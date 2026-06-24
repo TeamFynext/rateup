@@ -1,10 +1,8 @@
-"use client";
-
 import type { SelectProps } from "@mantine/core";
 import { Skeleton } from "@mantine/core";
 
-import { SurveyType } from "@/types/enums.ts";
 import { useSurveys } from "@/backend/surveys/surveys.query";
+import { SurveyType } from "@/types/enums.ts";
 
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput.tsx";
 
@@ -32,9 +30,7 @@ export function WebsurveySelector({
 
   const filteredWebSurvey = Array.isArray(data)
     ? onlyPublished
-      ? data.filter(
-          (survey) => survey.isPublished && survey.type === SurveyType.Web,
-        )
+      ? data.filter((survey) => survey.isPublished && survey.type === SurveyType.Web)
       : data.filter((survey) => survey.type === SurveyType.Web)
     : [];
 

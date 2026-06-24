@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import {
   BackgroundImage,
   Box,
@@ -16,9 +12,9 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { PageType } from "@/types/enums.ts";
 import {
   useUpdateStartedMutation,
   useUpdateVisitedMutation,
@@ -26,6 +22,7 @@ import {
 } from "@/backend/surveys/surveys.query";
 import { getQuestionsLength } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/util.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { PageType } from "@/types/enums.ts";
 
 import { CreditsCard } from "../../Card/CreditsCard.tsx";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput.tsx";
@@ -37,8 +34,9 @@ import {
 import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext.tsx";
 import LanguageSelectionPage from "../LanguageSelectionPage/index.tsx";
 import WelcomePage from "../WelcomePage/WelcomePage.tsx";
-import styles from "./TakeSurveyLayoutWeb.module.css";
 import { getBgImgAndBgColor } from "./utils.ts";
+
+import styles from "./TakeSurveyLayoutWeb.module.css";
 
 export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme;
@@ -59,8 +57,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   const start = searchParams?.start === "true";
 
   const largeScreen = useMediaQuery("(min-width: 60em)");
-  const isMobile =
-    useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
+  const isMobile = useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
 
   const [isWelcomePageEnabled, setIsWelcomePageEnabled] = useState(
     survey?.questions?.some((q) => q.type === PageType.Welcome) || false,
@@ -109,9 +106,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   }, [isWelcomePageEnabled]);
 
   useEffect(() => {
-    setIsWelcomePageEnabled(
-      survey?.questions?.some((q) => q.type === PageType.Welcome),
-    );
+    setIsWelcomePageEnabled(survey?.questions?.some((q) => q.type === PageType.Welcome));
   }, [survey?.questions]);
 
   const handleStartClick = () => {
@@ -134,16 +129,12 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
     setSelectedLanguage("English");
   }
 
-  const surveyThemeDataPrimaryColor =
-    surveyThemeData?.surveyTheme?.input?.primaryColor;
+  const surveyThemeDataPrimaryColor = surveyThemeData?.surveyTheme?.input?.primaryColor;
 
   const isLanguagePageActive =
-    !selectedLanguage &&
-    survey?.languages?.length > 1 &&
-    !isSurveyThemeEditView;
+    !selectedLanguage && survey?.languages?.length > 1 && !isSurveyThemeEditView;
   const isWelcomePageActive = !startClicked && isWelcomePageEnabled;
-  const useSurveyBackground =
-    isWelcomePageActive && pagesThemeData["welcomeTheme"]?.useSurveyTheme;
+  const useSurveyBackground = isWelcomePageActive && pagesThemeData["welcomeTheme"]?.useSurveyTheme;
   let requiredSurveyThemeObjKey = "surveyTheme";
   let requiredThemeData = surveyThemeData;
   if (isWelcomePageActive && !useSurveyBackground) {
@@ -157,9 +148,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
     isMobile,
   );
 
-  const isUnsplashImage = backgroundImageSrc?.startsWith(
-    "https://images.unsplash.com",
-  );
+  const isUnsplashImage = backgroundImageSrc?.startsWith("https://images.unsplash.com");
 
   const getRootElementForMantineProvider: () => HTMLElement = () => {
     if (!(typeof window === "undefined")) {
@@ -190,8 +179,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
         colors: {
           // @ts-ignore
           primaryColor: Array(10).fill(
-            surveyThemeDataPrimaryColor === "rateup-blue" ||
-              !surveyThemeDataPrimaryColor
+            surveyThemeDataPrimaryColor === "rateup-blue" || !surveyThemeDataPrimaryColor
               ? "#1C518E"
               : surveyThemeDataPrimaryColor,
           ),
@@ -269,17 +257,9 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
               style={{ padding: 0, margin: 0, flex: 1 }}
               display={"flex"}
             >
-              {(survey?.isPublished && survey?.active) ||
-              isSurveyThemePreview ? (
-                survey?.isProtected &&
-                !isPasswordVerified &&
-                !isSurveyThemePreview ? null : (
-                  <Paper
-                    radius={0}
-                    w={"100%"}
-                    bg={"transparent"}
-                    style={{ overflow: "hidden" }}
-                  >
+              {(survey?.isPublished && survey?.active) || isSurveyThemePreview ? (
+                survey?.isProtected && !isPasswordVerified && !isSurveyThemePreview ? null : (
+                  <Paper radius={0} w={"100%"} bg={"transparent"} style={{ overflow: "hidden" }}>
                     {startClicked &&
                       (isLanguagePageActive ? (
                         <LanguageSelectionPage

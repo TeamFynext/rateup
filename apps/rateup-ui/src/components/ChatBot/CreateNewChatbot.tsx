@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import { Modal, Stack, TextInput } from "@mantine/core";
+import { useState } from "react";
 
 import { RateupButtonBlue } from "../Button/RateupButtons.tsx";
 

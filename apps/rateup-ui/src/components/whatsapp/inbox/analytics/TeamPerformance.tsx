@@ -4,12 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { useGetTeamOverview } from "@/backend/conversation/conversation.query";
 import { Badge } from "@/components/ui/badge.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
@@ -33,9 +28,7 @@ function TeamPerformance({ dateRange }) {
           <table className="min-w-[900px] w-full">
             <thead>
               <tr className="border-b bg-gray-50/50 dark:bg-transparent">
-                <th className="text-left p-4 text-sm font-semibold text-gray-600">
-                  {t("Team")}
-                </th>
+                <th className="text-left p-4 text-sm font-semibold text-gray-600">{t("Team")}</th>
                 <th className="hidden sm:table-cell text-left p-4 text-sm font-semibold text-gray-600">
                   {t("Members")}
                 </th>
@@ -80,10 +73,9 @@ function TeamPerformance({ dateRange }) {
                     </tr>
                   ))
                 : teamsData?.map((team) => {
-                    const averageResponseTime =
-                      formatTimeToNearestUnitFromSeconds(
-                        team.averageResponseTime,
-                      );
+                    const averageResponseTime = formatTimeToNearestUnitFromSeconds(
+                      team.averageResponseTime,
+                    );
 
                     return (
                       <tr
@@ -101,30 +93,23 @@ function TeamPerformance({ dateRange }) {
                               className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm"
                               style={{
                                 backgroundColor:
-                                  team?.teamColor !== "null"
-                                    ? team.teamColor
-                                    : "blue",
+                                  team?.teamColor !== "null" ? team.teamColor : "blue",
                               }}
                             >
                               <Users className="w-5 h-5 text-white" />
                             </div>
-                            <span className="font-semibold">
-                              {team.teamName}
-                            </span>
+                            <span className="font-semibold">{team.teamName}</span>
                           </div>
                         </td>
                         <td className="hidden sm:table-cell p-4">
                           <div className="font-semibold">
-                            {team.teamMembers}{" "}
-                            {team.teamMembers > 1 ? "members" : "member"}
+                            {team.teamMembers} {team.teamMembers > 1 ? "members" : "member"}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {team.teamMembersOnline} {t("online")}
                           </div>
                         </td>
-                        <td className="p-4 font-semibold text-primary">
-                          {team.messagesSent}
-                        </td>
+                        <td className="p-4 font-semibold text-primary">{team.messagesSent}</td>
                         <td className="hidden md:table-cell p-4 font-semibold">
                           {averageResponseTime
                             ? `${averageResponseTime.value} ${averageResponseTime.suffix}`

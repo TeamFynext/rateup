@@ -1,5 +1,3 @@
-"use client";
-
 import { Avatar, Divider, Group, Stack, Text, Title } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 

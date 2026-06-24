@@ -52,9 +52,7 @@ export interface LoyaltyEarningRuleUpdateInput extends Partial<LoyaltyEarningRul
 /**
  * Fetches all loyalty earning rules
  */
-export const getLoyaltyEarningRules = async (): Promise<
-  LoyaltyEarningRule[]
-> => {
+export const getLoyaltyEarningRules = async (): Promise<LoyaltyEarningRule[]> => {
   const res = await axiosClient.get(LOYALTY_EARNING_RULES_URL);
   return res.data;
 };
@@ -62,9 +60,7 @@ export const getLoyaltyEarningRules = async (): Promise<
 /**
  * Fetches a loyalty earning rule by ID
  */
-export const getLoyaltyEarningRuleById = async (
-  ruleId: string,
-): Promise<LoyaltyEarningRule> => {
+export const getLoyaltyEarningRuleById = async (ruleId: string): Promise<LoyaltyEarningRule> => {
   const res = await axiosClient.get(`${LOYALTY_EARNING_RULES_URL}/${ruleId}`);
   return res.data;
 };
@@ -86,18 +82,13 @@ export const updateLoyaltyEarningRule = async (
   ruleId: string,
   ruleData: LoyaltyEarningRuleUpdateInput,
 ): Promise<LoyaltyEarningRule> => {
-  const res = await axiosClient.put(
-    `${LOYALTY_EARNING_RULES_URL}/${ruleId}`,
-    ruleData,
-  );
+  const res = await axiosClient.put(`${LOYALTY_EARNING_RULES_URL}/${ruleId}`, ruleData);
   return res.data;
 };
 
 /**
  * Deletes a loyalty earning rule
  */
-export const deleteLoyaltyEarningRule = async (
-  ruleId: string,
-): Promise<void> => {
+export const deleteLoyaltyEarningRule = async (ruleId: string): Promise<void> => {
   await axiosClient.delete(`${LOYALTY_EARNING_RULES_URL}/${ruleId}`);
 };

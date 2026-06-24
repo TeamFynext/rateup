@@ -1,5 +1,3 @@
-"use client";
-
 import { Anchor, Box, Button, Group, Image, Stack, Text } from "@mantine/core";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
@@ -15,11 +13,7 @@ export function ResponseSubmitted({ isSurveyPreview = false }) {
     <Stack
       className={`${styles["response-submitted-root-div"]} ${isSurveyPreview ? styles["survey-preview"] : ""}`}
     >
-      <Stack
-        className={
-          styles["check-icon-container-and-thankyou-message-container"]
-        }
-      >
+      <Stack className={styles["check-icon-container-and-thankyou-message-container"]}>
         <Box className={styles["check-icon-container"]}>
           {<IconCircleCheckFilled size={"6rem"} />}
         </Box>
@@ -27,22 +21,12 @@ export function ResponseSubmitted({ isSurveyPreview = false }) {
           Thank You, your response has been Submitted!
         </Text>
       </Stack>
-      <Stack
-        className={styles["create-surveys-text-and-try-now-btn-container"]}
-      >
+      <Stack className={styles["create-surveys-text-and-try-now-btn-container"]}>
         <Group className={styles["create-surveys-text-container"]}>
           <Text className={styles["create-surveys-text"]}>
             Create Surveys for free using
-            <Anchor
-              href="https://www.rateup.app"
-              styles={{ root: { width: "fit-content" } }}
-            >
-              <Image
-                src={rateupLogoStackedWhiteTransparent}
-                height={60}
-                width={60}
-                fit="contain"
-              />
+            <Anchor href="https://www.rateup.app" styles={{ root: { width: "fit-content" } }}>
+              <Image src={rateupLogoStackedWhiteTransparent} height={60} width={60} fit="contain" />
             </Anchor>
           </Text>
         </Group>

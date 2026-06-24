@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useState } from "react";
-
 import {
   IconAlertCircle,
   IconCheck,
@@ -11,6 +7,7 @@ import {
   IconServer,
   IconTrash,
 } from "@tabler/icons-react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -40,8 +37,7 @@ export default function ApiAccessKeyPage() {
   const { user } = useUser();
   const { t: translations } = useTranslation();
 
-  const apiEndpoint =
-    import.meta.env.VITE_API_URL + "/api/external/" + "v1/" + user?.orgId + "/";
+  const apiEndpoint = import.meta.env.VITE_API_URL + "/api/external/" + "v1/" + user?.orgId + "/";
 
   function handleGenerateApiKey() {
     generateMutation.mutate(undefined, {
@@ -61,10 +57,7 @@ export default function ApiAccessKeyPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <div className="p-2 bg-blue-50 rounded-lg dark:bg-blue-900/20">
-                <IconKey
-                  size={20}
-                  className="text-blue-600 dark:text-blue-400"
-                />
+                <IconKey size={20} className="text-blue-600 dark:text-blue-400" />
               </div>
               <CardTitle>API Access Key</CardTitle>
             </div>
@@ -74,11 +67,7 @@ export default function ApiAccessKeyPage() {
             {data.createdAt ? (
               <div className="space-y-4">
                 <div className="relative">
-                  <Input
-                    readOnly
-                    value={apiKey || "•".repeat(48)}
-                    className="font-mono pr-24"
-                  />
+                  <Input readOnly value={apiKey || "•".repeat(48)} className="font-mono pr-24" />
                   <div className="absolute right-1 top-0 h-full flex items-center gap-1 p-1">
                     {apiKey ? (
                       <ApiCopyButton value={apiKey} />
@@ -108,19 +97,14 @@ export default function ApiAccessKeyPage() {
                   <IconKey size={24} className="text-muted-foreground" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">
-                    No API Key Found
-                  </p>
+                  <p className="text-sm font-medium text-foreground">No API Key Found</p>
                   <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                     {translations(
                       "You have not generated an API Access Key yet. API Access Key is required to access the all API endpoints.",
                     )}
                   </p>
                 </div>
-                <Button
-                  onClick={handleGenerateApiKey}
-                  disabled={generateMutation.isPending}
-                >
+                <Button onClick={handleGenerateApiKey} disabled={generateMutation.isPending}>
                   {generateMutation.isPending ? (
                     <IconReload className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
@@ -138,24 +122,15 @@ export default function ApiAccessKeyPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <div className="p-2 bg-purple-50 rounded-lg dark:bg-purple-900/20">
-                <IconServer
-                  size={20}
-                  className="text-purple-600 dark:text-purple-400"
-                />
+                <IconServer size={20} className="text-purple-600 dark:text-purple-400" />
               </div>
               <CardTitle>{translations("API Base URL")}</CardTitle>
             </div>
-            <CardDescription>
-              Use this base URL for all your API requests.
-            </CardDescription>
+            <CardDescription>Use this base URL for all your API requests.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="relative">
-              <Input
-                readOnly
-                value={apiEndpoint}
-                className="font-mono pr-12 bg-muted/50"
-              />
+              <Input readOnly value={apiEndpoint} className="font-mono pr-12 bg-muted/50" />
               <div className="absolute right-1 top-0 h-full flex items-center p-1">
                 <ApiCopyButton value={apiEndpoint} />
               </div>
@@ -194,9 +169,7 @@ interface ApiRegenerateButtonProps {
   onRegenerate: (apiKey: string) => void;
 }
 
-function ApiRegenerateButton({
-  onRegenerate,
-}: Readonly<ApiRegenerateButtonProps>) {
+function ApiRegenerateButton({ onRegenerate }: Readonly<ApiRegenerateButtonProps>) {
   const regenerateMutation = useRegenerateLoyaltyApiKey();
   const { t: translations } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);

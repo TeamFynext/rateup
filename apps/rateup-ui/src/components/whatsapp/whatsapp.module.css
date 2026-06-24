@@ -34,10 +34,7 @@
 .chatHeader {
   border-radius: 10px;
   border: 0.5px solid rgba(0, 0, 0, 0.25);
-  background: var(
-    --Whatsapp-Promotions,
-    linear-gradient(271deg, #128c7e -6.39%, #128c7e 204.31%)
-  );
+  background: var(--Whatsapp-Promotions, linear-gradient(271deg, #128c7e -6.39%, #128c7e 204.31%));
   box-shadow: 2px 4px 7px 0px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   color: white;

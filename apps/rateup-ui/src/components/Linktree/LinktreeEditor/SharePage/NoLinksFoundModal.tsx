@@ -1,12 +1,10 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Button, Center, Modal } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
+import { useCallback } from "react";
+
+import { useSetLinktreeEditorTab } from "../LinktreeContext/LinktreeContext.tsx";
 
 import styles from "../../../Modal/ImageCropModal.module.css";
-import { useSetLinktreeEditorTab } from "../LinktreeContext/LinktreeContext.tsx";
 
 function NoLinksFoundModal({ opened, onClose }) {
   const setLinktreeEditorTab = useSetLinktreeEditorTab();
@@ -26,14 +24,9 @@ function NoLinksFoundModal({ opened, onClose }) {
       }}
       styles={{ content: { borderRadius: "1rem" } }}
     >
-      <Center
-        style={{ padding: "1.5rem", flexDirection: "column", gap: "1.5rem" }}
-      >
+      <Center style={{ padding: "1.5rem", flexDirection: "column", gap: "1.5rem" }}>
         <h2>No Links Found</h2>
-        <Button
-          onClick={handleGotoLinksPageBtnClick}
-          rightSection={<IconChevronRight />}
-        >
+        <Button onClick={handleGotoLinksPageBtnClick} rightSection={<IconChevronRight />}>
           Go to Links Page
         </Button>
       </Center>

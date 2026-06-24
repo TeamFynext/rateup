@@ -1,5 +1,3 @@
-"use client";
-
 import type { Table } from "@tanstack/react-table";
 import { X } from "lucide-react";
 
@@ -21,9 +19,7 @@ export function SubscriptionsDataTableToolbar<TData>({
       <div className="flex flex-1 items-center gap-2">
         <Input
           placeholder="Filter by plan name or status..."
-          value={
-            (table.getColumn("planName")?.getFilterValue() as string) ?? ""
-          }
+          value={(table.getColumn("planName")?.getFilterValue() as string) ?? ""}
           onChange={(event) => {
             const value = event.target.value;
             table.getColumn("planName")?.setFilterValue(value);
@@ -31,11 +27,7 @@ export function SubscriptionsDataTableToolbar<TData>({
           className="h-8 w-[150px] lg:w-[250px]"
         />
         {isFiltered && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => table.resetColumnFilters()}
-          >
+          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
             Reset
             <X />
           </Button>

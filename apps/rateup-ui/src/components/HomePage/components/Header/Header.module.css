@@ -90,11 +90,7 @@
   composes: header-footer-link from "../../index.module.css";
   composes: login-signup-link;
   color: white;
-  background-image: linear-gradient(
-    90deg,
-    var(--shade-of-blue-5),
-    var(--shade-of-blue-3)
-  );
+  background-image: linear-gradient(90deg, var(--shade-of-blue-5), var(--shade-of-blue-3));
 }
 
 .book-demo-btn-div :global(.book-a-demo-btn) {
@@ -107,11 +103,7 @@
 
 .go-to-dashboard-link {
   composes: header-footer-link from "../../index.module.css";
-  background-image: linear-gradient(
-    90deg,
-    var(--shade-of-blue-5),
-    var(--shade-of-blue-3)
-  );
+  background-image: linear-gradient(90deg, var(--shade-of-blue-5), var(--shade-of-blue-3));
   composes: login-signup-link;
   color: white;
 }
@@ -157,8 +149,7 @@
 
 .blue-background :global(.mobile-nav-burger-icon .mantine-Burger-burger),
 .blue-background :global(.mobile-nav-burger-icon .mantine-Burger-burger::after),
-.blue-background
-  :global(.mobile-nav-burger-icon .mantine-Burger-burger::before) {
+.blue-background :global(.mobile-nav-burger-icon .mantine-Burger-burger::before) {
   background-color: white;
 }
 

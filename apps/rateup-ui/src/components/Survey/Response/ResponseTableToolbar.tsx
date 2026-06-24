@@ -1,5 +1,3 @@
-import React, { useMemo, useState } from "react";
-
 import {
   IconDatabaseImport,
   IconFileDownload,
@@ -9,6 +7,7 @@ import {
 } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import React, { useMemo, useState } from "react";
 import type { Range } from "react-date-range";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -92,35 +91,26 @@ export function ResponseTableToolbar<TData>({
       table
         .getAllColumns()
         .filter(
-          (column) =>
-            column.getCanFilter() &&
-            !["action", "Action", "ticket"].includes(column.id),
+          (column) => column.getCanFilter() && !["action", "Action", "ticket"].includes(column.id),
         )
         .map((column) => ({
           id: column.id,
           label:
-            typeof column.columnDef?.header === "string"
-              ? column.columnDef?.header
-              : column.id,
+            typeof column.columnDef?.header === "string" ? column.columnDef?.header : column.id,
         })),
     [table],
   );
 
   const initialSearchState = useMemo(() => {
-    let searchByValue =
-      typeof filters?.searchBy === "string" ? filters.searchBy : "";
+    let searchByValue = typeof filters?.searchBy === "string" ? filters.searchBy : "";
 
     const isValidSearchBy =
-      !!searchByValue &&
-      filterableColumns.some((column) => column.id === searchByValue);
+      !!searchByValue && filterableColumns.some((column) => column.id === searchByValue);
 
     if (!isValidSearchBy) {
       const matchedColumn = filterableColumns.find((column) => {
         const backendKey = getBackendFilterKey(column.id);
-        return (
-          filters?.[column.id] !== undefined ||
-          filters?.[backendKey] !== undefined
-        );
+        return filters?.[column.id] !== undefined || filters?.[backendKey] !== undefined;
       });
 
       searchByValue = matchedColumn?.id || filterableColumns[0]?.id || "";
@@ -159,10 +149,7 @@ export function ResponseTableToolbar<TData>({
   const rawSearchBy = form.watch("searchBy");
 
   const searchBy = useMemo(() => {
-    if (
-      rawSearchBy &&
-      filterableColumns.some((column) => column.id === rawSearchBy)
-    ) {
+    if (rawSearchBy && filterableColumns.some((column) => column.id === rawSearchBy)) {
       return rawSearchBy;
     }
 
@@ -196,15 +183,9 @@ export function ResponseTableToolbar<TData>({
     return (segments[1] || "").toLowerCase();
   };
 
-  const activeColumnType = useMemo(
-    () => getColumnFilterType(searchBy),
-    [searchBy],
-  );
+  const activeColumnType = useMemo(() => getColumnFilterType(searchBy), [searchBy]);
 
-  const activeColumnMetaType = useMemo(
-    () => getColumnMetaType(searchBy),
-    [searchBy],
-  );
+  const activeColumnMetaType = useMemo(() => getColumnMetaType(searchBy), [searchBy]);
 
   const isRatingColumn = activeColumnMetaType === "rating";
 
@@ -242,10 +223,7 @@ export function ResponseTableToolbar<TData>({
           <DatePicker
             value={selectedDate}
             onChange={(date) => {
-              form.setValue(
-                "searchTerm",
-                date ? dayjs(date).format("YYYY-MM-DD") : "",
-              );
+              form.setValue("searchTerm", date ? dayjs(date).format("YYYY-MM-DD") : "");
             }}
             className="w-full"
           />
@@ -257,17 +235,13 @@ export function ResponseTableToolbar<TData>({
       return (
         <Select
           value={searchTerm || "__none__"}
-          onValueChange={(value) =>
-            form.setValue("searchTerm", value === "__none__" ? "" : value)
-          }
+          onValueChange={(value) => form.setValue("searchTerm", value === "__none__" ? "" : value)}
         >
           <SelectTrigger className="h-9 w-full pr-9">
             <SelectValue placeholder={translations("Select value")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__none__">
-              {translations("Select value")}
-            </SelectItem>
+            <SelectItem value="__none__">{translations("Select value")}</SelectItem>
             {numericOptions.map((option) => (
               <SelectItem key={option} value={option}>
                 {option}
@@ -293,15 +267,11 @@ export function ResponseTableToolbar<TData>({
     const enteredSearchTerm = form.getValues("searchTerm") || "";
     const selectedSearchBy =
       form.getValues("searchBy") &&
-      filterableColumns.some(
-        (column) => column.id === form.getValues("searchBy"),
-      )
+      filterableColumns.some((column) => column.id === form.getValues("searchBy"))
         ? form.getValues("searchBy")
         : searchBy;
 
-    const nextFilters: Record<string, unknown> = serverFilters
-      ? { ...serverFilters }
-      : {};
+    const nextFilters: Record<string, unknown> = serverFilters ? { ...serverFilters } : {};
 
     delete nextFilters.search;
     delete nextFilters.searchMethod;
@@ -313,8 +283,7 @@ export function ResponseTableToolbar<TData>({
 
     if (enteredSearchTerm.trim()) {
       if (selectedSearchBy) {
-        nextFilters[getBackendFilterKey(selectedSearchBy)] =
-          enteredSearchTerm.trim();
+        nextFilters[getBackendFilterKey(selectedSearchBy)] = enteredSearchTerm.trim();
       }
     }
 
@@ -322,9 +291,7 @@ export function ResponseTableToolbar<TData>({
   };
 
   const resetSearch = () => {
-    const nextFilters: Record<string, unknown> = serverFilters
-      ? { ...serverFilters }
-      : {};
+    const nextFilters: Record<string, unknown> = serverFilters ? { ...serverFilters } : {};
 
     delete nextFilters.search;
     delete nextFilters.searchMethod;
@@ -343,10 +310,7 @@ export function ResponseTableToolbar<TData>({
 
     return filterableColumns.some((column) => {
       const backendKey = getBackendFilterKey(column.id);
-      return (
-        filters?.[column.id] !== undefined ||
-        filters?.[backendKey] !== undefined
-      );
+      return filters?.[column.id] !== undefined || filters?.[backendKey] !== undefined;
     });
   }, [filterableColumns, filters, searchTerm]);
 
@@ -434,9 +398,7 @@ export function ResponseTableToolbar<TData>({
                     else handleSyncGoogleSheet();
                   }}
                 >
-                  <IconRefresh
-                    className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin" : ""}`}
-                  />
+                  <IconRefresh className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
                   {survey.spreadSheetId
                     ? translations("Resync with Google Sheet")
                     : translations("Sync with Google Sheet")}
@@ -446,9 +408,7 @@ export function ResponseTableToolbar<TData>({
                     const columns = table
                       .getVisibleFlatColumns()
                       .map((col) =>
-                        typeof col.columnDef?.header === "string"
-                          ? col.columnDef?.header
-                          : col?.id,
+                        typeof col.columnDef?.header === "string" ? col.columnDef?.header : col?.id,
                       );
                     handleExcelDownload(columns);
                     setOpenedExport(false);

@@ -1,8 +1,4 @@
-"use client";
-
-// TODO: refactor drag and drop
-import { useEffect } from "react";
-
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import {
   ActionIcon,
   Button,
@@ -17,26 +13,28 @@ import {
 import { useListState } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconEdit, IconPlayerPlay, IconPlus } from "@tabler/icons-react";
-import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { cloneDeep } from "lodash";
+// TODO: refactor drag and drop
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import type { PageType } from "@/types/enums.ts";
-import { QuestionType } from "@/types/enums.ts";
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
 import { useNavControlContext } from "@/context/NavControlContext.ts";
-import modalStyles from "@/styles/commonCssModules/modal.module.css";
+import type { PageType } from "@/types/enums.ts";
+import { QuestionType } from "@/types/enums.ts";
 import { uniquePages } from "@/utils/constants.ts";
 import { reorder, reOrderPages } from "@/utils/questions.ts";
 
 import { QuestionTabsEnum } from "./EditSurvey.tsx";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard/index.ts";
-import styles from "./QuestionsSideBar.module.css";
 import { getSurveyThemeTabValueFromPageType } from "./SurveyTheme/SurveyTheme.constants";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
+
+import styles from "./QuestionsSideBar.module.css";
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 interface QuestionsSideBarProps {
   questions: Question[];
@@ -81,7 +79,7 @@ export function QuestionsSideBar({
   const surveyId = params?.surveyId as string;
 
   const [questionsState, handlers] = useListState(questions);
-  const { navOpened, setNavOpened } = useNavControlContext();
+  const { setNavOpened } = useNavControlContext();
   const { t: translations } = useTranslation();
   useEffect(() => {
     handlers.setState(questions);
@@ -98,9 +96,7 @@ export function QuestionsSideBar({
     setSelectedQ(question);
     if (uniquePages.includes(question.type as PageType)) {
       const webSurveyPagesThemeCopy = cloneDeep(survey?.webSurveyPagesTheme);
-      const surveyThemeTabValue = getSurveyThemeTabValueFromPageType(
-        question.type,
-      );
+      const surveyThemeTabValue = getSurveyThemeTabValueFromPageType(question.type);
       setSelectedSurveyThemeTab(surveyThemeTabValue);
       setSurveyThemeContextValue(webSurveyPagesThemeCopy);
     }
@@ -158,12 +154,9 @@ export function QuestionsSideBar({
       haveUnsavedChanges &&
       Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
     ) {
-      toast.error(
-        translations("Please Enter heading and choices for all languages."),
-        {
-          id: "missing-title-toast",
-        },
-      );
+      toast.error(translations("Please Enter heading and choices for all languages."), {
+        id: "missing-title-toast",
+      });
       return;
     }
     openQuestion(question);
@@ -196,11 +189,7 @@ export function QuestionsSideBar({
   ));
 
   const handleDragEnd = ({ destination, source }) => {
-    const reorderedQuestions = reorder(
-      questionsState,
-      source.index,
-      destination?.index || 0,
-    );
+    const reorderedQuestions = reorder(questionsState, source.index, destination?.index || 0);
     handlers.setState(reorderedQuestions);
     questionsReorderMutation.mutate(reorderedQuestions);
   };
@@ -239,9 +228,7 @@ export function QuestionsSideBar({
               onClick={openSurveyPreviewModal}
             >
               <Group className={styles["icon-text-group"]}>
-                <Text className={styles["icon-text"]}>
-                  {translations("Preview")}
-                </Text>
+                <Text className={styles["icon-text"]}>{translations("Preview")}</Text>
                 <IconPlayerPlay />
               </Group>
             </ActionIcon>
@@ -256,28 +243,18 @@ export function QuestionsSideBar({
                   return;
                 }
                 const haveUnsavedChanges = checkForUnsavedChanges();
-                if (
-                  haveUnsavedChanges &&
-                  uniquePages.includes(selectedQ?.type as PageType)
-                ) {
+                if (haveUnsavedChanges && uniquePages.includes(selectedQ?.type as PageType)) {
                   openDiscardChangesModal(() => {
                     openSurveyEditPreview();
                   });
                   return;
                 } else if (
                   haveUnsavedChanges &&
-                  Object.values(QuestionType).includes(
-                    selectedQ?.type as QuestionType,
-                  )
+                  Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
                 ) {
-                  toast.error(
-                    translations(
-                      "Please Enter heading and choices for all languages.",
-                    ),
-                    {
-                      id: "missing-title-toast",
-                    },
-                  );
+                  toast.error(translations("Please Enter heading and choices for all languages."), {
+                    id: "missing-title-toast",
+                  });
                   return;
                 }
                 openSurveyEditPreview();
@@ -287,9 +264,7 @@ export function QuestionsSideBar({
                 className={styles["icon-text-group"]}
                 style={{ display: "flex", alignItems: "center", gap: "2px" }}
               >
-                <Text className={styles["icon-text"]}>
-                  {translations("Theme")}
-                </Text>
+                <Text className={styles["icon-text"]}>{translations("Theme")}</Text>
                 <IconEdit />
               </Group>
             </ActionIcon>

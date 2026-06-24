@@ -1,10 +1,7 @@
-"use client";
-
-import { memo } from "react";
-
 import { IconBrandInstagram } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 import { Handle, Position } from "@xyflow/react";
+import { memo } from "react";
 
 import BaseNode from "./base-node.tsx";
 
@@ -22,11 +19,7 @@ function InstagramStoryReplyNode(
 ) {
   const { data, isConnectable } = props;
   return (
-    <BaseNode
-      {...props}
-      icon={<IconBrandInstagram size={18} />}
-      color="#9333ea"
-    >
+    <BaseNode {...props} icon={<IconBrandInstagram size={18} />} color="#9333ea">
       <Handle
         type="target"
         position={Position.Top}

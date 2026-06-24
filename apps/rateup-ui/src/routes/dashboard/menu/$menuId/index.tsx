@@ -1,16 +1,6 @@
+import { IconFileImport, IconLayersSubtract, IconPlus } from "@tabler/icons-react";
+import { createFileRoute, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-
-import {
-  IconFileImport,
-  IconLayersSubtract,
-  IconPlus,
-} from "@tabler/icons-react";
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-  useSearch,
-} from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -34,12 +24,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 
 export const Route = createFileRoute("/dashboard/menu/$menuId/")({
@@ -70,22 +55,15 @@ function MenuById() {
     () => {},
     () => {},
   );
-  const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(
-    null,
-  );
+  const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
   const searchParams = useSearch({ strict: false });
   const tab = (searchParams.tab as TabEnum) || TabEnum.Menu;
 
   const activeTab = tab?.toString() as TabEnum;
 
-  const { isLoading: isLoadingMenu, data: menuLandingData } =
-    useMenuLandingById(menuId);
+  const { isLoading: isLoadingMenu, data: menuLandingData } = useMenuLandingById(menuId);
 
-  const {
-    isLoading,
-    isError,
-    data: categories,
-  } = useCategories(menuId, undefined);
+  const { isLoading, isError, data: categories } = useCategories(menuId, undefined);
   const filteredCategory = categories;
 
   useEffect(() => {
@@ -128,13 +106,9 @@ function MenuById() {
     >
       <TabsList>
         <TabsTrigger value={TabEnum.Menu}>{translations("Menu")}</TabsTrigger>
-        <TabsTrigger value={TabEnum.Settings}>
-          {translations("Settings")}
-        </TabsTrigger>
+        <TabsTrigger value={TabEnum.Settings}>{translations("Settings")}</TabsTrigger>
         <TabsTrigger value={TabEnum.Share}>{translations("Share")}</TabsTrigger>
-        <TabsTrigger value={TabEnum.Analytics}>
-          {translations("Analytics")}
-        </TabsTrigger>
+        <TabsTrigger value={TabEnum.Analytics}>{translations("Analytics")}</TabsTrigger>
       </TabsList>
       <TabsContent value={TabEnum.Menu}>
         <div className="flex h-full flex-col gap-3">
@@ -144,19 +118,13 @@ function MenuById() {
                 <IconPlus data-icon="inline-end" />
                 {translations("Add Category")}
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => setOpenUploadCsv((prev) => !prev)}
-              >
+              <Button variant="outline" onClick={() => setOpenUploadCsv((prev) => !prev)}>
                 <IconFileImport data-icon="inline-end" />
                 {translations("Import Menu")}
               </Button>
             </div>
 
-            <Button
-              variant="secondary"
-              onClick={() => setOpenBanner((prev) => !prev)}
-            >
+            <Button variant="secondary" onClick={() => setOpenBanner((prev) => !prev)}>
               <IconLayersSubtract data-icon="inline-end" />
               {translations("Manage Banners")}
             </Button>
@@ -174,9 +142,7 @@ function MenuById() {
                   <EmptyMedia variant="icon">
                     <IconLayersSubtract />
                   </EmptyMedia>
-                  <EmptyTitle>
-                    {translations("No Category available.")}
-                  </EmptyTitle>
+                  <EmptyTitle>{translations("No Category available.")}</EmptyTitle>
                   <EmptyDescription>
                     {translations("Add a category to get started.")}
                   </EmptyDescription>
@@ -216,9 +182,7 @@ function MenuById() {
       <TabsContent value={TabEnum.Settings}>
         <GeneralSettings editingItem={menuLandingData} />
       </TabsContent>
-      <TabsContent value={TabEnum.Share}>
-        {menu && <ShareMenu menu={menu} />}
-      </TabsContent>
+      <TabsContent value={TabEnum.Share}>{menu && <ShareMenu menu={menu} />}</TabsContent>
       <TabsContent value={TabEnum.Analytics}>
         <MenuAnalytics
           surveyTeamMapId={menuLandingData?.surveyTeamMapId}

@@ -1,5 +1,3 @@
-"use client";
-
 import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useTranslation } from "react-i18next";
@@ -17,16 +15,13 @@ export const ParticipantMenu = ({ contactId, groupId }) => {
       centered: true,
       children: (
         <Text size="sm">
-          {translations(
-            "Are you sure you want to remove this member from group?",
-          )}
+          {translations("Are you sure you want to remove this member from group?")}
         </Text>
       ),
       labels: { confirm: translations("Ok"), cancel: translations("cancel") },
       confirmProps: { color: "red" },
       onCancel: () => modals.closeAll(),
-      onConfirm: () =>
-        removeContactsMutation.mutate({ contactIds: [contactId], groupId }),
+      onConfirm: () => removeContactsMutation.mutate({ contactIds: [contactId], groupId }),
     });
   };
 

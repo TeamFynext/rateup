@@ -1,11 +1,8 @@
-"use client";
-
-import { useState } from "react";
-
 import { modals } from "@mantine/modals";
 import { IconChevronDown } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Edit, Trash } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {

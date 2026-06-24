@@ -1,16 +1,9 @@
-"use client";
-
 import React, { useEffect } from "react";
-
 import { useTranslation } from "react-i18next";
 
 import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import PaperLayout from "../../../styled/Layouts/PaperLayout.tsx";
 import UniqueDeviceSettings from "../UniqueDeviceSettings.tsx";
@@ -75,9 +68,7 @@ function KioskFetchLocSkipPreview({
                   <h3>{translations("Kiosk Mode")}</h3>
                   <p className="text-muted-foreground font-light text-xs">
                     {hasGoogleReview
-                      ? translations(
-                          "Not available since Google Review Questions present",
-                        )
+                      ? translations("Not available since Google Review Questions present")
                       : translations("Enables survey to restart on completion")}
                   </p>
                 </div>
@@ -91,9 +82,7 @@ function KioskFetchLocSkipPreview({
                 <TooltipTrigger>
                   <Switch
                     id="location"
-                    onCheckedChange={(event) =>
-                      updateGetLocation(setLocation, editSurvey)
-                    }
+                    onCheckedChange={(_event) => updateGetLocation(setLocation, editSurvey)}
                     checked={location}
                   />
                 </TooltipTrigger>
@@ -110,9 +99,7 @@ function KioskFetchLocSkipPreview({
                 <div className={"switch-heading-and-desc-container"}>
                   <h3>{translations("Fetch Location")}</h3>
                   <p className="text-muted-foreground font-light text-xs">
-                    {translations(
-                      "Retrieves the location of survey participant",
-                    )}
+                    {translations("Retrieves the location of survey participant")}
                   </p>
                 </div>
               </Label>
@@ -141,9 +128,7 @@ function KioskFetchLocSkipPreview({
                 <div className={"switch-heading-and-desc-container"}>
                   <h3>{translations("Skip Preview Screen")}</h3>
                   <p className="text-muted-foreground font-light text-xs">
-                    {translations(
-                      "Skips Responses preview screen on survey completion",
-                    )}
+                    {translations("Skips Responses preview screen on survey completion")}
                   </p>
                 </div>
               </Label>

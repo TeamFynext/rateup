@@ -1,10 +1,7 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Button, FileButton, Group } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconBrandUnsplash, IconUpload } from "@tabler/icons-react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import { mmImageCropModalClassnames } from "@/utils/constants.ts";
@@ -63,11 +60,7 @@ function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
       <FileButton onChange={handleFileBtnValueChange}>
         {(props) => {
           return (
-            <Button
-              className={styles["card"]}
-              {...props}
-              rightSection={<IconUpload size={16} />}
-            >
+            <Button className={styles["card"]} {...props} rightSection={<IconUpload size={16} />}>
               {translations("Upload from Device")}
             </Button>
           );

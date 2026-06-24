@@ -76,9 +76,7 @@ export default function App({ posts, authors, tags }: AppProps) {
               <>
                 {featuredPost && <FeaturedPost post={featuredPost} />}
                 <BrowseSection tags={tags} authors={authors} />
-                {remainingPosts.length > 0 && (
-                  <ArticlesGrid posts={remainingPosts} />
-                )}
+                {remainingPosts.length > 0 && <ArticlesGrid posts={remainingPosts} />}
               </>
             )}
           </main>

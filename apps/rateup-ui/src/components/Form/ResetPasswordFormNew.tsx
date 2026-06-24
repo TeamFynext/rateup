@@ -1,25 +1,16 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { schemaResolver, useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
-import {
-  useSendResetEmail,
-  useSetNewPassword,
-} from "@/utils/auth/resetPassword.tsx";
-import {
-  rateupLogoStackedWhiteTransparent,
-  SAVE_HOTKEY,
-} from "@/utils/constants.ts";
+import { useSendResetEmail, useSetNewPassword } from "@/utils/auth/resetPassword.tsx";
+import { rateupLogoStackedWhiteTransparent, SAVE_HOTKEY } from "@/utils/constants.ts";
 import { ResetSteps } from "@/utils/enums/index.ts";
 
 import { Button } from "../ui/button.tsx";
@@ -38,11 +29,8 @@ const ResetPasswordForm = ({ mode }) => {
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const requestStatus = searchParams.requestStatus;
   const emailTo = searchParams.emailTo;
-  const type = searchParams.type;
 
-  const [page, setPage] = useState(
-    token && token.length > 0 ? ResetSteps.STEP_THREE : mode,
-  );
+  const [page, setPage] = useState(token && token.length > 0 ? ResetSteps.STEP_THREE : mode);
   const { t: translations } = useTranslation();
   useEffect(() => {
     if (token && token.length > 0) {
@@ -66,18 +54,12 @@ const ResetPasswordForm = ({ mode }) => {
         .string()
         .min(1, { message: translations("Password is required") })
         .min(5, {
-          message: translations(
-            "Password should be at least 5 characters long",
-          ),
+          message: translations("Password should be at least 5 characters long"),
         })
         .refine((val) => /\d/.test(val) && /[a-zA-Z]/.test(val), {
-          message: translations(
-            "Password should contain at least one letter and one number!",
-          ),
+          message: translations("Password should contain at least one letter and one number!"),
         }),
-      confirmPassword: z
-        .string()
-        .min(1, { message: translations("Confirm password is required") }),
+      confirmPassword: z.string().min(1, { message: translations("Confirm password is required") }),
     })
     .refine((data) => data.password === data.confirmPassword, {
       path: ["confirmPassword"],
@@ -125,7 +107,7 @@ const ResetPasswordForm = ({ mode }) => {
     { label: "1 number", valid: /[0-9]/.test(password) },
     {
       label: "1 special character",
-      valid: /[!@#$%^&*(),.?\":{}|<>]/.test(password),
+      valid: /[!@#$%^&*(),.?":{}|<>]/.test(password),
     },
   ];
 
@@ -145,10 +127,7 @@ const ResetPasswordForm = ({ mode }) => {
             email: values.email,
           });
           if (!user?.success) {
-            emailForm.setFieldError(
-              "email",
-              translations("User with this email does not exist!"),
-            );
+            emailForm.setFieldError("email", translations("User with this email does not exist!"));
             toast.error(translations("User with this email does not exist!"), {
               id: "user-not-found",
             });
@@ -158,7 +137,7 @@ const ResetPasswordForm = ({ mode }) => {
           sendResetEmail(values.email).finally(() => {
             setIsLoading(false);
           });
-        } catch (error) {
+        } catch {
           setIsLoading(false);
         }
       }
@@ -172,11 +151,7 @@ const ResetPasswordForm = ({ mode }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
       <div className="text-center">
-        <img
-          src={rateupLogoStackedWhiteTransparent}
-          alt="RateUp"
-          className="w-20"
-        />
+        <img src={rateupLogoStackedWhiteTransparent} alt="RateUp" className="w-20" />
       </div>
       {page !== ResetSteps.STEP_TWO ? (
         <Card className="border-none shadow-lg p-4 max-w-2xl sm:min-w-md flex flex-col gap-8">
@@ -189,15 +164,11 @@ const ResetPasswordForm = ({ mode }) => {
               )}
             </div>
             <div className="text-2xl font-normal">
-              {isEmailPage
-                ? translations("Reset Password")
-                : translations("Set New Password")}
+              {isEmailPage ? translations("Reset Password") : translations("Set New Password")}
             </div>
             <span className="text-md text-gray-500 text-center max-w-sm mx-auto leading-relaxed">
               {isEmailPage
-                ? translations(
-                    "Enter your email address and we'll send you a verification code",
-                  )
+                ? translations("Enter your email address and we'll send you a verification code")
                 : translations("Create a strong new password for your account")}
             </span>
           </div>
@@ -207,10 +178,7 @@ const ResetPasswordForm = ({ mode }) => {
                 className="space-y-4"
                 onSubmit={emailForm.onSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [
-                    SAVE_HOTKEY,
-                    (event: any) => emailForm.onSubmit(onSubmit)(event),
-                  ],
+                  [SAVE_HOTKEY, (event: any) => emailForm.onSubmit(onSubmit)(event)],
                 ])}
               >
                 <div className="space-y-2">
@@ -238,10 +206,7 @@ const ResetPasswordForm = ({ mode }) => {
                 className="space-y-4"
                 onSubmit={pwdForm.onSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [
-                    SAVE_HOTKEY,
-                    (event: any) => pwdForm.onSubmit(onSubmit)(event),
-                  ],
+                  [SAVE_HOTKEY, (event: any) => pwdForm.onSubmit(onSubmit)(event)],
                 ])}
               >
                 <div className="space-y-1">
@@ -264,21 +229,14 @@ const ResetPasswordForm = ({ mode }) => {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
                 {/* Confirm Password */}
                 <div className="space-y-1">
-                  <Label
-                    htmlFor="confirmPassword"
-                    className="text-gray-700 text-sm"
-                  >
+                  <Label htmlFor="confirmPassword" className="text-gray-700 text-sm">
                     {translations("Confirm New Password")}
                   </Label>
                   <div className="relative">
@@ -292,9 +250,7 @@ const ResetPasswordForm = ({ mode }) => {
                     />
                     <button
                       type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       {showConfirmPassword ? (
@@ -317,20 +273,13 @@ const ResetPasswordForm = ({ mode }) => {
                       {translations("Password must have")}:
                       <ul className="list-none mt-1 space-y-1">
                         {rules.map((rule) => (
-                          <li
-                            key={rule.label}
-                            className="flex items-center space-x-1"
-                          >
+                          <li key={rule.label} className="flex items-center space-x-1">
                             {rule.valid ? (
                               <span className="text-green-600">✔</span>
                             ) : (
                               <span className="text-gray-400">●</span>
                             )}
-                            <span
-                              className={
-                                rule.valid ? "text-gray-800" : "text-gray-500"
-                              }
-                            >
+                            <span className={rule.valid ? "text-gray-800" : "text-gray-500"}>
                               {rule.label}
                             </span>
                           </li>
@@ -370,9 +319,7 @@ const ResetPasswordForm = ({ mode }) => {
               {translations("Check your email")}
             </h2>
             <p className="text-gray-600 text-sm leading-relaxed">
-              {translations(
-                "A password reset link has been sent to your email address",
-              )}
+              {translations("A password reset link has been sent to your email address")}
             </p>
             <p className="text-gray-900 font-medium mt-1">{emailTo}</p>
           </div>

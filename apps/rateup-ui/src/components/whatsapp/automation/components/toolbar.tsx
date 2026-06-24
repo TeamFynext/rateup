@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ArrowLeft,
   ArrowUp,
@@ -20,11 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import styles from "./toolbar.module.css";
 
@@ -98,11 +92,7 @@ export default function Toolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className={styles.toolbarButton}
-              >
+              <Button variant="outline" size="icon" className={styles.toolbarButton}>
                 <Table className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

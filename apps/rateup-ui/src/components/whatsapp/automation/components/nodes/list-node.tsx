@@ -1,25 +1,20 @@
-import { memo } from "react";
-
 import { Box, Paper, Stack, Text } from "@mantine/core";
 import { IconList } from "@tabler/icons-react";
 import { Handle, Position } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
+import { memo } from "react";
 
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
 
 import type { ListNodeData } from "../../types/node-types.ts";
 import BaseNode from "./base-node.tsx";
+
 import styles from "./node-styles.module.css";
 
 function ListNode(props: NodeProps & { data: ListNodeData }) {
   const { data } = props;
   return (
-    <BaseNode
-      {...props}
-      icon={<IconList size={16} />}
-      color="#8bc34a"
-      disableRight
-    >
+    <BaseNode {...props} icon={<IconList size={16} />} color="#8bc34a" disableRight>
       <Stack gap="xs">
         {data.header && (
           <Box>

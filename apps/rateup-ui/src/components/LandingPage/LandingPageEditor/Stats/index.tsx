@@ -1,5 +1,3 @@
-"use client";
-
 import { Group, Stack } from "@mantine/core";
 import { useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -8,6 +6,7 @@ import RefreshButton from "@/components/Button/RefreshButton.tsx";
 
 import PaperLayout from "../../../styled/Layouts/PaperLayout.tsx";
 import { useLandingPageObj } from "../LandingPageContext/LandingPageContext.tsx";
+
 import styles from "./Stats.module.css";
 
 function Stats() {
@@ -22,9 +21,7 @@ function Stats() {
       <Stack className={styles["stats-container"]}>
         <Group className={styles["visited-div"]}>
           <Group>
-            <h1 className={styles["visited-text-h1"]}>
-              {translations("Visited: ")}
-            </h1>
+            <h1 className={styles["visited-text-h1"]}>{translations("Visited: ")}</h1>
             <p className={styles["visited-count-p"]}>{visitorsCount}</p>
             <RefreshButton queryKeys={["landingPage", shortUrlId as string]} />
           </Group>

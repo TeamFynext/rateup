@@ -1,15 +1,8 @@
-"use client";
-
 import { Image } from "@unpic/react";
 import { useTranslation } from "react-i18next";
 
 import { Checkbox } from "../../ui/checkbox.tsx";
-import {
-  Field,
-  FieldContent,
-  FieldGroup,
-  FieldLabel,
-} from "../../ui/field.tsx";
+import { Field, FieldContent, FieldGroup, FieldLabel } from "../../ui/field.tsx";
 import { menuLabelWithText } from "../util/menuLabelData.ts";
 
 type FoodLabelFormAdapter = {
@@ -19,11 +12,7 @@ type FoodLabelFormAdapter = {
   setFieldValue: (path: string, value: any) => void;
 };
 
-export function FoodLabelSelector({
-  form,
-}: {
-  readonly form: FoodLabelFormAdapter;
-}) {
+export function FoodLabelSelector({ form }: { readonly form: FoodLabelFormAdapter }) {
   const { t: translations } = useTranslation();
   const selectedValues = form?.values?.foodLabels ?? [];
 
@@ -49,9 +38,7 @@ export function FoodLabelSelector({
                 >
                   <Checkbox
                     checked={checked}
-                    onCheckedChange={(value) =>
-                      toggleValue(label, value === true)
-                    }
+                    onCheckedChange={(value) => toggleValue(label, value === true)}
                   />
                   <Image src={image} alt={label} width={15} height={15} />
                   <span className="text-sm">{label}</span>

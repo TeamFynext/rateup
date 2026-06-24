@@ -1,16 +1,11 @@
-import { Activity } from "react";
-
 import dayjs from "dayjs";
 import { CalendarIcon, ChevronDown, Filter } from "lucide-react";
+import { Activity } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Calendar } from "@/components/ui/calendar.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import {
   Select,
   SelectContent,
@@ -85,9 +80,7 @@ const DateRangeSelector = ({ value, onChange }) => {
                 from: value.range[0],
                 to: value.range[1],
               }}
-              onSelect={(range) =>
-                onChange({ key: "custom-range", range: [range.from, range.to] })
-              }
+              onSelect={(range) => onChange({ key: "custom-range", range: [range.from, range.to] })}
               numberOfMonths={2}
               className="rounded-lg border shadow-sm"
             />
@@ -108,10 +101,7 @@ export function DateSelector({ days, setDays }) {
         <Filter className="w-4 h-4" />
         <span>{t("Filter by")}:</span>
       </div>
-      <Select
-        value={String(days)}
-        onValueChange={(value) => setDays(Number(value))}
-      >
+      <Select value={String(days)} onValueChange={(value) => setDays(Number(value))}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Select range" />
         </SelectTrigger>

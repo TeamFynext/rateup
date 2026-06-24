@@ -1,22 +1,10 @@
-"use client";
-
-import React, { useState } from "react";
-
 import { useDebouncedState } from "@mantine/hooks";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  Edit,
-  Folder,
-  MoreVertical,
-  Plus,
-  Search,
-  Trash2,
-  Users,
-} from "lucide-react";
+import { Edit, Folder, MoreVertical, Plus, Search, Trash2, Users } from "lucide-react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { ContactGroupType } from "@/types/enums.ts";
 import {
   useContactGroup,
   useDeleteGroupMutation,
@@ -38,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { ContactGroupType } from "@/types/enums.ts";
 import { formatDate } from "@/utils/dateTime.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
@@ -48,27 +37,17 @@ export const Route = createFileRoute("/dashboard/contacts/groups/")({
 function GroupPage() {
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
-  const {
-    isLoading: isLoadingContactgroup,
-    data: contactGroupData,
-    refetch: refetchGroups,
-    isRefetching: isRefetchingGroups,
-    isError: isErrorGroup,
-  } = useContactGroup();
+  const { isLoading: isLoadingContactgroup, data: contactGroupData } = useContactGroup();
   const { t: translations } = useTranslation();
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
       ? contactGroupData?.filter(
-          (group) =>
-            !searchTerm ||
-            group?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+          (group) => !searchTerm || group?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
         ) || []
       : contactGroupData
           ?.filter((group) => group?.teamId === selectedTeamID)
           ?.filter(
-            (group) =>
-              !searchTerm ||
-              group?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+            (group) => !searchTerm || group?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
           ) || [];
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const [isDeleteGroupOpen, setIsDeleteGroupOpen] = useState(false);
@@ -118,11 +97,7 @@ function GroupPage() {
             />
           </div>
 
-          <TeamSelector
-            value={selectedTeamID}
-            onChange={setSelectedTeamID}
-            enableAll={true}
-          />
+          <TeamSelector value={selectedTeamID} onChange={setSelectedTeamID} enableAll={true} />
           <Button
             size="sm"
             onClick={() => {
@@ -132,9 +107,7 @@ function GroupPage() {
             className="bg-rateup-blue"
           >
             <Plus />
-            <span className="text-sm font-normal">
-              {translations("Create Group")}
-            </span>
+            <span className="text-sm font-normal">{translations("Create Group")}</span>
           </Button>
         </div>
       </Card>
@@ -162,10 +135,7 @@ function GroupPage() {
                 : "Create your first group to organize contacts"}
             </p>
             {!searchTerm && (
-              <Button
-                onClick={() => setIsCreateGroupOpen(true)}
-                className="bg-rateup-blue"
-              >
+              <Button onClick={() => setIsCreateGroupOpen(true)} className="bg-rateup-blue">
                 <Plus className="w-4 h-4 mr-2" />
                 <span className="text-sm font-normal">Create Group</span>
               </Button>
@@ -222,7 +192,7 @@ function ContactGroupCard({ group, handleEdit, handleDelete }) {
     <Card
       key={group.id}
       className="p-4 cursor-pointer hover:ring-1 hover:ring-primary"
-      onClick={(e) => {
+      onClick={(_e) => {
         navigate({
           to: `/dashboard/contacts/groups/${group.id}`,
         });
@@ -238,11 +208,7 @@ function ContactGroupCard({ group, handleEdit, handleDelete }) {
             <Folder className="w-5 h-5" />
           )}
         </div>
-        <GroupCardMenu
-          group={group}
-          handleEdit={handleEdit}
-          handleDelete={handleDelete}
-        />
+        <GroupCardMenu group={group} handleEdit={handleEdit} handleDelete={handleDelete} />
       </div>
       <div className="space-y-2">
         <h3 className="truncate">{group.name}</h3>
@@ -252,14 +218,10 @@ function ContactGroupCard({ group, handleEdit, handleDelete }) {
           </Badge>
           <div className="flex items-center gap-1">
             <Users className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {group._count.contacts}
-            </span>
+            <span className="text-sm text-muted-foreground">{group._count.contacts}</span>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Created {formatDate(group.createdAt)}
-        </p>
+        <p className="text-xs text-muted-foreground">Created {formatDate(group.createdAt)}</p>
       </div>
     </Card>
   );

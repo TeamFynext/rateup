@@ -36,9 +36,8 @@ export default function WhyAutomation() {
           ✨ Why Choose RateUp for Your AI Automation?
         </h3>
         <p className="text-lg text-gray-600 max-w-2xl">
-          RateUp isn't just another automation tool. We offer a unique blend of
-          power, simplicity, and intelligence designed to give your business a
-          competitive edge.
+          RateUp isn't just another automation tool. We offer a unique blend of power, simplicity,
+          and intelligence designed to give your business a competitive edge.
         </p>
       </div>
 
@@ -52,12 +51,8 @@ export default function WhyAutomation() {
               <feature.icon className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-xl font-semibold text-[#013553]">
-                {feature.title}
-              </h4>
-              <p className="text-gray-600 pt-2 leading-relaxed">
-                {feature.description}
-              </p>
+              <h4 className="text-xl font-semibold text-[#013553]">{feature.title}</h4>
+              <p className="text-gray-600 pt-2 leading-relaxed">{feature.description}</p>
               <Link
                 to="https://rateup.app/login"
                 className="text-[#009987] font-semibold inline-flex items-center mt-4 group"

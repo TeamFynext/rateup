@@ -1,26 +1,20 @@
-"use client";
-
-import { useCallback, useContext, useMemo, useState } from "react";
-
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
+import { useCallback, useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { QuestionType2 } from "@/types/enums.ts";
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import { QuestionType2 } from "@/types/enums.ts";
 import { decryptPrivateKey } from "@/utils/encryption/index.ts";
 import { pushToSessionStorage } from "@/utils/essential/index.ts";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput.tsx";
 import SimpleModalLayout from "../../Modal/SimpleModalLayout.tsx";
 import Responses from "../Response/Responses.tsx";
@@ -36,15 +30,11 @@ const Result = ({
   version = 1,
 }) => {
   const { selectedTeamId } = useContext(SurveyContext);
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
+  const { defaultLanguage } = useContext(SelectedLanguageContext);
   // end to end encryption logic for result page begins here
   const passwordModalOpenedCondition =
     (survey?.isEncrypted || !!survey?.publicKey) && !encryptionpassword;
-  const [passwordModalOpened, setPasswordModalOpened] = useState(
-    passwordModalOpenedCondition,
-  );
+  const [passwordModalOpened, setPasswordModalOpened] = useState(passwordModalOpenedCondition);
   const close = () => setPasswordModalOpened(false);
   const {
     isLoading: isQLoading,
@@ -60,31 +50,20 @@ const Result = ({
     return flow?.json?.screens?.flatMap((screen) =>
       screen.layout.children
         .filter((child) => child.type !== QuestionType2.Footer)
-        .map(
-          ({
-            id,
-            label,
-            metaType,
-            type,
-            name,
-            "data-source": dataSource,
-            header,
-          }) => ({
-            id,
-            label,
-            metaType: type || metaType,
-            dataSource,
-            name,
-            header,
-          }),
-        )
+        .map(({ id, label, metaType, type, name, "data-source": dataSource, header }) => ({
+          id,
+          label,
+          metaType: type || metaType,
+          dataSource,
+          name,
+          header,
+        }))
         .filter(({ name }) => name),
     );
   }, [flow]);
   if (isQLoading) return <RateupLoader />;
 
-  if (QError)
-    return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
+  if (QError) return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
 
   return (
     <>
@@ -136,10 +115,7 @@ function EncryptionPasswordModal({
   const [encryptionpassword, setEncryptionPassword] = useState("");
 
   const onSubmitPassword = useCallback(async () => {
-    const { privateKey } = await decryptPrivateKey(
-      encryptionKeys?.privateKey,
-      encryptionpassword,
-    );
+    const { privateKey } = await decryptPrivateKey(encryptionKeys?.privateKey, encryptionpassword);
     if (privateKey) {
       close();
       pushToSessionStorage(`${surveyId}_ete_passkey`, encryptionpassword);
@@ -147,14 +123,7 @@ function EncryptionPasswordModal({
     } else {
       toast.error(translations("Invalid Password"));
     }
-  }, [
-    encryptionpassword,
-    encryptionKeys,
-    close,
-    setPassword,
-    surveyId,
-    translations,
-  ]);
+  }, [encryptionpassword, encryptionKeys, close, setPassword, surveyId, translations]);
 
   const handleGoback = useCallback(() => {
     navigate({
@@ -185,10 +154,7 @@ function EncryptionPasswordModal({
             leftIcon={<IconArrowLeft />}
             onClick={handleGoback}
           />
-          <RateupButtonBlue
-            title={translations("Submit")}
-            onClick={onSubmitPassword}
-          />
+          <RateupButtonBlue title={translations("Submit")} onClick={onSubmitPassword} />
         </div>
       </div>
     </SimpleModalLayout>

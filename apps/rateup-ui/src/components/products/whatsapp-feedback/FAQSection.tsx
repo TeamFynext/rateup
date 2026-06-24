@@ -37,9 +37,7 @@ function FAQItem({ q, a }) {
 
   useEffect(() => {
     if (ansRef.current) {
-      ansRef.current.style.maxHeight = open
-        ? ansRef.current.scrollHeight + "px"
-        : "0";
+      ansRef.current.style.maxHeight = open ? ansRef.current.scrollHeight + "px" : "0";
     }
   }, [open]);
 

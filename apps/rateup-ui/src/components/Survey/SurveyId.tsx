@@ -1,25 +1,18 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-
 import { Center, Group, MultiSelect, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useParams, useSearch } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
-import {
-  useGetSurveyVariables,
-  useSurvey,
-} from "@/backend/surveys/surveys.query";
+import { useGetSurveyVariables, useSurvey } from "@/backend/surveys/surveys.query";
 import { useNavControlContext } from "@/context/NavControlContext.ts";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { SurveyContextProvider } from "@/context/SurveyObjContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import modalStyles from "@/styles/commonCssModules/modal.module.css";
 import { UserRole } from "@/utils/enums/index.ts";
 import { getFromSessionStorage } from "@/utils/essential/index.ts";
 
@@ -27,6 +20,8 @@ import ErrorComponent from "../404/ErrorComponent.tsx";
 import RateupLoader from "../Loaders/RateupLoader.tsx";
 import TabPanelsComp from "./Tabs/TabPanels.tsx";
 import TabsListComp from "./Tabs/TabsList.tsx";
+
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 export enum TabEnum {
   Edit = "Edit",
@@ -80,7 +75,7 @@ export default function SurveyID() {
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
   const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Edit);
-  const [addQnTrigger, setaddQnTrigger] = useState(0);
+  const [addQnTrigger] = useState(0);
   const [teamOptions, setTeamOptions] = useState([]);
   const [filterTeams, setFilterTeams] = useState([]);
   const [filterTags, setFilterTags] = useState([]);
@@ -93,7 +88,7 @@ export default function SurveyID() {
     setFunToRunBeforeSurveyIdPageHeaderTabsChange,
   ] = useState(null);
 
-  const { navOpened, setNavOpened } = useNavControlContext();
+  const { setNavOpened } = useNavControlContext();
 
   const handleTabChange = useCallback(
     (value) => {
@@ -104,9 +99,7 @@ export default function SurveyID() {
           title: translations("Discard unsaved changes?"),
           children: (
             <Text className={modalStyles["are-you-sure-text"]}>
-              {translations(
-                "Are you sure, you want to discard unsaved changes?",
-              )}
+              {translations("Are you sure, you want to discard unsaved changes?")}
             </Text>
           ),
           labels: {
@@ -153,9 +146,7 @@ export default function SurveyID() {
   useEffect(() => {
     if (survey) {
       if (activeTab !== TabEnum.Result) {
-        setSelectedLanguage(
-          selectedLanguage ? selectedLanguage : survey?.languages?.[0],
-        );
+        setSelectedLanguage(selectedLanguage ? selectedLanguage : survey?.languages?.[0]);
       } else {
         setSelectedLanguage("");
       }
@@ -174,18 +165,12 @@ export default function SurveyID() {
 
   useEffect(() => {
     if (selectedTeamId) {
-      setSurveyTeamMapId(
-        survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId,
-      );
-      setSelectedTeamName(
-        survey?.teams?.find((team) => team.id === selectedTeamId)?.name,
-      );
+      setSurveyTeamMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId);
+      setSelectedTeamName(survey?.teams?.find((team) => team.id === selectedTeamId)?.name);
     }
   }, [selectedTeamId]);
 
-  const savedEncryptionPassword = getFromSessionStorage(
-    `${survey?.id}_ete_passkey`,
-  );
+  const savedEncryptionPassword = getFromSessionStorage(`${survey?.id}_ete_passkey`);
 
   useEffect(() => {
     if (savedEncryptionPassword) {
@@ -201,8 +186,7 @@ export default function SurveyID() {
     setNavOpened(false);
   }, []);
 
-  if (isLoading || isSurveyLoading || !activeTab)
-    return <RateupLoader h={"80dvh"} />;
+  if (isLoading || isSurveyLoading || !activeTab) return <RateupLoader h={"80dvh"} />;
 
   if (error || surveyError) {
     return (
@@ -215,9 +199,7 @@ export default function SurveyID() {
 
   return (
     <SurveyContextProvider survey={survey}>
-      <SelectedLanguageContext.Provider
-        value={{ selectedLanguage, defaultLanguage }}
-      >
+      <SelectedLanguageContext.Provider value={{ selectedLanguage, defaultLanguage }}>
         <SurveyContext.Provider
           value={{
             selectedTeamId,
@@ -253,9 +235,7 @@ export default function SurveyID() {
                   data={multiSelectOptions}
                   value={filterTeams}
                   onChange={setFilterTeams}
-                  placeholder={
-                    filterTeams.length > 0 ? "" : translations("All Teams")
-                  }
+                  placeholder={filterTeams.length > 0 ? "" : translations("All Teams")}
                 />
               </Group>
             )}

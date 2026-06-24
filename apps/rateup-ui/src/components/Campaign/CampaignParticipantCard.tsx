@@ -1,23 +1,15 @@
-"use client";
-
 import { Box, Menu, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconChevronDown, IconSend, IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
 import { useSendCampaign } from "@/backend/campaign/campaign.query";
 import { useRemoveCampaignParticipant } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
+import { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
 
 import { RateupButtonPrimary } from "../Button/RateupButtons.tsx";
 
-export const CampaignParticipantMenu = ({
-  id,
-  status,
-  participantId,
-  teamId,
-  consent,
-}) => {
+export const CampaignParticipantMenu = ({ id, status, participantId, teamId, consent }) => {
   const removeCampainPartcipant = useRemoveCampaignParticipant(id);
   const sendMutation = useSendCampaign(id, teamId);
   const { t } = useTranslation("campaign.participantMenu");

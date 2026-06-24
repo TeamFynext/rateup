@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useContext, useMemo } from "react";
-
 import {
   IconBrandGoogle,
   IconMessageDots,
@@ -9,14 +5,13 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react";
 import { Percent } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import React, { useContext, useMemo } from "react";
 
 import { useResponseCount } from "@/backend/surveys/response/response.query";
 import { useGetSurveyStats } from "@/backend/surveys/surveys.query";
 import SurveyContext from "@/context/SurveyContext.ts";
 
 const SurveyStatsWebForm = ({ surveyId }) => {
-  const { t: translations } = useTranslation();
   const { filterTeams } = useContext(SurveyContext);
 
   const { data: responseCountData } = useResponseCount(surveyId);
@@ -35,9 +30,7 @@ const SurveyStatsWebForm = ({ surveyId }) => {
   const { visited, started, reviewLinkVisited } = useMemo(() => {
     let filteredStats = surveyStats ? [...surveyStats] : [];
     if (filterTeams?.length > 0) {
-      filteredStats = surveyStats?.filter((team) =>
-        filterTeams.includes(team?.surveyTeamMapId),
-      );
+      filteredStats = surveyStats?.filter((team) => filterTeams.includes(team?.surveyTeamMapId));
     }
     return filteredStats?.reduce(
       (acc, curr) => {
@@ -50,8 +43,10 @@ const SurveyStatsWebForm = ({ surveyId }) => {
     );
   }, [surveyStats, filterTeams]);
 
-  const { responseRatePercentage, responseRateStatus, responseRateColor } =
-    getResponseRateInfo(responseCount, visited);
+  const { responseRatePercentage, responseRateStatus, responseRateColor } = getResponseRateInfo(
+    responseCount,
+    visited,
+  );
 
   const stats = [
     {
@@ -126,8 +121,7 @@ function getResponseRateInfo(responseCount: number, visited: number) {
     };
   }
 
-  const rate =
-    visited > 0 ? Number(((responseCount / visited) * 100).toFixed(1)) : 0;
+  const rate = visited > 0 ? Number(((responseCount / visited) * 100).toFixed(1)) : 0;
 
   let status = "Too Low";
   if (rate >= 70) status = "Great";

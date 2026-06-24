@@ -31,60 +31,6 @@ export const cardData = [
   },
 ];
 
-const plans = [
-  {
-    title: "Free Forever",
-    price: "$0",
-    description: "Get started with the basics, absolutely free.",
-    features: [
-      "Up to 25 Reviews / Month",
-      "1 QR Code Location",
-      "Smart Review Filtering",
-      "Basic Dashboard Access",
-    ],
-    excluded: [
-      "Online Reputation Management",
-      "WhatsApp Integration",
-      "Priority Support",
-    ],
-    button: "Sign Up for Free",
-    highlight: false,
-  },
-  {
-    title: "Pro Plan",
-    price: "$49",
-    description: "Ideal for growing businesses needing more power.",
-    features: [
-      "Up to 500 Reviews / Month",
-      "5 QR Code Locations",
-      "Smart Review Filtering",
-      "Advanced Dashboard Access",
-      "Online Reputation Management",
-      "WhatsApp Integration",
-    ],
-    excluded: ["Priority Support"],
-    button: "Choose Pro Plan",
-    highlight: true,
-  },
-  {
-    title: "Business",
-    price: "$99",
-    description: "Comprehensive solution for established businesses.",
-    features: [
-      "Unlimited Reviews / Month",
-      "Unlimited QR Code Locations",
-      "Smart Review Filtering",
-      "Advanced Dashboard & Analytics",
-      "Online Reputation Management",
-      "WhatsApp Integration",
-      "Priority Support",
-    ],
-    excluded: [],
-    button: "Choose Business Plan",
-    highlight: false,
-  },
-];
-
 export const features = [
   {
     title: "Cross-Platform Analysis",

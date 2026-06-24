@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import {
   Button,
   Checkbox,
@@ -18,25 +14,18 @@ import {
 import type { UseFormReturnType } from "@mantine/form";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useListState } from "@mantine/hooks";
-import {
-  IconChevronLeft,
-  IconChevronRight,
-  IconRefresh,
-} from "@tabler/icons-react";
+import { IconChevronLeft, IconChevronRight, IconRefresh } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { WaFlowFormElementType } from "@/types/enums.ts";
-import type {
-  WaFlowFormChoice,
-  WaFlowFormElement,
-  WaFlowWa,
-} from "@/types/global";
 import {
   useImportFlowsMutation,
   useUnsyncedFlows,
   useWaFlowJson,
 } from "@/backend/whatsapp/flow/flow.query";
+import { WaFlowFormElementType } from "@/types/enums.ts";
+import type { WaFlowFormChoice, WaFlowFormElement, WaFlowWa } from "@/types/global";
 import { getNestedProperty } from "@/utils/misc/obj.utils";
 import {
   getQuestionResponses,
@@ -49,14 +38,15 @@ import {
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
 import { TeamSelector } from "../../input/TeamSelector.tsx";
 import RateupLoader from "../../Loaders/RateupLoader.tsx";
-import classes from "../templates/template.module.css";
 import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
+
+import classes from "../templates/template.module.css";
 
 function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
   const [selectedFlows, handlers] = useListState([]);
-  const [currentScreen, setCurrentScreen] = useState<
-    "selectFlows" | "configureFlows"
-  >("selectFlows");
+  const [currentScreen, setCurrentScreen] = useState<"selectFlows" | "configureFlows">(
+    "selectFlows",
+  );
 
   if (!unsyncedFlows || !opened) return null;
 
@@ -85,9 +75,7 @@ function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
         />
       ) : (
         <ImportFlows
-          flows={selectedFlows.map((flowId) =>
-            unsyncedFlows.find((flow) => flow.id === flowId),
-          )}
+          flows={selectedFlows.map((flowId) => unsyncedFlows.find((flow) => flow.id === flowId))}
           handleClose={handleClose}
         />
       )}
@@ -145,12 +133,7 @@ function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
   return (
     <Stack mah={"80vh"}>
       <Progress value={((currentFlowIndex + 1) / flows.length) * 100} />
-      <ConfigureFlow
-        flow={flow}
-        form={form}
-        handleNext={handleNext}
-        key={flow.id}
-      />
+      <ConfigureFlow flow={flow} form={form} handleNext={handleNext} key={flow.id} />
       <TeamSelector
         value={selectedTeam}
         onChange={setSelectedTeam}
@@ -204,11 +187,7 @@ function ConfigureFlow({
         for (const screenElement of screen.layout.children) {
           if (screenElement.type === "Form") {
             for (const formElement of screenElement.children) {
-              if (
-                Object.keys(waFlowFormToQuestionTypeMaps).includes(
-                  formElement.type,
-                )
-              ) {
+              if (Object.keys(waFlowFormToQuestionTypeMaps).includes(formElement.type)) {
                 interactiveQCount++;
               }
             }
@@ -233,11 +212,7 @@ function ConfigureFlow({
 
   return (
     <>
-      <ContainedTextField
-        label={translations("Flow Name")}
-        value={flow.name}
-        disabled
-      />
+      <ContainedTextField label={translations("Flow Name")} value={flow.name} disabled />
       <InputLabel>{translations("Assign valid question types")}</InputLabel>
       <Stack
         bg="whitesmoke"
@@ -256,108 +231,90 @@ function ConfigureFlow({
               {
                 /* Form Element */
               }
-              return child.children.map(
-                (fc: WaFlowFormElement, elementIndex: number) => {
-                  if (
-                    Object.keys(waFlowFormToQuestionTypeMaps).includes(fc.type)
-                  ) {
-                    const qTypes = getQuestionTypesFromFlowElement(fc);
-                    const qPath = `${flowPath}.${fc.name}`;
+              return child.children.map((fc: WaFlowFormElement, elementIndex: number) => {
+                if (Object.keys(waFlowFormToQuestionTypeMaps).includes(fc.type)) {
+                  const qTypes = getQuestionTypesFromFlowElement(fc);
+                  const qPath = `${flowPath}.${fc.name}`;
 
-                    // setting first question type as default
-                    if (!form.isTouched(qPath))
-                      form.setFieldValue(qPath, { type: qTypes[0] });
+                  // setting first question type as default
+                  if (!form.isTouched(qPath)) form.setFieldValue(qPath, { type: qTypes[0] });
 
-                    // For opt in checkboxes we need to show which of the options go with 'checked' and 'unchecked' state
-                    const choices =
-                      fc.type === WaFlowFormElementType.optIn
-                        ? [
-                            {
-                              id: "true",
-                              title: "true",
-                            },
-                            {
-                              id: "false",
-                              title: "false",
-                            },
-                          ]
-                        : (fc["data-source"] as Array<WaFlowFormChoice>);
+                  // For opt in checkboxes we need to show which of the options go with 'checked' and 'unchecked' state
+                  const choices =
+                    fc.type === WaFlowFormElementType.optIn
+                      ? [
+                          {
+                            id: "true",
+                            title: "true",
+                          },
+                          {
+                            id: "false",
+                            title: "false",
+                          },
+                        ]
+                      : (fc["data-source"] as Array<WaFlowFormChoice>);
 
-                    return (
-                      <Stack key={fc.name}>
+                  return (
+                    <Stack key={fc.name}>
+                      <Group>
                         <Group>
-                          <Group>
-                            <Text>
-                              {`${screenIndex + 1}.${elementIndex + 1})`}
-                            </Text>
-                            <Text>
-                              {JSON.stringify({
-                                type: fc.type,
-                                label: fc.label,
-                              })}
-                            </Text>
-                          </Group>
-                          <Select
-                            data={qTypes}
-                            clearable={false}
-                            value={getNestedProperty(form.values, qPath)?.type}
-                            onChange={(value) => {
-                              form.setFieldValue(qPath, {
-                                type: value,
-                              });
-                            }}
-                            disabled={qTypes.length === 1}
-                          />
+                          <Text>{`${screenIndex + 1}.${elementIndex + 1})`}</Text>
+                          <Text>
+                            {JSON.stringify({
+                              type: fc.type,
+                              label: fc.label,
+                            })}
+                          </Text>
                         </Group>
+                        <Select
+                          data={qTypes}
+                          clearable={false}
+                          value={getNestedProperty(form.values, qPath)?.type}
+                          onChange={(value) => {
+                            form.setFieldValue(qPath, {
+                              type: value,
+                            });
+                          }}
+                          disabled={qTypes.length === 1}
+                        />
+                      </Group>
 
-                        {
-                          // Choice
-                          choices ? (
-                            <Stack pl="64px">
-                              {choices.map((choice) => {
-                                const choicePath = `${qPath}.${choice.id}`;
-                                let qRes = [];
-                                const qType = getNestedProperty(
-                                  form.values,
-                                  qPath,
-                                )?.type;
-                                if (qType) {
-                                  qRes = getQuestionResponses(qType);
-                                  if (
-                                    qRes?.length > 0 &&
-                                    !getNestedProperty(form.values, choicePath)
-                                  )
-                                    form.setFieldValue(choicePath, qRes[0]);
-                                }
-                                return (
-                                  <Group key={choice.id}>
-                                    <Text>{choice.title}</Text>
-                                    {qTypesWithAmbiguousChoices.includes(
-                                      qType,
-                                    ) ? (
-                                      <Select
-                                        clearable={false}
-                                        data={qRes}
-                                        value={getNestedProperty(
-                                          form.values,
-                                          choicePath,
-                                        )}
-                                        onChange={(value) => {
-                                          form.setFieldValue(choicePath, value);
-                                        }}
-                                      />
-                                    ) : null}
-                                  </Group>
-                                );
-                              })}
-                            </Stack>
-                          ) : null
-                        }
-                      </Stack>
-                    );
-                  }
-                },
-              );
+                      {
+                        // Choice
+                        choices ? (
+                          <Stack pl="64px">
+                            {choices.map((choice) => {
+                              const choicePath = `${qPath}.${choice.id}`;
+                              let qRes = [];
+                              const qType = getNestedProperty(form.values, qPath)?.type;
+                              if (qType) {
+                                qRes = getQuestionResponses(qType);
+                                if (qRes?.length > 0 && !getNestedProperty(form.values, choicePath))
+                                  form.setFieldValue(choicePath, qRes[0]);
+                              }
+                              return (
+                                <Group key={choice.id}>
+                                  <Text>{choice.title}</Text>
+                                  {qTypesWithAmbiguousChoices.includes(qType) ? (
+                                    <Select
+                                      clearable={false}
+                                      data={qRes}
+                                      value={getNestedProperty(form.values, choicePath)}
+                                      onChange={(value) => {
+                                        form.setFieldValue(choicePath, value);
+                                      }}
+                                    />
+                                  ) : null}
+                                </Group>
+                              );
+                            })}
+                          </Stack>
+                        ) : null
+                      }
+                    </Stack>
+                  );
+                }
+              });
             }
           });
         })}
@@ -371,12 +328,7 @@ function ConfigureFlow({
  * @param param0
  * @returns
  */
-function DisplayTemplates({
-  selectedTemplates,
-  unregisteredTemplates,
-  handlers,
-  onImport,
-}) {
+function DisplayTemplates({ selectedTemplates, unregisteredTemplates, handlers, onImport }) {
   function handleSelect(selected: boolean, id: string) {
     if (selected) {
       if (!selectedTemplates.includes(id)) {
@@ -384,9 +336,7 @@ function DisplayTemplates({
       }
     } else {
       if (selectedTemplates.includes(id)) {
-        handlers.remove(
-          selectedTemplates.findIndex((templateId) => templateId === id),
-        );
+        handlers.remove(selectedTemplates.findIndex((templateId) => templateId === id));
       }
     }
   }
@@ -423,9 +373,7 @@ function DisplayTemplates({
                 <Checkbox
                   checked={allChecked}
                   indeterminate={selectedTemplates.length > 0 && !allChecked}
-                  onChange={(event) =>
-                    handleMasterSelect(event.currentTarget.checked)
-                  }
+                  onChange={(event) => handleMasterSelect(event.currentTarget.checked)}
                 />
               </Table.Th>
               <Table.Th>{translations("Template")}</Table.Th>
@@ -438,9 +386,7 @@ function DisplayTemplates({
                 <Table.Td>
                   <Checkbox
                     checked={selectedTemplates.includes(template.id)}
-                    onChange={(event) =>
-                      handleSelect(event.currentTarget.checked, template.id)
-                    }
+                    onChange={(event) => handleSelect(event.currentTarget.checked, template.id)}
                   />
                 </Table.Td>
                 <Table.Td>{template.name}</Table.Td>
@@ -471,12 +417,7 @@ function DisplayTemplates({
 
 export function SyncFlowsButton({ disabled = false }) {
   const [openModal, { open, close }] = useDisclosure(false);
-  const {
-    data: unsyncedFlows,
-    isLoading,
-    error,
-    isError,
-  } = useUnsyncedFlows(openModal);
+  const { data: unsyncedFlows, isLoading, error, isError } = useUnsyncedFlows(openModal);
 
   if (error) {
     toast.error("Error syncing templates");
@@ -487,9 +428,7 @@ export function SyncFlowsButton({ disabled = false }) {
     <>
       <Button
         leftSection={
-          <IconRefresh
-            className={isLoading && openModal ? classes.rotateInfinitely : ""}
-          />
+          <IconRefresh className={isLoading && openModal ? classes.rotateInfinitely : ""} />
         }
         variant="outline"
         onClick={open}

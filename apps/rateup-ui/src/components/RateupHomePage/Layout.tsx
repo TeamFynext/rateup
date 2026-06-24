@@ -1,8 +1,5 @@
-"use client";
-
 import { lazy, Suspense, useEffect, useState } from "react";
 
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
 import { fbConsent } from "@/utils/fbpixel.ts";
 import { setGAConsent } from "@/utils/gtag.ts";
 
@@ -12,9 +9,9 @@ import LikeWhatUSee from "./helpers/LikeWhatUSee";
 import HomePageFooter from "./shared/HomePageFooter";
 import RateupNavbar from "./shared/RateupNavbar";
 
-const SupportWidget = lazy(
-  () => import("@/components/app&services/support-widget.tsx"),
-);
+import styles from "@/styles/commonCssModules/homepagecss.module.css";
+
+const SupportWidget = lazy(() => import("@/components/app&services/support-widget.tsx"));
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -92,9 +89,7 @@ export default function Layout({
 
   return (
     <div className={`relative w-full ${contentClassName} ${navbarClassName}`}>
-      <header
-        className={`sticky top-0 z-50 ${contentClassName ? "" : styles.themeDefault}`}
-      >
+      <header className={`sticky top-0 z-50 ${contentClassName ? "" : styles.themeDefault}`}>
         <RateupNavbar />
       </header>
       <main>{children}</main>

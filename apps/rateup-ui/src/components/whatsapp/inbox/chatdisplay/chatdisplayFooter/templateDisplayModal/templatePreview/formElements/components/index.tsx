@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import {
   ActionIcon,
   Badge,
@@ -19,6 +15,7 @@ import { useForm } from "@mantine/form";
 import { useListState } from "@mantine/hooks";
 import { IconPhoto, IconRefresh, IconUpload, IconX } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
@@ -51,8 +48,7 @@ interface Props {
 }
 export default function WaTemplateFormComponents(props: Props) {
   const header = props.exampleParams?.find(
-    (item) =>
-      typeof item === "object" && item.type === props?.type?.toLowerCase(),
+    (item) => typeof item === "object" && item.type === props?.type?.toLowerCase(),
   )?.[props?.type?.toLowerCase()];
 
   switch (props?.type) {
@@ -117,38 +113,22 @@ function WaDropZoneInputComponent(props: Props) {
       accept={getDropZoneMimeType()}
       {...props}
     >
-      <Group
-        justify="center"
-        gap="xl"
-        mih={100}
-        style={{ pointerEvents: "none" }}
-      >
+      <Group justify="center" gap="xl" mih={100} style={{ pointerEvents: "none" }}>
         <Dropzone.Accept>
-          <IconUpload
-            size={30}
-            color={"var(--mantine-primary-color-6)"}
-            stroke={1.5}
-          />
+          <IconUpload size={30} color={"var(--mantine-primary-color-6)"} stroke={1.5} />
         </Dropzone.Accept>
         <Dropzone.Reject>
           <IconX size={30} color="var(--mantine-color-red-6)" stroke={1.5} />
         </Dropzone.Reject>
         <Dropzone.Idle>
-          <IconPhoto
-            size={30}
-            color="var(--mantine-color-dimmed)"
-            stroke={1.5}
-          />
+          <IconPhoto size={30} color="var(--mantine-color-dimmed)" stroke={1.5} />
         </Dropzone.Idle>
         <div>
           <Text className={classes.dropzone_text}>
-            {translations("Drag")} {props?.type}{" "}
-            {translations("here or click to select files")}
+            {translations("Drag")} {props?.type} {translations("here or click to select files")}
           </Text>
           <Text className={classes.dropzone_text_note}>
-            {translations(
-              "Attach as many files as you like, each file should not exceed 5mb",
-            )}
+            {translations("Attach as many files as you like, each file should not exceed 5mb")}
           </Text>
         </div>
       </Group>
@@ -258,10 +238,7 @@ function WaBodyVariableInputComponent({
   useEffect(() => {
     if (exampleParams.length) {
       exampleParams.forEach((param, index) => {
-        if (
-          typeof param === "string" ||
-          param.type !== "leadgenform-question-key"
-        ) {
+        if (typeof param === "string" || param.type !== "leadgenform-question-key") {
           setParamChoice.setItem(index, "default");
         } else {
           setParamChoice.setItem(index, "leadgenform-question-key");
@@ -285,10 +262,7 @@ function WaBodyVariableInputComponent({
               >
                 <Group>
                   <Radio value={"default"} label={"Manual"} />
-                  <Radio
-                    value={"leadgenform-question-key"}
-                    label={"Select from lead form"}
-                  />
+                  <Radio value={"leadgenform-question-key"} label={"Select from lead form"} />
                 </Group>
               </RadioGroup>
               {paramChoice[i] === "default" && (
@@ -335,29 +309,18 @@ interface LeadFormQuestionsInputComponentProps {
   onChange: (value) => void;
   label: string;
 }
-function LeadFormQuestionsInputComponent(
-  props: LeadFormQuestionsInputComponentProps,
-) {
+function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentProps) {
   const params = useParams({
     strict: false,
   });
   const automatedId = params.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
-  const {
-    data: automatedReply,
-    isPending,
-    refetch,
-  } = useWaAutomatedReplyById(automatedId);
-  const isLeadAutomation =
-    automatedReply && automatedReply?.commands[0]?.startsWith("lead");
+  const { data: automatedReply, isPending } = useWaAutomatedReplyById(automatedId);
+  const isLeadAutomation = automatedReply && automatedReply?.commands[0]?.startsWith("lead");
   const waSetting =
     waSettings &&
-    (waSettings.find(
-      (w) => w.phoneId === automatedReply.whatsappSettingsPhoneId,
-    ) ??
-      waSettings[0]);
-  const waSettingsId =
-    automatedReply && isLeadAutomation && waSetting ? waSetting.id : null;
+    (waSettings.find((w) => w.phoneId === automatedReply.whatsappSettingsPhoneId) ?? waSettings[0]);
+  const waSettingsId = automatedReply && isLeadAutomation && waSetting ? waSetting.id : null;
   const syncformQuestionsMut = useSyncLeadgenFormQuestions(
     props.leadgenData.data.leadgenFormId,
     waSettingsId,

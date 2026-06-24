@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import {
@@ -14,10 +13,9 @@ import {
 } from "./stripe.api";
 
 function useCreateStripeCheckoutSession(setIsLoading) {
-  const navigate = useNavigate();
   return useMutation({
     mutationFn: (values: any) => createStripeCheckoutSession(values),
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       toast.loading("Please wait get ready for payment", {
         id: "load-data",
       });
@@ -111,12 +109,9 @@ export function useCancelStripeSubscriptionMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
-      toast.success(
-        "Rateup Subscription cancelled. Enjoy services till expiry date.",
-        {
-          id: "load-data",
-        },
-      );
+      toast.success("Rateup Subscription cancelled. Enjoy services till expiry date.", {
+        id: "load-data",
+      });
     },
     onError: (error) => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });

@@ -1,5 +1,3 @@
-import React, { useMemo } from "react";
-
 import {
   CheckCircle2,
   Clock,
@@ -12,6 +10,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -20,12 +19,7 @@ import {
 } from "@/backend/conversation/conversation.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
@@ -35,13 +29,11 @@ import ConversationTrendsGraph from "./ConversationTrendsGraph.tsx";
 
 const ConversationStatsOverview = ({ dateRange }) => {
   const { t } = useTranslation();
-  const { data, isLoading, error, refetch, isRefetching } =
-    useGetConversationOverView({
-      dateKey: dateRange.key,
-      dateRange: dateRange.range,
-    });
-  const { data: quickStats, isLoading: isLoadingStats } =
-    useGetConversationQuickStats();
+  const { data, isLoading, error, refetch, isRefetching } = useGetConversationOverView({
+    dateKey: dateRange.key,
+    dateRange: dateRange.range,
+  });
+  const { data: quickStats } = useGetConversationQuickStats();
   const overviewStats = useMemo(() => {
     return [
       {
@@ -68,12 +60,9 @@ const ConversationStatsOverview = ({ dateRange }) => {
           text: "text-green-500",
         },
         icon: Clock,
-        suffix: formatTimeToNearestUnitFromSeconds(data?.averageResponseTime)
-          ?.suffix,
+        suffix: formatTimeToNearestUnitFromSeconds(data?.averageResponseTime)?.suffix,
         progressTotal: 60,
-        value:
-          formatTimeToNearestUnitFromSeconds(data?.averageResponseTime)
-            ?.value ?? "NA",
+        value: formatTimeToNearestUnitFromSeconds(data?.averageResponseTime)?.value ?? "NA",
       },
       {
         key: "resolutionRate",
@@ -87,10 +76,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
         icon: Target,
         suffix: "%",
         progressTotal: 100,
-        value:
-          data?.resolutionRate != null
-            ? Number(data.resolutionRate.toFixed(1))
-            : 0,
+        value: data?.resolutionRate != null ? Number(data.resolutionRate.toFixed(1)) : 0,
       },
     ];
   }, [data, t]);
@@ -129,20 +115,14 @@ const ConversationStatsOverview = ({ dateRange }) => {
                       <div className="w-7 h-7 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
                         <metric.icon className="w-3.5 h-3.5 text-primary" />
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {metric.label}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{metric.label}</p>
                     </div>
                   </div>
 
                   <div className="flex items-baseline gap-1">
-                    <p className="text-xl sm:text-2xl font-bold text-primary">
-                      {metric.value}
-                    </p>
+                    <p className="text-xl sm:text-2xl font-bold text-primary">{metric.value}</p>
                     {metric.suffix && (
-                      <span className="text-xs text-muted-foreground">
-                        {metric.suffix}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{metric.suffix}</span>
                     )}
                   </div>
                 </div>
@@ -166,12 +146,8 @@ const ConversationStatsOverview = ({ dateRange }) => {
                   <Eye className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("New Conversations")}
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {quickStats?.newConversations ?? "NA"}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("New Conversations")}</p>
+                  <p className="text-lg font-semibold">{quickStats?.newConversations ?? "NA"}</p>
                 </div>
               </div>
               <Badge
@@ -188,12 +164,8 @@ const ConversationStatsOverview = ({ dateRange }) => {
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("Resolved")}
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {quickStats?.resolved ?? "NA"}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("Resolved")}</p>
+                  <p className="text-lg font-semibold">{quickStats?.resolved ?? "NA"}</p>
                 </div>
               </div>
               {quickStats?.resolvedRateDifference ? (
@@ -220,9 +192,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
                   <MessageSquare className="w-4 h-4 text-orange-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("In Progress")}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("In Progress")}</p>
                   <p className="text-lg font-semibold">
                     {quickStats?.conversationInProgress ?? "NA"}
                   </p>
@@ -236,9 +206,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
                   <Users className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("Agents Online")}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("Agents Online")}</p>
                   <p className="text-lg font-semibold">
                     {quickStats?.totalStaff
                       ? `${quickStats?.staffOnline}/${quickStats?.totalStaff}`

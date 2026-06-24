@@ -1,9 +1,6 @@
-"use client";
-
-import React from "react";
-
 import { Box, Group, Stack, Switch } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateFlowMetaDataMutation } from "@/backend/whatsapp/flow/flow.query";
@@ -11,6 +8,7 @@ import { useUpdateFlowMetaDataMutation } from "@/backend/whatsapp/flow/flow.quer
 import { RateupButtonPrimary } from "../../Button/RateupButtons.tsx";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
 import PaperLayout from "../../styled/Layouts/PaperLayout.tsx";
+
 import styles from "./SurveySettings.module.css";
 
 const FlowSettingsUpdate = ({

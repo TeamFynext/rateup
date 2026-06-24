@@ -240,9 +240,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "Plans start from $10/month." },
-                    ],
+                    content: [{ type: "text", text: "Plans start from $10/month." }],
                   },
                 ],
               },
@@ -285,8 +283,7 @@ export const DEMO_TEMPLATES = [
   {
     id: "tpl-002",
     name: "FAQ List Bot",
-    description:
-      "FAQ bot using list selection with detailed answers and navigation.",
+    description: "FAQ bot using list selection with detailed answers and navigation.",
     platform: AutomationPlatform.WHATSAPP,
     nodeCount: "6",
     tags: ["FAQ", "List", "Support"],
@@ -469,9 +466,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "Our plans start from $10/month." },
-                    ],
+                    content: [{ type: "text", text: "Our plans start from $10/month." }],
                   },
                 ],
               },
@@ -544,8 +539,7 @@ export const DEMO_TEMPLATES = [
   {
     id: "tpl-003",
     name: "Feedback & Experience Bot",
-    description:
-      "Collects user feedback with rating, follow-up questions, and response handling.",
+    description: "Collects user feedback with rating, follow-up questions, and response handling.",
     platform: AutomationPlatform.WHATSAPP,
     nodeCount: "9",
     tags: ["Feedback", "Survey", "Engagement"],
@@ -700,9 +694,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "How was your experience?" },
-                    ],
+                    content: [{ type: "text", text: "How was your experience?" }],
                   },
                 ],
               },
@@ -1123,9 +1115,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "Top product: iPhone 15 - $999" },
-                    ],
+                    content: [{ type: "text", text: "Top product: iPhone 15 - $999" }],
                   },
                 ],
               },
@@ -1177,9 +1167,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "Processing your order..." },
-                    ],
+                    content: [{ type: "text", text: "Processing your order..." }],
                   },
                 ],
               },
@@ -1199,9 +1187,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "🎉 Order placed successfully!" },
-                    ],
+                    content: [{ type: "text", text: "🎉 Order placed successfully!" }],
                   },
                 ],
               },
@@ -1223,9 +1209,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "Trending outfits available." },
-                    ],
+                    content: [{ type: "text", text: "Trending outfits available." }],
                   },
                 ],
               },
@@ -1246,9 +1230,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "New arrivals dropping weekly!" },
-                    ],
+                    content: [{ type: "text", text: "New arrivals dropping weekly!" }],
                   },
                 ],
               },
@@ -1317,8 +1299,7 @@ export const DEMO_TEMPLATES = [
   {
     id: "tpl-006",
     name: "Appointment Booking Bot",
-    description:
-      "Allows users to select service, choose slot, and confirm or manage appointments.",
+    description: "Allows users to select service, choose slot, and confirm or manage appointments.",
     platform: AutomationPlatform.WHATSAPP,
     nodeCount: "6",
     tags: ["Booking", "Appointments", "Advanced"],
@@ -1601,9 +1582,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "Confirm your appointment?" },
-                    ],
+                    content: [{ type: "text", text: "Confirm your appointment?" }],
                   },
                 ],
               },
@@ -1654,9 +1633,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "Need to modify your booking?" },
-                    ],
+                    content: [{ type: "text", text: "Need to modify your booking?" }],
                   },
                 ],
               },
@@ -1703,8 +1680,7 @@ export const DEMO_TEMPLATES = [
   {
     id: "tpl-008",
     name: "Loan Eligibility Bot",
-    description:
-      "Checks user eligibility based on income, employment, and credit profile.",
+    description: "Checks user eligibility based on income, employment, and credit profile.",
     platform: AutomationPlatform.WHATSAPP,
     nodeCount: "6",
     tags: ["Finance", "Eligibility", "Advanced"],
@@ -1889,9 +1865,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "What is your employment type?" },
-                    ],
+                    content: [{ type: "text", text: "What is your employment type?" }],
                   },
                 ],
               },
@@ -1917,9 +1891,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "Select your income range:" },
-                    ],
+                    content: [{ type: "text", text: "Select your income range:" }],
                   },
                 ],
               },
@@ -1945,9 +1917,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "Is your business income stable?" },
-                    ],
+                    content: [{ type: "text", text: "Is your business income stable?" }],
                   },
                 ],
               },
@@ -1970,9 +1940,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "What is your credit score?" },
-                    ],
+                    content: [{ type: "text", text: "What is your credit score?" }],
                   },
                 ],
               },
@@ -2021,9 +1989,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "Proceed to application process." },
-                    ],
+                    content: [{ type: "text", text: "Proceed to application process." }],
                   },
                 ],
               },
@@ -2093,9 +2059,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "Income too low for eligibility." },
-                    ],
+                    content: [{ type: "text", text: "Income too low for eligibility." }],
                   },
                 ],
               },
@@ -2115,9 +2079,7 @@ export const DEMO_TEMPLATES = [
                 content: [
                   {
                     type: "paragraph",
-                    content: [
-                      { type: "text", text: "❌ Not eligible at this time." },
-                    ],
+                    content: [{ type: "text", text: "❌ Not eligible at this time." }],
                   },
                 ],
               },

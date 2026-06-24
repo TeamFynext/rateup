@@ -1,5 +1,3 @@
-import { memo } from "react";
-
 import { Group, Text } from "@mantine/core";
 import {
   IconFileDescription,
@@ -9,11 +7,13 @@ import {
 } from "@tabler/icons-react";
 import { Handle, Position } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
+import { memo } from "react";
 
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
 
 import type { ButtonNodeData } from "../../types/node-types.ts";
 import BaseNode from "./base-node.tsx";
+
 import styles from "./node-styles.module.css";
 
 function ButtonNode(props: NodeProps & { data: ButtonNodeData }) {
@@ -72,12 +72,7 @@ function ButtonNode(props: NodeProps & { data: ButtonNodeData }) {
   );
 
   return (
-    <BaseNode
-      {...props}
-      icon={<IconSquare size={16} />}
-      color="#00bcd4"
-      disableRight
-    >
+    <BaseNode {...props} icon={<IconSquare size={16} />} color="#00bcd4" disableRight>
       <div className={styles.buttonContent}>
         {renderHeaderMedia()}
         {data.caption && <Text fz="xs">{parseJsonToReact(data.caption)}</Text>}

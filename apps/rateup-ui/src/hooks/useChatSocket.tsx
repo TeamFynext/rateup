@@ -1,18 +1,12 @@
-"use client";
-
-import { useEffect, useRef } from "react";
-
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
-import { getBrowserId } from "@/lib/browserId.ts";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
-import {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
+import { getBrowserId } from "@/lib/browserId.ts";
 
 export const useChatSocket = () => {
   const socketRef = useRef<WebSocket | null>(null);
@@ -29,9 +23,7 @@ export const useChatSocket = () => {
     let closedByUser = false;
 
     const connect = () => {
-      ws = new WebSocket(
-        `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${browserId}`,
-      );
+      ws = new WebSocket(`${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${browserId}`);
       socketRef.current = ws;
 
       ws.onmessage = async (event) => {
@@ -44,9 +36,7 @@ export const useChatSocket = () => {
             if (selectedContact?.id === incomingContact?.id) {
               markUnread = true;
             }
-            const contactInStore = useContactsStore
-              .getState()
-              .contactsById.get(incomingContact.id);
+            const contactInStore = useContactsStore.getState().contactsById.get(incomingContact.id);
             if (contactInStore) {
               updateContactById(
                 incomingContact.id,
@@ -104,10 +94,7 @@ export const useChatSocket = () => {
             }
             break;
           case "message_status_update":
-            if (
-              selectedContact &&
-              selectedContact?.id === data?.message_status_update?.contactId
-            ) {
+            if (selectedContact && selectedContact?.id === data?.message_status_update?.contactId) {
               messageStore.updateMessageByMessageId(
                 `${selectedContact?.id}_${data.message_status_update.sourceIdentifier}`,
                 data?.message_status_update.messageId,

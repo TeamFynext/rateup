@@ -1,18 +1,8 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-
-import {
-  FileInput,
-  Group,
-  NumberInput,
-  Popover,
-  Select,
-  TextInput,
-} from "@mantine/core";
+import { FileInput, Group, NumberInput, Popover, Select, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconPhoto } from "@tabler/icons-react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
@@ -40,7 +30,7 @@ function InsertImage() {
         if (chooseImageDDState === translations("Enter Image Url")) {
           try {
             new URL(value);
-          } catch (err) {
+          } catch {
             return translations("Please enter a valid URL");
           }
         } else {
@@ -154,9 +144,7 @@ function InsertImage() {
           <IconPhoto size={16} />
         </RichTextEditor.Control>
       </Popover.Target>
-      <Popover.Dropdown
-        className={styles["image-selector-popover-dropdown-div"]}
-      >
+      <Popover.Dropdown className={styles["image-selector-popover-dropdown-div"]}>
         <form
           className={styles["popover-dropdown-form"]}
           onSubmit={form.onSubmit(handlePopoverDDFormSubmit)}

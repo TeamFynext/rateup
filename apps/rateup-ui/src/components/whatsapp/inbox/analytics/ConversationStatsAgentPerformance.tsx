@@ -2,17 +2,12 @@ import { useNavigate } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { MessagePlatform } from "@/types/enums.ts";
 import { useGetStaffPerformanceonConversation } from "@/backend/conversation/conversation.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
+import { MessagePlatform } from "@/types/enums.ts";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
 export const StaffStatusBadge = ({ status }) => {
@@ -98,24 +93,12 @@ const ConversationStatsAgentPerformance = ({ dateRange }) => {
             <table className="w-full">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="p-4 text-left font-medium text-sm">
-                    {t("Agent")}
-                  </th>
-                  <th className="p-4 text-center font-medium text-sm">
-                    {t("Status")}
-                  </th>
-                  <th className="p-4 text-center font-medium text-sm">
-                    {t("Messages")}
-                  </th>
-                  <th className="p-4 text-center font-medium text-sm">
-                    {t("Avg Response Time")}
-                  </th>
-                  <th className="p-4 text-center font-medium text-sm">
-                    {t("Active Chats")}
-                  </th>
-                  <th className="p-4 text-center font-medium text-sm">
-                    {t("Resolved")}
-                  </th>
+                  <th className="p-4 text-left font-medium text-sm">{t("Agent")}</th>
+                  <th className="p-4 text-center font-medium text-sm">{t("Status")}</th>
+                  <th className="p-4 text-center font-medium text-sm">{t("Messages")}</th>
+                  <th className="p-4 text-center font-medium text-sm">{t("Avg Response Time")}</th>
+                  <th className="p-4 text-center font-medium text-sm">{t("Active Chats")}</th>
+                  <th className="p-4 text-center font-medium text-sm">{t("Resolved")}</th>
                   <th className="p-4 text-center font-medium text-sm"></th>
                 </tr>
               </thead>
@@ -126,10 +109,9 @@ const ConversationStatsAgentPerformance = ({ dateRange }) => {
                   </tr>
                 )}
                 {data.map((staff) => {
-                  const averageResponseTime =
-                    formatTimeToNearestUnitFromSeconds(
-                      staff.averageResponseTime,
-                    );
+                  const averageResponseTime = formatTimeToNearestUnitFromSeconds(
+                    staff.averageResponseTime,
+                  );
                   return (
                     <tr
                       key={staff.staff.userId}
@@ -148,12 +130,8 @@ const ConversationStatsAgentPerformance = ({ dateRange }) => {
                             size="sm"
                           />
                           <div>
-                            <div className="font-medium">
-                              {staff.staff.name}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {staff.staff.email}
-                            </div>
+                            <div className="font-medium">{staff.staff.name}</div>
+                            <div className="text-xs text-muted-foreground">{staff.staff.email}</div>
                           </div>
                         </div>
                       </td>

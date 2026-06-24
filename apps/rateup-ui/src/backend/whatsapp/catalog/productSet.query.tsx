@@ -1,13 +1,7 @@
-"use client";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import {
-  getProductSetById,
-  getProductSetsByCatalog,
-  syncProductSets,
-} from "./productSet.api";
+import { getProductSetById, getProductSetsByCatalog, syncProductSets } from "./productSet.api";
 
 export const useSyncProductSets = () => {
   const qc = useQueryClient();

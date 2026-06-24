@@ -1,10 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { getMenuBannerByMenuId } from "@/backend/menu/Banner/banner.api";
-import {
-  getFullMenuPublicById,
-  updateMenuVisitedMutation,
-} from "@/backend/menu/menu.api";
+import { getFullMenuPublicById, updateMenuVisitedMutation } from "@/backend/menu/menu.api";
 import MenuLandingPage from "@/components/(public-facing)/m/$shortId/menuLandingPage.tsx";
 
 export const Route = createFileRoute("/(public-facing)/m/$shortId/")({

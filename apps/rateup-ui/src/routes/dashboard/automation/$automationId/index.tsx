@@ -1,5 +1,3 @@
-"use client";
-
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
 
 import WhatsappAutomationRuleBuilder from "../../../../components/dashboard/automation/components/WhatsappAutomationRuleBuilder.tsx";

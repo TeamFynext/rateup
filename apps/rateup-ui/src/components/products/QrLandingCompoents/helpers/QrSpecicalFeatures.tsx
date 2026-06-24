@@ -1,5 +1,3 @@
-"use client";
-
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 
@@ -26,9 +24,7 @@ export default function QrSpecicalFeatures() {
           >
             {/* Text Section */}
             <div className="lg:w-1/2 text-center lg:text-left space-y-6">
-              <h3 className="text-[#003B7A] text-4xl font-bold tracking-tight">
-                {item.title}
-              </h3>
+              <h3 className="text-[#003B7A] text-4xl font-bold tracking-tight">{item.title}</h3>
               <p className="text-lg sm:text-xl pt-3 font-semibold text-gray-600 max-w-4xl mx-auto">
                 {item.description}
               </p>

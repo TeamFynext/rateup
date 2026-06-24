@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 import { Flex, Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
@@ -9,11 +5,11 @@ import { IconExclamationCircle } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { MessageSquare, Send, StickyNote } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { create } from "zustand";
 
-import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import {
   useAssignInboxToUer,
   useCreatePrivateMessage,
@@ -27,19 +23,13 @@ import useContactStore, {
 } from "@/components/dashboard/inbox/store.ts";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
-import WaTextEditor, {
-  parseToWhatsAppFormat,
-} from "@/components/RichTextEditor/waTextEditor.tsx";
+import WaTextEditor, { parseToWhatsAppFormat } from "@/components/RichTextEditor/waTextEditor.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
 import { formatDateWithRelativeTime } from "@/utils/dateTime.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
@@ -53,6 +43,7 @@ import { usePhoneIdStore } from "../../chatselect/accountSelectorStore.ts";
 import { generateInternalMessageId } from "../../util.tsx";
 import AssignUser from "../chatdisplayHeader/AssignUser.tsx";
 import WaInboxFooterMenu from "./footerMenu/index.tsx";
+
 import classes from "./styles.module.css";
 
 export default function WaInboxChatDisplayFooter({
@@ -65,10 +56,9 @@ export default function WaInboxChatDisplayFooter({
   const submiRef = useRef(null);
   const { t: translations } = useTranslation();
   const { user } = useUser();
-  const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
+  const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const currentUser = contact.assignedUsers?.find((c) => c.id === user?.userId);
-  const platform =
-    contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const platform = contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const sendnewWaMessage = useSendNewWaMessage(
     contact.id,
     currentUser.teamId,
@@ -98,8 +88,7 @@ export default function WaInboxChatDisplayFooter({
       text: (value, values) => {
         if (
           values.type === "text" &&
-          (value.body === "" ||
-            parseToWhatsAppFormat(value.body).trim().length === 0)
+          (value.body === "" || parseToWhatsAppFormat(value.body).trim().length === 0)
         ) {
           return translations("Message can't be empty");
         }
@@ -110,11 +99,7 @@ export default function WaInboxChatDisplayFooter({
         }
       },
       contacts: (value, values) => {
-        if (
-          values.type === "contact" &&
-          !value.contactIds.length &&
-          !value.groupIds.length
-        ) {
+        if (values.type === "contact" && !value.contactIds.length && !value.groupIds.length) {
           return "contacts required";
         }
       },
@@ -127,10 +112,7 @@ export default function WaInboxChatDisplayFooter({
         media,
         type: "text",
       };
-      if (
-        body.text.body === "" ||
-        parseToWhatsAppFormat(body.text.body).trim().length === 0
-      ) {
+      if (body.text.body === "" || parseToWhatsAppFormat(body.text.body).trim().length === 0) {
         message.type = "media";
       }
       form.setValues({ ...body, ...message });
@@ -199,8 +181,8 @@ export default function WaInboxChatDisplayFooter({
                   recipient: {
                     id: contact.igsId,
                   },
-                  message: {
-                    ...(values.type === "text"
+                  message:
+                    values.type === "text"
                       ? { text: parseToWhatsAppFormat(values.text.body) }
                       : values.type === "media"
                         ? {
@@ -208,8 +190,7 @@ export default function WaInboxChatDisplayFooter({
                               type: values.media[values.media.length - 1].type,
                             },
                           }
-                        : {}),
-                  },
+                        : {},
                 }
               : {
                   messaging_product: "whatsapp",
@@ -223,8 +204,7 @@ export default function WaInboxChatDisplayFooter({
                         : values.type === "media"
                           ? returnMessageContentBasedOnParsedMessage(
                               {
-                                messageType:
-                                  values.media[media.length - 1].type,
+                                messageType: values.media[media.length - 1].type,
                                 messageContent: "",
                                 timeStamp: dayjs().unix().toString(),
                               },
@@ -343,11 +323,7 @@ export default function WaInboxChatDisplayFooter({
             size="sm"
             className="bg-green-600 hover:bg-green-700 h-[60px] px-6"
             onClick={handleSendMessage}
-            disabled={
-              isSessionExpired ||
-              isRecording ||
-              (!media.length && !form.isValid("text"))
-            }
+            disabled={isSessionExpired || isRecording || (!media.length && !form.isValid("text"))}
           >
             <Send className="w-4 h-4" />
           </Button>
@@ -364,11 +340,7 @@ export default function WaInboxChatDisplayFooter({
             size="sm"
             className="bg-amber-600 hover:bg-amber-700 h-[60px] px-6"
             onClick={handleSendPrivateMessage}
-            disabled={
-              isSessionExpired ||
-              isRecording ||
-              (!media.length && !form.isValid("text"))
-            }
+            disabled={isSessionExpired || isRecording || (!media.length && !form.isValid("text"))}
           >
             <Send className="w-4 h-4" />
           </Button>
@@ -379,17 +351,11 @@ export default function WaInboxChatDisplayFooter({
   };
 
   if (isSessionExpired) {
-    if (
-      platform === MessagePlatform.INSTAGRAM ||
-      platform === MessagePlatform.FACEBOOK
-    )
+    if (platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK)
       return null;
     return (
       <Flex className={classes.wrapper} justify="flex-start">
-        <WaInboxFooterMenu
-          sessionExpired={isSessionExpired}
-          contact={contact}
-        />
+        <WaInboxFooterMenu sessionExpired={isSessionExpired} contact={contact} />
       </Flex>
     );
   }
@@ -439,12 +405,7 @@ export default function WaInboxChatDisplayFooter({
               flex={1}
               inbox={true}
               customEnter={() => submiRef.current()}
-              editable={
-                !isSessionExpired &&
-                !isRecording &&
-                !audioUrl &&
-                body.type === "text"
-              }
+              editable={!isSessionExpired && !isRecording && !audioUrl && body.type === "text"}
               placeholder="Type a message...Type / for quick replies"
               sendMessageButton={<SendMessageComponent />}
               border={true}
@@ -480,12 +441,7 @@ export const WaInboxAssignUserFooter = ({
   contact: ContactWithUpdatedAt;
   user: User;
 }) => {
-  const {
-    id: contactId,
-    waMessageAssignStatus,
-    closedAt,
-    closedUser,
-  } = contact ?? {};
+  const { id: contactId, waMessageAssignStatus, closedAt, closedUser } = contact ?? {};
   const { filterData } = useContactStore();
   const messagesStore = useMessagesStore();
   const assignMut = useAssignInboxToUer(contactId, filterData);
@@ -578,8 +534,7 @@ export const WaInboxAssignUserFooter = ({
             <span className="text-xs">This chat has been closed</span>
             {closedAt && (
               <span className="text-xs lowercase">
-                by {closedUser.name} at{" "}
-                {formatDateWithRelativeTime(contact.closedAt)}.
+                by {closedUser.name} at {formatDateWithRelativeTime(contact.closedAt)}.
               </span>
             )}
           </>
@@ -613,24 +568,12 @@ export const WaInboxBlockedContactFooter = ({ contact }) => {
   }
   return (
     <Stack gap={"xs"} pb={"xs"} className="bg-background">
-      <Group
-        bg={"black"}
-        justify="center"
-        c={"white"}
-        color="white"
-        gap={2}
-        py={2}
-      >
+      <Group bg={"black"} justify="center" c={"white"} color="white" gap={2} py={2}>
         <IconExclamationCircle size={"1rem"} />
         <Text size="xs">This contact has been blocked by you.</Text>
       </Group>
       <Group justify={"center"} gap={"xs"}>
-        <RateupButtonPrimary
-          title="Unblock contact"
-          onClick={open}
-          size="xs"
-          radius={"md"}
-        />
+        <RateupButtonPrimary title="Unblock contact" onClick={open} size="xs" radius={"md"} />
       </Group>
       <ConfirmationModal
         confirmLabel="Unblock"

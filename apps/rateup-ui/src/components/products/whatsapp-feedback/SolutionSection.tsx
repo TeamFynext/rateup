@@ -1,6 +1,5 @@
-import { useState } from "react";
-
 import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 
@@ -35,9 +34,7 @@ function CopyBlock({ eyebrow, h3, p, pills }) {
       <h6 className="font-nunito font-extrabold text-[clamp(28px,3.6vw,48px)] leading-[1.06] tracking-[-0.025em] text-white">
         {h3}
       </h6>
-      <p className="text-white/70 text-[16px] leading-[1.6] mt-5 mb-[22px] max-w-[460px]">
-        {p}
-      </p>
+      <p className="text-white/70 text-[16px] leading-[1.6] mt-5 mb-[22px] max-w-[460px]">{p}</p>
       <div className="flex flex-wrap gap-2.5 mb-7">
         {pills.map((t) => (
           <span
@@ -237,12 +234,8 @@ function TriggersTab() {
                 </span>
               </div>
               <div>
-                <div className="text-[13px] text-[#111] font-bold leading-tight">
-                  {t.label}
-                </div>
-                <div className="text-[11px] text-[#9098a3] mt-[1px]">
-                  {t.sub}
-                </div>
+                <div className="text-[13px] text-[#111] font-bold leading-tight">{t.label}</div>
+                <div className="text-[11px] text-[#9098a3] mt-[1px]">{t.sub}</div>
               </div>
               <span className="text-[10.5px] font-bold py-[3px] px-[9px] rounded-[6px] bg-[#E6F4EE] text-fb-green ml-auto flex-shrink-0">
                 ● Active
@@ -255,13 +248,7 @@ function TriggersTab() {
         eyebrow="AUTO-TRIGGERS"
         h3="Send Feedback at the Perfect Moment"
         p="Automated triggers fire at exactly the right time — after a purchase, dining experience, appointment, or support resolution. No manual sending required. RateUp handles it 24/7."
-        pills={[
-          "Post-Purchase",
-          "Post-Visit",
-          "After Service",
-          "Custom Events",
-          "24/7 Automated",
-        ]}
+        pills={["Post-Purchase", "Post-Visit", "After Service", "Custom Events", "24/7 Automated"]}
       />
     </>
   );
@@ -441,17 +428,13 @@ function AnalyticsTab() {
               <div className="font-nunito font-black text-[19px] text-fb-green tracking-[-0.02em]">
                 35%
               </div>
-              <div className="text-[10px] text-[#6b7280] mt-0.5 leading-tight">
-                Response Rate
-              </div>
+              <div className="text-[10px] text-[#6b7280] mt-0.5 leading-tight">Response Rate</div>
             </div>
             <div className="bg-[#f6f8fc] rounded-[10px] p-2.5">
               <div className="font-nunito font-black text-[19px] text-fb-green tracking-[-0.02em]">
                 4.8★
               </div>
-              <div className="text-[10px] text-[#6b7280] mt-0.5 leading-tight">
-                Avg Rating
-              </div>
+              <div className="text-[10px] text-[#6b7280] mt-0.5 leading-tight">Avg Rating</div>
             </div>
           </div>
           <div className="flex items-end gap-[7px] h-[100px] pt-2">
@@ -464,15 +447,11 @@ function AnalyticsTab() {
                   className="w-full rounded-t-[5px] bg-gradient-to-b from-fb-green-2 to-fb-green"
                   style={{ height: `${b.h}%` }}
                 />
-                <span className="text-[9px] text-[#9098a3] font-semibold">
-                  {b.l}
-                </span>
+                <span className="text-[9px] text-[#9098a3] font-semibold">{b.l}</span>
               </div>
             ))}
           </div>
-          <div
-            style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}
-          >
+          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
             <span
               style={{
                 fontSize: 10.5,
@@ -569,10 +548,7 @@ function FollowupTab() {
               <div className="text-[12px] text-[#111] font-semibold ml-2.5">
                 {r.n} Star{r.n !== 1 ? "s" : ""}
               </div>
-              <div
-                className="text-[12px] font-bold ml-auto"
-                style={{ color: r.color }}
-              >
+              <div className="text-[12px] font-bold ml-auto" style={{ color: r.color }}>
                 {r.action} →
               </div>
             </div>
@@ -598,9 +574,7 @@ function FollowupTab() {
             <div style={{ fontSize: 13, color: "#111", fontWeight: 700 }}>
               Rahul M. left 2★ · 14 min ago
             </div>
-            <div style={{ fontSize: 11, color: "#9098a3" }}>
-              Assigned to Neha S. · Support Team
-            </div>
+            <div style={{ fontSize: 11, color: "#9098a3" }}>Assigned to Neha S. · Support Team</div>
           </div>
         </div>
       </div>
@@ -712,9 +686,9 @@ export default function SolutionSection() {
             Solution That Actually Works
           </h2>
           <p className="mt-4 text-[17px] leading-[1.55] text-ink-500">
-            Boost your response rate by up to 35%. RateUp leverages WhatsApp
-            Flows — native, interactive forms inside the world's most popular
-            messaging app — so customers engage effortlessly.
+            Boost your response rate by up to 35%. RateUp leverages WhatsApp Flows — native,
+            interactive forms inside the world's most popular messaging app — so customers engage
+            effortlessly.
           </p>
         </div>
 

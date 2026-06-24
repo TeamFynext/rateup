@@ -1,7 +1,4 @@
-"use client";
-
 import { useEffect, useState } from "react";
-
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -18,13 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
+import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
@@ -136,10 +127,8 @@ export function CreateMenuCategoryModal({
     setIsCreating(true);
     const formatedData: any = { ...values };
     if (values.scheduleEnabled) {
-      formatedData.startTime =
-        values.startTime && createCustomTimestamp(values.startTime);
-      formatedData.endTime =
-        values.endTime && createCustomTimestamp(values.endTime);
+      formatedData.startTime = values.startTime && createCustomTimestamp(values.startTime);
+      formatedData.endTime = values.endTime && createCustomTimestamp(values.endTime);
     } else {
       formatedData.startTime = undefined;
       formatedData.endTime = undefined;
@@ -161,22 +150,16 @@ export function CreateMenuCategoryModal({
   }
 
   const isPending =
-    createMenuCategoryMutation.isPending ||
-    editMenuCategoryMutation.isPending ||
-    isCreating;
+    createMenuCategoryMutation.isPending || editMenuCategoryMutation.isPending || isCreating;
 
   return (
     <Dialog open={opened} onOpenChange={(nextOpen) => !nextOpen && close()}>
       <DialogContent className="sm:max-w-130">
         <DialogHeader>
           <DialogTitle>
-            {editingItem
-              ? translations("Edit Category")
-              : translations("Create Category")}
+            {editingItem ? translations("Edit Category") : translations("Create Category")}
           </DialogTitle>
-          <DialogDescription>
-            {translations("Category Details")}
-          </DialogDescription>
+          <DialogDescription>{translations("Category Details")}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="relative">
@@ -188,9 +171,7 @@ export function CreateMenuCategoryModal({
 
           <FieldGroup>
             <Field data-invalid={!!form.formState.errors.name}>
-              <FieldLabel htmlFor="category-name">
-                {translations("Name")}
-              </FieldLabel>
+              <FieldLabel htmlFor="category-name">{translations("Name")}</FieldLabel>
               <FieldContent>
                 <Input
                   id="category-name"
@@ -203,9 +184,7 @@ export function CreateMenuCategoryModal({
             </Field>
 
             <Field orientation="horizontal">
-              <FieldLabel htmlFor="timed-menu-switch">
-                {translations("Timed Menu")}
-              </FieldLabel>
+              <FieldLabel htmlFor="timed-menu-switch">{translations("Timed Menu")}</FieldLabel>
               <FieldContent>
                 <Controller
                   control={form.control}
@@ -223,9 +202,7 @@ export function CreateMenuCategoryModal({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field>
-                <FieldLabel htmlFor="start-time">
-                  {translations("Start Time:")}
-                </FieldLabel>
+                <FieldLabel htmlFor="start-time">{translations("Start Time:")}</FieldLabel>
                 <FieldContent>
                   <Input
                     id="start-time"
@@ -236,9 +213,7 @@ export function CreateMenuCategoryModal({
                 </FieldContent>
               </Field>
               <Field>
-                <FieldLabel htmlFor="end-time">
-                  {translations("End Time:")}
-                </FieldLabel>
+                <FieldLabel htmlFor="end-time">{translations("End Time:")}</FieldLabel>
                 <FieldContent>
                   <Input
                     id="end-time"
@@ -256,9 +231,7 @@ export function CreateMenuCategoryModal({
               {translations("Cancel")}
             </Button>
             <Button type="submit" disabled={isPending}>
-              {editingItem
-                ? translations("Save Category")
-                : translations("Create Category")}
+              {editingItem ? translations("Save Category") : translations("Create Category")}
             </Button>
           </DialogFooter>
         </form>

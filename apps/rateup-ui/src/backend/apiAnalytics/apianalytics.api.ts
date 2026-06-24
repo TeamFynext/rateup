@@ -22,9 +22,7 @@ export async function getTemplateOverview(filter) {
   const query = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
-  const res = await axiosClient.get(
-    `${API_BASE_URL}/template-overview?${query}`,
-  );
+  const res = await axiosClient.get(`${API_BASE_URL}/template-overview?${query}`);
   return res.data;
 }
 

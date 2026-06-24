@@ -1,15 +1,4 @@
-"use client";
-
-import {
-  Button,
-  Checkbox,
-  Group,
-  Image,
-  Menu,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { Button, Checkbox, Group, Image, Menu, Stack, Text, Tooltip } from "@mantine/core";
 import {
   IconAppWindow,
   IconChevronDown,
@@ -20,12 +9,9 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { PageType, QuestionType } from "@/types/enums.ts";
 import InfoButton from "@/components/Button/InfoButton.tsx";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "@/components/Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
+import { PageType, QuestionType } from "@/types/enums.ts";
 import { docsPath, NPSQuestions } from "@/utils/constants.ts";
 import {
   googleReviewSupportedTypes,
@@ -63,9 +49,8 @@ function QuestionDetailedViewFooter({
             form.setFieldValue("required", checked);
           }}
           disabled={
-            [QuestionType.InfoMessage, QuestionType.EmailOtp].includes(
-              question.type,
-            ) || question.type in PageType
+            [QuestionType.InfoMessage, QuestionType.EmailOtp].includes(question.type) ||
+            question.type in PageType
           }
         />
         <InfoButton docUrl={`${docsPath}/advancedFt/overview`} />
@@ -139,9 +124,7 @@ function QuestionDetailedViewFooter({
                 </Menu.Item>
               )}
 
-              {googleReviewSupportedTypes.includes(
-                question?.type as QuestionType,
-              ) && (
+              {googleReviewSupportedTypes.includes(question?.type as QuestionType) && (
                 <Menu.Item>
                   {isGoogleReviewFeatureActive ? (
                     <RateupButtonSecondary
@@ -151,17 +134,12 @@ function QuestionDetailedViewFooter({
                       fullWidth
                       onClick={async () => {
                         const save = await handleSave();
-                        save === "saved" &&
-                          setActiveTab(
-                            QuestionTabsEnum.QuestionReviewPageEditor,
-                          );
+                        save === "saved" && setActiveTab(QuestionTabsEnum.QuestionReviewPageEditor);
                       }}
                     />
                   ) : (
                     <Tooltip
-                      label={translations(
-                        "Upgrade your Plan for this feature.",
-                      )}
+                      label={translations("Upgrade your Plan for this feature.")}
                       disabled={isGoogleReviewFeatureActive}
                       color="yellow"
                     >
@@ -178,9 +156,7 @@ function QuestionDetailedViewFooter({
                 </Menu.Item>
               )}
 
-              {validationSupportedTypes.includes(
-                question?.type as QuestionType,
-              ) && (
+              {validationSupportedTypes.includes(question?.type as QuestionType) && (
                 <Menu.Item>
                   <RateupButtonSecondary
                     title={translations("Custom Validation")}
@@ -189,15 +165,12 @@ function QuestionDetailedViewFooter({
                     fullWidth
                     onClick={async () => {
                       const save = await handleSave();
-                      save === "saved" &&
-                        setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
+                      save === "saved" && setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
                     }}
                   />
                 </Menu.Item>
               )}
-              {ticketIssueSupportedTypes.includes(
-                question?.type as QuestionType,
-              ) && (
+              {ticketIssueSupportedTypes.includes(question?.type as QuestionType) && (
                 <Menu.Item>
                   {isTicketFeatureActive && !enableAutoGenerateTicket ? (
                     <RateupButtonSecondary
@@ -207,8 +180,7 @@ function QuestionDetailedViewFooter({
                       fullWidth
                       onClick={async () => {
                         const save = await handleSave();
-                        save === "saved" &&
-                          setActiveTab(QuestionTabsEnum.TicketIssueEditor);
+                        save === "saved" && setActiveTab(QuestionTabsEnum.TicketIssueEditor);
                       }}
                     />
                   ) : (
@@ -216,13 +188,9 @@ function QuestionDetailedViewFooter({
                       label={
                         isTicketFeatureActive
                           ? translations("Upgrade your Plan for this feature.")
-                          : translations(
-                              "Auto-Generate Ticket is enabled on this survey",
-                            )
+                          : translations("Auto-Generate Ticket is enabled on this survey")
                       }
-                      disabled={
-                        isTicketFeatureActive || enableAutoGenerateTicket
-                      }
+                      disabled={isTicketFeatureActive || enableAutoGenerateTicket}
                       color={enableAutoGenerateTicket ? "yellow" : "black"}
                     >
                       <Button

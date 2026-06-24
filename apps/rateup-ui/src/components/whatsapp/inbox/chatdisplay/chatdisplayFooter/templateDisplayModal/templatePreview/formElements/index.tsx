@@ -1,16 +1,14 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Divider, Paper, Stack, Text } from "@mantine/core";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { Updater } from "use-immer";
 
-import type { WaTemplateFetchBody } from "@/types/global";
 import type { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
 import type { LeadgenNodeData } from "@/components/whatsapp/automation/types/node-types.ts";
+import type { WaTemplateFetchBody } from "@/types/global";
 
 import WaTemplateFormComponents from "./components/index.tsx";
+
 import classes from "./styles.module.css";
 
 interface Props {
@@ -33,9 +31,7 @@ export default function WaTemplateFormElements(props: Props) {
       switch (component_type) {
         case "HEADER":
           props?.setParameterData((draft: Array<any>) => {
-            const existingItem = draft.find(
-              (item) => item.type === component_type.toLowerCase(),
-            );
+            const existingItem = draft.find((item) => item.type === component_type.toLowerCase());
             if (existingItem) {
               existingItem.parameters[0] = {
                 type: component_format.toLowerCase(),
@@ -168,11 +164,7 @@ export default function WaTemplateFormElements(props: Props) {
   );
 }
 
-export function NoParams({
-  type,
-}: {
-  type: "Header" | "Body" | "Footer" | "Button";
-}) {
+export function NoParams({ type }: { type: "Header" | "Body" | "Footer" | "Button" }) {
   return (
     <Paper className={classes.no_params_wrapper}>
       <Text className={classes.no_params_text}>No {type} Parameters</Text>

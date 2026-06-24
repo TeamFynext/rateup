@@ -1,8 +1,5 @@
-"use client";
-
-import React from "react";
-
 import { Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";
+import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { WaQuestions } from "@/types/enums.ts";

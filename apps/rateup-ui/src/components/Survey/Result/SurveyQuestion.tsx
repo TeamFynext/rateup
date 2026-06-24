@@ -1,7 +1,6 @@
-import React from "react";
-
 import { Progress } from "@mantine/core";
 import { IconMoodHappy, IconTarget, IconUsers } from "@tabler/icons-react";
+import React from "react";
 import {
   Bar,
   BarChart,
@@ -48,22 +47,14 @@ const SurveyQuestion = ({
     return {
       type: version === 1 ? question.type : question.metaType,
       questionTitle:
-        version === 1
-          ? question.title || question.label
-          : question.header || question.label,
+        version === 1 ? question.title || question.label : question.header || question.label,
     };
   }
 
   const getPercentage = (count: number, total: number) =>
     total > 0 ? Math.round((count / total) * 100) : "0";
 
-  const CustomTooltip = ({
-    active,
-    payload,
-  }: {
-    active?: boolean;
-    payload?: any[];
-  }) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
     if (active && payload?.length) {
       const { count, percentage } = payload[0].payload;
       return (
@@ -88,8 +79,7 @@ const SurveyQuestion = ({
           const passives = npsEntry?.npsData?.passives ?? 0;
           const detractors = npsEntry?.npsData?.detractors ?? 0;
           const total = promoters + passives + detractors;
-          const happinessIndex =
-            total > 0 ? ((promoters / total) * 10).toFixed(1) : 0;
+          const happinessIndex = total > 0 ? ((promoters / total) * 10).toFixed(1) : 0;
 
           const chartData = questionData?.data.map((item) => {
             const color =
@@ -115,8 +105,7 @@ const SurveyQuestion = ({
                     <span className="text-sm font-bold text-[#343A40]">
                       {typeof questionDetails?.questionTitle === "object"
                         ? getReplacedTitleFromVariable({
-                            title:
-                              questionDetails?.questionTitle[defaultLanguage],
+                            title: questionDetails?.questionTitle[defaultLanguage],
                             surveyId,
                           })
                         : questionDetails?.questionTitle}
@@ -135,27 +124,11 @@ const SurveyQuestion = ({
                   {/* Chart */}
                   <div className="h-[300px] border rounded-md bg-white shadow-sm px-4 pt-4">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={chartData}
-                        barSize={30}
-                        barGap={4}
-                        barCategoryGap="15%"
-                      >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                          stroke="#e0e0e0"
-                        />
-                        <XAxis
-                          dataKey="choice"
-                          tick={{ fontSize: 12 }}
-                          tickLine={false}
-                        />
+                      <BarChart data={chartData} barSize={30} barGap={4} barCategoryGap="15%">
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
+                        <XAxis dataKey="choice" tick={{ fontSize: 12 }} tickLine={false} />
                         <YAxis tick={{ fontSize: 12 }} tickLine={false} />
-                        <Tooltip
-                          content={<CustomTooltip />}
-                          cursor={{ fill: "transparent" }}
-                        />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
                         <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                           {chartData.map((_, i) => (
                             <Cell key={`cell-${i}`} fill={"#607D8B"} />
@@ -194,22 +167,16 @@ const SurveyQuestion = ({
                               <p className="text-[10px] font-semibold text-[#343A40]">
                                 {item.label}
                               </p>
-                              <p className="text-2xl font-bold text-[#004F98]">
-                                {item.value}
-                              </p>
+                              <p className="text-2xl font-bold text-[#004F98]">{item.value}</p>
                             </div>
-                            <div className="bg-[#2B82DE1F] p-1 rounded-md">
-                              {item.icon}
-                            </div>
+                            <div className="bg-[#2B82DE1F] p-1 rounded-md">{item.icon}</div>
                           </div>
                         ))}
                       </div>
 
                       <Progress.Root size="xl" radius={50}>
                         <Progress.Section
-                          value={Number(
-                            getPercentage(promoters, responseCount),
-                          )}
+                          value={Number(getPercentage(promoters, responseCount))}
                           color="#00BF83"
                         />
                         <Progress.Section
@@ -217,9 +184,7 @@ const SurveyQuestion = ({
                           color="#FFC107"
                         />
                         <Progress.Section
-                          value={Number(
-                            getPercentage(detractors, responseCount),
-                          )}
+                          value={Number(getPercentage(detractors, responseCount))}
                           color="#FF6161"
                         />
                       </Progress.Root>
@@ -241,10 +206,7 @@ const SurveyQuestion = ({
                           {
                             label: "Detractors",
                             value: detractors,
-                            percentage: getPercentage(
-                              detractors,
-                              responseCount,
-                            ),
+                            percentage: getPercentage(detractors, responseCount),
                             color: "#FF6161",
                           },
                         ].map((item) => (
@@ -252,18 +214,11 @@ const SurveyQuestion = ({
                             key={item.label}
                             className="flex flex-col items-center justify-center"
                           >
-                            <p className="text-xs font-semibold text-[#343A40]">
-                              {item.label}
-                            </p>
-                            <p
-                              className="text-2xl font-bold"
-                              style={{ color: item.color }}
-                            >
+                            <p className="text-xs font-semibold text-[#343A40]">{item.label}</p>
+                            <p className="text-2xl font-bold" style={{ color: item.color }}>
                               {item.percentage}%
                             </p>
-                            <p className="text-[#7A8289] text-xs">
-                              {item.value} Responses
-                            </p>
+                            <p className="text-[#7A8289] text-xs">{item.value} Responses</p>
                           </div>
                         ))}
                       </div>

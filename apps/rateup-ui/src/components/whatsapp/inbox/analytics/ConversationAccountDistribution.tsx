@@ -1,18 +1,12 @@
-import { useMemo } from "react";
-
 import { MessageCircle } from "lucide-react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { MessagePlatform } from "@/types/enums.ts";
 import { useGetConversationAccountDistribution } from "@/backend/conversation/conversation.query";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { MessagePlatform } from "@/types/enums.ts";
 
 function getMessageSourcePlatformColor(platform: MessagePlatform) {
   switch (platform) {
@@ -29,14 +23,12 @@ function getMessageSourcePlatformColor(platform: MessagePlatform) {
 
 const ConversationAccountDistribution = ({ dateRange }) => {
   const { t } = useTranslation();
-  const { data: channelDistribution = [], isLoading } =
-    useGetConversationAccountDistribution({
-      dateRange: dateRange.range,
-      dateKey: dateRange.key,
-    });
+  const { data: channelDistribution = [], isLoading } = useGetConversationAccountDistribution({
+    dateRange: dateRange.range,
+    dateKey: dateRange.key,
+  });
   const totalConversations = useMemo(
-    () =>
-      channelDistribution.reduce((sum, ch) => sum + ch.conversationCount, 0),
+    () => channelDistribution.reduce((sum, ch) => sum + ch.conversationCount, 0),
     [channelDistribution],
   );
   if (isLoading) {
@@ -54,12 +46,8 @@ const ConversationAccountDistribution = ({ dateRange }) => {
       <CardContent className="pt-0 space-y-3">
         {channelDistribution.length === 0 ? (
           <div className="grid place-content-center py-12 h-full">
-            <h3 className="text-lg font-medium">
-              {t("No data found for analysis")}
-            </h3>
-            <p className="text-muted-foreground mb-4 text-center">
-              {t("No messages found")}
-            </p>
+            <h3 className="text-lg font-medium">{t("No data found for analysis")}</h3>
+            <p className="text-muted-foreground mb-4 text-center">{t("No messages found")}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -72,23 +60,13 @@ const ConversationAccountDistribution = ({ dateRange }) => {
               );
               const phone = channel.phone || channel.ibaId || channel.phoneId;
               return (
-                <div
-                  key={index}
-                  className="p-3 rounded-lg border hover:shadow-md transition-all"
-                >
+                <div key={index} className="p-3 rounded-lg border hover:shadow-md transition-all">
                   <div className="flex flex-col sm:flex-row items-center justify-between mb-2">
                     <div className="flex items-center gap-2.5">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
                       <span className="text-sm font-medium">
                         {channel.sourcePlatform ||
-                          (channel.ibaId
-                            ? "Instagram"
-                            : channel.phoneId
-                              ? "WhatsApp"
-                              : "")}
+                          (channel.ibaId ? "Instagram" : channel.phoneId ? "WhatsApp" : "")}
                         <span className="text-xs text-muted-foreground ml-2">
                           {phone ? `(${phone})` : ""}
                         </span>

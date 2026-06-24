@@ -24,8 +24,7 @@ const WaFlowTourSteps = ({ styles }) => {
       element: `.${styles["team-select-option"]}`,
       popover: {
         title: "Select Team",
-        description:
-          "Click here to select the team to view team based list of flows",
+        description: "Click here to select the team to view team based list of flows",
         side: "bottom",
         align: "center",
       },

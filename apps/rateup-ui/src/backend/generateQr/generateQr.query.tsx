@@ -44,12 +44,9 @@ function useCreateQrMutation() {
       queryClient.invalidateQueries({ queryKey: ["generatedQrs"] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message || "Unable to create QR, please try again later",
-        {
-          id: "CreateQr",
-        },
-      );
+      toast.error(error?.message || "Unable to create QR, please try again later", {
+        id: "CreateQr",
+      });
     },
   });
 }
@@ -66,13 +63,9 @@ function useUpdateQrMutation(shortUrlId) {
       queryClient.invalidateQueries({ queryKey: ["generatedQr", shortUrlId] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          "Unable to update Landing Page, please try again later",
-        {
-          id: "CreateLandingPage",
-        },
-      );
+      toast.error(error?.message || "Unable to update Landing Page, please try again later", {
+        id: "CreateLandingPage",
+      });
     },
   });
 }
@@ -88,12 +81,9 @@ function useDeleteQrMutation() {
       queryClient.invalidateQueries({ queryKey: ["generatedQrs"] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message || "unable to delete QR, please try again later",
-        {
-          id: "deleteQr",
-        },
-      );
+      toast.error(error?.message || "unable to delete QR, please try again later", {
+        id: "deleteQr",
+      });
     },
   });
 }

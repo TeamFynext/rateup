@@ -1,18 +1,16 @@
-"use client";
-
-import { useContext } from "react";
-
 import { Stack, Text, TextInput, useMantineTheme } from "@mantine/core";
 import { IconMail } from "@tabler/icons-react";
+import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
-import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
+
+import classes from "../TakeSurvey.module.css";
 
 const ContactForm = ({ features }) => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -31,9 +29,7 @@ const ContactForm = ({ features }) => {
             <TextInput
               placeholder={translations("Enter name")}
               value={response?.name || ""}
-              onChange={(e) =>
-                updateResponse({ ...response, name: e.currentTarget.value })
-              }
+              onChange={(e) => updateResponse({ ...response, name: e.currentTarget.value })}
               variant="unstyled"
               classNames={{
                 input: classes.input,
@@ -51,16 +47,12 @@ const ContactForm = ({ features }) => {
           </Text>
           <FormPaperLayout>
             <PhoneInputWithCountrySelect
-              defaultCountry={
-                selectedFeature?.phone?.defaultCountryCode || "IN"
-              }
+              defaultCountry={selectedFeature?.phone?.defaultCountryCode || "IN"}
               international
               countryCallingCodeEditable={false}
               placeholder={translations("Enter phone number")}
               value={response?.phone || null}
-              onChange={(value) =>
-                updateResponse({ ...response, phone: value })
-              }
+              onChange={(value) => updateResponse({ ...response, phone: value })}
               className={`${classes.inputPhone} not-prose`}
               onClick={handleInputScrollIntoView}
             />
@@ -76,9 +68,7 @@ const ContactForm = ({ features }) => {
             <TextInput
               placeholder={translations("Enter email")}
               value={response?.email || ""}
-              onChange={(e) =>
-                updateResponse({ ...response, email: e.currentTarget.value })
-              }
+              onChange={(e) => updateResponse({ ...response, email: e.currentTarget.value })}
               variant="unstyled"
               classNames={{
                 input: classes.input,

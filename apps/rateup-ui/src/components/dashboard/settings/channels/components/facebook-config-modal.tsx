@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -13,12 +10,7 @@ import {
   useUpsertWaSettingsMutation,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
@@ -28,11 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 type WaSetting = WaSettings[number];
 
@@ -70,7 +58,7 @@ export function FacebookConfigModal({
 
   if (!selectedWaSettings) return null;
 
-  const { id, ...rest } = selectedWaSettings;
+  const { ...rest } = selectedWaSettings;
 
   const fbPages =
     metaAssets?.pages.map((page) => ({
@@ -82,9 +70,7 @@ export function FacebookConfigModal({
     <Dialog open={opened} onOpenChange={(value) => !value && close()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {translations("Connected Facebook account - FB Page")}
-          </DialogTitle>
+          <DialogTitle>{translations("Connected Facebook account - FB Page")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -105,9 +91,7 @@ export function FacebookConfigModal({
                       return;
                     }
 
-                    const page = metaAssets?.pages.find(
-                      (item) => item.id === value,
-                    );
+                    const page = metaAssets?.pages.find((item) => item.id === value);
 
                     if (!page) {
                       toast.error(translations("Page not found"));
@@ -148,9 +132,7 @@ export function FacebookConfigModal({
                     disabled={syncfbpageMut.isPending}
                   >
                     <RefreshCw
-                      className={`h-4 w-4 ${
-                        syncfbpageMut.isPending ? "animate-spin" : ""
-                      }`}
+                      className={`h-4 w-4 ${syncfbpageMut.isPending ? "animate-spin" : ""}`}
                     />
                     {translations("Sync FB pages")}
                   </Button>
@@ -171,10 +153,7 @@ export function FacebookConfigModal({
                   teams: undefined,
                 };
 
-                if (
-                  !selectedWaSettings.fbPageId?.length &&
-                  !data.fbPageId?.length
-                ) {
+                if (!selectedWaSettings.fbPageId?.length && !data.fbPageId?.length) {
                   toast.warning(translations("Please select a page"));
                   return;
                 }

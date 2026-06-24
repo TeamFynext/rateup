@@ -6,14 +6,14 @@ import {
   WaMessageAssignStatus,
   WaFlowFormElementType as wft,
 } from "@/types/enums.ts";
+
 import MMImageCropModalStyles from "@/components/Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 
 export const docsPath = "https://docs.rateup.app";
 export const imagesPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images`;
-const localImagesPath = `${import.meta.env.VITE_FRONTEND_URL}/images`;
+
 export const surveyUploadsPath = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}`;
-export const isProduction =
-  import.meta.env.VITE_FRONTEND_URL === "https://rateup.app";
+export const isProduction = import.meta.env.VITE_FRONTEND_URL === "https://rateup.app";
 export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 const ContactQuestions = [QuestionType.Contact];
@@ -94,11 +94,7 @@ const WaOtherQuestions = [
   QuestionType.Testimonial,
 ];
 
-export const FlowChoiceQuestions = [
-  QuestionType.MCQ,
-  QuestionType.MSQ,
-  QuestionType.DDSS,
-];
+export const FlowChoiceQuestions = [QuestionType.MCQ, QuestionType.MSQ, QuestionType.DDSS];
 
 const FlowChoiceQuestions2 = [
   QuestionType2.RadioButtonsGroup,
@@ -131,11 +127,7 @@ export const BasicPages = [
   // PageType.Language,
 ];
 
-export const uniquePages = [
-  PageType.Welcome,
-  PageType.Language,
-  PageType.ThankYou,
-];
+export const uniquePages = [PageType.Welcome, PageType.Language, PageType.ThankYou];
 
 const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
 
@@ -207,7 +199,6 @@ export const mimeTypesForImage: { [key: string]: string } = {
 
 export const MAX_FILE_SIZE_IN_MB = 10;
 export const MAX_FILE_SIZE_IN_BYTE = MAX_FILE_SIZE_IN_MB * 1024 * 1024;
-const THUMBNAIL_URL = "thumb300x200-";
 
 export const PAGE_SIZE = ["50", "100", "200", "500"];
 
@@ -215,12 +206,8 @@ export const SAVE_HOTKEY = "mod+s";
 
 export const COORDINATESX = ["LEFT", "CENTER", "RIGHT"];
 export const COORDINATESY = ["TOP", "MIDDLE", "BOTTOM", "DEFAULT"];
-const whatsappOptions = [];
-export const WHATSAPP_TEMPLATE_CATEGORY = [
-  "MARKETING",
-  "UTILITY",
-  "AUTHENTICATION",
-];
+
+export const WHATSAPP_TEMPLATE_CATEGORY = ["MARKETING", "UTILITY", "AUTHENTICATION"];
 export enum WHATSAPP_TEMPLATE_BROADCAST_TYPE {
   NONE = "NONE",
   TEXT = "TEXT",
@@ -244,12 +231,6 @@ export enum WHATSAPP_BUTTON_TYPE {
   SPM = "SPM",
   OTP = "OTP",
 }
-
-const MIN_AMOUNT_ERROR = "Purchase amount ineligible for gift.";
-const INTERNAL_ERROR = "Something Went Wrong! Try again.";
-const INTERNAL_ERROR2 = "There was an error, please try again later";
-const AXIOS_TIMEOUT = "Request timed out";
-const DISCOUNT_ERROR = "Invoice with discount is ineligible";
 
 export const WHATSAPP_TEMPLATE_LANGUAGE = [
   { label: "Afrikaans", value: "af" },
@@ -384,7 +365,6 @@ export const rateupLogoBlue = rateupLogoStackedWhiteTransparent;
 export const MAX_DESCRIPTION_COUNT = 300;
 export const MAX_METADATA_COUNT = 20;
 
-const CATALOG_PRODUCT_TYPES = ["PRODUCT_ITEM", "HOTEL", "HOTEL_ROOM"];
 export const CATALOG_PRODUCT_CONDITIONS = ["new", "refurbished", "used"];
 export const CATALOG_PRODUCT_AVAILABILITY = [
   "in stock",

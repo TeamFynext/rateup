@@ -1,8 +1,5 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import DOMPurify from "dompurify";
+import React, { useEffect, useState } from "react";
 
 const CustomHTML = ({ content = "<h1> Not Data found </h1>" }) => {
   const [htmlCode, setHtmlCode] = useState("");

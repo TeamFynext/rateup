@@ -1,13 +1,9 @@
-"use client";
-
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Redirect } from "@/components/(public-facing)/public/wa/Redirect.tsx";
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
-export const Route = createFileRoute(
-  "/(public-facing)/public/wa/$surveyTeamMapId/redirect/",
-)({
+export const Route = createFileRoute("/(public-facing)/public/wa/$surveyTeamMapId/redirect/")({
   component: Redirect,
   head: ({ params }) => ({
     meta: [

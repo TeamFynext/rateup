@@ -42,6 +42,5 @@ export async function rejectRedemption(data: RejectRedemptionInput) {
 }
 
 export async function getTransactions(filters?: TransactionFilter) {
-  return (await axiosClient.get(`${base}/transactions`, { params: filters }))
-    .data;
+  return (await axiosClient.get(`${base}/transactions`, { params: filters })).data;
 }

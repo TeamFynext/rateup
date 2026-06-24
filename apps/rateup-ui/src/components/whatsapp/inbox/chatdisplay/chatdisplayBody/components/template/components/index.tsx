@@ -1,13 +1,9 @@
-import React from "react";
-
 import { Button, Divider, Image, Stack, Text } from "@mantine/core";
 import { IconMessageReply } from "@tabler/icons-react";
+import React from "react";
 
-import type {
-  WaTemplateComponent,
-  WaTemplateFetchBodyComponent,
-} from "@/types/global";
 import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating.tsx";
+import type { WaTemplateComponent, WaTemplateFetchBodyComponent } from "@/types/global";
 
 import classes from "./styles.module.css";
 
@@ -36,14 +32,12 @@ const WaInboxTemplateHeader = (props: Props) => {
   function getUrlIfParameterIsPresent(): string {
     if (props?.parameterData) {
       if (
-        props?.parameterData?.parameters[0]?.[
-          props?.templateComponent?.format?.toLowerCase()
-        ]?.link instanceof File
+        props?.parameterData?.parameters[0]?.[props?.templateComponent?.format?.toLowerCase()]
+          ?.link instanceof File
       ) {
         return URL.createObjectURL(
-          props?.parameterData?.parameters[0]?.[
-            props?.templateComponent?.format?.toLowerCase()
-          ]?.link,
+          props?.parameterData?.parameters[0]?.[props?.templateComponent?.format?.toLowerCase()]
+            ?.link,
         );
       } else {
         return props?.parameterData?.parameters[0]?.[
@@ -56,11 +50,7 @@ const WaInboxTemplateHeader = (props: Props) => {
   }
   switch (props?.templateComponent?.format) {
     case "TEXT":
-      return (
-        <Text className={classes.header_text}>
-          {props?.templateComponent?.text}
-        </Text>
-      );
+      return <Text className={classes.header_text}>{props?.templateComponent?.text}</Text>;
     case "IMAGE":
       return <Image src={getUrlIfParameterIsPresent()} mah={300} />;
     case "DOCUMENT":

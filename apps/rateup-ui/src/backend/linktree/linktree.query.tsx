@@ -38,12 +38,9 @@ function useCreateLinktreeMutation() {
       queryClient.invalidateQueries({ queryKey: ["linktrees"] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message || "Unable to create linktree, please try again later",
-        {
-          id: "CreateLinktree",
-        },
-      );
+      toast.error(error?.message || "Unable to create linktree, please try again later", {
+        id: "CreateLinktree",
+      });
     },
   });
 }
@@ -62,13 +59,9 @@ function useUpdateLinktreeMutation(shortUrlId) {
       queryClient.invalidateQueries({ queryKey: ["linktree", shortUrlId] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          "Unable to update Landing Page, please try again later",
-        {
-          id: "CreateLinktree",
-        },
-      );
+      toast.error(error?.message || "Unable to update Landing Page, please try again later", {
+        id: "CreateLinktree",
+      });
     },
   });
 }
@@ -86,12 +79,9 @@ function useDeleteLinktreeMutation(id) {
       queryClient.invalidateQueries({ queryKey: ["linktrees"] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message || "unable to delete linktree, please try again later",
-        {
-          id: "deleteLinktree",
-        },
-      );
+      toast.error(error?.message || "unable to delete linktree, please try again later", {
+        id: "deleteLinktree",
+      });
     },
   });
 }
@@ -107,10 +97,7 @@ function useLinkTypeOptions(linkType) {
 
 function usePageVisitsOrLinkClicksUpdateMutation(shortUrlId) {
   return useMutation({
-    mutationFn: (bodyData: {
-      resourceToBeUpdated: string;
-      linkId?: string;
-    }) => {
+    mutationFn: (bodyData: { resourceToBeUpdated: string; linkId?: string }) => {
       return updatePageVisitsOrLinkClicks(shortUrlId, bodyData);
     },
     onSuccess: () => {},

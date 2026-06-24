@@ -10,7 +10,7 @@ export const useGroupTableStore = create<{
   groupDetails: any;
   setGroupDetails: (value) => void;
 }>()(
-  immer((set, get) => ({
+  immer((set, _get) => ({
     filter: {
       searchTerm: "",
     },

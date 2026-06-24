@@ -1,15 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
-import {
-  MultiSelect,
-  NumberInput,
-  Paper,
-  Select,
-  Stack,
-  TextInput,
-} from "@mantine/core";
+import { MultiSelect, NumberInput, Paper, Select, Stack, TextInput } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -30,11 +19,11 @@ import {
   X,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
 
-import { MessagePlatform } from "@/types/enums.ts";
 import {
   useContactDeleteMutation,
   useContactLabels,
@@ -61,12 +50,9 @@ import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import { MessagePlatform } from "@/types/enums.ts";
 
 interface WaInboxContactDetailsProps {
   contact: any;
@@ -109,8 +95,7 @@ export default function WaInboxContactDetails({
   const { updateContactById, setSelectedContact } = useContactsStore();
   const deleteContactMutation = useContactDeleteMutation(groupId);
   const [editable, setEditable] = useState(false);
-  const platform =
-    contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const platform = contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const labels = contact?.contactLabels?.map((label) => label?.id);
   const form = useForm<ContactFormValues>({
     validate: schemaResolver(contactSchema, {
@@ -145,9 +130,7 @@ export default function WaInboxContactDetails({
   const handleSubmit = async (values: ContactFormValues) => {
     const data = {
       ...values,
-      phone: values.phone?.startsWith("+")
-        ? values.phone.slice(1)
-        : values.phone,
+      phone: values.phone?.startsWith("+") ? values.phone.slice(1) : values.phone,
     };
     try {
       await editContactMutation.mutateAsync(
@@ -183,17 +166,13 @@ export default function WaInboxContactDetails({
   };
 
   const getCustomFieldValue = (fieldId) => {
-    const customField = form
-      .getValues()
-      .customFields?.find((cf) => cf.fieldId === fieldId);
+    const customField = form.getValues().customFields?.find((cf) => cf.fieldId === fieldId);
     return customField?.value || "";
   };
 
   const updateCustomField = (fieldId, value, customFieldData) => {
     const currentCustomFields = form.getValues().customFields || [];
-    const existingIndex = currentCustomFields.findIndex(
-      (cf) => cf.fieldId === fieldId,
-    );
+    const existingIndex = currentCustomFields.findIndex((cf) => cf.fieldId === fieldId);
 
     if (existingIndex >= 0) {
       currentCustomFields[existingIndex].value = value;
@@ -394,9 +373,7 @@ export default function WaInboxContactDetails({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.18, duration: 0.2 }}
                   >
-                    <label className="text-[11px] text-muted-foreground">
-                      {t("Name")}
-                    </label>
+                    <label className="text-[11px] text-muted-foreground">{t("Name")}</label>
                     <Input
                       placeholder={t("Enter name")}
                       className="h-7 text-xs"
@@ -411,17 +388,13 @@ export default function WaInboxContactDetails({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.21, duration: 0.2 }}
                   >
-                    <label className="text-[11px] text-muted-foreground">
-                      {t("Phone")}
-                    </label>
+                    <label className="text-[11px] text-muted-foreground">{t("Phone")}</label>
                     <PhoneInputWithCountry
                       defaultCountry="IN"
                       international
                       countryCallingCodeEditable={false}
                       value={form.values.phone}
-                      onChange={(value) =>
-                        form.setFieldValue("phone", value || "")
-                      }
+                      onChange={(value) => form.setFieldValue("phone", value || "")}
                       borderRadius={4}
                       placeholder={t("Enter the phone")}
                       error={form.errors.phone}
@@ -435,9 +408,7 @@ export default function WaInboxContactDetails({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.24, duration: 0.2 }}
                   >
-                    <label className="text-[11px] text-muted-foreground">
-                      {t("Email")}
-                    </label>
+                    <label className="text-[11px] text-muted-foreground">{t("Email")}</label>
                     <Input
                       type="email"
                       placeholder={t("Enter email")}
@@ -463,14 +434,10 @@ export default function WaInboxContactDetails({
                 <div className="space-y-2">
                   {/* Lifecycle Field */}
                   <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground">
-                      {t("Lifecycle")}
-                    </label>
+                    <label className="text-[11px] text-muted-foreground">{t("Lifecycle")}</label>
                     <LifecycleSelector
                       value={form.values.lifecycleId}
-                      onChange={(value) =>
-                        form.setFieldValue("lifecycleId", value)
-                      }
+                      onChange={(value) => form.setFieldValue("lifecycleId", value)}
                       className="w-full"
                       placeholder={t("Enter lifecycle")}
                     />
@@ -478,9 +445,7 @@ export default function WaInboxContactDetails({
 
                   {/* Other Field */}
                   <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground">
-                      {t("Other")}
-                    </label>
+                    <label className="text-[11px] text-muted-foreground">{t("Other")}</label>
                     <Input
                       placeholder={t("Enter other")}
                       className="h-7 text-xs border border-gray-300 py-4 placeholder:text-gray-400"
@@ -488,9 +453,7 @@ export default function WaInboxContactDetails({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground">
-                      {t("Labels")}
-                    </label>
+                    <label className="text-[11px] text-muted-foreground">{t("Labels")}</label>
                     <MultiSelect
                       placeholder={t("Select labels")}
                       data={contactLabels?.map((label) => ({
@@ -586,12 +549,7 @@ export default function WaInboxContactDetails({
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={handleToggle}
-              >
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleToggle}>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Button>
             </TooltipTrigger>
@@ -618,9 +576,7 @@ export default function WaInboxContactDetails({
             <IconBrandWhatsapp color="white" size={16} />
           </div>
         </div>
-        <h3 className="mb-1 text-base font-bold">
-          {contact?.name || contact?.phone}
-        </h3>
+        <h3 className="mb-1 text-base font-bold">{contact?.name || contact?.phone}</h3>
         <div className="flex items-center justify-center space-x-2 mb-2.5">
           {contact?.lifecycleName && (
             <Badge variant="outline" className={`text-[11px]`}>
@@ -650,9 +606,7 @@ export default function WaInboxContactDetails({
                 >
                   <Phone className="w-3.5 h-3.5 text-muted-foreground mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-muted-foreground">
-                      {t("Phone")}
-                    </p>
+                    <p className="text-[11px] text-muted-foreground">{t("Phone")}</p>
                     <div className="flex items-center justify-between">
                       <p className="text-xs">{contact.phone}</p>
                       <Button
@@ -677,9 +631,7 @@ export default function WaInboxContactDetails({
                 >
                   <Mail className="w-3.5 h-3.5 text-muted-foreground mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-muted-foreground">
-                      {t("Email")}
-                    </p>
+                    <p className="text-[11px] text-muted-foreground">{t("Email")}</p>
                     <div className="flex items-center justify-between">
                       <p className="text-xs truncate">{contact.email}</p>
                       <Button
@@ -704,21 +656,15 @@ export default function WaInboxContactDetails({
                 >
                   <IconBrandWhatsapp className="w-3.5 h-3.5 text-muted-foreground mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-muted-foreground">
-                      {t("Whatsapp Username")}
-                    </p>
+                    <p className="text-[11px] text-muted-foreground">{t("Whatsapp Username")}</p>
                     <div className="flex items-center justify-between">
-                      <p className="text-xs truncate">
-                        {contact.whatsappUserName}
-                      </p>
+                      <p className="text-xs truncate">{contact.whatsappUserName}</p>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                         onClick={() => {
-                          navigator.clipboard.writeText(
-                            contact.whatsappUserName || "",
-                          );
+                          navigator.clipboard.writeText(contact.whatsappUserName || "");
                         }}
                       >
                         <Copy className="w-3 h-3" />
@@ -733,9 +679,7 @@ export default function WaInboxContactDetails({
           <Separator />
 
           {customFields?.length > 0 && (
-            <Stack gap="sm">
-              {customFields.map((field) => renderCustomField(field))}
-            </Stack>
+            <Stack gap="sm">{customFields.map((field) => renderCustomField(field))}</Stack>
           )}
 
           {/* Customer Stats */}
@@ -781,9 +725,7 @@ export default function WaInboxContactDetails({
                 <MapPin className="w-3.5 h-3.5 text-blue-600" />
                 <span className="text-xs">{t("Source")}</span>
               </div>
-              <span className="text-xs font-medium">
-                {contact?.source || t("Unknown")}
-              </span>
+              <span className="text-xs font-medium">{contact?.source || t("Unknown")}</span>
             </motion.div>
 
             <motion.div
@@ -869,18 +811,14 @@ export default function WaInboxContactDetails({
                       <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
-                      <p className="text-xs font-light text-foreground">
-                        {user.name}
-                      </p>
+                      <p className="text-xs font-light text-foreground">{user.name}</p>
                     </motion.div>
                   ))}
                 </div>
               </div>
             ) : (
               <div className="flex items-center justify-center py-8 px-4">
-                <p className="text-sm text-muted-foreground italic">
-                  {t("No users assigned")}
-                </p>
+                <p className="text-sm text-muted-foreground italic">{t("No users assigned")}</p>
               </div>
             )}
           </motion.div>
@@ -894,9 +832,7 @@ export default function WaInboxContactDetails({
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] text-muted-foreground">
-                  {t("Labels")}
-                </p>
+                <p className="text-[11px] text-muted-foreground">{t("Labels")}</p>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {contact.contactLabels.map((label) => (
                     <Badge
@@ -928,10 +864,7 @@ export default function WaInboxContactDetails({
               {t("Quick Actions")}
             </h4>
             <div className="space-y-1.5">
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
                   variant="outline"
                   size="sm"

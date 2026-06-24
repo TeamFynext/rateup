@@ -1,12 +1,6 @@
-import React from "react";
-
 import { PlusIcon, Trash2Icon } from "lucide-react";
-import {
-  Controller,
-  useFieldArray,
-  useFormContext,
-  useWatch,
-} from "react-hook-form";
+import React from "react";
+import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
@@ -191,11 +185,6 @@ const ConditionRow = ({
 }) => {
   const { control, setValue } = useFormContext<CreateRuleInput>();
 
-  const triggerEvent = useWatch({
-    control,
-    name: "triggerEvent",
-  });
-
   const fieldType = useWatch({
     control,
     name: `${namePrefix}.${index}.field` as any,
@@ -230,17 +219,12 @@ const ConditionRow = ({
               defaultValue={field.value as string}
               value={field.value as string}
             >
-              <SelectTrigger
-                className="w-full"
-                aria-invalid={fieldState.invalid}
-              >
+              <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
                 <SelectValue placeholder="Field" />
               </SelectTrigger>
               <SelectContent>
                 {(allowedFields
-                  ? CONDITION_FIELDS.filter((opt) =>
-                      allowedFields.includes(opt.value),
-                    )
+                  ? CONDITION_FIELDS.filter((opt) => allowedFields.includes(opt.value))
                   : CONDITION_FIELDS
                 ).map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
@@ -265,10 +249,7 @@ const ConditionRow = ({
                 defaultValue={field.value as string}
                 value={field.value as string}
               >
-                <SelectTrigger
-                  className="w-full"
-                  aria-invalid={fieldState.invalid}
-                >
+                <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
                   <SelectValue placeholder="Operator" />
                 </SelectTrigger>
                 <SelectContent>
@@ -380,9 +361,7 @@ const ConditionList: React.FC<ConditionListProps> = ({
         className="w-full border-2 border-dashed border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-900/30"
         onClick={() => {
           const defaultField =
-            CONDITION_FIELDS.length > 0
-              ? CONDITION_FIELDS[0].value
-              : "CONTACT_EMAIL";
+            CONDITION_FIELDS.length > 0 ? CONDITION_FIELDS[0].value : "CONTACT_EMAIL";
           append({
             field: defaultField as any,
             operator: "CONTAINS",
@@ -394,9 +373,7 @@ const ConditionList: React.FC<ConditionListProps> = ({
       </Button>
 
       {listError?.message && (
-        <p className="text-sm font-medium text-destructive mt-2">
-          {listError.message}
-        </p>
+        <p className="text-sm font-medium text-destructive mt-2">{listError.message}</p>
       )}
     </div>
   );

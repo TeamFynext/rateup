@@ -36,18 +36,13 @@ async function deleteLinktree(id) {
 
 function getDropdownOptionsOfLinkType(linkType) {
   return async () => {
-    const res = await axiosClient.get(
-      `${url}/linkTypeDropdownOptions/${linkType}`,
-    );
+    const res = await axiosClient.get(`${url}/linkTypeDropdownOptions/${linkType}`);
     return res.data;
   };
 }
 
 async function updatePageVisitsOrLinkClicks(shortUrlId, bodyData) {
-  const res = await axiosClient.patch(
-    `${url}/pageVisitsOrLinkClicks/${shortUrlId}`,
-    bodyData,
-  );
+  const res = await axiosClient.patch(`${url}/pageVisitsOrLinkClicks/${shortUrlId}`, bodyData);
   return res.data;
 }
 

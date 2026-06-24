@@ -1,6 +1,5 @@
-import React from "react";
-
 import { Image } from "@unpic/react";
+import React from "react";
 
 import { imagesPath } from "@/utils/constants.ts";
 
@@ -13,8 +12,7 @@ const articles = [
   {
     category: "Automated Check-ins",
     date: "SEPTEMBER 1, 2022",
-    title:
-      "Schedule periodic pulses to gather continuous feedback without administrative hassle.",
+    title: "Schedule periodic pulses to gather continuous feedback without administrative hassle.",
     image: Image1,
     link: "#",
   },
@@ -37,8 +35,7 @@ const articles = [
   {
     category: "Anonymous & Secure",
     date: "SEPTEMBER 1, 2022",
-    title:
-      "Ensure honest feedback with guaranteed anonymity and enterprise-grade data security.",
+    title: "Ensure honest feedback with guaranteed anonymity and enterprise-grade data security.",
     image: Image4,
     link: "#",
   },
@@ -58,9 +55,7 @@ export default function InboxFeatures2() {
             <div
               key={index}
               className={`flex flex-col-reverse md:flex-row items-center justify-between gap-12 
-                transition-all duration-300 ${
-                  index % 2 === 1 ? "md:flex-row-reverse" : ""
-                }`}
+                transition-all duration-300 ${index % 2 === 1 ? "md:flex-row-reverse" : ""}`}
             >
               {/* Text Content */}
               <div className="md:w-1/2 text-left">

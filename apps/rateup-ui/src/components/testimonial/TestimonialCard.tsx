@@ -1,16 +1,4 @@
-"use client";
-
-import {
-  Anchor,
-  Avatar,
-  Flex,
-  Group,
-  Modal,
-  Rating,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Anchor, Avatar, Flex, Group, Modal, Rating, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
@@ -25,10 +13,7 @@ interface TestimonialCardInterface {
   testimonial: Omit<Testimonial, "teamId" | "survey">;
   currentStyle?: any;
 }
-const TestimonialCard = ({
-  testimonial,
-  currentStyle = null,
-}: TestimonialCardInterface) => {
+const TestimonialCard = ({ testimonial, currentStyle = null }: TestimonialCardInterface) => {
   const [opened, { open, close }] = useDisclosure(false);
   return (
     <>
@@ -69,13 +54,7 @@ const TestimonialCard = ({
   );
 };
 
-const TestimonialContent = ({
-  testimonial,
-  isModal,
-  open,
-  currentStyle,
-  close,
-}) => {
+const TestimonialContent = ({ testimonial, isModal, open, currentStyle, close }) => {
   const isProfileRemoved = currentStyle?.profileBlock.profilePic.isRemoved;
   const { t: translations } = useTranslation();
   return (
@@ -83,12 +62,7 @@ const TestimonialContent = ({
       <Stack bg={currentStyle?.profileBlock.bg} gap={0}>
         {isModal ? (
           <Flex justify={"flex-end"} m={"xs"}>
-            <IconX
-              onClick={close}
-              size={"1.5rem"}
-              style={{ cursor: "pointer" }}
-              color="black"
-            />
+            <IconX onClick={close} size={"1.5rem"} style={{ cursor: "pointer" }} color="black" />
           </Flex>
         ) : null}
         <Group pl={"xl"} py={"md"} h={90}>
@@ -110,19 +84,8 @@ const TestimonialContent = ({
           </Stack>
         </Group>
       </Stack>
-      <Stack
-        gap={0}
-        pl={"xl"}
-        pr={"sm"}
-        py={"sm"}
-        bg={currentStyle?.descBlock.bg}
-        mih={105}
-      >
-        <Text
-          size="sm"
-          lineClamp={isModal ? null : 3}
-          style={currentStyle?.descBlock.desc}
-        >
+      <Stack gap={0} pl={"xl"} pr={"sm"} py={"sm"} bg={currentStyle?.descBlock.bg} mih={105}>
+        <Text size="sm" lineClamp={isModal ? null : 3} style={currentStyle?.descBlock.desc}>
           {testimonial?.testimonial.testimonial}
         </Text>
         {!isModal && testimonial?.testimonial.testimonial?.length >= 80 && (
@@ -131,8 +94,7 @@ const TestimonialContent = ({
           </Anchor>
         )}
       </Stack>
-      {!currentStyle?.ratingBlock.isRemoved &&
-      testimonial?.testimonial.rating != null ? (
+      {!currentStyle?.ratingBlock.isRemoved && testimonial?.testimonial.rating != null ? (
         <Stack py={"xs"} bg={currentStyle?.ratingBlock.bg} pl={"xl"} h={50}>
           <Rating value={testimonial?.testimonial.rating} readOnly size="lg" />
         </Stack>

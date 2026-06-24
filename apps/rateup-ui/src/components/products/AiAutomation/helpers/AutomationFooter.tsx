@@ -1,8 +1,4 @@
-import {
-  IconBrandFacebook,
-  IconBrandInstagram,
-  IconBrandLinkedin,
-} from "@tabler/icons-react";
+import { IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 
 const AutomationFooter = () => {
@@ -13,8 +9,8 @@ const AutomationFooter = () => {
           <div>
             <h3 className="font-bold text-xl mb-4">RateUp</h3>
             <p className="text-gray-400 mb-4">
-              Experience the power of AI-enabled automation. Get started with
-              RateUp today and build smarter, more efficient customer journeys.
+              Experience the power of AI-enabled automation. Get started with RateUp today and build
+              smarter, more efficient customer journeys.
             </p>
             <div className="flex space-x-4 mt-3">
               <Link
@@ -52,18 +48,12 @@ const AutomationFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/contact-us"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link to="/contact-us" className="hover:text-gray-300 transition">
                   Contact Us
                 </Link>
               </li>
               <li>
-                <Link
-                  to="https://blog.rateup.app/"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link to="https://blog.rateup.app/" className="hover:text-gray-300 transition">
                   Blog
                 </Link>
               </li>
@@ -96,18 +86,12 @@ const AutomationFooter = () => {
 
             <ul className="space-y-2 text-sm text-gray-100">
               <li>
-                <Link
-                  to="/privacy-policy"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link to="/privacy-policy" className="hover:text-gray-300 transition">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/terms-of-service"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link to="/terms-of-service" className="hover:text-gray-300 transition">
                   Terms of Service
                 </Link>
               </li>
@@ -120,10 +104,7 @@ const AutomationFooter = () => {
             &copy; {new Date().getFullYear()} RateUp. All rights reserved.
           </p>
           <div className="flex space-x-6">
-            <Link
-              to="/privacy-policy"
-              className="text-gray-400 hover:text-white text-sm"
-            >
+            <Link to="/privacy-policy" className="text-gray-400 hover:text-white text-sm">
               Privacy Policy
             </Link>
             <Link to="#" className="text-gray-400 hover:text-white text-sm">

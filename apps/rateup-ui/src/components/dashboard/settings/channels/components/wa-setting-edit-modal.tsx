@@ -1,5 +1,3 @@
-"use client";
-
 import { Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 

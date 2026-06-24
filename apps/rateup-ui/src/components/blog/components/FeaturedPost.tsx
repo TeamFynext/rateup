@@ -12,25 +12,18 @@ export function FeaturedPost({ post }: { post?: Post }) {
         .join("")
     : "RU";
 
-  const formattedDate = new Date(post.published_at).toLocaleDateString(
-    "en-US",
-    {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    },
-  );
+  const formattedDate = new Date(post.published_at).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
     <article className="group/featured rounded-[28px] overflow-hidden bg-white border border-[#ECECEA] shadow-[0_1px_3px_rgba(11,31,72,0.06),0_8px_24px_rgba(11,31,72,0.06)] grid grid-cols-[1.2fr_1fr] transition-all duration-[220ms] hover:border-[#C5D5EC] hover:shadow-[0_16px_48px_rgba(11,31,72,0.1)]">
       {/* Thumbnail */}
       <div className="relative min-h-[340px] overflow-hidden bg-[#06182F] border-r border-[#ECECEA]">
         {post.feature_image ? (
-          <img
-            src={post.feature_image}
-            alt={post.title}
-            className="w-full h-full object-cover"
-          />
+          <img src={post.feature_image} alt={post.title} className="w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0 bg-[linear-gradient(145deg,#082040_0%,#0C2B54_45%,#071A33_100%)] flex flex-col items-start justify-end p-[22px]">
             {/* Glow */}

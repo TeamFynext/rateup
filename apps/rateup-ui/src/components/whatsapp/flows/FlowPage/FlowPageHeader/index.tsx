@@ -1,7 +1,3 @@
-"use client";
-
-import { useContext } from "react";
-
 import {
   IconArrowLeft,
   IconBrandWhatsapp,
@@ -14,7 +10,8 @@ import {
   IconShare,
   IconUsers,
 } from "@tabler/icons-react";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
+import { useContext } from "react";
 
 import { usePushToWaMutation } from "@/backend/whatsapp/flow/flow.query";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -22,6 +19,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import { EditFlowContext } from "../EditFlow/EditFlowContext.ts";
+
 import styles from "./FlowPageHeader.module.css";
 
 export enum FlowTabEnum {
@@ -76,11 +74,7 @@ function FlowPageHeader({
     <div className={styles["flow-page-header"]}>
       {/* Row 1: Back Button, Title, Badge, and Subtitle */}
       <div className={styles["header-row-1"]}>
-        <Button
-          variant="ghost"
-          onClick={() => history.back()}
-          className={styles["back-button"]}
-        >
+        <Button variant="ghost" onClick={() => history.back()} className={styles["back-button"]}>
           <IconArrowLeft size={18} />
           <span className={styles["back-text"]}>Back</span>
         </Button>
@@ -88,9 +82,7 @@ function FlowPageHeader({
         <div className={styles["title-section"]}>
           <div className={styles["title-row"]}>
             <h1 className={styles["flow-title"]}>{name}</h1>
-            {isActive && (
-              <Badge className={styles["status-badge"]}>Active</Badge>
-            )}
+            {isActive && <Badge className={styles["status-badge"]}>Active</Badge>}
           </div>
           <p className={styles["flow-subtitle"]}>{subtitle}</p>
         </div>
@@ -99,20 +91,14 @@ function FlowPageHeader({
         <div className="flex gap-2">
           {/* Save to WhatsApp Button - Visible in all tabs */}
           {flowDbId && (
-            <Button
-              onClick={handleSaveToWhatsapp}
-              disabled={pushToWaMutation.isPending}
-            >
+            <Button onClick={handleSaveToWhatsapp} disabled={pushToWaMutation.isPending}>
               <IconBrandWhatsapp size={16} className="mr-2" />
               {pushToWaMutation.isPending ? "Syncing..." : "Save to WhatsApp"}
             </Button>
           )}
           {/* Preview Button - Only show in Edit tab */}
           {tab === FlowTabEnum.Edit && setPreviewOpened && (
-            <Button
-              variant="outline"
-              onClick={() => setPreviewOpened(!previewOpened)}
-            >
+            <Button variant="outline" onClick={() => setPreviewOpened(!previewOpened)}>
               {previewOpened ? (
                 <>
                   <IconEyeOff size={16} className="mr-2" />
@@ -141,11 +127,7 @@ function FlowPageHeader({
             {Object.values(FlowTabEnum).map((tabNameString) => {
               const TabIcon = tabIcons[tabNameString];
               return (
-                <TabsTrigger
-                  key={tabNameString}
-                  value={tabNameString}
-                  className={styles["tab"]}
-                >
+                <TabsTrigger key={tabNameString} value={tabNameString} className={styles["tab"]}>
                   <TabIcon size={16} className="mr-2" />
                   {tabNameString}
                 </TabsTrigger>

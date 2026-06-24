@@ -1,6 +1,5 @@
-import React from "react";
-
 import { Box, Group, Stack, Text } from "@mantine/core";
+import React from "react";
 import type { DefaultInputComponentProps } from "react-phone-number-input";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
@@ -32,10 +31,7 @@ const PhoneInputWithCountry = ({
           </Text>
         )}
       </Group>
-      <Box
-        className={styles.inputBox}
-        style={{ borderColor: error && "red", borderRadius }}
-      >
+      <Box className={styles.inputBox} style={{ borderColor: error && "red", borderRadius }}>
         <PhoneInputWithCountrySelect
           defaultCountry="IN"
           international

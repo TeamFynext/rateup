@@ -1,6 +1,5 @@
-import React from "react";
-
 import { Image } from "@unpic/react";
+import React from "react";
 
 import { articles } from "../WhatsAppSurveyConstants.tsx";
 
@@ -19,8 +18,8 @@ export default function WhatsAppSurveyGrowth() {
         </h3>
 
         <p className="pt-4 text-gray-200 text-lg max-w-2xl mx-auto">
-          RateUp goes beyond just collecting feedback. We help you leverage it
-          to improve your business from every angle.
+          RateUp goes beyond just collecting feedback. We help you leverage it to improve your
+          business from every angle.
         </p>
 
         <div className="mt-16 space-y-16 w-full">
@@ -33,9 +32,7 @@ export default function WhatsAppSurveyGrowth() {
             >
               {/* Text Section */}
               <div className="md:w-1/2 text-left">
-                <h4 className="text-3xl font-semibold text-white">
-                  {article.category}
-                </h4>
+                <h4 className="text-3xl font-semibold text-white">{article.category}</h4>
                 <p className="pt-4 text-gray-100 text-lg">{article.title}</p>
               </div>
 

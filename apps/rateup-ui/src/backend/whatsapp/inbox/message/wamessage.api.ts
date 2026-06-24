@@ -52,10 +52,7 @@ export async function getMessagesByContactId(
 }
 
 export async function sendNewWaMessage(contactId: string, message: any) {
-  return await axiosClient.post(
-    `${WA_CONTACT_BASE_PATH}/${contactId}`,
-    message,
-  );
+  return await axiosClient.post(`${WA_CONTACT_BASE_PATH}/${contactId}`, message);
 }
 
 export type ContactsWithLastMessage = ContactsData & {
@@ -144,12 +141,9 @@ export async function exportWaChats({
 
 export async function getWaChatMediaFile(mediaId: string) {
   try {
-    const response = await axiosClient.get(
-      `${WA_CONTACT_BASE_PATH}/mediafile/${mediaId}`,
-      {
-        responseType: "arraybuffer", // Ensure the response is returned as raw binary data
-      },
-    );
+    const response = await axiosClient.get(`${WA_CONTACT_BASE_PATH}/mediafile/${mediaId}`, {
+      responseType: "arraybuffer", // Ensure the response is returned as raw binary data
+    });
 
     // Convert the binary data to a Blob and return it
     return new Blob([response.data]);
@@ -171,36 +165,27 @@ export async function bulkAssignInboxToUser(data: {
   contactIds: string[];
   assignee: { userId: string; teamId: string };
 }) {
-  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign-bulk`, data))
-    .data;
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign-bulk`, data)).data;
 }
 
 export async function getAssignedUserForContact(contactId) {
-  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/assign/${contactId}`))
-    .data;
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/assign/${contactId}`)).data;
 }
 
 export async function getInboxUserCount() {
-  return (
-    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`, { timeout: 30000 })
-  ).data;
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`, { timeout: 30000 })).data;
 }
 
 export async function markWaMessagesAsRead(contactId) {
-  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/mark/${contactId}`))
-    .data;
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/mark/${contactId}`)).data;
 }
 
 export async function blockWhatsAppUser(data: { phoneNumbersList: string[] }) {
-  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/block-user`, data))
-    .data;
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/block-user`, data)).data;
 }
 
-export async function unblockWhatsAppUser(data: {
-  phoneNumbersList: string[];
-}) {
-  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/unblock-user`, data))
-    .data;
+export async function unblockWhatsAppUser(data: { phoneNumbersList: string[] }) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/unblock-user`, data)).data;
 }
 
 export async function getInboxAnalytics() {
@@ -208,18 +193,11 @@ export async function getInboxAnalytics() {
 }
 
 export async function generateInboxResponse(data) {
-  return (
-    await axiosClient.post(`${WA_CONTACT_BASE_PATH}/generate-response`, data)
-  ).data;
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/generate-response`, data)).data;
 }
 
 export async function createPrivateMessage(contactId, data) {
-  return (
-    await axiosClient.post(
-      `${WA_CONTACT_BASE_PATH}/privatemessage/${contactId}`,
-      data,
-    )
-  ).data;
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/privatemessage/${contactId}`, data)).data;
 }
 
 export async function getWaMessageLogs(filter) {
@@ -250,9 +228,7 @@ export async function getWaMessageLogs(filter) {
   }
 
   // Filter out undefined/null values
-  const filteredParams = Object.fromEntries(
-    Object.entries(params).filter(([, v]) => v != null),
-  );
+  const filteredParams = Object.fromEntries(Object.entries(params).filter(([, v]) => v != null));
 
   return (
     await axiosClient.get(`${WA_CONTACT_BASE_PATH}/message-logs`, {
@@ -277,9 +253,7 @@ export async function exportWaMessageLogs(filter) {
     searchQuery: filter.searchQuery,
   };
 
-  const filteredParams = Object.fromEntries(
-    Object.entries(params).filter(([, v]) => v != null),
-  );
+  const filteredParams = Object.fromEntries(Object.entries(params).filter(([, v]) => v != null));
 
   return (
     await axiosClient.get(`${WA_CONTACT_BASE_PATH}/export-message-logs`, {

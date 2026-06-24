@@ -64,13 +64,7 @@ export default function Problem() {
                 >
                   <rect x="2" y="2" width="20" height="20" rx="5.5" />
                   <circle cx="12" cy="12" r="4.2" />
-                  <circle
-                    cx="17.6"
-                    cy="6.4"
-                    r="1.3"
-                    fill="currentColor"
-                    stroke="none"
-                  />
+                  <circle cx="17.6" cy="6.4" r="1.3" fill="currentColor" stroke="none" />
                 </svg>
               ),
               iconBg: "rgba(221,42,123,0.13)",
@@ -118,9 +112,7 @@ export default function Problem() {
               <h6 className="font-display font-black text-white text-[18px] leading-[1.25] mb-2.5 tracking-[-0.01em]">
                 {title}
               </h6>
-              <p className="text-[14px] leading-[1.58] text-white/50 m-0">
-                {body}
-              </p>
+              <p className="text-[14px] leading-[1.58] text-white/50 m-0">{body}</p>
             </div>
           ))}
         </div>

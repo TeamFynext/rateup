@@ -1,17 +1,11 @@
-"use client";
-
-import type { FormEventHandler } from "react";
-
 import { getDefaultZIndex, Group, Modal, Space, Title } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
+import type { FormEventHandler } from "react";
 import { useTranslation } from "react-i18next";
 
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../Button/RateupButtons.tsx";
 
 interface FormModalLayoutProps {
   opened: boolean;
@@ -92,9 +86,7 @@ export default function FormModalLayout({
           onSubmit();
         }}
         style={!noCustomHeader ? { padding: 20 } : {}}
-        onKeyDown={getHotkeyHandler([
-          [SAVE_HOTKEY, onSubmit ? onSubmit : () => {}],
-        ])}
+        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, onSubmit ? onSubmit : () => {}]])}
       >
         {children}
         <Space h={"md"} />
@@ -104,9 +96,7 @@ export default function FormModalLayout({
               type="reset"
               variant="subtle"
               onClick={cancelOnClick ? cancelOnClick : onClose}
-              title={
-                cancelButtonTitle ? cancelButtonTitle : translations("Cancel")
-              }
+              title={cancelButtonTitle ? cancelButtonTitle : translations("Cancel")}
             />
           )}
           {buttonTitle && (

@@ -1,5 +1,3 @@
-"use client";
-
 import type { MantineStyleProp } from "@mantine/core";
 import {
   ActionIcon,
@@ -83,12 +81,7 @@ interface QuickReplyButtonProps {
   onClick?: any;
   type?: any;
 }
-export function QuickReplyButton({
-  text,
-  style,
-  onClick,
-  type,
-}: QuickReplyButtonProps) {
+export function QuickReplyButton({ text, style, onClick, type }: QuickReplyButtonProps) {
   const theme = useMantineTheme();
   return (
     <Box
@@ -135,11 +128,7 @@ interface WaListButonProps {
   style?: MantineStyleProp;
   onClick?: any;
 }
-function WaListButton({
-  text = "View Options",
-  style = {},
-  ...props
-}: WaListButonProps) {
+function WaListButton({ text = "View Options", style = {}, ...props }: WaListButonProps) {
   const theme = useMantineTheme();
   return (
     <Group
@@ -250,10 +239,7 @@ export function WaResponseMessage({
       </ResponseMessageContainer>
       {/* update changes in whatsapp */}
       {quickReplyButtons.map((text, i) => (
-        <QuickReplyButton
-          key={i}
-          text={typeof text === "string" ? text : text.value}
-        />
+        <QuickReplyButton key={i} text={typeof text === "string" ? text : text.value} />
       ))}
     </Stack>
   );
@@ -265,12 +251,7 @@ interface WaListMessageProps {
   footer?: string;
   openList: any;
 }
-function WaListMessage({
-  body,
-  header = "",
-  footer = "",
-  openList,
-}: WaListMessageProps) {
+function WaListMessage({ body, header = "", footer = "", openList }: WaListMessageProps) {
   return (
     <Stack
       style={{

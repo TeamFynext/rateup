@@ -1,18 +1,5 @@
-"use client";
-
-import {
-  BackgroundImage,
-  Box,
-  Flex,
-  ScrollAreaAutosize,
-  Text,
-} from "@mantine/core";
-import {
-  IconAntennaBars5,
-  IconBatteryFilled,
-  IconInfoCircle,
-  IconWifi,
-} from "@tabler/icons-react";
+import { BackgroundImage, Box, Flex, ScrollAreaAutosize, Text } from "@mantine/core";
+import { IconAntennaBars5, IconBatteryFilled, IconInfoCircle, IconWifi } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 

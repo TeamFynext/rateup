@@ -1,11 +1,6 @@
-import React, { Suspense, useEffect } from "react";
-
 import { Center, Stack, Text } from "@mantine/core";
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import React, { Suspense, useEffect } from "react";
 import { toast } from "sonner";
 
 import { useUpdateUserAccessToken } from "@/backend/whatsapp/settings/waSettings.query";
@@ -45,8 +40,7 @@ function FbLoginRedirect({
     const waSettingId = localStorage.getItem("waSettingsId");
     const automationId = localStorage.getItem("automationId");
     const automationRouteBase =
-      localStorage.getItem("automationRouteBase") ||
-      "/dashboard/whatsapp/flowbots";
+      localStorage.getItem("automationRouteBase") || "/dashboard/whatsapp/flowbots";
     const targetRoute = automationId
       ? `${automationRouteBase}/${automationId}`
       : "/dashboard/whatsapp/flowbots";

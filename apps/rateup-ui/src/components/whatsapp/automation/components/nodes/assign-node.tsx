@@ -1,8 +1,7 @@
-import { memo } from "react";
-
 import { Box, Group, Stack, Text } from "@mantine/core";
 import { IconUser } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
+import { memo } from "react";
 
 import type { AssignNodeData } from "../../types/node-types.ts";
 import BaseNode from "./base-node.tsx";
@@ -33,9 +32,7 @@ function AssignNode(props: NodeProps & { data: AssignNodeData }) {
               Assign If Online:
             </Text>
             <Text size="sm">
-              {data.assign.assignIfOnline
-                ? "Only if online"
-                : "Regardless of status"}
+              {data.assign.assignIfOnline ? "Only if online" : "Regardless of status"}
             </Text>
           </Group>
           {data.assign?.assignType === "staff" && (
@@ -51,9 +48,7 @@ function AssignNode(props: NodeProps & { data: AssignNodeData }) {
                   <Text size="sm" c="dimmed">
                     Round Robin:
                   </Text>
-                  <Text size="sm">
-                    {data.assign?.roundRobin ? "Yes" : "No"}
-                  </Text>
+                  <Text size="sm">{data.assign?.roundRobin ? "Yes" : "No"}</Text>
                 </Group>
               )}
             </>

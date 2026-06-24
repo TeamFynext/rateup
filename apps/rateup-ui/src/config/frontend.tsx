@@ -1,6 +1,5 @@
 import type { SuperTokensConfig } from "supertokens-auth-react/lib/build/types";
 import EmailPasswordReact from "supertokens-auth-react/recipe/emailpassword";
-import { EmailPasswordPreBuiltUI } from "supertokens-auth-react/recipe/emailpassword/prebuiltui";
 import EmailVerificationReact from "supertokens-auth-react/recipe/emailverification";
 import Session from "supertokens-auth-react/recipe/session";
 import ThirdPartyReact from "supertokens-auth-react/recipe/thirdparty";
@@ -26,10 +25,7 @@ export const frontendConfig = (): SuperTokensConfig => {
       EmailPasswordReact.init(),
       ThirdPartyReact.init({
         signInAndUpFeature: {
-          providers: [
-            ThirdPartyReact.Google.init(),
-            ThirdPartyReact.Apple.init(),
-          ],
+          providers: [ThirdPartyReact.Google.init(), ThirdPartyReact.Apple.init()],
         },
       }),
       EmailVerificationReact.init(),
@@ -61,8 +57,3 @@ export const frontendConfig = (): SuperTokensConfig => {
     },
   };
 };
-
-const recipeDetails = {
-  docsLink: "https://supertokens.com/docs/emailpassword/introduction",
-};
-const PreBuiltUIList = [EmailPasswordPreBuiltUI];

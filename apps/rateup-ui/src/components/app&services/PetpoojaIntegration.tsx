@@ -1,16 +1,12 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Divider, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { IntegratedApps } from "@/types/enums.ts";
 import {
   useCreateIntegrationMutation,
   useDeleteIntegrationMutation,
@@ -28,31 +24,21 @@ import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { ActionIconCommon } from "@/components/menu/ActionIcon/ActionIconCommon.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import { IntegratedApps } from "@/types/enums.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 const PETPOOJA_WEBHOOK_ENDPOINT = `${import.meta.env.VITE_API_URL}/api/public/integrations/petpooja`;
 
 export function PetpoojaIntegration() {
   const { data: integration } = useIntegrationByType(IntegratedApps.petpooja);
-  const updateIntegration = useUpdateIntegrationMutation(
-    IntegratedApps.petpooja,
-  );
+  const updateIntegration = useUpdateIntegrationMutation(IntegratedApps.petpooja);
 
   return (
     <Stack>
       <SimpleGrid cols={2}>
-        <PetpoojaConfig
-          integration={integration}
-          updateIntegration={updateIntegration}
-        />
-        <WaTemplateSendSettings
-          integration={integration}
-          updateIntegration={updateIntegration}
-        />
+        <PetpoojaConfig integration={integration} updateIntegration={updateIntegration} />
+        <WaTemplateSendSettings integration={integration} updateIntegration={updateIntegration} />
       </SimpleGrid>
       <Divider mt={"md"} />
       <WaTemplateSentHistory integration={integration} />
@@ -63,12 +49,8 @@ export function PetpoojaIntegration() {
 function PetpoojaConfig({ integration, updateIntegration }) {
   const [restaurantId, setRestaurantId] = useState("");
   const [error, setError] = useState(null);
-  const createIntegration = useCreateIntegrationMutation(
-    IntegratedApps.petpooja,
-  );
-  const deleteIntegration = useDeleteIntegrationMutation(
-    IntegratedApps.petpooja,
-  );
+  const createIntegration = useCreateIntegrationMutation(IntegratedApps.petpooja);
+  const deleteIntegration = useDeleteIntegrationMutation(IntegratedApps.petpooja);
   const [opened, { open, close }] = useDisclosure(false);
   const handleConfig = () => {
     if (!restaurantId.trim().length) {

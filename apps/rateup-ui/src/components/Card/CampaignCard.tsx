@@ -1,18 +1,13 @@
-"use client";
-
 import { ActionIcon, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconTrash } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
 import { useDeleteCampaignMutation } from "@/backend/campaign/campaign.query";
+import { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
 
 export const CampaignMenu = ({ teamId, id, campaignType }) => {
-  const deleteCampaignMutation = useDeleteCampaignMutation(
-    teamId,
-    campaignType,
-  );
+  const deleteCampaignMutation = useDeleteCampaignMutation(teamId, campaignType);
   const { t: translations } = useTranslation();
   const openDeleteModal = (e) => {
     e.stopPropagation();
@@ -33,12 +28,7 @@ export const CampaignMenu = ({ teamId, id, campaignType }) => {
     });
   };
   return (
-    <ActionIcon
-      variant="light"
-      radius={"md"}
-      onClick={openDeleteModal}
-      ml={"md"}
-    >
+    <ActionIcon variant="light" radius={"md"} onClick={openDeleteModal} ml={"md"}>
       <IconTrash size={18} />
     </ActionIcon>
   );

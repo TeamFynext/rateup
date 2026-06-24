@@ -1,15 +1,10 @@
-"use client";
-
 import { Star } from "lucide-react";
 import { motion } from "motion/react";
 
 import { testimonials } from "../TestimonialContants.tsx";
 
 const StarRating = ({ count }: { count: number }) => (
-  <div
-    className="flex items-center gap-1 mt-2"
-    aria-label={`Rating: ${count} out of 5 stars`}
-  >
+  <div className="flex items-center gap-1 mt-2" aria-label={`Rating: ${count} out of 5 stars`}>
     {[...Array(count)].map((_, i) => (
       <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
     ))}
@@ -28,8 +23,8 @@ const SuccessStories = () => {
             Success stories
           </h2>
           <p className="pt-3 text-gray-600 dark:text-gray-300 max-w-2xl">
-            See how businesses are leveraging our platform to collect and
-            showcase authentic testimonials
+            See how businesses are leveraging our platform to collect and showcase authentic
+            testimonials
           </p>
         </div>
 

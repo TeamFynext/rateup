@@ -1,5 +1,3 @@
-import React, { useEffect, useRef, useState } from "react";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { isEqual } from "lodash";
 import {
@@ -11,9 +9,9 @@ import {
   UserRoundCheck,
   Users,
 } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { WaMessageAssignStatus } from "@/types/enums.ts";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import {
@@ -36,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 import { generateInternalMessageId } from "../../util.tsx";
 
@@ -44,21 +43,10 @@ const AssignUser = ({
   variant = "ghost",
 }: {
   contactId: string;
-  variant?:
-    | "ghost"
-    | "link"
-    | "default"
-    | "destructive"
-    | "outline"
-    | "secondary";
+  variant?: "ghost" | "link" | "default" | "destructive" | "outline" | "secondary";
 }) => {
   const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
-  const {
-    data: teamRes,
-    isPending: teamsLoading,
-    isError,
-    error,
-  } = useTeamsByUser();
+  const { data: teamRes, isPending: teamsLoading } = useTeamsByUser();
   const queryClient = useQueryClient();
   const { filterData } = useContactStore();
   const { t: translations } = useTranslation();
@@ -71,9 +59,7 @@ const AssignUser = ({
   const [assignedStaff, setAssignedStaff] = useState<
     { userId: string; teamId: string; contactId: string }[]
   >([]);
-  const [debouncedAssignedStaff, setDebouncedAssignedStaff] = useState<any[]>(
-    [],
-  );
+  const [debouncedAssignedStaff, setDebouncedAssignedStaff] = useState<any[]>([]);
   const { updateContactById } = useContactsStore();
   const isDefault = variant === "default";
 
@@ -106,11 +92,7 @@ const AssignUser = ({
   }, [assignedUsers, contactId]);
 
   useEffect(() => {
-    if (
-      !debouncedAssignedStaff.length ||
-      debouncedAssignedStaff[0].contactId !== contactId
-    )
-      return;
+    if (!debouncedAssignedStaff.length || debouncedAssignedStaff[0].contactId !== contactId) return;
     const assignees = debouncedAssignedStaff.map((a) => ({
       userId: a.userId,
       teamId: a.teamId,
@@ -133,17 +115,11 @@ const AssignUser = ({
 
       const newlyAssigned = nextAssigned.filter(
         (next) =>
-          !prevAssigned.some(
-            (prev) =>
-              prev.userId === next.userId && prev.teamId === next.teamId,
-          ),
+          !prevAssigned.some((prev) => prev.userId === next.userId && prev.teamId === next.teamId),
       );
       const unassigned = prevAssigned.filter(
         (prev) =>
-          !nextAssigned.some(
-            (next) =>
-              next.userId === prev.userId && next.teamId === prev.teamId,
-          ),
+          !nextAssigned.some((next) => next.userId === prev.userId && next.teamId === prev.teamId),
       );
 
       if (!newlyAssigned.length && !unassigned.length) {
@@ -227,10 +203,7 @@ const AssignUser = ({
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
             messagesStore.addMessage(`${contactId}_all`, newMessage as any);
-            messagesStore.addMessage(
-              `${contactId}_internal`,
-              newMessage as any,
-            );
+            messagesStore.addMessage(`${contactId}_internal`, newMessage as any);
             updateContactById(contactId, (contact) => ({
               ...contact,
               waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
@@ -240,7 +213,7 @@ const AssignUser = ({
               }),
             }));
           },
-          onError: async (error) => {
+          onError: async (_error) => {
             setAssignedStaff(
               prevAssignedRef.current.map((a) => ({
                 userId: a.userId,
@@ -269,9 +242,7 @@ const AssignUser = ({
 
   const toggleTeamOpen = (teamId: string) => {
     setOpenTeams((prev) =>
-      prev.includes(teamId)
-        ? prev.filter((id) => id !== teamId)
-        : [...prev, teamId],
+      prev.includes(teamId) ? prev.filter((id) => id !== teamId) : [...prev, teamId],
     );
   };
 
@@ -287,9 +258,7 @@ const AssignUser = ({
   };
 
   const handleSelectTeam = (team: any) => {
-    const teamStaff = staffMembers.filter((m) =>
-      m.teams.some((t) => t.team_id === team.id),
-    );
+    const teamStaff = staffMembers.filter((m) => m.teams.some((t) => t.team_id === team.id));
     const allSelected = teamStaff.every((m) =>
       assignedStaff.some((a) => a.userId === m.id && a.teamId === team.id),
     );
@@ -349,16 +318,12 @@ const AssignUser = ({
                   return (
                     <div key={a.userId} className="relative">
                       <p className="text-sm font-semibold">
-                        {staff?.name?.length > 10
-                          ? staff?.name?.slice(0, 10)
-                          : staff?.name}
+                        {staff?.name?.length > 10 ? staff?.name?.slice(0, 10) : staff?.name}
                       </p>
                     </div>
                   );
                 })}
-                {assignedStaff.length > 1 && (
-                  <p className="text-sm font-semibold">...</p>
-                )}
+                {assignedStaff.length > 1 && <p className="text-sm font-semibold">...</p>}
               </div>
             </div>
 
@@ -366,17 +331,11 @@ const AssignUser = ({
               trigger={
                 !assignedStaff.length ? (
                   <div className="flex items-center gap-1">
-                    <UserRoundCheck
-                      className={`w-4 h-4 ${isDefault ? "" : "text-primary"}`}
-                    />
-                    <span className={`${isDefault ? "" : "text-primary"} pr-2`}>
-                      Assign
-                    </span>
+                    <UserRoundCheck className={`w-4 h-4 ${isDefault ? "" : "text-primary"}`} />
+                    <span className={`${isDefault ? "" : "text-primary"} pr-2`}>Assign</span>
                   </div>
                 ) : (
-                  <ChevronDown
-                    className={`w-3 h-3 ${isDefault ? "" : "text-muted-foreground"}`}
-                  />
+                  <ChevronDown className={`w-3 h-3 ${isDefault ? "" : "text-muted-foreground"}`} />
                 )
               }
               side="bottom"
@@ -391,31 +350,20 @@ const AssignUser = ({
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-72 max-h-80 overflow-y-auto"
-      >
+      <DropdownMenuContent align="end" className="w-72 max-h-80 overflow-y-auto">
         <div className="px-2 py-1.5 text-xs text-muted-foreground">
           Assign to team or individual
         </div>
         <DropdownMenuSeparator />
 
         {teams?.map((team) => {
-          const teamStaff = staffMembers.filter((s) =>
-            s.teams.some((t) => t.team_id === team.id),
-          );
-          const allSelected = teamStaff.every((s) =>
-            isSelectedForTeam(s.id, team.id),
-          );
-          const hasOtherTeamsSelected = assignedStaff.some(
-            (a) => a.teamId !== team.id,
-          );
+          const teamStaff = staffMembers.filter((s) => s.teams.some((t) => t.team_id === team.id));
+          const allSelected = teamStaff.every((s) => isSelectedForTeam(s.id, team.id));
+          const hasOtherTeamsSelected = assignedStaff.some((a) => a.teamId !== team.id);
           const partiallySelected =
             !allSelected &&
             teamStaff.some((s) =>
-              assignedStaff.some(
-                (a) => a.userId === s.id && a.teamId === team.id,
-              ),
+              assignedStaff.some((a) => a.userId === s.id && a.teamId === team.id),
             );
           return (
             <div key={team.id}>
@@ -448,16 +396,12 @@ const AssignUser = ({
                     className="text-xs text-muted-foreground cursor-pointer"
                     disabled={allSelected && !hasOtherTeamsSelected}
                   >
-                    {allSelected
-                      ? "Unassign entire team"
-                      : "Assign entire team"}
+                    {allSelected ? "Unassign entire team" : "Assign entire team"}
                   </DropdownMenuItem>
 
                   {teamStaff?.map((staff) => {
                     const isSelected = isSelectedForTeam(staff.id, team.id);
-                    const globalAssigned = assignedStaff.find(
-                      (a) => a.userId === staff.id,
-                    );
+                    const globalAssigned = assignedStaff.find((a) => a.userId === staff.id);
 
                     const isAssignedToOtherTeam =
                       globalAssigned && globalAssigned.teamId !== team.id;
@@ -470,9 +414,7 @@ const AssignUser = ({
                         onSelect={(e) => e.preventDefault()}
                         key={staff.id}
                         onClick={() => updateStaffAssignment(staff, team.id)}
-                        className={`gap-2 group ${
-                          isSelected ? "bg-muted/50" : ""
-                        } cursor-pointer`}
+                        className={`gap-2 group ${isSelected ? "bg-muted/50" : ""} cursor-pointer`}
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2 flex-1">
@@ -487,15 +429,11 @@ const AssignUser = ({
                               <div className="text-sm">
                                 {staff.name}
                                 {staff.id === user.userId && (
-                                  <span className="ml-1">
-                                    ( {translations("You")} )
-                                  </span>
+                                  <span className="ml-1">( {translations("You")} )</span>
                                 )}
                               </div>
                               <div className="text-[11px] text-muted-foreground">
-                                {staff.status === "online"
-                                  ? "Online"
-                                  : "Offline"}
+                                {staff.status === "online" ? "Online" : "Offline"}
                               </div>
                             </div>
                           </div>
@@ -520,9 +458,7 @@ const AssignUser = ({
                                 side="right"
                               />
                             )}
-                            {isSelected && (
-                              <Check className="w-4 h-4 text-green-600" />
-                            )}
+                            {isSelected && <Check className="w-4 h-4 text-green-600" />}
                           </div>
                         </div>
                       </DropdownMenuItem>

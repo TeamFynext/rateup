@@ -1,8 +1,3 @@
-"use client";
-
-import type React from "react";
-import { useCallback } from "react";
-
 import {
   IconAd,
   IconBuildingStore,
@@ -23,10 +18,12 @@ import {
   IconUsers,
   IconVideo,
 } from "@tabler/icons-react";
+import type React from "react";
+import { useCallback } from "react";
 
+import { Card } from "@/components/ui/card.tsx";
 import type { AutomationPlatform } from "@/types/platform.ts";
 import { isComponentSupportedOnPlatform } from "@/types/platform.ts";
-import { Card } from "@/components/ui/card.tsx";
 
 // Component categories and items
 const categories = [
@@ -132,12 +129,7 @@ export default function ComponentSidebar({ platform }: { platform: string }) {
   const selectedPlatform = platform as AutomationPlatform;
 
   // Debug log to verify platform
-  console.log(
-    "[ComponentSidebar] Received platform:",
-    platform,
-    "Parsed as:",
-    selectedPlatform,
-  );
+  console.log("[ComponentSidebar] Received platform:", platform, "Parsed as:", selectedPlatform);
 
   // Function to get default node data based on node type
   const getDefaultNodeData = useCallback((nodeId: string, label: string) => {
@@ -196,14 +188,8 @@ export default function ComponentSidebar({ platform }: { platform: string }) {
       .map((category) => ({
         ...category,
         items: category.items.filter((item) => {
-          const isSupported = isComponentSupportedOnPlatform(
-            item.id,
-            selectedPlatform,
-          );
-          console.log(
-            `[Filter] ${item.id} on ${selectedPlatform}:`,
-            isSupported,
-          );
+          const isSupported = isComponentSupportedOnPlatform(item.id, selectedPlatform);
+          console.log(`[Filter] ${item.id} on ${selectedPlatform}:`, isSupported);
           return isSupported;
         }),
       }))
@@ -224,16 +210,12 @@ export default function ComponentSidebar({ platform }: { platform: string }) {
     <Card className="w-62.5 overflow-y-auto p-4">
       <div className="mb-4">
         <h2 className="text-lg font-semibold">Components</h2>
-        <p className="text-sm text-muted-foreground">
-          Drag components to the canvas
-        </p>
+        <p className="text-sm text-muted-foreground">Drag components to the canvas</p>
       </div>
 
       {filteredCategories.map((category) => (
         <div key={category.name} className="mb-6">
-          <h3 className="mb-2 text-sm font-medium text-muted-foreground">
-            {category.name}
-          </h3>
+          <h3 className="mb-2 text-sm font-medium text-muted-foreground">{category.name}</h3>
           <div className="grid grid-cols-2 gap-2">
             {category.items.map((item) => (
               <div
@@ -242,11 +224,7 @@ export default function ComponentSidebar({ platform }: { platform: string }) {
                 role="none"
                 draggable
                 onDragStart={(event) =>
-                  onDragStart(
-                    event,
-                    item.id,
-                    getDefaultNodeData(item.id, item.label),
-                  )
+                  onDragStart(event, item.id, getDefaultNodeData(item.id, item.label))
                 }
               >
                 <div className="text-muted-foreground">{item.icon}</div>

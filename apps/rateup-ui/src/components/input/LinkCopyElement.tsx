@@ -1,5 +1,3 @@
-"use client";
-
 import type { TextInputProps } from "@mantine/core";
 import { ActionIcon, CopyButton, TextInput } from "@mantine/core";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
@@ -8,11 +6,7 @@ import { useTranslation } from "react-i18next";
 interface LinkCopyElementProps extends TextInputProps {
   link: string;
 }
-export function LinkCopyElement({
-  link,
-  label,
-  ...props
-}: LinkCopyElementProps) {
+export function LinkCopyElement({ link, label, ...props }: LinkCopyElementProps) {
   const { t: translations } = useTranslation();
   return (
     <TextInput
@@ -22,11 +16,7 @@ export function LinkCopyElement({
       rightSection={
         <CopyButton value={link}>
           {({ copied, copy }) => (
-            <ActionIcon
-              variant={"subtle"}
-              onClick={copy}
-              disabled={props.disabled}
-            >
+            <ActionIcon variant={"subtle"} onClick={copy} disabled={props.disabled}>
               {copied ? <IconCheck color={"teal"} /> : <IconCopy />}
             </ActionIcon>
           )}

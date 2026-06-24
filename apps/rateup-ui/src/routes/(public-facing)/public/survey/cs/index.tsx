@@ -1,18 +1,7 @@
-"use client";
-
-import React, { useState } from "react";
-
-import {
-  Button,
-  Container,
-  Image,
-  Paper,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Button, Container, Image, Paper, Stack, Text, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import React, { useState } from "react";
 
 import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
 
@@ -25,14 +14,9 @@ function Page() {
   const [startClicked, setStartClicked] = useState(false);
 
   return (
-    <Container
-      fluid
-      px="10vw"
-      py="5vh"
-      style={{ background: "#F7F6FB", height: "100vh" }}
-    >
+    <Container fluid px="10vw" py="5vh" style={{ background: "#F7F6FB", height: "100vh" }}>
       <>
-        {/* <Image pb={30} 
+        {/* <Image pb={30}
               src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`} 
               alt="RateUp Logo" width={140} height={35} /> */}
 
@@ -48,10 +32,7 @@ function Page() {
           {startClicked ? (
             <StartPage largeScreen={largeScreen} />
           ) : (
-            <Welcome
-              largeScreen={largeScreen}
-              setStartClicked={setStartClicked}
-            />
+            <Welcome largeScreen={largeScreen} setStartClicked={setStartClicked} />
           )}
         </Container>
         {/* <RateupRedirectCard /> */}
@@ -64,12 +45,7 @@ function Welcome({ setStartClicked, largeScreen }) {
   return (
     <>
       {/* .........Survey Welcome page.......... */}
-      <Stack
-        align="center"
-        justify="center"
-        gap="xl"
-        style={{ height: "70vh" }}
-      >
+      <Stack align="center" justify="center" gap="xl" style={{ height: "70vh" }}>
         <Title order={2} style={{ fontSize: largeScreen ? "4rem" : "3rem" }}>
           Welcome
         </Title>
@@ -97,12 +73,7 @@ const survey3 =
 function StartPage({ largeScreen }) {
   return (
     <Stack align="center" justify="center" gap="xl" style={{ height: "70vh" }}>
-      <Title
-        order={3}
-        mb="xl"
-        pb="sm"
-        style={{ fontSize: largeScreen ? "3rem" : "1.5rem" }}
-      >
+      <Title order={3} mb="xl" pb="sm" style={{ fontSize: largeScreen ? "3rem" : "1.5rem" }}>
         Select one option :
       </Title>
 

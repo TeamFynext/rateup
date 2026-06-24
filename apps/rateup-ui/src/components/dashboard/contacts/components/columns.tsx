@@ -1,5 +1,3 @@
-"use client";
-
 import { Checkbox, Text } from "@mantine/core";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -16,9 +14,7 @@ export const columns: ColumnDef<CustomFieldData>[] = [
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
         indeterminate={table.getIsSomePageRowsSelected()}
-        onChange={(event) =>
-          table.toggleAllPageRowsSelected(!!event.currentTarget.checked)
-        }
+        onChange={(event) => table.toggleAllPageRowsSelected(!!event.currentTarget.checked)}
         aria-label="Select all"
       />
     ),
@@ -34,9 +30,7 @@ export const columns: ColumnDef<CustomFieldData>[] = [
   },
   {
     accessorKey: "name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => (
       <Text size="sm" style={{ width: 80 }}>
         {String(row.getValue("name"))}
@@ -47,9 +41,7 @@ export const columns: ColumnDef<CustomFieldData>[] = [
   },
   {
     accessorKey: "slug",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Field ID" />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Field ID" />,
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("slug"))}</Text>;
     },
@@ -70,9 +62,7 @@ export const columns: ColumnDef<CustomFieldData>[] = [
   },
   {
     accessorKey: "visibility",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Visibility" />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Visibility" />,
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("visibility"))}</Text>;
     },
@@ -80,9 +70,7 @@ export const columns: ColumnDef<CustomFieldData>[] = [
   },
   {
     accessorKey: "type",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Type" />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("type"))}</Text>;
     },
@@ -90,15 +78,9 @@ export const columns: ColumnDef<CustomFieldData>[] = [
   },
   {
     accessorKey: "createdAt",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Created At" />
-    ),
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Created At" />,
     cell: ({ row }) => {
-      return (
-        <Text size="sm">
-          {dayjs(row.getValue("createdAt")).format("DD/MM/YYYY")}
-        </Text>
-      );
+      return <Text size="sm">{dayjs(row.getValue("createdAt")).format("DD/MM/YYYY")}</Text>;
     },
     meta: { title: "Created At" },
   },

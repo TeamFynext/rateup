@@ -38,8 +38,7 @@
     left: 100%;
   }
 
-  .chat-selector-and-chat-container
-    > div:nth-child(2):global(.chat-display-open) {
+  .chat-selector-and-chat-container > div:nth-child(2):global(.chat-display-open) {
     left: 5px;
   }
 }

@@ -34,8 +34,7 @@ const useCreateApprovalRequest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateApprovalRequestInput) =>
-      createApprovalRequest(data),
+    mutationFn: (data: CreateApprovalRequestInput) => createApprovalRequest(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyApprovals"] });
       toast.success("Approval request created successfully");
@@ -50,13 +49,8 @@ export const useApproveApprovalRequest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      approvalId,
-      data,
-    }: {
-      approvalId: string;
-      data: ApproveRequestInput;
-    }) => approveApprovalRequest(approvalId, data),
+    mutationFn: ({ approvalId, data }: { approvalId: string; data: ApproveRequestInput }) =>
+      approveApprovalRequest(approvalId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyApprovals"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyRedemptions"] });
@@ -74,13 +68,8 @@ export const useRejectApprovalRequest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      approvalId,
-      data,
-    }: {
-      approvalId: string;
-      data: RejectRequestInput;
-    }) => rejectApprovalRequest(approvalId, data),
+    mutationFn: ({ approvalId, data }: { approvalId: string; data: RejectRequestInput }) =>
+      rejectApprovalRequest(approvalId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyApprovals"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyRedemptions"] });
@@ -98,13 +87,8 @@ const useCancelApprovalRequest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      approvalId,
-      data,
-    }: {
-      approvalId: string;
-      data: CancelRequestInput;
-    }) => cancelApprovalRequest(approvalId, data),
+    mutationFn: ({ approvalId, data }: { approvalId: string; data: CancelRequestInput }) =>
+      cancelApprovalRequest(approvalId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyApprovals"] });
       toast.success("Approval request cancelled successfully");

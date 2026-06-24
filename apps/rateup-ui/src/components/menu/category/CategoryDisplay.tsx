@@ -1,19 +1,7 @@
-"use client";
-
 import { useTranslation } from "react-i18next";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty.tsx";
 import { formatedTime } from "@/utils/dateTime.ts";
 
 import { ItemDisplay } from "../item/ItemDisplay.tsx";
@@ -23,10 +11,7 @@ interface CategoryDisplayProps {
   readonly setSelectedItem: (item: MenuItem) => void;
   readonly currency: string;
   readonly hideUnavailableCategory: boolean;
-  readonly registerCategoryRef: (
-    categoryId: string,
-    element: HTMLDivElement | null,
-  ) => void;
+  readonly registerCategoryRef: (categoryId: string, element: HTMLDivElement | null) => void;
 }
 
 export function CategoryDisplay({
@@ -36,11 +21,8 @@ export function CategoryDisplay({
   hideUnavailableCategory,
   registerCategoryRef,
 }: Readonly<CategoryDisplayProps>) {
-  const {
-    categoryDisabled,
-    formattedStartTimeWithAmPm,
-    formattedEndTimeWithAmPm,
-  } = formatedTime(category);
+  const { categoryDisabled, formattedStartTimeWithAmPm, formattedEndTimeWithAmPm } =
+    formatedTime(category);
   const { t: translations } = useTranslation();
   return (
     <div
@@ -59,8 +41,7 @@ export function CategoryDisplay({
           )}
         </CardHeader>
         <CardContent className="grid gap-3 px-4 py-4 sm:px-5 lg:grid-cols-4">
-          {category?.items?.length === 0 ||
-          (categoryDisabled && hideUnavailableCategory) ? (
+          {category?.items?.length === 0 || (categoryDisabled && hideUnavailableCategory) ? (
             <Empty className="col-span-full min-h-40 rounded-2xl border border-dashed border-border bg-muted/30 p-6">
               <EmptyHeader>
                 <EmptyTitle>{translations("No Data Found")}</EmptyTitle>

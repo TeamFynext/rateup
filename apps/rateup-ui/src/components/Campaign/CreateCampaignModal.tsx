@@ -1,7 +1,4 @@
-"use client";
-
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   IconCheck,
   IconClock,
@@ -11,15 +8,13 @@ import {
   IconTrash,
   IconWand,
 } from "@tabler/icons-react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { CampaignType } from "@/types/enums.ts";
-import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import {
   useCreateCampaignMutation,
   useUpdateCampaignMutation,
@@ -56,13 +51,10 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
+import { CampaignType } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 
 import { TeamSelector } from "../input/TeamSelector.tsx";
@@ -204,15 +196,9 @@ const CreateCampaignModal = ({
   }, []);
 
   const updateDripStage = useCallback(
-    (
-      idx: number,
-      field: "templateId" | "delay" | "delayUnit" | "sendAtTime",
-      value: any,
-    ) => {
+    (idx: number, field: "templateId" | "delay" | "delayUnit" | "sendAtTime", value: any) => {
       setDripStages((prev) =>
-        prev.map((stage, i) =>
-          i === idx ? { ...stage, [field]: value } : stage,
-        ),
+        prev.map((stage, i) => (i === idx ? { ...stage, [field]: value } : stage)),
       );
     },
     [],
@@ -238,8 +224,7 @@ const CreateCampaignModal = ({
     if (!selectedTemplate) return [];
 
     const bodyText =
-      selectedTemplate.data?.components?.find((c: any) => c.type === "BODY")
-        ?.text ?? "";
+      selectedTemplate.data?.components?.find((c: any) => c.type === "BODY")?.text ?? "";
 
     const matches = bodyText.match(/{{\d+}}/g) || [];
 
@@ -257,23 +242,16 @@ const CreateCampaignModal = ({
       return;
     }
     if (extractedDynamicVariables.length > 0) {
-      form.setValue(
-        "dynamicTags",
-        Array(extractedDynamicVariables.length).fill(""),
-        {
-          shouldDirty: false,
-          shouldValidate: false,
-        },
-      );
+      form.setValue("dynamicTags", Array(extractedDynamicVariables.length).fill(""), {
+        shouldDirty: false,
+        shouldValidate: false,
+      });
     } else {
       form.setValue("dynamicTags", []);
     }
   }, [watchedTemplate]);
 
-  const createCampaignMutation = useCreateCampaignMutation(
-    teamId,
-    campaignType,
-  );
+  const createCampaignMutation = useCreateCampaignMutation(teamId, campaignType);
   const updateCampaignMutation = useUpdateCampaignMutation(
     campaign?.id,
     campaign?.teamId,
@@ -326,9 +304,7 @@ const CreateCampaignModal = ({
   const handleSubmit = useCallback(
     (values: FormValues) => {
       if (values.type === CampaignType.DRIP) {
-        const invalidStageIndex = dripStages.findIndex(
-          (stage) => !stage.templateId,
-        );
+        const invalidStageIndex = dripStages.findIndex((stage) => !stage.templateId);
 
         if (invalidStageIndex !== -1) {
           toast.error(
@@ -345,8 +321,7 @@ const CreateCampaignModal = ({
           templates
             ?.find((t) => t?.id === values?.waTemplateId)
             ?.data?.components?.find((c: any) => c?.buttons)
-            ?.buttons?.find((b: any) => b?.type === "FLOW")?.flow_id ??
-          undefined;
+            ?.buttons?.find((b: any) => b?.type === "FLOW")?.flow_id ?? undefined;
 
         if (flowId) {
           values.flowId = flowId;
@@ -431,9 +406,7 @@ const CreateCampaignModal = ({
                 ) : (
                   <IconRocket className="h-3 w-3" />
                 )}
-                {watchedType === CampaignType.DRIP
-                  ? t("Drip Campaign")
-                  : t("WhatsApp Campaign")}
+                {watchedType === CampaignType.DRIP ? t("Drip Campaign") : t("WhatsApp Campaign")}
               </Badge>
             </DialogTitle>
             <DialogDescription>
@@ -490,10 +463,7 @@ const CreateCampaignModal = ({
                         <FormItem>
                           <FormLabel>{t("Campaign Name *")}</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder={t("e.g., Summer Sale 2025")}
-                              {...field}
-                            />
+                            <Input placeholder={t("e.g., Summer Sale 2025")} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -510,30 +480,21 @@ const CreateCampaignModal = ({
                               <div className="space-y-1 flex-1">
                                 <div className="flex items-center gap-2">
                                   <IconCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                  <FormLabel className="font-medium">
-                                    {t("User Consent")}
-                                  </FormLabel>
+                                  <FormLabel className="font-medium">{t("User Consent")}</FormLabel>
                                 </div>
                                 <FormDescription className="text-xs">
                                   {field.value
-                                    ? t(
-                                        "Only send messages to contacts who have given consent",
-                                      )
+                                    ? t("Only send messages to contacts who have given consent")
                                     : t(
                                         "Send messages to all contacts regardless of consent status",
                                       )}
                                 </FormDescription>
                                 <p className="text-xs text-blue-600 dark:text-blue-400">
-                                  {t(
-                                    "Recommended: Keep enabled for compliance",
-                                  )}
+                                  {t("Recommended: Keep enabled for compliance")}
                                 </p>
                               </div>
                               <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -559,17 +520,11 @@ const CreateCampaignModal = ({
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <p className="text-sm text-muted-foreground">
-                          {t(
-                            "Configure your drip campaign stages ({count} stages)",
-                            { count: dripStages.length?.toString() },
-                          )}
+                          {t("Configure your drip campaign stages ({count} stages)", {
+                            count: dripStages.length?.toString(),
+                          })}
                         </p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={addDripStage}
-                        >
+                        <Button type="button" variant="outline" size="sm" onClick={addDripStage}>
                           <IconPlus className="mr-2 h-4 w-4" />
                           {t("Add Stage")}
                         </Button>
@@ -606,16 +561,13 @@ const CreateCampaignModal = ({
 
                               <div
                                 className={`grid gap-3 ${
-                                  stage.delayUnit === "minutes" ||
-                                  stage.delayUnit === "hours"
+                                  stage.delayUnit === "minutes" || stage.delayUnit === "hours"
                                     ? "grid-cols-3"
                                     : "grid-cols-2"
                                 }`}
                               >
                                 <div className="space-y-2 col-span-full">
-                                  <Label className="text-xs">
-                                    {t("Choose Template *")}
-                                  </Label>
+                                  <Label className="text-xs">{t("Choose Template *")}</Label>
                                   <div className="flex items-center gap-2">
                                     <Select
                                       value={stage.templateId}
@@ -638,10 +590,7 @@ const CreateCampaignModal = ({
 
                                       <SelectContent>
                                         {templatesData.map((template) => (
-                                          <SelectItem
-                                            key={template.value}
-                                            value={template.value}
-                                          >
+                                          <SelectItem key={template.value} value={template.value}>
                                             {template.label}
                                           </SelectItem>
                                         ))}
@@ -668,9 +617,7 @@ const CreateCampaignModal = ({
                                 </div>
 
                                 <div className="space-y-2">
-                                  <Label className="text-xs">
-                                    {t("Delay")}
-                                  </Label>
+                                  <Label className="text-xs">{t("Delay")}</Label>
                                   <div className="relative">
                                     <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                                     <Input
@@ -679,11 +626,7 @@ const CreateCampaignModal = ({
                                       step={1}
                                       value={stage.delay}
                                       onChange={(e) =>
-                                        updateDripStage(
-                                          idx,
-                                          "delay",
-                                          parseInt(e.target.value) || 1,
-                                        )
+                                        updateDripStage(idx, "delay", parseInt(e.target.value) || 1)
                                       }
                                       className="h-9 pl-8"
                                     />
@@ -694,29 +637,17 @@ const CreateCampaignModal = ({
                                   <Label className="text-xs">{t("Unit")}</Label>
                                   <Select
                                     value={stage.delayUnit}
-                                    onValueChange={(val) =>
-                                      updateDripStage(idx, "delayUnit", val)
-                                    }
+                                    onValueChange={(val) => updateDripStage(idx, "delayUnit", val)}
                                   >
                                     <SelectTrigger className="h-9">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="minutes">
-                                        {t("Minutes")}
-                                      </SelectItem>
-                                      <SelectItem value="hours">
-                                        {t("Hours")}
-                                      </SelectItem>
-                                      <SelectItem value="days">
-                                        {t("Days")}
-                                      </SelectItem>
-                                      <SelectItem value="weeks">
-                                        {t("Weeks")}
-                                      </SelectItem>
-                                      <SelectItem value="months">
-                                        {t("Months")}
-                                      </SelectItem>
+                                      <SelectItem value="minutes">{t("Minutes")}</SelectItem>
+                                      <SelectItem value="hours">{t("Hours")}</SelectItem>
+                                      <SelectItem value="days">{t("Days")}</SelectItem>
+                                      <SelectItem value="weeks">{t("Weeks")}</SelectItem>
+                                      <SelectItem value="months">{t("Months")}</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>
@@ -725,20 +656,14 @@ const CreateCampaignModal = ({
                                   stage.delayUnit === "weeks" ||
                                   stage.delayUnit === "months") && (
                                   <div className="space-y-2">
-                                    <Label className="text-xs">
-                                      {t("Send at time")}
-                                    </Label>
+                                    <Label className="text-xs">{t("Send at time")}</Label>
                                     <div className="relative">
                                       <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                                       <Input
                                         type="time"
                                         value={stage.sendAtTime}
                                         onChange={(e) =>
-                                          updateDripStage(
-                                            idx,
-                                            "sendAtTime",
-                                            e.target.value,
-                                          )
+                                          updateDripStage(idx, "sendAtTime", e.target.value)
                                         }
                                         className="h-9 pl-8"
                                       />
@@ -781,10 +706,7 @@ const CreateCampaignModal = ({
                                 </FormControl>
                                 <SelectContent>
                                   {templatesData.map((template) => (
-                                    <SelectItem
-                                      key={template.value}
-                                      value={template.value}
-                                    >
+                                    <SelectItem key={template.value} value={template.value}>
                                       {template.label}
                                     </SelectItem>
                                   ))}
@@ -811,13 +733,9 @@ const CreateCampaignModal = ({
                       {extractedDynamicVariables.length > 0 && (
                         <div className="space-y-3">
                           <div>
-                            <h4 className="text-sm font-medium">
-                              {t("Dynamic Variables")}
-                            </h4>
+                            <h4 className="text-sm font-medium">{t("Dynamic Variables")}</h4>
                             <p className="text-xs text-muted-foreground">
-                              {t(
-                                "Map dynamic content to your message variables",
-                              )}
+                              {t("Map dynamic content to your message variables")}
                             </p>
                           </div>
                           <div className="grid gap-3 sm:grid-cols-2">
@@ -828,9 +746,7 @@ const CreateCampaignModal = ({
                                 name={`dynamicTags.${i}`}
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-xs">
-                                      Variable {i + 1}
-                                    </FormLabel>
+                                    <FormLabel className="text-xs">Variable {i + 1}</FormLabel>
                                     <Select
                                       onValueChange={(val) => {
                                         field.onChange(val);
@@ -842,17 +758,11 @@ const CreateCampaignModal = ({
                                     >
                                       <FormControl>
                                         <SelectTrigger className="h-9">
-                                          <SelectValue
-                                            placeholder={t(
-                                              "Select dynamic tag",
-                                            )}
-                                          />
+                                          <SelectValue placeholder={t("Select dynamic tag")} />
                                         </SelectTrigger>
                                       </FormControl>
                                       <SelectContent>
-                                        <SelectItem value="name">
-                                          {t("Name")}
-                                        </SelectItem>
+                                        <SelectItem value="name">{t("Name")}</SelectItem>
                                         {customFields?.map((customField) => (
                                           <SelectItem
                                             key={customField.slug}

@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { buildPageHead } from "@/lib/metadata.ts";
-import { useRevealAnimation } from "@/hooks/useRevealAnimation";
 import CustomerProfiles from "@/components/LoyaltyLandingPage/CustomerProfiles";
 import Faq from "@/components/LoyaltyLandingPage/Faq";
 import Hero from "@/components/LoyaltyLandingPage/Hero";
@@ -10,11 +8,14 @@ import Integrations from "@/components/LoyaltyLandingPage/Integrations";
 import Trusted from "@/components/LoyaltyLandingPage/Trusted";
 import WhyWhatsApp from "@/components/LoyaltyLandingPage/WhyWhatsApp";
 import Layout from "@/components/RateupHomePage/Layout";
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
+import { useRevealAnimation } from "@/hooks/useRevealAnimation";
+import { buildPageHead } from "@/lib/metadata.ts";
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 import { productsMarkdown } from "../../../../markdown/products";
 import { createMarkdownMiddleware } from "../../../../markdown/serveMarkdown";
+
+import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -30,8 +31,7 @@ const jsonLd = {
       applicationCategory: "BusinessApplication",
       applicationSubCategory: "Customer Loyalty Software",
       operatingSystem: "Web, Android, iOS",
-      browserRequirements:
-        "Requires a modern web browser with JavaScript enabled",
+      browserRequirements: "Requires a modern web browser with JavaScript enabled",
       softwareVersion: "2026",
       releaseNotes: "https://rateup.app/products/whatsapp-loyalty",
 
@@ -67,8 +67,7 @@ const jsonLd = {
         {
           "@type": "Offer",
           name: "Enterprise Plan",
-          description:
-            "Custom pricing for growing businesses. Contact sales for details.",
+          description: "Custom pricing for growing businesses. Contact sales for details.",
           url: "https://rateup.app/pricing",
           availability: "https://schema.org/InStock",
         },
@@ -106,8 +105,7 @@ const jsonLd = {
             "@type": "Person",
             name: "Ramesh",
           },
-          reviewBody:
-            "No more stamp cards! Our staff and customers both love how easy it is.",
+          reviewBody: "No more stamp cards! Our staff and customers both love how easy it is.",
           reviewRating: {
             "@type": "Rating",
             ratingValue: "5",
@@ -184,23 +182,21 @@ const jsonLd = {
   ],
 };
 
-export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")(
-  {
-    server: {
-      middleware: [createMarkdownMiddleware(productsMarkdown)],
-    },
-    component: LoyaltyLandingPage,
-    head: () => ({
-      ...buildPageHead("/products/whatsapp-loyalty"),
-      scripts: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify(jsonLd),
-        },
-      ],
-    }),
+export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")({
+  server: {
+    middleware: [createMarkdownMiddleware(productsMarkdown)],
   },
-);
+  component: LoyaltyLandingPage,
+  head: () => ({
+    ...buildPageHead("/products/whatsapp-loyalty"),
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(jsonLd),
+      },
+    ],
+  }),
+});
 
 function LoyaltyLandingPage() {
   useRevealAnimation();

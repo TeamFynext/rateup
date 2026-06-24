@@ -1,9 +1,6 @@
-"use client";
-
-import React, { useEffect } from "react";
-
 import { ScrollAreaAutosize, Table } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import FormModalLayout from "../Modal/FormModalLayout.tsx";

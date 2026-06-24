@@ -1,9 +1,6 @@
-"use client";
-
-import { useState } from "react";
-
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -25,12 +22,7 @@ type MenuCardMenuProps = {
   readonly menu: Menu;
 };
 
-function MenuCardMenu({
-  menu,
-  menuId,
-  teamId,
-  handleEditClick,
-}: Readonly<MenuCardMenuProps>) {
+function MenuCardMenu({ menu, menuId, teamId, handleEditClick }: Readonly<MenuCardMenuProps>) {
   const [dialogOpened, setDialogOpened] = useState(false);
   const { t: translations } = useTranslation();
   const deleteMutation = useDeleteMenuMutation(
@@ -58,12 +50,7 @@ function MenuCardMenu({
         }}
       />
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <Button variant="ghost" size="icon" className="size-8" onClick={(e) => e.stopPropagation()}>
           <IconDots size={18} />
         </Button>
       </DropdownMenuTrigger>
@@ -84,10 +71,7 @@ function MenuCardMenu({
           {translations("Share")}
         </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onClick={() => setDialogOpened(true)}
-          variant="destructive"
-        >
+        <DropdownMenuItem onClick={() => setDialogOpened(true)} variant="destructive">
           <IconTrash size={16} className="mr-2" />
           {translations("Delete")}
         </DropdownMenuItem>

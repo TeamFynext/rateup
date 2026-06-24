@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
-
 import { schemaResolver, useForm } from "@mantine/form";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type z from "zod";
@@ -59,7 +58,7 @@ const CreateOrEditQuickReply = ({
 
   useEffect(() => {
     if (reply && isEdit) {
-      const { id, orgId, createdAt, ...defaultValues } = reply;
+      const { ...defaultValues } = reply;
       const initialValues = {
         ...defaultValues,
         key: defaultValues.key || "",
@@ -122,12 +121,8 @@ const CreateOrEditQuickReply = ({
       <form>
         <DialogContent className="sm:max-w-md md:max-w-3xl md:min-w-2xl min-h-[500px]">
           <DialogHeader>
-            <DialogTitle>
-              {isEdit ? t("Edit Quick Reply") : t("Add Quick Reply")}{" "}
-            </DialogTitle>
-            <DialogDescription>
-              {t("Click save when you are done.")}
-            </DialogDescription>
+            <DialogTitle>{isEdit ? t("Edit Quick Reply") : t("Add Quick Reply")} </DialogTitle>
+            <DialogDescription>{t("Click save when you are done.")}</DialogDescription>
           </DialogHeader>
           <div className="overflow-auto h-[500px]">
             <FieldGroup className="flex flex-col gap-4 p-1">
@@ -162,14 +157,10 @@ const CreateOrEditQuickReply = ({
                     "Choose a high-level category to organize this reply text, Examples: 'Billing', 'Technical', or 'Account'",
                   )}
                 </FieldDescription>
-                {form.errors.category && (
-                  <FieldError>{form.errors.category}</FieldError>
-                )}
+                {form.errors.category && <FieldError>{form.errors.category}</FieldError>}
               </Field>
               <Field className="flex flex-col gap-1">
-                <FieldLabel htmlFor="form-rhf-demo-description">
-                  {t("Topic")}
-                </FieldLabel>
+                <FieldLabel htmlFor="form-rhf-demo-description">{t("Topic")}</FieldLabel>
                 <Input
                   {...form.getInputProps("topic")}
                   id="topic"
@@ -181,9 +172,7 @@ const CreateOrEditQuickReply = ({
                     "Choose a clear topic that describes the customer issue or task this reply text addresses for easy reference",
                   )}
                 </FieldDescription>
-                {form.errors.topic && (
-                  <FieldError>{form.errors.topic}</FieldError>
-                )}
+                {form.errors.topic && <FieldError>{form.errors.topic}</FieldError>}
               </Field>
               <Field>
                 <FieldLabel htmlFor="text">{t("Reply Text")}</FieldLabel>
@@ -195,9 +184,7 @@ const CreateOrEditQuickReply = ({
                   isQuickReplyEditor={true}
                   mah={300}
                 />
-                {form.errors.text && (
-                  <FieldError>{form.errors.text}</FieldError>
-                )}
+                {form.errors.text && <FieldError>{form.errors.text}</FieldError>}
               </Field>
             </FieldGroup>
           </div>

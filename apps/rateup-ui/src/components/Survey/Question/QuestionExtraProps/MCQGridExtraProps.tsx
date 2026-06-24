@@ -1,31 +1,21 @@
-"use client";
-
-import { useContext, useState, type CSSProperties } from "react";
-
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { ActionIcon, Flex, Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconEdit,
-  IconGripVertical,
-  IconPlus,
-  IconTrash,
-} from "@tabler/icons-react";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { IconEdit, IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import cx from "clsx";
+import { useContext, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
-import { SurveyType } from "@/types/enums.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { SurveyType } from "@/types/enums.ts";
 import { reorder } from "@/utils/questions.ts";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../../../Button/RateupButtons.tsx";
 import { ContainedTextArea } from "../../../input/ContainedInput/ContainedInput.tsx";
 import FormModalLayout from "../../../Modal/FormModalLayout.tsx";
-import classes from "../DraggableQuestionCard/DraggableQuestionCard.module.css";
 import { ChoicesCreator } from "./ChoicesCreator.tsx";
+
+import classes from "../DraggableQuestionCard/DraggableQuestionCard.module.css";
 
 const MCQGridExtraProps = ({ form, qId }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -58,11 +48,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
   };
 
   const handleDragEnd = ({ source, destination }) => {
-    const reorderedQuestions = reorder(
-      questions,
-      source.index,
-      destination?.index || 0,
-    );
+    const reorderedQuestions = reorder(questions, source.index, destination?.index || 0);
     form.setFieldValue("features", {
       ...form.values.features,
       [selectedLanguage]: {
@@ -118,10 +104,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
                       {...provided.draggableProps}
                       style={provided.draggableProps.style as CSSProperties}
                     >
-                      <div
-                        {...provided.dragHandleProps}
-                        className={classes.dragHandle}
-                      >
+                      <div {...provided.dragHandleProps} className={classes.dragHandle}>
                         <IconGripVertical stroke={1.5} />
                       </div>
                       <Group justify="space-between" my={"sm"} pl={"xs"}>

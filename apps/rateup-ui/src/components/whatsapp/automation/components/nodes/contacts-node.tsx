@@ -1,8 +1,7 @@
-import { memo } from "react";
-
 import { Stack, Text } from "@mantine/core";
 import { IconPhone } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
+import { memo } from "react";
 
 import type { ContactsNodeData } from "../../types/node-types.ts";
 import BaseNode from "./base-node.tsx";

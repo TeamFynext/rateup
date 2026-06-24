@@ -4,9 +4,7 @@ const SurveyThemeContext = createContext(null);
 
 function SurveyThemeContextProvider({ surveyThemeObj, children }) {
   return (
-    <SurveyThemeContext.Provider value={surveyThemeObj}>
-      {children}
-    </SurveyThemeContext.Provider>
+    <SurveyThemeContext.Provider value={surveyThemeObj}>{children}</SurveyThemeContext.Provider>
   );
 }
 

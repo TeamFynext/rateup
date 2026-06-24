@@ -1,7 +1,6 @@
-import { forwardRef, Fragment, useCallback, useMemo } from "react";
-
 import type { Editor } from "@tiptap/react";
 import { useCurrentEditor, useEditorState } from "@tiptap/react";
+import { forwardRef, Fragment, useCallback, useMemo } from "react";
 
 import {
   Tooltip,
@@ -28,8 +27,7 @@ const MAC_SYMBOLS: Record<string, string> = {
   escape: "⎋",
   capslock: "⇪",
 } as const;
-export interface ImageAlignButtonProps
-  extends Omit<ButtonProps, "type">, UseImageAlignConfig {
+export interface ImageAlignButtonProps extends Omit<ButtonProps, "type">, UseImageAlignConfig {
   /**
    * Optional text to display alongside the icon.
    */
@@ -45,28 +43,23 @@ export interface ImageAlignButtonProps
  *
  * For custom button implementations, use the `useImageAlign` hook instead.
  */
-export const ImageAlignButton = forwardRef<
-  HTMLButtonElement,
-  ImageAlignButtonProps
->((props, ref) => {
-  const {
-    editor: providedEditor,
-    align,
-    text,
-    extensionName,
-    attributeName = "data-align",
-    hideWhenUnavailable = false,
-    onAligned,
-    showShortcut = false,
-    onClick,
-    children,
-    ...buttonProps
-  } = props;
+export const ImageAlignButton = forwardRef<HTMLButtonElement, ImageAlignButtonProps>(
+  (props, ref) => {
+    const {
+      editor: providedEditor,
+      align,
+      extensionName,
+      attributeName = "data-align",
+      hideWhenUnavailable = false,
+      onAligned,
+      onClick,
+      children,
+      ...buttonProps
+    } = props;
 
-  const { editor } = useTiptapEditor(providedEditor);
+    const { editor } = useTiptapEditor(providedEditor);
 
-  const { isVisible, handleImageAlign, label, canAlign, isActive, Icon } =
-    useImageAlign({
+    const { isVisible, handleImageAlign, label, canAlign, isActive, Icon } = useImageAlign({
       editor,
       align,
       extensionName,
@@ -75,34 +68,35 @@ export const ImageAlignButton = forwardRef<
       onAligned,
     });
 
-  const handleClick = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      onClick?.(event);
-      if (event.defaultPrevented) return;
-      handleImageAlign();
-    },
-    [handleImageAlign, onClick],
-  );
+    const handleClick = useCallback(
+      (event: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(event);
+        if (event.defaultPrevented) return;
+        handleImageAlign();
+      },
+      [handleImageAlign, onClick],
+    );
 
-  if (!isVisible) return null;
+    if (!isVisible) return null;
 
-  return (
-    <Button
-      ref={ref}
-      type="button"
-      disabled={!canAlign}
-      data-style="ghost"
-      data-active-state={isActive ? "on" : "off"}
-      aria-label={label}
-      aria-pressed={isActive}
-      tooltip={label}
-      onClick={handleClick}
-      {...buttonProps}
-    >
-      {children ?? <Icon className="tiptap-button-icon" />}
-    </Button>
-  );
-});
+    return (
+      <Button
+        ref={ref}
+        type="button"
+        disabled={!canAlign}
+        data-style="ghost"
+        data-active-state={isActive ? "on" : "off"}
+        aria-label={label}
+        aria-pressed={isActive}
+        tooltip={label}
+        onClick={handleClick}
+        {...buttonProps}
+      >
+        {children ?? <Icon className="tiptap-button-icon" />}
+      </Button>
+    );
+  },
+);
 
 ImageAlignButton.displayName = "ImageAlignButton";
 
@@ -116,8 +110,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const buttonVariants = {
-  primary:
-    "bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-500 dark:hover:bg-brand-600",
+  primary: "bg-brand-500 text-white hover:bg-brand-600 dark:bg-brand-500 dark:hover:bg-brand-600",
   ghost:
     "bg-transparent hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white",
   secondary:
@@ -162,23 +155,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) => {
-    const shortcuts = useMemo<string[]>(
-      () => parseShortcutKeys({ shortcutKeys }),
-      [shortcutKeys],
-    );
+    const shortcuts = useMemo<string[]>(() => parseShortcutKeys({ shortcutKeys }), [shortcutKeys]);
 
     // Handle data-style and data-size props from legacy code if passed
     const finalVariant = (props as any)["data-style"] || variant;
     const finalSize = (props as any)["data-size"] || size;
 
     // Map legacy 'subdued' appearance or ghost style to ghost variant
-    const isGhost =
-      finalVariant === "ghost" ||
-      (props as any)["data-appearence"] === "subdued";
+    const isGhost = finalVariant === "ghost" || (props as any)["data-appearence"] === "subdued";
     const computedVariantClass = isGhost
       ? buttonVariants.ghost
-      : buttonVariants[finalVariant as keyof typeof buttonVariants] ||
-        buttonVariants.secondary;
+      : buttonVariants[finalVariant as keyof typeof buttonVariants] || buttonVariants.secondary;
 
     const computedSizeClass =
       buttonSizes[finalSize as keyof typeof buttonSizes] || buttonSizes.medium;
@@ -192,12 +179,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     if (!tooltip || !showTooltip) {
       return (
-        <button
-          className={buttonClass}
-          ref={ref}
-          aria-label={ariaLabel}
-          {...props}
-        >
+        <button className={buttonClass} ref={ref} aria-label={ariaLabel} {...props}>
           {children}
         </button>
       );
@@ -207,12 +189,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <TooltipProvider delayDuration={200}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
-              className={buttonClass}
-              ref={ref}
-              aria-label={ariaLabel}
-              {...props}
-            >
+            <button className={buttonClass} ref={ref} aria-label={ariaLabel} {...props}>
               {children}
             </button>
           </TooltipTrigger>
@@ -271,11 +248,7 @@ const parseShortcutKeys = (props: {
     .map((key) => key.trim())
     .map((key) => formatShortcutKey(key, isMac(), capitalize));
 };
-const formatShortcutKey = (
-  key: string,
-  isMac: boolean,
-  capitalize: boolean = true,
-) => {
+const formatShortcutKey = (key: string, isMac: boolean, capitalize: boolean = true) => {
   if (isMac) {
     const lowerKey = key.toLowerCase();
     return MAC_SYMBOLS[lowerKey] || (capitalize ? key.toUpperCase() : key);
@@ -284,10 +257,7 @@ const formatShortcutKey = (
   return capitalize ? key.charAt(0).toUpperCase() + key.slice(1) : key;
 };
 function isMac(): boolean {
-  return (
-    typeof navigator !== "undefined" &&
-    navigator.platform.toLowerCase().includes("mac")
-  );
+  return typeof navigator !== "undefined" && navigator.platform.toLowerCase().includes("mac");
 }
 
 export function useTiptapEditor(providedEditor?: Editor | null): {
@@ -296,10 +266,7 @@ export function useTiptapEditor(providedEditor?: Editor | null): {
   canCommand?: Editor["can"];
 } {
   const { editor: coreEditor } = useCurrentEditor();
-  const mainEditor = useMemo(
-    () => providedEditor || coreEditor,
-    [providedEditor, coreEditor],
-  );
+  const mainEditor = useMemo(() => providedEditor || coreEditor, [providedEditor, coreEditor]);
 
   const editorState = useEditorState({
     editor: mainEditor,

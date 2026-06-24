@@ -1,35 +1,22 @@
-"use client";
-
-import React from "react";
-
 import {
   AlertCircle,
   CheckCircle2,
   Clock,
   Loader2,
-  MapPin,
   MoreVertical,
   RefreshCw,
   X,
   XCircle,
   Zap,
 } from "lucide-react";
+import React from "react";
 import { toast } from "sonner";
 
-import { QuestionType2, WaQuestions } from "@/types/enums";
-import {
-  useCatalogSettings,
-  useCreateAddressFlow,
-} from "@/backend/whatsapp/catalog/catalog.query";
+import { useCatalogSettings, useCreateAddressFlow } from "@/backend/whatsapp/catalog/catalog.query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { WaQuestions } from "@/types/enums";
 
 const SHOPIFY_FIELDS = [
   { label: "First Name", shopifyKey: "first_name", required: true },
@@ -85,8 +72,7 @@ const STATUS_CONFIG = {
 export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
   const isReview = true; // will poll when status is review
   const { data: settings, isLoading } = useCatalogSettings(catalogId, isReview);
-  const { mutate: createFlow, isPending: isCreating } =
-    useCreateAddressFlow(catalogId);
+  const { mutate: createFlow, isPending: isCreating } = useCreateAddressFlow(catalogId);
 
   if (isLoading || !catalogId) {
     return (
@@ -98,17 +84,14 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
     );
   }
 
-  const status = (settings?.addressFlowStatus ??
-    "idle") as keyof typeof STATUS_CONFIG;
+  const status = (settings?.addressFlowStatus ?? "idle") as keyof typeof STATUS_CONFIG;
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.idle;
   const canCreate = status === "idle" || status === "rejected";
   const isPolling = status === "review" || status === "submitting";
 
   const handleCreateFlow = () => {
     try {
-      const enabledFields = SHOPIFY_FIELDS.filter(
-        (f) => f.shopifyKey !== "country_code",
-      );
+      const enabledFields = SHOPIFY_FIELDS.filter((f) => f.shopifyKey !== "country_code");
 
       const screens = [
         {
@@ -143,8 +126,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
                   name: "complete",
                   payload: enabledFields.reduce(
                     (acc: any, f) => {
-                      acc[f.shopifyKey] =
-                        `\${screen.ADDRESS_SCREEN.form.${f.shopifyKey}}`;
+                      acc[f.shopifyKey] = `\${screen.ADDRESS_SCREEN.form.${f.shopifyKey}}`;
                       return acc;
                     },
                     { country_code: "IN" },
@@ -187,12 +169,10 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <CardTitle className="text-base">
-                  WhatsApp Address Flow
-                </CardTitle>
+                <CardTitle className="text-base">WhatsApp Address Flow</CardTitle>
                 <CardDescription className="text-xs mt-1">
-                  A Meta-approved form sent to customers after they place an
-                  order. Collects their shipping address inside WhatsApp.
+                  A Meta-approved form sent to customers after they place an order. Collects their
+                  shipping address inside WhatsApp.
                 </CardDescription>
               </div>
               <Badge variant={cfg.badge} className="shrink-0">
@@ -204,13 +184,11 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
             <div className="flex items-center gap-3">
               {cfg.icon}
               <div>
-                <p className={`font-medium text-sm ${cfg.color}`}>
-                  {cfg.label}
-                </p>
+                <p className={`font-medium text-sm ${cfg.color}`}>{cfg.label}</p>
                 {status === "review" && (
                   <p className="text-xs text-muted-foreground">
-                    Meta review typically takes 1–3 business days. This page
-                    auto-refreshes every 10 seconds.
+                    Meta review typically takes 1–3 business days. This page auto-refreshes every 10
+                    seconds.
                   </p>
                 )}
                 {status === "approved" && settings?.addressFlowId && (
@@ -223,14 +201,13 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
                 )}
                 {status === "idle" && (
                   <p className="text-xs text-muted-foreground">
-                    Click "Create Address Flow" to generate the form and submit
-                    it to Meta for review.
+                    Click "Create Address Flow" to generate the form and submit it to Meta for
+                    review.
                   </p>
                 )}
                 {status === "rejected" && (
                   <p className="text-xs text-muted-foreground">
-                    Meta rejected the flow. Click "Resubmit" to create a new
-                    one.
+                    Meta rejected the flow. Click "Resubmit" to create a new one.
                   </p>
                 )}
               </div>
@@ -248,9 +225,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
                 ) : (
                   <Zap className="h-3.5 w-3.5" />
                 )}
-                {status === "rejected"
-                  ? "Resubmit Address Flow"
-                  : "Create Address Flow"}
+                {status === "rejected" ? "Resubmit Address Flow" : "Create Address Flow"}
               </Button>
             )}
 
@@ -269,15 +244,12 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
             <div className="flex items-start gap-3">
               <span className="text-xl">🚚</span>
               <div>
-                <p className="text-sm font-medium">
-                  Delivery Selection (no Meta approval needed)
-                </p>
+                <p className="text-sm font-medium">Delivery Selection (no Meta approval needed)</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   After address collection, the bot automatically sends a{" "}
-                  <strong>WhatsApp List Message</strong> — an interactive
-                  dropdown with your enabled delivery partners and their prices.
-                  The customer selects one and the bot calculates the final
-                  total. Configure delivery partners in the{" "}
+                  <strong>WhatsApp List Message</strong> — an interactive dropdown with your enabled
+                  delivery partners and their prices. The customer selects one and the bot
+                  calculates the final total. Configure delivery partners in the{" "}
                   <strong>Delivery Options</strong> tab.
                 </p>
               </div>
@@ -290,12 +262,8 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
       <div className="lg:col-span-5 bg-gradient-to-b from-muted/30 to-muted/10 border rounded-2xl p-6 flex flex-col items-center justify-center shadow-sm">
         <div className="w-full flex items-center justify-between border-b pb-3 mb-6">
           <div>
-            <h3 className="text-sm font-semibold tracking-tight">
-              Address Form Preview
-            </h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Live smartphone simulation
-            </p>
+            <h3 className="text-sm font-semibold tracking-tight">Address Form Preview</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Live smartphone simulation</p>
           </div>
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold bg-background shadow-sm border px-2.5 py-1 rounded-full">
             Mobile Preview
@@ -339,9 +307,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#222e35]">
               <X className="h-5 w-5 text-[#8696a0] cursor-pointer hover:text-[#e9edef] transition-colors" />
-              <span className="font-semibold text-base text-[#e9edef]">
-                Shipping Address
-              </span>
+              <span className="font-semibold text-base text-[#e9edef]">Shipping Address</span>
               <MoreVertical className="h-5 w-5 text-[#8696a0] cursor-pointer hover:text-[#e9edef] transition-colors" />
             </div>
 
@@ -392,8 +358,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
         </div>
 
         <p className="text-[10px] text-muted-foreground text-center italic mt-6">
-          * Fields are pre-configured to ensure 1:1 compatibility with Shopify
-          order fulfillment.
+          * Fields are pre-configured to ensure 1:1 compatibility with Shopify order fulfillment.
         </p>
       </div>
     </div>

@@ -1,24 +1,16 @@
-"use client";
-
-import type { CSSProperties } from "react";
-
-import {
-  Center,
-  Checkbox,
-  Group,
-  ScrollAreaAutosize,
-  Stack,
-} from "@mantine/core";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { Center, Checkbox, Group, ScrollAreaAutosize, Stack } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
+import type { CSSProperties } from "react";
 
 import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
 import { reorder } from "@/utils/questions.ts";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 
 import NothingFound from "../NothingFound/NothingFound.tsx";
-import classes from "./testimonial.module.css";
 import TestimonialCard from "./TestimonialCard.tsx";
+
+import classes from "./testimonial.module.css";
 
 const TestimonialEdit = ({
   currentStyle,
@@ -34,11 +26,7 @@ const TestimonialEdit = ({
     strict: false,
   });
   const collectionId = params.collectionId as string;
-  const filteredTestimonials = getFilteredTestimonials(
-    testimonials,
-    filters,
-    type,
-  );
+  const filteredTestimonials = getFilteredTestimonials(testimonials, filters, type);
 
   const updateCollection = useUpdateCollection(collectionId);
 
@@ -75,16 +63,10 @@ const TestimonialEdit = ({
                 p={"sm"}
               >
                 {filteredTestimonials?.map((testimonial, index) => {
-                  const isSelected = selectedTestimonialIds.some(
-                    (t) => t === testimonial.id,
-                  );
+                  const isSelected = selectedTestimonialIds.some((t) => t === testimonial.id);
                   return (
-                    <Draggable
-                      key={testimonial?.id}
-                      index={index}
-                      draggableId={testimonial?.id}
-                    >
-                      {(provided, snapshot) => (
+                    <Draggable key={testimonial?.id} index={index} draggableId={testimonial?.id}>
+                      {(provided, _snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
@@ -98,15 +80,10 @@ const TestimonialEdit = ({
                                 classNames={{ root: classes.checkboxWrapper }}
                                 onChange={(e) => {
                                   if (e.currentTarget.checked)
-                                    setSelectedTestimonialIds((prev) => [
-                                      ...prev,
-                                      testimonial?.id,
-                                    ]);
+                                    setSelectedTestimonialIds((prev) => [...prev, testimonial?.id]);
                                   else
                                     setSelectedTestimonialIds((prev) =>
-                                      prev?.filter(
-                                        (t) => t !== testimonial?.id,
-                                      ),
+                                      prev?.filter((t) => t !== testimonial?.id),
                                     );
                                 }}
                                 tabIndex={-1}

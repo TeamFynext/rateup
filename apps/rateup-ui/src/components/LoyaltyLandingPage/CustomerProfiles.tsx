@@ -1,6 +1,5 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-
-import { Link, useNavigate } from "@tanstack/react-router";
 
 import styles from "./loyalty.landing.module.css";
 
@@ -73,20 +72,15 @@ export default function CustomerProfiles() {
   ];
 
   return (
-    <section
-      className={styles.profiles}
-      id="profiles"
-      data-screen-label="Customer Profiles"
-    >
+    <section className={styles.profiles} id="profiles" data-screen-label="Customer Profiles">
       <div className={styles.wrap}>
         <div className={styles.reveal}>
           <h3>
             How <span className={styles.b}>RateUp</span> Powers WhatsApp Loyalty
           </h3>
           <p className={styles.sub}>
-            Turn every customer conversation into repeat purchases with
-            automated rewards, loyalty points, tier upgrades, and personalized
-            WhatsApp engagement.
+            Turn every customer conversation into repeat purchases with automated rewards, loyalty
+            points, tier upgrades, and personalized WhatsApp engagement.
           </p>
         </div>
 
@@ -194,9 +188,7 @@ export default function CustomerProfiles() {
                       <div className={styles["pf-top"]}>
                         <div className={styles["pf-av"]}>AF</div>
                         <div className={styles["pf-name"]}>Alistair Finch</div>
-                        <div className={styles["pf-code"]}>
-                          Referral Code · ZkuDf123
-                        </div>
+                        <div className={styles["pf-code"]}>Referral Code · ZkuDf123</div>
                       </div>
                       <div className={styles["pf-info"]}>
                         <svg
@@ -219,9 +211,7 @@ export default function CustomerProfiles() {
                           </svg>
                           Points
                         </div>
-                        <div className={`${styles.v} ${styles.warm}`}>
-                          4680 Points
-                        </div>
+                        <div className={`${styles.v} ${styles.warm}`}>4680 Points</div>
                       </div>
                       <div className={styles["pf-field"]}>
                         <div className={styles.l}>
@@ -272,10 +262,7 @@ export default function CustomerProfiles() {
                         </div>
                         <div className={styles.v}>Jun 28, 2025</div>
                       </div>
-                      <div
-                        className={styles["pf-field"]}
-                        style={{ border: "none" }}
-                      >
+                      <div className={styles["pf-field"]} style={{ border: "none" }}>
                         <div className={styles.l}>
                           <svg
                             viewBox="0 0 24 24"
@@ -333,10 +320,7 @@ export default function CustomerProfiles() {
                             .slice(0, 2);
                           return (
                             <div key={idx} className={styles.rrow}>
-                              <div
-                                className={styles.ra}
-                                style={{ background: r.c }}
-                              >
+                              <div className={styles.ra} style={{ background: r.c }}>
                                 {initials}
                               </div>
                               <div>
@@ -358,10 +342,9 @@ export default function CustomerProfiles() {
                     Customer Profiles
                   </h3>
                   <p>
-                    Get a complete real-time view of every customer with
-                    conversation history, order activity, loyalty points,
-                    engagement timelines, support interactions, and behavioral
-                    insights.
+                    Get a complete real-time view of every customer with conversation history, order
+                    activity, loyalty points, engagement timelines, support interactions, and
+                    behavioral insights.
                   </p>
                   <div className={styles["tag-pills"]}>
                     <span className={styles.tp}>Real-Time</span>
@@ -392,10 +375,7 @@ export default function CustomerProfiles() {
                         </svg>
                       </span>
                     </button>
-                    <a
-                      href="#how"
-                      className={`${styles.btn} ${styles["btn-secondary"]}`}
-                    >
+                    <a href="#how" className={`${styles.btn} ${styles["btn-secondary"]}`}>
                       Know More
                       <span className={styles.chip}>
                         <svg
@@ -435,15 +415,10 @@ export default function CustomerProfiles() {
                       </svg>
                       Auto-Generated Segments
                     </div>
-                    <p className={styles["mck-sub"]}>
-                      Updated in real time as customers engage
-                    </p>
+                    <p className={styles["mck-sub"]}>Updated in real time as customers engage</p>
                     {segments.map((s, idx) => (
                       <div key={idx} className={styles["mck-row"]}>
-                        <span
-                          className={styles["mck-dot"]}
-                          style={{ background: s.c }}
-                        />
+                        <span className={styles["mck-dot"]} style={{ background: s.c }} />
                         <div style={{ flex: 1 }}>
                           <div className={styles.nm}>{s.n}</div>
                           <div className={styles.mt}>{s.d}</div>
@@ -475,9 +450,8 @@ export default function CustomerProfiles() {
                     Segments
                   </h3>
                   <p>
-                    Automatically group customers by spend, tier, activity and
-                    behavior — then trigger the right WhatsApp reward to the
-                    right audience, with zero manual lists.
+                    Automatically group customers by spend, tier, activity and behavior — then
+                    trigger the right WhatsApp reward to the right audience, with zero manual lists.
                   </p>
                   <div className={styles["tag-pills"]}>
                     <span className={styles.tp}>Behavioral</span>
@@ -508,10 +482,7 @@ export default function CustomerProfiles() {
                         </svg>
                       </span>
                     </button>
-                    <a
-                      href="#how"
-                      className={`${styles.btn} ${styles["btn-secondary"]}`}
-                    >
+                    <a href="#how" className={`${styles.btn} ${styles["btn-secondary"]}`}>
                       Know More
                       <span className={styles.chip}>
                         <svg
@@ -556,8 +527,8 @@ export default function CustomerProfiles() {
                     <div className={styles["mck-compose"]}>
                       <div className={styles["mck-wa"]}>
                         Hi {"{{name}}"} 🎉 This weekend earn{" "}
-                        <span className={styles.pts}>2x points</span> on every
-                        order. Tap below to shop &amp; redeem your rewards!
+                        <span className={styles.pts}>2x points</span> on every order. Tap below to
+                        shop &amp; redeem your rewards!
                       </div>
                       <div className={styles["mck-tags"]}>
                         <span className={styles["mck-pill"]}>⚡ Automated</span>
@@ -589,9 +560,9 @@ export default function CustomerProfiles() {
                     Campaigns
                   </h3>
                   <p>
-                    Send personalized, on-brand WhatsApp campaigns to any
-                    segment — double-point weekends, tier upgrades, win-back
-                    offers — and watch them land with 90%+ open rates.
+                    Send personalized, on-brand WhatsApp campaigns to any segment — double-point
+                    weekends, tier upgrades, win-back offers — and watch them land with 90%+ open
+                    rates.
                   </p>
                   <div className={styles["tag-pills"]}>
                     <span className={styles.tp}>Personalized</span>
@@ -622,10 +593,7 @@ export default function CustomerProfiles() {
                         </svg>
                       </span>
                     </button>
-                    <a
-                      href="#how"
-                      className={`${styles.btn} ${styles["btn-secondary"]}`}
-                    >
+                    <a href="#how" className={`${styles.btn} ${styles["btn-secondary"]}`}>
                       Know More
                       <span className={styles.chip}>
                         <svg
@@ -670,15 +638,10 @@ export default function CustomerProfiles() {
                     </p>
                     {leaders.map((l, idx) => (
                       <div key={idx} className={styles["mck-row"]}>
-                        <span
-                          className={`${styles["mck-rank"]} ${idx === 0 ? styles.top : ""}`}
-                        >
+                        <span className={`${styles["mck-rank"]} ${idx === 0 ? styles.top : ""}`}>
                           {idx + 1}
                         </span>
-                        <span
-                          className={styles["mck-av"]}
-                          style={{ background: l.c }}
-                        >
+                        <span className={styles["mck-av"]} style={{ background: l.c }}>
                           {l.n
                             .split(" ")
                             .map((w) => w[0])
@@ -687,14 +650,10 @@ export default function CustomerProfiles() {
                         </span>
                         <div style={{ flex: 1 }}>
                           <div className={styles.nm}>{l.n}</div>
-                          <div className={styles.mt}>
-                            {l.r} friends referred
-                          </div>
+                          <div className={styles.mt}>{l.r} friends referred</div>
                         </div>
                         <div className={styles.rt}>
-                          <div className={`${styles.big} ${styles.warm}`}>
-                            {l.pts}
-                          </div>
+                          <div className={`${styles.big} ${styles.warm}`}>{l.pts}</div>
                           <div className={styles.sm}>points</div>
                         </div>
                       </div>
@@ -709,9 +668,9 @@ export default function CustomerProfiles() {
                     Program
                   </h3>
                   <p>
-                    Turn loyal customers into your best growth channel. Every
-                    referral is tracked automatically, both sides get rewarded
-                    in WhatsApp, and your leaderboard keeps them coming back.
+                    Turn loyal customers into your best growth channel. Every referral is tracked
+                    automatically, both sides get rewarded in WhatsApp, and your leaderboard keeps
+                    them coming back.
                   </p>
                   <div className={styles["tag-pills"]}>
                     <span className={styles.tp}>Auto-Tracked</span>
@@ -742,10 +701,7 @@ export default function CustomerProfiles() {
                         </svg>
                       </span>
                     </button>
-                    <a
-                      href="#how"
-                      className={`${styles.btn} ${styles["btn-secondary"]}`}
-                    >
+                    <a href="#how" className={`${styles.btn} ${styles["btn-secondary"]}`}>
                       Know More
                       <span className={styles.chip}>
                         <svg
@@ -785,9 +741,7 @@ export default function CustomerProfiles() {
                       </svg>
                       Loyalty Performance
                     </div>
-                    <p className={styles["mck-sub"]}>
-                      Last 7 days · points issued &amp; redeemed
-                    </p>
+                    <p className={styles["mck-sub"]}>Last 7 days · points issued &amp; redeemed</p>
                     <div className={styles["mck-tiles"]}>
                       <div className={styles["mck-tile"]}>
                         <div className={styles.tn}>182K</div>
@@ -829,9 +783,9 @@ export default function CustomerProfiles() {
                     Analytics
                   </h3>
                   <p>
-                    See exactly how your program performs — points issued,
-                    redemption rates, retention lift and revenue impact — all in
-                    one real-time dashboard you can act on instantly.
+                    See exactly how your program performs — points issued, redemption rates,
+                    retention lift and revenue impact — all in one real-time dashboard you can act
+                    on instantly.
                   </p>
                   <div className={styles["tag-pills"]}>
                     <span className={styles.tp}>Real-Time</span>
@@ -862,10 +816,7 @@ export default function CustomerProfiles() {
                         </svg>
                       </span>
                     </button>
-                    <a
-                      href="#how"
-                      className={`${styles.btn} ${styles["btn-secondary"]}`}
-                    >
+                    <a href="#how" className={`${styles.btn} ${styles["btn-secondary"]}`}>
                       Know More
                       <span className={styles.chip}>
                         <svg

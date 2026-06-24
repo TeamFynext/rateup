@@ -1,7 +1,4 @@
-"use client";
-
 import React from "react";
-
 import { useTranslation } from "react-i18next";
 
 import { PageType as Page, QuestionType as Q } from "@/types/enums.ts";
@@ -34,14 +31,7 @@ import { TextForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/Tex
 import WOPForm from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/WOPForm.tsx";
 import { YNForm } from "../../TakeSurvey/TakeSurveyComponent/QuestionForms/YNForm.tsx";
 
-const QuestionTypePreview = ({
-  type,
-  choices,
-  features,
-  tnc,
-  wop,
-  htmlContent = null,
-}) => {
+const QuestionTypePreview = ({ type, choices, features, tnc, wop, htmlContent = null }) => {
   const { t: translations } = useTranslation();
   switch (type) {
     case Q.Text:
@@ -93,13 +83,7 @@ const QuestionTypePreview = ({
     case Q.MultiTextInput:
       return <MultiTextInputForm features={features} />;
     case Q.MCQGrid:
-      return (
-        <MCQGridForm
-          features={features}
-          previewChoices={choices}
-          isPreview={true}
-        />
-      );
+      return <MCQGridForm features={features} previewChoices={choices} isPreview={true} />;
     case Q.File:
       return <FileInputForm isPreview={true} />;
     case Q.EmailOtp:

@@ -1,5 +1,3 @@
-"use client";
-
 import { BarChart, MessageSquare, RefreshCcw } from "lucide-react";
 import { easeOut, motion } from "motion/react";
 
@@ -25,9 +23,7 @@ const ReviewAiFeatures = () => {
           className="text-center flex justify-center flex-col items-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl text-[#009987] font-bold mb-4">
-            <span className="font-bold">
-              Everything You Need to Elevate Your Reputation
-            </span>
+            <span className="font-bold">Everything You Need to Elevate Your Reputation</span>
           </h2>
           <p className="text-gray-600 max-w-2xl pt-4 mx-auto">
             From smart review collection to deep online presence analysis.

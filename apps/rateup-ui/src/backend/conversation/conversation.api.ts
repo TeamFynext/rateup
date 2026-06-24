@@ -3,15 +3,11 @@ import { CONTACT_BASE_URL } from "../campaign/contacts/contacts.api";
 
 const baseUrl = `${CONTACT_BASE_URL}/conversations`;
 
-export const getConversationOverView = async (
-  filter,
-): Promise<ConversationOverviewStats> => {
+export const getConversationOverView = async (filter): Promise<ConversationOverviewStats> => {
   const query = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
-  const response = await axiosClient.get<ConversationOverviewStats>(
-    `${baseUrl}/overview?${query}`,
-  );
+  const response = await axiosClient.get<ConversationOverviewStats>(`${baseUrl}/overview?${query}`);
   return response.data;
 };
 
@@ -83,15 +79,11 @@ export interface ConversationQuickStats {
   resolvedRateDifference: number;
 }
 
-export const getConversationQuickStats = async (
-  filter,
-): Promise<ConversationQuickStats> => {
+export const getConversationQuickStats = async (filter): Promise<ConversationQuickStats> => {
   const query = Object.entries(filter || {})
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
-  const response = await axiosClient.get<ConversationQuickStats>(
-    `${baseUrl}/quick-stats?${query}`,
-  );
+  const response = await axiosClient.get<ConversationQuickStats>(`${baseUrl}/quick-stats?${query}`);
   return response.data;
 };
 
@@ -183,8 +175,6 @@ export const getTeamDetailedMetrics = async (teamId, filter) => {
   const query = Object.entries(filter || {})
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
-  const response = await axiosClient.get(
-    `${baseUrl}/team-metrics/${teamId}?${query}`,
-  );
+  const response = await axiosClient.get(`${baseUrl}/team-metrics/${teamId}?${query}`);
   return response.data;
 };

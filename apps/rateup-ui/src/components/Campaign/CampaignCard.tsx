@@ -1,5 +1,3 @@
-"use client";
-
 import { Edit2, Eye, MoreVertical, Trash2, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -74,10 +72,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
     campaign.type,
   );
   const { t } = useTranslation("campaign.card");
-  const deleteCampaignMutation = useDeleteCampaignMutation(
-    campaign.teamId,
-    campaign.type,
-  );
+  const deleteCampaignMutation = useDeleteCampaignMutation(campaign.teamId, campaign.type);
   const handleStatusChange = async (campaign: Campaign, checked: boolean) => {
     const newStatus = checked ? "ACTIVE" : "INACTIVE";
 
@@ -115,10 +110,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent
-        align="end"
-        onClick={(event) => event.stopPropagation()}
-      >
+      <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
         <DropdownMenuItem
           onClick={(event) => {
             event.stopPropagation();
@@ -153,10 +145,9 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
             <AlertDialogHeader>
               <AlertDialogTitle>{t("Delete Campaign")}</AlertDialogTitle>
               <AlertDialogDescription>
-                {t(
-                  'Are you sure you want to delete "{name}"? This action cannot be undone.',
-                  { name: campaign.name },
-                )}
+                {t('Are you sure you want to delete "{name}"? This action cannot be undone.', {
+                  name: campaign.name,
+                })}
               </AlertDialogDescription>
             </AlertDialogHeader>
 
@@ -198,10 +189,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
         </div>
       }
       footerLeft={
-        <Badge
-          variant="outline"
-          className={getStatusColor(campaign.status ?? "")}
-        >
+        <Badge variant="outline" className={getStatusColor(campaign.status ?? "")}>
           {campaign.status}
         </Badge>
       }

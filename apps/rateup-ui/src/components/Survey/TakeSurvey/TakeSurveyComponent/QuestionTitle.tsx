@@ -1,14 +1,12 @@
-"use client";
-
-import { useContext, useEffect } from "react";
-
 import { Text } from "@mantine/core";
+import { useContext, useEffect } from "react";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 
-import classes from "./TakeSurvey.module.css";
 import { getReplacedTitleFromVariable } from "./util.tsx";
+
+import classes from "./TakeSurvey.module.css";
 
 function QuestionTitle({
   largeScreen,
@@ -29,13 +27,10 @@ function QuestionTitle({
     isPublicPage: true,
   };
 
-  const replacedTitle =
-    getReplacedTitleFromVariable(data) ?? selectedQ?.title[selectedLanguage];
+  const replacedTitle = getReplacedTitleFromVariable(data) ?? selectedQ?.title[selectedLanguage];
 
   useEffect(() => {
-    const firstAlignment = getFirstLineAlignmentFromHTML(
-      selectedQ?.title[selectedLanguage],
-    );
+    const firstAlignment = getFirstLineAlignmentFromHTML(selectedQ?.title[selectedLanguage]);
     setAlignment(firstAlignment);
   }, [selectedQ]);
 

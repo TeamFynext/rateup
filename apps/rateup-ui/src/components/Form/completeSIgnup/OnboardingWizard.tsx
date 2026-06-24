@@ -1,25 +1,15 @@
-"use client";
-
-import React, { useState } from "react";
-
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Building, Check, ClipboardList, Sparkles, X, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import React, { useState } from "react";
 
-import {
-  useCompleteOrgDetails,
-  useOrgNameAndPhone,
-} from "@/backend/org/org.query";
+import { useCompleteOrgDetails, useOrgNameAndPhone } from "@/backend/org/org.query";
 import { ChannelDetailsPage } from "@/components/dashboard/settings/channels/ChannelDetailsPage.tsx";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Card } from "@/components/ui/card.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import OnboardingStep1 from "./Onboarding1.tsx";
 import OnboardingStep2 from "./Onboarding2.tsx";
@@ -37,19 +27,13 @@ export default function OnboardingWizard() {
   });
 
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [activeIntegration, setActiveIntegration] = useState<string | null>(
-    null,
-  );
+  const [activeIntegration, setActiveIntegration] = useState<string | null>(null);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const completeOrgDetails = useCompleteOrgDetails();
   const { route, updateRouteAndCart } = useRouteAndCartStore();
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        Loading...
-      </div>
-    );
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
 
   const handleFinish = () => {
@@ -142,11 +126,7 @@ export default function OnboardingWizard() {
     setCompletedSteps([...completedSteps, currentStep]);
   };
   const goToStep = (step: number) => {
-    if (
-      step <= currentStep ||
-      completedSteps.includes(step - 1) ||
-      step === 1
-    ) {
+    if (step <= currentStep || completedSteps.includes(step - 1) || step === 1) {
       setCurrentStep(step);
     }
   };
@@ -203,8 +183,7 @@ export default function OnboardingWizard() {
               Welcome to RateUp, {info?.nameOfUser || ""}! 👋
             </h1>
             <p className="text-gray-600 text-sm">
-              Let`&apos;s get your customer engagement platform ready in 3 quick
-              steps
+              Let`&apos;s get your customer engagement platform ready in 3 quick steps
             </p>
           </motion.div>
 
@@ -220,9 +199,7 @@ export default function OnboardingWizard() {
                 const isActive = currentStep === step.id;
                 const isCompleted = completedSteps.includes(step.id);
                 const isAccessible =
-                  step.id <= currentStep ||
-                  completedSteps.includes(step.id - 1) ||
-                  step.id === 1;
+                  step.id <= currentStep || completedSteps.includes(step.id - 1) || step.id === 1;
 
                 return (
                   <React.Fragment key={step.id}>
@@ -299,9 +276,7 @@ export default function OnboardingWizard() {
                         side="bottom"
                         className="bg-white/95 backdrop-blur-sm border-gray-200/60 shadow-lg"
                       >
-                        <p className="text-gray-700 text-xs">
-                          {step.description}
-                        </p>
+                        <p className="text-gray-700 text-xs">{step.description}</p>
                       </TooltipContent>
                     </Tooltip>
                     {index < stepInfo.length - 1 && (
@@ -329,9 +304,7 @@ export default function OnboardingWizard() {
               <span className="text-gray-600 text-sm">
                 Step {currentStep} of {totalSteps}
               </span>
-              <span className="text-blue-600 text-sm">
-                {Math.round(progress)}% complete
-              </span>
+              <span className="text-blue-600 text-sm">{Math.round(progress)}% complete</span>
             </div>
             <div className="w-full bg-gray-200/60 rounded-full h-1.5 overflow-hidden shadow-inner backdrop-blur-sm border border-gray-300/60">
               <motion.div

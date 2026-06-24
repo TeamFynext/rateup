@@ -64,6 +64,7 @@
     "Add checklist": "إضافة قائمة مرجعية",
     "Add choice": "إضافة خيار",
     "Add Column": "إضافة عمود",
+    "Add Command": "إضافة أمر",
     "Add Components": "إضافة مكونات",
     "Add Condition": "إضافة شرط",
     "Add Contact": "إضافة جهة اتصال",
@@ -73,6 +74,7 @@
     "Add Else Component": "إضافة مكون آخر",
     "Add Existing Contacts": "إضافة جهات الاتصال الموجودة",
     "Add Field": "إضافة حقل",
+    "Add Ice Breaker": "أضف كاسر الجليد",
     "Add If Block": "أضف إذا بلوك",
     "Add Images (max 3)": "إضافة صور (الحد الأقصى 3)",
     "Add job title": "أضف المسمى الوظيفي",
@@ -518,6 +520,7 @@
     "Continue to Payment": "الاستمرار في الدفع",
     "Contrast color": "لون التباين",
     "Conversation Trends": "اتجاهات المحادثة",
+    "Conversational": "محادثة",
     "Conversations": "المحادثات",
     "copied": "منقول",
     "Copied": "منقول",
@@ -1330,6 +1333,7 @@
     "Max size 2MB": "الحد الأقصى للحجم 2 ميجابايت",
     "max uploaded documents": "الحد الأقصى للمستندات المرفوعة",
     "max uploaded photos": "الحد الأقصى للصور التي تم تحميلها",
+    "Maximum 4 ice breakers allowed": "الحد الأقصى المسموح به هو 4 كاسحات ثلج",
     "maximum file size (in kilobytes) that can be uploaded": "الحد الأقصى لحجم الملف (بالكيلوبايت) الذي يمكن تحميله",
     "maximum number of documents that can be uploaded": "الحد الأقصى لعدد المستندات التي يمكن تحميلها",
     "maximum number of photos that can be uploaded": "الحد الأقصى لعدد الصور التي يمكن تحميلها",
@@ -1656,6 +1660,7 @@
     "Please retry loading the application. If the problem continues, you may need to logout and login again": "يرجى إعادة محاولة تحميل التطبيق. إذا استمرت المشكلة، فقد تحتاج إلى تسجيل الخروج وتسجيل الدخول مرة أخرى",
     "Please select a CSV file to import.": "الرجاء تحديد ملف CSV لاستيراده.",
     "Please select a page": "الرجاء تحديد صفحة",
+    "Please select a phone account to configure conversational settings.": "الرجاء تحديد حساب هاتف لتكوين إعدادات المحادثة.",
     "Please select a redemption": "الرجاء تحديد الاسترداد",
     "Please select a reward": "الرجاء تحديد مكافأة",
     "Please select a screen first": "الرجاء تحديد الشاشة أولاً",
@@ -2103,6 +2108,7 @@
     "Skip approval flow": "تخطي تدفق الموافقة",
     "Skip Preview Screen": "تخطي شاشة المعاينة",
     "Skips Responses preview screen on survey completion": "تخطي شاشة معاينة الردود عند إكمال الاستطلاع",
+    "Slash commands users can access by typing '/' in chat. Maximum 30 commands. Name up to 32 chars, description up to 256 chars.": "يمكن للمستخدمين الوصول إلى أوامر الشرطة المائلة عن طريق كتابة \"/\" في الدردشة. الحد الأقصى 30 أمرًا. الاسم يصل إلى 32 حرفًا، والوصف يصل إلى 256 حرفًا.",
     "Sliding banners to be shown in top of menu. You can add upto 4 banners.": "لافتات منزلقة ليتم عرضها في أعلى القائمة. يمكنك إضافة ما يصل إلى 4 لافتات.",
     "slower vs last week": "أبطأ مقارنة بالأسبوع الماضي",
     "Slug is required": "مطلوب سبيكة",
@@ -2173,6 +2179,7 @@
     "Swap the order of flow screens": "تبديل ترتيب شاشات التدفق",
     "Sync": "مزامنة",
     "Sync FB pages": "مزامنة صفحات الفيسبوك",
+    "Sync from WhatsApp": "المزامنة من الواتس اب",
     "Sync Google Account": "مزامنة حساب جوجل",
     "Sync Google Sheet": "مزامنة ورقة جوجل",
     "Sync products": "مزامنة المنتجات",
@@ -2187,10 +2194,12 @@
     "Syncing Shopify products": "مزامنة منتجات Shopify",
     "Syncing Zoho contacts to Rateup...": "جارٍ مزامنة جهات اتصال Zoho مع التقييم...",
     "Syncing Zoho leads to Rateup...": "تؤدي مزامنة Zoho إلى التقييم...",
+    "Syncing...": "جارٍ المزامنة...",
     "System Settings": "إعدادات النظام",
     "tags": "العلامات",
     "Tags": "العلامات",
     "Tags/ Groups/ Campaigns": "العلامات / المجموعات / الحملات",
+    "Tappable text prompts shown to users the first time they message you. Maximum 4, up to 80 characters each.": "تظهر المطالبات النصية القابلة للنقر للمستخدمين في المرة الأولى التي يرسلون فيها رسالة إليك. الحد الأقصى 4، ما يصل إلى 80 حرفًا لكل منها.",
     "Target URL for redirection": "عنوان URL المستهدف لإعادة التوجيه",
     "tax": "ضريبة",
     "Tax": "ضريبة",
@@ -2566,13 +2575,6 @@
   "Example": {
     " /points": "مثال: / نقطة"
   },
-  "Eg": {
-    "https://www": {
-      "example": {
-        "com": "على سبيل المثال:https://www.example.com"
-      }
-    }
-  },
   "campaign.resend": {
     "Cancel": "يلغي",
     "Choose when to send and which participants to resend to": "اختر وقت الإرسال والمشاركين الذين تريد إعادة الإرسال إليهم",
@@ -2716,8 +2718,12 @@
     "Selected": "مختارة",
     "You have not selected any participant": "لم تقم باختيار أي مشارك"
   },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "حدد فقط المراحل التي تنتمي إلى خط الأنابيب المحدد وتكوين خط الأنابيب الفرعي."
+  "Eg": {
+    "https://www": {
+      "example": {
+        "com": "على سبيل المثال:https://www.example.com"
+      }
+    }
   },
   "apianalytics": {
     "All": "الجميع",
@@ -2744,6 +2750,9 @@
     "Total Messages Sent": "إجمالي الرسائل المرسلة",
     "WhatsApp Messages Analytics": "تحليل رسائل الواتس اب",
     "WhatsApp Template Analytics": "تحليلات قالب الواتساب"
+  },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "حدد فقط المراحل التي تنتمي إلى خط الأنابيب المحدد وتكوين خط الأنابيب الفرعي."
   },
   "campaign.list": {
     "Active": "نشيط",

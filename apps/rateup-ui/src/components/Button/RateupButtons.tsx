@@ -1,19 +1,7 @@
-import type { MutableRefObject } from "react";
-
-import type {
-  ActionIconProps,
-  ButtonProps,
-  MantineStyleProp,
-} from "@mantine/core";
-import {
-  ActionIcon,
-  Button,
-  FileButton,
-  Group,
-  HoverCard,
-  Image,
-} from "@mantine/core";
+import type { ActionIconProps, ButtonProps, MantineStyleProp } from "@mantine/core";
+import { ActionIcon, Button, FileButton, Group, HoverCard, Image } from "@mantine/core";
 import { IconRestore, IconTrash, IconUpload } from "@tabler/icons-react";
+import type { MutableRefObject } from "react";
 
 import { DEFAULT_IMAGE_BASE64_START } from "@/utils/constants.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
@@ -248,11 +236,7 @@ export const RateupFileUploadButton = ({
         </HoverCard>
       )}
 
-      <FileButton
-        onChange={handleFileChange}
-        accept={accept}
-        resetRef={resetRef}
-      >
+      <FileButton onChange={handleFileChange} accept={accept} resetRef={resetRef}>
         {(props) => (
           <Button
             variant="outline"

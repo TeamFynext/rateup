@@ -2,15 +2,7 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 
 import { Card, CardContent } from "../ui/card.tsx";
 
-function OverviewCard({
-  title,
-  value,
-  Icon,
-  bg,
-  iconColor,
-  trendLogoRequired,
-  trendValue,
-}) {
+function OverviewCard({ title, value, Icon, bg, iconColor, trendLogoRequired, trendValue }) {
   const isNegative = trendValue < 0;
   return (
     <Card>

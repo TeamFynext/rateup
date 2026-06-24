@@ -1,5 +1,3 @@
-"use client";
-
 import { useTranslation } from "react-i18next";
 
 import {
@@ -9,11 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 export function StatusFilterMenu({ filterParam, setFilterParam }) {
   const { t: translations } = useTranslation();
@@ -37,9 +31,7 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
           </SelectContent>
         </Select>
       </TooltipTrigger>
-      <TooltipContent side="top">
-        {translations("Status") ?? "Status"}
-      </TooltipContent>
+      <TooltipContent side="top">{translations("Status") ?? "Status"}</TooltipContent>
     </Tooltip>
   );
 }

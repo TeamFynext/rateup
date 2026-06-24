@@ -1,17 +1,15 @@
-"use client";
-
-import React, { useContext, useEffect } from "react";
-
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { Card, Flex, Stack, Text } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { IconGripVertical } from "@tabler/icons-react";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import React, { useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-import classes from "../../../menu/category/sortDrawer/DndListHandle.module.css";
 import FormModalLayout from "../../../Modal/FormModalLayout.tsx";
 import useFlowStore from "../../flow-v2/utils/store.ts";
 import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext.ts";
+
+import classes from "../../../menu/category/sortDrawer/DndListHandle.module.css";
 
 interface Idata {
   id: string;
@@ -24,12 +22,7 @@ interface ISortDrawerProps {
   v?: number;
 }
 
-const SortDrawerFlow = ({
-  opened,
-  close,
-  data = [],
-  v = 1,
-}: ISortDrawerProps) => {
+const SortDrawerFlow = ({ opened, close, data = [], v = 1 }: ISortDrawerProps) => {
   const [state, handlers] = useListState(data);
   const { flowJson, updateFlowJson } = useContext(EditFlowContext);
   const { screens, addScreens } = useFlowStore();

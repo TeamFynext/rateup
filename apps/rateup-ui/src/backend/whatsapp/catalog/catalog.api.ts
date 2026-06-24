@@ -32,11 +32,7 @@ export async function getWaCatalogById(catalogId) {
 }
 
 export async function getWaConnectedCatalog(whatsappSettingsPhoneId: string) {
-  return (
-    await axiosClient.get(
-      `${waCatalogUrl}/connected/${whatsappSettingsPhoneId}`,
-    )
-  ).data;
+  return (await axiosClient.get(`${waCatalogUrl}/connected/${whatsappSettingsPhoneId}`)).data;
 }
 
 export async function deleteWaCatalog(catalogId: string) {
@@ -44,8 +40,7 @@ export async function deleteWaCatalog(catalogId: string) {
 }
 
 export async function disconnectCatalogFromWaba(data) {
-  return (await axiosClient.delete(`${waCatalogUrl}/disconnect`, { data }))
-    .data;
+  return (await axiosClient.delete(`${waCatalogUrl}/disconnect`, { data })).data;
 }
 
 // ─── Catalog Settings ──────────────────────────────────────────────────────
@@ -74,25 +69,15 @@ export type CatalogSettings = {
   deliveryOptions: DeliveryOption[];
 };
 
-export async function getCatalogSettings(
-  catalogId: string,
-): Promise<CatalogSettings> {
+export async function getCatalogSettings(catalogId: string): Promise<CatalogSettings> {
   return (await axiosClient.get(`${waCatalogUrl}/${catalogId}/settings`)).data;
 }
 
-export async function updateCatalogSettings(
-  catalogId: string,
-  data: Partial<CatalogSettings>,
-) {
-  return (await axiosClient.put(`${waCatalogUrl}/${catalogId}/settings`, data))
-    .data;
+export async function updateCatalogSettings(catalogId: string, data: Partial<CatalogSettings>) {
+  return (await axiosClient.put(`${waCatalogUrl}/${catalogId}/settings`, data)).data;
 }
 
-export async function createCatalogAddressFlow(
-  catalogId: string,
-  json?: any,
-  map?: any,
-) {
+export async function createCatalogAddressFlow(catalogId: string, json?: any, map?: any) {
   return (
     await axiosClient.post(`${waCatalogUrl}/${catalogId}/create-address-flow`, {
       json,

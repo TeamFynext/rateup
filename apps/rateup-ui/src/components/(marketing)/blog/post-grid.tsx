@@ -1,7 +1,6 @@
-import React from "react";
-
 import { Avatar, Badge, Image } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
+import React from "react";
 
 import type { Post } from "@/lib/posts.ts";
 
@@ -63,9 +62,7 @@ export default function PostGrid({
         </div>
       )}
       {posts?.length === 0 ? (
-        <div className="py-10 text-center text-slate-600">
-          No posts found for the selected tag.
-        </div>
+        <div className="py-10 text-center text-slate-600">No posts found for the selected tag.</div>
       ) : (
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
@@ -97,9 +94,7 @@ export default function PostGrid({
                   <h3 className="mb-2 line-clamp-2 text-lg font-semibold text-slate-900">
                     {post.title}
                   </h3>
-                  <p className="mb-4 line-clamp-2 text-sm text-slate-600">
-                    {post.excerpt}
-                  </p>
+                  <p className="mb-4 line-clamp-2 text-sm text-slate-600">{post.excerpt}</p>
                   <div className="mt-auto flex items-center">
                     <Avatar
                       name={post?.primary_author?.name}
@@ -112,14 +107,11 @@ export default function PostGrid({
                         {post?.primary_author?.name}
                       </span>
                       <div>
-                        {new Date(post.published_at).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          },
-                        )}
+                        {new Date(post.published_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
                       </div>
                     </div>
                   </div>

@@ -1,17 +1,11 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { signOut } from "supertokens-auth-react/recipe/session";
 
 import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilter/index.tsx";
 
-import {
-  useContactsStore,
-  useMessagesStore,
-} from "../../../components/dashboard/inbox/store.ts";
+import { useContactsStore, useMessagesStore } from "../../../components/dashboard/inbox/store.ts";
 import { resetBrowserQueryClient } from "../../../components/providers.tsx";
 
 export const Route = createFileRoute("/(auth)/logout/")({
@@ -44,7 +38,7 @@ function Logout() {
             to: "/login",
             replace: true,
           });
-        } catch (error) {
+        } catch {
           // Optionally handle error (e.g., show notification)
         }
       }

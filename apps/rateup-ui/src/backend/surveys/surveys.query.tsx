@@ -106,7 +106,7 @@ const usePublicSurveyGoogleLink = (surveyTeamMapId: string) =>
 //     queryFn: getSurveys,
 //   });
 // --------------survey landing pages----------
-const useSurveysLanding = (teamIsSelected) =>
+const useSurveysLanding = (_teamIsSelected) =>
   useQuery({
     enabled: true,
     queryKey: ["surveysLanding"],
@@ -159,10 +159,7 @@ export const useAllSurveysSummary = () => {
   });
 };
 
-export const useSurveysByTeam = (
-  teamId: string,
-  specificTeamIsSelected: boolean,
-) =>
+export const useSurveysByTeam = (teamId: string, specificTeamIsSelected: boolean) =>
   useQuery({
     enabled: specificTeamIsSelected,
     queryKey: ["surveys", teamId],
@@ -173,7 +170,7 @@ export const useCreateSurveyMutation = () => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createSurvey,
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       toast.success("Survey Created...!", {
         id: "load-data",
       });
@@ -197,11 +194,7 @@ type LandingProps = {
   setIsCreating: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const useCreateSurveyLandingPageMutation = ({
-  close,
-  resetForm,
-  setIsCreating,
-}: LandingProps) => {
+const useCreateSurveyLandingPageMutation = ({ close, resetForm, setIsCreating }: LandingProps) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createSurveyLandingPage,
@@ -268,9 +261,8 @@ type CloneProps = {
 export function useCloneSurveyMutation({ close, selectedTeamId }: CloneProps) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, teamIds }: { id: string; teamIds: string[] }) =>
-      cloneSurvey(id, teamIds),
-    onSuccess: (data, variables) => {
+    mutationFn: ({ id, teamIds }: { id: string; teamIds: string[] }) => cloneSurvey(id, teamIds),
+    onSuccess: (_data, _variables) => {
       toast.success("Survey Copy created!", {
         id: "load-data",
       });
@@ -291,7 +283,7 @@ export function useUpdateSurveyPwdMutation(surveyId) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateSurveyPassword,
-    onSuccess: (res: any) => {
+    onSuccess: (_res: any) => {
       toast.success("Sucessfully updated Password Protection ", {
         id: "load-data",
       });
@@ -314,7 +306,7 @@ export function useVerifySurveyPwdMutation(
 ) {
   return useMutation({
     mutationFn: () => handleSurveyVerifyPwd(surveyId, password),
-    onSuccess: (response) => {
+    onSuccess: (_response) => {
       toast.success("Start attending the survey. ", {
         id: "load-data",
       });
@@ -365,7 +357,7 @@ const useUpdateSurveyGoogleLinkMutation = (
     mutationFn: ({ data }: any) => {
       return updateSurveyGoogleLink(surveyTeamMapId, data);
     },
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       toast.dismiss();
       setLinkUpdateStatus(true);
     },
@@ -546,33 +538,17 @@ export const useSurveyUpdateMutation = (surveyId) => {
       queryClient.invalidateQueries({ queryKey: ["survey-templates", "web"] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message || "Something went wrong, Please try again later.",
-        {
-          id: surveyId,
-        },
-      );
+      toast.error(error?.message || "Something went wrong, Please try again later.", {
+        id: surveyId,
+      });
     },
   });
 };
 
-const useAllResponseForGraph = (
-  timePeriod,
-  userTimeZone,
-  surveyId = "",
-  teamMapIds = [],
-) => {
+const useAllResponseForGraph = (timePeriod, userTimeZone, surveyId = "", teamMapIds = []) => {
   return useQuery({
-    queryKey: [
-      "reponse",
-      "graph",
-      timePeriod,
-      userTimeZone,
-      surveyId,
-      teamMapIds,
-    ],
-    queryFn: () =>
-      getSurveyResponseForGraph(timePeriod, userTimeZone, surveyId, teamMapIds),
+    queryKey: ["reponse", "graph", timePeriod, userTimeZone, surveyId, teamMapIds],
+    queryFn: () => getSurveyResponseForGraph(timePeriod, userTimeZone, surveyId, teamMapIds),
   });
 };
 
@@ -583,20 +559,7 @@ export const useAllResponseNPSForGraph = (
   teamMapIds = [],
 ) => {
   return useQuery({
-    queryKey: [
-      "reponse-nps",
-      "graph-nps",
-      timePeriod,
-      userTimeZone,
-      surveyId,
-      teamMapIds,
-    ],
-    queryFn: () =>
-      getNPSSurveyResponseForGraph(
-        timePeriod,
-        userTimeZone,
-        surveyId,
-        teamMapIds,
-      ),
+    queryKey: ["reponse-nps", "graph-nps", timePeriod, userTimeZone, surveyId, teamMapIds],
+    queryFn: () => getNPSSurveyResponseForGraph(timePeriod, userTimeZone, surveyId, teamMapIds),
   });
 };

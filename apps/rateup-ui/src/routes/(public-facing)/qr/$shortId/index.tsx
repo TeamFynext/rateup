@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { createFileRoute, useParams } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import {
   useGetQrWithShortUrlIdPublic,
@@ -19,7 +16,7 @@ function GenerateQrRedirectionPage() {
   });
   const shortId = params.shortId as string;
 
-  const { isPending, isError, data } = useGetQrWithShortUrlIdPublic(shortId);
+  const { data } = useGetQrWithShortUrlIdPublic(shortId);
 
   const incrementNoOfScansMutation = useIncrementNoOfScansMutation();
 

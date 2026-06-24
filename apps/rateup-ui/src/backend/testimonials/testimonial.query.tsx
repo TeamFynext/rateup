@@ -41,7 +41,7 @@ export function useCreateTestimonialCollection() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createTestimonialCollection,
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       toast.success("Collection created", {
         id: "create-collection",
       });
@@ -134,9 +134,7 @@ export function useAddMultipleTestimonialsToCollection(collectionId: string) {
   });
 }
 
-export function useDeleteMultipleTestimonialsFromCollection(
-  collectionId: string,
-) {
+export function useDeleteMultipleTestimonialsFromCollection(collectionId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (testimonialIds: string[]) =>

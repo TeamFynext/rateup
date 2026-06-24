@@ -1,8 +1,4 @@
-import {
-  IconBrandFacebook,
-  IconBrandInstagram,
-  IconBrandLinkedin,
-} from "@tabler/icons-react";
+import { IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 
 const InboxFooter = () => {
@@ -15,30 +11,21 @@ const InboxFooter = () => {
           <div>
             <h3 className="font-bold text-2xl pb-4 text-[#00397b]">RateUp</h3>
             <p className="text-muted-foreground">
-              Stop guessing what your employees are thinking. Start listening,
-              understanding, and resolving. Book a free, no-obligation demo to
-              see RateUp in action.
+              Stop guessing what your employees are thinking. Start listening, understanding, and
+              resolving. Book a free, no-obligation demo to see RateUp in action.
             </p>
           </div>
 
           <div>
-            <h4 className="font-semibold text-lg pb-4 text-[#013553]">
-              Product
-            </h4>
+            <h4 className="font-semibold text-lg pb-4 text-[#013553]">Product</h4>
             <ul className="space-y-3">
               <li>
-                <Link
-                  to="#features"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="#features" className="text-[#1c518e] transition-colors">
                   Features
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/pricing"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="/pricing" className="text-[#1c518e] transition-colors">
                   Pricing
                 </Link>
               </li>
@@ -46,32 +33,21 @@ const InboxFooter = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold text-lg pb-4 text-[#013553]">
-              Company
-            </h4>
+            <h4 className="font-semibold text-lg pb-4 text-[#013553]">Company</h4>
             <ul className="space-y-3">
               <li>
-                <Link
-                  to="/about-us"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="/about-us" className="text-[#1c518e] transition-colors">
                   About
                 </Link>
               </li>
               <li>
-                <Link
-                  to="https://blog.rateup.app/"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="https://blog.rateup.app/" className="text-[#1c518e] transition-colors">
                   Blog
                 </Link>
               </li>
 
               <li>
-                <Link
-                  to="/contact-us"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="/contact-us" className="text-[#1c518e] transition-colors">
                   Contact
                 </Link>
               </li>
@@ -82,18 +58,12 @@ const InboxFooter = () => {
             <h4 className="font-semibold text-lg pb-4 text-[#013553]">Legal</h4>
             <ul className="space-y-3">
               <li>
-                <Link
-                  to="/privacy-policy"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="/privacy-policy" className="text-[#1c518e] transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/terms-of-service"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="/terms-of-service" className="text-[#1c518e] transition-colors">
                   Terms of Service
                 </Link>
               </li>

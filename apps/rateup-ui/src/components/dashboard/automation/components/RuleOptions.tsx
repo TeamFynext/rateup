@@ -1,15 +1,9 @@
 import React from "react";
-
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 import { useGetAllBusinessHours } from "@/backend/org/business-hours/business-hours.query";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -48,15 +42,12 @@ const RuleOptions: React.FC = () => {
               aria-invalid={fieldState.invalid}
             />
             <div className="flex-1">
-              <FieldLabel
-                htmlFor="send-once-per-day"
-                className="cursor-pointer font-medium"
-              >
+              <FieldLabel htmlFor="send-once-per-day" className="cursor-pointer font-medium">
                 Send only once per day per contact
               </FieldLabel>
               <FieldDescription className="text-xs mt-0.5">
-                Prevents duplicate messages to the same contact within 24 hours.
-                (only available for chatbot action)
+                Prevents duplicate messages to the same contact within 24 hours. (only available for
+                chatbot action)
               </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </div>
@@ -82,18 +73,13 @@ const RuleOptions: React.FC = () => {
                 aria-invalid={fieldState.invalid}
               />
               <div className="flex-1">
-                <FieldLabel
-                  htmlFor="business-hours"
-                  className="cursor-pointer font-medium"
-                >
+                <FieldLabel htmlFor="business-hours" className="cursor-pointer font-medium">
                   Only during business hours
                 </FieldLabel>
                 <FieldDescription className="text-xs mt-0.5">
                   Rule will only trigger during your configured business hours
                 </FieldDescription>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </div>
             </Field>
 
@@ -107,10 +93,7 @@ const RuleOptions: React.FC = () => {
                       <FieldLabel className="text-xs font-semibold mb-2">
                         Select Business Hours
                       </FieldLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value || ""}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <SelectTrigger aria-invalid={fieldState.invalid}>
                           <SelectValue placeholder="Select business hours" />
                         </SelectTrigger>
@@ -122,9 +105,7 @@ const RuleOptions: React.FC = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />

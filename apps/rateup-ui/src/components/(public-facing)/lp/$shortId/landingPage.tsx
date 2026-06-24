@@ -1,15 +1,12 @@
-"use client";
-
-import React, { useEffect } from "react";
-
 import { Box, Flex } from "@mantine/core";
 import parse from "html-react-parser";
 import { produce } from "immer";
+import React, { useEffect } from "react";
 
 import { usePageVisitsUpdateMutation } from "@/backend/landingPage/landingPage.query";
-import tiptapDivStyles from "@/components/LandingPage/LandingPageEditor/Editor/RichTextEditor/RichTextEditor.module.css";
 
 import styles from "./lp.module.css";
+import tiptapDivStyles from "@/components/LandingPage/LandingPageEditor/Editor/RichTextEditor/RichTextEditor.module.css";
 
 const LandingPageC = ({ shortUrlId, landingPageObj }) => {
   const updatePageVisitsMutation = usePageVisitsUpdateMutation(shortUrlId);
@@ -27,24 +24,15 @@ const LandingPageC = ({ shortUrlId, landingPageObj }) => {
       );
       updatePageVisitsMutation.mutate();
     } else if (landingPageVisitsData) {
-      const parsedVisitsDataObj = JSON.parse(
-        localStorage.getItem("landingPageVisitsData"),
-      );
-      const currentLinktreeLastVisited =
-        parsedVisitsDataObj[shortUrlId]?.lastVisitedAt;
+      const parsedVisitsDataObj = JSON.parse(localStorage.getItem("landingPageVisitsData"));
+      const currentLinktreeLastVisited = parsedVisitsDataObj[shortUrlId]?.lastVisitedAt;
       if (!currentLinktreeLastVisited) {
-        const updatedParsedVisitsDataObj = produce(
-          parsedVisitsDataObj,
-          (draft) => {
-            draft[shortUrlId] = {
-              lastVisitedAt: new Date().toISOString(),
-            };
-          },
-        );
-        localStorage.setItem(
-          "landingPageVisitsData",
-          JSON.stringify(updatedParsedVisitsDataObj),
-        );
+        const updatedParsedVisitsDataObj = produce(parsedVisitsDataObj, (draft) => {
+          draft[shortUrlId] = {
+            lastVisitedAt: new Date().toISOString(),
+          };
+        });
+        localStorage.setItem("landingPageVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
         updatePageVisitsMutation.mutate();
         return;
       }
@@ -53,20 +41,13 @@ const LandingPageC = ({ shortUrlId, landingPageObj }) => {
       // currentLinktreeLastVisited is an ISO time string.
       const lastVisitedDateObj = new Date(currentLinktreeLastVisited);
 
-      const differenceInMinutes =
-        (+newDateObj - +lastVisitedDateObj) / (1000 * 60);
+      const differenceInMinutes = (+newDateObj - +lastVisitedDateObj) / (1000 * 60);
 
       if (differenceInMinutes > 60) {
-        const updatedParsedVisitsDataObj = produce(
-          parsedVisitsDataObj,
-          (draft) => {
-            draft[shortUrlId].lastVisitedAt = new Date().toISOString();
-          },
-        );
-        localStorage.setItem(
-          "landingPageVisitsData",
-          JSON.stringify(updatedParsedVisitsDataObj),
-        );
+        const updatedParsedVisitsDataObj = produce(parsedVisitsDataObj, (draft) => {
+          draft[shortUrlId].lastVisitedAt = new Date().toISOString();
+        });
+        localStorage.setItem("landingPageVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
         updatePageVisitsMutation.mutate();
       }
     }

@@ -69,14 +69,9 @@ export function useCropperJS() {
   }, []);
 
   const scaleImage = useCallback((scale: number) => {
-    if (
-      imageRef.current &&
-      typeof imageRef.current.$getTransform === "function"
-    ) {
+    if (imageRef.current && typeof imageRef.current.$getTransform === "function") {
       const transform = imageRef.current.$getTransform();
-      const currentScale = Math.sqrt(
-        transform[0] * transform[0] + transform[1] * transform[1],
-      );
+      const currentScale = Math.sqrt(transform[0] * transform[0] + transform[1] * transform[1]);
       if (currentScale > 0) {
         const ratio = scale / currentScale;
         transform[0] *= ratio;

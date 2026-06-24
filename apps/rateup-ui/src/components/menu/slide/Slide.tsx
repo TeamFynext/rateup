@@ -1,37 +1,21 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 import { IconMenu2, IconTrash, IconUpload } from "@tabler/icons-react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { MenuItemPriceType } from "@/types/enums.ts";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { ImageCropModal } from "@/components/Modal/ImageCropModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
+import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import {
-  MAX_FILE_SIZE_IN_BYTE,
-  MAX_FILE_SIZE_IN_MB,
-} from "@/utils/constants.ts";
-import {
-  deleteUploadedFiles,
-  getFileUrlFromKey,
-  uploadFile,
-} from "@/utils/file-upload/upload.ts";
+import { MenuItemPriceType } from "@/types/enums.ts";
+import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "@/utils/constants.ts";
+import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
 import { FoodLabelSelector } from "../combobox/foodLabelSelector.tsx";
 import { PriceSection } from "../item/PriceSection.tsx";
@@ -56,9 +40,7 @@ type SlideFormValues = {
 };
 
 const getByPath = (object: any, path: string) => {
-  return path
-    .split(".")
-    .reduce((acc: any, key: string) => (acc == null ? acc : acc[key]), object);
+  return path.split(".").reduce((acc: any, key: string) => (acc == null ? acc : acc[key]), object);
 };
 
 const toFormValues = (menuId: string, formValues?: any): SlideFormValues => {
@@ -199,8 +181,7 @@ export const Slide = ({
   const applyUploadedImage = async (payload: any, uploadedKey: string) => {
     if (!imageToUpload) return;
 
-    const isReplacingExisting =
-      formValues?.image && formValues?.image !== payload?.image;
+    const isReplacingExisting = formValues?.image && formValues?.image !== payload?.image;
     if (isReplacingExisting) {
       await deleteUploadedFiles({
         fileKeyArray: [{ Key: formValues?.image }],
@@ -250,9 +231,7 @@ export const Slide = ({
   const onChangePicture = (file: File | null) => {
     if (!file) return;
     if (file.size > MAX_FILE_SIZE_IN_BYTE) {
-      toast.error(
-        `${translations("Max file size is")} ${MAX_FILE_SIZE_IN_MB} MB`,
-      );
+      toast.error(`${translations("Max file size is")} ${MAX_FILE_SIZE_IN_MB} MB`);
       return;
     }
     setSelectedImage({
@@ -267,12 +246,9 @@ export const Slide = ({
 
   const handleDeleteMutation = () => {
     if (formValues?.id) {
-      toast.loading(
-        translations("Hold on, Your Menu Banner Is Getting Deleted."),
-        {
-          id: "menu-banner-delete",
-        },
-      );
+      toast.loading(translations("Hold on, Your Menu Banner Is Getting Deleted."), {
+        id: "menu-banner-delete",
+      });
       deleteMenuBannerMutation.mutate(formValues?.id);
       return;
     }
@@ -295,9 +271,7 @@ export const Slide = ({
   };
 
   const isPending =
-    createMenuBannerMutation.isPending ||
-    updateMenuBannerMutation.isPending ||
-    creating;
+    createMenuBannerMutation.isPending || updateMenuBannerMutation.isPending || creating;
 
   const navSkeletonKeys = ["nav-1", "nav-2", "nav-3"];
   const cardSkeletonKeys = isMobile
@@ -336,9 +310,7 @@ export const Slide = ({
             <FieldGroup>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <Field data-invalid={!!form.formState.errors.name}>
-                  <FieldLabel htmlFor="banner-name">
-                    {translations("Name")}
-                  </FieldLabel>
+                  <FieldLabel htmlFor="banner-name">{translations("Name")}</FieldLabel>
                   <FieldContent>
                     <Input
                       id="banner-name"
@@ -350,9 +322,7 @@ export const Slide = ({
                   </FieldContent>
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="banner-video-url">
-                    {translations("Video Url")}
-                  </FieldLabel>
+                  <FieldLabel htmlFor="banner-video-url">{translations("Video Url")}</FieldLabel>
                   <FieldContent>
                     <Input
                       id="banner-video-url"
@@ -364,9 +334,7 @@ export const Slide = ({
               </div>
 
               <Field data-invalid={!!form.formState.errors.description}>
-                <FieldLabel htmlFor="banner-description">
-                  {translations("Description")}
-                </FieldLabel>
+                <FieldLabel htmlFor="banner-description">{translations("Description")}</FieldLabel>
                 <FieldContent>
                   <Textarea
                     id="banner-description"
@@ -404,13 +372,9 @@ export const Slide = ({
               </Button>
             </div>
 
-            <div
-              className={`rounded-lg border bg-card ${isMobile ? "w-46.25" : "w-full"}`}
-            >
+            <div className={`rounded-lg border bg-card ${isMobile ? "w-46.25" : "w-full"}`}>
               {imageUploadError && (
-                <p className="px-4 pt-2 text-sm text-destructive">
-                  *Image is Required
-                </p>
+                <p className="px-4 pt-2 text-sm text-destructive">*Image is Required</p>
               )}
 
               <div
@@ -446,9 +410,7 @@ export const Slide = ({
                   type="file"
                   className="hidden"
                   accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                  onChange={(event) =>
-                    onChangePicture(event.target.files?.[0] ?? null)
-                  }
+                  onChange={(event) => onChangePicture(event.target.files?.[0] ?? null)}
                 />
               </div>
 
@@ -469,9 +431,7 @@ export const Slide = ({
 
                 <Skeleton className="mb-3 h-2.25 w-14.25 rounded-sm bg-muted" />
 
-                <div
-                  className={`grid ${isMobile ? "grid-cols-1 gap-1.25" : "grid-cols-3 gap-4"}`}
-                >
+                <div className={`grid ${isMobile ? "grid-cols-1 gap-1.25" : "grid-cols-3 gap-4"}`}>
                   {cardSkeletonKeys.map((key) => (
                     <div key={key}>
                       <SkeletonMenuCard isMobile={isMobile} />
@@ -484,12 +444,7 @@ export const Slide = ({
         </div>
 
         <div className="mt-4 flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCloseAction}
-            disabled={isPending}
-          >
+          <Button type="button" variant="outline" onClick={onCloseAction} disabled={isPending}>
             Cancel
           </Button>
           <Button type="submit" disabled={isPending}>

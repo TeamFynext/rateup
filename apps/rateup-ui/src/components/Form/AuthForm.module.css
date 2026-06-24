@@ -175,8 +175,7 @@
   border-radius: 1rem;
 }
 
-.terms-of-service-and-privacy-policy-checkbox-div
-  :global(.mantine-Checkbox-body) {
+.terms-of-service-and-privacy-policy-checkbox-div :global(.mantine-Checkbox-body) {
   padding-left: 1rem;
 }
 

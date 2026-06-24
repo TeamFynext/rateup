@@ -1,10 +1,4 @@
-"use client";
-
-import {
-  IconBrandFacebook,
-  IconBrandInstagram,
-  IconBrandWhatsapp,
-} from "@tabler/icons-react";
+import { IconBrandFacebook, IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
@@ -25,13 +19,10 @@ function ChannelsPage() {
   const { data: waSettings, isLoading } = useWaSettings();
 
   const waConnected = !isLoading && Boolean(waSettings?.length);
-  const igConnected =
-    waSettings?.some((setting) => setting.ibaId?.length > 0) ?? false;
-  const igConnectedCount =
-    waSettings?.filter((setting) => setting.ibaId?.length > 0).length ?? 0;
+  const igConnected = waSettings?.some((setting) => setting.ibaId?.length > 0) ?? false;
+  const igConnectedCount = waSettings?.filter((setting) => setting.ibaId?.length > 0).length ?? 0;
 
-  const fbConnected =
-    waSettings?.some((s) => s.fbPageId && s.fbPageId.length > 0) ?? false;
+  const fbConnected = waSettings?.some((s) => s.fbPageId && s.fbPageId.length > 0) ?? false;
 
   const fbConnectedCount =
     waSettings?.filter((s) => s.fbPageId && s.fbPageId.length > 0).length ?? 0;
@@ -65,9 +56,7 @@ function ChannelsPage() {
             waConnected ? (
               <div className="flex items-center justify-between">
                 <span>Accounts</span>
-                <span className="text-foreground">
-                  {waSettings.length} connected
-                </span>
+                <span className="text-foreground">{waSettings.length} connected</span>
               </div>
             ) : null
           }
@@ -88,17 +77,13 @@ function ChannelsPage() {
             })
           }
           helperText={
-            !waConnected && !isLoading
-              ? "Connect WhatsApp first to enable Facebook"
-              : undefined
+            !waConnected && !isLoading ? "Connect WhatsApp first to enable Facebook" : undefined
           }
           summary={
             fbConnectedCount > 0 ? (
               <div className="flex items-center justify-between">
                 <span>Pages</span>
-                <span className="text-foreground">
-                  {fbConnectedCount} connected
-                </span>
+                <span className="text-foreground">{fbConnectedCount} connected</span>
               </div>
             ) : null
           }
@@ -119,17 +104,13 @@ function ChannelsPage() {
             })
           }
           helperText={
-            !waConnected && !isLoading
-              ? "Connect WhatsApp first to enable Instagram"
-              : undefined
+            !waConnected && !isLoading ? "Connect WhatsApp first to enable Instagram" : undefined
           }
           summary={
             igConnectedCount > 0 ? (
               <div className="flex items-center justify-between">
                 <span>Accounts</span>
-                <span className="text-foreground">
-                  {igConnectedCount} connected
-                </span>
+                <span className="text-foreground">{igConnectedCount} connected</span>
               </div>
             ) : null
           }

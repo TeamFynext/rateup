@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-
 import { Group, Stack } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
@@ -19,6 +16,7 @@ import {
   logoTabPanelReducer,
 } from "../../../Survey/ShareSurvey/ShareQR/LogoTabPanel/LogoTabPanelReducer.tsx";
 import { useLandingPageObj } from "../LandingPageContext/LandingPageContext.tsx";
+
 import styles from "./ShareLandingPage.module.css";
 
 function ShareLandingPage({ url, isPublished, title }) {
@@ -31,8 +29,7 @@ function ShareLandingPage({ url, isPublished, title }) {
     strict: false,
   });
   const shortUrlId = params?.shortUrlId as string;
-  const { mutateAsync: landingPageUpdateMutateAsync } =
-    useUpdateLandingPageMutation(shortUrlId);
+  const { mutateAsync: landingPageUpdateMutateAsync } = useUpdateLandingPageMutation(shortUrlId);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const { shareSettings } = useLandingPageObj();
 
@@ -51,8 +48,7 @@ function ShareLandingPage({ url, isPublished, title }) {
       const newState = { ...logoTabPanelState };
       if (newState?.logoFile instanceof File) {
         const uploadedFileKey = await uploadFile(newState.logoFile);
-        newState["logoFile"] =
-          `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${uploadedFileKey}`;
+        newState["logoFile"] = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${uploadedFileKey}`;
       }
       const formData = new FormData();
       for (const property in newState) {
@@ -64,10 +60,8 @@ function ShareLandingPage({ url, isPublished, title }) {
           shortUrlId,
           shareSettings: newState,
         });
-      } catch (err) {
-        toast.error(
-          translations("Unable to save settings, Please try again later"),
-        );
+      } catch {
+        toast.error(translations("Unable to save settings, Please try again later"));
       }
     }
     setIsSavingSettings(false);

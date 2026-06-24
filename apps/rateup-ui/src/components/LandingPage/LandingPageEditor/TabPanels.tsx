@@ -1,9 +1,10 @@
 import { Tabs, TabsPanel } from "@mantine/core";
 
 import Editor from "./Editor/index.tsx";
-import styles from "./LandingPageEditor.module.css";
 import SharePage from "./SharePage/index.tsx";
 import Stats from "./Stats/index.tsx";
+
+import styles from "./LandingPageEditor.module.css";
 
 function TabPanelsComp({ value }) {
   return (

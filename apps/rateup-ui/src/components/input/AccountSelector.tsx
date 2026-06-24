@@ -1,24 +1,15 @@
-"use client";
-
-import { useEffect } from "react";
-
 import type { MultiSelectProps, SelectProps } from "@mantine/core";
 import { Card, Group, Skeleton, Text } from "@mantine/core";
 import { X } from "lucide-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-import { MessagePlatform } from "@/types/enums.ts";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { MessagePlatform } from "@/types/enums.ts";
 
 import { Button } from "../ui/button.tsx";
 import { Label } from "../ui/label.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { ContainedMultiSelect } from "./ContainedInput/ContainedInput.tsx";
 
 interface CommonAccountSelectorProps {
@@ -62,9 +53,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   let accountOptions = [];
   for (const account of data ?? []) {
     if (platform === "all" || platform === MessagePlatform.WHATSAPP) {
-      const val = usePhoneNumber
-        ? account?.phone?.replace("+", "")
-        : account.phoneId;
+      const val = usePhoneNumber ? account?.phone?.replace("+", "") : account.phoneId;
 
       if (!filterIds || filterIds.includes(val)) {
         accountOptions.push({
@@ -101,8 +90,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   }
 
   const defaultAccountOption =
-    accountOptions?.find((account) => account.status !== "DISCONNECTED") ??
-    accountOptions?.[0];
+    accountOptions?.find((account) => account.status !== "DISCONNECTED") ?? accountOptions?.[0];
 
   useEffect(() => {
     if (value) return;
@@ -130,9 +118,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
       <ContainedMultiSelect
         data={accountOptions}
         defaultValue={
-          defaultAccountOption?.value
-            ? [defaultAccountOption.value as string]
-            : undefined
+          defaultAccountOption?.value ? [defaultAccountOption.value as string] : undefined
         }
         onChange={onChange}
         value={value}

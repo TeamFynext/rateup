@@ -1,5 +1,3 @@
-"use client";
-
 import { useNavigate } from "@tanstack/react-router";
 import { AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -38,9 +36,7 @@ export default function CorruptedSessionScreen() {
             <AlertTriangle className="text-red-500" size={18} />
             {t("Session Error")}
           </CardTitle>
-          <CardDescription>
-            {t("Your login session data appears to be corrupted")}.
-          </CardDescription>
+          <CardDescription>{t("Your login session data appears to be corrupted")}.</CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -60,11 +56,7 @@ export default function CorruptedSessionScreen() {
             {t("Reload")}
           </Button>
 
-          <Button
-            variant="destructive"
-            className="w-full"
-            onClick={handleLogout}
-          >
+          <Button variant="destructive" className="w-full" onClick={handleLogout}>
             {t("Logout")}
           </Button>
         </CardFooter>

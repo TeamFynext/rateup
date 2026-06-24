@@ -1,7 +1,4 @@
-"use client";
-
 import { createContext, useContext, useState } from "react";
-
 import { useImmerReducer } from "use-immer";
 
 import { useLinktreeObj } from "../../LinktreeContext/LinktreeContext.tsx";
@@ -28,9 +25,7 @@ function ThemeObjProvider({ children }) {
     <ThemeContext.Provider value={themeObj}>
       <ThemeDispatchContext.Provider value={dispatch}>
         <SelectedPreviewDeviceContext.Provider value={selectedPreviewDevice}>
-          <SetSelectPreviewDeviceContext.Provider
-            value={setSelectedPreviewDevice}
-          >
+          <SetSelectPreviewDeviceContext.Provider value={setSelectedPreviewDevice}>
             <SelectedEditorContext.Provider value={selectedEditor}>
               <SetSelectedEditorContext.Provider value={setSelectedEditor}>
                 {children}

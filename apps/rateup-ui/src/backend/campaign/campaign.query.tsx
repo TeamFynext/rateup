@@ -1,10 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type {
-  CampaignParticipantStatus,
-  CampaignStatus,
-} from "@/types/enums.ts";
+import type { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
 
 import {
   campaignResponseDownloadById,
@@ -70,12 +67,7 @@ export const useCampaignStatsById = (campaignId, selectedDripStage) => {
   });
 };
 
-export const useUpdateCampaignMutation = (
-  campaignId,
-  teamId,
-  complete = () => {},
-  type,
-) => {
+export const useUpdateCampaignMutation = (campaignId, teamId, complete = () => {}, type) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateCampaign,
@@ -159,10 +151,9 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
     },
     onError: (error: any) => {
       if (!(error?.response?.data?.displayMessageInClient ?? false))
-        toast.error(
-          error?.message || `${error?.message ?? "Error sending campaign"}`,
-          { id: "campaign-start" },
-        );
+        toast.error(error?.message || `${error?.message ?? "Error sending campaign"}`, {
+          id: "campaign-start",
+        });
     },
   });
 };
@@ -175,7 +166,6 @@ export const useCampaignFilterForFlows = (surveyId: string) => {
   });
 };
 export const useCampaignResponseDownloadById = () => {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: campaignResponseDownloadById,
     onSuccess: () => {
@@ -186,12 +176,9 @@ export const useCampaignResponseDownloadById = () => {
       });
     },
     onError: (error) => {
-      toast.error(
-        error?.message || error.message || "Error generating delivery report.",
-        {
-          id: "delivery-report",
-        },
-      );
+      toast.error(error?.message || error.message || "Error generating delivery report.", {
+        id: "delivery-report",
+      });
     },
   });
 };

@@ -1,28 +1,12 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import { Image } from "@unpic/react";
 import dayjs from "dayjs";
-import {
-  ExternalLink,
-  Loader2,
-  MapPin,
-  Package,
-  ShoppingBag,
-  Truck,
-} from "lucide-react";
+import { ExternalLink, Loader2, MapPin, Package, ShoppingBag, Truck } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { COMMON_CARRIERS, EXCLUDED_KEYS, STAGE_LABELS } from "@/types/enums";
 import { axiosClient } from "@/backend/apiClient";
 import { Badge } from "@/components/ui/badge.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import {
   Table,
@@ -32,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table.tsx";
+import { COMMON_CARRIERS, EXCLUDED_KEYS, STAGE_LABELS } from "@/types/enums";
 
 export default function OrderDetailsDialog({
   open,
@@ -51,9 +36,7 @@ export default function OrderDetailsDialog({
   const [selectedCarrier, setSelectedCarrier] = useState("");
   const [customCarrierName, setCustomCarrierName] = useState("");
   const [notifyCustomer, setNotifyCustomer] = useState(true);
-  const [quantitiesToFulfill, setQuantitiesToFulfill] = useState<
-    Record<string, number>
-  >({});
+  const [quantitiesToFulfill, setQuantitiesToFulfill] = useState<Record<string, number>>({});
 
   const fetchFulfillmentOrders = async () => {
     if (!order?.id || !order?.shopifyDraftOrderId) return;
@@ -99,9 +82,7 @@ export default function OrderDetailsDialog({
       .filter((item: any) => item.quantity > 0);
 
     if (!lineItemsToFulfill || lineItemsToFulfill.length === 0) {
-      toast.error(
-        "Please enter a quantity greater than 0 for at least one item.",
-      );
+      toast.error("Please enter a quantity greater than 0 for at least one item.");
       return;
     }
 
@@ -147,16 +128,14 @@ export default function OrderDetailsDialog({
   const address: any = order.shippingAddress;
   const delivery: any = order.deliveryOption;
   const itemsTotal = products.reduce(
-    (s, p) =>
-      s + (parseFloat(p.price ?? 0) || 0) * (parseInt(p.quantity ?? 1) || 1),
+    (s, p) => s + (parseFloat(p.price ?? 0) || 0) * (parseInt(p.quantity ?? 1) || 1),
     0,
   );
   const deliveryCharge = delivery?.charge ?? 0;
   const grandTotal = itemsTotal + deliveryCharge;
   const currency = products[0]?.currency ?? "₹";
 
-  const stageLabel =
-    STAGE_LABELS[order.orderStage] ?? order.orderStage ?? order.status ?? "—";
+  const stageLabel = STAGE_LABELS[order.orderStage] ?? order.orderStage ?? order.status ?? "—";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -172,18 +151,14 @@ export default function OrderDetailsDialog({
               Customer
             </p>
             <p className="font-medium">{order.contact?.name || "Unknown"}</p>
-            <p className="text-sm text-muted-foreground">
-              {order.contact?.phone}
-            </p>
+            <p className="text-sm text-muted-foreground">{order.contact?.phone}</p>
           </div>
           <div className="text-right">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
               Order Date
             </p>
             <p className="text-sm">
-              {order.createdAt
-                ? dayjs(order.createdAt).format("MMMM D, YYYY h:mm A")
-                : "—"}
+              {order.createdAt ? dayjs(order.createdAt).format("MMMM D, YYYY h:mm A") : "—"}
             </p>
             <Badge variant="outline" className="mt-1.5">
               {stageLabel}
@@ -236,11 +211,7 @@ export default function OrderDetailsDialog({
                       <div className="flex flex-col gap-0.5">
                         {Object.entries(item).map(([k, v]) => {
                           if (EXCLUDED_KEYS.has(k)) return null;
-                          if (
-                            k === "additional_variant_attributes" &&
-                            typeof v === "object" &&
-                            v
-                          ) {
+                          if (k === "additional_variant_attributes" && typeof v === "object" && v) {
                             return Object.entries(v as any).map(([kk, vv]) => (
                               <span key={kk} className="capitalize">
                                 {kk.replace(/_/g, " ")}: {String(vv)}
@@ -283,9 +254,7 @@ export default function OrderDetailsDialog({
           </div>
           {delivery && (
             <div className="flex gap-8">
-              <span className="text-muted-foreground">
-                Delivery ({delivery.name})
-              </span>
+              <span className="text-muted-foreground">Delivery ({delivery.name})</span>
               <span>
                 {currency}
                 {deliveryCharge.toFixed(2)}
@@ -315,9 +284,7 @@ export default function OrderDetailsDialog({
               <p>
                 {address.first_name} {address.last_name}
               </p>
-              {address.phone && (
-                <p className="text-muted-foreground">{address.phone}</p>
-              )}
+              {address.phone && <p className="text-muted-foreground">{address.phone}</p>}
               <p>{address.address1}</p>
               {address.address2 && <p>{address.address2}</p>}
               <p>
@@ -383,9 +350,7 @@ export default function OrderDetailsDialog({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold">
-                      Shopify Fulfillment
-                    </span>
+                    <span className="text-sm font-semibold">Shopify Fulfillment</span>
                     {loadingFulfillments && (
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                     )}
@@ -399,23 +364,19 @@ export default function OrderDetailsDialog({
                   </div>
                 ) : fulfillmentOrders.length === 0 ? (
                   <div className="rounded-lg border p-4 bg-muted/10 text-sm text-muted-foreground">
-                    No active fulfillment orders found. Make sure the draft
-                    order is completed and paid in Shopify.
+                    No active fulfillment orders found. Make sure the draft order is completed and
+                    paid in Shopify.
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {fulfillmentOrders.map((fo: any) => {
                       const unfulfilledItems =
-                        fo.lineItems?.nodes?.filter(
-                          (item: any) => item.remainingQuantity > 0,
-                        ) || [];
+                        fo.lineItems?.nodes?.filter((item: any) => item.remainingQuantity > 0) ||
+                        [];
                       const isFulfilled = fo.status === "FULFILLED";
 
                       return (
-                        <div
-                          key={fo.id}
-                          className="rounded-lg border p-4 bg-muted/5 space-y-3"
-                        >
+                        <div key={fo.id} className="rounded-lg border p-4 bg-muted/5 space-y-3">
                           <div className="flex justify-between items-center text-xs">
                             <div>
                               <span className="font-semibold text-muted-foreground mr-1">
@@ -425,9 +386,7 @@ export default function OrderDetailsDialog({
                                 {fo.id.split("/").pop()}
                               </code>
                             </div>
-                            <Badge
-                              variant={isFulfilled ? "default" : "secondary"}
-                            >
+                            <Badge variant={isFulfilled ? "default" : "secondary"}>
                               {fo.status}
                             </Badge>
                           </div>
@@ -441,24 +400,18 @@ export default function OrderDetailsDialog({
                                   className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0"
                                 >
                                   <div>
-                                    <p className="font-medium text-xs">
-                                      {item.title}
-                                    </p>
+                                    <p className="font-medium text-xs">{item.title}</p>
                                     <p className="text-[10px] text-muted-foreground">
                                       SKU: {item.sku || "N/A"}
                                     </p>
                                   </div>
                                   <div className="flex items-center gap-4 text-xs">
                                     <div>
-                                      <span className="text-muted-foreground">
-                                        Total:
-                                      </span>{" "}
+                                      <span className="text-muted-foreground">Total:</span>{" "}
                                       {item.totalQuantity}
                                     </div>
                                     <div>
-                                      <span className="text-muted-foreground">
-                                        Remaining:
-                                      </span>{" "}
+                                      <span className="text-muted-foreground">Remaining:</span>{" "}
                                       {item.remainingQuantity}
                                     </div>
                                     {hasRemaining && (
@@ -470,16 +423,11 @@ export default function OrderDetailsDialog({
                                           type="number"
                                           min="0"
                                           max={item.remainingQuantity}
-                                          value={
-                                            quantitiesToFulfill[item.id] ?? 0
-                                          }
+                                          value={quantitiesToFulfill[item.id] ?? 0}
                                           onChange={(e) => {
                                             const val = Math.min(
                                               item.remainingQuantity,
-                                              Math.max(
-                                                0,
-                                                parseInt(e.target.value) || 0,
-                                              ),
+                                              Math.max(0, parseInt(e.target.value) || 0),
                                             );
                                             setQuantitiesToFulfill((prev) => ({
                                               ...prev,
@@ -521,17 +469,13 @@ export default function OrderDetailsDialog({
                                       }}
                                       className="w-full h-8 text-xs border rounded px-2 bg-background"
                                     >
-                                      <option value="">
-                                        Select carrier...
-                                      </option>
+                                      <option value="">Select carrier...</option>
                                       {COMMON_CARRIERS.map((c) => (
                                         <option key={c} value={c}>
                                           {c}
                                         </option>
                                       ))}
-                                      <option value="Custom">
-                                        Custom / Other
-                                      </option>
+                                      <option value="Custom">Custom / Other</option>
                                     </select>
                                   </div>
                                   <div className="space-y-1">
@@ -542,9 +486,7 @@ export default function OrderDetailsDialog({
                                       type="text"
                                       placeholder="e.g. DEL123456"
                                       value={trackingNumber}
-                                      onChange={(e) =>
-                                        setTrackingNumber(e.target.value)
-                                      }
+                                      onChange={(e) => setTrackingNumber(e.target.value)}
                                       className="w-full h-8 text-xs border rounded px-2 bg-background"
                                     />
                                   </div>
@@ -556,9 +498,7 @@ export default function OrderDetailsDialog({
                                       type="text"
                                       placeholder="https://..."
                                       value={trackingUrl}
-                                      onChange={(e) =>
-                                        setTrackingUrl(e.target.value)
-                                      }
+                                      onChange={(e) => setTrackingUrl(e.target.value)}
                                       className="w-full h-8 text-xs border rounded px-2 bg-background"
                                     />
                                   </div>
@@ -591,9 +531,7 @@ export default function OrderDetailsDialog({
                                   <input
                                     type="checkbox"
                                     checked={notifyCustomer}
-                                    onChange={(e) =>
-                                      setNotifyCustomer(e.target.checked)
-                                    }
+                                    onChange={(e) => setNotifyCustomer(e.target.checked)}
                                     className="rounded border-gray-300"
                                   />
                                   Notify customer

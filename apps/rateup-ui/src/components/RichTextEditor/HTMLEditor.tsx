@@ -1,13 +1,10 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { Group, Stack, Text } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { useEffect } from "react";
 
 import CustomImageExtension from "./InsertImage/CustomImageExtenstion.tsx";
 
@@ -66,10 +63,7 @@ function HTMLEditor({ form, selectedLanguage, className = "" }) {
         parseOptions: { preserveWhitespace: "full" },
       });
       codeEditor.commands.setTextSelection(selection);
-      form.setFieldValue(
-        `description.${selectedLanguage}`,
-        codeEditor.getHTML(),
-      );
+      form.setFieldValue(`description.${selectedLanguage}`, codeEditor.getHTML());
     }
   }, [htmlContent, codeEditor]);
 

@@ -1,7 +1,3 @@
-"use client";
-
-import React, { lazy, Suspense, useEffect, useState } from "react";
-
 import { ActionIcon, Box, Divider, Group, Tooltip } from "@mantine/core";
 import {
   IconArrowBackUp,
@@ -13,14 +9,11 @@ import {
 } from "@tabler/icons-react";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Smile } from "lucide-react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 
 const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
@@ -56,38 +49,22 @@ export const TextFormateToolBar = ({
         <PopoverEmojiPicker onEmojiClick={insertValue} />
         <Divider size="sm" orientation="vertical" />
         <Tooltip label={translations("Bold")}>
-          <ActionIcon
-            variant={"transparent"}
-            size={"xs"}
-            onClick={() => applyFormatting("*")}
-          >
+          <ActionIcon variant={"transparent"} size={"xs"} onClick={() => applyFormatting("*")}>
             <IconBold color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={translations("Italic")}>
-          <ActionIcon
-            variant={"transparent"}
-            size={"xs"}
-            onClick={() => applyFormatting("_")}
-          >
+          <ActionIcon variant={"transparent"} size={"xs"} onClick={() => applyFormatting("_")}>
             <IconItalic color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={translations("StikeThough")}>
-          <ActionIcon
-            variant={"transparent"}
-            size={"xs"}
-            onClick={() => applyFormatting("~")}
-          >
+          <ActionIcon variant={"transparent"} size={"xs"} onClick={() => applyFormatting("~")}>
             <IconStrikethrough color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={translations("Monospace")}>
-          <ActionIcon
-            variant={"transparent"}
-            size={"xs"}
-            onClick={() => applyFormatting("```")}
-          >
+          <ActionIcon variant={"transparent"} size={"xs"} onClick={() => applyFormatting("```")}>
             <IconCode color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
@@ -148,9 +125,7 @@ export const PopoverEmojiPicker = ({
             </div>
           }
         >
-          <EmojiPicker
-            onEmojiClick={(emoji) => onEmojiClick(emoji.emoji, emoji)}
-          />
+          <EmojiPicker onEmojiClick={(emoji) => onEmojiClick(emoji.emoji, emoji)} />
         </Suspense>
       </PopoverContent>
     </Popover>

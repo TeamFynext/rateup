@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-
 import { useNavigate, useRouterState, useSearch } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
 import Session from "supertokens-auth-react/recipe/session";
 
 export const useCheckSession = () => {
@@ -24,7 +23,7 @@ export const useCheckSession = () => {
         });
       }
       setDoesSessionExist(doesSessionExist);
-    } catch (error) {
+    } catch {
       setDoesSessionExist(false);
     }
   }, [pathname]);

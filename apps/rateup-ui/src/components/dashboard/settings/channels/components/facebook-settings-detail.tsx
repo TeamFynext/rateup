@@ -1,8 +1,5 @@
-"use client";
-
-import type { ReactNode } from "react";
-
 import { IconBrandFacebook } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -52,9 +49,7 @@ export function FacebookSettingsDetail({
       <div className="flex items-center gap-2 border-b pb-3">
         <IconBrandFacebook className="h-5 w-5 text-blue-600" />
 
-        <h3 className="text-lg font-semibold">
-          {translations("Facebook Messenger Settings")}
-        </h3>
+        <h3 className="text-lg font-semibold">{translations("Facebook Messenger Settings")}</h3>
       </div>
 
       {content}

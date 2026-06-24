@@ -1,5 +1,3 @@
-"use client";
-
 import { Group, Stack } from "@mantine/core";
 import { IconHome } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
@@ -40,14 +38,8 @@ function BodyComp({
       )}
       {k === "cs" && (
         <Group m="xl" p="xl">
-          <Link
-            to={`${import.meta.env.VITE_FRONTEND_URL}/public/survey/cs`}
-            target="_blank"
-          >
-            <RateupButtonBlue
-              leftIcon={<IconHome />}
-              title={translations("Go to Home")}
-            />
+          <Link to={`${import.meta.env.VITE_FRONTEND_URL}/public/survey/cs`} target="_blank">
+            <RateupButtonBlue leftIcon={<IconHome />} title={translations("Go to Home")} />
           </Link>
         </Group>
       )}

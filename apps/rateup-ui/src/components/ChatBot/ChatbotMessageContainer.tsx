@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useRef } from "react";
-
 import {
   ActionIcon,
   Avatar,
@@ -16,6 +12,7 @@ import {
 } from "@mantine/core";
 import { getHotkeyHandler, useMediaQuery } from "@mantine/hooks";
 import { IconPlus, IconSend } from "@tabler/icons-react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ChatBotSource } from "@/types/enums.ts";
@@ -50,8 +47,7 @@ const ChatbotMessageContainer = ({
   const messagesEndRef = useRef(null);
   const isMobile = useMediaQuery("(max-width: 480px)");
   const scrollToBottom = () => {
-    if (messagesEndRef.current)
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -76,11 +72,7 @@ const ChatbotMessageContainer = ({
               <Stack justify="flex-end" p={"xs"} gap={"xs"}>
                 {messages?.map((message, index) => (
                   <Group
-                    justify={
-                      message.source == ChatBotSource.HUMAN
-                        ? "flex-end"
-                        : "flex-start"
-                    }
+                    justify={message.source == ChatBotSource.HUMAN ? "flex-end" : "flex-start"}
                     key={index}
                   >
                     <PaperLayout
@@ -97,9 +89,7 @@ const ChatbotMessageContainer = ({
                         <Group p={0} gap={"xs"}>
                           <Avatar
                             src={
-                              message.source == ChatBotSource.HUMAN
-                                ? null
-                                : "/images/chatbot.png"
+                              message.source == ChatBotSource.HUMAN ? null : "/images/chatbot.png"
                             }
                             size={"sm"}
                           />
@@ -112,9 +102,7 @@ const ChatbotMessageContainer = ({
                             fw={"bold"}
                             size="sm"
                           >
-                            {message.source == ChatBotSource.HUMAN
-                              ? "You"
-                              : "AI"}{" "}
+                            {message.source == ChatBotSource.HUMAN ? "You" : "AI"}{" "}
                           </Text>
                         </Group>
                         <Text>{message.content}</Text>
@@ -160,15 +148,8 @@ const ChatbotMessageContainer = ({
                 mih={60}
                 autosize
               />
-              <ActionIcon
-                onClick={handleSendQuery}
-                size={isMobile ? "sm" : "md"}
-              >
-                {isMessagePending ? (
-                  <Loader color="white" size={"xs"} />
-                ) : (
-                  <IconSend />
-                )}
+              <ActionIcon onClick={handleSendQuery} size={isMobile ? "sm" : "md"}>
+                {isMessagePending ? <Loader color="white" size={"xs"} /> : <IconSend />}
               </ActionIcon>
             </Group>
           </PaperLayout>

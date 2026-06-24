@@ -1,9 +1,6 @@
-"use client";
-
-import React, { useState } from "react";
-
 import dayjs from "dayjs";
 import { Loader2, Package } from "lucide-react";
+import React, { useState } from "react";
 
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
@@ -38,8 +35,7 @@ const STAGE_CONFIG: Record<
 function calcTotal(products: any[], deliveryOption?: any): string {
   const items = (products ?? []).reduce(
     (s: number, p: any) =>
-      s +
-      (parseFloat(p.price ?? "0") || 0) * (parseInt(p.quantity ?? "1") || 1),
+      s + (parseFloat(p.price ?? "0") || 0) * (parseInt(p.quantity ?? "1") || 1),
     0,
   );
   const delivery = deliveryOption?.charge ?? 0;
@@ -63,14 +59,14 @@ export default function OrdersTable({
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { data: connectedCatalog, isLoading: isLoadingCatalog } =
-    useConnectedWaCatalog(phoneId);
+  const { data: connectedCatalog, isLoading: isLoadingCatalog } = useConnectedWaCatalog(phoneId);
   const catalogId = connectedCatalog?.catalogId;
 
-  const { data: ordersData, isLoading: isLoadingOrders } = useWaCatalogOrders(
-    catalogId,
-    { pageIndex: page, pageSize, storeType },
-  );
+  const { data: ordersData, isLoading: isLoadingOrders } = useWaCatalogOrders(catalogId, {
+    pageIndex: page,
+    pageSize,
+    storeType,
+  });
 
   const orders = ordersData?.data ?? [];
   const totalCount = ordersData?.totalCount ?? 0;
@@ -91,8 +87,8 @@ export default function OrdersTable({
           <Package className="h-6 w-6 text-muted-foreground" />
         </div>
         <p className="text-muted-foreground text-sm">
-          No catalog connected. Orders will appear here once a catalog is linked
-          to this WhatsApp number.
+          No catalog connected. Orders will appear here once a catalog is linked to this WhatsApp
+          number.
         </p>
       </div>
     );
@@ -122,10 +118,7 @@ export default function OrdersTable({
               </TableRow>
             ) : orders.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="h-24 text-center text-muted-foreground"
-                >
+                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                   No orders yet.
                 </TableCell>
               </TableRow>
@@ -136,10 +129,7 @@ export default function OrdersTable({
                   variant: "outline" as const,
                 };
                 return (
-                  <TableRow
-                    key={order.id}
-                    className="hover:bg-muted/20 transition-colors"
-                  >
+                  <TableRow key={order.id} className="hover:bg-muted/20 transition-colors">
                     <TableCell className="text-sm">
                       <div>{dayjs(order.createdAt).format("MMM D, YYYY")}</div>
                       <div className="text-xs text-muted-foreground">
@@ -147,18 +137,11 @@ export default function OrdersTable({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium text-sm">
-                        {order.contact?.name || "Unknown"}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {order.contact?.phone}
-                      </div>
+                      <div className="font-medium text-sm">{order.contact?.name || "Unknown"}</div>
+                      <div className="text-xs text-muted-foreground">{order.contact?.phone}</div>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={stageCfg.variant}
-                        className="text-xs whitespace-nowrap"
-                      >
+                      <Badge variant={stageCfg.variant} className="text-xs whitespace-nowrap">
                         {stageCfg.label}
                       </Badge>
                     </TableCell>
@@ -167,8 +150,7 @@ export default function OrdersTable({
                     </TableCell>
                     <TableCell className="text-center text-sm">
                       {order.products?.reduce(
-                        (a: number, p: any) =>
-                          a + (parseInt(p.quantity ?? "1") || 1),
+                        (a: number, p: any) => a + (parseInt(p.quantity ?? "1") || 1),
                         0,
                       ) ?? 0}
                     </TableCell>

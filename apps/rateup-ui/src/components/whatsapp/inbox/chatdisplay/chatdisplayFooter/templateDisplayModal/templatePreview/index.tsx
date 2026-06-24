@@ -1,18 +1,15 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Badge, Box, Group, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconSend } from "@tabler/icons-react";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useImmer } from "use-immer";
 
-import type { WaTemplateFetchBody } from "@/types/global";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
+import type { WaTemplateFetchBody } from "@/types/global";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { validateInboxTemplateSending } from "@/utils/whatsapp/inbox.ts";
 
@@ -20,6 +17,7 @@ import { RateupButtonPrimary } from "../../../../../../Button/RateupButtons.tsx"
 import WaInboxTemplate from "../../../chatdisplayBody/components/template/index.tsx";
 import WaInboxSingleMessageLayout from "../../../chatdisplayBody/layout/singleMessageLayout/index.tsx";
 import WaTemplateFormElements from "./formElements/index.tsx";
+
 import classes from "./styles.module.css";
 
 interface Props {
@@ -51,14 +49,12 @@ function WaInboxTemplatePreview(props: Props) {
 
   async function handleFilesIfAny(data: Array<any>) {
     const newData = await Promise.all(
-      data.map(async (item, index) => {
+      data.map(async (item, _index) => {
         if (
           item?.type === "header" &&
           ["image", "video", "document"].includes(item?.parameters[0]?.type)
         ) {
-          const fileKey = await uploadFile(
-            item?.parameters[0]?.[item?.parameters[0]?.type]?.link,
-          );
+          const fileKey = await uploadFile(item?.parameters[0]?.[item?.parameters[0]?.type]?.link);
           const filename = fileKey?.split("-")?.slice(1)?.join("-") ?? fileKey;
           const isDocument = item?.parameters?.[0]?.type === "document";
 
@@ -148,15 +144,9 @@ function WaInboxTemplatePreview(props: Props) {
             exchangeProcess="send"
             messageObject={{} as WaGetMessagesBody}
           >
-            <WaInboxTemplate
-              parameters={parameterData}
-              templateBody={props?.template}
-            />
+            <WaInboxTemplate parameters={parameterData} templateBody={props?.template} />
           </WaInboxSingleMessageLayout>
-          <WaTemplateFormElements
-            setParameterData={setParameterData}
-            template={props?.template}
-          />
+          <WaTemplateFormElements setParameterData={setParameterData} template={props?.template} />
         </Stack>
       </Stack>
     );
@@ -172,14 +162,12 @@ export function WaInboxTemplatePreviewNew(props: Props) {
 
   async function handleFilesIfAny(data: Array<any>) {
     const newData = await Promise.all(
-      data.map(async (item, index) => {
+      data.map(async (item, _index) => {
         if (
           item?.type === "header" &&
           ["image", "video", "document"].includes(item?.parameters[0]?.type)
         ) {
-          const fileKey = await uploadFile(
-            item?.parameters[0]?.[item?.parameters[0]?.type]?.link,
-          );
+          const fileKey = await uploadFile(item?.parameters[0]?.[item?.parameters[0]?.type]?.link);
           const filename = fileKey?.split("-")?.slice(1)?.join("-") ?? fileKey;
           const isDocument = item?.parameters?.[0]?.type === "document";
 
@@ -229,15 +217,9 @@ export function WaInboxTemplatePreviewNew(props: Props) {
           exchangeProcess="send"
           messageObject={{} as WaGetMessagesBody}
         >
-          <WaInboxTemplate
-            parameters={parameterData}
-            templateBody={props?.template}
-          />
+          <WaInboxTemplate parameters={parameterData} templateBody={props?.template} />
         </WaInboxSingleMessageLayout>
-        <WaTemplateFormElements
-          setParameterData={setParameterData}
-          template={props?.template}
-        />
+        <WaTemplateFormElements setParameterData={setParameterData} template={props?.template} />
       </div>
       <div className="w-full flex items-center justify-end">
         <button

@@ -1,7 +1,3 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-
 import {
   ActionIcon,
   Card,
@@ -16,12 +12,10 @@ import {
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import {
-  useTriggeringDownload,
-  useUnsplashPhotosList,
-} from "@/backend/unsplash/unsplash.query";
+import { useTriggeringDownload, useUnsplashPhotosList } from "@/backend/unsplash/unsplash.query";
 import { mmImageCropModalClassnames } from "@/utils/constants.ts";
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput.tsx";
@@ -73,40 +67,22 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
         zIndex={1000}
         overlayProps={{ radius: "sm", blur: 2 }}
       />
-      {unsplashPhotosList?.isError && (
-        <Text c={"red"}>Currently Unsplash Is Unavailable</Text>
-      )}
+      {unsplashPhotosList?.isError && <Text c={"red"}>Currently Unsplash Is Unavailable</Text>}
       {!unsplashPhotosList?.isError && (
         <Center mb={"lg"}>
           <ContainedTextField
             w={largeScreen ? "60%" : "90%"}
-            leftSection={
-              <IconSearch
-                style={{ width: rem(18), height: rem(18) }}
-                stroke={1.5}
-              />
-            }
+            leftSection={<IconSearch style={{ width: rem(18), height: rem(18) }} stroke={1.5} />}
             rightSection={
-              <ActionIcon
-                size={32}
-                radius="xl"
-                color={"var(--tertiary-color)"}
-                variant="filled"
-              >
-                <IconArrowRight
-                  style={{ width: rem(18), height: rem(18) }}
-                  stroke={1.5}
-                />
+              <ActionIcon size={32} radius="xl" color={"var(--tertiary-color)"} variant="filled">
+                <IconArrowRight style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
               </ActionIcon>
             }
             onChange={(e) => setSearchQuery(e?.target?.value)}
           />
         </Center>
       )}
-      <SimpleGrid
-        cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 4, xl: 5 }}
-        mx={"lg"}
-      >
+      <SimpleGrid cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 4, xl: 5 }} mx={"lg"}>
         {_photoList?.length === 0 ? (
           <Text>{translations("Images Not Found")}</Text>
         ) : (
@@ -163,11 +139,7 @@ const UnsplashPhoto = ({
       ref={reference}
     >
       <Card.Section>
-        <Image
-          src={regular}
-          h={200}
-          alt={translations("image from unsplash")}
-        />
+        <Image src={regular} h={200} alt={translations("image from unsplash")} />
       </Card.Section>
     </Card>
   );

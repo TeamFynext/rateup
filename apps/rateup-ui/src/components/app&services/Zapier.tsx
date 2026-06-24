@@ -1,23 +1,9 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
-import {
-  ActionIcon,
-  Avatar,
-  Flex,
-  Group,
-  Stack,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Avatar, Flex, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconKey, IconReload, IconTrash } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { IntegratedApps, ZapierTriggers } from "@/types/enums.ts";
-import type { ZapierIntegration } from "@/types/global";
 import {
   useCreateIntegrationMutation,
   useDeleteIntegrationMutation,
@@ -34,6 +20,8 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { IntegratedApps, ZapierTriggers } from "@/types/enums.ts";
+import type { ZapierIntegration } from "@/types/global";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 export function Zapier() {
@@ -54,11 +42,7 @@ export function Zapier() {
       <Flex gap={"sm"} className="flex-col items-start">
         <APIKeyGenerate integration={integration} />
         <div className="flex flex-col justify-center items-center w-full">
-          <ZapierTriggerList
-            integration={integration}
-            refetch={refetch}
-            isLoading={isRefetching}
-          />
+          <ZapierTriggerList integration={integration} refetch={refetch} isLoading={isRefetching} />
         </div>
       </Flex>
     </Stack>
@@ -127,9 +111,7 @@ function APIKeyGenerate({ integration }) {
                 },
               }}
               label={translations("Api Key")}
-              description={translations(
-                "Use this key to set up your Zapier connection",
-              )}
+              description={translations("Use this key to set up your Zapier connection")}
               readOnly
               rightSection={
                 <Group
@@ -144,11 +126,7 @@ function APIKeyGenerate({ integration }) {
                   {apiKey ? (
                     <ApiCopyButton value={apiKey} />
                   ) : (
-                    <Tooltip
-                      label={translations("Regenerate")}
-                      position="top"
-                      withArrow
-                    >
+                    <Tooltip label={translations("Regenerate")} position="top" withArrow>
                       <ActionIcon
                         onClick={handleRegenerate}
                         variant={"subtle"}
@@ -161,11 +139,7 @@ function APIKeyGenerate({ integration }) {
                       </ActionIcon>
                     </Tooltip>
                   )}
-                  <Tooltip
-                    label={translations("Delete")}
-                    position="top"
-                    withArrow
-                  >
+                  <Tooltip label={translations("Delete")} position="top" withArrow>
                     <ActionIcon
                       onClick={handleDelete}
                       variant={"subtle"}
@@ -211,9 +185,7 @@ function ZapierTriggerList({
   refetch: () => void;
   isLoading: boolean;
 }) {
-  const triggers = integration
-    ? (integration.credential?.triggerSubscriptions ?? [])
-    : [];
+  const triggers = integration ? (integration.credential?.triggerSubscriptions ?? []) : [];
   const [opened, { open, close }] = useDisclosure(false);
   const [trigger, setTrigger] = useState(null);
   const deleteMut = useDeleteZapierTriggerHook();
@@ -247,12 +219,7 @@ function ZapierTriggerList({
             </Text>
             {t.triggers.length > 0 ? (
               t.triggers.map((tr, index) => (
-                <Stack
-                  gap={"sm"}
-                  key={tr.hookUrl}
-                  className="rounded-sm bg-gray-200"
-                  p={"sm"}
-                >
+                <Stack gap={"sm"} key={tr.hookUrl} className="rounded-sm bg-gray-200" p={"sm"}>
                   <Group px={"sm"} gap={"xs"} justify="end">
                     <ActiveStatusBadge active={tr.active} />
                     <Tooltip label={"Delete"}>
@@ -269,11 +236,7 @@ function ZapierTriggerList({
                       </ActionIcon>
                     </Tooltip>
                   </Group>
-                  <ContainedTextField
-                    label={"Zap ID"}
-                    value={tr.zapId || ""}
-                    readOnly
-                  />
+                  <ContainedTextField label={"Zap ID"} value={tr.zapId || ""} readOnly />
                   <ContainedTextField
                     value={tr.hookUrl}
                     label={`Target Url ${index + 1}`}
@@ -299,11 +262,7 @@ function ZapierTriggerList({
       </Stack>
       <ConfirmationModal
         headerLabel="Are you sure you want to delete this subscription?"
-        deleteQuotion={
-          trigger?.active
-            ? "The zap with this subscription will get paused"
-            : ""
-        }
+        deleteQuotion={trigger?.active ? "The zap with this subscription will get paused" : ""}
         confirmLabel="Delete"
         headerTitle="Delete trigger subscription"
         onClose={() => {

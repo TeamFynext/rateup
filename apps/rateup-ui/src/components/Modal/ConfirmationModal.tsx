@@ -1,18 +1,12 @@
-"use client";
-
-import { useState } from "react";
-
 import { Blockquote, Group, Modal, Stack, Text } from "@mantine/core";
 import { IconAlertOctagon } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useUser } from "@/context/UserContext.tsx";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../Button/RateupButtons.tsx";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput.tsx";
 
 interface ConfirmationModalProps {

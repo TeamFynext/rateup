@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import { Image } from "@unpic/react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { imagesPath } from "@/utils/constants.ts";
@@ -33,9 +30,9 @@ export default function QrHeroSection() {
             We Transform Your Marketing & Packaging with Smart QR Codes
           </h1>
           <p className="text-gray-100 text-lg max-w-xl mx-auto md:mx-0 py-3">
-            Transform your marketing and packaging with RateUp's next-level QR
-            code engagement platform. Capture leads, drive sales, collect
-            feedback, and gain invaluable insights – all from a single scan.
+            Transform your marketing and packaging with RateUp's next-level QR code engagement
+            platform. Capture leads, drive sales, collect feedback, and gain invaluable insights –
+            all from a single scan.
           </p>
 
           <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
@@ -60,14 +57,10 @@ export default function QrHeroSection() {
                 key={label}
                 className={pill}
                 onMouseEnter={() =>
-                  setHoveredImage(
-                    featureImages[label as keyof typeof featureImages],
-                  )
+                  setHoveredImage(featureImages[label as keyof typeof featureImages])
                 }
                 onMouseLeave={() =>
-                  setHoveredImage(
-                    `${imagesPath}/qr-landing/1FEEDBACK COLLECTION.png`,
-                  )
+                  setHoveredImage(`${imagesPath}/qr-landing/1FEEDBACK COLLECTION.png`)
                 }
               >
                 <span

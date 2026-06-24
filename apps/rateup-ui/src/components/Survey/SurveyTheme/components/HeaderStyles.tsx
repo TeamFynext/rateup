@@ -1,8 +1,5 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Box, Group, NumberInput, Select, Stack } from "@mantine/core";
+import { useCallback } from "react";
 
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker/index.tsx";
 import { FontWeights, getSurveyThemeKeyOf } from "../SurveyTheme.constants";
@@ -11,6 +8,7 @@ import {
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../SurveyThemeContext.tsx";
+
 import styles from "./stylescomponent/StylesComponent.module.css";
 
 function HeaderStyles() {

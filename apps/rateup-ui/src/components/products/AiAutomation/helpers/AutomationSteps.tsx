@@ -34,8 +34,8 @@ export default function AutomationSteps() {
             How RateUp's AI-Enabled Automation Builder Works
           </h2>
           <p className="text-lg text-[#4B5563] max-w-2xl mx-auto">
-            Building powerful AI-driven workflows is simple with our intuitive
-            no-code platform. Follow these easy steps to get started.
+            Building powerful AI-driven workflows is simple with our intuitive no-code platform.
+            Follow these easy steps to get started.
           </p>
         </div>
 
@@ -60,12 +60,8 @@ export default function AutomationSteps() {
                 )}
 
                 {/* Title & Description */}
-                <h3 className="text-xl font-semibold text-[#013553] mb-3">
-                  {step.title}
-                </h3>
-                <p className="text-gray-600 text-base leading-relaxed">
-                  {step.description}
-                </p>
+                <h3 className="text-xl font-semibold text-[#013553] mb-3">{step.title}</h3>
+                <p className="text-gray-600 text-base leading-relaxed">{step.description}</p>
               </div>
             ))}
           </div>

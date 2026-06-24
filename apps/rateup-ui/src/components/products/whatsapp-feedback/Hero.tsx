@@ -1,6 +1,5 @@
-import { useEffect, useRef } from "react";
-
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 
@@ -131,9 +130,7 @@ export default function Hero() {
     }
 
     function clearChat() {
-      waBody
-        .querySelectorAll(".msg, .typing, .fb-card, .wa-replies")
-        .forEach((n) => n.remove());
+      waBody.querySelectorAll(".msg, .typing, .fb-card, .wa-replies").forEach((n) => n.remove());
     }
 
     async function runHero() {
@@ -214,12 +211,7 @@ export default function Hero() {
           <span className="inline-flex items-center gap-2.5 bg-white/[0.07] border border-white/[0.13] rounded-full py-[9px] pr-[18px] pl-3.5 text-sm font-bold text-white backdrop-blur-sm">
             <span className={`inline-flex gap-0.5 ${style.warm300}`}>
               {[...Array(5)].map((_, i) => (
-                <svg
-                  key={i}
-                  className="w-[15px] h-[15px]"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
+                <svg key={i} className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
               ))}
@@ -241,10 +233,9 @@ export default function Hero() {
           </h1>
 
           <p className="text-[17px] md:text-[19px] leading-[1.55] text-white/70 max-w-[520px] mt-5 md:mt-6 mb-7 md:mb-[34px] max-md:mx-auto">
-            Traditional feedback methods yield only 2% response rates. RateUp
-            uses WhatsApp Flows to connect with customers where they already are
-            — boosting feedback by up to 35% and turning insights into real
-            growth.
+            Traditional feedback methods yield only 2% response rates. RateUp uses WhatsApp Flows to
+            connect with customers where they already are — boosting feedback by up to 35% and
+            turning insights into real growth.
           </p>
 
           <div className="flex gap-3.5 flex-wrap max-md:justify-center">
@@ -341,12 +332,8 @@ export default function Hero() {
                   SG
                 </div>
                 <div>
-                  <div className="text-[15px] font-bold leading-tight">
-                    Spice Garden
-                  </div>
-                  <div className="text-[11px] text-white/70">
-                    business account · online
-                  </div>
+                  <div className="text-[15px] font-bold leading-tight">Spice Garden</div>
+                  <div className="text-[11px] text-white/70">business account · online</div>
                 </div>
                 <div className="ml-auto flex gap-4 opacity-90">
                   <svg
@@ -421,9 +408,7 @@ export default function Hero() {
             >
               662
             </div>
-            <div className={`text-[12px] ${style.ink400} mt-[3px]`}>
-              feedback responses
-            </div>
+            <div className={`text-[12px] ${style.ink400} mt-[3px]`}>feedback responses</div>
             <div className="inline-flex items-center gap-1 text-[12px] font-bold text-green-600 mt-0.5">
               <svg
                 className="w-3.5 h-3.5"

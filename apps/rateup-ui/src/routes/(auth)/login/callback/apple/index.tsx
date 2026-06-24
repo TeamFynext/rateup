@@ -1,9 +1,6 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { LoadingOverlay, Text } from "@mantine/core";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { signInAndUp } from "supertokens-auth-react/recipe/thirdparty";
 
@@ -18,10 +15,7 @@ function AppleCallback() {
     try {
       const response = await signInAndUp();
       if (response.status === "OK") {
-        if (
-          response.createdNewRecipeUser &&
-          response.user.loginMethods.length === 1
-        ) {
+        if (response.createdNewRecipeUser && response.user.loginMethods.length === 1) {
           // sign up successful
           navigate({
             to: "/signup?auth=apple",
@@ -50,9 +44,7 @@ function AppleCallback() {
 
         // As a hack to solve this, you can override the backend functions to create a fake email for the user.
         // TODO remov alert
-        window.alert(
-          "No email provided by social login. Please use another form of login",
-        );
+        window.alert("No email provided by social login. Please use another form of login");
         window.location.assign("/logout"); // redirect back to login page
       }
     } catch (err: any) {

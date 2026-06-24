@@ -1,7 +1,4 @@
-export function generateWaSurveyIdentifier_byName(
-  surveyName: string,
-  teamCode: string,
-) {
+export function generateWaSurveyIdentifier_byName(surveyName: string, teamCode: string) {
   return `\`#${surveyName} @${teamCode}\``;
 }
 

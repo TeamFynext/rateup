@@ -1,13 +1,11 @@
-"use client";
-
 import type { MultiSelectProps, SelectProps } from "@mantine/core";
 import { Card, Group, Skeleton, Text } from "@mantine/core";
 import { IconAward } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { LoyaltyActionType } from "@/types/enums.ts";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
+import { LoyaltyActionType } from "@/types/enums.ts";
 
 import {
   ContainedMultiSelect,
@@ -38,18 +36,12 @@ interface LAProps extends SelectProps {
   multiSelectProps?: MultiSelectProps;
 }
 
-const LASelector = ({
-  multiSelect = false,
-  multiSelectProps,
-  ...props
-}: LAProps) => {
+const LASelector = ({ multiSelect = false, multiSelectProps, ...props }: LAProps) => {
   const { data: actions, isLoading } = useGetLoyaltyActions();
   const { t: translations } = useTranslation();
   const actionList = actions
     ? actions
-        .filter(
-          (a) => a.active && (multiSelect ? !isLReferralAction(a.type) : true),
-        )
+        .filter((a) => a.active && (multiSelect ? !isLReferralAction(a.type) : true))
         .map((a) => ({
           label: `${a.name} (${a.type})`,
           value: a.id,
@@ -75,11 +67,7 @@ const LASelector = ({
   );
 };
 
-const LReferralSelector = ({
-  multiSelect = false,
-  multiSelectProps,
-  ...props
-}: LAProps) => {
+const LReferralSelector = ({ multiSelect = false, multiSelectProps, ...props }: LAProps) => {
   const { data: actions, isLoading } = useGetLoyaltyActions();
   const { t: translations } = useTranslation();
   const actionList = actions
@@ -126,10 +114,7 @@ const isLReferralAction = (actionType) =>
 
 const isLPurchaseAction = (actionType) =>
   actionType &&
-  [
-    LoyaltyActionType.DirectPurchase,
-    LoyaltyActionType.ReferralPurchase,
-  ].includes(actionType);
+  [LoyaltyActionType.DirectPurchase, LoyaltyActionType.ReferralPurchase].includes(actionType);
 
 const LoyaltyReward = ({ rewardName }) => {
   return (

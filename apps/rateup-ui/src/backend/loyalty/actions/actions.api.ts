@@ -35,10 +35,7 @@ interface referalProps {
   };
 }
 
-export async function referralLoyaltyAction({
-  referralCode,
-  data,
-}: referalProps) {
+export async function referralLoyaltyAction({ referralCode, data }: referalProps) {
   await axiosClient.post(`${actionBaseUrl}/${referralCode}`, data);
 }
 

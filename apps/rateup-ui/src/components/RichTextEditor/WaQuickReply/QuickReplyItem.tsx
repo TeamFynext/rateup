@@ -1,9 +1,7 @@
-import React from "react";
-
 import { Edit, Trash } from "lucide-react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 

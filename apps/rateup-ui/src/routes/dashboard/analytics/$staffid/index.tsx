@@ -1,11 +1,5 @@
-import { useRef, useState } from "react";
-
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {
   ArrowLeft,
@@ -17,36 +11,21 @@ import {
   RefreshCcw,
   ThumbsUp,
 } from "lucide-react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { useGetStaffDetailedConversationAnalytics } from "@/backend/conversation/conversation.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { AnalyticsStatCard } from "@/components/whatsapp/inbox/analytics/AnalyticsStaticCard.tsx";
 import { StaffStatusBadge } from "@/components/whatsapp/inbox/analytics/ConversationStatsAgentPerformance.tsx";
 import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
-import {
-  formatTimeToNearestUnitFromSeconds,
-  formatToRelativeTime,
-} from "@/utils/dateTime.ts";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
+import { formatTimeToNearestUnitFromSeconds, formatToRelativeTime } from "@/utils/dateTime.ts";
 
 export const Route = createFileRoute("/dashboard/analytics/$staffid/")({
   component: page,
@@ -70,10 +49,9 @@ function page() {
       });
     }
   };
-  const { data: analytics, isLoading } =
-    useGetStaffDetailedConversationAnalytics(staffid, {
-      days: day,
-    });
+  const { data: analytics, isLoading } = useGetStaffDetailedConversationAnalytics(staffid, {
+    days: day,
+  });
   const graphdata = analytics
     ? analytics.weeklyMessageStats?.map((a) => ({
         ...a,
@@ -136,9 +114,7 @@ function page() {
                   className="shrink-0"
                 >
                   <ArrowLeft className="w-4 h-4 md:mr-2" />
-                  <span className="hidden md:inline">
-                    {t("Back to Agents")}
-                  </span>
+                  <span className="hidden md:inline">{t("Back to Agents")}</span>
                 </Button>
 
                 {/* Divider */}
@@ -211,12 +187,8 @@ function page() {
                 label={t("Messages Handled")}
                 value={analytics?.userPerformance?.totalMessagesHandled}
                 trendValue={
-                  analytics?.userPerformance?.messagesHandledRateByLastWeek !=
-                  null
-                    ? Math.floor(
-                        analytics?.userPerformance
-                          ?.messagesHandledRateByLastWeek,
-                      )
+                  analytics?.userPerformance?.messagesHandledRateByLastWeek != null
+                    ? Math.floor(analytics?.userPerformance?.messagesHandledRateByLastWeek)
                     : 0
                 }
                 trendSuffix={t("vs last week")}
@@ -232,9 +204,7 @@ function page() {
                 }
                 trendValue={
                   analytics?.userPerformance?.responseTimeRateByLastWeek != null
-                    ? Math.floor(
-                        analytics?.userPerformance?.responseTimeRateByLastWeek,
-                      )
+                    ? Math.floor(analytics?.userPerformance?.responseTimeRateByLastWeek)
                     : 0
                 }
                 trendPositiveWhen="decrease"
@@ -255,9 +225,7 @@ function page() {
                 }
                 trendValue={
                   analytics?.userPerformance?.resolutionRateByLastWeek != null
-                    ? Math.floor(
-                        analytics?.userPerformance?.resolutionRateByLastWeek,
-                      )
+                    ? Math.floor(analytics?.userPerformance?.resolutionRateByLastWeek)
                     : 0
                 }
                 trendSuffix={t("vs last week")}
@@ -337,12 +305,8 @@ function page() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  <span className="text-base">
-                    {t("Weekly Performance Trend")}
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    {t("Messages handled per day")}
-                  </p>
+                  <span className="text-base">{t("Weekly Performance Trend")}</span>
+                  <p className="text-xs text-muted-foreground">{t("Messages handled per day")}</p>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -352,12 +316,7 @@ function page() {
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
-                    <Bar
-                      dataKey="messageCount"
-                      fill="#1873E8"
-                      radius={[8, 8, 0, 0]}
-                      barSize={60}
-                    />
+                    <Bar dataKey="messageCount" fill="#1873E8" radius={[8, 8, 0, 0]} barSize={60} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -377,18 +336,10 @@ function page() {
                   <table className="w-full">
                     <thead className="bg-muted/50 border-b">
                       <tr>
-                        <th className="p-3 text-left text-[11px] font-medium">
-                          {t("Customer")}
-                        </th>
-                        <th className="p-3 text-left text-[11px] font-medium">
-                          {t("Duration")}
-                        </th>
-                        <th className="p-3 text-left text-[11px] font-medium">
-                          {t("Time")}
-                        </th>
-                        <th className="p-3 text-left text-[11px] font-medium">
-                          {t("Status")}
-                        </th>
+                        <th className="p-3 text-left text-[11px] font-medium">{t("Customer")}</th>
+                        <th className="p-3 text-left text-[11px] font-medium">{t("Duration")}</th>
+                        <th className="p-3 text-left text-[11px] font-medium">{t("Time")}</th>
+                        <th className="p-3 text-left text-[11px] font-medium">{t("Status")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -400,10 +351,7 @@ function page() {
                         </tr>
                       )}
                       {analytics?.recentConversations?.map((conv) => (
-                        <tr
-                          key={conv.id}
-                          className="border-b last:border-b-0 hover:bg-muted/20"
-                        >
+                        <tr key={conv.id} className="border-b last:border-b-0 hover:bg-muted/20">
                           <td className="p-3">
                             <div className="flex items-center gap-2">
                               <CreativeAvatar
@@ -411,9 +359,7 @@ function page() {
                                 size="sm"
                                 platform={MessagePlatform.WEBCHAT}
                               />
-                              <span className="text-xs font-medium">
-                                {conv.customer.name}
-                              </span>
+                              <span className="text-xs font-medium">{conv.customer.name}</span>
                             </div>
                           </td>
                           <td className="p-3 text-xs text-muted-foreground">

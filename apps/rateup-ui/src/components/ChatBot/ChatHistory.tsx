@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useMemo, useState } from "react";
-
 import {
   Avatar,
   Badge,
@@ -13,46 +9,39 @@ import {
   Text,
 } from "@mantine/core";
 import { IconRobotFace, IconUserFilled } from "@tabler/icons-react";
+import React, { useMemo, useState } from "react";
 
-import { ChatBotSource } from "@/types/enums.ts";
 import { useGetUserAiChats } from "@/backend/chatbot/chatbot.query";
+import { ChatBotSource } from "@/types/enums.ts";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
 
 import RefreshButton from "../Button/RefreshButton.tsx";
 import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
 import ChatSelectSkeletonCardList from "../whatsapp/inbox/chatselect/chatselectCard/Skeleton.tsx";
+
 import classes from "./ChatbotStyle.module.css";
 
 const ChatHistory = ({ enableApi, selectedChatbotId }) => {
-  const { data: chats, isLoading } = useGetUserAiChats(
-    enableApi,
-    selectedChatbotId,
-  );
+  const { data: chats, isLoading } = useGetUserAiChats(enableApi, selectedChatbotId);
   const userChats = useMemo(() => {
     if (!chats) return null;
     const userChats = Object.groupBy(chats, ({ userId }) => userId);
-    return Object.entries(userChats || {}).map(
-      ([userId, userChat]: [string, UserChat[]]) => ({
-        userId,
-        userDetails: userChat[0].user,
-        chats: userChat.map((c) => ({
-          message: c.message,
-          createdAt: c.createdAt,
-          source: c.source,
-        })),
-      }),
-    );
+    return Object.entries(userChats || {}).map(([userId, userChat]: [string, UserChat[]]) => ({
+      userId,
+      userDetails: userChat[0].user,
+      chats: userChat.map((c) => ({
+        message: c.message,
+        createdAt: c.createdAt,
+        source: c.source,
+      })),
+    }));
   }, [chats]);
 
   const [selectedChat, setSelectedChat] = useState(null);
 
   return (
     <Flex gap={"xs"} h={"100%"}>
-      <AIChatSelect
-        userChats={userChats}
-        setSelectedChat={setSelectedChat}
-        isLoading={isLoading}
-      />
+      <AIChatSelect userChats={userChats} setSelectedChat={setSelectedChat} isLoading={isLoading} />
       <AIChatDisplay selectedChat={selectedChat} />
     </Flex>
   );
@@ -86,11 +75,7 @@ const AIChatSelect = ({ userChats, setSelectedChat, isLoading }) => {
             <ChatSelectSkeletonCardList />
           ) : userChats?.length > 0 ? (
             userChats?.map((user) => (
-              <AIChatSelectCard
-                user={user}
-                key={user.userId}
-                setSelectedChat={setSelectedChat}
-              />
+              <AIChatSelectCard user={user} key={user.userId} setSelectedChat={setSelectedChat} />
             ))
           ) : (
             <Text size="sm" p="sm">
@@ -105,12 +90,7 @@ const AIChatSelect = ({ userChats, setSelectedChat, isLoading }) => {
 
 const AIChatSelectCard = ({ user, setSelectedChat }) => {
   return (
-    <Stack
-      gap={0}
-      p={0}
-      className={classes["chat-select"]}
-      onClick={() => setSelectedChat(user)}
-    >
+    <Stack gap={0} p={0} className={classes["chat-select"]} onClick={() => setSelectedChat(user)}>
       <Group gap={2} px={"xs"}>
         <Avatar color="initials" name={user.userDetails.name} />
         <Stack p={"xs"} gap={2} flex={1}>
@@ -121,9 +101,7 @@ const AIChatSelectCard = ({ user, setSelectedChat }) => {
             <Text size="xs" c={"dimmed"} truncate w={"60%"}>
               {user.chats[user.chats.length - 1].message}
             </Text>
-            <Text size="xs">
-              {formatDate(user.chats[user.chats.length - 1].createdAt)}
-            </Text>
+            <Text size="xs">{formatDate(user.chats[user.chats.length - 1].createdAt)}</Text>
           </Group>
         </Stack>
       </Group>
@@ -134,9 +112,7 @@ const AIChatSelectCard = ({ user, setSelectedChat }) => {
 
 const AIChatDisplay = ({ selectedChat }) => {
   const chats = selectedChat
-    ? Object.groupBy(selectedChat?.chats, ({ createdAt }) =>
-        formatDate(createdAt),
-      )
+    ? Object.groupBy(selectedChat?.chats, ({ createdAt }) => formatDate(createdAt))
     : [];
 
   if (!selectedChat)
@@ -179,10 +155,7 @@ const AIChatDisplay = ({ selectedChat }) => {
                     p="xs"
                     radius={"sm"}
                     style={{
-                      alignSelf:
-                        chat.source === ChatBotSource.HUMAN
-                          ? "flex-start"
-                          : "flex-end",
+                      alignSelf: chat.source === ChatBotSource.HUMAN ? "flex-start" : "flex-end",
                     }}
                   >
                     <Group gap={2}>
@@ -192,9 +165,7 @@ const AIChatDisplay = ({ selectedChat }) => {
                         <IconRobotFace size={"1rem"} />
                       )}
                       <Text fw={500} size="sm">
-                        {chat.source == ChatBotSource.HUMAN
-                          ? selectedChat.userDetails.name
-                          : "AI"}
+                        {chat.source == ChatBotSource.HUMAN ? selectedChat.userDetails.name : "AI"}
                       </Text>
                     </Group>
                     <Text size="sm" c="var(--grey-color-3)">

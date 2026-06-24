@@ -1,31 +1,13 @@
-"use client";
-
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import {
-  Calendar,
-  CreditCard,
-  DollarSign,
-  Package,
-  Pause,
-  Play,
-  Square,
-} from "lucide-react";
+import { Calendar, CreditCard, DollarSign, Package, Pause, Play, Square } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { useGetAllStripeSubscriptions } from "@/backend/payment/stripe/stripe.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 
 import { SubscriptionsDataTableToolbar } from "./subscriptions-data-table-toolbar.tsx";
 
@@ -137,17 +119,13 @@ const StripeSubscription = () => {
     {
       accessorKey: "startsAt",
       header: createSortableHeader("Starts At"),
-      cell: ({ row }) => (
-        <span className="text-sm">{row.getValue("startsAt")}</span>
-      ),
+      cell: ({ row }) => <span className="text-sm">{row.getValue("startsAt")}</span>,
       meta: { title: "Starts At" },
     },
     {
       accessorKey: "endsAt",
       header: createSortableHeader("Ends At"),
-      cell: ({ row }) => (
-        <span className="text-sm">{row.getValue("endsAt")}</span>
-      ),
+      cell: ({ row }) => <span className="text-sm">{row.getValue("endsAt")}</span>,
       meta: { title: "Ends At" },
     },
   ];
@@ -206,9 +184,7 @@ const StripeSubscription = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {activeSubscriptions}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{activeSubscriptions}</div>
           </CardContent>
         </Card>
 
@@ -219,9 +195,7 @@ const StripeSubscription = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {inactiveSubscriptions}
-            </div>
+            <div className="text-2xl font-bold text-red-600">{inactiveSubscriptions}</div>
           </CardContent>
         </Card>
       </div>

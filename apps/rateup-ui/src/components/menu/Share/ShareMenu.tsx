@@ -1,5 +1,3 @@
-"use client";
-
 import { useTranslation } from "react-i18next";
 
 import { useUpdateMenuMutation } from "@/backend/menu/menu.query";
@@ -46,9 +44,7 @@ const ShareMenu = ({ menu }: ShareMenuProps) => {
               }}
             />
             <p className="text-sm font-semibold">
-              {isPublished
-                ? translations("Published")
-                : translations("Not Published")}
+              {isPublished ? translations("Published") : translations("Not Published")}
             </p>
           </CardContent>
         </Card>

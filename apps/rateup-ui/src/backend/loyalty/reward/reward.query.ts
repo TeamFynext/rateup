@@ -53,7 +53,7 @@ const useUpdateLoyaltyRewardMutation = (rewardId) => {
   const qc = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: (data: UpdateReward) => updateLoyaltyReward(rewardId, data),
-    onSuccess: (_, reward) => {
+    onSuccess: (_, _reward) => {
       qc.invalidateQueries({ queryKey: ["loyaltyRewards", rewardId] });
       qc.invalidateQueries({ queryKey: ["loyaltyRewards"] });
       toast.success("Reward updated successfully");

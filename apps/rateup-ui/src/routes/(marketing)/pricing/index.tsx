@@ -80,8 +80,7 @@ function Pricing() {
       <div
         className="grid xs:grid-cols-1 lg:grid-cols-2 p-0"
         style={{
-          background:
-            "linear-gradient(to bottom right, #00397b, #013553, #1c518e)",
+          background: "linear-gradient(to bottom right, #00397b, #013553, #1c518e)",
         }}
       >
         <Faq />

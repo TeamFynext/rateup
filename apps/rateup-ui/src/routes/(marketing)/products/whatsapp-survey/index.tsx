@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { buildPageHead } from "@/lib/metadata.ts";
 import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection.tsx";
 import ClientsSectionSurvey from "@/components/products/WhatsAppSurveyComponets/helpers/ClientsSectionSurvey.tsx";
 import CustomerFeedbackSection from "@/components/products/WhatsAppSurveyComponets/helpers/CustomerFeedbackSection.tsx";
@@ -15,6 +14,7 @@ import WhatsAppSurveyGrowth from "@/components/products/WhatsAppSurveyComponets/
 import WhatsAppSurveyHero from "@/components/products/WhatsAppSurveyComponets/shared/WhatsAppSurveyHero.tsx";
 import WhatsAppSurveyService from "@/components/products/WhatsAppSurveyComponets/shared/WhatsAppSurveyService.tsx";
 import WhatsAppSurveySteps from "@/components/products/WhatsAppSurveyComponets/shared/WhatsAppSurveySteps.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
 
 import { productsMarkdown } from "../../../../markdown/products";
 import { createMarkdownMiddleware } from "../../../../markdown/serveMarkdown";

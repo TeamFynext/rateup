@@ -1,25 +1,16 @@
-import React from "react";
-
 import { Stack, Text } from "@mantine/core";
 import { Map, Marker } from "pigeon-maps";
 
 import type { WaSendMessageBody } from "@/types/global";
 
-const WaInboxLocation = ({
-  messageContent,
-}: {
-  messageContent: WaSendMessageBody["location"];
-}) => {
+const WaInboxLocation = ({ messageContent }: { messageContent: WaSendMessageBody["location"] }) => {
   const { latitude, longitude, name, address } = messageContent;
 
   return (
     <Stack
       gap={2}
       onClick={() =>
-        window.open(
-          `https://www.google.com/maps?q=${latitude},${longitude}`,
-          "_blank",
-        )
+        window.open(`https://www.google.com/maps?q=${latitude},${longitude}`, "_blank")
       }
     >
       <Map width={270} height={200} center={[latitude, longitude]}>

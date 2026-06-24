@@ -1,21 +1,15 @@
-"use client";
-
-import React, { useEffect, useRef, useState } from "react";
-
 import { Group, Text } from "@mantine/core";
 import WavesurferPlayer from "@wavesurfer/react";
 import { Mic, Pause, Play, Square, Trash } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-import {
-  deleteUploadedFiles,
-  getFileUrlFromKey,
-  uploadFile,
-} from "@/utils/file-upload/upload.ts";
+import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
 import { Button } from "../ui/button.tsx";
 import CustomTooltip from "../ui/custom/CustomTooltip.tsx";
+
 import classes from "./VoiceRecorder.module.css";
 
 interface VoiceRecordState {
@@ -73,21 +67,11 @@ const VoiceRecorder = () => {
   };
 
   const startRecording = async () => {
-    const supportedTypes = [
-      "audio/aac",
-      "audio/amr",
-      "audio/mpeg",
-      "audio/mp4",
-      "audio/ogg",
-    ];
-    const mimeType = supportedTypes.find((type) =>
-      MediaRecorder.isTypeSupported(type),
-    );
+    const supportedTypes = ["audio/aac", "audio/amr", "audio/mpeg", "audio/mp4", "audio/ogg"];
+    const mimeType = supportedTypes.find((type) => MediaRecorder.isTypeSupported(type));
 
     if (!mimeType) {
-      alert(
-        "None of the required audio formats are supported by this browser.",
-      );
+      alert("None of the required audio formats are supported by this browser.");
       return null;
     }
 
@@ -129,13 +113,9 @@ const VoiceRecorder = () => {
     recorder.onstop = async () => {
       const { chunks } = useVoiceRecordStore.getState();
       const blob = new Blob(chunks, { type: mimeType });
-      const file = new File(
-        [blob],
-        `voice-${Date.now()}${getAudioExtension(mimeType)}`,
-        {
-          type: mimeType,
-        },
-      );
+      const file = new File([blob], `voice-${Date.now()}${getAudioExtension(mimeType)}`, {
+        type: mimeType,
+      });
       try {
         const key = await uploadFile(file);
         setFileKey(key);
@@ -220,17 +200,8 @@ const VoiceRecorder = () => {
         <Group>
           <CustomTooltip
             trigger={
-              <Button
-                onClick={onPlayPause}
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-              >
-                {isPlaying ? (
-                  <Pause className="w-5 h-5" />
-                ) : (
-                  <Play className="w-5 h-5" />
-                )}
+              <Button onClick={onPlayPause} variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
               </Button>
             }
             content={<p>{isPlaying ? "Pause" : "Play"}</p>}
@@ -260,11 +231,7 @@ const VoiceRecorder = () => {
       {barHeights.length > 0 && (
         <div className={classes["bar-visualizer"]}>
           {barHeights.map((height, index) => (
-            <div
-              key={index}
-              className={classes.bar}
-              style={{ height: `${height}px` }}
-            />
+            <div key={index} className={classes.bar} style={{ height: `${height}px` }} />
           ))}
         </div>
       )}

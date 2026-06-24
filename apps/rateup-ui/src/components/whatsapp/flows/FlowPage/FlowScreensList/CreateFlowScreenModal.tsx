@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback, useContext, useEffect } from "react";
-
 import { useForm } from "@mantine/form";
 import { useParams } from "@tanstack/react-router";
+import { useCallback, useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -104,9 +101,7 @@ function CreateFlowScreenModal({
   return (
     <FormModalLayout
       opened={opened}
-      title={
-        screenId ? translations("Edit Screen") : translations("Create Screen")
-      }
+      title={screenId ? translations("Edit Screen") : translations("Create Screen")}
       onClose={close}
       centered
       onSubmit={form.onSubmit(handleCreate)}

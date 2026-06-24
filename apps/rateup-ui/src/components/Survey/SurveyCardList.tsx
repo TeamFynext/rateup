@@ -1,8 +1,3 @@
-"use client";
-
-import type { JSX } from "react";
-import { useEffect, useState } from "react";
-
 import {
   Avatar,
   Badge,
@@ -14,16 +9,16 @@ import {
   SimpleGrid,
   Space,
   Text,
-  useMantineTheme,
 } from "@mantine/core";
 import { IconChartBar } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
+import type { JSX } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useSurveys } from "@/backend/surveys/surveys.query";
-import { useUser } from "@/context/UserContext.tsx";
 import { getTimeSince } from "@/utils/index.ts";
 
 function SurveyCardList({ getSelectedSurveys, LandingPage }) {
@@ -57,7 +52,7 @@ function SurveyCardList({ getSelectedSurveys, LandingPage }) {
 
   // --------handle check box click ----------
 
-  const handleCheckBox = (e, surveyid, checked) => {
+  const handleCheckBox = (e, surveyid, _checked) => {
     e.stopPropagation();
     if (surveyidArray.length >= 4 && e.target.checked) {
       toast.warning(translations("Max 4 surveys can be merged."), {
@@ -86,10 +81,7 @@ function SurveyCardList({ getSelectedSurveys, LandingPage }) {
   return (
     <>
       <Flex style={{ flexDirection: "column", width: "100%" }}>
-        <SimpleGrid
-          cols={{ base: 2, sm: 1, md: 2, lg: 5, xl: 2 }}
-          spacing={"lg"}
-        >
+        <SimpleGrid cols={{ base: 2, sm: 1, md: 2, lg: 5, xl: 2 }} spacing={"lg"}>
           {surveys.map((s) => {
             if (s.type == "web")
               return (
@@ -112,41 +104,24 @@ interface SurveyCardProps {
   handleCheckBox: any;
   isChecked: any;
 }
-function SurveyCard({
-  survey,
-  handleCheckBox,
-  isChecked,
-}: SurveyCardProps & {}): JSX.Element {
-  const theme = useMantineTheme();
+function SurveyCard({ survey, handleCheckBox, isChecked }: SurveyCardProps & {}): JSX.Element {
   const [timeSince, setTimeSince] = useState("");
-  const { user, setUser } = useUser();
+
   useEffect(() => {
     setTimeSince(getTimeSince(survey?.createdAt));
-    const timeoutID = setInterval(
-      () => setTimeSince(getTimeSince(survey?.createdAt)),
-      5000,
-    );
+    const timeoutID = setInterval(() => setTimeSince(getTimeSince(survey?.createdAt)), 5000);
     return () => clearInterval(timeoutID);
   }, []);
 
-  const navigate = useNavigate();
   const { t: translations } = useTranslation();
   return (
     <>
-      <Paper
-        p="md"
-        shadow="lg"
-        withBorder
-        radius="lg"
-        style={{ cursor: "pointer" }}
-      >
+      <Paper p="md" shadow="lg" withBorder radius="lg" style={{ cursor: "pointer" }}>
         <Flex justify={"space-between"} align={"center"}>
           <Text mr={"sm"} truncate size="xl" fw={500}>
             {survey?.title}
           </Text>
-          <Badge color={survey?.type == "web" ? "blue" : "green"}>
-            {survey?.type}
-          </Badge>
+          <Badge color={survey?.type == "web" ? "blue" : "green"}>{survey?.type}</Badge>
           <Group align={"center"} mt="sm" gap="xs">
             <Checkbox
               onClick={(e) => {
@@ -190,9 +165,7 @@ function SurveyCard({
 export function StatusBadge({ active }) {
   return (
     <>
-      <Badge color={active ? "green" : "yellow"}>
-        {active ? "Active" : "Paused"}
-      </Badge>
+      <Badge color={active ? "green" : "yellow"}>{active ? "Active" : "Paused"}</Badge>
     </>
   );
 }

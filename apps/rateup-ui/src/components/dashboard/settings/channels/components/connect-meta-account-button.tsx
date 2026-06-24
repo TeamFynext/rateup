@@ -1,13 +1,10 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-
 import { Checkbox, Modal, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandMeta } from "@tabler/icons-react";
+import { useEffect, useMemo, useState } from "react";
 
-import { MetaLoginAssets } from "@/types/enums.ts";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
+import { MetaLoginAssets } from "@/types/enums.ts";
 
 import { MetaLoginButton } from "./meta-login-button.tsx";
 
@@ -27,9 +24,7 @@ const initFacebookSdk = () => {
 
 export function ConnectMetaAccountButton() {
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedAssets, setSelectedAssets] = useState<string[]>([
-    MetaLoginAssets.WHATSAPP,
-  ]);
+  const [selectedAssets, setSelectedAssets] = useState<string[]>([MetaLoginAssets.WHATSAPP]);
   const assets = Object.values(MetaLoginAssets);
 
   useEffect(() => {
@@ -41,10 +36,7 @@ export function ConnectMetaAccountButton() {
     if (assets.every((asset) => selectedAssets.includes(asset))) {
       return import.meta.env.VITE_META_CONFIG_ID_ALL;
     }
-    if (
-      selectedAssets.length === 2 &&
-      selectedAssets.includes(MetaLoginAssets.CATALOGS)
-    ) {
+    if (selectedAssets.length === 2 && selectedAssets.includes(MetaLoginAssets.CATALOGS)) {
       return import.meta.env.VITE_META_CONFIG_ID_WA_CG;
     }
 

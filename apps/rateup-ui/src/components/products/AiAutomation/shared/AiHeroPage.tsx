@@ -17,15 +17,12 @@ export default function AiHeroPage() {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-[#001C57] pb-6 leading-tight text-center md:text-left">
           Stop Missing Opportunities. <br />
-          <span className="text-[#004F98]">
-            Transform Customer Journeys with AI.
-          </span>
+          <span className="text-[#004F98]">Transform Customer Journeys with AI.</span>
         </h1>
         <p className="text-base font-medium sm:text-lg text-gray-600 pb-8 text-center md:text-left">
-          Tired of manual processes and disconnected customer experiences?
-          RateUp's AI-Enabled Automation Builder lets you design smart,
-          context-aware workflows that personalize every touchpoint, resolve
-          issues faster, and fuel growth — all without writing a single line of
+          Tired of manual processes and disconnected customer experiences? RateUp's AI-Enabled
+          Automation Builder lets you design smart, context-aware workflows that personalize every
+          touchpoint, resolve issues faster, and fuel growth — all without writing a single line of
           code.
         </p>
         <div className="flex flex-col sm:flex-row sm:justify-center md:justify-start gap-4 w-full sm:w-auto">

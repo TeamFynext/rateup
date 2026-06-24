@@ -1,7 +1,3 @@
-"use client";
-
-import { useRef, useState } from "react";
-
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -15,6 +11,7 @@ import {
   RefreshCcw,
   Send,
 } from "lucide-react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -42,11 +39,7 @@ const Analytics = () => {
   const teamRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  const isExportable = [
-    "overview",
-    "agent-performance",
-    "team-performance",
-  ].includes(tab);
+  const isExportable = ["overview", "agent-performance", "team-performance"].includes(tab);
 
   const handleExport = async () => {
     const generatePDF = (await import("react-to-pdf")).default;
@@ -98,55 +91,42 @@ const Analytics = () => {
   const headerConfigMap = {
     overview: {
       title: t("Overview"),
-      description: t(
-        "Real-time overview of your team performance and activities",
-      ),
+      description: t("Real-time overview of your team performance and activities"),
       icon: <BarChart className="w-4 h-4 text-white" />,
     },
 
     "agent-performance": {
       title: t("Agent Performance"),
-      description: t(
-        "Track individual agent metrics, response times, and customer satisfaction",
-      ),
+      description: t("Track individual agent metrics, response times, and customer satisfaction"),
       icon: <Award className="w-4 h-4 text-white" />,
     },
 
     "team-performance": {
       title: t("Team Performance"),
-      description: t(
-        "Monitor team-level statistics, collaboration, and productivity",
-      ),
+      description: t("Monitor team-level statistics, collaboration, and productivity"),
       icon: <Activity className="w-4 h-4 text-white" />,
     },
 
     "api-analytics": {
       title: t("API Analytics"),
-      description: t(
-        "Analyze API usage, request patterns, and integration performance",
-      ),
+      description: t("Analyze API usage, request patterns, and integration performance"),
       icon: <LineChart className="w-4 h-4 text-white" />,
     },
 
     "message-logs": {
       title: t("Message Logs"),
-      description: t(
-        "Complete history of all messages sent via API, Inbox, and Campaigns",
-      ),
+      description: t("Complete history of all messages sent via API, Inbox, and Campaigns"),
       icon: <Send className="w-4 h-4 text-white" />,
     },
 
     "team-activity": {
       title: t("Team Activity"),
-      description: t(
-        "View detailed activity logs and actions performed by team members",
-      ),
+      description: t("View detailed activity logs and actions performed by team members"),
       icon: <FileText className="w-4 h-4 text-white" />,
     },
   };
   const headerConfig =
-    headerConfigMap[tab as keyof typeof headerConfigMap] ||
-    headerConfigMap["overview"];
+    headerConfigMap[tab as keyof typeof headerConfigMap] || headerConfigMap["overview"];
 
   return (
     <>
@@ -162,9 +142,7 @@ const Analytics = () => {
                 className="w-full sm:w-auto justify-center"
                 onClick={() => refresh()}
               >
-                <RefreshCcw
-                  className={`${isFetching ? "animate-spin" : ""} mr-1`}
-                />
+                <RefreshCcw className={`${isFetching ? "animate-spin" : ""} mr-1`} />
                 {t("Refresh")}
               </Button>
 

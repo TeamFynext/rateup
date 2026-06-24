@@ -1,13 +1,10 @@
-"use client";
-
-import { useEffect, useMemo } from "react";
-
 import type { SelectProps } from "@mantine/core";
+import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { TemplateType } from "@/types/enums.ts";
-import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
+import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
+import type { TemplateType } from "@/types/enums.ts";
 
 import { SelectSkeleton } from "../LoyaltyComponents/utils.tsx";
 import { ContainedSelection } from "./ContainedInput/ContainedInput.tsx";
@@ -32,9 +29,7 @@ const WaTemplateSelector = ({
 }: WaTemplateSelector) => {
   const { t: translations } = useTranslation();
   const { data: allTemplates, isLoading } = useWaTemplates(templateType);
-  const templates = teamId
-    ? useTemplatesAvailableForTeam(teamId)
-    : allTemplates;
+  const templates = teamId ? useTemplatesAvailableForTeam(teamId) : allTemplates;
 
   const templatesData = useMemo(
     () =>
@@ -46,11 +41,7 @@ const WaTemplateSelector = ({
   );
 
   useEffect(() => {
-    if (
-      value?.length &&
-      templatesData &&
-      !templatesData?.map((t) => t.value).includes(value)
-    ) {
+    if (value?.length && templatesData && !templatesData?.map((t) => t.value).includes(value)) {
       onChange(null);
     }
   }, [value, templatesData, onChange]);

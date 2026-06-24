@@ -1,18 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-
 import { ActionIcon, Center, Loader } from "@mantine/core";
 import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import dayjs from "dayjs";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import { MessagePlatform } from "@/types/enums.ts";
-import type { IgReceiveMessageBody } from "@/types/global";
 import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { getMessagesFromIDB } from "@/components/dashboard/inbox/idb.ts";
-import {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
+import { MessagePlatform } from "@/types/enums.ts";
+import type { IgReceiveMessageBody } from "@/types/global";
 import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
 import { useChatFilterStore } from "../../chatselect/chatFilter/index.tsx";
@@ -26,6 +22,7 @@ import {
   TempMessageBody,
 } from "./components/utils.tsx";
 import WaInboxSingleMessageLayout from "./layout/singleMessageLayout/index.tsx";
+
 import classes from "./styles.module.css";
 
 const reverseScroll = (e) => {
@@ -39,14 +36,8 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
   const { filter } = useChatFilterStore();
   // api call
   const [enable, setEnabled] = useState(false);
-  const {
-    mergeMessages,
-    setSelected,
-    setIsLoading,
-    selectedKey,
-    messagesByKey,
-    isLoading,
-  } = useMessagesStore();
+  const { mergeMessages, setSelected, setIsLoading, selectedKey, messagesByKey, isLoading } =
+    useMessagesStore();
 
   const allMessages = useMemo(() => {
     if (!selectedKey) return [];
@@ -62,10 +53,7 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
         ...(messagesByKey.get(key1)?.messages ?? []),
         ...(messagesByKey.get(key2)?.messages ?? []),
         ...(messagesByKey.get(key3)?.messages ?? []),
-      ].sort(
-        (a, b) =>
-          new Date(b.waCreatedAt).getTime() - new Date(a.waCreatedAt).getTime(),
-      );
+      ].sort((a, b) => new Date(b.waCreatedAt).getTime() - new Date(a.waCreatedAt).getTime());
     }
   }, [selectedKey, messagesByKey]);
 
@@ -117,8 +105,7 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
       }
       mergeMessages(selectedKey, cached);
     })();
-    if (rowVirtualizer.getVirtualItems().length > 0)
-      rowVirtualizer.scrollToIndex(0);
+    if (rowVirtualizer.getVirtualItems().length > 0) rowVirtualizer.scrollToIndex(0);
   }, [selectedKey]);
 
   const isAtBottom = () => {
@@ -132,11 +119,7 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
     const lastItem = rowVirtualizer.getVirtualItems().at(-1);
     if (lastItem && lastItem?.index >= allMessages.length - 1) setEnabled(true);
     else if (enable) setEnabled(false);
-    if (
-      lastItem?.index >= allMessages.length - 1 &&
-      hasNextPage &&
-      !isFetchingNextPage
-    ) {
+    if (lastItem?.index >= allMessages.length - 1 && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [
@@ -154,18 +137,13 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
   }, []);
 
   useEffect(() => {
-    setIsLoading(
-      !messagesByKey?.get(selectedKey)?.messages?.length && isPending,
-    );
+    setIsLoading(!messagesByKey?.get(selectedKey)?.messages?.length && isPending);
   }, [selectedKey, isPending, messagesByKey, enable]);
   if (isLoading) return <WhatsAppInboxLoader isLoading={isLoading} />;
 
   return (
     <>
-      <div
-        ref={parentRef}
-        className="relative h-full p-2 scale-y-[-1] overflow-y-auto"
-      >
+      <div ref={parentRef} className="relative h-full p-2 scale-y-[-1] overflow-y-auto">
         {tempMessages?.[selectedContact.id]?.length > 0 && (
           <div className="relative p-6 max-w-4xl mx-auto">
             {tempMessages?.[selectedContact.id]?.map((msg, i) => (
@@ -189,12 +167,9 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const message = allMessages[virtualRow.index];
             const nextMessage =
-              virtualRow.index < allMessages.length - 1
-                ? allMessages[virtualRow.index + 1]
-                : null;
+              virtualRow.index < allMessages.length - 1 ? allMessages[virtualRow.index + 1] : null;
             const isLoaderRow = virtualRow.index > allMessages.length - 1;
-            const isEndofConversation =
-              !hasNextPage && virtualRow.index === allMessages.length - 1;
+            const isEndofConversation = !hasNextPage && virtualRow.index === allMessages.length - 1;
             return (
               <div
                 key={virtualRow.key}
@@ -239,10 +214,7 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
             bottom: isContactDetailsOpened ? "180px" : "155px",
           }}
         >
-          <ActionIcon
-            variant="transparent"
-            onClick={() => rowVirtualizer.scrollToIndex(0)}
-          >
+          <ActionIcon variant="transparent" onClick={() => rowVirtualizer.scrollToIndex(0)}>
             <IconSquareRoundedChevronDown size={20} />
           </ActionIcon>
         </div>
@@ -266,8 +238,7 @@ const MessageItem = ({ message, selectedContact, nextMessage }) => {
   )
     return <div />;
   const showDate =
-    !nextMessage ||
-    !dayjs(message.waCreatedAt).isSame(dayjs(nextMessage.waCreatedAt), "day");
+    !nextMessage || !dayjs(message.waCreatedAt).isSame(dayjs(nextMessage.waCreatedAt), "day");
   const reaction = getReactionMessage({
     message,
     allMessages: messagesByKey.get(selectedKey)?.messages || [],

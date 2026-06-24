@@ -1,9 +1,6 @@
-"use client";
-
-import React, { useEffect, useRef } from "react";
-
 import { Button, Card, Flex, SimpleGrid } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import React, { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { RateupFileUploadButton } from "@/components/Button/RateupButtons.tsx";
@@ -24,10 +21,7 @@ const ImageCarouselInput = (props) => {
 
   useEffect(() => {
     if (props.value?.length > 0) {
-      form.setFieldValue(
-        "images",
-        props.value || [{ src: "", "alt-text": "" }],
-      );
+      form.setFieldValue("images", props.value || [{ src: "", "alt-text": "" }]);
     }
   }, [props.value]);
 
@@ -36,10 +30,7 @@ const ImageCarouselInput = (props) => {
       if (!file) return;
       if (file.size > 400000) {
         toast.error("Max image size is 400KB");
-        return form.setFieldError(
-          `images.${idx}.src`,
-          "max image size is 400KB",
-        );
+        return form.setFieldError(`images.${idx}.src`, "max image size is 400KB");
       }
       form.clearFieldError(`images.${idx}.src`);
       const base64String = await FileConverter.fileToBase64(file);

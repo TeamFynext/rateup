@@ -7,8 +7,8 @@ const BenefitsSection = () => {
         {/* Section Header */}
         <div className="text-center mb-16 flex flex-col items-center">
           <h2 className="text-3xl md:text-4xl max-w-5xl font-bold text-[#013553]">
-            From understanding your business goals to delivering real results,
-            RateUp is built for your success.
+            From understanding your business goals to delivering real results, RateUp is built for
+            your success.
           </h2>
           <div className="mt-4 h-1 w-24 bg-[#1c518e] rounded-full" />
         </div>
@@ -26,14 +26,10 @@ const BenefitsSection = () => {
               </div>
 
               {/* Title */}
-              <h3 className="text-xl font-semibold text-[#013553] mb-2">
-                {benefit.title}
-              </h3>
+              <h3 className="text-xl font-semibold text-[#013553] mb-2">{benefit.title}</h3>
 
               {/* Description */}
-              <p className="text-base text-[#1c518e] leading-relaxed">
-                {benefit.description}
-              </p>
+              <p className="text-base text-[#1c518e] leading-relaxed">{benefit.description}</p>
             </div>
           ))}
         </div>

@@ -12,8 +12,8 @@ export default function WhatsAppSurveyService() {
         </h3>
 
         <p className="py-4 pb-6 text-gray-500 text-center text-lg max-w-2xl mx-auto">
-          RateUp is perfect for any business that values customer feedback and
-          wants a modern, effective way to collect it.
+          RateUp is perfect for any business that values customer feedback and wants a modern,
+          effective way to collect it.
         </p>
       </div>
       <div className="max-w-7xl pt-6 mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -26,9 +26,7 @@ export default function WhatsAppSurveyService() {
               <feature.icon className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                {feature.title}
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900">{feature.title}</h3>
               <p className="text-gray-500 pt-2">{feature.description}</p>
               <Link
                 to="https://rateup.app/login"

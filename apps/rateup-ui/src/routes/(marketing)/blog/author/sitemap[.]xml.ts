@@ -1,7 +1,7 @@
 // src/routes/sitemap[.]xml.ts
 import { createFileRoute } from "@tanstack/react-router";
 
-import { getAuthors, getPosts } from "@/lib/posts";
+import { getAuthors } from "@/lib/posts";
 
 export const Route = createFileRoute("/(marketing)/blog/author/sitemap.xml")({
   server: {

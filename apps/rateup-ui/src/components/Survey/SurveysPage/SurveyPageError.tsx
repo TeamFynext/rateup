@@ -1,5 +1,3 @@
-"use client";
-
 import { Stack, Text } from "@mantine/core";
 import { IconReload } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";

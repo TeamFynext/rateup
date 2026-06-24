@@ -1,8 +1,5 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Box, Flex, Stack } from "@mantine/core";
+import { useCallback } from "react";
 
 import { COORDINATESX, COORDINATESY } from "@/utils/constants.ts";
 
@@ -15,6 +12,7 @@ import {
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../SurveyThemeContext.tsx";
+
 import styles from "./stylescomponent/StylesComponent.module.css";
 
 function ButtonStyles() {
@@ -34,13 +32,6 @@ function ButtonStyles() {
   const handleTextColorChange = useCallback((value) => {
     surveyThemeDispatch({
       type: "button-text-color-change",
-      payload: value,
-    });
-  }, []);
-
-  const handleBorderRadiusChange = useCallback((value) => {
-    surveyThemeDispatch({
-      type: "button-border-radius-change",
       payload: value,
     });
   }, []);

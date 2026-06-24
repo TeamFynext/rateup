@@ -1,17 +1,14 @@
-"use client";
-
-import { useContext, useState } from "react";
-
 import type { SelectProps } from "@mantine/core";
 import { Flex, Paper, Stack, Switch, Textarea, Tooltip } from "@mantine/core";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
+import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getCountries, getCountryCallingCode } from "react-phone-number-input";
 import en from "react-phone-number-input/locale/en";
 
-import { QuestionType } from "@/types/enums.ts";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { QuestionType } from "@/types/enums.ts";
 
 import classes from "./Style.module.css";
 

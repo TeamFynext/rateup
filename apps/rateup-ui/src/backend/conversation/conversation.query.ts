@@ -19,9 +19,7 @@ export const useGetConversationOverView = (filter) => {
   });
 };
 
-export const useGetAverageConversationResponseTimeGraphData = (
-  filter = null,
-) => {
+export const useGetAverageConversationResponseTimeGraphData = (filter = null) => {
   return useQuery({
     queryFn: () => getAverageConversationResponseTimeGraphData(filter),
     queryKey: ["conversationAverageResponseTime", filter],
@@ -55,10 +53,7 @@ export const useGetStaffPerformanceonConversation = (filter = null) => {
   });
 };
 
-export const useGetStaffDetailedConversationAnalytics = (
-  staffId,
-  filter = null,
-) => {
+export const useGetStaffDetailedConversationAnalytics = (staffId, filter = null) => {
   return useQuery({
     queryFn: () => getStaffDetailedConversationAnalytics(staffId, filter),
     queryKey: ["StaffDetailedConversationAnalytics", staffId, filter],

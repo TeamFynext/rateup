@@ -1,19 +1,13 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Download, Filter, Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetTransactions } from "@/backend/loyalty/redemption/redemption.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { docsPath } from "@/utils/constants.ts";
@@ -71,9 +65,7 @@ function DescriptionCell({ description }: { description: string }) {
 }
 
 function DateCell({ createdAt }: { createdAt: Date }) {
-  return (
-    <div className="text-muted-foreground">{dayjs(createdAt).fromNow()}</div>
-  );
+  return <div className="text-muted-foreground">{dayjs(createdAt).fromNow()}</div>;
 }
 
 function TransactionsPage() {
@@ -88,8 +80,7 @@ function TransactionsPage() {
         accessorKey: "account.contact.name",
         id: "customerName",
         header: createSortableHeader(t("Customer")),
-        cell: ({ row }) =>
-          CustomerCell({ customerName: row.getValue("customerName") }),
+        cell: ({ row }) => CustomerCell({ customerName: row.getValue("customerName") }),
         meta: { title: t("Customer") },
       },
       {
@@ -110,8 +101,7 @@ function TransactionsPage() {
       {
         accessorKey: "description",
         header: t("Description"),
-        cell: ({ row }) =>
-          DescriptionCell({ description: row.getValue("description") }),
+        cell: ({ row }) => DescriptionCell({ description: row.getValue("description") }),
         meta: { title: t("Description") },
       },
       {
@@ -163,10 +153,7 @@ function TransactionsPage() {
           <Loader2 className="w-6 h-6 animate-spin" />
         </div>
       ) : (
-        <DataTable
-          columns={columns}
-          data={transactionsData?.transactions || []}
-        />
+        <DataTable columns={columns} data={transactionsData?.transactions || []} />
       )}
     </div>
   );

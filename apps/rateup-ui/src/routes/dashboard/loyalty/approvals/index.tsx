@@ -1,10 +1,7 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Download, Filter, Loader2, X } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type {
@@ -18,18 +15,10 @@ import {
   useRejectApprovalRequest,
 } from "@/backend/loyalty/approval/approval.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/approvals/")({
@@ -52,9 +41,7 @@ const formatPoints = (points: number | null | undefined): string => {
 
 function ApprovalsPage() {
   const { t } = useTranslation();
-  const [statusFilter, setStatusFilter] = useState<ApprovalStatus | undefined>(
-    "PENDING",
-  );
+  const [statusFilter] = useState<ApprovalStatus | undefined>("PENDING");
   const [currentUserId] = useState("cb5d861c-9b5b-41bc-afdb-bd94c0e85306"); // Replace with actual user ID from auth
   const [currentUserName] = useState("Admin User"); // Replace with actual user name from auth
 
@@ -98,9 +85,7 @@ function ApprovalsPage() {
         accessorKey: "account.contact.name",
         id: "customerName",
         header: createSortableHeader(t("Customer")),
-        cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("customerName")}</div>
-        ),
+        cell: ({ row }) => <div className="font-medium">{row.getValue("customerName")}</div>,
         meta: { title: t("Customer") },
       },
       {
@@ -111,12 +96,9 @@ function ApprovalsPage() {
           const colors = {
             REWARD_REDEMPTION:
               "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
-            POINTS_ADJUSTMENT:
-              "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
-            TIER_OVERRIDE:
-              "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
-            ACCOUNT_SUSPENSION:
-              "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+            POINTS_ADJUSTMENT: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
+            TIER_OVERRIDE: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
+            ACCOUNT_SUSPENSION: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
             ACCOUNT_REACTIVATION:
               "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
             BULK_OPERATION:
@@ -124,9 +106,7 @@ function ApprovalsPage() {
           };
           const typedRequestType = requestType as ApprovalRequestType;
           return (
-            <Badge
-              className={`${colors[typedRequestType] || ""} hover:bg-opacity-10 border`}
-            >
+            <Badge className={`${colors[typedRequestType] || ""} hover:bg-opacity-10 border`}>
               {formatRequestType(typedRequestType)}
             </Badge>
           );
@@ -161,9 +141,7 @@ function ApprovalsPage() {
       {
         accessorKey: "reason",
         header: t("Reason"),
-        cell: ({ row }) => (
-          <div className="max-w-xs truncate">{row.getValue("reason")}</div>
-        ),
+        cell: ({ row }) => <div className="max-w-xs truncate">{row.getValue("reason")}</div>,
         meta: { title: t("Reason") },
       },
       {
@@ -172,9 +150,7 @@ function ApprovalsPage() {
         cell: ({ row }) => (
           <div className="text-muted-foreground">
             <div>{row.original.requestedByName || "N/A"}</div>
-            <div className="text-xs text-muted-foreground/70">
-              {row.original.requestedByType}
-            </div>
+            <div className="text-xs text-muted-foreground/70">{row.original.requestedByType}</div>
           </div>
         ),
         meta: { title: t("Requested By") },
@@ -197,19 +173,14 @@ function ApprovalsPage() {
 
           if (status !== "PENDING") {
             const statusColors = {
-              APPROVED:
-                "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
-              REJECTED:
-                "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
-              EXPIRED:
-                "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20",
+              APPROVED: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
+              REJECTED: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+              EXPIRED: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20",
               CANCELLED:
                 "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
             };
             return (
-              <Badge
-                className={`${statusColors[status] || ""} hover:bg-opacity-10 border`}
-              >
+              <Badge className={`${statusColors[status] || ""} hover:bg-opacity-10 border`}>
                 {status}
               </Badge>
             );
@@ -293,9 +264,7 @@ function ApprovalsPage() {
             <div className="text-2xl font-bold">
               {approvals.filter((item) => item.status === "PENDING").length}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t("Awaiting review")}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{t("Awaiting review")}</p>
           </CardContent>
         </Card>
 
@@ -313,9 +282,7 @@ function ApprovalsPage() {
                   return sum + (approval.points || 0);
                 }, 0)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t("Net change")}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{t("Net change")}</p>
           </CardContent>
         </Card>
 
@@ -329,9 +296,7 @@ function ApprovalsPage() {
             <div className="text-2xl font-bold">
               {approvalsResponse?.pagination?.total || approvals.length}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t("All time")}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{t("All time")}</p>
           </CardContent>
         </Card>
       </div>

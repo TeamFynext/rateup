@@ -1,21 +1,14 @@
-"use client";
-
 import { ArrowUpCircle, Loader2, Save, Send } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { TemplateType } from "@/types/enums.ts";
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { FormField } from "@/components/ui/form.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { TemplateType } from "@/types/enums.ts";
 
 import { getLoyaltyTemplateLabel, LoyaltyTemplateTypes } from "./utils.ts";
 
@@ -39,10 +32,7 @@ export function TierUpdateSettings({
   disabled = false,
 }: Readonly<TierUpdateSettingsProps>) {
   const { t } = useTranslation();
-  const templateInfo = getLoyaltyTemplateLabel(
-    LoyaltyTemplateTypes.TierUpgraded,
-    t,
-  );
+  const templateInfo = getLoyaltyTemplateLabel(LoyaltyTemplateTypes.TierUpgraded, t);
 
   return (
     <Card>
@@ -103,9 +93,7 @@ export function TierUpdateSettings({
               <div className="flex items-start gap-2">
                 <Send className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {t("Preview Message")}
-                  </p>
+                  <p className="text-sm font-medium text-foreground">{t("Preview Message")}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     "Congratulations! 🌟 You've reached {"{"}tier_name
                     {"}"} tier! Enjoy exciting new benefits like {"{"}
@@ -115,11 +103,7 @@ export function TierUpdateSettings({
               </div>
             </div>
             {isModified && (
-              <Button
-                size="sm"
-                onClick={onSave}
-                disabled={isPending || disabled}
-              >
+              <Button size="sm" onClick={onSave} disabled={isPending || disabled}>
                 {isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (

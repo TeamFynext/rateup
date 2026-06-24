@@ -47,12 +47,8 @@ const EVENT_TRIGGER_BASE = "/loyalty/settings/event-trigger";
 /**
  * Get all event triggers for a program
  */
-export const getEventTriggers = async (
-  programId: string,
-): Promise<EventTrigger[]> => {
-  const response = await axiosClient.get(
-    `${EVENT_TRIGGER_BASE}/all?programId=${programId}`,
-  );
+export const getEventTriggers = async (programId: string): Promise<EventTrigger[]> => {
+  const response = await axiosClient.get(`${EVENT_TRIGGER_BASE}/all?programId=${programId}`);
   return response.data;
 };
 
@@ -67,9 +63,7 @@ export const getEventTrigger = async (id: string): Promise<EventTrigger> => {
 /**
  * Create a new event trigger
  */
-export const createEventTrigger = async (
-  data: EventTriggerInput,
-): Promise<EventTrigger> => {
+export const createEventTrigger = async (data: EventTriggerInput): Promise<EventTrigger> => {
   const response = await axiosClient.post(EVENT_TRIGGER_BASE, data);
   return response.data;
 };

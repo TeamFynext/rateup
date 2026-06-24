@@ -1,14 +1,5 @@
-"use client";
-
+import { IconDots, IconEdit, IconPlus, IconReplace, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
-
-import {
-  IconDots,
-  IconEdit,
-  IconPlus,
-  IconReplace,
-  IconTrash,
-} from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -72,10 +63,9 @@ function CategoryTableToolbar({
           headerTitle={translations("Delete Category?")}
           confirmLabel={translations("Delete")}
           onConfirm={() => {
-            toast.loading(
-              translations("Hold on, category is getting deleted..."),
-              { id: "delete-data-menu-category" },
-            );
+            toast.loading(translations("Hold on, category is getting deleted..."), {
+              id: "delete-data-menu-category",
+            });
             handleDelete.mutate(category?.id);
             setDialogOpened(false);
           }}
@@ -102,10 +92,7 @@ function CategoryTableToolbar({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => setDialogOpened(true)}
-            >
+            <DropdownMenuItem variant="destructive" onClick={() => setDialogOpened(true)}>
               <IconTrash />
               {translations("Delete")}
             </DropdownMenuItem>
@@ -124,8 +111,7 @@ export function CategoryCard({
   headerOrder,
   currency,
 }: CategoryCardProps) {
-  const [createMenuItemModalOpened, setCreateMenuItemModalOpened] =
-    useState(false);
+  const [createMenuItemModalOpened, setCreateMenuItemModalOpened] = useState(false);
   const open = () => setCreateMenuItemModalOpened(true);
   const close = () => setCreateMenuItemModalOpened(false);
 
@@ -135,16 +121,11 @@ export function CategoryCard({
 
   const [swapOrderCategoryOpened, setSwapOrderCategoryOpened] = useState(false);
   const closeSwapOrderCategory = () => setSwapOrderCategoryOpened(false);
-  const toggleSwapOrderCategory = () =>
-    setSwapOrderCategoryOpened((prev) => !prev);
+  const toggleSwapOrderCategory = () => setSwapOrderCategoryOpened((prev) => !prev);
 
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
 
-  const {
-    isLoading,
-    isError,
-    data: items,
-  } = useItemsByCategoryId(category.id, category.menuId);
+  const { isLoading, isError, data: items } = useItemsByCategoryId(category.id, category.menuId);
   const deleteItemMutation = useDeleteMenuItemMutation(
     category.id,
     category.menuId,
@@ -177,9 +158,7 @@ export function CategoryCard({
     itemsSearch = items ?? [];
   } else {
     itemsSearch =
-      items?.filter((item) =>
-        item?.name?.toLowerCase().includes(searchText?.toLowerCase()),
-      ) ?? [];
+      items?.filter((item) => item?.name?.toLowerCase().includes(searchText?.toLowerCase())) ?? [];
   }
   const handleCreateItem = () => {
     setEditingItem(null);
@@ -200,34 +179,23 @@ export function CategoryCard({
     return (
       <div className="flex flex-col h-full">
         <div className="flex-1 overflow-auto">
-          <DataTable
-            columns={columns}
-            data={[]}
-            isPending
-            DataTableToolbar={dataTableToolbar}
-          />
+          <DataTable columns={columns} data={[]} isPending DataTableToolbar={dataTableToolbar} />
         </div>
       </div>
     );
   }
 
-  const filteredMenuItems = itemsSearch.map(
-    ({ id, name, images, disabled }) => ({
-      id,
-      name,
-      image: typeof images[0] === "string" ? images[0] : "",
-      disabled,
-    }),
-  );
+  const filteredMenuItems = itemsSearch.map(({ id, name, images, disabled }) => ({
+    id,
+    name,
+    image: typeof images[0] === "string" ? images[0] : "",
+    disabled,
+  }));
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto">
-        <DataTable
-          columns={columns}
-          data={itemsSearch}
-          DataTableToolbar={dataTableToolbar}
-        />
+        <DataTable columns={columns} data={itemsSearch} DataTableToolbar={dataTableToolbar} />
       </div>
       <CreateMenuItemModal
         opened={createMenuItemModalOpened}

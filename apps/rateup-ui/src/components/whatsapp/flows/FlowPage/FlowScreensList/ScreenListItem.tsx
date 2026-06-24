@@ -1,13 +1,4 @@
-"use client";
-
-import {
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
-
+import { Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   ActionIcon,
   Badge,
@@ -32,26 +23,20 @@ import {
   IconReplace,
   IconTrash,
 } from "@tabler/icons-react";
-import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { useParams } from "@tanstack/react-router";
 import classNames from "classnames/bind";
+import { useContext, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { useReplaceQuestionsMutation } from "@/backend/surveys/questions/questions.query";
+import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
+import { FlowMaxElementsPerScreen, FlowMaxScreens } from "@/components/whatsapp/whatsappConfig.tsx";
 import type { QuestionType } from "@/types/enums.ts";
 import { WaFlowFormElementType, WaFlowStatus } from "@/types/enums.ts";
 import type { WaFlowFormElement, WaFlowScreen } from "@/types/global";
-import { useReplaceQuestionsMutation } from "@/backend/surveys/questions/questions.query";
-import {
-  usePushToWaMutation,
-  useWaFlowFromDb,
-} from "@/backend/whatsapp/flow/flow.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
-import {
-  FlowMaxElementsPerScreen,
-  FlowMaxScreens,
-} from "@/components/whatsapp/whatsappConfig.tsx";
 import { FlowChoiceQuestions } from "@/utils/constants.ts";
 import {
   getFlowElementText,
@@ -63,9 +48,10 @@ import {
   updateFlowJsonNavigationAndDataPassing,
 } from "@/utils/whatsapp/flow.utils";
 
-import dndClasses from "../../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
 import SortDrawerFlow from "../../sortDrawer/SortDrawerFlow.tsx";
 import { EditFlowContext } from "../EditFlow/EditFlowContext.ts";
+
+import dndClasses from "../../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
 import styles from "./ScreenListIem.module.css";
 
 const cx = classNames.bind(styles);
@@ -118,13 +104,9 @@ function ScreenListItem({
   const elements = getFlowFormElementsFromScreen(
     flowJson?.screens?.[pageNo],
   ) as WaFlowFormElement[];
-  const footerElement = getFlowFooterElementsFromScreen(
-    screen,
-  )?.[0] as WaFlowFormElement;
+  const footerElement = getFlowFooterElementsFromScreen(screen)?.[0] as WaFlowFormElement;
   const { t: translations } = useTranslation();
-  const [screenTitleInputState, setScreenTitleInputState] = useState(
-    screen?.title,
-  );
+  const [screenTitleInputState, setScreenTitleInputState] = useState(screen?.title);
   const [footerLabelInputState, setFooterLabelInputState] = useState(
     footerElement?.label ?? "Next",
   );
@@ -147,9 +129,7 @@ function ScreenListItem({
     updateFlowJson((draft) => {
       const questions = getQuestionsFromScreen(screen, survey, map);
       const qIds = questions?.map((q) => q.id);
-      const updatedQuestions = survey.questions.filter(
-        (q) => !qIds.includes(q.id),
-      );
+      const updatedQuestions = survey.questions.filter((q) => !qIds.includes(q.id));
 
       replaceQuestionsMutation.mutate({
         questions: updatedQuestions,
@@ -163,9 +143,7 @@ function ScreenListItem({
       updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
     });
     handlers.decrement();
-    const feNames = getFlowFormElementsFromScreen(screen, true)?.map(
-      (fe) => fe.name,
-    );
+    const feNames = getFlowFormElementsFromScreen(screen, true)?.map((fe) => fe.name);
     updateMap((draft) => {
       for (const feName of feNames || []) {
         delete draft[feName];
@@ -185,13 +163,9 @@ function ScreenListItem({
 
   function handleAddElementClick() {
     if (!flowEditable) return;
-    const elements = getFlowFormElementsFromScreen(
-      screen,
-    ) as WaFlowFormElement[];
+    const elements = getFlowFormElementsFromScreen(screen) as WaFlowFormElement[];
     if (elements?.length >= FlowMaxElementsPerScreen) {
-      toast.error(
-        `Maximum ${FlowMaxElementsPerScreen} elements allowed per screen`,
-      );
+      toast.error(`Maximum ${FlowMaxElementsPerScreen} elements allowed per screen`);
     } else {
       onAddElementClick(screen.id);
     }
@@ -224,9 +198,7 @@ function ScreenListItem({
     if (!flowEditable) return;
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, screen.id);
-      const footer = formEl.children.filter(
-        (data) => data.type === "Footer",
-      )?.[0];
+      const footer = formEl.children.filter((data) => data.type === "Footer")?.[0];
       footer.label = footerLabelInputState;
     });
   }
@@ -246,9 +218,7 @@ function ScreenListItem({
       }
     }
     if (errorMessages.length > 0) {
-      errorMessages?.map((error) =>
-        toast.error(`Atleast one choice in ${error} question needed`),
-      );
+      errorMessages?.map((error) => toast.error(`Atleast one choice in ${error} question needed`));
     } else {
       pushToWaMutation.mutate(dbFlowId);
     }
@@ -292,10 +262,7 @@ function ScreenListItem({
               confirmLabel={translations("Delete")}
               onConfirm={handleDeleteScreen}
             />
-            <Group
-              gap={5}
-              className={styles["screen-title-input-and-chevrons-container"]}
-            >
+            <Group gap={5} className={styles["screen-title-input-and-chevrons-container"]}>
               <Tooltip label={translations("Previous Screen")}>
                 <ActionIcon
                   onClick={handlers.decrement}
@@ -379,10 +346,7 @@ function ScreenListItem({
                         <IconTrash size={20} />
                       </ActionIcon>
                     </Tooltip>
-                    <Tooltip
-                      label={translations("Swap order of screens")}
-                      openDelay={500}
-                    >
+                    <Tooltip label={translations("Swap order of screens")} openDelay={500}>
                       <ActionIcon onClick={open} variant={"subtle"} size={20}>
                         <IconReplace size={20} />
                       </ActionIcon>
@@ -410,9 +374,7 @@ function ScreenListItem({
                     <IconDeviceFloppy size={22} />
                   </ActionIcon>
                 </Tooltip>
-                <Text c={"dimmed"}>
-                  {`${flowJson.screens.length}/${FlowMaxScreens}`}
-                </Text>
+                <Text c={"dimmed"}>{`${flowJson.screens.length}/${FlowMaxScreens}`}</Text>
               </Group>
             </Group>
             <ScrollAreaAutosize mah={"88%"}>
@@ -431,11 +393,7 @@ function ScreenListItem({
                         <DraggableFormElementCard
                           fe={element}
                           key={element.id}
-                          text={getFlowElementText(
-                            element,
-                            survey.questions,
-                            map,
-                          )}
+                          text={getFlowElementText(element, survey.questions, map)}
                           screen={screen.id}
                           selected={selectedFormElementId === element.id}
                           index={index}
@@ -511,21 +469,16 @@ interface FormElementCardProps {
   dragHandleProps?: any;
   screen: string;
 }
-function DraggableFormElementCard(
-  props: Readonly<Omit<FormElementCardProps, "dragHandleProps">>,
-) {
+function DraggableFormElementCard(props: Readonly<Omit<FormElementCardProps, "dragHandleProps">>) {
   return (
     <Draggable key={props.fe.id} index={props.index} draggableId={props.fe.id}>
-      {(provided, snapshot) => (
+      {(provided, _snapshot) => (
         <Box
           {...provided.draggableProps}
           ref={provided.innerRef}
           style={provided.draggableProps.style as CSSProperties}
         >
-          <FormElementCard
-            {...props}
-            dragHandleProps={provided.dragHandleProps}
-          />
+          <FormElementCard {...props} dragHandleProps={provided.dragHandleProps} />
         </Box>
       )}
     </Draggable>

@@ -60,7 +60,7 @@ function TestimonialCard({ t }: Readonly<{ t: (typeof testimonials)[0] }>) {
       <span className={styles.qbadge}>{t.badge}</span>
       <p className={styles.quote}>{t.quote}</p>
       <div className={styles.stars}>
-        {[...new Array(5)].map((_, i) => (
+        {Array.from({ length: 5 }).map((_, i) => (
           <StarSVG key={i} />
         ))}
       </div>
@@ -73,10 +73,7 @@ function TestimonialCard({ t }: Readonly<{ t: (typeof testimonials)[0] }>) {
           <div className={styles.pr}>{t.role}</div>
         </div>
       </div>
-      <span
-        className={styles.blogo}
-        style={{ background: t.logo.bg, color: t.logo.fg }}
-      >
+      <span className={styles.blogo} style={{ background: t.logo.bg, color: t.logo.fg }}>
         {t.logo.txt}
       </span>
     </div>
@@ -148,9 +145,7 @@ export default function Trusted() {
               const p = Math.min(1, (now - start) / dur);
               const eased = 1 - Math.pow(1 - p, 3);
               const val = target * eased;
-              el.textContent =
-                (dec ? val.toFixed(dec) : Math.round(val).toLocaleString()) +
-                suffix;
+              el.textContent = (dec ? val.toFixed(dec) : Math.round(val).toLocaleString()) + suffix;
               if (p < 1) requestAnimationFrame(tick);
             }
             requestAnimationFrame(tick);
@@ -176,10 +171,7 @@ export default function Trusted() {
       <div className={styles.wrap}>
         <div className={`${styles["sec-head"]} ${styles.reveal}`}>
           <h4>Trusted by Growing Businesses</h4>
-          <p>
-            See how businesses like yours are driving customer loyalty with
-            WhatsApp
-          </p>
+          <p>See how businesses like yours are driving customer loyalty with WhatsApp</p>
         </div>
 
         <div className={`${styles.tcards} ${styles.reveal}`}>

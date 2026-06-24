@@ -1,11 +1,10 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
+import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { WaTemplateDefaultValues } from "@/components/whatsapp/templates/Schema/templateSchema.ts";
 import type { WaMessageAssignStatus } from "@/types/enums.ts";
-import {
-  MessagePlatform,
-  WaTemplateComponentTypeUpperCase,
-} from "@/types/enums.ts";
+import { MessagePlatform, WaTemplateComponentTypeUpperCase } from "@/types/enums.ts";
 import type {
   IgReceiveMessageBody,
   IgSendMessageBody,
@@ -15,8 +14,6 @@ import type {
   WaTemplateFetchBody,
   WaTemplateFetchBodyComponent,
 } from "@/types/global";
-import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import type { WaTemplateDefaultValues } from "@/components/whatsapp/templates/Schema/templateSchema.ts";
 
 import { WaMessageClosedStatus } from "../constants.ts";
 
@@ -29,17 +26,14 @@ export type ParsedWaMessageReturn = {
   template?: WaTemplateFetchBody;
   interactive?: WaSendMessageBody["interactive"];
 };
-export function parseWaMessage(
-  message: Partial<WaGetMessagesBody>,
-): ParsedWaMessageReturn {
+export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMessageReturn {
   const { messageBody, waCreatedAt } = message;
-  let reaction;
+
   let timeStamp: string = waCreatedAt ?? new Date().toLocaleTimeString();
   let messageType = "text";
   let messageContent = "No messages yet" as any;
   let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
-  let interactive: WaSendMessageBody["interactive"] =
-    {} as WaSendMessageBody["interactive"];
+  let interactive: WaSendMessageBody["interactive"] = {} as WaSendMessageBody["interactive"];
   if (
     message.sourcePlatform === MessagePlatform.INSTAGRAM ||
     message.sourcePlatform === MessagePlatform.FACEBOOK
@@ -67,10 +61,7 @@ export function parseWaMessage(
     if (messageBody?.exchangeProcess === "receive") {
       const { receive } = messageBody as { receive: IgReceiveMessageBody };
       if (receive.message) {
-        if (
-          receive.message.comment_id ||
-          receive.message.mid?.startsWith("ig_comment_")
-        ) {
+        if (receive.message.comment_id || receive.message.mid?.startsWith("ig_comment_")) {
           messageType = "ig_comment";
           messageContent = {
             text: receive.message.text,
@@ -163,8 +154,7 @@ export function parseWaMessage(
         case "interactive":
           switch (receive.messages[0].interactive.type) {
             case "button_reply":
-              messageContent =
-                receive.messages[0].interactive.button_reply.title;
+              messageContent = receive.messages[0].interactive.button_reply.title;
               break;
             case "list_reply":
               messageContent = receive.messages[0].interactive.list_reply.title;
@@ -283,9 +273,7 @@ export function validateInboxTemplateSending(
           case "IMAGE":
             const hasDefaultImage = !!defaultValues?.image?.link;
             const hasSelectedImage =
-              !!sendHeaderComponent?.parameters[0]?.[
-                componentC?.format.toLowerCase()
-              ]?.link;
+              !!sendHeaderComponent?.parameters[0]?.[componentC?.format.toLowerCase()]?.link;
             return hasDefaultImage || hasSelectedImage;
           case "VIDEO":
           case "DOCUMENT":
@@ -293,9 +281,7 @@ export function validateInboxTemplateSending(
               (data) => data.type === WaTemplateComponentTypeUpperCase.HEADER,
             )?.example?.header_handle?.[0];
             const hasSelectedFile =
-              !!sendHeaderComponent?.parameters[0]?.[
-                componentC?.format.toLowerCase()
-              ]?.link;
+              !!sendHeaderComponent?.parameters[0]?.[componentC?.format.toLowerCase()]?.link;
             return hasDefaultFile || hasSelectedFile;
           case "LOCATION":
             if (!sendHeaderComponent) return false;

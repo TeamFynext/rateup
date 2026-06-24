@@ -1,22 +1,12 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { IconDots, IconTrash } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { TemplateType, WhatsappSettingsStatus } from "@/types/enums.ts";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import {
-  useDeleteWaTemplateMutation,
-  useWaTemplates,
-} from "@/backend/whatsapp/whatsapp.query";
-import {
-  GenericActionCard,
-  GenericCardGrid,
-} from "@/components/common/generic-card.tsx";
+import { useDeleteWaTemplateMutation, useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
+import { GenericActionCard, GenericCardGrid } from "@/components/common/generic-card.tsx";
 import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
@@ -30,16 +20,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
-import styles from "@/components/WelcomeTour/components/Tour.module.css";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps.jsx";
 import { TemplateFilterSort } from "@/components/whatsapp/templates/FilterAndSort.tsx";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates.tsx";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge.tsx";
+import { TemplateType, WhatsappSettingsStatus } from "@/types/enums.ts";
+
+import styles from "@/components/WelcomeTour/components/Tour.module.css";
 
 export const Route = createFileRoute("/dashboard/whatsapp/templates/")({
   component: Template,
@@ -49,9 +37,7 @@ function formatLabel(value: string) {
   return value
     .toLowerCase()
     .split("_")
-    .map((word) =>
-      word ? `${word.charAt(0).toUpperCase()}${word.slice(1)}` : word,
-    )
+    .map((word) => (word ? `${word.charAt(0).toUpperCase()}${word.slice(1)}` : word))
     .join(" ");
 }
 
@@ -114,23 +100,15 @@ function Template() {
         "";
       const matchSearch = !searchValue || name.includes(searchValue);
       const matchStatus = filters.status === "all" || status === filters.status;
-      const matchCategory =
-        filters.category === "all" || category === filters.category;
+      const matchCategory = filters.category === "all" || category === filters.category;
       const matchAccount =
         selectedAccountId === "all" ||
         !selectedAccountId ||
         templateAccountId === selectedAccountId;
 
-      const matchTemplateType =
-        filters.templateType === "all" || type === filters.templateType;
+      const matchTemplateType = filters.templateType === "all" || type === filters.templateType;
 
-      return (
-        matchSearch &&
-        matchStatus &&
-        matchCategory &&
-        matchTemplateType &&
-        matchAccount
-      );
+      return matchSearch && matchStatus && matchCategory && matchTemplateType && matchAccount;
     });
 
     return sortData(filtered, sortOption) as TemplateListEntry[];
@@ -160,9 +138,7 @@ function Template() {
   const syncAccountIds = useMemo(() => {
     const activeAccountIds =
       data
-        ?.filter(
-          (account) => account.status !== WhatsappSettingsStatus.DISCONNECTED,
-        )
+        ?.filter((account) => account.status !== WhatsappSettingsStatus.DISCONNECTED)
         .map((account) => account.phoneId) ?? [];
 
     if (selectedAccountId === "all") {
@@ -181,17 +157,10 @@ function Template() {
         setFilters={setFilters}
         templateTypeOptions={templateTypeOptions}
       />
-      <AccountSelector
-        value={selectedAccountId}
-        onChange={setSelectedAccountId}
-        withAllOption
-      />
+      <AccountSelector value={selectedAccountId} onChange={setSelectedAccountId} withAllOption />
 
       {data ? (
-        <SyncTemplatesButton
-          disabled={isPending}
-          whatsappSettingsPhoneIds={syncAccountIds}
-        />
+        <SyncTemplatesButton disabled={isPending} whatsappSettingsPhoneIds={syncAccountIds} />
       ) : (
         <Tooltip>
           <TooltipTrigger asChild>
@@ -200,11 +169,7 @@ function Template() {
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p>
-              {translations(
-                "Connect a WhatsApp number in settings to sync Template",
-              )}
-            </p>
+            <p>{translations("Connect a WhatsApp number in settings to sync Template")}</p>
           </TooltipContent>
         </Tooltip>
       )}
@@ -232,9 +197,7 @@ function Template() {
       onRetry={refetch}
       isEmpty={!isPending && !isError && filteredTemplates.length === 0}
       emptyTitle={translations("No templates found")}
-      emptyDescription={translations(
-        "Try changing filters or create a new template.",
-      )}
+      emptyDescription={translations("Try changing filters or create a new template.")}
       rightControls={rightControls}
     >
       <TemplateCardList
@@ -247,19 +210,14 @@ function Template() {
         forDeleteFunctionality
         opened={deleteDialogOpened}
         onClose={() => setDeleteDialogOpened(false)}
-        headerLabel={translations(
-          "Are you sure you want to delete this Template?",
-        )}
+        headerLabel={translations("Are you sure you want to delete this Template?")}
         headerTitle={translations("Delete Template")}
         confirmLabel={translations("Delete")}
         onConfirm={() => {
           if (selectedTemplate) {
-            toast.loading(
-              translations("Hold on, Template is getting Deleted..."),
-              {
-                id: "template-delete",
-              },
-            );
+            toast.loading(translations("Hold on, Template is getting Deleted..."), {
+              id: "template-delete",
+            });
             templateDeleteMutation.mutate(selectedTemplate);
           }
         }}
@@ -357,14 +315,10 @@ function TemplateCard({
   const content = (
     <div className="flex flex-wrap gap-2">
       <Badge variant="default" className="text-xs">
-        {(template?.WhatsappSettings?.phoneDisplayName ||
-          template?.whatsappSettingsPhoneId) ??
+        {(template?.WhatsappSettings?.phoneDisplayName || template?.whatsappSettingsPhoneId) ??
           "No Account"}
       </Badge>
-      <WaTemplateStatusBadge
-        status={template?.data?.category as never}
-        defaultType
-      />
+      <WaTemplateStatusBadge status={template?.data?.category as never} defaultType />
       <div className="min-w-0 flex-1 overflow-hidden">
         <WaTemplateStatusBadge
           status={template?.templateType as never}
@@ -382,9 +336,7 @@ function TemplateCard({
       subtitle={template?.data?.category || "Template"}
       actions={menu}
       content={content}
-      footerLeft={
-        <WaTemplateStatusBadge status={template?.data?.status as never} />
-      }
+      footerLeft={<WaTemplateStatusBadge status={template?.data?.status as never} />}
       createdAt={template.createdAt}
       onClick={onClick}
     />

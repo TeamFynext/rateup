@@ -1,14 +1,10 @@
-"use client";
-
-import { useState } from "react";
-
 import { Center, Flex, Image, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandGoogleDrive } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { IntegratedApps } from "@/types/enums.ts";
 import {
   useDeleteIntegrationMutation,
   useGetGoogleSheetAuthorizationUrl,
@@ -18,25 +14,20 @@ import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { IntegratedApps } from "@/types/enums.ts";
 
 export function GoogleSheet() {
-  const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
-    useDisclosure(false);
+  const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] = useDisclosure(false);
 
-  const { data: googleAccessToken } = useIntegrationByType(
-    IntegratedApps.googlesheet,
-  );
+  const { data: googleAccessToken } = useIntegrationByType(IntegratedApps.googlesheet);
 
-  const deleteAccount = useDeleteIntegrationMutation(
-    IntegratedApps.googlesheet,
-  );
+  const deleteAccount = useDeleteIntegrationMutation(IntegratedApps.googlesheet);
   const { t: translations } = useTranslation();
   const { data: authUrl } = useGetGoogleSheetAuthorizationUrl();
-  const [callbackRoute, setCallBackRoute] = useState<string>(() => {
+  const [, setCallBackRoute] = useState<string>(() => {
     try {
       return (
-        localStorage.getItem("google-callback-route") ??
-        "/dashboard/apps&services/googlesheet"
+        localStorage.getItem("google-callback-route") ?? "/dashboard/apps&services/googlesheet"
       );
     } catch {
       return "/dashboard/apps&services/googlesheet";
@@ -96,9 +87,7 @@ export function GoogleSheet() {
           opened={alertModalOpened}
           onClose={alertModalClose}
           headerTitle={translations("Sign out")}
-          headerLabel={translations(
-            "Are you sure you want to sign out from the synced account?",
-          )}
+          headerLabel={translations("Are you sure you want to sign out from the synced account?")}
           confirmLabel={translations("Yes")}
           onConfirm={handleSignOutGoogleSync}
         />

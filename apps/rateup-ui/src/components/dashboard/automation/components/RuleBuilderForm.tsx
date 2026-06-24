@@ -1,11 +1,8 @@
-import React, { useState } from "react";
-
 import { IconRefresh } from "@tabler/icons-react";
 import {
   ArrowRight,
   CheckCircle,
   ChevronDown,
-  ClipboardList,
   Filter,
   Loader2,
   Play,
@@ -15,11 +12,10 @@ import {
   Trash2Icon,
   Zap,
 } from "lucide-react";
+import React, { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller, useFieldArray, useWatch } from "react-hook-form";
 
-import { ShopifyEvents } from "@/types/enums.ts";
-import { cn } from "@/lib/utils.ts";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
 import {
   useInstagramMediaPosts,
@@ -28,12 +24,7 @@ import {
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Form } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
@@ -44,19 +35,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { cn } from "@/lib/utils.ts";
+import { ShopifyEvents } from "@/types/enums.ts";
 import { shopifyEventData } from "@/utils/constants.ts";
 
 import ActionList from "./ActionList.tsx";
 import ConditionList from "./ConditionList.tsx";
 import RuleOptions from "./RuleOptions.tsx";
 import type { CreateRuleInput, Platform } from "./schema.ts";
-import {
-  getTriggerEventsForPlatform,
-  INSTAGRAM_SCOPE_OPTIONS,
-  PLATFORMS,
-} from "./schema.ts";
+import { getTriggerEventsForPlatform, INSTAGRAM_SCOPE_OPTIONS, PLATFORMS } from "./schema.ts";
 
 interface RuleBuilderFormProps {
   form: UseFormReturn<CreateRuleInput>;
@@ -68,20 +56,14 @@ interface RuleBuilderFormProps {
 
 type Section = "trigger" | "conditions" | "actions" | "options";
 
-const SECTION_META: Record<
-  Section,
-  { icon: React.ElementType; label: string; color: string }
-> = {
+const SECTION_META: Record<Section, { icon: React.ElementType; label: string; color: string }> = {
   trigger: { icon: Zap, label: "When", color: "text-amber-500" },
   conditions: { icon: Filter, label: "If", color: "text-violet-500" },
   actions: { icon: Play, label: "Then", color: "text-emerald-500" },
   options: { icon: Settings, label: "Options", color: "text-sky-500" },
 };
 
-const platformColor: Record<
-  Platform,
-  { pill: string; activePill: string; glow: string }
-> = {
+const platformColor: Record<Platform, { pill: string; activePill: string; glow: string }> = {
   WHATSAPP: {
     pill: "hover:bg-green-100 hover:text-green-700 dark:hover:bg-green-900/40 dark:hover:text-green-300",
     activePill:
@@ -137,26 +119,21 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   const isShopifyTrigger = triggerEvent === "SHOPIFY_EVENT";
   const isInstagramCommentTrigger = triggerEvent === "INSTAGRAM_COMMENT";
   const isInstagramStoryTrigger = triggerEvent === "INSTAGRAM_STORY_MENTION";
-  const isInstagramTrigger =
-    isInstagramCommentTrigger || isInstagramStoryTrigger;
+  const isInstagramTrigger = isInstagramCommentTrigger || isInstagramStoryTrigger;
 
   const shopifyEvent = useWatch({
     control: form.control,
     name: "options.shopifyEvent",
   });
   const shopifyProductIds =
-    useWatch({ control: form.control, name: "options.shopifyProductIds" }) ??
-    [];
+    useWatch({ control: form.control, name: "options.shopifyProductIds" }) ?? [];
   const instagramScope =
-    useWatch({ control: form.control, name: "options.instagramScope" }) ??
-    "ALL";
+    useWatch({ control: form.control, name: "options.instagramScope" }) ?? "ALL";
   const selectedPhoneIds =
     useWatch({ control: form.control, name: "whatsappSettingsPhoneIds" }) ?? [];
 
   const activeIbaId =
-    isInstagramTrigger && instagramScope === "SPECIFIC"
-      ? selectedPhoneIds[0]
-      : undefined;
+    isInstagramTrigger && instagramScope === "SPECIFIC" ? selectedPhoneIds[0] : undefined;
   const { data: mediaPosts, isLoading: mediaLoading } = useInstagramMediaPosts(
     isInstagramCommentTrigger ? activeIbaId : undefined,
   );
@@ -164,9 +141,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
     isInstagramStoryTrigger ? activeIbaId : undefined,
   );
 
-  const mediaItems = isInstagramCommentTrigger
-    ? (mediaPosts ?? [])
-    : (stories ?? []);
+  const mediaItems = isInstagramCommentTrigger ? (mediaPosts ?? []) : (stories ?? []);
   const mediaOptions = mediaItems.map((item: any) => {
     const label = item.caption
       ? `${item.caption.slice(0, 60)}${item.caption.length > 60 ? "…" : ""}`
@@ -174,9 +149,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
     return { value: item.id, label };
   });
 
-  const [productData, setProductData] = useState<
-    { label: string; value: string }[]
-  >([]);
+  const [productData, setProductData] = useState<{ label: string; value: string }[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
 
   const loadShopifyProducts = async () => {
@@ -197,11 +170,8 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   };
 
   // Build live summary
-  const triggerLabel = filteredTriggerEvents.find(
-    (e) => e.value === triggerEvent,
-  )?.label;
-  const conditionCount =
-    groups?.reduce((sum, g) => sum + (g.conditions?.length ?? 0), 0) ?? 0;
+  const triggerLabel = filteredTriggerEvents.find((e) => e.value === triggerEvent)?.label;
+  const conditionCount = groups?.reduce((sum, g) => sum + (g.conditions?.length ?? 0), 0) ?? 0;
   const actionCount = actions?.length ?? 0;
 
   const sections: Section[] = ["trigger", "conditions", "actions", "options"];
@@ -212,17 +182,9 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-5"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
         {/* ── Top bar: Platform + Name ── */}
-        <div
-          className={cn(
-            "rounded-2xl border bg-card p-5 shadow-sm",
-            pColor.glow,
-          )}
-        >
+        <div className={cn("rounded-2xl border bg-card p-5 shadow-sm", pColor.glow)}>
           <FieldGroup>
             {/* Platform pills + Rule name side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 items-end">
@@ -243,13 +205,8 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                             if (field.value === p.value) return;
                             field.onChange(p.value);
                             form.setValue("whatsappSettingsPhoneIds", []);
-                            const firstEvent = getTriggerEventsForPlatform(
-                              p.value,
-                            )[0];
-                            form.setValue(
-                              "triggerEvent",
-                              firstEvent?.value ?? "MESSAGE_RECEIVED",
-                            );
+                            const firstEvent = getTriggerEventsForPlatform(p.value)[0];
+                            form.setValue("triggerEvent", firstEvent?.value ?? "MESSAGE_RECEIVED");
                             form.setValue("groups", [
                               {
                                 operator: "AND",
@@ -299,9 +256,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                       {...field}
                       aria-invalid={fieldState.invalid}
                     />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
@@ -324,9 +279,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                     onChange={field.onChange}
                     platform={platform as any}
                   />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
@@ -346,9 +299,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
               s === "options";
             return (
               <React.Fragment key={s}>
-                {i > 0 && (
-                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-                )}
+                {i > 0 && <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />}
                 <button
                   type="button"
                   onClick={() => toggleSection(s)}
@@ -361,16 +312,9 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                         : "text-muted-foreground hover:bg-muted/50",
                   )}
                 >
-                  <Icon
-                    className={cn(
-                      "w-3.5 h-3.5",
-                      isActive ? "text-background" : meta.color,
-                    )}
-                  />
+                  <Icon className={cn("w-3.5 h-3.5", isActive ? "text-background" : meta.color)} />
                   {meta.label}
-                  {isDone && !isActive && (
-                    <CheckCircle className="w-3 h-3 text-emerald-500" />
-                  )}
+                  {isDone && !isActive && <CheckCircle className="w-3 h-3 text-emerald-500" />}
                 </button>
               </React.Fragment>
             );
@@ -380,35 +324,23 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
         {/* ── Live summary sentence ── */}
         {(triggerLabel || conditionCount > 0 || actionCount > 0) && (
           <div className="rounded-xl bg-muted/40 border border-dashed px-4 py-3 text-sm text-muted-foreground leading-relaxed">
-            <span className="font-medium text-foreground">
-              {ruleName || "Untitled rule"}
-            </span>
+            <span className="font-medium text-foreground">{ruleName || "Untitled rule"}</span>
             {triggerLabel && (
               <>
                 {" "}
-                —{" "}
-                <span className="text-amber-600 dark:text-amber-400 font-medium">
-                  when
-                </span>{" "}
+                — <span className="text-amber-600 dark:text-amber-400 font-medium">when</span>{" "}
                 <span className="italic">{triggerLabel.toLowerCase()}</span>
               </>
             )}
             {conditionCount > 0 && (
               <>
-                ,{" "}
-                <span className="text-violet-600 dark:text-violet-400 font-medium">
-                  if
-                </span>{" "}
-                {conditionCount} condition{conditionCount !== 1 ? "s" : ""}{" "}
-                match
+                , <span className="text-violet-600 dark:text-violet-400 font-medium">if</span>{" "}
+                {conditionCount} condition{conditionCount !== 1 ? "s" : ""} match
               </>
             )}
             {actionCount > 0 && (
               <>
-                ,{" "}
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                  then
-                </span>{" "}
+                , <span className="text-emerald-600 dark:text-emerald-400 font-medium">then</span>{" "}
                 {actionCount} action{actionCount !== 1 ? "s" : ""}
               </>
             )}
@@ -444,9 +376,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-semibold">{meta.label}</span>
                     {s === "trigger" && triggerLabel && !isOpen && (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {triggerLabel}
-                      </span>
+                      <span className="ml-2 text-xs text-muted-foreground">{triggerLabel}</span>
                     )}
                     {s === "conditions" && conditionCount > 0 && !isOpen && (
                       <Badge variant="secondary" className="ml-2 text-[10px]">
@@ -515,9 +445,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                           render={({ fieldState }) => (
                             <Field data-invalid={fieldState.invalid}>
                               <ActionList />
-                              {fieldState.invalid && (
-                                <FieldError errors={[fieldState.error]} />
-                              )}
+                              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                             </Field>
                           )}
                         />
@@ -538,19 +466,10 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
               Rule will be active immediately after saving
             </p>
             <div className="flex gap-2 ml-auto">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={onCancel}
-                className="h-9"
-              >
+              <Button type="button" variant="ghost" onClick={onCancel} className="h-9">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isPending}
-                className="h-9 min-w-32"
-              >
+              <Button type="submit" disabled={isPending} className="h-9 min-w-32">
                 <Save className="w-4 h-4 mr-2" />
                 {buttonText}
               </Button>
@@ -584,10 +503,7 @@ const TriggerPanel: React.FC<{
                 form.setValue("options.shopifyEvent", undefined);
                 form.setValue("options.shopifyProductIds", []);
               }
-              if (
-                value !== "INSTAGRAM_COMMENT" &&
-                value !== "INSTAGRAM_STORY_MENTION"
-              ) {
+              if (value !== "INSTAGRAM_COMMENT" && value !== "INSTAGRAM_STORY_MENTION") {
                 form.setValue("options.instagramScope", "ALL");
                 form.setValue("options.instagramPostIds", []);
               }
@@ -634,10 +550,7 @@ const TriggerPanel: React.FC<{
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel>Shopify Trigger Condition</FieldLabel>
             <Select onValueChange={field.onChange} value={field.value}>
-              <SelectTrigger
-                className="w-full"
-                aria-invalid={fieldState.invalid}
-              >
+              <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
                 <SelectValue placeholder="Select Shopify event" />
               </SelectTrigger>
               <SelectContent>
@@ -739,8 +652,7 @@ const ConditionsPanel: React.FC<{
                       type="button"
                       onClick={() => {
                         field.onChange(opt.value);
-                        if (opt.value === "ALL")
-                          form.setValue("options.instagramPostIds", []);
+                        if (opt.value === "ALL") form.setValue("options.instagramPostIds", []);
                       }}
                       className={cn(
                         "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
@@ -770,10 +682,7 @@ const ConditionsPanel: React.FC<{
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel>
-                          Select{" "}
-                          {isInstagramCommentTrigger
-                            ? "posts / reels"
-                            : "stories"}
+                          Select {isInstagramCommentTrigger ? "posts / reels" : "stories"}
                         </FieldLabel>
                         <MultiSelect
                           options={mediaOptions}
@@ -786,9 +695,7 @@ const ConditionsPanel: React.FC<{
                           }
                           disabled={mediaLoading || storiesLoading}
                         />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
                     )}
                   />
@@ -809,9 +716,7 @@ const ConditionsPanel: React.FC<{
 
         {shopifyEvent !== ShopifyEvents.ABANDONED_CHECKOUTS && (
           <div className="rounded-xl border p-4 bg-muted/20 space-y-3">
-            <span className="text-sm font-semibold block">
-              Product Filter (optional)
-            </span>
+            <span className="text-sm font-semibold block">Product Filter (optional)</span>
             <p className="text-xs text-muted-foreground">
               The rule triggers if the order contains any selected product.
             </p>
@@ -824,10 +729,7 @@ const ConditionsPanel: React.FC<{
                   render={({ field, fieldState }) => (
                     <Field className="flex-1" data-invalid={fieldState.invalid}>
                       <FieldLabel>Product {index + 1}</FieldLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value ?? ""}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value ?? ""}>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select Product" />
                         </SelectTrigger>
@@ -839,9 +741,7 @@ const ConditionsPanel: React.FC<{
                           ))}
                         </SelectContent>
                       </Select>
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -850,9 +750,7 @@ const ConditionsPanel: React.FC<{
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    const next = shopifyProductIds.filter(
-                      (_: any, i: number) => i !== index,
-                    );
+                    const next = shopifyProductIds.filter((_: any, i: number) => i !== index);
                     form.setValue("options.shopifyProductIds", next);
                   }}
                   className="text-muted-foreground hover:text-red-500"
@@ -867,10 +765,7 @@ const ConditionsPanel: React.FC<{
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  form.setValue("options.shopifyProductIds", [
-                    ...shopifyProductIds,
-                    "",
-                  ]);
+                  form.setValue("options.shopifyProductIds", [...shopifyProductIds, ""]);
                   if (!productData.length) loadShopifyProducts();
                 }}
               >
@@ -903,17 +798,13 @@ const ConditionsPanel: React.FC<{
       groupFields.map((group: any, groupIndex: number) => (
         <div key={group.id} className="rounded-xl border p-4 bg-muted/20">
           <div className="flex items-center justify-between mb-3 pb-3 border-b">
-            <span className="text-sm font-semibold">
-              Block {groupIndex + 1}
-            </span>
+            <span className="text-sm font-semibold">Block {groupIndex + 1}</span>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => removeGroup(groupIndex)}
-              disabled={
-                triggerEvent === "MESSAGE_RECEIVED" && groupFields.length === 1
-              }
+              disabled={triggerEvent === "MESSAGE_RECEIVED" && groupFields.length === 1}
               className="h-7 text-muted-foreground hover:text-red-500"
             >
               <Trash2Icon className="w-3.5 h-3.5" />
@@ -921,16 +812,11 @@ const ConditionsPanel: React.FC<{
           </div>
           <ConditionList
             name={`groups.${groupIndex}.conditions`}
-            groupOperator={
-              (form.watch(`groups.${groupIndex}.operator`) as "AND" | "OR") ||
-              "AND"
-            }
+            groupOperator={(form.watch(`groups.${groupIndex}.operator`) as "AND" | "OR") || "AND"}
             onOperatorChange={(operator) =>
               form.setValue(`groups.${groupIndex}.operator`, operator)
             }
-            allowedFields={
-              isInstagramCommentTrigger ? ["MESSAGE_BODY"] : undefined
-            }
+            allowedFields={isInstagramCommentTrigger ? ["MESSAGE_BODY"] : undefined}
           />
         </div>
       ))}
@@ -947,9 +833,7 @@ const ConditionsPanel: React.FC<{
               : "CONTACT_EMAIL";
           appendGroup({
             operator: "AND",
-            conditions: [
-              { field: defaultField, operator: "CONTAINS", value: "" },
-            ],
+            conditions: [{ field: defaultField, operator: "CONTAINS", value: "" }],
           });
         }}
       >

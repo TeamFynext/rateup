@@ -1,17 +1,7 @@
-"use client";
-
-import { useCallback, useRef } from "react";
-
-import {
-  ActionIcon,
-  Button,
-  FileButton,
-  Group,
-  NumberInput,
-  Stack,
-} from "@mantine/core";
+import { ActionIcon, Button, FileButton, Group, NumberInput, Stack } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
+import { useCallback, useRef } from "react";
 
 import { mmImageCropModalClassnames } from "@/utils/constants.ts";
 
@@ -21,6 +11,7 @@ import {
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../SurveyThemeContext.tsx";
+
 import styles from "./stylescomponent/StylesComponent.module.css";
 
 function LogoStyles() {
@@ -101,11 +92,7 @@ function LogoStyles() {
     <Stack
       className={`${styles["style-inputs-container"]} style-inputs-container ${styles["logo-styles"]} logo-style-inputs-container`}
     >
-      <Group
-        wrap="nowrap"
-        gap="lg"
-        className={styles["logo-styles-number-inputs-container"]}
-      >
+      <Group wrap="nowrap" gap="lg" className={styles["logo-styles-number-inputs-container"]}>
         <NumberInput
           min={10}
           max={200}
@@ -129,9 +116,7 @@ function LogoStyles() {
       </Group>
 
       <Stack>
-        <Group
-          className={styles["logo-styles-logo-upload-file-input-container"]}
-        >
+        <Group className={styles["logo-styles-logo-upload-file-input-container"]}>
           <Group>
             <FileButton
               onChange={handleFileInputChange}
@@ -139,12 +124,7 @@ function LogoStyles() {
               resetRef={resetLogoRef}
             >
               {(props) => (
-                <Button
-                  leftSection={<IconUpload size={16} />}
-                  radius="18px"
-                  size="xs"
-                  {...props}
-                >
+                <Button leftSection={<IconUpload size={16} />} radius="18px" size="xs" {...props}>
                   Upload
                 </Button>
               )}

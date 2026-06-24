@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
@@ -66,15 +63,10 @@ function CreateScreenModal({ opened, close }: CreateScreenModalProps) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{translations("Create New Screen")}</DialogTitle>
-          <DialogDescription>
-            {translations("Add a new screen to your flow")}
-          </DialogDescription>
+          <DialogDescription>{translations("Add a new screen to your flow")}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="title"
@@ -82,11 +74,7 @@ function CreateScreenModal({ opened, close }: CreateScreenModalProps) {
                 <FormItem>
                   <FormLabel>{translations("Screen Title")}</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder={translations("Enter screen title")}
-                      {...field}
-                      autoFocus
-                    />
+                    <Input placeholder={translations("Enter screen title")} {...field} autoFocus />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

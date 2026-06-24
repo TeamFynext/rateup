@@ -47,11 +47,7 @@ export async function getWaFlowMetrics(flowId: string) {
   return res.data;
 }
 
-export async function importFlows(
-  waFlowIds: string[],
-  teamIds: string[],
-  mapData: object,
-) {
+export async function importFlows(waFlowIds: string[], teamIds: string[], mapData: object) {
   const res = await axiosClient.post(`${BASE}/import`, {
     waFlowIds,
     teamIds,
@@ -60,10 +56,7 @@ export async function importFlows(
   return res.data;
 }
 export async function cloneAndDeprecateFlows(flowId: string) {
-  const res = await axiosClient.put(
-    `${BASE}/clone-and-deprecate/${flowId}`,
-    {},
-  );
+  const res = await axiosClient.put(`${BASE}/clone-and-deprecate/${flowId}`, {});
   return res.data;
 }
 
@@ -85,10 +78,7 @@ export type createFlowInput = {
 export async function createFlow(data: createFlowInput) {
   return (await axiosClient.post(`${BASE}`, data))?.data;
 }
-export async function updateFlow(
-  dbFlowId: string,
-  data: Partial<Omit<DbFlow, "id">>,
-) {
+export async function updateFlow(dbFlowId: string, data: Partial<Omit<DbFlow, "id">>) {
   try {
     toast.loading(`Hold on, flow is getting Updated...`, {
       id: "flow-update",
@@ -137,9 +127,7 @@ export async function updateFlowMetaData(
     toast.loading(`Hold on, flow is getting Updated...`, {
       id: "flow-meta-data-update",
     });
-    return (
-      await axiosClient.put(`${BASE}/update-flow-metadata/${dbFlowId}`, data)
-    )?.data;
+    return (await axiosClient.put(`${BASE}/update-flow-metadata/${dbFlowId}`, data))?.data;
   } catch (error) {
     console.log(error, "error");
     return error?.response?.data;

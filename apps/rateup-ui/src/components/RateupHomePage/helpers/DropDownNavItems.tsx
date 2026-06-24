@@ -1,11 +1,7 @@
-"use client";
-
-import * as React from "react";
-
 import { Link } from "@tanstack/react-router";
 import { Inbox, MessageCircle, Monitor } from "lucide-react";
+import * as React from "react";
 
-import { cn } from "@/lib/utils";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -13,8 +9,8 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
 
 const components: {
   icon: React.ReactNode;
@@ -51,8 +47,7 @@ export default function DropDownNavItems({
   dropdownStyle,
 }: Readonly<DropDownNavItemsProps>) {
   const hasColor =
-    (dropdownStyle && /\btext-\S+/.test(dropdownStyle)) ||
-    (style && /\btext-\S+/.test(style));
+    (dropdownStyle && /\btext-\S+/.test(dropdownStyle)) || (style && /\btext-\S+/.test(style));
   const defaultColor = hasColor ? "" : "text-white";
 
   return (
@@ -107,9 +102,7 @@ function ListItem({
             <div>{icon}</div>
             <div className="flex flex-col gap-1 text-sm">
               <div className="leading-none font-medium">{title}</div>
-              <div className="line-clamp-2 text-muted-foreground">
-                {children}
-              </div>
+              <div className="line-clamp-2 text-muted-foreground">{children}</div>
             </div>
           </div>
         </Link>

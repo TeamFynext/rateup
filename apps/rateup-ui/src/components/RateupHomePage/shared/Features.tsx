@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 
 import { RateupStar } from "@/components/integrations/logos";
+
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 interface FeatureCardProps {
@@ -13,15 +14,7 @@ interface FeatureCardProps {
   delay?: string;
 }
 
-function FeatureCard({
-  viz,
-  icon,
-  iconClass,
-  title,
-  desc,
-  tags,
-  delay,
-}: FeatureCardProps) {
+function FeatureCard({ viz, icon, iconClass, title, desc, tags, delay }: FeatureCardProps) {
   return (
     <div className={`${styles.feat} ${styles.reveal}`} data-d={delay}>
       <div className={styles.viz}>{viz}</div>
@@ -80,13 +73,12 @@ export default function Features() {
           </span>
 
           <h2 className={styles.reveal} data-d="1">
-            Everything You Need In{" "}
-            <span className={styles["grad-cyan"]}>One Place</span>
+            Everything You Need In <span className={styles["grad-cyan"]}>One Place</span>
           </h2>
 
           <p className={styles.reveal} data-d="2">
-            Ten tools that used to live in ten tabs — unified into a single,
-            automated engagement engine.
+            Ten tools that used to live in ten tabs — unified into a single, automated engagement
+            engine.
           </p>
         </div>
 
@@ -130,10 +122,7 @@ export default function Features() {
                     />
                   </div>
 
-                  <span
-                    className={styles.mdot}
-                    style={{ background: "var(--cyan)" }}
-                  />
+                  <span className={styles.mdot} style={{ background: "var(--cyan)" }} />
                 </div>
 
                 <div className={styles["ic-item"]}>
@@ -158,13 +147,7 @@ export default function Features() {
                     >
                       <rect x="2" y="2" width="20" height="20" rx="5.5" />
                       <circle cx="12" cy="12" r="4.2" />
-                      <circle
-                        cx="17.6"
-                        cy="6.4"
-                        r="1.1"
-                        fill="#fff"
-                        stroke="none"
-                      />
+                      <circle cx="17.6" cy="6.4" r="1.1" fill="#fff" stroke="none" />
                     </svg>
                   </span>
 
@@ -297,12 +280,7 @@ export default function Features() {
             }
             iconClass={styles["ic-warm"]}
             icon={
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 1.8l2.95 5.98 6.6.96-4.77 4.65 1.13 6.57L12 16.84 6.09 19.96l1.13-6.57L2.45 8.74l6.6-.96L12 1.8z" />
               </svg>
             }
@@ -405,15 +383,11 @@ export default function Features() {
                     </span>
                   </div>
 
-                  <div
-                    className={styles["loy-progress"]}
-                    style={{ marginTop: 9 }}
-                  >
+                  <div className={styles["loy-progress"]} style={{ marginTop: 9 }}>
                     <span
                       style={{
                         width: "92%",
-                        background:
-                          "linear-gradient(90deg,var(--cyan-2),var(--cyan))",
+                        background: "linear-gradient(90deg,var(--cyan-2),var(--cyan))",
                       }}
                     />
                   </div>
@@ -526,10 +500,7 @@ export default function Features() {
                       background: "rgba(47,163,255,0.1)",
                     }}
                   >
-                    <span
-                      className={styles.mdot}
-                      style={{ background: "var(--cyan)" }}
-                    />
+                    <span className={styles.mdot} style={{ background: "var(--cyan)" }} />
 
                     <div className={styles.mline} style={{ width: "62%" }} />
                   </div>
@@ -545,10 +516,7 @@ export default function Features() {
                       borderRadius: 9,
                     }}
                   >
-                    <span
-                      className={styles.mdot}
-                      style={{ background: "var(--warm-400)" }}
-                    />
+                    <span className={styles.mdot} style={{ background: "var(--warm-400)" }} />
 
                     <div className={styles.mline} style={{ width: "52%" }} />
                   </div>
@@ -672,15 +640,11 @@ export default function Features() {
                     </span>
                   </div>
 
-                  <div
-                    className={styles["loy-progress"]}
-                    style={{ marginTop: 10 }}
-                  >
+                  <div className={styles["loy-progress"]} style={{ marginTop: 10 }}>
                     <span
                       style={{
                         width: "72%",
-                        background:
-                          "linear-gradient(90deg,var(--cyan-2),var(--cyan))",
+                        background: "linear-gradient(90deg,var(--cyan-2),var(--cyan))",
                       }}
                     />
                   </div>

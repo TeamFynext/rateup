@@ -1,22 +1,13 @@
-import { useState } from "react";
-
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { Calendar, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 
 import { PRIORITY_CONFIG } from "./card.tsx";
-import type {
-  Board as BoardType,
-  Card,
-  Column as ColumnType,
-} from "./types.ts";
+import type { Board as BoardType, Card, Column as ColumnType } from "./types.ts";
 
 export function TicketListView({
   board,
@@ -58,9 +49,7 @@ export function TicketListView({
       }
     }
     if (assigneeFilter) {
-      const isAssigned = card.assignees?.some(
-        (a) => a.assigneeId === assigneeFilter,
-      );
+      const isAssigned = card.assignees?.some((a) => a.assigneeId === assigneeFilter);
       if (!isAssigned) matches = false;
     }
     return matches;
@@ -86,17 +75,11 @@ export function TicketListView({
       const pB = b.card.priority?.toLowerCase() || "low";
       cmp = (PRIORITY_ORDER[pA] ?? 3) - (PRIORITY_ORDER[pB] ?? 3);
     } else if (sortBy === "status") {
-      const colOrder = Object.fromEntries(
-        board.ticketColumns.map((c, i) => [c.id, i]),
-      );
+      const colOrder = Object.fromEntries(board.ticketColumns.map((c, i) => [c.id, i]));
       cmp = (colOrder[a.col.id] ?? 0) - (colOrder[b.col.id] ?? 0);
     } else if (sortBy === "due") {
-      const da = a.card.deadline
-        ? new Date(a.card.deadline).getTime()
-        : 9999999999999;
-      const db = b.card.deadline
-        ? new Date(b.card.deadline).getTime()
-        : 9999999999999;
+      const da = a.card.deadline ? new Date(a.card.deadline).getTime() : 9999999999999;
+      const db = b.card.deadline ? new Date(b.card.deadline).getTime() : 9999999999999;
       cmp = da - db;
     } else if (sortBy === "createdAt") {
       const da = a.card.createdAt ? new Date(a.card.createdAt).getTime() : 0;
@@ -138,14 +121,10 @@ export function TicketListView({
           <span
             className="inline-flex transition-transform duration-150"
             style={{
-              transform:
-                sortBy === id && sortDir === "asc" ? "rotate(180deg)" : "none",
+              transform: sortBy === id && sortDir === "asc" ? "rotate(180deg)" : "none",
             }}
           >
-            <ChevronDown
-              size={11}
-              className={sortBy === id ? "text-primary" : "text-gray-300"}
-            />
+            <ChevronDown size={11} className={sortBy === id ? "text-primary" : "text-gray-300"} />
           </span>
         )}
       </span>
@@ -161,29 +140,16 @@ export function TicketListView({
             <Th id="title" label={t("Title")} />
             <Th id="priority" label={t("Priority")} width={110} />
             <Th id="status" label={t("Status")} width={155} />
-            <Th
-              id="assignee"
-              label={t("Assignee")}
-              width={148}
-              sortable={false}
-            />
-            <Th
-              id="customer"
-              label={t("Customer")}
-              width={165}
-              sortable={false}
-            />
+            <Th id="assignee" label={t("Assignee")} width={148} sortable={false} />
+            <Th id="customer" label={t("Customer")} width={165} sortable={false} />
             <Th id="due" label={t("Due")} width={108} />
           </tr>
         </thead>
         <tbody>
           {sorted.map(({ card, col }) => {
-            const isOverdue = !!(
-              card.deadline && new Date(card.deadline) < new Date()
-            );
+            const isOverdue = !!(card.deadline && new Date(card.deadline) < new Date());
             const pConf =
-              PRIORITY_CONFIG[card.priority?.toLowerCase() || "low"] ||
-              PRIORITY_CONFIG.low;
+              PRIORITY_CONFIG[card.priority?.toLowerCase() || "low"] || PRIORITY_CONFIG.low;
 
             // Extract customer
             let customerName = null;
@@ -209,18 +175,13 @@ export function TicketListView({
                 customerName={customerName}
                 channel={channel}
                 boardMembers={boardMembers}
-                onClick={() =>
-                  navigate({ to: `/dashboard/tickets/${card.id}` })
-                }
+                onClick={() => navigate({ to: `/dashboard/tickets/${card.id}` })}
               />
             );
           })}
           {sorted.length === 0 && (
             <tr>
-              <td
-                colSpan={7}
-                className="p-16 text-center font-body text-sm text-muted-foreground"
-              >
+              <td colSpan={7} className="p-16 text-center font-body text-sm text-muted-foreground">
                 {t("No tickets match your filters")}
               </td>
             </tr>
@@ -310,10 +271,7 @@ function ListRow({
             border: `1px solid ${pConf.color}20`,
           }}
         >
-          <span
-            className="w-1.5 h-1.5 rounded-full shrink-0"
-            style={{ background: pConf.dot }}
-          />
+          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: pConf.dot }} />
           {t(pConf.label)}
         </div>
       </td>
@@ -326,10 +284,7 @@ function ListRow({
             color: colColor,
           }}
         >
-          <span
-            className="w-1.5 h-1.5 rounded-full shrink-0"
-            style={{ background: colColor }}
-          />
+          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: colColor }} />
           {col.title}
         </span>
       </td>
@@ -337,9 +292,7 @@ function ListRow({
         {card.assignees && card.assignees.length > 0 ? (
           <div className="flex -space-x-2">
             {card.assignees.map((assigneeObj) => {
-              const member = boardMembers.find(
-                (m) => m.id === assigneeObj.assigneeId,
-              );
+              const member = boardMembers.find((m) => m.id === assigneeObj.assigneeId);
               if (!member) return null;
               const uColor = getUserColor(member.id);
               return (
@@ -359,9 +312,7 @@ function ListRow({
             })}
           </div>
         ) : (
-          <span className="font-body text-xs text-muted-foreground italic">
-            {t("Unassigned")}
-          </span>
+          <span className="font-body text-xs text-muted-foreground italic">{t("Unassigned")}</span>
         )}
       </td>
       <td className="py-[11px] px-3.5">

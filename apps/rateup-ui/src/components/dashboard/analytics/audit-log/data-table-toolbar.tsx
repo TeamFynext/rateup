@@ -1,5 +1,3 @@
-"use client";
-
 import type { Table } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
 
@@ -10,9 +8,7 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
 
-export function DataTableToolbar<TData>({
-  table,
-}: Readonly<DataTableToolbarProps<TData>>) {
+export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
   const { t: translations } = useTranslation();
   return (
     <div className="flex items-center justify-between">
@@ -22,14 +18,10 @@ export function DataTableToolbar<TData>({
             <div className="flex items-center gap-4">
               <div className="flex flex-col items-start justify-center">
                 <div className="flex items-center gap-1">
-                  <h4 className="text-xl tracking-tight">
-                    {translations("Team Activity log")}
-                  </h4>
+                  <h4 className="text-xl tracking-tight">{translations("Team Activity log")}</h4>
                   <RefreshButton queryKeys={["userAuditLogs"]} />
                 </div>
-                <h6>
-                  {translations("Recent actions performed by team members")}
-                </h6>
+                <h6>{translations("Recent actions performed by team members")}</h6>
               </div>
             </div>
           </div>

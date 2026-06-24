@@ -1,15 +1,11 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { ActionIcon, Group, Skeleton, Stack, Title } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { IconTrash } from "@tabler/icons-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
-import { IntegratedApps } from "@/types/enums.ts";
 import {
   useCreateIntegrationMutation,
   useDeleteIntegrationMutation,
@@ -22,21 +18,14 @@ import {
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { IntegratedApps } from "@/types/enums.ts";
 
 export function WpAmelia() {
-  const { data, isPending, isError } = useIntegrationByType(
-    IntegratedApps.amelia,
-  );
-  const createIntegrationMutation = useCreateIntegrationMutation(
-    IntegratedApps.amelia,
-  );
+  const { data, isPending } = useIntegrationByType(IntegratedApps.amelia);
+  const createIntegrationMutation = useCreateIntegrationMutation(IntegratedApps.amelia);
 
-  const updateIntegrationMutation = useUpdateIntegrationMutation(
-    IntegratedApps.amelia,
-  );
-  const deleteIntegrationMutation = useDeleteIntegrationMutation(
-    IntegratedApps.amelia,
-  );
+  const updateIntegrationMutation = useUpdateIntegrationMutation(IntegratedApps.amelia);
+  const deleteIntegrationMutation = useDeleteIntegrationMutation(IntegratedApps.amelia);
   const { t: translations } = useTranslation();
   const schema = z.object({
     apiKey: z.string(),

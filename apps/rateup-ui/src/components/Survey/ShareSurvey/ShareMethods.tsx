@@ -1,5 +1,3 @@
-"use client";
-
 import { ActionIcon, Group, Image, Stack, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
@@ -15,13 +13,8 @@ interface ShareMethodsProps {
   disableShare: boolean;
 }
 /** Shows Different ways to share. (email, whatsapp, facebook) */
-export function ShareMethods({
-  disableShare,
-  shareUrl,
-  survey,
-}: ShareMethodsProps) {
-  const [openedIframe, { open: openIframe, close: closeIframe }] =
-    useDisclosure(false);
+export function ShareMethods({ disableShare, shareUrl, survey }: ShareMethodsProps) {
+  const [openedIframe, { open: openIframe, close: closeIframe }] = useDisclosure(false);
 
   function shareButtonAction(btn: string) {
     switch (btn) {

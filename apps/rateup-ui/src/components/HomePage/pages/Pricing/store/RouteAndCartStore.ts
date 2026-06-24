@@ -40,8 +40,7 @@ const initialState = {
 
 export const useRouteAndCartStore = create<Store & Actions>((set) => ({
   ...initialState,
-  updateRouteAndCart: (newRoute, cart) =>
-    set(() => ({ route: newRoute, cart: cart })),
+  updateRouteAndCart: (newRoute, cart) => set(() => ({ route: newRoute, cart: cart })),
   reset: () => {
     set(initialState);
   },
@@ -60,8 +59,7 @@ const initalImageData = {
 };
 export const useImageStore = create<ImageStore & ImageActions>((set) => ({
   ...initalImageData,
-  updateImageArray: (image) =>
-    set((state) => ({ imageToDelete: [...state.imageToDelete, image] })),
+  updateImageArray: (image) => set((state) => ({ imageToDelete: [...state.imageToDelete, image] })),
   resetImage: () => set(initalImageData),
 }));
 
@@ -73,16 +71,3 @@ type VisibleColumnActions = {
   updateVisibleColumnArray: (VisibleColumn: string[]) => void;
   resetVisibleColumn: () => void;
 };
-const initalVisibleColumnData = {
-  visibleColumn: [],
-};
-const useVisibleColumnStore = create<VisibleColumnStore & VisibleColumnActions>(
-  (set) => ({
-    ...initalVisibleColumnData,
-    updateVisibleColumnArray: (VisibleColumn) =>
-      set((state) => ({
-        visibleColumn: VisibleColumn,
-      })),
-    resetVisibleColumn: () => set(initalVisibleColumnData),
-  }),
-);

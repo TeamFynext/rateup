@@ -1,9 +1,6 @@
-"use client";
-
-import { useState } from "react";
-
 import { ActionIcon, Badge, Group, Loader, Tooltip } from "@mantine/core";
 import { IconPencil, IconTrash, IconTrashX } from "@tabler/icons-react";
+import { useState } from "react";
 
 import { useDeleteThemeMutation } from "@/backend/surveyTheme/surveyTheme.query";
 
@@ -65,15 +62,11 @@ function RenderOption({
           </ActionIcon>
         )}
         {!isSurveyThemeActive && isDeletingTheme && (
-          <ActionIcon
-            className={`${styles["render-option-btn"]} ${styles["loader-btn"]}`}
-          >
+          <ActionIcon className={`${styles["render-option-btn"]} ${styles["loader-btn"]}`}>
             <Loader size={"1rem"} className={styles["delete-loader"]} />
           </ActionIcon>
         )}
-        {isSurveyThemeActive && (
-          <Badge className={styles["active-badge"]}>Active</Badge>
-        )}
+        {isSurveyThemeActive && <Badge className={styles["active-badge"]}>Active</Badge>}
       </Group>
     </Group>
   );

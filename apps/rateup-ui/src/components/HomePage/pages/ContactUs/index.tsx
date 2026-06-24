@@ -16,10 +16,7 @@ function ContactUs() {
             <br />
             <span className="text-blue-600">
               E-mail:{" "}
-              <a
-                href="mailto:hello@rateup.app"
-                className="underline hover:text-blue-800"
-              >
+              <a href="mailto:hello@rateup.app" className="underline hover:text-blue-800">
                 hello@rateup.app
               </a>
             </span>
@@ -28,18 +25,13 @@ function ContactUs() {
 
         {/* Germany Contact */}
         <div className="bg-white shadow-lg rounded-2xl border border-gray-100 p-6 hover:shadow-xl transition-shadow duration-300">
-          <h2 className="text-2xl font-semibold mb-3 text-[#1c518e]">
-            Germany
-          </h2>
+          <h2 className="text-2xl font-semibold mb-3 text-[#1c518e]">Germany</h2>
           <p className="text-base leading-relaxed">
             <strong>Duesseldorf, Germany</strong>
             <br />
             <span className="text-blue-600">
               E-mail:{" "}
-              <a
-                href="mailto:hello@rateup.app"
-                className="underline hover:text-blue-800"
-              >
+              <a href="mailto:hello@rateup.app" className="underline hover:text-blue-800">
                 hello@rateup.app
               </a>
             </span>

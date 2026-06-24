@@ -14,10 +14,7 @@ const ReviewAiHero = () => {
           <div className="animate-fade-in">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-gray-900 leading-tight">
               Turn Happy Customers into{" "}
-              <span className="text-[#009987] font-bold">
-                5-Star Google Reviews{" "}
-              </span>{" "}
-              with AI
+              <span className="text-[#009987] font-bold">5-Star Google Reviews </span> with AI
             </h1>
             <p className="pt-6 text-md sm:text-xl text-[#374151] max-w-2xl">
               {

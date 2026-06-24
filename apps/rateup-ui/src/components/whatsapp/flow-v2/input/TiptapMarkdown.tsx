@@ -1,22 +1,13 @@
-"use client";
-
-import { useEffect, useRef } from "react";
-
 import { Group } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
-import {
-  Table,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@tiptap/extension-table";
+import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
 import { CharacterCount } from "@tiptap/extensions";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { useEffect, useRef } from "react";
 import { Markdown } from "tiptap-markdown";
-
 // import InsertBase64Image from "@/components/RichTextEditor/InsertImage/insertBase64Image";
 // import InsertTable from "@/components/RichTextEditor/InsertTable/index.tsx";
 
@@ -124,7 +115,7 @@ function TiptapMarkdown({ value, onChange, label, max, disabled }) {
           </RichTextEditor.ControlsGroup>
           <RichTextEditor.ControlsGroup>
             {/* Todo: add this again when richtext can be included with other component */}
-            {/* <InsertBase64Image /> 
+            {/* <InsertBase64Image />
             <InsertTable /> */}
           </RichTextEditor.ControlsGroup>
         </Group>

@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import { ActionIcon, Button, Group, Popover, Tooltip } from "@mantine/core";
 import {
   IconBrandFacebookFilled,
@@ -18,6 +14,7 @@ import {
   TwitterShareButton,
   WhatsappShareButton,
 } from "next-share";
+import { useState } from "react";
 
 export default function SharePopover() {
   const url = typeof window !== "undefined" ? window.location.href : "";
@@ -33,12 +30,7 @@ export default function SharePopover() {
   return (
     <Popover opened={opened} onChange={setOpened} position="right">
       <Popover.Target>
-        <ActionIcon
-          variant="light"
-          radius="xl"
-          size="lg"
-          onClick={() => setOpened((o) => !o)}
-        >
+        <ActionIcon variant="light" radius="xl" size="lg" onClick={() => setOpened((o) => !o)}>
           <IconShare size={18} />
         </ActionIcon>
       </Popover.Target>
@@ -49,11 +41,7 @@ export default function SharePopover() {
             <Button
               variant="subtle"
               leftSection={
-                copied ? (
-                  <IconCheck size={18} className="text-green-600" />
-                ) : (
-                  <IconCopy size={18} />
-                )
+                copied ? <IconCheck size={18} className="text-green-600" /> : <IconCopy size={18} />
               }
               onClick={handleCopy}
               fullWidth
@@ -65,49 +53,25 @@ export default function SharePopover() {
 
         <Group gap="sm" grow>
           <FacebookShareButton url={url}>
-            <ActionIcon
-              component="div"
-              radius="xl"
-              color="blue"
-              variant="filled"
-              size="lg"
-            >
+            <ActionIcon component="div" radius="xl" color="blue" variant="filled" size="lg">
               <IconBrandFacebookFilled size={18} />
             </ActionIcon>
           </FacebookShareButton>
 
           <WhatsappShareButton url={url}>
-            <ActionIcon
-              component="div"
-              radius="xl"
-              color="green"
-              variant="filled"
-              size="lg"
-            >
+            <ActionIcon component="div" radius="xl" color="green" variant="filled" size="lg">
               <IconBrandWhatsappFilled size={18} />
             </ActionIcon>
           </WhatsappShareButton>
 
           <TwitterShareButton url={url}>
-            <ActionIcon
-              component="div"
-              radius="xl"
-              color="black"
-              variant="filled"
-              size="lg"
-            >
+            <ActionIcon component="div" radius="xl" color="black" variant="filled" size="lg">
               <IconBrandXFilled size={18} />
             </ActionIcon>
           </TwitterShareButton>
 
           <LinkedinShareButton url={url}>
-            <ActionIcon
-              component="div"
-              radius="xl"
-              color="blue"
-              variant="filled"
-              size="lg"
-            >
+            <ActionIcon component="div" radius="xl" color="blue" variant="filled" size="lg">
               <IconBrandLinkedinFilled size={18} />
             </ActionIcon>
           </LinkedinShareButton>

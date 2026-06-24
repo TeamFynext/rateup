@@ -1,6 +1,5 @@
-import React from "react";
-
 import { Box, Flex, Stack, Text } from "@mantine/core";
+import React from "react";
 
 import PlanCard from "../Card/PlanCard.tsx";
 import { PlanCardWidth } from "../Utils/constants.ts";
@@ -16,10 +15,7 @@ export const SurveySection = ({
     ?.filter((item) => {
       const name = item?.name;
       return (
-        name &&
-        !name.includes("Menu") &&
-        !name.includes("WhatsApp") &&
-        !name.includes("Custom")
+        name && !name.includes("Menu") && !name.includes("WhatsApp") && !name.includes("Custom")
       );
     })
     ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
@@ -33,16 +29,12 @@ export const SurveySection = ({
     },
   });
 
-  const inversePeriod =
-    surveyPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
+  const inversePeriod = surveyPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
   if (freePlan?.length > 0) {
     freePlan[0].paymentPlan = {
       amount: 0,
       currency: "",
-      period:
-        surveyPlan?.[0]?.paymentPlan?.period === "yearly"
-          ? "yearly"
-          : "monthly",
+      period: surveyPlan?.[0]?.paymentPlan?.period === "yearly" ? "yearly" : "monthly",
     };
   }
   const surveyPlans = [...freePlan, ...surveyPlan];
@@ -51,8 +43,7 @@ export const SurveySection = ({
     <Flex justify={"center"} gap={"xl"} wrap={"wrap"} my={"lg"}>
       {surveyPlans?.map((data, index) => {
         let isPopular = false;
-        isPopular =
-          data?.displayName && data?.displayName.toLowerCase().includes("team");
+        isPopular = data?.displayName && data?.displayName.toLowerCase().includes("team");
 
         return (
           <Stack align="center" gap={0} pos={"relative"} key={data?.id}>

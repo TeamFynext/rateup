@@ -1,23 +1,18 @@
-"use client";
-
-import React from "react";
-
 import { Image } from "@unpic/react";
 import { TicketCheck } from "lucide-react";
 import { motion } from "motion/react";
+import React from "react";
 
 import { imagesPath } from "@/utils/constants.ts";
 
 const features = [
   {
     title: "WhatsApp-First Approach",
-    description:
-      "Meet your employees where they are to drive incredibly high participation rates.",
+    description: "Meet your employees where they are to drive incredibly high participation rates.",
   },
   {
     title: "NPS & CSAT Tracking",
-    description:
-      "Effortlessly measure key metrics to benchmark and track morale over time.",
+    description: "Effortlessly measure key metrics to benchmark and track morale over time.",
   },
   {
     title: "Unified Multi-Branch View",
@@ -53,9 +48,7 @@ export const InboxFeatures = () => {
             </h3>
             <p className="pt-4 text-lg text-gray-700 leading-relaxed max-w-xl">
               Everything you need to transform your{" "}
-              <span className="font-semibold text-[#1c518e]">
-                workplace culture,
-              </span>
+              <span className="font-semibold text-[#1c518e]">workplace culture,</span>
               all in one platform.
             </p>
 
@@ -73,9 +66,7 @@ export const InboxFeatures = () => {
                   >
                     <TicketCheck color="#006156" />
                     <div>
-                      <p className="font-semibold text-[#1c518e] text-lg">
-                        {item.title}
-                      </p>
+                      <p className="font-semibold text-[#1c518e] text-lg">{item.title}</p>
                       <p className="text-gray-700">{item.description}</p>
                     </div>
                   </motion.li>

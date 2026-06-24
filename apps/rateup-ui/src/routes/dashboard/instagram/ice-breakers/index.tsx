@@ -1,9 +1,6 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   useDeleteInstagramIceBreakersMutation,
@@ -89,9 +86,7 @@ function IceBreakerEditor({ waSettingId }: Readonly<{ waSettingId: string }>) {
     <Card className="border-border/70">
       <CardHeader className="border-b">
         <CardTitle className="text-base">Ice breaker questions</CardTitle>
-        <CardDescription>
-          Meta allows a maximum of four ice breakers for Instagram.
-        </CardDescription>
+        <CardDescription>Meta allows a maximum of four ice breakers for Instagram.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         {items.map((item, index) => (
@@ -118,9 +113,7 @@ function IceBreakerEditor({ waSettingId }: Readonly<{ waSettingId: string }>) {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() =>
-                  setItems(items.filter((_, current) => current !== index))
-                }
+                onClick={() => setItems(items.filter((_, current) => current !== index))}
               >
                 <IconTrash className="mr-2 h-4 w-4" />
                 Remove
@@ -144,11 +137,7 @@ function IceBreakerEditor({ waSettingId }: Readonly<{ waSettingId: string }>) {
             <IconPlus className="mr-2 h-4 w-4" />
             Add question
           </Button>
-          <Button
-            type="button"
-            onClick={save}
-            disabled={!canSave || setMutation.isPending}
-          >
+          <Button type="button" onClick={save} disabled={!canSave || setMutation.isPending}>
             Save to DB
           </Button>
           <Button

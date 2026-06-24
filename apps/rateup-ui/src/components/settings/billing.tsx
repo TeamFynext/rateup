@@ -1,5 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
-
 import { useNavigate } from "@tanstack/react-router";
 import {
   AlertCircle,
@@ -23,6 +21,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -47,7 +46,7 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
 export function UsageCard({ subscription }) {
-  const { data: stats, refetch, isRefetching, isLoading } = useUsageStats();
+  const { data: stats, refetch, isRefetching } = useUsageStats();
 
   return (
     <Card className="p-6 ">
@@ -71,8 +70,8 @@ export function UsageCard({ subscription }) {
 
 export function OrderHistory({ orders, refresh, isRefetching }) {
   const { t: translations } = useTranslation();
-  const [selectedOrder, setSelectedOrder] = useState([]);
-  const [opened, setOpened] = useState(false);
+  const [, setSelectedOrder] = useState([]);
+  const [, setOpened] = useState(false);
   return (
     <>
       <Card id="order-history" className="p-6 ">
@@ -99,11 +98,7 @@ export function OrderHistory({ orders, refresh, isRefetching }) {
         ) : (
           <div className="space-y-3">
             {orders
-              ?.sort(
-                (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime(),
-              )
+              ?.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
               .map((item, index) => (
                 <div
                   key={index}
@@ -111,13 +106,8 @@ export function OrderHistory({ orders, refresh, isRefetching }) {
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-center">
-                      <p className="text-sm">
-                        {" "}
-                        {formatIsoDateString(item?.createdAt)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {item?.id}
-                      </p>
+                      <p className="text-sm"> {formatIsoDateString(item?.createdAt)}</p>
+                      <p className="text-xs text-muted-foreground">{item?.id}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
@@ -222,23 +212,20 @@ export const Billing = ({
   const navigate = useNavigate();
 
   const handleCancelSubscription = () => {
-    toast.loading(
-      translations("Hold.. your subscription is getting cancelled..."),
-      {
-        id: "load-data",
-      },
-    );
+    toast.loading(translations("Hold.. your subscription is getting cancelled..."), {
+      id: "load-data",
+    });
 
     if (subscription?.basePlan?.stripeProduct) {
       CancelStripeSubscription.mutate(null, {
-        onSuccess: (r) => {
+        onSuccess: (_r) => {
           setCancelResult(true);
           setCancelDialogOpened(false);
         },
       });
     } else {
       CancelRazorpaySubscription.mutate(null, {
-        onSuccess: (r) => {
+        onSuccess: (_r) => {
           setCancelResult(true);
           setCancelDialogOpened(false);
         },
@@ -273,14 +260,10 @@ export const Billing = ({
                     {translations("Your plan activation is under process.")}
                   </p>
                   <p className="text-sm text-blue-800">
-                    {translations(
-                      "You will receive activation status via email shortly.",
-                    )}
+                    {translations("You will receive activation status via email shortly.")}
                   </p>
                   <p className="text-xs text-blue-700">
-                    {translations(
-                      "Usually takes between 30seconds to 15 mins.",
-                    )}
+                    {translations("Usually takes between 30seconds to 15 mins.")}
                   </p>
                 </div>
                 <Button
@@ -289,9 +272,7 @@ export const Billing = ({
                   variant="outline"
                   className="shrink-0 border-blue-300 hover:bg-blue-50"
                 >
-                  <RefreshCw
-                    className={`mr-2 h-4 w-4 ${isRefetching ? "animate-spin" : ""}`}
-                  />
+                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
                   {translations("Refresh Status")}
                 </Button>
               </div>
@@ -308,17 +289,13 @@ export const Billing = ({
                 <div className="space-y-3 flex-1">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Package className="h-4 w-4" />
-                    <span className="font-medium">
-                      {translations("Plan Name")}
-                    </span>
+                    <span className="font-medium">{translations("Plan Name")}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <h3 className="text-2xl font-bold">
-                      {subscription?.basePlan?.displayName ||
-                        translations("No Plan")}
+                      {subscription?.basePlan?.displayName || translations("No Plan")}
                     </h3>
-                    {latestOrderData?.subscriptionStatus ===
-                      "authenticated" && (
+                    {latestOrderData?.subscriptionStatus === "authenticated" && (
                       <Badge
                         variant="outline"
                         className="bg-amber-50 text-amber-700 border-amber-200"
@@ -345,8 +322,7 @@ export const Billing = ({
                     </Button>
                   ) : (
                     subscription?.basePlan?.name &&
-                    (activeOrderData?.subscriptionStatus === "cancelled" &&
-                    !isCustomPlan ? (
+                    (activeOrderData?.subscriptionStatus === "cancelled" && !isCustomPlan ? (
                       <Button disabled variant="secondary" className="gap-2">
                         <X className="h-4 w-4" />
                         {translations("Cancelled")}
@@ -368,10 +344,7 @@ export const Billing = ({
                   )}
 
                   {isCustomPlan && (
-                    <Button
-                      onClick={() => setCustomUpgradeModal(true)}
-                      className="gap-2"
-                    >
+                    <Button onClick={() => setCustomUpgradeModal(true)} className="gap-2">
                       <TrendingUp className="h-4 w-4" />
                       {translations("Upgrade plan")}
                     </Button>
@@ -385,14 +358,10 @@ export const Billing = ({
                   <div className="space-y-3 text-right">
                     <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
-                      <span className="font-medium">
-                        {translations("Next Charging on")}:
-                      </span>
+                      <span className="font-medium">{translations("Next Charging on")}:</span>
                     </div>
                     <p className="text-lg font-semibold">
-                      {formatIsoDateString(
-                        activeOrderData?.subscriptionChargeAt,
-                      )}
+                      {formatIsoDateString(activeOrderData?.subscriptionChargeAt)}
                     </p>
                   </div>
                 )}
@@ -403,14 +372,10 @@ export const Billing = ({
                   <div className="space-y-3 text-right">
                     <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
                       <X className="h-4 w-4" />
-                      <span className="font-medium">
-                        {translations("Cancelled on")}:
-                      </span>
+                      <span className="font-medium">{translations("Cancelled on")}:</span>
                     </div>
                     <p className="text-lg font-semibold">
-                      {formatIsoDateString(
-                        activeOrderData?.subscriptionEndedAt,
-                      )}
+                      {formatIsoDateString(activeOrderData?.subscriptionEndedAt)}
                     </p>
                   </div>
                 )}
@@ -431,17 +396,11 @@ export const Billing = ({
                 </div>
                 <div className="space-y-2">
                   <p className="text-base font-semibold">
-                    {isFreePlan
-                      ? "NA"
-                      : formatIsoDateString(subscription?.expiresAt)}
+                    {isFreePlan ? "NA" : formatIsoDateString(subscription?.expiresAt)}
                   </p>
                   <div className="flex items-center gap-2">
                     <Badge
-                      variant={
-                        checkExpiry(subscription?.expiresAt)
-                          ? "destructive"
-                          : "default"
-                      }
+                      variant={checkExpiry(subscription?.expiresAt) ? "destructive" : "default"}
                       className="gap-1"
                     >
                       {checkExpiry(subscription?.expiresAt) ? (
@@ -456,17 +415,16 @@ export const Billing = ({
                         </>
                       )}
                     </Badge>
-                    {checkExpiry(subscription?.expiresAt) &&
-                      !isProcessingPlan && (
-                        <Button
-                          size="sm"
-                          onClick={() => setOpenedUpgradeModal(true)}
-                          className="gap-1"
-                        >
-                          <TrendingUp className="h-3 w-3" />
-                          {translations("Upgrade")}
-                        </Button>
-                      )}
+                    {checkExpiry(subscription?.expiresAt) && !isProcessingPlan && (
+                      <Button
+                        size="sm"
+                        onClick={() => setOpenedUpgradeModal(true)}
+                        className="gap-1"
+                      >
+                        <TrendingUp className="h-3 w-3" />
+                        {translations("Upgrade")}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -474,9 +432,7 @@ export const Billing = ({
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span className="font-medium">
-                    {translations("Billing Cycle")}
-                  </span>
+                  <span className="font-medium">{translations("Billing Cycle")}</span>
                 </div>
                 <p className="text-base font-semibold">
                   {(subscription?.basePlan?.paymentPlan?.period ||
@@ -488,9 +444,7 @@ export const Billing = ({
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <DollarSign className="h-4 w-4" />
-                  <span className="font-medium">
-                    {translations("Plan Cost")}
-                  </span>
+                  <span className="font-medium">{translations("Plan Cost")}</span>
                 </div>
                 {isShopifyPlan ? (
                   <a
@@ -521,17 +475,13 @@ export const Billing = ({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Package className="h-4 w-4" />
-                      <span className="font-medium">
-                        {translations("Addons")}
-                      </span>
+                      <span className="font-medium">{translations("Addons")}</span>
                     </div>
                     <p className="text-base font-semibold text-muted-foreground">
                       {translations("Nil")}
                     </p>
                   </div>
-                  {!["FREE PLAN", "RATEUP TRIAL"].includes(
-                    subscription?.basePlan?.name,
-                  ) &&
+                  {!["FREE PLAN", "RATEUP TRIAL"].includes(subscription?.basePlan?.name) &&
                     activeOrderData?.subscriptionStatus === "cancelled" && (
                       <Button
                         onClick={() => setOpenedUpgradeModal(true)}
@@ -576,10 +526,7 @@ export const Billing = ({
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <Pricing
-              isAccount={true}
-              handleSelection={() => setOpenedUpgradeModal(false)}
-            />
+            <Pricing isAccount={true} handleSelection={() => setOpenedUpgradeModal(false)} />
           </div>
         </DialogContent>
       </Dialog>
@@ -595,9 +542,7 @@ export const Billing = ({
           <div className="space-y-4 py-4">
             <div className="space-y-3 text-sm text-muted-foreground">
               <p>
-                {translations(
-                  "Your current Rateup plan subscription is successfully cancelled.",
-                )}
+                {translations("Your current Rateup plan subscription is successfully cancelled.")}
               </p>
               <p>
                 {translations(
@@ -613,9 +558,7 @@ export const Billing = ({
             <Separator />
             <div className="flex items-center justify-center gap-2 pt-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {translations("Need help")}?
-              </span>
+              <span className="text-sm text-muted-foreground">{translations("Need help")}?</span>
               <a
                 href="mailto:hello@rateup.app"
                 className="text-sm font-medium hover:underline text-primary"
@@ -643,9 +586,7 @@ export const Billing = ({
             <Separator />
             <div className="flex items-center justify-center gap-2 pt-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {translations("Contact us at")}
-              </span>
+              <span className="text-sm text-muted-foreground">{translations("Contact us at")}</span>
               <a
                 href="mailto:hello@rateup.app"
                 className="text-sm font-medium hover:underline text-primary"
@@ -665,10 +606,7 @@ export const Billing = ({
               {translations("Cancel Subscription")}
             </DialogTitle>
             <DialogDescription className="text-base pt-2">
-              {translations(
-                "Are you sure you want to cancel your active subscription",
-              )}
-              ?{" "}
+              {translations("Are you sure you want to cancel your active subscription")}?{" "}
               {translations(
                 "You will lose access to premium features once the current billing period ends",
               )}
@@ -676,10 +614,7 @@ export const Billing = ({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setCancelDialogOpened(false)}
-            >
+            <Button variant="outline" onClick={() => setCancelDialogOpened(false)}>
               {translations("Close")}
             </Button>
             <Button onClick={handleCancelSubscription} variant="destructive">
@@ -735,8 +670,8 @@ const TeamStats = ({ stats, refetch, isRefetching, subscription }) => {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                {percentage.toFixed(0)}% {translations("used")} •{" "}
-                {remaining.toLocaleString()} {translations("remaining")}
+                {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
+                {translations("remaining")}
               </p>
             </div>
           );
@@ -802,8 +737,8 @@ const MenuStats = ({ stats, subscription }) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% {translations("used")} •{" "}
-                    {remaining.toLocaleString()} {translations("remaining")}
+                    {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
+                    {translations("remaining")}
                   </p>
                 </>
               )}
@@ -823,8 +758,7 @@ const SurveyStats = ({ stats, subscription }) => {
   const statsArray = [
     {
       count: stats?.monthlySurveyResponses,
-      totalCount:
-        subscription?.features?.webSurvey?.count?.monthlyResponseLimit,
+      totalCount: subscription?.features?.webSurvey?.count?.monthlyResponseLimit,
       stats: "Monthly Responses",
     },
     {
@@ -872,8 +806,8 @@ const SurveyStats = ({ stats, subscription }) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% {translations("used")} •{" "}
-                    {remaining.toLocaleString()} {translations("remaining")}
+                    {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
+                    {translations("remaining")}
                   </p>
                 </>
               )}
@@ -898,9 +832,7 @@ const WhatsappStats = ({ stats, subscription }) => {
       totalCount: subscription?.isAnnualMessageLimit
         ? subscription?.features?.whatsapp?.count?.monthlyMessageLimit * 12
         : subscription?.features?.whatsapp?.count?.monthlyMessageLimit,
-      stats: subscription?.isAnnualMessageLimit
-        ? "Annual Message"
-        : "Monthly Message",
+      stats: subscription?.isAnnualMessageLimit ? "Annual Message" : "Monthly Message",
     },
     {
       count: stats?.waSurveysCount,
@@ -914,9 +846,7 @@ const WhatsappStats = ({ stats, subscription }) => {
     },
     {
       count: stats?.monthlyAutomationTriggerCount,
-      totalCount:
-        subscription?.features?.whatsapp?.automation?.automationTrigger?.count
-          ?.max,
+      totalCount: subscription?.features?.whatsapp?.automation?.automationTrigger?.count?.max,
       stats: "Monthly Automation Trigger",
     },
     {
@@ -959,8 +889,8 @@ const WhatsappStats = ({ stats, subscription }) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% {translations("used")} •{" "}
-                    {remaining.toLocaleString()} {translations("remaining")}
+                    {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
+                    {translations("remaining")}
                   </p>
                 </>
               )}
@@ -1024,8 +954,8 @@ const AIStats = ({ stats, subscription }) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% {translations("used")} •{" "}
-                    {remaining.toLocaleString()} {translations("remaining")}
+                    {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
+                    {translations("remaining")}
                   </p>
                 </>
               )}
@@ -1094,8 +1024,8 @@ const LoyaltyStats = ({ stats, subscription }) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% {translations("used")} •{" "}
-                    {remaining.toLocaleString()} {translations("remaining")}
+                    {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
+                    {translations("remaining")}
                   </p>
                 </>
               )}

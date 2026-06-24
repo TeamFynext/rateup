@@ -1,14 +1,12 @@
-"use client";
-
+import { Group } from "@mantine/core";
 import { useContext } from "react";
 
-import { Group } from "@mantine/core";
-
-import { PageType, QuestionType as Q } from "@/types/enums.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+import { PageType, QuestionType as Q } from "@/types/enums.ts";
+
+import { getQuestionForm } from "./util.tsx";
 
 import classes from "./TakeSurvey.module.css";
-import { getQuestionForm } from "./util.tsx";
 
 function QuestionForm() {
   const { selectedQ, alignment } = useContext(SelectedQContext);

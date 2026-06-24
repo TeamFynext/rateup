@@ -54,8 +54,7 @@ const PUBLICUSER_URL = "/public/user/";
 
 export async function fetchUserInfo() {
   try {
-    const response: IUserInfoApiResponse = (await axiosClient.get("/user/info"))
-      .data;
+    const response: IUserInfoApiResponse = (await axiosClient.get("/user/info")).data;
     return response;
   } catch (e) {
     return { error: e.response.data }; // TODO: improve error handling for react query
@@ -146,10 +145,8 @@ export interface IUpdateMemberProfile {
   phone: string;
 }
 
-export const updateMemberProfile = (
-  userId: string,
-  data: IUpdateMemberProfile,
-) => axiosClient.put(`user/update-profile/${userId}`, data);
+export const updateMemberProfile = (userId: string, data: IUpdateMemberProfile) =>
+  axiosClient.put(`user/update-profile/${userId}`, data);
 
 export enum UserAvailabilityStatus {
   offline = "offline",
@@ -198,10 +195,7 @@ export interface IPaginatedResponse<T> {
   pagination: IPagination;
 }
 
-export async function getAuditLogs(params: {
-  pagination: PaginationState;
-  sorting: SortingState;
-}) {
+export async function getAuditLogs(params: { pagination: PaginationState; sorting: SortingState }) {
   const sortParams =
     params?.sorting?.length > 0
       ? {
@@ -210,15 +204,12 @@ export async function getAuditLogs(params: {
         }
       : {};
 
-  const response = await axiosClient.get<IPaginatedResponse<AuditLog>>(
-    `user/audit-logs`,
-    {
-      params: {
-        page: params?.pagination.pageIndex + 1,
-        limit: params?.pagination.pageSize,
-        ...sortParams,
-      },
+  const response = await axiosClient.get<IPaginatedResponse<AuditLog>>(`user/audit-logs`, {
+    params: {
+      page: params?.pagination.pageIndex + 1,
+      limit: params?.pagination.pageSize,
+      ...sortParams,
     },
-  );
+  });
   return response.data;
 }

@@ -1,12 +1,10 @@
-"use client";
-
 import dayjs from "dayjs";
 import parse from "html-react-parser";
 import { Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { QuestionType as Q, QuestionType2 } from "@/types/enums.ts";
 import { Badge } from "@/components/ui/badge";
+import { QuestionType as Q, QuestionType2 } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { SmileyResponseMap } from "@/utils/whatsapp/enumMap.ts";
 
@@ -20,9 +18,7 @@ const ReadOnlyRating = ({ value }: { value: number }) => {
         <Star
           key={star}
           className={`h-4 w-4 ${
-            star <= value
-              ? "fill-current text-yellow-500"
-              : "text-muted-foreground"
+            star <= value ? "fill-current text-yellow-500" : "text-muted-foreground"
           }`}
         />
       ))}
@@ -84,11 +80,7 @@ const SurveyResponsesView = ({
                   const imgUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${img}`;
 
                   return img ? (
-                    <img
-                      src={imgUrl}
-                      alt=""
-                      className="max-w-[240px] rounded-md"
-                    />
+                    <img src={imgUrl} alt="" className="max-w-[240px] rounded-md" />
                   ) : (
                     <p className="text-xs text-muted-foreground">
                       {translations("... not answered...")}
@@ -107,18 +99,11 @@ const SurveyResponsesView = ({
                     return (
                       <ul className="list-disc pl-5">
                         {responseData.map((item) => {
-                          const choices =
-                            question?.choices?.[language] ?? question?.choices;
+                          const choices = question?.choices?.[language] ?? question?.choices;
 
-                          const choice = choices?.find(
-                            (c: any) => c.id === item,
-                          );
+                          const choice = choices?.find((c: any) => c.id === item);
 
-                          return (
-                            <li key={choice?.title}>
-                              {choice?.title || item?.value}
-                            </li>
-                          );
+                          return <li key={choice?.title}>{choice?.title || item?.value}</li>;
                         })}
                       </ul>
                     );
@@ -133,11 +118,7 @@ const SurveyResponsesView = ({
 
                 case Q.Date:
                   return (
-                    <p>
-                      {dayjs(Object.values(response?.response)[0]).format(
-                        "DD, MMM, YYYY",
-                      )}
-                    </p>
+                    <p>{dayjs(Object.values(response?.response)[0]).format("DD, MMM, YYYY")}</p>
                   );
 
                 case Q.Testimonial: {
@@ -146,25 +127,19 @@ const SurveyResponsesView = ({
                   return (
                     <div className="flex flex-col gap-2">
                       <div className="flex gap-2">
-                        <span className="font-medium">
-                          {translations("Name: ")}
-                        </span>
+                        <span className="font-medium">{translations("Name: ")}</span>
                         <span>{data.name}</span>
                       </div>
 
                       {data.jobTitle && (
                         <div className="flex gap-2">
-                          <span className="font-medium">
-                            {translations("Job Title: ")}
-                          </span>
+                          <span className="font-medium">{translations("Job Title: ")}</span>
                           <span>{data.jobTitle}</span>
                         </div>
                       )}
 
                       <div className="flex gap-2">
-                        <span className="font-medium">
-                          {translations("Testimonial: ")}
-                        </span>
+                        <span className="font-medium">{translations("Testimonial: ")}</span>
                         <span>{data.testimonial}</span>
                       </div>
 
@@ -207,12 +182,9 @@ const SurveyResponsesView = ({
                       ? Object.values(response?.response)[0]
                       : response?.response;
 
-                  const choices =
-                    question?.choices?.[language] ?? question?.choices;
+                  const choices = question?.choices?.[language] ?? question?.choices;
 
-                  const choice = choices?.find(
-                    (c: any) => c.id === selectedValue,
-                  );
+                  const choice = choices?.find((c: any) => c.id === selectedValue);
 
                   return <p>{choice?.title || selectedValue?.value}</p>;
                 }
@@ -225,9 +197,7 @@ const SurveyResponsesView = ({
                 }
 
                 case Q.PCQ: {
-                  const selectedPictureChoice = Object.values(
-                    response?.response,
-                  )?.[0]?.value;
+                  const selectedPictureChoice = Object.values(response?.response)?.[0]?.value;
 
                   return (
                     <div className="flex flex-col items-center gap-0">
@@ -251,27 +221,21 @@ const SurveyResponsesView = ({
                     <div className="flex flex-col gap-2">
                       {res?.name && (
                         <div className="flex gap-2">
-                          <span className="font-medium">
-                            {translations("Name: ")}
-                          </span>
+                          <span className="font-medium">{translations("Name: ")}</span>
                           <span>{res.name}</span>
                         </div>
                       )}
 
                       {res?.phone && (
                         <div className="flex gap-2">
-                          <span className="font-medium">
-                            {translations("Phone: ")}
-                          </span>
+                          <span className="font-medium">{translations("Phone: ")}</span>
                           <span>{res.phone}</span>
                         </div>
                       )}
 
                       {res?.email && (
                         <div className="flex gap-2">
-                          <span className="font-medium">
-                            {translations("Email: ")}
-                          </span>
+                          <span className="font-medium">{translations("Email: ")}</span>
                           <span>{res.email}</span>
                         </div>
                       )}
@@ -304,9 +268,7 @@ const SurveyResponsesView = ({
             })()}
           </>
         ) : (
-          <p className="text-xs text-muted-foreground">
-            {translations("... not answered...")}
-          </p>
+          <p className="text-xs text-muted-foreground">{translations("... not answered...")}</p>
         )}
       </div>
     </>

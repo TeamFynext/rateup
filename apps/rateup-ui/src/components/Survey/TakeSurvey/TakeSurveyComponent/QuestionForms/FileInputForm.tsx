@@ -1,7 +1,3 @@
-"use client";
-
-import { useContext, useEffect, useState } from "react";
-
 import {
   ActionIcon,
   Group,
@@ -15,14 +11,11 @@ import {
 import type { DropzoneProps } from "@mantine/dropzone";
 import { Dropzone } from "@mantine/dropzone";
 import { IconFileFilled, IconUpload, IconX } from "@tabler/icons-react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
-import {
-  deleteUploadedFiles,
-  getFileNameFromKey,
-  uploadFile,
-} from "@/utils/file-upload/upload.ts";
+import { deleteUploadedFiles, getFileNameFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
 import PaperLayout from "../../../../styled/Layouts/PaperLayout.tsx";
 
@@ -36,13 +29,9 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
   const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState("");
   const { t: translations } = useTranslation();
-  const themePrimaryColor = theme.colors.primaryColor
-    ? theme.colors.primaryColor[5]
-    : "#1C518E";
+  const themePrimaryColor = theme.colors.primaryColor ? theme.colors.primaryColor[5] : "#1C518E";
   const dragFileTextColor =
-    luminance(themePrimaryColor) > 0.8
-      ? `var(--mantine-color-gray-7)`
-      : themePrimaryColor;
+    luminance(themePrimaryColor) > 0.8 ? `var(--mantine-color-gray-7)` : themePrimaryColor;
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const handleUploadedFiles = async () => {
@@ -98,27 +87,15 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
         }}
         disabled={isPreview}
       >
-        <Group
-          justify="center"
-          gap="xl"
-          mih={80}
-          style={{ pointerEvents: "none" }}
-        >
+        <Group justify="center" gap="xl" mih={80} style={{ pointerEvents: "none" }}>
           <Dropzone.Accept>
-            <IconUpload
-              stroke={1.5}
-              color={`var(--mantine-color-${theme.primaryColor}-filled)`}
-            />
+            <IconUpload stroke={1.5} color={`var(--mantine-color-${theme.primaryColor}-filled)`} />
           </Dropzone.Accept>
           <Dropzone.Reject>
             <IconX color="var(--mantine-color-red-6)" stroke={1.5} />
           </Dropzone.Reject>
           <Dropzone.Idle>
-            <IconFileFilled
-              color="var(--mantine-color-dimmed)"
-              stroke={1.5}
-              size={"2.5rem"}
-            />
+            <IconFileFilled color="var(--mantine-color-dimmed)" stroke={1.5} size={"2.5rem"} />
             <LoadingOverlay
               visible={isUploading}
               zIndex={1000}

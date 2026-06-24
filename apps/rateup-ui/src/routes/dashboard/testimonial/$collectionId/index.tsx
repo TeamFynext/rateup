@@ -1,19 +1,8 @@
-import { useEffect, useState } from "react";
-
 import { Button, Checkbox, Group, Paper, Stack, Tabs } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconDeviceFloppy,
-  IconPencil,
-  IconShare,
-  IconTrash,
-} from "@tabler/icons-react";
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-  useSearch,
-} from "@tanstack/react-router";
+import { IconDeviceFloppy, IconPencil, IconShare, IconTrash } from "@tabler/icons-react";
+import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -54,19 +43,15 @@ export type filterType = {
 
 function CollectionById() {
   const { update } = useRouteParams();
-  const navigate = useNavigate();
+
   const searchParams = useSearch({ strict: false });
   const params = useParams({
     strict: false,
   });
 
   const tab = searchParams.tab;
-  const [activeTab, setActiveTab] = useState<TestimonialTabs | null>(
-    TestimonialTabs.Select,
-  );
-  const [selectedTestimonialIds, setSelectedTestimonialIds] = useState<
-    string[]
-  >([]);
+  const [activeTab, setActiveTab] = useState<TestimonialTabs | null>(TestimonialTabs.Select);
+  const [selectedTestimonialIds, setSelectedTestimonialIds] = useState<string[]>([]);
   const [isDelete, { toggle: toggleDelete }] = useDisclosure(false);
   const collectionId = params?.collectionId as string;
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
@@ -79,17 +64,11 @@ function CollectionById() {
   });
   const [type, setType] = useState("date");
 
-  const { data: alltestimonials, isLoading: isTestimonialLoading } =
-    useGetAllTestimonialsByOrg();
-  const filteredTestimonials = getFilteredTestimonials(
-    alltestimonials,
-    filters,
-    type,
-  );
+  const { data: alltestimonials } = useGetAllTestimonialsByOrg();
+  const filteredTestimonials = getFilteredTestimonials(alltestimonials, filters, type);
   const filteredTestimonialIds = filteredTestimonials?.map((t) => t.id);
 
-  const [openedEdit, { open: openEdit, close: closeEdit }] =
-    useDisclosure(false);
+  const [openedEdit, { open: openEdit, close: closeEdit }] = useDisclosure(false);
 
   useEffect(() => {
     update({ collectionId: collection?.name });
@@ -122,15 +101,9 @@ function CollectionById() {
       <Group>
         <Heading title={"Testimonials"} titleprops={{ tt: "capitalize" }} />
         <Tabs.List>
-          <Tabs.Tab value={TestimonialTabs.Select}>
-            {TestimonialTabs.Select}
-          </Tabs.Tab>
-          <Tabs.Tab value={TestimonialTabs.Edit}>
-            {TestimonialTabs.Edit}
-          </Tabs.Tab>
-          <Tabs.Tab value={TestimonialTabs.Share}>
-            {TestimonialTabs.Share}
-          </Tabs.Tab>
+          <Tabs.Tab value={TestimonialTabs.Select}>{TestimonialTabs.Select}</Tabs.Tab>
+          <Tabs.Tab value={TestimonialTabs.Edit}>{TestimonialTabs.Edit}</Tabs.Tab>
+          <Tabs.Tab value={TestimonialTabs.Share}>{TestimonialTabs.Share}</Tabs.Tab>
         </Tabs.List>
       </Group>
       <Group gap="sm" h="85vh">
@@ -183,11 +156,7 @@ function CollectionById() {
           />
         </Tabs.Panel>
       </Group>
-      <TestimonialEditModal
-        theme={collection?.theme}
-        onClose={closeEdit}
-        opened={openedEdit}
-      />
+      <TestimonialEditModal theme={collection?.theme} onClose={closeEdit} opened={openedEdit} />
     </StyledTabs>
   );
 }
@@ -216,16 +185,12 @@ function UtilityComponent({
     strict: false,
   });
   const collectionId = params?.collectionId as string;
-  const addMultipleTestimonials =
-    useAddMultipleTestimonialsToCollection(collectionId);
-  const deletedTestimonialsMutation =
-    useDeleteMultipleTestimonialsFromCollection(collectionId);
+  const addMultipleTestimonials = useAddMultipleTestimonialsToCollection(collectionId);
+  const deletedTestimonialsMutation = useDeleteMultipleTestimonialsFromCollection(collectionId);
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
   const savedTestimonialIds = collection?.testimonials?.map((t) => t.id);
-  const [dialogOpened, { open: openDialog, close: closeDialog }] =
-    useDisclosure(false);
-  const [openedShare, { open: openShare, close: closeShare }] =
-    useDisclosure(false);
+  const [dialogOpened, { open: openDialog, close: closeDialog }] = useDisclosure(false);
+  const [openedShare, { open: openShare, close: closeShare }] = useDisclosure(false);
   const { t: translations } = useTranslation();
   const handleSave = () => {
     addMultipleTestimonials.mutate(selectedTestimonialIds, {
@@ -247,8 +212,7 @@ function UtilityComponent({
   );
   // this function is used to check if the selected testimonial ids are already present in the collection
   function filterAndSelectTestimonialIds(e) {
-    if (e.currentTarget.checked)
-      setSelectedTestimonialIds(testimonialIdsNotInCollection);
+    if (e.currentTarget.checked) setSelectedTestimonialIds(testimonialIdsNotInCollection);
     else setSelectedTestimonialIds([]);
   }
 
@@ -260,8 +224,7 @@ function UtilityComponent({
   );
 
   useEffect(() => {
-    if (!isDelete && activeTab == TestimonialTabs.Edit)
-      setSelectedTestimonialIds([]);
+    if (!isDelete && activeTab == TestimonialTabs.Edit) setSelectedTestimonialIds([]);
   }, [isDelete, activeTab]);
 
   return (
@@ -276,8 +239,7 @@ function UtilityComponent({
                 checked={isAllSelectedForDelete}
                 disabled={!savedTestimonialIds?.length}
                 onChange={(e) => {
-                  if (e.currentTarget.checked)
-                    setSelectedTestimonialIds(savedTestimonialIds);
+                  if (e.currentTarget.checked) setSelectedTestimonialIds(savedTestimonialIds);
                   else setSelectedTestimonialIds([]);
                 }}
               />
@@ -305,12 +267,7 @@ function UtilityComponent({
               {translations("Delete")}
             </Button>
             {isDelete && (
-              <Button
-                size="compact-xs"
-                radius="md"
-                variant="filled"
-                onClick={toggleDelete}
-              >
+              <Button size="compact-xs" radius="md" variant="filled" onClick={toggleDelete}>
                 {translations("Cancel")}
               </Button>
             )}
@@ -365,7 +322,7 @@ function UtilityComponent({
         headerTitle={translations("Delete testimonials?")}
         opened={dialogOpened}
         onClose={closeDialog}
-        onConfirm={(e) => {
+        onConfirm={(_e) => {
           handleDelete();
         }}
       />

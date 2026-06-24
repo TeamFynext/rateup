@@ -1,8 +1,5 @@
 import {
-  AlertCircle,
   BarChart3,
-  CheckCircle2,
-  Circle,
   CircleCheck,
   Database,
   FileSearch,
@@ -19,7 +16,6 @@ import {
   Users,
   UsersRound,
   Workflow,
-  XCircle,
 } from "lucide-react";
 
 import { imagesPath } from "@/utils/constants.ts";
@@ -127,92 +123,6 @@ export const steps: Step[] = [
       "Track key metrics like conversion rates, lead quality scores, ticket resolution times, and customer satisfaction across all WhatsApp interactions.",
     icon: BarChart3,
     color: "bg-purple-100 text-purple-600",
-  },
-];
-
-const tickets = [
-  {
-    id: "#23",
-    title: "Product Dissatisfaction",
-    customer: "Benjamin",
-    phone: "+91 9484254548",
-    issue: "Not satisfied with our products",
-    assignedTo: "Henry",
-    source: "Custom",
-    status: "Open",
-    priority: "Critical",
-    created: "17/02/2025",
-    daysLeft: 4,
-  },
-  {
-    id: "#20",
-    title: "Test Survey (Auto Generated)",
-    customer: "Zara Laanson",
-    phone: "+91 9456587878",
-    issue: "Confusing navigation menu",
-    assignedTo: "Henry",
-    source: "Survey Response",
-    status: "Open",
-    priority: "Critical",
-    created: "17/02/2025",
-    daysLeft: 4,
-  },
-  {
-    id: "#17",
-    title: "System Survey (Auto Generated)",
-    customer: "William James",
-    phone: "+91 9255857574",
-    issue: "Inconsistent performance across devices",
-    assignedTo: "Henry",
-    source: "Survey Response",
-    status: "Open",
-    priority: "Critical",
-    created: "20/02/2025",
-    daysLeft: 2,
-  },
-  {
-    id: "#15",
-    title: "UI Update Survey (Auto Generated)",
-    customer: "James Steve",
-    phone: "+91 9566569696",
-    issue: "Design feels clunky",
-    assignedTo: "Bennet",
-    source: "Survey Response",
-    status: "Open",
-    priority: "Low",
-    created: "20/02/2025",
-    daysLeft: 6,
-  },
-];
-
-const ticketCategories = [
-  {
-    name: "OPEN",
-    count: 7,
-    color: "text-blue-500",
-    icon: Circle,
-    iconBg: "bg-blue-100",
-  },
-  {
-    name: "IN PROGRESS",
-    count: 5,
-    color: "text-amber-500",
-    icon: AlertCircle,
-    iconBg: "bg-amber-100",
-  },
-  {
-    name: "RESOLVED",
-    count: 12,
-    color: "text-green-600",
-    icon: CheckCircle2,
-    iconBg: "bg-green-100",
-  },
-  {
-    name: "CLOSED",
-    count: 3,
-    color: "text-gray-500",
-    icon: XCircle,
-    iconBg: "bg-gray-100",
   },
 ];
 

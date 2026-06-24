@@ -1,8 +1,7 @@
-import { useRef, useState } from "react";
-
 import dayjs from "dayjs";
 import isToday from "dayjs/plugin/isToday";
 import { CheckCircle2, Download, Send, XCircle, Zap } from "lucide-react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -12,9 +11,7 @@ import {
   useGetTemplateOverview,
 } from "@/backend/apiAnalytics/apianalytics.query";
 import { ApiSelector } from "@/components/apiAnalytics/APISelector.tsx";
-import ChartOverview, {
-  DailyTrend,
-} from "@/components/apiAnalytics/ChartOverview.tsx";
+import ChartOverview, { DailyTrend } from "@/components/apiAnalytics/ChartOverview.tsx";
 import OverviewCard from "@/components/apiAnalytics/OverviewCard.tsx";
 import TeamOverview from "@/components/apiAnalytics/TeamOverview.tsx";
 import TemplateOverview from "@/components/apiAnalytics/TemplateOverview.tsx";
@@ -38,37 +35,33 @@ function ApiAnalytics({ dateRange }) {
   const { t } = useTranslation("apianalytics");
   const targetRef = useRef(null);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
-  const [granularity, setGranularity] = useState("hour");
+  const [granularity] = useState("hour");
   const [apiType, setApiType] = useState("all");
-  const { data: teamData, isLoading: isTeamDataLoading } =
-    useGetTeamApiOverview({
-      dateKey: dateRange.key,
-      dateRange: dateRange.range,
-      apiType: apiType,
-    });
+  const { data: teamData, isLoading: isTeamDataLoading } = useGetTeamApiOverview({
+    dateKey: dateRange.key,
+    dateRange: dateRange.range,
+    apiType: apiType,
+  });
   const { data, isLoading } = useGetApiAnlayticsOverview({
     dateKey: dateRange.key,
     dateRange: dateRange.range,
     teamId: selectedTeamId,
     apiType: apiType,
   });
-  const { data: trend, isLoading: isTrendLoading } = useGetDeliveredFailedTrend(
-    {
-      dateKey: dateRange.key,
-      dateRange: dateRange.range,
-      teamId: selectedTeamId,
-      granularity: granularity,
-      apiType: apiType,
-    },
-  );
+  const { data: trend, isLoading: isTrendLoading } = useGetDeliveredFailedTrend({
+    dateKey: dateRange.key,
+    dateRange: dateRange.range,
+    teamId: selectedTeamId,
+    granularity: granularity,
+    apiType: apiType,
+  });
 
-  const { data: templates, isLoading: isTemplateLoading } =
-    useGetTemplateOverview({
-      dateKey: dateRange.key,
-      dateRange: dateRange.range,
-      teamId: selectedTeamId,
-      apiType: apiType,
-    });
+  const { data: templates, isLoading: isTemplateLoading } = useGetTemplateOverview({
+    dateKey: dateRange.key,
+    dateRange: dateRange.range,
+    teamId: selectedTeamId,
+    apiType: apiType,
+  });
 
   const localTrend = trend?.trend.map((item) => ({
     ...item,
@@ -90,11 +83,7 @@ function ApiAnalytics({ dateRange }) {
           </p>
         </div>
         <div className="flex md:flex-col lg:flex-row items-center justify-center gap-4 lg:min-w-md">
-          <ApiSelector
-            value={apiType}
-            onChange={(value) => setApiType(value)}
-            className="w-full"
-          />
+          <ApiSelector value={apiType} onChange={(value) => setApiType(value)} className="w-full" />
           <TeamSelector
             value={selectedTeamId}
             onChange={(teamId) => setSelectedTeamId(teamId)}
@@ -164,8 +153,7 @@ function ApiAnalytics({ dateRange }) {
           />
           <OverviewCard
             value={
-              data?.avgDeliveryTimeSeconds !== undefined &&
-              data?.avgDeliveryTimeSeconds !== null
+              data?.avgDeliveryTimeSeconds !== undefined && data?.avgDeliveryTimeSeconds !== null
                 ? `${Number(data.avgDeliveryTimeSeconds).toFixed(1)}s`
                 : "NA"
             }
@@ -179,10 +167,7 @@ function ApiAnalytics({ dateRange }) {
         </div>
       )}
       <ChartOverview messageTrendData={localTrend} isLoading={isTrendLoading} />
-      <DailyTrend
-        dailyMessageData={localWeekTrend}
-        isLoading={isTrendLoading}
-      />
+      <DailyTrend dailyMessageData={localWeekTrend} isLoading={isTrendLoading} />
       <TemplateOverview
         categoryOverview={templates?.categoryOverview?.byCategory}
         templatePerformance={templates?.templatePerformance}

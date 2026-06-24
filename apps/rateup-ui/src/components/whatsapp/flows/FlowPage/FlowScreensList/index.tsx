@@ -1,18 +1,15 @@
-"use client";
-
-import { useContext, useEffect, useRef } from "react";
-
+import { DragDropContext } from "@hello-pangea/dnd";
 import { Box, Group, Text, useMantineTheme } from "@mantine/core";
 import { useCounter, useDisclosure } from "@mantine/hooks";
 import { IconAlertTriangle } from "@tabler/icons-react";
-import { DragDropContext } from "@hello-pangea/dnd";
 import { useParams } from "@tanstack/react-router";
+import { useContext, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { WaFlowFormElementType, WaFlowStatus } from "@/types/enums.ts";
 import type { WaFlowFormElement } from "@/types/global";
-import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { reorder } from "@/utils/questions.ts";
 import {
   getFlowFormElementsFromScreen,
@@ -23,8 +20,9 @@ import {
 import { FlowMaxScreens } from "../../../whatsappConfig.tsx";
 import { EditFlowContext } from "../EditFlow/EditFlowContext.ts";
 import CreateFlowScreenModal from "./CreateFlowScreenModal.tsx";
-import styles from "./FlowScreensList.module.css";
 import ScreenListItem from "./ScreenListItem.tsx";
+
+import styles from "./FlowScreensList.module.css";
 
 interface FlowScreensListProps {
   onAddElementClick: (screenId: string) => void;
@@ -36,8 +34,7 @@ function FlowScreensList({
   onElementClick,
   onDeleteElement,
 }: FlowScreensListProps) {
-  const { flowJson, updateFlowJson, setScreenNumber } =
-    useContext(EditFlowContext);
+  const { flowJson, updateFlowJson } = useContext(EditFlowContext);
   const theme = useMantineTheme();
   const params = useParams({
     strict: false,
@@ -75,35 +72,19 @@ function FlowScreensList({
 
   function onDragEnd({ destination, source }) {
     if (!destination) return;
-    if (
-      destination.index === source.index &&
-      destination.droppableId === source.droppableId
-    )
+    if (destination.index === source.index && destination.droppableId === source.droppableId)
       return;
     if (destination.droppableId === source.droppableId) {
-      const screen = getScreenObjById(
-        flowJson.screens,
-        destination.droppableId,
-      );
-      const elements = getFlowFormElementsFromScreen(
-        screen,
-      ) as WaFlowFormElement[];
+      const screen = getScreenObjById(flowJson.screens, destination.droppableId);
+      const elements = getFlowFormElementsFromScreen(screen) as WaFlowFormElement[];
 
       const newOrder = reorder(elements, source.index, destination.index);
 
-      const form = getFormObjFromScreenId(
-        flowJson.screens,
-        destination.droppableId,
-      );
-      const footer = form.children.find(
-        (child) => child.type === WaFlowFormElementType.footer,
-      );
+      const form = getFormObjFromScreenId(flowJson.screens, destination.droppableId);
+      const footer = form.children.find((child) => child.type === WaFlowFormElementType.footer);
 
       updateFlowJson((draft) => {
-        const form = getFormObjFromScreenId(
-          draft.screens,
-          destination.droppableId,
-        );
+        const form = getFormObjFromScreenId(draft.screens, destination.droppableId);
         form.children = [...newOrder, footer];
       });
     } else {

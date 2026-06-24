@@ -1,20 +1,8 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  Building2,
-  Calendar,
-  Mail,
-  Pause,
-  Play,
-  Shield,
-  UserCheck,
-  Users,
-} from "lucide-react";
+import { Building2, Calendar, Mail, Pause, Play, Shield, UserCheck, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -27,10 +15,7 @@ import {
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -84,10 +69,8 @@ function Index() {
   });
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [
-    openedConfirmModal,
-    { open: openConfirmModal, close: closeConfirmModal },
-  ] = useDisclosure(false);
+  const [openedConfirmModal, { open: openConfirmModal, close: closeConfirmModal }] =
+    useDisclosure(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isUpdatedRecipe, setIsUpdatedRecipe] = useState(false);
 
@@ -133,10 +116,7 @@ function Index() {
         return (
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-muted-foreground" />
-            <Badge
-              variant="outline"
-              className={`text-${getUserRoleColor(role)}-600`}
-            >
+            <Badge variant="outline" className={`text-${getUserRoleColor(role)}-600`}>
               <UserRoleLabel role={role} />
             </Badge>
           </div>
@@ -158,9 +138,7 @@ function Index() {
     {
       accessorKey: "recipeName",
       header: createSortableHeader("Recipe"),
-      cell: ({ row }) => (
-        <span className="text-sm">{row.getValue("recipeName") || "N/A"}</span>
-      ),
+      cell: ({ row }) => <span className="text-sm">{row.getValue("recipeName") || "N/A"}</span>,
       meta: { title: "Recipe" },
     },
     {
@@ -169,9 +147,7 @@ function Index() {
       cell: ({ row }) => {
         const isPaused = row.getValue("isPaused");
         return (
-          <Badge variant={isPaused ? "destructive" : "secondary"}>
-            {isPaused ? "YES" : "NO"}
-          </Badge>
+          <Badge variant={isPaused ? "destructive" : "secondary"}>{isPaused ? "YES" : "NO"}</Badge>
         );
       },
       meta: { title: "Is Paused" },
@@ -200,19 +176,13 @@ function Index() {
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              const user = users?.find(
-                (user) => user.email === row.original.id,
-              );
+              const user = users?.find((user) => user.email === row.original.id);
               setSelectedUser(user);
               openConfirmModal();
             }}
             className="h-8 w-8 p-0"
           >
-            {isPaused ? (
-              <Play className="h-4 w-4" />
-            ) : (
-              <Pause className="h-4 w-4" />
-            )}
+            {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
           </Button>
         );
       },
@@ -237,14 +207,10 @@ function Index() {
 
   useEffect(() => {
     if (users) {
-      const today =
-        users.filter((user) => isToday(user?.createdAt))?.length || 0;
-      const yesterday =
-        users.filter((user) => isYesterday(user.createdAt))?.length || 0;
-      const lastWeek =
-        users.filter((user) => isInLastSevenDays(user?.createdAt))?.length || 0;
-      const thisMonth =
-        users.filter((user) => isThisMonth(user?.createdAt))?.length || 0;
+      const today = users.filter((user) => isToday(user?.createdAt))?.length || 0;
+      const yesterday = users.filter((user) => isYesterday(user.createdAt))?.length || 0;
+      const lastWeek = users.filter((user) => isInLastSevenDays(user?.createdAt))?.length || 0;
+      const thisMonth = users.filter((user) => isThisMonth(user?.createdAt))?.length || 0;
 
       setUserStats({
         today,
@@ -253,9 +219,7 @@ function Index() {
         thisMonth,
       });
 
-      setIsUpdatedRecipe(
-        users.filter((user) => !user.recipeName)?.length ? false : true,
-      );
+      setIsUpdatedRecipe(users.filter((user) => !user.recipeName)?.length ? false : true);
     }
   }, [users]);
 
@@ -265,9 +229,7 @@ function Index() {
         <Card className="w-96">
           <CardHeader>
             <CardTitle className="text-destructive">Error</CardTitle>
-            <CardDescription>
-              An error occurred while loading users.
-            </CardDescription>
+            <CardDescription>An error occurred while loading users.</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -340,9 +302,7 @@ function Index() {
             <div className="absolute inset-0 bg-linear-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Users
-                </CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Users</CardTitle>
                 <Users className="h-4 w-4 text-purple-600" />
               </div>
             </CardHeader>
@@ -368,9 +328,7 @@ function Index() {
               <div className="text-3xl font-bold text-green-700 dark:text-green-400">
                 {userStats.today}
               </div>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                New users
-              </p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">New users</p>
             </CardContent>
           </Card>
 
@@ -388,9 +346,7 @@ function Index() {
               <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">
                 {userStats.yesterday}
               </div>
-              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                Previous day
-              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Previous day</p>
             </CardContent>
           </Card>
 
@@ -410,9 +366,7 @@ function Index() {
               <div className="text-3xl font-bold text-purple-700 dark:text-purple-400">
                 {userStats.lastWeek}
               </div>
-              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                Weekly growth
-              </p>
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">Weekly growth</p>
             </CardContent>
           </Card>
 
@@ -432,9 +386,7 @@ function Index() {
               <div className="text-3xl font-bold text-rose-700 dark:text-rose-400">
                 {userStats.thisMonth}
               </div>
-              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">
-                Monthly total
-              </p>
+              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">Monthly total</p>
             </CardContent>
           </Card>
         </div>
@@ -442,9 +394,7 @@ function Index() {
       <h2 className="text-xl font-semibold tracking-tight">
         {translations("Most Recent SignUps")}
       </h2>
-      <p className="text-sm text-muted-foreground">
-        Manage and view all users in your system
-      </p>
+      <p className="text-sm text-muted-foreground">Manage and view all users in your system</p>
       <div>
         <DataTable
           columns={columns}
@@ -457,13 +407,7 @@ function Index() {
           }}
         />
       </div>
-      <FormModalLayout
-        centered
-        opened={opened}
-        onClose={close}
-        title=""
-        size="xl"
-      >
+      <FormModalLayout centered opened={opened} onClose={close} title="" size="xl">
         <UserModal selectedUser={selectedUser} />
       </FormModalLayout>
       <ConfirmationModal
@@ -471,17 +415,13 @@ function Index() {
         onClose={closeConfirmModal}
         confirmLabel="Yes"
         headerTitle={
-          selectedUser?.isPaused
-            ? translations("Resume User")
-            : translations("Pause User")
+          selectedUser?.isPaused ? translations("Resume User") : translations("Pause User")
         }
         onConfirm={() => {
           handleUserStatus();
         }}
         headerLabel={` ${translations("Are you sure to")} ${
-          selectedUser?.isPaused
-            ? translations("resume")
-            : translations("pause")
+          selectedUser?.isPaused ? translations("resume") : translations("pause")
         } ${translations("this user?")}`}
         closeLabel={translations("cancel")}
       />

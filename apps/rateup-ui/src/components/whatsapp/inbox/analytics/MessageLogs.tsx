@@ -1,7 +1,3 @@
-"use client";
-
-import { useCallback, useEffect, useMemo, useState } from "react";
-
 import type { ColumnDef, PaginationState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
@@ -16,6 +12,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -27,11 +24,7 @@ import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -70,23 +63,14 @@ function MessageLogs({ dateRange }) {
       searchQuery: debouncedSearch,
       pagination,
     }),
-    [
-      dateRange,
-      selectedStatus,
-      selectedSource,
-      selectedTeamId,
-      debouncedSearch,
-      pagination,
-    ],
+    [dateRange, selectedStatus, selectedSource, selectedTeamId, debouncedSearch, pagination],
   );
   const { data: messageLogsData, isLoading } = useWaMessageLogs(params);
-  const { mutate: exportLogs, isPending: isExporting } =
-    useExportWaMessageLogs();
+  const { mutate: exportLogs, isPending: isExporting } = useExportWaMessageLogs();
 
   const handlePaginationChange = useCallback((updater: any) => {
     setPagination((prev) => {
-      const newPagination =
-        typeof updater === "function" ? updater(prev) : updater;
+      const newPagination = typeof updater === "function" ? updater(prev) : updater;
       return newPagination;
     });
   }, []);
@@ -103,24 +87,21 @@ function MessageLogs({ dateRange }) {
 
     if (formatted === "Inbox") {
       return {
-        className:
-          "bg-blue-50 dark:bg-transparent text-blue-700 border-blue-200",
+        className: "bg-blue-50 dark:bg-transparent text-blue-700 border-blue-200",
         icon: <MessageCircle className="w-3 h-3 mr-1" />,
       };
     }
 
     if (formatted === "Campaign") {
       return {
-        className:
-          "bg-orange-50 dark:bg-transparent text-orange-700 border-orange-200",
+        className: "bg-orange-50 dark:bg-transparent text-orange-700 border-orange-200",
         icon: <Megaphone className="w-3 h-3 mr-1" />,
       };
     }
 
     if (formatted === "Template") {
       return {
-        className:
-          "bg-purple-50 dark:bg-transparent text-purple-700 border-purple-200",
+        className: "bg-purple-50 dark:bg-transparent text-purple-700 border-purple-200",
         icon: <Megaphone className="w-3 h-3 mr-1" />,
       };
     }
@@ -136,24 +117,21 @@ function MessageLogs({ dateRange }) {
 
     if (s === "delivered") {
       return {
-        className:
-          "bg-green-50 dark:bg-transparent text-green-700 border-green-200",
+        className: "bg-green-50 dark:bg-transparent text-green-700 border-green-200",
         icon: <CheckCircle2 className="w-3 h-3 mr-1" />,
       };
     }
 
     if (s === "sent") {
       return {
-        className:
-          "bg-blue-50 dark:bg-transparent text-blue-700 border-blue-200",
+        className: "bg-blue-50 dark:bg-transparent text-blue-700 border-blue-200",
         icon: <Send className="w-3 h-3 mr-1" />,
       };
     }
 
     if (s === "read") {
       return {
-        className:
-          "bg-indigo-50 dark:bg-transparent text-indigo-700 border-indigo-200",
+        className: "bg-indigo-50 dark:bg-transparent text-indigo-700 border-indigo-200",
         icon: <CheckCircle2 className="w-3 h-3 mr-1" />,
       };
     }
@@ -183,9 +161,7 @@ function MessageLogs({ dateRange }) {
         header: t("Timestamp"),
         cell: ({ row }) => {
           if (row.original.isSkeleton) {
-            return (
-              <div className="h-4 w-32 bg-gray-200 animate-pulse rounded" />
-            );
+            return <div className="h-4 w-32 bg-gray-200 animate-pulse rounded" />;
           }
 
           return (
@@ -201,9 +177,7 @@ function MessageLogs({ dateRange }) {
         header: t("Phone"),
         cell: ({ row }) => {
           if (row.original.isSkeleton) {
-            return (
-              <div className="h-4 w-24 bg-gray-200 animate-pulse rounded" />
-            );
+            return <div className="h-4 w-24 bg-gray-200 animate-pulse rounded" />;
           }
 
           return <div className="font-mono text-sm">{row.original.phone}</div>;
@@ -215,9 +189,7 @@ function MessageLogs({ dateRange }) {
         header: t("Status"),
         cell: ({ row }) => {
           if (row.original.isSkeleton) {
-            return (
-              <div className="h-5 w-20 bg-gray-200 animate-pulse rounded" />
-            );
+            return <div className="h-5 w-20 bg-gray-200 animate-pulse rounded" />;
           }
 
           const status = row.original.status;
@@ -239,9 +211,7 @@ function MessageLogs({ dateRange }) {
         header: t("Source"),
         cell: ({ row }) => {
           if (row.original.isSkeleton) {
-            return (
-              <div className="h-5 w-24 bg-gray-200 animate-pulse rounded" />
-            );
+            return <div className="h-5 w-24 bg-gray-200 animate-pulse rounded" />;
           }
 
           const source = row.original.sourceMessage;
@@ -263,16 +233,10 @@ function MessageLogs({ dateRange }) {
         header: t("Type"),
         cell: ({ row }) => {
           if (row.original.isSkeleton) {
-            return (
-              <div className="h-4 w-16 bg-gray-200 animate-pulse rounded" />
-            );
+            return <div className="h-4 w-16 bg-gray-200 animate-pulse rounded" />;
           }
 
-          return (
-            <div className="text-xs text-slate-500">
-              {row.original.messageType}
-            </div>
-          );
+          return <div className="text-xs text-slate-500">{row.original.messageType}</div>;
         },
       },
 
@@ -281,15 +245,11 @@ function MessageLogs({ dateRange }) {
         header: t("Template"),
         cell: ({ row }) => {
           if (row.original.isSkeleton) {
-            return (
-              <div className="h-4 w-48 bg-gray-200 animate-pulse rounded" />
-            );
+            return <div className="h-4 w-48 bg-gray-200 animate-pulse rounded" />;
           }
 
           return (
-            <div className="max-w-75 truncate text-sm">
-              {row.original.messagePreview || "-"}
-            </div>
+            <div className="max-w-75 truncate text-sm">{row.original.messagePreview || "-"}</div>
           );
         },
       },
@@ -306,8 +266,7 @@ function MessageLogs({ dateRange }) {
           if (!logsObj) {
             return <span className="text-muted-foreground">Failed</span>;
           }
-          const shortMessage =
-            logsObj?.error_data?.details || logsObj?.message || "View error";
+          const shortMessage = logsObj?.error_data?.details || logsObj?.message || "View error";
 
           return (
             <Popover>
@@ -333,12 +292,10 @@ function MessageLogs({ dateRange }) {
     [],
   );
 
-  const skeletonData = Array.from({ length: pagination.pageSize }).map(
-    (_, i) => ({
-      id: i,
-      isSkeleton: true,
-    }),
-  );
+  const skeletonData = Array.from({ length: pagination.pageSize }).map((_, i) => ({
+    id: i,
+    isSkeleton: true,
+  }));
 
   return (
     <div className="h-full relative">
@@ -364,10 +321,7 @@ function MessageLogs({ dateRange }) {
             )}
           </div>
 
-          <Select
-            value={selectedStatus}
-            onValueChange={(value) => setSelectedStatus(value)}
-          >
+          <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value)}>
             <SelectTrigger className="h-8 w-full max-w-44">
               <SelectValue placeholder={t("All Status")} />
             </SelectTrigger>
@@ -380,10 +334,7 @@ function MessageLogs({ dateRange }) {
             </SelectContent>
           </Select>
 
-          <Select
-            value={selectedSource}
-            onValueChange={(value) => setSelectedSource(value)}
-          >
+          <Select value={selectedSource} onValueChange={(value) => setSelectedSource(value)}>
             <SelectTrigger className="h-8 w-full max-w-44">
               <SelectValue placeholder={t("All Sources")} />
             </SelectTrigger>

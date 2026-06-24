@@ -1,8 +1,7 @@
-import { memo } from "react";
-
 import { Group, Stack, Text } from "@mantine/core";
 import { IconLocation } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
+import { memo } from "react";
 
 import type { LocationNodeData } from "../../types/node-types.ts";
 import BaseNode from "./base-node.tsx";

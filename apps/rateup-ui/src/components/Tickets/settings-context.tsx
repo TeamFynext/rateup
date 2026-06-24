@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { createContext, useMemo, useState } from "react";
 
@@ -47,9 +45,5 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
     };
   }, [settings]);
 
-  return (
-    <SettingsContext.Provider value={value}>
-      {children}
-    </SettingsContext.Provider>
-  );
+  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

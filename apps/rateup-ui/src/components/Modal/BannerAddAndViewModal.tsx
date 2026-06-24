@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 import {
   IconBookmark,
   IconChevronLeft,
@@ -9,10 +5,10 @@ import {
   IconInfoCircle,
   IconPlus,
 } from "@tabler/icons-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { MenuItemPriceType } from "@/types/enums.ts";
 import {
   useCreateMenuBannerMutation,
   useDeleteMenuBannerMutation,
@@ -20,11 +16,7 @@ import {
   useUpdateMenuBannerMutation,
 } from "@/backend/menu/Banner/banner.query";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel.tsx";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel.tsx";
 import {
   Dialog,
   DialogContent,
@@ -32,11 +24,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { MenuItemPriceType } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import RateupLoader from "../Loaders/RateupLoader.tsx";
@@ -103,10 +92,7 @@ const BannerAddAndViewModal = ({
   };
 
   const bannerForm = data?.map((value, index) => (
-    <CarouselItem
-      key={value.id || `${index}-${renderTick}`}
-      className="basis-full"
-    >
+    <CarouselItem key={value.id || `${index}-${renderTick}`} className="basis-full">
       <div className="mx-auto max-w-222.5 px-2">
         <Slide
           key={value?.id || `${index}-${renderTick}`}
@@ -140,28 +126,18 @@ const BannerAddAndViewModal = ({
   };
 
   return (
-    <Dialog
-      open={opened}
-      onOpenChange={(nextOpen) => !nextOpen && onCloseAction()}
-    >
+    <Dialog open={opened} onOpenChange={(nextOpen) => !nextOpen && onCloseAction()}>
       <DialogContent className="w-[90vw] sm:max-w-250 max-h-[90vh] overflow-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <DialogTitle>{translations("Manage Banners")}</DialogTitle>
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={translations("Banner info")}
-                >
+                <Button variant="ghost" size="icon-sm" aria-label={translations("Banner info")}>
                   <IconInfoCircle />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent
-                className="w-[90vw] sm:w-[70vw] p-2"
-                align="start"
-              >
+              <PopoverContent className="w-[90vw] sm:w-[70vw] p-2" align="start">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={getFileUrlFromKey("/images/menu/banner-demo.gif", false)}
@@ -206,11 +182,7 @@ const BannerAddAndViewModal = ({
           ) : (
             <>
               <div className="mt-2 flex items-center justify-between">
-                <Button
-                  type="button"
-                  onClick={addBanner}
-                  disabled={data?.length === 4}
-                >
+                <Button type="button" onClick={addBanner} disabled={data?.length === 4}>
                   <IconPlus data-icon="inline-end" />
                   {translations("Add Banner")}
                 </Button>

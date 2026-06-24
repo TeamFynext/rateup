@@ -12,12 +12,7 @@ export type ApprovalRequestType =
   | "ACCOUNT_REACTIVATION"
   | "BULK_OPERATION";
 
-export type ApprovalStatus =
-  | "PENDING"
-  | "APPROVED"
-  | "REJECTED"
-  | "EXPIRED"
-  | "CANCELLED";
+export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED" | "CANCELLED";
 
 type RequestedByType = "CUSTOMER" | "STAFF" | "SYSTEM";
 
@@ -100,9 +95,7 @@ export async function getApprovalRequests(
   return (await axiosClient.get(base, { params })).data;
 }
 
-export async function getApprovalRequestById(
-  approvalId: string,
-): Promise<ApprovalRequest> {
+export async function getApprovalRequestById(approvalId: string): Promise<ApprovalRequest> {
   return (await axiosClient.get(`${base}/${approvalId}`)).data;
 }
 

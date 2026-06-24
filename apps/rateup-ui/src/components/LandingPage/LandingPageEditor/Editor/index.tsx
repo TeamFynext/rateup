@@ -1,7 +1,8 @@
 import { Stack } from "@mantine/core";
 
-import styles from "./Editor.module.css";
 import RichTextEditor from "./RichTextEditor/index.tsx";
+
+import styles from "./Editor.module.css";
 
 function Editor() {
   return (

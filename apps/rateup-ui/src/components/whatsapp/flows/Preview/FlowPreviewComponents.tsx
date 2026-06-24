@@ -23,9 +23,6 @@ import {
   IconX,
 } from "@tabler/icons-react";
 
-import type { WaFlowFormNonInputElementType } from "@/types/enums.ts";
-import { WaFlowFormElementType } from "@/types/enums.ts";
-import type { WaFlowFormElement } from "@/types/global";
 import {
   Carousel,
   CarouselContent,
@@ -33,9 +30,13 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel.tsx";
+import type { WaFlowFormNonInputElementType } from "@/types/enums.ts";
+import { WaFlowFormElementType } from "@/types/enums.ts";
+import type { WaFlowFormElement } from "@/types/global";
 
 import { markdownToPlainText } from "../../flow-v2/FlowScreensList/ScreenListItem.tsx";
 import { getTextStyle } from "../FlowPage/EditFlow/FlowTextDetailedView.tsx";
+
 import styles from "./preview.module.css";
 
 function FlowTextPreview({
@@ -123,13 +124,7 @@ function FlowFileInputPreview({
     </Box>
   );
 }
-function FlowRadioPreview({
-  label = "Label",
-  options,
-}: {
-  label?: string;
-  options: string[];
-}) {
+function FlowRadioPreview({ label = "Label", options }: { label?: string; options: string[] }) {
   return (
     <Radio.Group
       name="preview"
@@ -139,7 +134,7 @@ function FlowRadioPreview({
       }}
     >
       <Stack mt="xs">
-        {options?.map((option, index) => (
+        {options?.map((option, _index) => (
           <Radio
             styles={{
               body: {
@@ -158,13 +153,7 @@ function FlowRadioPreview({
   );
 }
 
-function FlowCheckBoxPreview({
-  label = "Label",
-  options,
-}: {
-  label?: string;
-  options: string[];
-}) {
+function FlowCheckBoxPreview({ label = "Label", options }: { label?: string; options: string[] }) {
   return (
     <Checkbox.Group
       label={label}
@@ -173,7 +162,7 @@ function FlowCheckBoxPreview({
       }}
     >
       <Stack mt="xs">
-        {options?.map((option, index) => (
+        {options?.map((option, _index) => (
           <Checkbox
             styles={{
               body: {
@@ -202,7 +191,7 @@ function FlowChipsSelectorPreview({
     <Chip.Group multiple>
       <Text fz={"sm"}>{label}</Text>
       <Group>
-        {options?.map((option, index) => (
+        {options?.map((option, _index) => (
           <Chip key={option} value={option}>
             {option}
           </Chip>
@@ -212,13 +201,7 @@ function FlowChipsSelectorPreview({
   );
 }
 
-function DropDownPreview({
-  label = "Label",
-  options,
-}: {
-  label?: string;
-  options: string[];
-}) {
+function DropDownPreview({ label = "Label", options }: { label?: string; options: string[] }) {
   return (
     <TextInput
       variant="unstyled"
@@ -273,13 +256,7 @@ function FlowImagePreview({ src, width, height }: FlowImagePreviewProps) {
   );
 }
 
-function FlowImageCarouselPreview({
-  label = "Label",
-  fe,
-}: {
-  label?: string;
-  fe: any;
-}) {
+function FlowImageCarouselPreview({ label = "Label", fe }: { label?: string; fe: any }) {
   return (
     <Box>
       <Text>{label}</Text>
@@ -396,8 +373,7 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
         <FlowRadioPreview
           label={label}
           options={
-            typeof fe["data-source"] !== "string" &&
-            fe["data-source"]?.map((ds) => ds.title)
+            typeof fe["data-source"] !== "string" && fe["data-source"]?.map((ds) => ds.title)
           }
         />
       );
@@ -406,8 +382,7 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
         <FlowCheckBoxPreview
           label={label}
           options={
-            typeof fe["data-source"] !== "string" &&
-            fe["data-source"]?.map((ds) => ds.title)
+            typeof fe["data-source"] !== "string" && fe["data-source"]?.map((ds) => ds.title)
           }
         />
       );
@@ -416,8 +391,7 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
         <DropDownPreview
           label={label}
           options={
-            typeof fe["data-source"] !== "string" &&
-            fe["data-source"]?.map((ds) => ds.title)
+            typeof fe["data-source"] !== "string" && fe["data-source"]?.map((ds) => ds.title)
           }
         />
       );
@@ -430,9 +404,7 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
         </Text>
       );
     case WaFlowFormElementType.image:
-      return (
-        <FlowImagePreview src={fe.src} width={fe.width} height={fe.height} />
-      );
+      return <FlowImagePreview src={fe.src} width={fe.width} height={fe.height} />;
     case WaFlowFormElementType.photoPicker:
       return <FlowFileInputPreview label={label} type={"photo"} />;
     case WaFlowFormElementType.documentPicker:
@@ -442,8 +414,7 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
         <FlowChipsSelectorPreview
           label={label}
           options={
-            typeof fe["data-source"] !== "string" &&
-            fe["data-source"]?.map((ds) => ds.title)
+            typeof fe["data-source"] !== "string" && fe["data-source"]?.map((ds) => ds.title)
           }
         />
       );

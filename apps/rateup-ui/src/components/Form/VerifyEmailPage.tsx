@@ -1,16 +1,6 @@
-"use client";
-
-import { useState } from "react";
-
 import { useNavigate } from "@tanstack/react-router";
-import {
-  CheckCircle2,
-  Clock,
-  HelpCircle,
-  Home,
-  Mail,
-  Send,
-} from "lucide-react";
+import { CheckCircle2, Clock, HelpCircle, Home, Mail, Send } from "lucide-react";
+import { useState } from "react";
 
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
@@ -43,11 +33,7 @@ function VerifyEmailPage({ sendEmail }) {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-linear-to-br from-blue-50/30 via-gray-50/20 to-orange-50/30 gap-1 p-4">
       <div className="flex flex-col gap-1 items-center justify-center">
-        <img
-          src={rateupLogoStackedWhiteTransparent}
-          alt="RateUp Logo"
-          className="w-18 h-auto"
-        />
+        <img src={rateupLogoStackedWhiteTransparent} alt="RateUp Logo" className="w-18 h-auto" />
         <h2 className="text-lg text-gray-900 mb-1">Verify Your Email</h2>
         <p className="text-sm text-gray-600">Check your inbox to continue</p>
       </div>
@@ -87,9 +73,7 @@ function VerifyEmailPage({ sendEmail }) {
               className="w-full h-10 border-2 border-gray-300 hover:border-rateup-blue hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white text-sm"
             >
               <Send className="w-4 h-4 mr-2" />
-              {countdown > 0
-                ? `Resend in ${countdown}s`
-                : "Resend verification email"}
+              {countdown > 0 ? `Resend in ${countdown}s` : "Resend verification email"}
             </Button>
 
             <Button
@@ -111,8 +95,8 @@ function VerifyEmailPage({ sendEmail }) {
               <HelpCircle className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
               <div className="flex-1">
                 <p className="text-xs text-gray-700 leading-relaxed">
-                  Didn't receive the email? Check your spam folder or wait a few
-                  minutes for delivery.
+                  Didn't receive the email? Check your spam folder or wait a few minutes for
+                  delivery.
                 </p>
               </div>
             </div>

@@ -1,11 +1,9 @@
-"use client";
-
 import { useTranslation } from "react-i18next";
 
-import { cn } from "@/lib/utils.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { cn } from "@/lib/utils.ts";
 import { fallbackImage } from "@/utils/constants.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
@@ -33,8 +31,7 @@ export function ItemDisplay({
           getFileUrlFromKey(
             item?.images[0],
             true,
-            item?.unsplashImage?.find((data) => data === item?.images[0])
-              ?.length > 0,
+            item?.unsplashImage?.find((data) => data === item?.images[0])?.length > 0,
           ),
         )
       : fallbackImage;
@@ -78,44 +75,28 @@ export function ItemDisplay({
           </CreditsCard>
           {isUnavailable && (
             <div className="absolute inset-x-0 top-3 flex justify-center px-3">
-              <Badge
-                variant="outline"
-                className="bg-background/90 text-foreground shadow-sm"
-              >
+              <Badge variant="outline" className="bg-background/90 text-foreground shadow-sm">
                 {translations("Not Available")}
               </Badge>
             </div>
           )}
         </div>
-        <div
-          className={cn(
-            "flex min-w-0 flex-col gap-3",
-            isUnavailable && "opacity-70",
-          )}
-        >
+        <div className={cn("flex min-w-0 flex-col gap-3", isUnavailable && "opacity-70")}>
           <div className="space-y-2">
             <p className="line-clamp-2 min-h-11 text-base font-medium capitalize text-foreground sm:text-lg">
               {item?.name}
             </p>
             <ScrollArea className="w-full whitespace-nowrap">
               <div className="flex gap-2 pb-1">
-                <MenuFoodLabelBadge
-                  foodLabels={item?.foodLabels ?? []}
-                  label={false}
-                />
+                <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} label={false} />
               </div>
             </ScrollArea>
-            <p className="line-clamp-3 text-sm text-muted-foreground">
-              {item?.description}
-            </p>
+            <p className="line-clamp-3 text-sm text-muted-foreground">{item?.description}</p>
           </div>
           <div className="mt-auto grid grid-cols-3 gap-3 text-center">
             {item?.price?.variants?.length > 0 ? (
               item?.price?.variants.map((varient, index) => (
-                <div
-                  className="flex flex-col items-center gap-1"
-                  key={varient.name ?? index}
-                >
+                <div className="flex flex-col items-center gap-1" key={varient.name ?? index}>
                   <span className="truncate text-xs font-medium capitalize text-muted-foreground sm:text-sm">
                     {varient?.name}
                   </span>

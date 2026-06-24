@@ -1,13 +1,7 @@
-import { Suspense } from "react";
-
 import { Anchor, Center, Stack, Text } from "@mantine/core";
 import { IconMoodSad, IconReload } from "@tabler/icons-react";
-import {
-  createFileRoute,
-  Link,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 
 import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
@@ -32,11 +26,7 @@ function ShopifyCallbackRetryWithParams() {
   return <ShopifyCallbackRetry searchParams={searchParams} />;
 }
 
-function ShopifyCallbackRetry({
-  searchParams,
-}: {
-  searchParams: Record<string, string>;
-}) {
+function ShopifyCallbackRetry({ searchParams }: { searchParams: Record<string, string> }) {
   const navigate = useNavigate();
   const shop = searchParams.shop;
   const { t: translations } = useTranslation();
@@ -49,15 +39,13 @@ function ShopifyCallbackRetry({
           <RateupButtonBlue
             title={translations("Retry")}
             onClick={() => {
-              const regex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com/;
+              const regex = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com/;
               if (!shop || !regex.test(shop)) {
                 navigate({
                   to: "/login",
                 });
               }
-              window.open(
-                `${API_URL}/api/public/integrations/shopify/auth?shop=${shop}`,
-              );
+              window.open(`${API_URL}/api/public/integrations/shopify/auth?shop=${shop}`);
             }}
             fullWidth
             leftIcon={<IconReload size={"1rem"} />}

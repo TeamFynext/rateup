@@ -1,5 +1,3 @@
-"use client";
-
 import CommonError from "@/components/404/common-error.tsx";
 
 import MainSidebar from "../Layout/Navbar/main-sidebar";

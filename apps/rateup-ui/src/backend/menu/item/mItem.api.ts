@@ -5,8 +5,7 @@ type CreateMenuItem = Omit<MenuItem, "id" | "createdAt">;
 export const createMenuItem = async (menuItem: CreateMenuItem) =>
   await axiosClient.post(MENUITEM_URL, menuItem);
 export const getItemsByCategoryId = async (categoryId: string) =>
-  (await axiosClient.get(`${MENUITEM_URL}/all/${categoryId}`))
-    .data as MenuItem[];
+  (await axiosClient.get(`${MENUITEM_URL}/all/${categoryId}`)).data as MenuItem[];
 export const deleteMenuItem = async (itemId: string) =>
   await axiosClient.delete(`${MENUITEM_URL}/${itemId}`);
 export const updateMenuItem = async (menuId: string, menuItem) =>

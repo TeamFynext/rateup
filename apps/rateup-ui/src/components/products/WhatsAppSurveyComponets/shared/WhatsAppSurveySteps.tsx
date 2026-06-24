@@ -10,8 +10,7 @@ const WhatsAppSurveySteps = () => {
             Get Actionable Feedback in 3 Simple Steps
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl">
-            Start collecting valuable customer insights quickly and easily with
-            RateUp.
+            Start collecting valuable customer insights quickly and easily with RateUp.
           </p>
         </div>
 
@@ -36,9 +35,7 @@ const WhatsAppSurveySteps = () => {
                 )}
 
                 {/* Title & Description */}
-                <h3 className="text-xl font-semibold text-[#0F172A] mb-2">
-                  {step.title}
-                </h3>
+                <h3 className="text-xl font-semibold text-[#0F172A] mb-2">{step.title}</h3>
                 <p className="text-gray-600 text-sm">{step.description}</p>
               </div>
             ))}

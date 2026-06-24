@@ -1,10 +1,7 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { CheckCircle, Info, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -16,11 +13,7 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import { generateListItems } from "@/components/HomePage/pages/Pricing/Card/PricingCard.tsx";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
-import {
-  Billing,
-  OrderHistory,
-  UsageCard,
-} from "@/components/settings/billing.tsx";
+import { Billing, OrderHistory, UsageCard } from "@/components/settings/billing.tsx";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -59,12 +52,7 @@ function BillingPage() {
   const { user } = useUser();
   const navigate = useNavigate();
   const { t: translations } = useTranslation();
-  const {
-    data: subscription,
-    isPending,
-    refetch,
-    isRefetching,
-  } = useSubscription();
+  const { data: subscription, refetch, isRefetching } = useSubscription();
   const {
     data: orders,
     refetch: refreshOrders,
@@ -78,14 +66,11 @@ function BillingPage() {
   const [isAnnualMessageLimit, setIsAnnualMessageLimit] = useState(false);
 
   useEffect(() => {
-    const order = orders?.data?.filter(
-      (o) => o.subscriptionId === subscription?.subscriptionRef,
-    );
+    const order = orders?.data?.filter((o) => o.subscriptionId === subscription?.subscriptionRef);
     order?.length > 0 && setActiveOrderData(order[0]);
 
     const sorted = orders?.data?.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     sorted?.length && setLatestOrderData(sorted[0]);
   }, [subscription, orders]);
@@ -96,7 +81,7 @@ function BillingPage() {
   // Modal control functions
   const open = () => setOpened(true);
   const close = () => setOpened(false);
-  const openSummary = () => setSummaryView(true);
+
   const closeSummary = () => setSummaryView(false);
 
   const { cart, reset } = useRouteAndCartStore();
@@ -115,9 +100,7 @@ function BillingPage() {
   };
 
   async function displayRazorpay() {
-    const res = await loadScript(
-      "https://checkout.razorpay.com/v1/checkout.js",
-    );
+    const res = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
 
     if (!res) {
       alert(translations("Razropay failed to load!!"));
@@ -131,7 +114,7 @@ function BillingPage() {
         name: translations("RateUp Payment"),
         description: "Subscription Plans in Rateup",
         image: "https://djd7kjh9uwow0.cloudfront.net/images/logo.svg",
-        handler: function (response) {
+        handler: function (_response) {
           console.log(translations("Payment Successful...!"));
           setProcessingPayment(false);
           if (order.hasTrial) {
@@ -155,9 +138,7 @@ function BillingPage() {
           rateupPlanId: selectedRateupPlan,
           subId: order?.subscriptionId,
           orgId: user?.orgId,
-          subExpiry: dayjs
-            .unix(order?.subExpiry)
-            .format("YYYY-MM-DDTHH:mm:ss.sssZ"),
+          subExpiry: dayjs.unix(order?.subExpiry).format("YYYY-MM-DDTHH:mm:ss.sssZ"),
         },
         theme: {
           color: "#1C518E",
@@ -196,8 +177,7 @@ function BillingPage() {
     );
   };
 
-  const enablePurchase =
-    isSubscriber() || activeOrderData?.subscriptionStatus === "cancelled";
+  const enablePurchase = isSubscriber() || activeOrderData?.subscriptionStatus === "cancelled";
 
   function handleRefresh() {
     refetch();
@@ -221,9 +201,7 @@ function BillingPage() {
             size="sm"
             className="gap-2"
           >
-            <RefreshCw
-              className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`}
-            />
+            <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
             {translations("Refresh")}
           </Button>
         </div>
@@ -238,11 +216,7 @@ function BillingPage() {
         isRefetching={isRefetching}
       />
       <UsageCard subscription={subscription} />
-      <OrderHistory
-        orders={orders?.data}
-        refresh={refreshOrders}
-        isRefetching={isRefetchOrders}
-      />
+      <OrderHistory orders={orders?.data} refresh={refreshOrders} isRefetching={isRefetchOrders} />
       {/* Order Confirmation Modal */}
       <Dialog
         open={opened}
@@ -284,17 +258,14 @@ function BillingPage() {
                     <h3 className="text-2xl font-bold">{cart?.name}</h3>
                     <p className="text-xl font-semibold text-muted-foreground">
                       {cart?.currencySymbol}
-                      {cart?.amount}{" "}
-                      <span className="text-base">/{cart?.period}</span>
+                      {cart?.amount} <span className="text-base">/{cart?.period}</span>
                     </p>
                   </div>
                 </div>
 
                 {/* Features Section */}
                 <div className="space-y-4 flex-1">
-                  <h4 className="text-lg font-semibold">
-                    {translations("Plan Features")}
-                  </h4>
+                  <h4 className="text-lg font-semibold">{translations("Plan Features")}</h4>
                   <div className="space-y-2">
                     {cart?.description && generateListItems(cart?.description)}
                   </div>
@@ -324,9 +295,7 @@ function BillingPage() {
               </div>
 
               <div className="flex justify-center pt-4">
-                <Button className="w-full sm:w-auto">
-                  {translations("Buy Addons")}
-                </Button>
+                <Button className="w-full sm:w-auto">{translations("Buy Addons")}</Button>
               </div>
             </div>
           )}
@@ -353,7 +322,7 @@ function BillingPage() {
                   } else {
                     setProcessingPayment(true);
                     createCheckout.mutate(checkoutDetails, {
-                      onSettled: (data) => {
+                      onSettled: (_data) => {
                         setIsAnnualMessageLimit(false);
                       },
                     });
@@ -401,11 +370,7 @@ function BillingPage() {
               </p>
 
               <div className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  {translations(
-                    "Thank you for choosing Rateup Premium subscription.",
-                  )}
-                </p>
+                <p>{translations("Thank you for choosing Rateup Premium subscription.")}</p>
                 <p>
                   {translations(
                     "You can enjoy Rateup Premium features once your order is processed successfully.",

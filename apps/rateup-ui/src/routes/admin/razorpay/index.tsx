@@ -1,14 +1,7 @@
-"use client";
-
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Package, Receipt } from "lucide-react";
 
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import RazorpayPlans from "../../../components/admin/razorpay/plans.tsx";
 import RazorpaySubscriptions from "../../../components/admin/razorpay/subscriptions.tsx";
@@ -24,9 +17,7 @@ function Index() {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3">
           <CreditCard className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Razorpay Dashboard
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Razorpay Dashboard</h1>
         </div>
       </div>
 

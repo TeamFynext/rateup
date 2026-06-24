@@ -1,5 +1,3 @@
-"use client";
-
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { getTeamFeatures } from "@/backend/team/team.api";
@@ -9,12 +7,8 @@ import { Loader } from "@/components/ui/loader.tsx";
 import { getDashboardLandingTarget } from "@/utils/dashboard-feature-access.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
-async function getMemberAllowedFeatures(
-  teamIds: string[],
-): Promise<Set<string>> {
-  const teamFeaturesResponses = await Promise.all(
-    teamIds.map((id) => getTeamFeatures(id)),
-  );
+async function getMemberAllowedFeatures(teamIds: string[]): Promise<Set<string>> {
+  const teamFeaturesResponses = await Promise.all(teamIds.map((id) => getTeamFeatures(id)));
   const allowedFeatures = new Set<string>();
 
   for (const result of teamFeaturesResponses) {
@@ -35,8 +29,7 @@ export const Route = createFileRoute("/dashboard/")({
       queryFn: fetchUserInfo,
       staleTime: 60 * 1000,
     });
-    const user =
-      userQueryData && "data" in userQueryData ? userQueryData.data : null;
+    const user = userQueryData && "data" in userQueryData ? userQueryData.data : null;
 
     if (!user) {
       throw redirect({

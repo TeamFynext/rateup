@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ChevronLeft,
   ChevronRight,
@@ -66,8 +64,7 @@ const StatePagination = ({
   const isLast = pageIndex === totalPageCount - 1;
   const pageRange = getPageRange(pageIndex, totalPageCount);
 
-  const goTo = (index: number) =>
-    setPagination((prev) => ({ ...prev, pageIndex: index }));
+  const goTo = (index: number) => setPagination((prev) => ({ ...prev, pageIndex: index }));
 
   return (
     <div className="flex items-center gap-1 mt-3 flex-wrap">

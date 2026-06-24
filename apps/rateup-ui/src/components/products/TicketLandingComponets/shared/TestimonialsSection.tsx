@@ -1,10 +1,6 @@
 import { Star, User } from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { testimonials } from "../TicketingConstants.tsx";
@@ -35,36 +31,24 @@ const TestimonialsSection = () => {
                 {/* Stars */}
                 <div className="flex mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-5 h-5 fill-[#FACC15] text-[#FACC15] mr-1"
-                    />
+                    <Star key={i} className="w-5 h-5 fill-[#FACC15] text-[#FACC15] mr-1" />
                   ))}
                 </div>
 
                 {/* Quote */}
-                <p className="text-gray-700 mb-6 italic leading-relaxed">
-                  "{testimonial.quote}"
-                </p>
+                <p className="text-gray-700 mb-6 italic leading-relaxed">"{testimonial.quote}"</p>
 
                 {/* Avatar + Info */}
                 <div className="flex items-center mt-6">
                   <Avatar className="h-10 w-10 mr-3">
-                    <AvatarImage
-                      src={testimonial.avatar}
-                      alt={testimonial.name}
-                    />
+                    <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
                     <AvatarFallback className="bg-[#1c518e] text-white">
                       <User className="h-5 w-5" />
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-semibold text-[#013553]">
-                      {testimonial.name}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {testimonial.company}
-                    </p>
+                    <p className="font-semibold text-[#013553]">{testimonial.name}</p>
+                    <p className="text-sm text-gray-500">{testimonial.company}</p>
                   </div>
                 </div>
               </CardContent>

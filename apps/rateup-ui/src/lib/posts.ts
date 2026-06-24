@@ -115,7 +115,7 @@ export async function getSinglePost(postSlug: string) {
       slug: postSlug,
       include: "tags,authors",
     })) as Post;
-  } catch (_error) {
+  } catch {
     return null;
   }
 }

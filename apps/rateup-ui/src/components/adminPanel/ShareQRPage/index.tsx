@@ -1,7 +1,4 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
-
 import { useTranslation } from "react-i18next";
 import { v4 as uuid } from "uuid";
 

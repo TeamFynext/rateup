@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowLeft, Loader2, Plus } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 
@@ -63,20 +61,17 @@ export function RewardFormContainer({
       case "point-rewards":
         return {
           title: "Create Point Reward",
-          description:
-            "Configure a reward that customers can redeem using their loyalty points",
+          description: "Configure a reward that customers can redeem using their loyalty points",
         };
       case "coupons":
         return {
           title: "Create Coupon",
-          description:
-            "Create a coupon code that all users can apply for discounts",
+          description: "Create a coupon code that all users can apply for discounts",
         };
       case "free-gifts":
         return {
           title: "Create Free Gift",
-          description:
-            "Set up a personalized gift that can be assigned to customers",
+          description: "Set up a personalized gift that can be assigned to customers",
         };
       case "referral":
         return {
@@ -126,12 +121,7 @@ export function RewardFormContainer({
 
           {/* Action Buttons */}
           <div className="flex gap-3 mt-8">
-            <Button
-              variant="outline"
-              type="button"
-              className="flex-1"
-              onClick={onCancel}
-            >
+            <Button variant="outline" type="button" className="flex-1" onClick={onCancel}>
               Cancel
             </Button>
             {category === "point-rewards" && (

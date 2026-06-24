@@ -1,14 +1,8 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { useParams } from "@tanstack/react-router";
 import { isEqual } from "lodash";
+import { useEffect } from "react";
 
-import {
-  useUpdateFlowMutation,
-  useWaFlowFromDb,
-} from "@/backend/whatsapp/flow/flow.query";
+import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 
 import ElementsList from "./ElementsList/index.tsx";
@@ -21,10 +15,7 @@ interface EditFlowV3Props {
   setPreviewOpened?: (opened: boolean) => void;
 }
 
-function EditFlowV3({
-  previewOpened = true,
-  setPreviewOpened,
-}: EditFlowV3Props = {}) {
+function EditFlowV3({ previewOpened = true, setPreviewOpened }: EditFlowV3Props = {}) {
   const params = useParams({
     strict: false,
   });
@@ -48,25 +39,21 @@ function EditFlowV3({
   useEffect(() => {
     if (dbFlow) {
       // Normalize elements to ensure they have metaType
-      const normalizedScreens = (dbFlow.json.screens || []).map(
-        (screen: any) => ({
-          ...screen,
-          layout: {
-            ...screen.layout,
-            children: (screen.layout.children || []).map((element: any) => ({
-              ...element,
-              // Ensure metaType is set, fallback to type if missing
-              metaType: element.metaType || element.type,
-            })),
-          },
-        }),
-      );
+      const normalizedScreens = (dbFlow.json.screens || []).map((screen: any) => ({
+        ...screen,
+        layout: {
+          ...screen.layout,
+          children: (screen.layout.children || []).map((element: any) => ({
+            ...element,
+            // Ensure metaType is set, fallback to type if missing
+            metaType: element.metaType || element.type,
+          })),
+        },
+      }));
 
       addScreens(normalizedScreens as any);
       if (currentScreenId) {
-        const screenExists = getScreens().some(
-          (screen) => screen.id === currentScreenId,
-        );
+        const screenExists = getScreens().some((screen) => screen.id === currentScreenId);
         if (!screenExists) {
           setCurrentScreenId(normalizedScreens?.[0]?.id);
         }
@@ -96,8 +83,7 @@ function EditFlowV3({
       // Deep comparison to avoid unnecessary saves
       const screensChanged = !isEqual(dbFlow.json.screens, getScreens());
       const logicJumpsChanged = !isEqual(dbFlow.logicJumps, logicJumps);
-      const ticketsChanged =
-        ticketIssued && !isEqual(dbFlow.ticketIssued, ticketIssued);
+      const ticketsChanged = ticketIssued && !isEqual(dbFlow.ticketIssued, ticketIssued);
 
       if (screensChanged || logicJumpsChanged || ticketsChanged) {
         const timeoutId = setTimeout(() => {

@@ -1,5 +1,3 @@
-"use client";
-
 import { Box, CloseButton, SimpleGrid } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { useDebouncedCallback } from "@mantine/hooks";
@@ -30,24 +28,19 @@ const WOPExtraProps = ({ form }) => {
     })
     .check((ctx) => {
       const { value: values } = ctx;
-      if (
-        !values.imageSrc &&
-        values.segColors?.length !== values.segments?.length
-      ) {
+      if (!values.imageSrc && values.segColors?.length !== values.segments?.length) {
         ["segments", "segColors"].forEach((data) => {
           ctx.issues.push({
             path: [data],
             code: "custom",
-            message: translations(
-              "Segments and segColors should have equal number of data",
-            ),
+            message: translations("Segments and segColors should have equal number of data"),
             input: "",
           });
         });
       }
       try {
         values.imageSrc && new URL(values.imageSrc);
-      } catch (error) {
+      } catch {
         ctx.issues.push({
           path: ["imageSrc"],
           code: "custom",

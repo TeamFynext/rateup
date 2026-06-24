@@ -2,8 +2,7 @@ import { getSurveyThemeKeyOf } from "./SurveyTheme.constants";
 
 function surveyThemeReducer(state, action) {
   const { payload } = action;
-  const { selectedPageTab, surveyTheme, selectedEditor, selectedPreview } =
-    state;
+  const { selectedPageTab, surveyTheme, selectedPreview } = state;
   const surveyThemeKey = getSurveyThemeKeyOf(selectedPageTab);
 
   switch (action.type) {
@@ -50,12 +49,10 @@ function surveyThemeReducer(state, action) {
     }
     case "bg-choose-background-radio-change": {
       if (selectedPreview === "desktop") {
-        surveyTheme[surveyThemeKey].bg.desktopBg.chooseBgRadioInputValue =
-          payload;
+        surveyTheme[surveyThemeKey].bg.desktopBg.chooseBgRadioInputValue = payload;
       }
       if (selectedPreview === "mobile") {
-        surveyTheme[surveyThemeKey].bg.mobileBg.chooseBgRadioInputValue =
-          payload;
+        surveyTheme[surveyThemeKey].bg.mobileBg.chooseBgRadioInputValue = payload;
       }
       break;
     }

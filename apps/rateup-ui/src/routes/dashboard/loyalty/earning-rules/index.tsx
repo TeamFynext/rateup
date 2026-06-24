@@ -1,7 +1,3 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -17,12 +13,12 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { useConfirmDialog } from "@/hooks/useConfirmDialog.tsx";
 import type {
   LoyaltyEarningRule,
   LoyaltyEarningRuleInput,
@@ -67,6 +63,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog.tsx";
 import { docsPath } from "@/utils/constants.ts";
 import { randomHexColor } from "@/utils/index.ts";
 
@@ -86,9 +83,7 @@ const earningRuleSchema = z.object({
   name: z.string().min(1, "Rule name is required"),
   description: z.string().optional(),
   priority: z.coerce.number().min(0).default(10),
-  status: z
-    .enum(["active", "inactive", "scheduled", "expired"])
-    .default("active"),
+  status: z.enum(["active", "inactive", "scheduled", "expired"]).default("active"),
   pointsPerUnit: z.coerce.number().min(0).default(1.0),
   multiplier: z.coerce.number().min(0).default(1.0),
   bonusPoints: z.coerce.number().min(0).default(0),
@@ -131,40 +126,28 @@ function getRuleIcon(rule: LoyaltyEarningRule) {
 function EarningRulesPage() {
   const { t } = useTranslation("loyalty.earningRules");
 
-  const [earningRulesViewMode, setEarningRulesViewMode] = useState<
-    "list" | "create"
-  >("list");
+  const [earningRulesViewMode, setEarningRulesViewMode] = useState<"list" | "create">("list");
 
   const [editingTierId, setEditingTierId] = useState<string | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
 
   // Create view (UI-only extras to match design)
   const [ruleIcon, setRuleIcon] = useState("");
-  const [ruleType, setRuleType] = useState<
-    "" | "multiplier" | "bonus" | "percentage"
-  >("");
+  const [ruleType, setRuleType] = useState<"" | "multiplier" | "bonus" | "percentage">("");
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [tierRestrictionEnabled, setTierRestrictionEnabled] = useState(false);
   const [limitedPeriodEnabled, setLimitedPeriodEnabled] = useState(false);
-  const [whatsAppTemplate, setWhatsAppTemplate] = useState("");
+  const [, setWhatsAppTemplate] = useState("");
 
   const { confirm, ConfirmDialog } = useConfirmDialog();
 
   // Fetch tiers from API
-  const { data: loyaltyTiers = [], isLoading: tiersLoading } =
-    useLoyaltyTiers();
+  const { data: loyaltyTiers = [], isLoading: tiersLoading } = useLoyaltyTiers();
 
   // Fetch earning rules
-  const {
-    data: earningRules = [],
-    isLoading,
-    error,
-  } = useLoyaltyEarningRules();
+  const { data: earningRules = [], isLoading, error } = useLoyaltyEarningRules();
 
-  const additionalRules = useMemo(
-    () => earningRules.filter((r) => !r.isDefault),
-    [earningRules],
-  );
+  const additionalRules = useMemo(() => earningRules.filter((r) => !r.isDefault), [earningRules]);
 
   // Tier mutations
   const createTierMutation = useCreateLoyaltyTierMutation(() => {
@@ -230,8 +213,7 @@ function EarningRulesPage() {
   };
 
   const handleCreateSubmit = (values: EarningRuleFormValues) => {
-    const { timeFrom, timeTo, allowedDays, applicableToTiers, ...rest } =
-      values;
+    const { timeFrom, timeTo, allowedDays, applicableToTiers, ...rest } = values;
     const payload = {
       ...rest,
       allowedDays: scheduleEnabled ? (allowedDays ?? []) : [],
@@ -239,9 +221,7 @@ function EarningRulesPage() {
         scheduleEnabled && (timeFrom || timeTo)
           ? [{ start: timeFrom || "00:00", end: timeTo || "23:59" }]
           : [],
-      applicableToTiers: tierRestrictionEnabled
-        ? (applicableToTiers ?? [])
-        : [],
+      applicableToTiers: tierRestrictionEnabled ? (applicableToTiers ?? []) : [],
       validFrom: limitedPeriodEnabled ? rest.validFrom : null,
       validUntil: limitedPeriodEnabled ? rest.validUntil : null,
     };
@@ -255,9 +235,7 @@ function EarningRulesPage() {
         ? t("Are you sure you want to delete {name}? This cannot be undone.", {
             name: ruleName,
           })
-        : t(
-            "Are you sure you want to delete this earning rule? This cannot be undone.",
-          ),
+        : t("Are you sure you want to delete this earning rule? This cannot be undone."),
     });
     if (!confirmed) return;
     deleteRuleMutation.mutate(ruleId, {
@@ -303,10 +281,9 @@ function EarningRulesPage() {
         onSuccess: () =>
           toast.success(
             hasCustomersInTier
-              ? t(
-                  "{name} tier deleted and customers were downgraded to the previous tier",
-                  { name: tierName },
-                )
+              ? t("{name} tier deleted and customers were downgraded to the previous tier", {
+                  name: tierName,
+                })
               : t("{name} tier deleted", { name: tierName }),
           ),
       },
@@ -327,10 +304,7 @@ function EarningRulesPage() {
       return `Tier ${randomLetter}-${nextTierNumber}`;
     };
 
-    const maxPoints = Math.max(
-      ...loyaltyTiers.map((tier) => tier.threshold),
-      0,
-    );
+    const maxPoints = Math.max(...loyaltyTiers.map((tier) => tier.threshold), 0);
 
     const newTierData: LoyaltyTierInput = {
       name: createRandomTierName(),
@@ -354,9 +328,7 @@ function EarningRulesPage() {
     return (
       <div className="p-6">
         <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
-          <p className="text-sm text-destructive">
-            {t("Error loading earning rules")}
-          </p>
+          <p className="text-sm text-destructive">{t("Error loading earning rules")}</p>
         </div>
       </div>
     );
@@ -370,13 +342,9 @@ function EarningRulesPage() {
           {/* Header */}
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="mb-1 text-2xl font-semibold">
-                {t("Point Earning Rules")}
-              </h1>
+              <h1 className="mb-1 text-2xl font-semibold">{t("Point Earning Rules")}</h1>
               <p className="text-sm text-muted-foreground">
-                {t(
-                  "Define how customers earn points through purchases and activities",
-                )}
+                {t("Define how customers earn points through purchases and activities")}
               </p>
             </div>
             <div className="flex items-start justify-between gap-2">
@@ -401,9 +369,7 @@ function EarningRulesPage() {
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold">
-                    {t("Tier-Based Earning Rates")}
-                  </h3>
+                  <h3 className="font-semibold">{t("Tier-Based Earning Rates")}</h3>
                   <Badge variant="outline" className="text-xs">
                     {loyaltyTiers.length} {t("tiers")}
                   </Badge>
@@ -452,9 +418,7 @@ function EarningRulesPage() {
             {/* Additional Earning Rules */}
             <div>
               <div className="mb-3 flex items-center gap-2">
-                <h3 className="font-semibold">
-                  {t("Additional Earning Rules")}
-                </h3>
+                <h3 className="font-semibold">{t("Additional Earning Rules")}</h3>
                 <Badge variant="outline" className="text-xs">
                   {additionalRules.length} {t("rules")}
                 </Badge>
@@ -471,9 +435,7 @@ function EarningRulesPage() {
                       setEditingRuleId(rule.id || null);
                     }}
                     onCancelEdit={() => setEditingRuleId(null)}
-                    onDelete={() =>
-                      rule.id && handleDeleteRule(rule.id, rule.name)
-                    }
+                    onDelete={() => rule.id && handleDeleteRule(rule.id, rule.name)}
                     isDeleting={deleteRuleMutation.isPending}
                   />
                 ))}
@@ -484,9 +446,7 @@ function EarningRulesPage() {
                       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
                         <Plus className="h-6 w-6 text-gray-400" />
                       </div>
-                      <h4 className="mb-1 font-semibold">
-                        {t("No additional rules yet")}
-                      </h4>
+                      <h4 className="mb-1 font-semibold">{t("No additional rules yet")}</h4>
                       <p className="mb-4 text-sm text-muted-foreground">
                         {t(
                           "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials",
@@ -531,19 +491,14 @@ function EarningRulesPage() {
 
           <Card className="border shadow-sm bg-white">
             <CardContent className="p-6">
-              <h2 className="mb-2 text-xl font-semibold">
-                Create Additional Earning Rule
-              </h2>
+              <h2 className="mb-2 text-xl font-semibold">Create Additional Earning Rule</h2>
               <p className="mb-6 text-sm text-muted-foreground">
-                Add bonus earning opportunities like happy hour multipliers,
-                birthday bonuses, or weekend specials
+                Add bonus earning opportunities like happy hour multipliers, birthday bonuses, or
+                weekend specials
               </p>
 
               <Form {...ruleForm}>
-                <form
-                  onSubmit={ruleForm.handleSubmit(handleCreateSubmit)}
-                  className="space-y-5"
-                >
+                <form onSubmit={ruleForm.handleSubmit(handleCreateSubmit)} className="space-y-5">
                   {/* Rule Name */}
                   <FormField
                     control={ruleForm.control}
@@ -571,17 +526,13 @@ function EarningRulesPage() {
                     render={({ field }) => (
                       <FormItem className="space-y-2">
                         <FormLabel>
-                          {t(
-                            "Define how customers earn points through purchases and activities",
-                          )}
+                          {t("Define how customers earn points through purchases and activities")}
                         </FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
                             className="min-h-20 resize-none"
-                            placeholder={t(
-                              "Describe when and how this rule applies...",
-                            )}
+                            placeholder={t("Describe when and how this rule applies...")}
                           />
                         </FormControl>
                         <FormMessage />
@@ -613,12 +564,8 @@ function EarningRulesPage() {
                           <SelectItem value="multiplier">
                             Points Multiplier (2x, 3x points)
                           </SelectItem>
-                          <SelectItem value="bonus">
-                            Fixed Bonus Points
-                          </SelectItem>
-                          <SelectItem value="percentage">
-                            Percentage Bonus
-                          </SelectItem>
+                          <SelectItem value="bonus">Fixed Bonus Points</SelectItem>
+                          <SelectItem value="percentage">Percentage Bonus</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -633,12 +580,7 @@ function EarningRulesPage() {
                         <FormItem className="space-y-2">
                           <FormLabel>{t("Multiplier")}</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value as number}
-                              step="0.1"
-                              min="1"
-                            />
+                            <Input {...field} value={field.value as number} step="0.1" min="1" />
                           </FormControl>
                           <FormDescription>
                             {t("e.g., 2.0 = Double points, 1.5 = 50% more")}
@@ -654,11 +596,7 @@ function EarningRulesPage() {
                         <FormItem className="space-y-2">
                           <FormLabel>{t("Bonus Points")}</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value as number}
-                              min="0"
-                            />
+                            <Input {...field} value={field.value as number} min="0" />
                           </FormControl>
                           <FormDescription>
                             {t("Additional points on top of standard rate")}
@@ -671,17 +609,13 @@ function EarningRulesPage() {
 
                   {/* Schedule Settings */}
                   <div className="space-y-3 border-t pt-4">
-                    <h3 className="text-base font-medium">
-                      When does this rule apply?
-                    </h3>
+                    <h3 className="text-base font-medium">When does this rule apply?</h3>
 
                     <div className="space-y-3">
                       <div className="space-y-3 rounded-lg border p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium">
-                              Specific Days/Times
-                            </p>
+                            <p className="text-sm font-medium">Specific Days/Times</p>
                             <p className="text-xs text-muted-foreground">
                               E.g., Weekends, Happy Hours, specific dates
                             </p>
@@ -706,9 +640,7 @@ function EarningRulesPage() {
                               name="allowedDays"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">
-                                    Available Days
-                                  </FormLabel>
+                                  <FormLabel className="text-xs">Available Days</FormLabel>
                                   <div className="grid grid-cols-2 gap-2">
                                     {[
                                       "MONDAY",
@@ -719,19 +651,14 @@ function EarningRulesPage() {
                                       "SATURDAY",
                                       "SUNDAY",
                                     ].map((day) => (
-                                      <div
-                                        key={day}
-                                        className="flex items-center space-x-2"
-                                      >
+                                      <div key={day} className="flex items-center space-x-2">
                                         <Checkbox
                                           id={`create-day-${day}`}
                                           checked={field.value?.includes(day)}
                                           onCheckedChange={(checked) => {
                                             const updated = checked
                                               ? [...(field.value || []), day]
-                                              : (field.value || []).filter(
-                                                  (d) => d !== day,
-                                                );
+                                              : (field.value || []).filter((d) => d !== day);
                                             field.onChange(updated);
                                           }}
                                         />
@@ -739,8 +666,7 @@ function EarningRulesPage() {
                                           htmlFor={`create-day-${day}`}
                                           className="cursor-pointer text-sm font-normal capitalize"
                                         >
-                                          {day.charAt(0) +
-                                            day.slice(1).toLowerCase()}
+                                          {day.charAt(0) + day.slice(1).toLowerCase()}
                                         </Label>
                                       </div>
                                     ))}
@@ -755,15 +681,9 @@ function EarningRulesPage() {
                                 name="timeFrom"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-xs">
-                                      Start Time
-                                    </FormLabel>
+                                    <FormLabel className="text-xs">Start Time</FormLabel>
                                     <FormControl>
-                                      <Input
-                                        type="time"
-                                        {...field}
-                                        value={field.value ?? ""}
-                                      />
+                                      <Input type="time" {...field} value={field.value ?? ""} />
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>
@@ -774,15 +694,9 @@ function EarningRulesPage() {
                                 name="timeTo"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-xs">
-                                      End Time
-                                    </FormLabel>
+                                    <FormLabel className="text-xs">End Time</FormLabel>
                                     <FormControl>
-                                      <Input
-                                        type="time"
-                                        {...field}
-                                        value={field.value ?? ""}
-                                      />
+                                      <Input type="time" {...field} value={field.value ?? ""} />
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>
@@ -796,9 +710,7 @@ function EarningRulesPage() {
                       <div className="space-y-3 rounded-lg border p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium">
-                              Customer Tier Restriction
-                            </p>
+                            <p className="text-sm font-medium">Customer Tier Restriction</p>
                             <p className="text-xs text-muted-foreground">
                               Apply to specific membership tiers only
                             </p>
@@ -807,8 +719,7 @@ function EarningRulesPage() {
                             checked={tierRestrictionEnabled}
                             onCheckedChange={(checked) => {
                               setTierRestrictionEnabled(checked);
-                              if (!checked)
-                                ruleForm.setValue("applicableToTiers", []);
+                              if (!checked) ruleForm.setValue("applicableToTiers", []);
                             }}
                             className="data-[state=checked]:bg-[#1873E8]"
                           />
@@ -819,24 +730,17 @@ function EarningRulesPage() {
                             name="applicableToTiers"
                             render={({ field }) => (
                               <FormItem className="border-t pt-3">
-                                <FormLabel className="text-xs">
-                                  Applicable Tiers
-                                </FormLabel>
+                                <FormLabel className="text-xs">Applicable Tiers</FormLabel>
                                 <div className="space-y-2">
                                   {loyaltyTiers.map((tier) => (
-                                    <div
-                                      key={tier.id}
-                                      className="flex items-center space-x-2"
-                                    >
+                                    <div key={tier.id} className="flex items-center space-x-2">
                                       <Checkbox
                                         id={`create-tier-${tier.id}`}
                                         checked={field.value?.includes(tier.id)}
                                         onCheckedChange={(checked) => {
                                           const updated = checked
                                             ? [...(field.value || []), tier.id]
-                                            : (field.value || []).filter(
-                                                (t) => t !== tier.id,
-                                              );
+                                            : (field.value || []).filter((t) => t !== tier.id);
                                           field.onChange(updated);
                                         }}
                                       />
@@ -865,9 +769,7 @@ function EarningRulesPage() {
                       <div className="space-y-3 rounded-lg border p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium">
-                              Limited Time Period
-                            </p>
+                            <p className="text-sm font-medium">Limited Time Period</p>
                             <p className="text-xs text-muted-foreground">
                               Set start and end dates for this rule
                             </p>
@@ -891,16 +793,12 @@ function EarningRulesPage() {
                               name="validFrom"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">
-                                    Valid From
-                                  </FormLabel>
+                                  <FormLabel className="text-xs">Valid From</FormLabel>
                                   <FormControl>
                                     <Input
                                       type="date"
                                       value={field.value ?? ""}
-                                      onChange={(e) =>
-                                        field.onChange(e.target.value || null)
-                                      }
+                                      onChange={(e) => field.onChange(e.target.value || null)}
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -912,16 +810,12 @@ function EarningRulesPage() {
                               name="validUntil"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">
-                                    Valid To
-                                  </FormLabel>
+                                  <FormLabel className="text-xs">Valid To</FormLabel>
                                   <FormControl>
                                     <Input
                                       type="date"
                                       value={field.value ?? ""}
-                                      onChange={(e) =>
-                                        field.onChange(e.target.value || null)
-                                      }
+                                      onChange={(e) => field.onChange(e.target.value || null)}
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -975,14 +869,7 @@ function EarningRulesPage() {
   );
 }
 
-function TierCard({
-  tier,
-  index,
-  isEditing,
-  onStartEdit,
-  onCancelEdit,
-  onDelete,
-}) {
+function TierCard({ tier, index, isEditing, onStartEdit, onCancelEdit, onDelete }) {
   const { t } = useTranslation();
   const tierForm = useForm<TierFormValues>({
     resolver: zodResolver(tierSchema),
@@ -995,9 +882,7 @@ function TierCard({
   });
 
   const updateTierMutation = useUpdateLoyaltyTierMutation(tier.id, () => {
-    toast.success(
-      t("{name} tier settings saved", { name: tierForm.getValues("name") }),
-    );
+    toast.success(t("{name} tier settings saved", { name: tierForm.getValues("name") }));
   });
 
   const onSubmit = (values: TierFormValues) => {
@@ -1027,9 +912,7 @@ function TierCard({
             <div className="flex flex-1 items-center gap-4">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-semibold leading-tight">
-                    {tier.name}
-                  </h4>
+                  <h4 className="text-sm font-semibold leading-tight">{tier.name}</h4>
                   <span className="text-xs text-muted-foreground font-medium">
                     ({index === 0 ? "Base Tier" : `Tier ${index}`})
                   </span>
@@ -1042,9 +925,7 @@ function TierCard({
               </div>
 
               <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5">
-                <p className="text-xs text-muted-foreground">
-                  {t("Earning Rate")}
-                </p>
+                <p className="text-xs text-muted-foreground">{t("Earning Rate")}</p>
                 <p className="text-sm font-semibold text-[#1873E8]">
                   {Number(tier.pointsMultiplier)} pts/
                   {tier.program?.currencyCode}
@@ -1072,10 +953,7 @@ function TierCard({
     <Card>
       <CardContent>
         <Form {...tierForm}>
-          <form
-            onSubmit={tierForm.handleSubmit(onSubmit)}
-            className="space-y-4"
-          >
+          <form onSubmit={tierForm.handleSubmit(onSubmit)} className="space-y-4">
             <div className="mb-3 flex items-center justify-between">
               <h4 className="text-sm font-semibold">Edit Tier</h4>
               <div className="flex gap-2">
@@ -1147,9 +1025,7 @@ function TierCard({
                 name="pointsMultiplier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">
-                      {t("Earning Rate")}
-                    </FormLabel>
+                    <FormLabel className="text-xs">{t("Earning Rate")}</FormLabel>
                     <div className="mt-1 flex items-center gap-1">
                       <FormControl>
                         <Input
@@ -1188,9 +1064,7 @@ function TierCard({
                 )}
               />
               <div className="px-2 py-1.5 bg-blue-50 rounded border border-blue-200">
-                <p className="text-xs text-muted-foreground">
-                  Value per point:
-                </p>
+                <p className="text-xs text-muted-foreground">Value per point:</p>
                 <p className="font-semibold text-sm text-[#1873E8]">
                   1 pt ={" "}
                   {(() => {
@@ -1210,17 +1084,12 @@ function TierCard({
                 {tier.threshold === 0 ? (
                   <>
                     <Info className="mr-1 inline h-3 w-3" />
-                    {t(
-                      "Base tier - All new customers start here. Cannot be deleted.",
-                    )}
+                    {t("Base tier - All new customers start here. Cannot be deleted.")}
                   </>
                 ) : (
-                  t(
-                    "Customers reach this tier after earning {points} lifetime points",
-                    {
-                      points: tier.threshold.toLocaleString(),
-                    },
-                  )
+                  t("Customers reach this tier after earning {points} lifetime points", {
+                    points: tier.threshold.toLocaleString(),
+                  })
                 )}
               </div>
 
@@ -1244,14 +1113,7 @@ function TierCard({
   );
 }
 
-function RuleCard({
-  rule,
-  isEditing,
-  onStartEdit,
-  onCancelEdit,
-  onDelete,
-  isDeleting,
-}: any) {
+function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDeleting }: any) {
   const { t } = useTranslation();
   const { data: loyaltyTiers = [] } = useLoyaltyTiers();
   const ruleForm = useForm<EarningRuleFormValues>({
@@ -1276,21 +1138,15 @@ function RuleCard({
     },
   });
 
-  const updateRuleMutation = useUpdateLoyaltyEarningRuleMutation(
-    rule.id || "",
-    () => {
-      toast.success(t("Earning rule updated successfully"));
-    },
-  );
+  const updateRuleMutation = useUpdateLoyaltyEarningRuleMutation(rule.id || "", () => {
+    toast.success(t("Earning rule updated successfully"));
+  });
 
-  const toggleStatusMutation = useToggleLoyaltyEarningRuleStatusMutation(
-    rule.id || "",
-  );
+  const toggleStatusMutation = useToggleLoyaltyEarningRuleStatusMutation(rule.id || "");
 
   const isEnabled = rule.status === "active";
   const [scheduleEnabled, setScheduleEnabled] = useState(
-    (rule.allowedDays?.length || 0) > 0 ||
-      (rule.allowedTimeRanges?.length || 0) > 0,
+    (rule.allowedDays?.length || 0) > 0 || (rule.allowedTimeRanges?.length || 0) > 0,
   );
   const [tierRestrictionEnabled, setTierRestrictionEnabled] = useState(
     (rule.applicableToTiers?.length || 0) > 0,
@@ -1300,8 +1156,7 @@ function RuleCard({
   );
 
   const onSave = (values: EarningRuleFormValues) => {
-    const { timeFrom, timeTo, allowedDays, applicableToTiers, ...rest } =
-      values;
+    const { timeFrom, timeTo, allowedDays, applicableToTiers, ...rest } = values;
     const payload = {
       ...rest,
       allowedDays: scheduleEnabled ? (allowedDays ?? []) : [],
@@ -1309,9 +1164,7 @@ function RuleCard({
         scheduleEnabled && (timeFrom || timeTo)
           ? [{ start: timeFrom || "00:00", end: timeTo || "23:59" }]
           : [],
-      applicableToTiers: tierRestrictionEnabled
-        ? (applicableToTiers ?? [])
-        : [],
+      applicableToTiers: tierRestrictionEnabled ? (applicableToTiers ?? []) : [],
       validFrom: limitedPeriodEnabled ? rest.validFrom : null,
       validUntil: limitedPeriodEnabled ? rest.validUntil : null,
     };
@@ -1336,9 +1189,7 @@ function RuleCard({
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
               <span className="shrink-0 text-xl">{getRuleIcon(rule)}</span>
               <div className="min-w-0 flex-1">
-                <h4 className="text-sm font-medium leading-tight">
-                  {rule.name}
-                </h4>
+                <h4 className="text-sm font-medium leading-tight">{rule.name}</h4>
                 <p className="truncate text-xs text-muted-foreground">
                   {rule.description || t("No description provided")}
                 </p>
@@ -1349,16 +1200,12 @@ function RuleCard({
             <div className="flex shrink-0 items-center gap-2">
               {rule.multiplier && rule.multiplier !== 1.0 && (
                 <div className="rounded border border-purple-200 bg-purple-50 px-2 py-1">
-                  <p className="text-xs font-medium text-purple-700">
-                    {rule.multiplier}x
-                  </p>
+                  <p className="text-xs font-medium text-purple-700">{rule.multiplier}x</p>
                 </div>
               )}
               {rule.bonusPoints && rule.bonusPoints !== 0 && (
                 <div className="rounded border border-blue-200 bg-blue-50 px-2 py-1">
-                  <p className="text-xs font-medium text-[#1873E8]">
-                    +{rule.bonusPoints}
-                  </p>
+                  <p className="text-xs font-medium text-[#1873E8]">+{rule.bonusPoints}</p>
                 </div>
               )}
               <Badge
@@ -1405,13 +1252,9 @@ function RuleCard({
                 <div className="flex items-center gap-1.5">
                   <Calendar className="h-3.5 w-3.5" />
                   <span>
-                    {rule.validFrom
-                      ? new Date(rule.validFrom).toLocaleDateString()
-                      : t("Start")}
+                    {rule.validFrom ? new Date(rule.validFrom).toLocaleDateString() : t("Start")}
                     {" - "}
-                    {rule.validUntil
-                      ? new Date(rule.validUntil).toLocaleDateString()
-                      : t("End")}
+                    {rule.validUntil ? new Date(rule.validUntil).toLocaleDateString() : t("End")}
                   </span>
                 </div>
               )}
@@ -1466,9 +1309,7 @@ function RuleCard({
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">
-                        {t("Rule Name")}
-                      </FormLabel>
+                      <FormLabel className="text-xs">{t("Rule Name")}</FormLabel>
                       <FormControl>
                         <Input {...field} className="mt-1 h-9" />
                       </FormControl>
@@ -1485,16 +1326,10 @@ function RuleCard({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs">
-                        {t(
-                          "Define how customers earn points through purchases and activities",
-                        )}
+                        {t("Define how customers earn points through purchases and activities")}
                       </FormLabel>
                       <FormControl>
-                        <Textarea
-                          {...field}
-                          className="mt-1 text-sm"
-                          rows={2}
-                        />
+                        <Textarea {...field} className="mt-1 text-sm" rows={2} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1526,15 +1361,9 @@ function RuleCard({
                 name="bonusPoints"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">
-                      {t("Bonus Points")}
-                    </FormLabel>
+                    <FormLabel className="text-xs">{t("Bonus Points")}</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value as number}
-                        className="mt-1 h-9"
-                      />
+                      <Input {...field} value={field.value as number} className="mt-1 h-9" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1585,9 +1414,7 @@ function RuleCard({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">Specific Days/Times</p>
-                    <p className="text-xs text-muted-foreground">
-                      E.g., Weekends, Happy Hours
-                    </p>
+                    <p className="text-xs text-muted-foreground">E.g., Weekends, Happy Hours</p>
                   </div>
                   <Switch
                     checked={scheduleEnabled}
@@ -1609,9 +1436,7 @@ function RuleCard({
                       name="allowedDays"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">
-                            Available Days
-                          </FormLabel>
+                          <FormLabel className="text-xs">Available Days</FormLabel>
                           <div className="grid grid-cols-2 gap-2">
                             {[
                               "MONDAY",
@@ -1622,19 +1447,14 @@ function RuleCard({
                               "SATURDAY",
                               "SUNDAY",
                             ].map((day) => (
-                              <div
-                                key={day}
-                                className="flex items-center space-x-2"
-                              >
+                              <div key={day} className="flex items-center space-x-2">
                                 <Checkbox
                                   id={`edit-day-${rule.id}-${day}`}
                                   checked={field.value?.includes(day)}
                                   onCheckedChange={(checked) => {
                                     const updated = checked
                                       ? [...(field.value || []), day]
-                                      : (field.value || []).filter(
-                                          (d) => d !== day,
-                                        );
+                                      : (field.value || []).filter((d) => d !== day);
                                     field.onChange(updated);
                                   }}
                                 />
@@ -1657,9 +1477,7 @@ function RuleCard({
                         name="timeFrom"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs">
-                              Start Time
-                            </FormLabel>
+                            <FormLabel className="text-xs">Start Time</FormLabel>
                             <FormControl>
                               <Input
                                 type="time"
@@ -1698,9 +1516,7 @@ function RuleCard({
               <div className="space-y-3 rounded-lg border p-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">
-                      Customer Tier Restriction
-                    </p>
+                    <p className="text-sm font-medium">Customer Tier Restriction</p>
                     <p className="text-xs text-muted-foreground">
                       Apply to specific membership tiers only
                     </p>
@@ -1720,24 +1536,17 @@ function RuleCard({
                     name="applicableToTiers"
                     render={({ field }) => (
                       <FormItem className="border-t pt-3">
-                        <FormLabel className="text-xs">
-                          Applicable Tiers
-                        </FormLabel>
+                        <FormLabel className="text-xs">Applicable Tiers</FormLabel>
                         <div className="space-y-2">
                           {loyaltyTiers.map((tier: any) => (
-                            <div
-                              key={tier.id}
-                              className="flex items-center space-x-2"
-                            >
+                            <div key={tier.id} className="flex items-center space-x-2">
                               <Checkbox
                                 id={`edit-tier-${rule.id}-${tier.id}`}
                                 checked={field.value?.includes(tier.id)}
                                 onCheckedChange={(checked) => {
                                   const updated = checked
                                     ? [...(field.value || []), tier.id]
-                                    : (field.value || []).filter(
-                                        (t) => t !== tier.id,
-                                      );
+                                    : (field.value || []).filter((t) => t !== tier.id);
                                   field.onChange(updated);
                                 }}
                               />
@@ -1793,9 +1602,7 @@ function RuleCard({
                             <Input
                               type="date"
                               value={field.value ?? ""}
-                              onChange={(e) =>
-                                field.onChange(e.target.value || null)
-                              }
+                              onChange={(e) => field.onChange(e.target.value || null)}
                               className="mt-1 h-9"
                             />
                           </FormControl>
@@ -1813,9 +1620,7 @@ function RuleCard({
                             <Input
                               type="date"
                               value={field.value ?? ""}
-                              onChange={(e) =>
-                                field.onChange(e.target.value || null)
-                              }
+                              onChange={(e) => field.onChange(e.target.value || null)}
                               className="mt-1 h-9"
                             />
                           </FormControl>

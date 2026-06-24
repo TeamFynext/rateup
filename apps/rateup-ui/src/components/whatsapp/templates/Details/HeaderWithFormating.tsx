@@ -1,22 +1,11 @@
 import { Box, Center, Image, Stack, Text } from "@mantine/core";
-import {
-  IconFileText,
-  IconMapPin,
-  IconPhoto,
-  IconVideo,
-} from "@tabler/icons-react";
+import { IconFileText, IconMapPin, IconPhoto, IconVideo } from "@tabler/icons-react";
 
 import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 
 const MediaCardPreview = ({ children }) => {
   return (
-    <Stack
-      w={"100%"}
-      mih={"80px"}
-      justify="center"
-      align="center"
-      component={"span"}
-    >
+    <Stack w={"100%"} mih={"80px"} justify="center" align="center" component={"span"}>
       {children}
     </Stack>
   );
@@ -47,12 +36,7 @@ export function HeaderWithFormatting(text, type) {
                 alt="image of the template content"
               />
             ) : text?.startsWith("http") ? (
-              <Image
-                src={text}
-                mih={70}
-                w={"100%"}
-                alt="image of the template content"
-              />
+              <Image src={text} mih={70} w={"100%"} alt="image of the template content" />
             ) : (
               <Center component="span">
                 <IconPhoto size={40} />

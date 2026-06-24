@@ -1,18 +1,15 @@
-"use client";
-
-import React, { useCallback, useEffect, useRef } from "react";
-
 import { Box, Button, Modal, TextInput, Tooltip } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCreateNewThemeMutation } from "@/backend/surveyTheme/surveyTheme.query";
-import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 import styles from "./ThemeSelector.module.css";
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
   const params = useParams({
@@ -38,8 +35,7 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
     },
   });
 
-  const { mutateAsync: createNewThemeMutationAsync } =
-    useCreateNewThemeMutation(surveyId);
+  const { mutateAsync: createNewThemeMutationAsync } = useCreateNewThemeMutation(surveyId);
 
   const submitBtnRef = useRef(null);
 
@@ -94,11 +90,7 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
             placeholder={translations("Enter Theme Name")}
             {...form.getInputProps("name")}
           />
-          <Button
-            style={{ display: "none" }}
-            type="submit"
-            ref={submitBtnRef}
-          />
+          <Button style={{ display: "none" }} type="submit" ref={submitBtnRef} />
         </form>
         <Box className={modalStyles["cancel-save-btns-container"]}>
           <Button onClick={close} className={modalStyles["cancel-btn"]}>

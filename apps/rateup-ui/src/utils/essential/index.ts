@@ -5,17 +5,10 @@ function retrieveRole(
 ): string | "Super Admin" | "Admin" {
   if (role === UserRole.SUPADM)
     return UserRole.SUPADM.split("_")
-      .map(
-        (str) =>
-          str.toLowerCase().charAt(0).toUpperCase() +
-          str.toLowerCase().slice(1),
-      )
+      .map((str) => str.toLowerCase().charAt(0).toUpperCase() + str.toLowerCase().slice(1))
       .join(" ");
   if (role === UserRole.ADM)
-    return (
-      UserRole.ADM.toLowerCase().charAt(0).toUpperCase() +
-      UserRole.ADM.toLowerCase().slice(1)
-    );
+    return UserRole.ADM.toLowerCase().charAt(0).toUpperCase() + UserRole.ADM.toLowerCase().slice(1);
 }
 
 function mergeNames(first: string, last: string) {

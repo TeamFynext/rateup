@@ -1,15 +1,7 @@
-"use client";
-
 import { Globe, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 
 interface ApiSelectorProps {
   value?: string;

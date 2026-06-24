@@ -1,10 +1,9 @@
-"use client";
-
 import { Button, Select } from "@mantine/core";
 import { IconAnalyze } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { resourceOptions } from "./constants.tsx";
+
 import styles from "./ResourceSelector.module.css";
 import selectStyles from "./Select.module.css";
 
@@ -19,11 +18,7 @@ function ResourceSelector({ resource, setResource, onGenerateBtnClick }) {
         onChange={setResource}
         value={resource}
       />
-      <Button
-        variant="filled"
-        onClick={onGenerateBtnClick}
-        rightSection={<IconAnalyze />}
-      >
+      <Button variant="filled" onClick={onGenerateBtnClick} rightSection={<IconAnalyze />}>
         {translations("Generate")}
       </Button>
     </div>

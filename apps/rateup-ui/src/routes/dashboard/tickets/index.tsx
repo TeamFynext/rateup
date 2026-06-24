@@ -1,27 +1,15 @@
-import { useMemo, useState } from "react";
-
 import { IconEdit, IconTrash } from "@tabler/icons-react";
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import {
-  Calendar,
-  LayoutPanelTop,
-  MoreHorizontal,
-  Plus,
-  Users,
-} from "lucide-react";
+import { Calendar, LayoutPanelTop, MoreHorizontal, Plus, Users } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useBoardQueries } from "@/backend/tickets/tickets.query";
 import { useUserInfo } from "@/backend/user/user.query";
-import { GenericCardGrid } from "@/components/common/generic-card.tsx";
 import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
@@ -111,10 +99,8 @@ function Page() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [newBoardData, setNewBoardData] =
-    useState<BoardFormState>(EMPTY_BOARD_FORM);
-  const [editBoardData, setEditBoardData] =
-    useState<BoardFormState>(EMPTY_BOARD_FORM);
+  const [newBoardData, setNewBoardData] = useState<BoardFormState>(EMPTY_BOARD_FORM);
+  const [editBoardData, setEditBoardData] = useState<BoardFormState>(EMPTY_BOARD_FORM);
   const [boardIdToDelete, setBoardIdToDelete] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState("latest");
   const [search, setSearch] = useState("");
@@ -130,8 +116,7 @@ function Page() {
   const role = userRes?.data?.role;
   const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
-  const { boards, isLoading, error, createBoard, updateBoard, deleteBoard } =
-    useBoardQueries();
+  const { boards, isLoading, error, createBoard, updateBoard, deleteBoard } = useBoardQueries();
   const {
     data: teamRes,
     isPending: teamsLoading,
@@ -149,9 +134,7 @@ function Page() {
   }, [teamRes?.data]);
 
   const boardInfos = useMemo(() => {
-    const teamLookup = new Map(
-      teamOptions.map((team) => [team.value, team.label]),
-    );
+    const teamLookup = new Map(teamOptions.map((team) => [team.value, team.label]));
 
     return boards.map((board) => {
       const teamIds = board.teams.map((team) => team.teamId);
@@ -185,10 +168,8 @@ function Page() {
     const searchValue = debouncedSearch.toLowerCase();
 
     const filtered = boardInfos.filter((board) => {
-      const matchesSearch =
-        !searchValue || board.title.toLowerCase().includes(searchValue);
-      const matchesTeam =
-        selectedTeamId === "all" || board.teamIds.includes(selectedTeamId);
+      const matchesSearch = !searchValue || board.title.toLowerCase().includes(searchValue);
+      const matchesTeam = selectedTeamId === "all" || board.teamIds.includes(selectedTeamId);
 
       return matchesSearch && matchesTeam;
     });
@@ -227,11 +208,7 @@ function Page() {
   };
 
   const handleSaveEditBoard = () => {
-    if (
-      !editBoardData.id ||
-      !editBoardData.title.trim() ||
-      !editBoardData.teamIds.length
-    ) {
+    if (!editBoardData.id || !editBoardData.title.trim() || !editBoardData.teamIds.length) {
       return;
     }
 
@@ -252,9 +229,7 @@ function Page() {
 
   const confirmDeleteBoard = () => {
     if (!isAdmin) {
-      toast.warning(
-        translations("Only admin or super admin can delete a board."),
-      );
+      toast.warning(translations("Only admin or super admin can delete a board."));
       return;
     }
 
@@ -288,12 +263,7 @@ function Page() {
   );
 
   if (selectedBoardId) {
-    return (
-      <BoardContent
-        selectedBoardId={selectedBoardId}
-        teamOptions={teamOptions}
-      />
-    );
+    return <BoardContent selectedBoardId={selectedBoardId} teamOptions={teamOptions} />;
   }
 
   return (
@@ -317,13 +287,9 @@ function Page() {
         onRetry={() => {
           void refetchTeams();
         }}
-        isEmpty={
-          !isLoading && !error && !isTeamsError && filteredBoards.length === 0
-        }
+        isEmpty={!isLoading && !error && !isTeamsError && filteredBoards.length === 0}
         emptyTitle={translations("No boards found")}
-        emptyDescription={translations(
-          "Try changing the team filter or create a new board.",
-        )}
+        emptyDescription={translations("Try changing the team filter or create a new board.")}
       >
         <Separator className="-mt-1 mb-2" />
         <BoardCardList
@@ -337,9 +303,7 @@ function Page() {
       <BoardFormDialog
         open={isCreateDialogOpen}
         title={translations("Create New Board")}
-        description={translations(
-          "Set a board title and choose which teams can access it.",
-        )}
+        description={translations("Set a board title and choose which teams can access it.")}
         submitLabel={translations("Create")}
         teamOptions={teamOptions}
         value={newBoardData}
@@ -356,9 +320,7 @@ function Page() {
       <BoardFormDialog
         open={isEditDialogOpen}
         title={translations("Edit Board")}
-        description={translations(
-          "Update the board title and the teams assigned to it.",
-        )}
+        description={translations("Update the board title and the teams assigned to it.")}
         submitLabel={translations("Save")}
         teamOptions={teamOptions}
         value={editBoardData}
@@ -387,10 +349,7 @@ function Page() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{translations("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={confirmDeleteBoard}
-            >
+            <AlertDialogAction variant="destructive" onClick={confirmDeleteBoard}>
               {translations("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -457,10 +416,7 @@ function BoardCardList({
   const { t } = useTranslation();
 
   return (
-    <div
-      className="flex-1 overflow-y-auto"
-      style={{ padding: "0px 32px 40px" }}
-    >
+    <div className="flex-1 overflow-y-auto" style={{ padding: "0px 32px 40px" }}>
       <div className="mb-7">
         <div className="font-display font-black text-[28px] text-ink-900 tracking-tight">
           {t("Ticket Boards")}
@@ -512,12 +468,7 @@ type BoardListCardProps = {
   readonly onDelete: (boardId: string) => void;
 };
 
-function BoardListCard({
-  board,
-  onSelect,
-  onEdit,
-  onDelete,
-}: Readonly<BoardListCardProps>) {
+function BoardListCard({ board, onSelect, onEdit, onDelete }: Readonly<BoardListCardProps>) {
   const [hovered, setHovered] = useState(false);
   const { t } = useTranslation();
 
@@ -528,9 +479,7 @@ function BoardListCard({
       onMouseLeave={() => setHovered(false)}
       className="cursor-pointer transition-all duration-200 flex flex-col h-full gap-0 py-0"
       style={{
-        boxShadow: hovered
-          ? "0 8px 28px rgba(11,31,72,.10)"
-          : "0 1px 3px rgba(11,31,72,.05)",
+        boxShadow: hovered ? "0 8px 28px rgba(11,31,72,.10)" : "0 1px 3px rgba(11,31,72,.05)",
         transform: hovered ? "translateY(-2px)" : "none",
       }}
     >
@@ -552,18 +501,12 @@ function BoardListCard({
                 <MoreHorizontal size={18} strokeWidth={2} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              onClick={(event) => event.stopPropagation()}
-            >
+            <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
               <DropdownMenuItem onClick={() => onEdit(board.id)}>
                 <IconEdit size={16} className="mr-2" />
                 {t("Edit")}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => onDelete(board.id)}
-              >
+              <DropdownMenuItem variant="destructive" onClick={() => onDelete(board.id)}>
                 <IconTrash size={16} className="mr-2" />
                 {t("Delete")}
               </DropdownMenuItem>
@@ -574,8 +517,7 @@ function BoardListCard({
 
       <CardContent className="px-[20px] pb-[18px] pt-4 flex-1">
         <div className="font-body font-semibold text-sm text-ink-900">
-          {board.totalTickets}{" "}
-          {board.totalTickets !== 1 ? t("tickets") : t("ticket")}
+          {board.totalTickets} {board.totalTickets !== 1 ? t("tickets") : t("ticket")}
           {board.columnStats.length > 0 && (
             <span className="inline-flex gap-1.5 ml-2.5">
               {board.columnStats.map((stat, i) => {
@@ -644,7 +586,7 @@ function BoardFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
-        {/* We use visually hidden elements for accessibility if we don't want the default DialogTitle/DialogDescription to break our layout. 
+        {/* We use visually hidden elements for accessibility if we don't want the default DialogTitle/DialogDescription to break our layout.
             However, DialogTitle is required for screen readers, so we include it visually hidden if needed, or wrap our visual title. */}
         <DialogHeader className="hidden">
           <DialogTitle>{modalTitle}</DialogTitle>
@@ -657,9 +599,7 @@ function BoardFormDialog({
           </div>
           <div>
             <div className="font-bold text-xl">{modalTitle}</div>
-            <div className="text-sm text-muted-foreground">
-              {modalDescription}
-            </div>
+            <div className="text-sm text-muted-foreground">{modalDescription}</div>
           </div>
         </div>
 
@@ -715,9 +655,7 @@ function BoardFormDialog({
               }
               searchable
               className="w-full text-sm shadow-none"
-              emptyIndicator={
-                <p className="text-center text-sm">{t("No teams found")}</p>
-              }
+              emptyIndicator={<p className="text-center text-sm">{t("No teams found")}</p>}
             />
             <div className="text-xs text-muted-foreground mt-2">
               {t("Choose the teams that can work inside this board.")}

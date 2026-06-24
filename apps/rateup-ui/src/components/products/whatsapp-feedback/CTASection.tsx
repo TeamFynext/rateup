@@ -15,9 +15,8 @@ export default function CTASection() {
           Customers Really Think?
         </h3>
         <p className="text-[17px] text-ink-500 max-w-[580px] mx-auto mb-9 leading-[1.55]">
-          Stop missing out on valuable feedback. Start turning customer insights
-          into measurable growth with RateUp's WhatsApp Surveys. Book your free,
-          personalized demo today.
+          Stop missing out on valuable feedback. Start turning customer insights into measurable
+          growth with RateUp's WhatsApp Surveys. Book your free, personalized demo today.
         </p>
         <div className="flex gap-3.5 justify-center flex-wrap">
           <button

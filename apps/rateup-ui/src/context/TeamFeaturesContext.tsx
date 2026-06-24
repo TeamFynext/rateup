@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext, useContext, useMemo } from "react";
 
 import { useMyAllowedFeatures } from "@/backend/team/team.query";
@@ -17,16 +15,11 @@ type TeamFeaturesContextValue = {
   isPending: boolean;
 };
 
-const TeamFeaturesContext = createContext<TeamFeaturesContextValue | undefined>(
-  undefined,
-);
+const TeamFeaturesContext = createContext<TeamFeaturesContextValue | undefined>(undefined);
 
-export function TeamFeaturesProvider({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export function TeamFeaturesProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const { data: userQueryData, isPending: isUserPending } = useUserInfo();
-  const user =
-    userQueryData && "data" in userQueryData ? userQueryData.data : null;
+  const user = userQueryData && "data" in userQueryData ? userQueryData.data : null;
   const hasUser = user !== null;
 
   // Only SUPER_ADMIN bypasses feature checks.
@@ -40,18 +33,10 @@ export function TeamFeaturesProvider({
   if (hasUser && !isSuperAdmin) {
     allowedFeatures = memberFeatures;
   }
-  const isPending =
-    isUserPending || (!hasUser && !isSuperAdmin) || featuresPending;
-  const value = useMemo(
-    () => ({ allowedFeatures, isPending }),
-    [allowedFeatures, isPending],
-  );
+  const isPending = isUserPending || (!hasUser && !isSuperAdmin) || featuresPending;
+  const value = useMemo(() => ({ allowedFeatures, isPending }), [allowedFeatures, isPending]);
 
-  return (
-    <TeamFeaturesContext.Provider value={value}>
-      {children}
-    </TeamFeaturesContext.Provider>
-  );
+  return <TeamFeaturesContext.Provider value={value}>{children}</TeamFeaturesContext.Provider>;
 }
 
 /**

@@ -1,6 +1,5 @@
-import React from "react";
-
 import { IconBrandInstagram } from "@tabler/icons-react";
+import React from "react";
 
 interface PremiumAvatarProps {
   name: string;
@@ -96,7 +95,7 @@ export function PremiumAvatar({
   const sizes = sizeClasses[size];
   const [isRippling, setIsRippling] = React.useState(false);
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleClick = (_e: React.MouseEvent<HTMLDivElement>) => {
     if (onClick) {
       setIsRippling(true);
       setTimeout(() => setIsRippling(false), 600);
@@ -143,9 +142,7 @@ export function PremiumAvatar({
         </div>
 
         {/* Ripple Effect */}
-        {isRippling && (
-          <span className="absolute inset-0 animate-ping bg-white/30 rounded-full" />
-        )}
+        {isRippling && <span className="absolute inset-0 animate-ping bg-white/30 rounded-full" />}
 
         {/* Initials */}
         <span

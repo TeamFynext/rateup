@@ -23,16 +23,10 @@ function getPlanHighlights(plan: any) {
     features.whatsapp?.campaign?.active
       ? `${features.whatsapp?.campaign?.count?.max || 0} WhatsApp Campaigns`
       : null,
-    features.webSurvey?.active
-      ? `${features.webSurvey?.count?.max || 0} Web Surveys`
-      : null,
+    features.webSurvey?.active ? `${features.webSurvey?.count?.max || 0} Web Surveys` : null,
     features.loyalty?.active ? "WhatsApp Loyalty Program" : null,
-    features.ticket?.active
-      ? `${features.ticket?.count?.max || 0} Ticketing Seats`
-      : null,
-    features.menu?.active
-      ? `${features.menu?.count?.max || 0} Digital Menus`
-      : null,
+    features.ticket?.active ? `${features.ticket?.count?.max || 0} Ticketing Seats` : null,
+    features.menu?.active ? `${features.menu?.count?.max || 0} Digital Menus` : null,
     features.reputationManagement?.active ? "Reputation Management" : null,
     features.ai?.active
       ? `AI Tokens (${features.ai?.count?.promptTokens || 0} prompt tokens)`
@@ -83,8 +77,7 @@ ${plans
     const googleReviewLine = plan.features?.webSurvey?.googleReview?.active
       ? "- Google Review Integration"
       : "";
-    const emailNotificationLine = plan.features?.webSurvey?.emailNotification
-      ?.active
+    const emailNotificationLine = plan.features?.webSurvey?.emailNotification?.active
       ? "- Email Notifications"
       : "";
     const htmlEmbedLine = plan.features?.webSurvey?.htmlCodePage?.active

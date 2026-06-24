@@ -1,17 +1,11 @@
-"use client";
-
-import React, { useCallback, useContext, useEffect, useState } from "react";
-
 import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { SurveyType, WaFlowStatus } from "@/types/enums.ts";
-import {
-  usePushToWaMutation,
-  useWaFlowFromDb,
-} from "@/backend/whatsapp/flow/flow.query";
+import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { SurveyType, WaFlowStatus } from "@/types/enums.ts";
 
 import { ContainedSelection } from "../../input/ContainedInput/ContainedInput.tsx";
 import NothingFound from "../../NothingFound/NothingFound.tsx";
@@ -39,9 +33,7 @@ export const ShareFlow = ({
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const surveyId = survey?.id;
   const [shareUrl, setShareUrl] = useState("");
-  const [surveyTeamMapId, setSurveyTeamMapId] = useState(
-    survey?.teams[0]?.mapId,
-  );
+  const [surveyTeamMapId, setSurveyTeamMapId] = useState(survey?.teams[0]?.mapId);
   const [selectTeamDropdownState, setSelectTeamDropdownState] = useState("0");
   const [tag, setTag] = useState("");
   const [shortUrlId, setShortUrlId] = useState(survey?.teams[0]?.shortUrlId);
@@ -49,10 +41,7 @@ export const ShareFlow = ({
   const { data: waSettings } = useWaSettings();
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
-    if (
-      survey.type === SurveyType.WhatsApp ||
-      survey.type === SurveyType.WaFlow
-    ) {
+    if (survey.type === SurveyType.WhatsApp || survey.type === SurveyType.WaFlow) {
       if (!waSettings) return;
 
       if (shortUrlId) {
@@ -69,20 +58,10 @@ export const ShareFlow = ({
         }
       }
     }
-  }, [
-    surveyId,
-    surveyTeamMapId,
-    tag,
-    shortUrlId,
-    survey?.type,
-    survey?.getLocation,
-    waSettings,
-  ]);
+  }, [surveyId, surveyTeamMapId, tag, shortUrlId, survey?.type, survey?.getLocation, waSettings]);
 
   useEffect(() => {
-    const short = survey?.teams?.find(
-      (data) => data.mapId === surveyTeamMapId,
-    )?.shortUrlId;
+    const short = survey?.teams?.find((data) => data.mapId === surveyTeamMapId)?.shortUrlId;
     if (short) {
       setShortUrlId(short);
     }
@@ -110,11 +89,9 @@ export const ShareFlow = ({
     },
     [survey],
   );
-  const tagSelectData = survey?.teams[selectTeamDropdownState]?.tags?.map(
-    (tag) => {
-      return tag;
-    },
-  );
+  const tagSelectData = survey?.teams[selectTeamDropdownState]?.tags?.map((tag) => {
+    return tag;
+  });
 
   const handleSaveToWa = () => {
     pushToWaMutation.mutate(dbFlowId);
@@ -198,17 +175,11 @@ export const ShareFlow = ({
             </Group>
             <CopyLinkComponent value={shareUrl} disabled={disableShare} />
           </Stack>
-          <ShareMethods
-            survey={survey}
-            disableShare={disableShare}
-            shareUrl={shareUrl}
-          />
+          <ShareMethods survey={survey} disableShare={disableShare} shareUrl={shareUrl} />
         </Group>
       </PaperLayout>
       <FlowShareMessageEditor
-        selectedTeamCode={
-          teamSelectData.find((t) => t.value === surveyTeamMapId)?.label
-        }
+        selectedTeamCode={teamSelectData.find((t) => t.value === surveyTeamMapId)?.label}
       />
       <ShareQR
         url={shareUrl || import.meta.env.VITE_FRONTEND_URL}

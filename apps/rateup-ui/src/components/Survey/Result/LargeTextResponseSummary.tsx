@@ -1,7 +1,3 @@
-"use client";
-
-import { useContext, useEffect, useRef, useState } from "react";
-
 import {
   ActionIcon,
   Badge,
@@ -13,17 +9,13 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import {
-  IconArrowLeft,
-  IconBrandOpenai,
-  IconInfoCircle,
-} from "@tabler/icons-react";
+import { IconArrowLeft, IconBrandOpenai, IconInfoCircle } from "@tabler/icons-react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useGenerateLargeTextResponseSummaryByAI } from "@/backend/surveys/response/response.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
-import styles from "@/components/Graph/graph.module.css";
 import Heading from "@/components/styled/Heading/Heading.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
 import type { FormElement } from "@/components/whatsapp/flow-v2/utils/store.ts";
@@ -31,6 +23,8 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util.tsx";
+
+import styles from "@/components/Graph/graph.module.css";
 
 interface LargeTextResponseSummaryProp {
   surveyId: string;
@@ -53,9 +47,7 @@ const LargeTextResponseSummary = ({
   version = 1,
 }: LargeTextResponseSummaryProp) => {
   const getSummary = useGenerateLargeTextResponseSummaryByAI(surveyId);
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
+  const { defaultLanguage } = useContext(SelectedLanguageContext);
   const [summaryTab, setSummaryTab] = useState(ResponseSummaryType.All);
   const [selectedQuestion, setSelectedQuestion] = useState<Question>(null);
   const { teams } = useContext(SurveyContext);
@@ -80,12 +72,9 @@ const LargeTextResponseSummary = ({
         },
         onError(error) {
           console.log(error);
-          toast.error(
-            error?.message || ` ${translations("Summary generation failed:")}`,
-            {
-              id: "summary",
-            },
-          );
+          toast.error(error?.message || ` ${translations("Summary generation failed:")}`, {
+            id: "summary",
+          });
         },
       },
     );
@@ -101,9 +90,7 @@ const LargeTextResponseSummary = ({
 
   const LargeTextTeamwiseSummary = () => {
     if (!selectedQuestion) setSummaryTab(ResponseSummaryType.Team);
-    const questionSummary = currentSummary.find(
-      (q) => q.questionId === selectedQuestion.id,
-    );
+    const questionSummary = currentSummary.find((q) => q.questionId === selectedQuestion.id);
     const teamWiseSummary = questionSummary?.team;
 
     return (
@@ -130,9 +117,7 @@ const LargeTextResponseSummary = ({
               : selectedQuestion?.label}
           </Text>
           {teams?.map((team, index) => {
-            const currentTeamSummary = teamWiseSummary?.find(
-              (t) => t.teamId === team.value,
-            );
+            const currentTeamSummary = teamWiseSummary?.find((t) => t.teamId === team.value);
             return (
               <Stack key={team.value} pl={"xl"} mt={"md"}>
                 <Flex justify={"flex-end"} gap={"sm"}>
@@ -143,17 +128,11 @@ const LargeTextResponseSummary = ({
                     <Button
                       rightSection={
                         <IconBrandOpenai
-                          className={
-                            getSummary.isPending
-                              ? styles.rotateInfinitely
-                              : null
-                          }
+                          className={getSummary.isPending ? styles.rotateInfinitely : null}
                         />
                       }
                       size="sm"
-                      onClick={() =>
-                        getResponseSummary(selectedQuestion.id, team.value)
-                      }
+                      onClick={() => getResponseSummary(selectedQuestion.id, team.value)}
                     >
                       {translations("Generate")}
                     </Button>
@@ -189,9 +168,7 @@ const LargeTextResponseSummary = ({
           <LargeTextTeamwiseSummary />
         ) : (
           questions?.map((question, index) => {
-            const summary = currentSummary.find(
-              (summary) => summary.questionId === question.id,
-            );
+            const summary = currentSummary.find((summary) => summary.questionId === question.id);
             return (
               <Stack key={question?.id} mt={"sm"} ref={ref}>
                 <Flex gap={"xs"}>
@@ -208,11 +185,7 @@ const LargeTextResponseSummary = ({
                     <Button
                       rightSection={
                         <IconBrandOpenai
-                          className={
-                            getSummary.isPending
-                              ? styles.rotateInfinitely
-                              : null
-                          }
+                          className={getSummary.isPending ? styles.rotateInfinitely : null}
                         />
                       }
                       size="sm"

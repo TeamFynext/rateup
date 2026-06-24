@@ -1,16 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
-import {
-  ActionIcon,
-  Group,
-  Menu,
-  MultiSelect,
-  Radio,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { ActionIcon, Group, Menu, MultiSelect, Radio, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -24,14 +12,11 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  deleteSurvey,
-  deleteSurveyForOneTeam,
-  updateSurvey,
-} from "@/backend/surveys/survey.api";
+import { deleteSurvey, deleteSurveyForOneTeam, updateSurvey } from "@/backend/surveys/survey.api";
 import { useCloneSurveyMutation } from "@/backend/surveys/surveys.query";
 
 import ConfirmationModal from "../../Modal/ConfirmationModal.tsx";
@@ -44,12 +29,7 @@ interface SurveyMenuProps {
   refetchSurveys: any;
 }
 
-export function SurveyMenu({
-  survey,
-  selectedTeamId,
-  teamsData,
-  refetchSurveys,
-}: SurveyMenuProps) {
+export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }: SurveyMenuProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const pathname = useRouterState({
@@ -71,8 +51,7 @@ export function SurveyMenu({
       teamIds: [],
     },
     validate: {
-      teamIds: (values) =>
-        values?.length ? null : translations("Must contain atleast one team"),
+      teamIds: (values) => (values?.length ? null : translations("Must contain atleast one team")),
     },
   });
 
@@ -85,15 +64,12 @@ export function SurveyMenu({
   }, [teamChoice]);
 
   useEffect(() => {
-    if (
-      teamChoice === "all" &&
-      !arraysEqual(cloneForm?.values?.teamIds, allTeams)
-    ) {
+    if (teamChoice === "all" && !arraysEqual(cloneForm?.values?.teamIds, allTeams)) {
       cloneForm.setFieldValue("teamIds", allTeams);
     }
   }, [allTeams, teamChoice, cloneForm?.values?.teamIds]);
 
-  const onSubmit = (values) => {
+  const onSubmit = (_values) => {
     const validationRes = cloneForm.validate();
     if (validationRes.hasErrors) {
       console.error(validationRes.errors);
@@ -155,9 +131,7 @@ export function SurveyMenu({
       >
         <Stack>
           <Text c="dimmed">
-            {translations(
-              "Select the team/teams in which the survey copy to be created.",
-            )}
+            {translations("Select the team/teams in which the survey copy to be created.")}
           </Text>
           <Group>
             <Radio.Group
@@ -195,7 +169,7 @@ export function SurveyMenu({
         headerLabel={translations("Are you sure to delete this Survey?")}
         headerTitle={translations("Delete Survey?")}
         confirmLabel={translations("Delete")}
-        onConfirm={async (e) => {
+        onConfirm={async (_e) => {
           toast.loading(translations("Hold on, survey is getting deleted..."), {
             id: "delete-data",
           });
@@ -225,16 +199,10 @@ export function SurveyMenu({
         }}
       >
         <Menu.Item
-          leftSection={
-            survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />
-          }
-          onClick={() =>
-            surveyUpdateMutation.mutate({ active: !survey?.active })
-          }
+          leftSection={survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />}
+          onClick={() => surveyUpdateMutation.mutate({ active: !survey?.active })}
         >
-          {survey?.active
-            ? translations("Pause Survey")
-            : translations("Resume Survey")}
+          {survey?.active ? translations("Pause Survey") : translations("Resume Survey")}
         </Menu.Item>
 
         <Menu.Item

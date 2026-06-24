@@ -29,10 +29,7 @@ export const updateSurveyTheme = async ({
   surveyThemeId: string;
   body: { surveyId: string; theme: SurveyTheme };
 }) => {
-  const response = await axiosClient.put(
-    `${THEME_API_PATH}/${surveyThemeId}`,
-    body,
-  );
+  const response = await axiosClient.put(`${THEME_API_PATH}/${surveyThemeId}`, body);
   return response.data;
 };
 
@@ -43,23 +40,16 @@ export const renameSurveyTheme = async ({
   surveyThemeId: string;
   body: { name: string };
 }) => {
-  const response = await axiosClient.patch(
-    `${THEME_API_PATH}/${surveyThemeId}`,
-    body,
-  );
+  const response = await axiosClient.patch(`${THEME_API_PATH}/${surveyThemeId}`, body);
   return response.data;
 };
 
 export const deleteTheme = async (surveyThemeId) => {
-  const response = await axiosClient.delete(
-    `${THEME_API_PATH}/${surveyThemeId}`,
-  );
+  const response = await axiosClient.delete(`${THEME_API_PATH}/${surveyThemeId}`);
   return response.data;
 };
 
 export const updateAllThemes = async () => {
-  const response = await axiosClient.post(
-    `${THEME_API_PATH}/updateWebSurveyThemes`,
-  );
+  const response = await axiosClient.post(`${THEME_API_PATH}/updateWebSurveyThemes`);
   return response.data;
 };

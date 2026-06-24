@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import { Box, Skeleton } from "@mantine/core";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function YoutubeEmbed({ embedId, sx }) {

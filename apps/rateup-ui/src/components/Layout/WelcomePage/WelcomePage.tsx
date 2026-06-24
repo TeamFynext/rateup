@@ -1,11 +1,8 @@
-"use client";
-
+import { Button, Image, Stack } from "@mantine/core";
 import React from "react";
 
-import { Button, Image, Stack } from "@mantine/core";
-
-import { PageType } from "@/types/enums.ts";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
+import { PageType } from "@/types/enums.ts";
 import { cordinateStyle } from "@/utils/index.ts";
 
 const _buttonStyles = {
@@ -86,12 +83,7 @@ function WelcomePage({
         w={isMobile ? "100%" : "80%"}
       >
         {orgLogoSrc && (
-          <Image
-            fit="contain"
-            src={orgLogoSrc}
-            alt="Logo"
-            style={{ ...orgLogoStyles }}
-          />
+          <Image fit="contain" src={orgLogoSrc} alt="Logo" style={{ ...orgLogoStyles }} />
         )}
         <div
           dangerouslySetInnerHTML={{

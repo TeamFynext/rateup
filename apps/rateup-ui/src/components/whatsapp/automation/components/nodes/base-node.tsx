@@ -1,14 +1,11 @@
-"use client";
-
-import type { JSX } from "react";
-import { memo } from "react";
-import type React from "react";
-
 import { ActionIcon, Text } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
+import type { JSX } from "react";
+import { memo } from "react";
+import type React from "react";
 
 import styles from "./node-styles.module.css";
 

@@ -1,8 +1,5 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
@@ -11,11 +8,7 @@ import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import WaFlowTourSteps from "@/components/WelcomeTour/components/FlowTourSteps.jsx";
 import CreateFlowModal from "@/components/whatsapp/flows/CreateFlowModal/CreateFlowModal.tsx";
 import FlowCardsList from "@/components/whatsapp/flows/FlowCardsList/index.tsx";
@@ -40,8 +33,7 @@ function Flows() {
 
   const { data: flows, isPending, isError, refetch } = useWaFlowsFromDb();
   const { data: waSettings, isPending: waSettingsPending } = useWaSettings();
-  const { isPending: isPendingTeamsUser, data: teamsDataUser } =
-    useTeamsByUser();
+  const { isPending: isPendingTeamsUser, data: teamsDataUser } = useTeamsByUser();
 
   const teamsData = teamsDataUser?.data;
   const tourSteps = WaFlowTourSteps({ styles });
@@ -50,14 +42,10 @@ function Flows() {
   const handleCreateFlowModalOpen = () => setIsCreateFlowModalOpened(true);
   const handleCreateFlowModalClose = () => setIsCreateFlowModalOpened(false);
 
-  const hasSelectedTeamFilter = Boolean(
-    selectedTeamId && selectedTeamId !== "all",
-  );
+  const hasSelectedTeamFilter = Boolean(selectedTeamId && selectedTeamId !== "all");
 
   let filteredFlows = hasSelectedTeamFilter
-    ? flows?.filter((flow) =>
-        flow.survey.teams.some((team) => team.teamId === selectedTeamId),
-      )
+    ? flows?.filter((flow) => flow.survey.teams.some((team) => team.teamId === selectedTeamId))
     : flows;
 
   if (searchQuery) {
@@ -71,17 +59,14 @@ function Flows() {
     [filteredFlows, sortOption],
   );
 
-  const shouldShowEmptyState =
-    !isLoading && !isError && sortedFlows.length === 0;
+  const shouldShowEmptyState = !isLoading && !isError && sortedFlows.length === 0;
 
   return (
     <>
       <ListPageLayout
         canCreate={hasWaSettings}
         createLabel={translations("Create Flow")}
-        createDisabledText={translations(
-          "Connect a WhatsApp number in settings to create a Flow",
-        )}
+        createDisabledText={translations("Connect a WhatsApp number in settings to create a Flow")}
         docsUrl="automation/flows"
         isLoading={isLoading}
         queryKeys={["flow", "db"]}
@@ -96,13 +81,9 @@ function Flows() {
         onRetry={refetch}
         isEmpty={shouldShowEmptyState}
         emptyTitle={
-          searchQuery
-            ? translations("No results found")
-            : translations("No Flows Available")
+          searchQuery ? translations("No results found") : translations("No Flows Available")
         }
-        emptyDescription={translations(
-          "Try adjusting your filters or create a new flow.",
-        )}
+        emptyDescription={translations("Try adjusting your filters or create a new flow.")}
         rightControls={
           <div className="flex gap-2">
             <TeamSelector
@@ -124,11 +105,7 @@ function Flows() {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>
-                    {translations(
-                      "Connect a WhatsApp number in settings to sync a Flow",
-                    )}
-                  </p>
+                  <p>{translations("Connect a WhatsApp number in settings to sync a Flow")}</p>
                 </TooltipContent>
               </Tooltip>
             )}
@@ -139,10 +116,7 @@ function Flows() {
           <FlowCardsList flows={sortedFlows} teamsData={teamsData} />
         </div>
       </ListPageLayout>
-      <CreateFlowModal
-        opened={isCreateFlowModalOpened}
-        onClose={handleCreateFlowModalClose}
-      />
+      <CreateFlowModal opened={isCreateFlowModalOpened} onClose={handleCreateFlowModalClose} />
     </>
   );
 }

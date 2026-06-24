@@ -1,26 +1,13 @@
-"use client";
-
-import { useContext, useEffect, useState } from "react";
-
 import type { TextareaProps } from "@mantine/core";
-import {
-  Divider,
-  Group,
-  Radio,
-  ScrollArea,
-  Stack,
-  Switch,
-} from "@mantine/core";
+import { Divider, Group, Radio, ScrollArea, Stack, Switch } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconDeviceSdCard } from "@tabler/icons-react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  WaFlowFormElementType,
-  WhatsappFlowFontWeight,
-} from "@/types/enums.ts";
+import { WaFlowFormElementType, WhatsappFlowFontWeight } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import {
   getFlowFormElementById,
@@ -36,10 +23,7 @@ import { EditFlowContext } from "./EditFlowContext.ts";
 export function FlowTextDetailedView() {
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
     useContext(EditFlowContext);
-  const selectedFormElement = getFlowFormElementById(
-    selectedFormElementId,
-    flowJson,
-  );
+  const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
   const [nonInputTextType, setNonInputTextType] = useState(
     selectedFormElement.type === WaFlowFormElementType.nonInputText
       ? WaFlowFormElementType.textHeading
@@ -78,13 +62,8 @@ export function FlowTextDetailedView() {
       toast.error(translations("Fix errors before saving"));
       return "error";
     } else {
-      const flowForm = getFormObjFromScreenId(
-        flowJson.screens,
-        selectedScreenId,
-      );
-      const index = flowForm.children.findIndex(
-        (fe) => fe === selectedFormElement,
-      );
+      const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
+      const index = flowForm.children.findIndex((fe) => fe === selectedFormElement);
       updateFlowJson((draft) => {
         const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
         formEl.children[index].text = form.values.text;
@@ -190,9 +169,7 @@ export function FlowTextDetailedView() {
               style={{
                 ...getTextStyle(form.values?.fontWeight, textDecoration),
                 textDecoration:
-                  textDecoration && form.values?.strikethrough
-                    ? "line-through"
-                    : "none",
+                  textDecoration && form.values?.strikethrough ? "line-through" : "none",
               }}
               fontNormal={textDecoration}
               fontSize={textFontSize[nonInputTextType]}
@@ -223,7 +200,7 @@ function FlowTextElementEditor(
     fontSize: string;
   },
 ) {
-  const { fontNormal, fontSize, ...otherProp } = props;
+  const { fontSize, ...otherProp } = props;
   const { t: translations } = useTranslation();
   return (
     <TextareaWithLengthTracker

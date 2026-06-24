@@ -1,25 +1,27 @@
-"use client";
-
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-
 import { useDebouncedState } from "@mantine/hooks";
 import { IconTicket } from "@tabler/icons-react";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
+import { useCampaignFilterForFlows } from "@/backend/campaign/campaign.query";
+import {
+  useDeleteResponse,
+  useDownloadExcelResponse,
+  useResponsesBySurvey,
+  useSyncResponseToGoogleSheet,
+} from "@/backend/surveys/response/response.query";
+import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem.tsx";
+import SurveyContext from "@/context/SurveyContext.ts";
 import {
   IntegratedApps,
   QuestionType,
@@ -27,24 +29,6 @@ import {
   SubscriptionFeaturePathName,
   WaQuestions,
 } from "@/types/enums.ts";
-import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
-import { useCampaignFilterForFlows } from "@/backend/campaign/campaign.query";
-import {
-  useDeleteResponse,
-  useDownloadExcelResponse,
-  useExportContactResponses,
-  useResponsesBySurvey,
-  useSyncResponseToGoogleSheet,
-} from "@/backend/surveys/response/response.query";
-import ErrorComponent from "@/components/404/ErrorComponent.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
-import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem.tsx";
-import SurveyContext from "@/context/SurveyContext.ts";
-import { useUser } from "@/context/UserContext.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
@@ -66,23 +50,16 @@ import { useResponseFilterStore } from "./store.ts";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const WaResponses = ({
-  survey,
-  defaultLanguage,
-  selectedTeamId,
-  subscription,
-  questions,
-}) => {
+const WaResponses = ({ survey, defaultLanguage, selectedTeamId, subscription, questions }) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
   const surveyId = survey?.id;
-  const { surveyTeamMapId, filterTeams, filterTags } =
-    useContext(SurveyContext);
+  const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
-  const { user } = useUser();
-  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [, setIsDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [createTicketOpened, setCreateTicketOpened] = useState(false);
   const openTicketModal = () => setCreateTicketOpened(true);
@@ -92,17 +69,13 @@ const WaResponses = ({
   const [responseTeamId, setResponseTeamId] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
-  const { data: googleAccessToken } = useIntegrationByType(
-    IntegratedApps.googlesheet,
-  );
+  const { data: googleAccessToken } = useIntegrationByType(IntegratedApps.googlesheet);
 
-  const [alertModalOpened, setAlertModalOpened] = useState(false);
+  const [, setAlertModalOpened] = useState(false);
   const alertModalOpen = () => setAlertModalOpened(true);
-  const alertModalClose = () => setAlertModalOpened(false);
 
-  const [redirectModalOpened, setRedirectModalOpened] = useState(false);
+  const [, setRedirectModalOpened] = useState(false);
   const redirectModalOpen = () => setRedirectModalOpened(true);
-  const redirectModalClose = () => setRedirectModalOpened(false);
 
   const [opened, setOpened] = useState(false);
   const open = () => setOpened(true);
@@ -110,19 +83,17 @@ const WaResponses = ({
 
   const [openedExport, setOpenedExport] = useState(false);
   const toggle = () => setOpenedExport(!openedExport);
-  const [alertMsg, setAlertMsg] = useState("");
+  const [, setAlertMsg] = useState("");
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
-  const navigate = useNavigate();
+
   const params = useParams({
     strict: false,
   });
   const dbFlowId = params.dbFlowId as string;
   const { data: CFData } = useCampaignFilterForFlows(surveyId);
-  const [columnFilters, setColumnFilters] =
-    useDebouncedState<ColumnFiltersState>([], 200);
+  const [columnFilters, setColumnFilters] = useDebouncedState<ColumnFiltersState>([], 200);
   const [campaignIds, setSelectedCampaignIds] = useState([]);
-  const { serverFilters, enableServerFilter, setServerFilters } =
-    useResponseFilterStore();
+  const { serverFilters, setServerFilters } = useResponseFilterStore();
   useEffect(() => {
     setServerFilters({});
   }, [survey]);
@@ -142,26 +113,16 @@ const WaResponses = ({
     dateRange:
       !ranges.length || !ranges[0].startDate || !ranges[0].endDate
         ? []
-        : [
-            ranges[0]?.startDate.toISOString(),
-            ranges[0]?.endDate.toISOString(),
-          ],
+        : [ranges[0]?.startDate.toISOString(), ranges[0]?.endDate.toISOString()],
     ...serverFilters,
   });
 
   const enableTicket = useMemo(
-    () =>
-      survey?.enableTickets &&
-      hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+    () => survey?.enableTickets && hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     [subscription, survey],
   );
 
-  const deleteResponse = useDeleteResponse(
-    surveyId,
-    surveyTeamMapId,
-    close,
-    setIsDeleting,
-  );
+  const deleteResponse = useDeleteResponse(surveyId, surveyTeamMapId, close, setIsDeleting);
   const { t: translations } = useTranslation();
 
   useEffect(() => {
@@ -174,15 +135,7 @@ const WaResponses = ({
     throw new Error(translations("surveyId is an array"));
   }
 
-  const exportContactMutation = useExportContactResponses(surveyId);
-
   const downloadExcelResponse = useDownloadExcelResponse();
-  const handleExportContacts = useCallback(() => {
-    toast.loading(translations("Exporting Contact responses to Contacts..."), {
-      id: "export-contacts",
-    });
-    exportContactMutation.mutate();
-  }, [exportContactMutation, translations]);
 
   const handleExcelDownload = useCallback(
     (columns) => {
@@ -232,37 +185,25 @@ const WaResponses = ({
       {
         accessorKey: "createdAt",
         header: "Created At",
-        cell: (info) =>
-          dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+        cell: (info) => dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
       },
       ...questions?.map((question) => ({
-        id:
-          question.label +
-          "_,_" +
-          QuestionType2[question.metaType] +
-          "_,_" +
-          question.id,
+        id: question.label + "_,_" + QuestionType2[question.metaType] + "_,_" + question.id,
         accessorKey: question.id,
         accessorFn: (row) => {
           const response = row?.[question.id];
-          if (
-            [QuestionType.Rating, QuestionType.Opinion].includes(
-              question.metaType,
-            )
-          ) {
+          if ([QuestionType.Rating, QuestionType.Opinion].includes(question.metaType)) {
             return Number(response);
           }
           return response;
         },
         header: markdownToPlainText(question.header || question.label),
-        enableColumnFilter: ![
-          WaQuestions.DocumentPicker,
-          WaQuestions.PhotoPicker,
-        ].includes(question.metaType),
-        enableSorting: ![
-          WaQuestions.DocumentPicker,
-          WaQuestions.PhotoPicker,
-        ].includes(question.metaType),
+        enableColumnFilter: ![WaQuestions.DocumentPicker, WaQuestions.PhotoPicker].includes(
+          question.metaType,
+        ),
+        enableSorting: ![WaQuestions.DocumentPicker, WaQuestions.PhotoPicker].includes(
+          question.metaType,
+        ),
         cell: (info) => getCellData(info?.getValue(), question),
       })),
       {
@@ -305,9 +246,7 @@ const WaResponses = ({
                             <IconTicket color="orange" className="w-9 h-9" />
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent side="right">
-                          {translations("View Ticket")}
-                        </TooltipContent>
+                        <TooltipContent side="right">{translations("View Ticket")}</TooltipContent>
                       </Tooltip>
                     )}
                   </div>
@@ -343,9 +282,7 @@ const WaResponses = ({
     setIsSyncing(true);
     if (!googleAccessToken) {
       setIsSyncing(false);
-      setAlertMsg(
-        translations("Please sync your Google account in the App & Services."),
-      );
+      setAlertMsg(translations("Please sync your Google account in the App & Services."));
       redirectModalOpen();
     } else {
       syncResponseToGoogleSheet.mutate(
@@ -353,12 +290,9 @@ const WaResponses = ({
         {
           onSuccess: () => {
             setIsSyncing(false);
-            toast.success(
-              translations("Response synced to Google sheet successfully"),
-              {
-                id: "success",
-              },
-            );
+            toast.success(translations("Response synced to Google sheet successfully"), {
+              id: "success",
+            });
             toggle();
           },
           onError: (error: any) => {
@@ -373,9 +307,7 @@ const WaResponses = ({
               redirectModalOpen();
             } else {
               toggle();
-              toast.error(
-                error?.message || translations("Error in syncing response"),
-              );
+              toast.error(error?.message || translations("Error in syncing response"));
             }
           },
         },
@@ -414,9 +346,7 @@ const WaResponses = ({
       };
 
       questions.forEach((question) => {
-        const response = item.responses.find(
-          (res) => res.questionId === question.id,
-        );
+        const response = item.responses.find((res) => res.questionId === question.id);
         row[question.id] = response ? response.response : "";
       });
 
@@ -424,10 +354,7 @@ const WaResponses = ({
     });
   }, [responseData?.responses, questions]);
   const isPending = isLoading || isRefetching;
-  if (error)
-    return (
-      <ErrorComponent refetch={refetchResponse} isRefetching={isRefetching} />
-    );
+  if (error) return <ErrorComponent refetch={refetchResponse} isRefetching={isRefetching} />;
 
   const responseCount = responseData?.totalCount;
 
@@ -476,9 +403,7 @@ const WaResponses = ({
         <DataTable
           data={data ?? []}
           columns={
-            disableTags.current
-              ? columns?.filter((col) => col.accessorKey !== "tag")
-              : columns
+            disableTags.current ? columns?.filter((col) => col.accessorKey !== "tag") : columns
           }
           serverSide={{
             pagination,
@@ -491,11 +416,7 @@ const WaResponses = ({
           DataTableToolbar={Toolbar}
         />
       </div>
-      <DeleteModal
-        confirmDelete={confirmDelete}
-        opened={opened}
-        close={close}
-      />
+      <DeleteModal confirmDelete={confirmDelete} opened={opened} close={close} />
     </div>
   );
 };
@@ -546,11 +467,7 @@ export const getCellData = (info, question) => {
     case WaQuestions.ChipsSelector:
       return (
         (Array.isArray(info) &&
-          info
-            ?.map(
-              (i) => question.dataSource?.find((data) => data.id === i)?.title,
-            )
-            ?.join(",")) ||
+          info?.map((i) => question.dataSource?.find((data) => data.id === i)?.title)?.join(",")) ||
         ""
       );
     case WaQuestions.DocumentPicker:

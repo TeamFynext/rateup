@@ -1,8 +1,7 @@
-import React from "react";
-
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { ActionIcon, Group, ScrollAreaAutosize, Table } from "@mantine/core";
 import { IconEdit, IconGripVertical, IconTrash } from "@tabler/icons-react";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import React from "react";
 
 import { reorder } from "@/utils/questions.ts";
 
@@ -41,11 +40,7 @@ const DraggableTable = ({
   const headerKeys = headers.map((header) => header.headerKey);
 
   const rows = items?.map((item, index) => (
-    <Draggable
-      key={item?.[itemUniqueKey]}
-      index={index}
-      draggableId={item?.[itemUniqueKey]}
-    >
+    <Draggable key={item?.[itemUniqueKey]} index={index} draggableId={item?.[itemUniqueKey]}>
       {(provided) => (
         <Table.Tr
           key={item?.[itemUniqueKey]}
@@ -78,11 +73,7 @@ const DraggableTable = ({
                 </ActionIcon>
               )}
               {deleteEnabled && (
-                <ActionIcon
-                  variant="subtle"
-                  onClick={() => handleDelete(item)}
-                  size={"sm"}
-                >
+                <ActionIcon variant="subtle" onClick={() => handleDelete(item)} size={"sm"}>
                   <IconTrash color="red" />
                 </ActionIcon>
               )}
@@ -97,11 +88,7 @@ const DraggableTable = ({
     <ScrollAreaAutosize mah={maxHeight} scrollbarSize={6}>
       <DragDropContext
         onDragEnd={({ source, destination }) => {
-          const reorderedItems = reorder(
-            items,
-            source.index,
-            destination?.index || 0,
-          );
+          const reorderedItems = reorder(items, source.index, destination?.index || 0);
           handleDragEnd(reorderedItems);
         }}
       >

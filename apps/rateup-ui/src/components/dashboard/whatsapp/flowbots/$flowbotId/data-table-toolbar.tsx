@@ -1,5 +1,3 @@
-"use client";
-
 import type { Table } from "@tanstack/react-table";
 import { Search, X } from "lucide-react";
 
@@ -10,9 +8,7 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
 
-export function DataTableToolbar<TData>({
-  table,
-}: Readonly<DataTableToolbarProps<TData>>) {
+export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
   const isFiltered = table.getState().columnFilters.length > 0;
 
   return (
@@ -23,9 +19,7 @@ export function DataTableToolbar<TData>({
           <Input
             placeholder="Search phone..."
             value={(table.getColumn("phone")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("phone")?.setFilterValue(event.target.value)
-            }
+            onChange={(event) => table.getColumn("phone")?.setFilterValue(event.target.value)}
             className="pl-8 w-[250px] lg:w-[300px]"
           />
         </div>

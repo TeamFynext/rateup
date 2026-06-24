@@ -1,10 +1,7 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Box, Switch } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useParams } from "@tanstack/react-router";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
@@ -13,9 +10,10 @@ import PaperLayout from "../../../styled/Layouts/PaperLayout.tsx";
 import { CopyLinkComponent } from "../../../Survey/ShareSurvey/ShareSurvey.tsx";
 import { useLinktreeObj } from "../LinktreeContext/LinktreeContext.tsx";
 import NoLinksFoundModal from "./NoLinksFoundModal.tsx";
-import styles from "./ShareLinktree.module.css";
 import ShareLinktree from "./ShareLinktree.tsx";
 import SocialMediaLinks from "./SocialMediaLinks.tsx";
+
+import styles from "./ShareLinktree.module.css";
 
 function SharePage() {
   const { isPublished, name, links } = useLinktreeObj();
@@ -24,13 +22,10 @@ function SharePage() {
   });
   const shortUrlId = params?.shortUrlId as string;
   const shareUrl = `${import.meta.env.VITE_FRONTEND_URL}/lt/${shortUrlId}`;
-  const { mutateAsync: linktreeUpdateMutateAsync } =
-    useUpdateLinktreeMutation(shortUrlId);
+  const { mutateAsync: linktreeUpdateMutateAsync } = useUpdateLinktreeMutation(shortUrlId);
 
-  const [
-    isNoLinksFoundModalOpen,
-    { open: openNoLinksFoundModal, close: closeNoLinksFoundModal },
-  ] = useDisclosure(false);
+  const [isNoLinksFoundModalOpen, { open: openNoLinksFoundModal, close: closeNoLinksFoundModal }] =
+    useDisclosure(false);
   const handlePublishSwitchClick = useCallback(() => {
     if (!links?.length && !isPublished) {
       openNoLinksFoundModal();
@@ -71,10 +66,7 @@ function SharePage() {
         <h2>{translations("Share QR Code")}</h2>
         <ShareLinktree url={shareUrl} isPublished={isPublished} title={name} />
       </PaperLayout>
-      <NoLinksFoundModal
-        opened={isNoLinksFoundModalOpen}
-        onClose={closeNoLinksFoundModal}
-      />
+      <NoLinksFoundModal opened={isNoLinksFoundModalOpen} onClose={closeNoLinksFoundModal} />
     </Box>
   );
 }

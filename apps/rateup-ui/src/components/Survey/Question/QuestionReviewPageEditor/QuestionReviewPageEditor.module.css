@@ -23,8 +23,7 @@
   gap: 2rem;
 }
 
-.platform-dd-and-platform-name-input-container
-  :global(.mantine-InputWrapper-root) {
+.platform-dd-and-platform-name-input-container :global(.mantine-InputWrapper-root) {
   min-width: 250px;
 }
 

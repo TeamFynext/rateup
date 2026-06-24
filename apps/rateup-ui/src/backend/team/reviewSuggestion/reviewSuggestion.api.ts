@@ -19,8 +19,7 @@ export async function getPublicReviewsBySurveyTeamMapId(
   ).data as { reviews: Array<ReviewSuggestion>; reviewLink: string };
 }
 export async function getReviewsCountByTeamId(teamId: string) {
-  return (await axiosClient.get(`${REVIEW_SUGGESTION_URL}/${teamId}/count`))
-    .data as number;
+  return (await axiosClient.get(`${REVIEW_SUGGESTION_URL}/${teamId}/count`)).data as number;
 }
 interface CreateReviewSuggestionsProps {
   reviewSuggestions: Array<string>;
@@ -37,16 +36,9 @@ export async function createReviewSuggestions({
     language: language,
   });
 }
-export async function updateReviewSuggestion(
-  reviewSuggestion: Omit<ReviewSuggestion, "teamId">,
-) {
-  return await axiosClient.put(
-    `${REVIEW_SUGGESTION_URL}/${reviewSuggestion.id}`,
-    reviewSuggestion,
-  );
+export async function updateReviewSuggestion(reviewSuggestion: Omit<ReviewSuggestion, "teamId">) {
+  return await axiosClient.put(`${REVIEW_SUGGESTION_URL}/${reviewSuggestion.id}`, reviewSuggestion);
 }
 export async function deleteReviewSuggestion(reviewSuggestionId: string) {
-  return await axiosClient.delete(
-    `${REVIEW_SUGGESTION_URL}/${reviewSuggestionId}`,
-  );
+  return await axiosClient.delete(`${REVIEW_SUGGESTION_URL}/${reviewSuggestionId}`);
 }

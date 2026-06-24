@@ -1,25 +1,8 @@
-"use client";
-
-import React, { useEffect, useMemo, useState } from "react";
-
 import type { BoxComponentProps } from "@mantine/core";
-import {
-  ActionIcon,
-  Anchor,
-  Image,
-  Indicator,
-  Modal,
-  Stack,
-} from "@mantine/core";
+import { ActionIcon, Anchor, Image, Indicator, Modal, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { RichTextEditor } from "@mantine/tiptap";
-import {
-  IconFileFilled,
-  IconRobot,
-  IconTrash,
-  IconWaveSine,
-  IconX,
-} from "@tabler/icons-react";
+import { IconFileFilled, IconRobot, IconTrash, IconWaveSine, IconX } from "@tabler/icons-react";
 import Placeholder from "@tiptap/extension-placeholder";
 import { CharacterCount } from "@tiptap/extensions";
 import { Plugin } from "@tiptap/pm/state";
@@ -27,10 +10,11 @@ import { Extension, generateHTML, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 import { LayoutTemplate, Paperclip, TypeOutline, X, Zap } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { MessagePlatform } from "@/types/enums.ts";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import { MessagePlatform } from "@/types/enums.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
@@ -52,6 +36,7 @@ import InsertInboxFile from "./InsertInboxMedia/InsertInboxFile.tsx";
 import InsertInboxImage from "./InsertInboxMedia/InsertInboxImage.tsx";
 import InsertInboxVideo from "./InsertInboxMedia/InsertInboxVideo.tsx";
 import { isJSONString, WaQuickReply } from "./WaQuickReply/index.tsx";
+
 import styles from "./waTextEditor.module.css";
 
 interface WaTextEditorProps extends BoxComponentProps {
@@ -155,12 +140,7 @@ function WaTextEditor({
             handleTextInput(view, from, to, text) {
               if (text === "/" && !isQuickReplyEditor) {
                 const slice = view.state.doc.slice(0, from);
-                const textBefore = slice.content.textBetween(
-                  0,
-                  slice.content.size,
-                  "\n",
-                  "\n",
-                );
+                const textBefore = slice.content.textBetween(0, slice.content.size, "\n", "\n");
 
                 const match = textBefore.match(/\/([^\n]*)$/);
                 const search = match?.[1]?.trim() ?? "";
@@ -226,16 +206,12 @@ function WaTextEditor({
     },
     editable,
   });
-  const { media, setSelectedMedia, selectedMedia, removeMedia } =
-    useMediaStore();
+  const { media, setSelectedMedia, removeMedia } = useMediaStore();
   const { selectedContact } = useContactsStore();
   const { data: waSettings } = useWaSettings();
-  const [flowModalOpened, { close: flowModalClose, open: openFlowModal }] =
+  const [flowModalOpened, { close: flowModalClose, open: openFlowModal }] = useDisclosure(false);
+  const [automationModalOpened, { close: automationModalClose, open: openAutomationModal }] =
     useDisclosure(false);
-  const [
-    automationModalOpened,
-    { close: automationModalClose, open: openAutomationModal },
-  ] = useDisclosure(false);
 
   useEffect(() => {
     if (editor) {
@@ -250,19 +226,15 @@ function WaTextEditor({
   useEffect(() => {
     if (editor) editor.setEditable(editable);
   }, [editable]);
-  const [isModalOpened, { close: onModalClose, open: openModal }] =
-    useDisclosure(false);
+  const [isModalOpened, { close: onModalClose, open: openModal }] = useDisclosure(false);
   const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
 
-  const platform = selectedContact
-    ? selectedContact.lastMessage?.sourcePlatform
-    : null;
+  const platform = selectedContact ? selectedContact.lastMessage?.sourcePlatform : null;
   const phone_number_id = useMemo(
     () =>
       waSettings
-        ? waSettings?.find(
-            (s) => s?.phone === selectedContact?.lastMessage?.sourceIdentifier,
-          )?.phoneId
+        ? waSettings?.find((s) => s?.phone === selectedContact?.lastMessage?.sourceIdentifier)
+            ?.phoneId
         : "",
     [waSettings],
   );
@@ -279,9 +251,7 @@ function WaTextEditor({
     }
   }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
 
-  const isSessionExpired = isInboxSessionExpired(
-    selectedContact?.lastReceivedMessageTimeStamp,
-  );
+  const isSessionExpired = isInboxSessionExpired(selectedContact?.lastReceivedMessageTimeStamp);
 
   const AccountSelectComponent = () => {
     if (platform === MessagePlatform.WEBCHAT) return null;
@@ -305,10 +275,7 @@ function WaTextEditor({
           },
         }}
         platform={platform}
-        disabled={
-          platform === MessagePlatform.INSTAGRAM ||
-          platform === MessagePlatform.FACEBOOK
-        }
+        disabled={platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK}
         hideLabel={true}
       />
     );
@@ -348,9 +315,7 @@ function WaTextEditor({
   }, []);
 
   return (
-    <div
-      className={`${border ? "border-t" : ""} bg-background shrink-0 relative`}
-    >
+    <div className={`${border ? "border-t" : ""} bg-background shrink-0 relative`}>
       <div className="flex gap-1 ">
         {media.length > 0 &&
           media.map((me) => {
@@ -384,9 +349,7 @@ function WaTextEditor({
                   {me.type === "image" && (
                     <Image src={me.url} width={48} height={48} alt={me.name} />
                   )}
-                  {me.type === "video" && (
-                    <video src={me.url} width={48} height={48} />
-                  )}
+                  {me.type === "video" && <video src={me.url} width={48} height={48} />}
                   {me.type === "document" && (
                     <Anchor href={me.url}>
                       <IconFileFilled color="white" size={"2rem"} />
@@ -420,12 +383,7 @@ function WaTextEditor({
                     : JSON.parse(value);
 
                   const { from } = editor.state.selection;
-                  const textBefore = editor.state.doc.textBetween(
-                    0,
-                    from,
-                    "\n",
-                    "\n",
-                  );
+                  const textBefore = editor.state.doc.textBetween(0, from, "\n", "\n");
 
                   const match = textBefore.match(/\/[^\n]*$/);
                   if (match) {
@@ -477,9 +435,7 @@ function WaTextEditor({
                 style={{
                   borderRadius: "5px",
                 }}
-                className={`${
-                  editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""
-                }`}
+                className={`${editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""}`}
               />
             </div>
             <div className="flex items-center justify-end px-2 pt-1 space-x-1">
@@ -509,11 +465,7 @@ function WaTextEditor({
                   <PopoverTrigger>
                     <CustomTooltip
                       trigger={
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                        >
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                           <TypeOutline className="w-5 h-5" />
                         </Button>
                       }
@@ -554,11 +506,7 @@ function WaTextEditor({
                     <PopoverTrigger>
                       <CustomTooltip
                         trigger={
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                             <Paperclip className="w-5 h-5" />
                           </Button>
                         }
@@ -568,9 +516,7 @@ function WaTextEditor({
                     <PopoverContent className="w-full">
                       <div className="flex items-center justify-center flex-nowrap">
                         <RichTextEditor.ControlsGroup>
-                          {platform !== MessagePlatform.INSTAGRAM && (
-                            <InsertInboxFile />
-                          )}
+                          {platform !== MessagePlatform.INSTAGRAM && <InsertInboxFile />}
                           <InsertInboxImage />
                           <InsertInboxVideo />
                           <InsertInboxAudio />
@@ -595,11 +541,7 @@ function WaTextEditor({
                   <div className="flex">
                     <CustomTooltip
                       trigger={
-                        <Button
-                          variant="ghost"
-                          onClick={() => openModal()}
-                          size="sm"
-                        >
+                        <Button variant="ghost" onClick={() => openModal()} size="sm">
                           <LayoutTemplate className="w-4 h-4" />
                         </Button>
                       }
@@ -607,11 +549,7 @@ function WaTextEditor({
                     />
                     <CustomTooltip
                       trigger={
-                        <Button
-                          variant="ghost"
-                          onClick={() => openFlowModal()}
-                          size="sm"
-                        >
+                        <Button variant="ghost" onClick={() => openFlowModal()} size="sm">
                           <IconWaveSine className="w-4 h-4" />
                         </Button>
                       }
@@ -619,11 +557,7 @@ function WaTextEditor({
                     />
                     <CustomTooltip
                       trigger={
-                        <Button
-                          variant="ghost"
-                          onClick={() => openAutomationModal()}
-                          size="sm"
-                        >
+                        <Button variant="ghost" onClick={() => openAutomationModal()} size="sm">
                           <IconRobot className="w-4 h-4" />
                         </Button>
                       }
@@ -631,25 +565,19 @@ function WaTextEditor({
                     />
                   </div>
                 )}
-                {inbox && platform !== MessagePlatform.WEBCHAT && (
-                  <VoiceRecorder />
-                )}
+                {inbox && platform !== MessagePlatform.WEBCHAT && <VoiceRecorder />}
               </div>
 
               {inbox && (
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs text-muted-foreground">
-                    Channel - to:
-                  </span>
+                  <span className="text-xs text-muted-foreground">Channel - to:</span>
                   <AccountSelectComponent />
                 </div>
               )}
             </div>
           </RichTextEditor>
         </div>
-        <div className="mt-5">
-          {(inbox || privateMessage) && sendMessageButton}
-        </div>
+        <div className="mt-5">{(inbox || privateMessage) && sendMessageButton}</div>
       </div>
       <WaInboxTemplateDisplayModal
         sessionExpired={isSessionExpired}
@@ -691,12 +619,7 @@ const ShowMedia = ({ opened, close }) => {
           <IconTrash />
         </ActionIcon>
         {media.type === "image" && (
-          <img
-            src={media.url}
-            width={"100%"}
-            height={"100%"}
-            alt={media.name}
-          />
+          <img src={media.url} width={"100%"} height={"100%"} alt={media.name} />
         )}
         {media.type === "video" && (
           <video src={media.url} width={"100%"} height={"100%"} controls />
@@ -741,8 +664,7 @@ export function parseToWhatsAppFormat(editorContent) {
 
     const leadingSpaces = " ".repeat(text.length - trimmedStart.length);
     const trailingSpaces = " ".repeat(text.length - trimmedEnd.length);
-    const formattedText =
-      trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
+    const formattedText = trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
     return `${leadingSpaces}${type}${trimmed}${type}${formattedText}`;
   }
   const parseNode = (node) => {
@@ -776,9 +698,7 @@ export function parseToWhatsAppFormat(editorContent) {
       case "bulletList":
         return node.content.map((item) => `* ${parseNode(item)}`).join("\n");
       case "orderedList":
-        return node.content
-          .map((item, index) => `${index + 1}. ${parseNode(item)}`)
-          .join("\n");
+        return node.content.map((item, index) => `${index + 1}. ${parseNode(item)}`).join("\n");
       case "blockquote":
         return node.content.map((item) => `> ${parseNode(item)}`).join("\n");
       case "codeBlock":
@@ -834,9 +754,7 @@ export function parseFromWhatsAppFormat(text: string): {
           // Check if it's opening or closing bold
           const isClosing = activeMarks.includes("bold");
           if (currentText) {
-            paragraphNode.content?.push(
-              createTextNode(currentText, [...activeMarks]),
-            );
+            paragraphNode.content?.push(createTextNode(currentText, [...activeMarks]));
             currentText = "";
           }
           if (isClosing) {
@@ -850,9 +768,7 @@ export function parseFromWhatsAppFormat(text: string): {
           // Check for italic
           const isClosing = activeMarks.includes("italic");
           if (currentText) {
-            paragraphNode.content?.push(
-              createTextNode(currentText, [...activeMarks]),
-            );
+            paragraphNode.content?.push(createTextNode(currentText, [...activeMarks]));
             currentText = "";
           }
           if (isClosing) {
@@ -866,9 +782,7 @@ export function parseFromWhatsAppFormat(text: string): {
           // Check for strikethrough
           const isClosing = activeMarks.includes("strike");
           if (currentText) {
-            paragraphNode.content?.push(
-              createTextNode(currentText, [...activeMarks]),
-            );
+            paragraphNode.content?.push(createTextNode(currentText, [...activeMarks]));
             currentText = "";
           }
           if (isClosing) {
@@ -882,9 +796,7 @@ export function parseFromWhatsAppFormat(text: string): {
           // Check for code
           const isClosing = activeMarks.includes("code");
           if (currentText) {
-            paragraphNode.content?.push(
-              createTextNode(currentText, [...activeMarks]),
-            );
+            paragraphNode.content?.push(createTextNode(currentText, [...activeMarks]));
             currentText = "";
           }
           if (isClosing) {
@@ -903,9 +815,7 @@ export function parseFromWhatsAppFormat(text: string): {
 
     // Add any remaining text
     if (currentText) {
-      paragraphNode.content?.push(
-        createTextNode(currentText, [...activeMarks]),
-      );
+      paragraphNode.content?.push(createTextNode(currentText, [...activeMarks]));
     }
 
     // Add paragraph if it has content
@@ -991,10 +901,7 @@ export function parseJsonToReact(value) {
 export function whatsappToHTML(text) {
   if (!text) return "";
 
-  let html = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   html = html
     // Bold (*text*)
@@ -1008,30 +915,15 @@ export function whatsappToHTML(text) {
 
   // Alignment markers
   html = html
-    .replace(
-      /\[center\]([\s\S]*?)(?=\[|$)/g,
-      '<div style="text-align:center;">$1</div>',
-    )
-    .replace(
-      /\[right\]([\s\S]*?)(?=\[|$)/g,
-      '<div style="text-align:right;">$1</div>',
-    )
-    .replace(
-      /\[left\]([\s\S]*?)(?=\[|$)/g,
-      '<div style="text-align:left;">$1</div>',
-    );
+    .replace(/\[center\]([\s\S]*?)(?=\[|$)/g, '<div style="text-align:center;">$1</div>')
+    .replace(/\[right\]([\s\S]*?)(?=\[|$)/g, '<div style="text-align:right;">$1</div>')
+    .replace(/\[left\]([\s\S]*?)(?=\[|$)/g, '<div style="text-align:left;">$1</div>');
 
   // --- Handle checkboxes / bullets / numbered lists ---
-  html = html.replace(
-    /(^|\\n)[\s]*[☑☐]\s?(.*?)(?=\\n|$)/g,
-    "$1<div>☐ $2</div>",
-  );
+  html = html.replace(/(^|\\n)[\s]*[☑☐]\s?(.*?)(?=\\n|$)/g, "$1<div>☐ $2</div>");
 
   // Replace lines that start with "-" or "*" or "•"
-  html = html.replace(
-    /(^|\\n)[\s]*[-*•]\s+(.*?)(?=\\n|$)/g,
-    "$1<div>• $2</div>",
-  );
+  html = html.replace(/(^|\\n)[\s]*[-*•]\s+(.*?)(?=\\n|$)/g, "$1<div>• $2</div>");
 
   // Replace numbered list lines "1. text"
   html = html.replace(/(^|\\n)[\s]*\d+\.\s+(.*?)(?=\\n|$)/g, "$1<div>$2</div>");

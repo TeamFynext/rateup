@@ -1,18 +1,8 @@
-"use client";
-
-import { useEffect } from "react";
-
-import {
-  Button,
-  Flex,
-  Image,
-  Popover,
-  ScrollAreaAutosize,
-  Stack,
-} from "@mantine/core";
+import { Button, Flex, Image, Popover, ScrollAreaAutosize, Stack } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconChevronDown } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { useCurrentPath } from "@/hooks/currentPath.tsx";
 
@@ -30,14 +20,7 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
     }
   }, [isViewportLEQ1024px]);
   return (
-    <Popover
-      opened={opened}
-      zIndex={400}
-      width={350}
-      offset={-3}
-      position="bottom"
-      withArrow
-    >
+    <Popover opened={opened} zIndex={400} width={350} offset={-3} position="bottom" withArrow>
       <Popover.Target>
         <Flex
           className={`${headerStyles["header-link-wrapper"]} ${
@@ -46,12 +29,7 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
           onMouseEnter={open}
           onMouseLeave={close}
         >
-          <Link
-            className={className}
-            to={href}
-            key={linkText}
-            onClick={() => close()}
-          >
+          <Link className={className} to={href} key={linkText} onClick={() => close()}>
             <span>{linkText}</span>
           </Link>
           <Button
@@ -59,7 +37,7 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
             classNames={{
               section: styles["chevron-down"],
             }}
-            onClick={(e) => {
+            onClick={(_e) => {
               if (!opened) open();
               else close();
             }}
@@ -80,19 +58,13 @@ const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
                 <Link key={id} to={link} className={styles["link"]}>
                   <Flex className={styles["link-content-container"]}>
                     <Flex className={styles["image-container"]}>
-                      <Image
-                        className={styles["link-content-img"]}
-                        src={iconLink}
-                        alt="icon"
-                      />
+                      <Image className={styles["link-content-img"]} src={iconLink} alt="icon" />
                     </Flex>
                     <Stack
                       className={`${styles["heading-description-container"]} ${currentRoutePath === link ? "link-active" : ""}`}
                     >
                       <span className={styles["heading-span"]}>{heading}</span>
-                      <span className={styles["description-span"]}>
-                        {description}
-                      </span>
+                      <span className={styles["description-span"]}>{description}</span>
                     </Stack>
                   </Flex>
                 </Link>

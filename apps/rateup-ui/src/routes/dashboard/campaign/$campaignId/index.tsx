@@ -1,11 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-
 import { useDebouncedState } from "@mantine/hooks";
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
@@ -24,16 +18,10 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  CampaignParticipantStatus,
-  CampaignStatus,
-  CampaignType,
-  SendMode,
-  SentCampaignChoice,
-} from "@/types/enums.ts";
 import {
   useCampaignById,
   useCampaignResponseDownloadById,
@@ -76,13 +64,15 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
+import {
+  CampaignParticipantStatus,
+  CampaignStatus,
+  CampaignType,
+  SendMode,
+  SentCampaignChoice,
+} from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/campaign/$campaignId/")({
@@ -95,19 +85,17 @@ function CampaignDetails() {
   const [editingCampaign, setEditingCampaign] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
-  const [sorting, setSorting] = useState([CONTACT_SORT]);
-  const [columnFilters, setColumnFilters] = useDebouncedState([], 200);
+  const [sorting] = useState([CONTACT_SORT]);
+  const [columnFilters] = useDebouncedState([], 200);
   const [isResendModalOpen, setIsResendModalOpen] = useState(false);
 
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
-  const [selectedDripStage, setSelectedDripStage] = useState("all");
+  const [selectedDripStage] = useState("all");
   const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
-  const [sendingParticipantId, setSendingParticipantId] = useState<
-    string | null
-  >(null);
+  const [sendingParticipantId, setSendingParticipantId] = useState<string | null>(null);
 
   const { t } = useTranslation("campaign.details");
   const navigate = useNavigate();
@@ -143,10 +131,7 @@ function CampaignDetails() {
 
   const statsQuery = useCampaignStatsById(campaignId, selectedDripStage);
   const queueCount = statsQuery.data?.queueCount ?? 0;
-  const sendCampaignMutation = useSendCampaign(
-    campaignId ?? "",
-    campaignQuery.data?.teamId ?? "",
-  );
+  const sendCampaignMutation = useSendCampaign(campaignId ?? "", campaignQuery.data?.teamId ?? "");
   const toggleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(participants.map((p) => p.id));
@@ -156,9 +141,7 @@ function CampaignDetails() {
   };
 
   const toggleSelectOne = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
   const columns = useMemo<ColumnDef<any>[]>(
@@ -168,9 +151,7 @@ function CampaignDetails() {
         id: "select",
         size: 50,
         header: () => {
-          const allSelected =
-            participants.length > 0 &&
-            selectedIds.length === participants.length;
+          const allSelected = participants.length > 0 && selectedIds.length === participants.length;
 
           return (
             <Checkbox
@@ -192,9 +173,7 @@ function CampaignDetails() {
         accessorKey: "contact.name",
         header: t("Name"),
         cell: ({ row }) => (
-          <div className="font-medium dark:text-slate-200">
-            {row.original.contact?.name}
-          </div>
+          <div className="font-medium dark:text-slate-200">{row.original.contact?.name}</div>
         ),
       },
 
@@ -214,19 +193,14 @@ function CampaignDetails() {
         accessorKey: "status",
         header: t("Status"),
         cell: ({ row }) => (
-          <StatusBadge
-            status={row.original.status}
-            errorMessage={row.original.errorMessage}
-          />
+          <StatusBadge status={row.original.status} errorMessage={row.original.errorMessage} />
         ),
       },
 
       // ───────────── Consent ─────────────
       {
         accessorKey: "contact.consent",
-        header: () => (
-          <div className="text-center font-medium">{t("Consent")}</div>
-        ),
+        header: () => <div className="text-center font-medium">{t("Consent")}</div>,
         cell: ({ row }) =>
           row.original.contact?.consent ? (
             <div className="flex justify-center">
@@ -263,13 +237,10 @@ function CampaignDetails() {
     ],
     [participants.length, selectedIds, sendingParticipantId, t],
   );
-  const removeMulitpleGroupParticipants = useRemoveMulitpleGroupParticipants(
-    campaignId,
-    () => {
-      setSelectedIds([]);
-      setOpenDeleteModal(false);
-    },
-  );
+  const removeMulitpleGroupParticipants = useRemoveMulitpleGroupParticipants(campaignId, () => {
+    setSelectedIds([]);
+    setOpenDeleteModal(false);
+  });
 
   useEffect(() => {
     if (campaignQuery.data) {
@@ -305,10 +276,7 @@ function CampaignDetails() {
   };
 
   const teamName =
-    campaignQuery.data.team?.name ??
-    campaignQuery.data.teamName ??
-    campaignQuery.data.teamId ??
-    "";
+    campaignQuery.data.team?.name ?? campaignQuery.data.teamName ?? campaignQuery.data.teamId ?? "";
   const stats = campaignQuery.data.stats ?? {
     participants: 0,
     pending: 0,
@@ -323,8 +291,7 @@ function CampaignDetails() {
     type: campaignQuery.data.type,
     team: teamName,
     status: campaignQuery.data.status,
-    template:
-      campaignQuery.data.template?.name ?? campaignQuery.data.waTemplateId,
+    template: campaignQuery.data.template?.name ?? campaignQuery.data.waTemplateId,
     participants: stats.participants,
     pending: stats.pending,
     sent: stats.sent,
@@ -344,8 +311,7 @@ function CampaignDetails() {
   };
 
   const isQueuing =
-    campaign.status === CampaignStatus.QUEUING ||
-    campaign.status === CampaignStatus.DEQUEUING;
+    campaign.status === CampaignStatus.QUEUING || campaign.status === CampaignStatus.DEQUEUING;
 
   const closeEditModal = () => {
     setEditingCampaign(null);
@@ -377,15 +343,10 @@ function CampaignDetails() {
       {
         statuses: options.statuses,
         sentCampaignChoice:
-          options.sendMode === SendMode.NOW
-            ? SentCampaignChoice.NOW
-            : SentCampaignChoice.LATER,
+          options.sendMode === SendMode.NOW ? SentCampaignChoice.NOW : SentCampaignChoice.LATER,
         campaignSentAt:
           options.sendMode === SendMode.SCHEDULED
-            ? dayjs(
-                `${options.scheduleDate} ${options.scheduleTime}`,
-                "YYYY-MM-DD HH:mm",
-              ).toDate()
+            ? dayjs(`${options.scheduleDate} ${options.scheduleTime}`, "YYYY-MM-DD HH:mm").toDate()
             : undefined,
         type: campaign.type,
         status: canSend ? CampaignStatus.ACTIVE : campaign.status,
@@ -418,9 +379,7 @@ function CampaignDetails() {
           );
         },
         onError: (error) => {
-          toast.error(
-            error?.message || t("Failed to update drip campaign status"),
-          );
+          toast.error(error?.message || t("Failed to update drip campaign status"));
         },
       },
     );
@@ -430,10 +389,7 @@ function CampaignDetails() {
     setSendingParticipantId(participantId);
     sendCampaignMutation.mutate(
       {
-        statuses: [
-          CampaignParticipantStatus.PENDING,
-          CampaignParticipantStatus.FAILED,
-        ],
+        statuses: [CampaignParticipantStatus.PENDING, CampaignParticipantStatus.FAILED],
         sentCampaignChoice: SentCampaignChoice.NOW,
         participantId,
         type: campaign.type,
@@ -507,9 +463,7 @@ function CampaignDetails() {
                 </Button>
                 <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
                 <div>
-                  <h1 className="text-lg dark:text-slate-50">
-                    {campaign.name}
-                  </h1>
+                  <h1 className="text-lg dark:text-slate-50">{campaign.name}</h1>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     {t("Campaign ID: #{id}", { id: campaign.id })}
                   </p>
@@ -605,10 +559,9 @@ function CampaignDetails() {
                   )}
                   {campaign.type !== CampaignType.DRIP &&
                     queueCount > 0 &&
-                    ![
-                      CampaignStatus.QUEUING,
-                      CampaignStatus.DEQUEUING,
-                    ].includes(campaign.status) && (
+                    ![CampaignStatus.QUEUING, CampaignStatus.DEQUEUING].includes(
+                      campaign.status,
+                    ) && (
                       <Button
                         variant="destructive"
                         className="rounded-full gap-2"
@@ -622,9 +575,7 @@ function CampaignDetails() {
                   {campaign.type === CampaignType.DRIP && (
                     <Button
                       variant={
-                        campaign.status === CampaignStatus.ACTIVE
-                          ? "destructive"
-                          : "outline"
+                        campaign.status === CampaignStatus.ACTIVE ? "destructive" : "outline"
                       }
                       onClick={handleToggleDrip}
                       className="rounded-full gap-2"
@@ -643,19 +594,14 @@ function CampaignDetails() {
                     className="gap-2"
                   >
                     <FileDown className="w-3.5 h-3.5" />
-                    {deliveryReportMutation.isPending
-                      ? t("Generating...")
-                      : t("Delivery Report")}
+                    {deliveryReportMutation.isPending ? t("Generating...") : t("Delivery Report")}
                   </Button>
                 </div>
               </div>
             </div>
           </div>
 
-          <TabsContent
-            value="info"
-            className="flex-1 min-h-0 overflow-auto mt-0 p-6"
-          >
+          <TabsContent value="info" className="flex-1 min-h-0 overflow-auto mt-0 p-6">
             <div className="mx-auto space-y-6">
               {/* Campaign Header Card */}
               <Card>
@@ -667,14 +613,10 @@ function CampaignDetails() {
                           <Send className="w-6 h-6 text-primary-foreground" />
                         </div>
                         <div className="flex-1">
-                          <h2 className="text-xl dark:text-slate-50">
-                            {campaign.name}
-                          </h2>
+                          <h2 className="text-xl dark:text-slate-50">{campaign.name}</h2>
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="secondary">{campaign.type}</Badge>
-                            <Badge variant="outline">
-                              Team: {campaignInfo?.team}
-                            </Badge>
+                            <Badge variant="outline">Team: {campaignInfo?.team}</Badge>
                           </div>
                         </div>
                         {/* Total Participants */}
@@ -726,10 +668,7 @@ function CampaignDetails() {
             </div>
           </TabsContent>
 
-          <TabsContent
-            value="participants"
-            className="flex-1 min-h-0 flex flex-col mt-0 p-0"
-          >
+          <TabsContent value="participants" className="flex-1 min-h-0 flex flex-col mt-0 p-0">
             {/* Toolbar (fixed height, never scrolls) */}
             <Card className="mb-4 p-0  ">
               <CardContent className="mx-0">
@@ -798,17 +737,12 @@ function CampaignDetails() {
         </Tabs>
       </div>
       {/* ── Dialogs (portalled, outside layout flow) ──────────────────── */}
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("Delete Campaign")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t(
-                "Are you sure you want to delete this campaign? This action cannot be undone.",
-              )}
+              {t("Are you sure you want to delete this campaign? This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,8 +1,3 @@
-"use client";
-
-import type { MutableRefObject } from "react";
-import { useEffect, useRef, useState } from "react";
-
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -27,6 +22,8 @@ import {
   Trash2,
   User,
 } from "lucide-react";
+import type { MutableRefObject } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -44,11 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog.tsx";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,12 +50,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
-import {
-  getCardData,
-  getCardDropTargetData,
-  isCardData,
-  isDraggingACard,
-} from "./data.ts";
+import { getCardData, getCardDropTargetData, isCardData, isDraggingACard } from "./data.ts";
 import { isShallowEqual } from "./is-shallow-equal.ts";
 import type { Card as TCard } from "./types.ts";
 
@@ -207,9 +195,7 @@ function CardDisplay({
         flexShrink: 0,
         flexDirection: "column",
         gap: "8px",
-        ...(state.type === "is-dragging-and-left-self"
-          ? { display: "none" }
-          : {}),
+        ...(state.type === "is-dragging-and-left-self" ? { display: "none" } : {}),
       }}
     >
       {state.type === "is-over" && state.closestEdge === "top" ? (
@@ -223,8 +209,7 @@ function CardDisplay({
         style={{
           padding: "15px 16px",
           opacity: state.type === "is-dragging" ? 0.4 : 1,
-          boxShadow:
-            state.type !== "preview" ? "0 1px 3px rgba(11,31,72,.04)" : "none",
+          boxShadow: state.type !== "preview" ? "0 1px 3px rgba(11,31,72,.04)" : "none",
           ...(state.type === "preview"
             ? { width: state.dragging.width, height: state.dragging.height }
             : {}),
@@ -285,11 +270,7 @@ function CardDisplay({
           })}
           {card.attachments && card.attachments.length > 0 && (
             <span className="inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium text-muted-foreground">
-              <Paperclip
-                size={12}
-                className="text-muted-foreground"
-                strokeWidth={2}
-              />
+              <Paperclip size={12} className="text-muted-foreground" strokeWidth={2} />
               {card.attachments.length}
             </span>
           )}
@@ -300,19 +281,13 @@ function CardDisplay({
               <CheckSquare
                 size={12}
                 strokeWidth={2}
-                className={
-                  doneCount === totalCount ? "text-green-600" : "text-gray-400"
-                }
+                className={doneCount === totalCount ? "text-green-600" : "text-gray-400"}
               />
               {doneCount}/{totalCount}
             </span>
           )}
           <span className="inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium text-muted-foreground">
-            <MessageCircle
-              size={12}
-              className="text-muted-foreground"
-              strokeWidth={2}
-            />
+            <MessageCircle size={12} className="text-muted-foreground" strokeWidth={2} />
             {card.ticketComments?.length || 0}
           </span>
         </div>
@@ -332,10 +307,7 @@ function CardDisplay({
               border: `1px solid ${priorityStyle.border}`,
             }}
           >
-            <span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: priorityStyle.dot }}
-            />
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: priorityStyle.dot }} />
             {t(priorityStyle.label)}
           </span>
 
@@ -357,11 +329,7 @@ function CardDisplay({
                     }
                   />
                 ) : (
-                  <Calendar
-                    size={12}
-                    strokeWidth={2}
-                    className="text-gray-400"
-                  />
+                  <Calendar size={12} strokeWidth={2} className="text-gray-400" />
                 )}
                 {dateFormatted}
               </span>
@@ -532,23 +500,15 @@ export function Card({
         onDelete={handleDeleteClick}
       />
       {state.type === "preview"
-        ? createPortal(
-            <CardDisplay state={state} card={card} />,
-            state.container,
-          )
+        ? createPortal(<CardDisplay state={state} card={card} />, state.container)
         : null}
 
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("Delete ticket?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t(
-                "Are you sure you want to delete this ticket? This action cannot be undone.",
-              )}
+              {t("Are you sure you want to delete this ticket? This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

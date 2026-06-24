@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import {
   IconBrandFacebook,
   IconBrandWhatsapp,
@@ -10,13 +6,10 @@ import {
   IconMail,
   IconUpload,
 } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import {
-  usePushToWaMutation,
-  useUpdateFlowMutation,
-  useWaFlowFromDb,
-} from "@/backend/whatsapp/flow/flow.query";
+import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -40,40 +33,28 @@ interface FlowShareProps {
   surveyId: string;
 }
 
-export default function FlowShare({
-  flowName,
-  flowDbId,
-  survey,
-  surveyId,
-}: FlowShareProps) {
+export default function FlowShare({ flowName, flowDbId, survey, surveyId }: FlowShareProps) {
   // Share Survey state
-  const pushToWaMutation = usePushToWaMutation();
+
   const updateFlowMutation = useUpdateFlowMutation();
   const { data: flowData } = useWaFlowFromDb(flowDbId);
-  const [selectedTeam, setSelectedTeam] = useState(
-    survey?.teams?.[0]?.code || "",
-  );
+  const [selectedTeam, setSelectedTeam] = useState(survey?.teams?.[0]?.code || "");
   const [selectedTag, setSelectedTag] = useState("");
   const [shareUrl, setShareUrl] = useState("");
-  const [surveyTeamMapId, setSurveyTeamMapId] = useState(
-    survey?.teams?.[0]?.mapId,
-  );
+  const [surveyTeamMapId, setSurveyTeamMapId] = useState(survey?.teams?.[0]?.mapId);
   const [shortUrlId, setShortUrlId] = useState(survey?.teams?.[0]?.shortUrlId);
   const [headerImage, setHeaderImage] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
 
   // Start Message state
-  const [startMessageBody, setStartMessageBody] = useState(
-    "Send this message to start survey.",
-  );
+  const [startMessageBody, setStartMessageBody] = useState("Send this message to start survey.");
   const [startMessageSuffix, setStartMessageSuffix] = useState("");
 
   // Load start message values from DB
   useEffect(() => {
     if (flowData?.startMessageConfig) {
       setStartMessageBody(
-        flowData.startMessageConfig.prefix ||
-          "Send this message to start survey.",
+        flowData.startMessageConfig.prefix || "Send this message to start survey.",
       );
       setStartMessageSuffix(flowData.startMessageConfig.suffix || "");
     }
@@ -98,9 +79,7 @@ export default function FlowShare({
       label: team?.code,
     })) || [];
 
-  const selectedTeamObj = survey?.teams?.find(
-    (team) => team?.code === selectedTeam,
-  );
+  const selectedTeamObj = survey?.teams?.find((team) => team?.code === selectedTeam);
   const tagOptions =
     selectedTeamObj?.tags?.map((tag) => ({
       value: tag,
@@ -122,25 +101,17 @@ export default function FlowShare({
 
     if (shortUrlId) {
       const baseUrl = `${import.meta.env.VITE_FRONTEND_URL}/was/${shortUrlId}`;
-      const urlWithTag = selectedTag
-        ? `${baseUrl}?tag=${selectedTag}`
-        : baseUrl;
+      const urlWithTag = selectedTag ? `${baseUrl}?tag=${selectedTag}` : baseUrl;
       setShareUrl(urlWithTag);
     } else {
       // Fallback URL if shortUrlId is not available
-      setShareUrl(
-        `${import.meta.env.VITE_FRONTEND_URL}/public/wa/${surveyTeamMapId}/redirect`,
-      );
+      setShareUrl(`${import.meta.env.VITE_FRONTEND_URL}/public/wa/${surveyTeamMapId}/redirect`);
     }
   }, [surveyId, surveyTeamMapId, selectedTag, shortUrlId]);
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(shareUrl);
     toast.success("URL copied to clipboard!");
-  };
-
-  const handleSaveToWhatsapp = () => {
-    pushToWaMutation.mutate(flowDbId);
   };
 
   const handleSaveStartMessage = () => {
@@ -179,47 +150,33 @@ export default function FlowShare({
             <div className="flex flex-col gap-4">
               <div className="flex flex-1 gap-4">
                 <div className="flex-1">
-                  <Label className="text-xs text-gray-500 dark:text-gray-400">
-                    Select Team
-                  </Label>
-                  <Select
-                    value={selectedTeam}
-                    onValueChange={(value) => setSelectedTeam(value)}
-                  >
+                  <Label className="text-xs text-gray-500 dark:text-gray-400">Select Team</Label>
+                  <Select value={selectedTeam} onValueChange={(value) => setSelectedTeam(value)}>
                     <SelectTrigger className="h-9 text-sm w-full">
                       <SelectValue placeholder="Team" />
                     </SelectTrigger>
                     <SelectContent>
-                      {teamOptions.map(
-                        (option: { value: string; label: string }) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ),
-                      )}
+                      {teamOptions.map((option: { value: string; label: string }) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="flex-1">
-                  <Label className="text-xs text-gray-500 dark:text-gray-400">
-                    Select Tag
-                  </Label>
-                  <Select
-                    value={selectedTag}
-                    onValueChange={(value) => setSelectedTag(value)}
-                  >
+                  <Label className="text-xs text-gray-500 dark:text-gray-400">Select Tag</Label>
+                  <Select value={selectedTag} onValueChange={(value) => setSelectedTag(value)}>
                     <SelectTrigger className="h-9 text-sm w-full">
                       <SelectValue placeholder="Optional" />
                     </SelectTrigger>
                     <SelectContent>
                       {tagOptions.length > 0 ? (
-                        tagOptions.map(
-                          (option: { value: string; label: string }) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ),
-                        )
+                        tagOptions.map((option: { value: string; label: string }) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))
                       ) : (
                         <div className="py-3 text-center text-xs text-gray-500">
                           No tags available
@@ -231,21 +188,14 @@ export default function FlowShare({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs text-gray-500 dark:text-gray-400">
-                  Share Link
-                </Label>
+                <Label className="text-xs text-gray-500 dark:text-gray-400">Share Link</Label>
                 <div className="flex gap-2">
                   <Input
                     value={shareUrl}
                     readOnly
                     className="flex-1 h-9 text-xs font-mono bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-300"
                   />
-                  <Button
-                    onClick={handleCopyUrl}
-                    size="sm"
-                    variant="outline"
-                    className="h-9 px-3"
-                  >
+                  <Button onClick={handleCopyUrl} size="sm" variant="outline" className="h-9 px-3">
                     <IconCopy size={14} className="mr-2" />
                     Copy
                   </Button>
@@ -334,11 +284,7 @@ export default function FlowShare({
               <div className="bg-[#DCF8C6] dark:bg-[#005c4b] rounded-md rounded-tr-sm p-2 max-w-[85%] ml-auto mb-1 border border-[#c8e6c9] dark:border-[#064e3b] relative break-words before:content-[''] before:absolute before:right-[-6px] before:top-0 before:w-0 before:h-0 before:border-l-[6px] before:border-l-[#DCF8C6] dark:before:border-l-[#005c4b] before:border-b-[6px] before:border-b-transparent">
                 <div>
                   {startMessageBody.split("\n").map((line, i) => (
-                    <div
-                      key={i}
-                      className="text-xs"
-                      style={{ lineHeight: 1.4 }}
-                    >
+                    <div key={i} className="text-xs" style={{ lineHeight: 1.4 }}>
                       {line || "\u00A0"}
                     </div>
                   ))}
@@ -347,11 +293,7 @@ export default function FlowShare({
                   </span>
                   {startMessageSuffix &&
                     startMessageSuffix.split("\n").map((line, i) => (
-                      <div
-                        key={i}
-                        className="text-xs mt-1"
-                        style={{ lineHeight: 1.4 }}
-                      >
+                      <div key={i} className="text-xs mt-1" style={{ lineHeight: 1.4 }}>
                         {line || "\u00A0"}
                       </div>
                     ))}
@@ -386,7 +328,7 @@ export default function FlowShare({
                       const url = await uploadFile(file);
                       setHeaderImage(url);
                       toast.success("Image uploaded");
-                    } catch (e) {
+                    } catch {
                       toast.error("Upload failed");
                     } finally {
                       setImageUploading(false);
@@ -397,16 +339,10 @@ export default function FlowShare({
                   size="sm"
                   className="h-8 text-xs"
                   disabled={imageUploading}
-                  onClick={() =>
-                    document.getElementById("flow-image-upload")?.click()
-                  }
+                  onClick={() => document.getElementById("flow-image-upload")?.click()}
                 >
                   <IconUpload size={14} className="mr-2" />
-                  {imageUploading
-                    ? "Uploading..."
-                    : headerImage
-                      ? "Change Image"
-                      : "Upload Image"}
+                  {imageUploading ? "Uploading..." : headerImage ? "Change Image" : "Upload Image"}
                 </Button>
                 <Button
                   variant="outline"
@@ -480,9 +416,7 @@ export default function FlowShare({
               <div className="bg-white dark:bg-gray-700 rounded-md rounded-tl-sm p-3 max-w-[85%] border border-gray-200 dark:border-gray-600 relative wrap-break-words before:content-[''] before:absolute before:left-[-6px] before:top-0 before:w-0 before:h-0 before:border-r-[6px] before:border-r-white dark:before:border-r-gray-700 before:border-b-[6px] before:border-b-transparent">
                 {imageUploading ? (
                   <div className="w-full h-30 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-md mb-2">
-                    <span className="text-xs text-gray-500">
-                      Uploading image...
-                    </span>
+                    <span className="text-xs text-gray-500">Uploading image...</span>
                   </div>
                 ) : (
                   headerImage && (

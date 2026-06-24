@@ -34,14 +34,12 @@ export function getTimeSince(date: string) {
     return `${interval} minute${interval === 1 ? "" : "s"} ago`;
   }
 
-  return `${Math.floor(seconds)} second${
-    Math.floor(seconds) === 1 ? "" : "s"
-  } ago`;
+  return `${Math.floor(seconds)} second${Math.floor(seconds) === 1 ? "" : "s"} ago`;
 }
 
 function arrayEquals<T extends string | number>(a: Array<T>, b: Array<T>) {
   if (a.length !== b.length) return false;
-  return a.every((val, index) => b.includes(val));
+  return a.every((val, _index) => b.includes(val));
 }
 
 export function shuffleArray(array) {
@@ -143,7 +141,7 @@ export function isValidUrl(url: string, checkHttps: boolean = true) {
     const validatedUrl = new URL(url);
     if (checkHttps) return validatedUrl.protocol === "https:";
     return ["http:", "https:"].includes(validatedUrl.protocol);
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -152,9 +150,7 @@ export const safeStrOrNull = (str: string): string | null =>
   !str || !str.trim().length ? null : str;
 
 export function hasRealContent(obj) {
-  return obj?.content?.some(
-    (block) => block.content && block.content.length > 0,
-  );
+  return obj?.content?.some((block) => block.content && block.content.length > 0);
 }
 
 export function randomHexColor(): string {

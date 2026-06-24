@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useCallback, useEffect, useState } from "react";
-
 import {
   Box,
   Card,
@@ -16,16 +12,12 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCircleCheck, IconX } from "@tabler/icons-react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons.tsx";
 import { NumberAnimate } from "../Animate/NumberAnimate.tsx";
-import {
-  CardWidth,
-  Title1,
-  Title2,
-  Title3,
-  Title4,
-} from "../Utils/constants.ts";
+import { CardWidth, Title1, Title2, Title3, Title4 } from "../Utils/constants.ts";
+
 import ButtonStyles from "./Button.module.css";
 import styles from "./Modal.module.css";
 
@@ -76,9 +68,7 @@ const PricingCard = ({
         </Text>
       </Stack>
       <Divider
-        label={
-          index !== 2 && `${currencySymbol} ${data?.inverse}-${inversePeriod}`
-        }
+        label={index !== 2 && `${currencySymbol} ${data?.inverse}-${inversePeriod}`}
         mt={index === 2 && 10}
         labelPosition="center"
       />
@@ -186,11 +176,7 @@ export const generateListItems = (listData: string[] = []) => (
     spacing="xs"
     size="md"
     center
-    icon={
-      <IconCircleCheck
-        style={{ width: rem(16), height: rem(16), color: "green" }}
-      />
-    }
+    icon={<IconCircleCheck style={{ width: rem(16), height: rem(16), color: "green" }} />}
   >
     {listData.map((item) => {
       const isNegative = item.startsWith("-");
@@ -198,13 +184,7 @@ export const generateListItems = (listData: string[] = []) => (
       return (
         <List.Item
           key={item}
-          icon={
-            isNegative && (
-              <IconX
-                style={{ width: rem(16), height: rem(16), color: "red" }}
-              />
-            )
-          }
+          icon={isNegative && <IconX style={{ width: rem(16), height: rem(16), color: "red" }} />}
         >
           {displayName}
         </List.Item>

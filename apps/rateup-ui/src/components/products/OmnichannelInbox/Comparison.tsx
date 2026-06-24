@@ -122,25 +122,21 @@ export default function Comparison() {
             Not just another helpdesk.
           </h6>
           <p className="reveal d2 text-[17px] leading-[1.65] text-white/50 m-0 max-w-[560px] mx-auto">
-            Most helpdesk tools are built for email. RateUp Inbox is built
-            around the channels your customers actually use — with the loyalty
-            and engagement context only RateUp can provide.
+            Most helpdesk tools are built for email. RateUp Inbox is built around the channels your
+            customers actually use — with the loyalty and engagement context only RateUp can
+            provide.
           </p>
         </div>
 
         <div
           className="reveal d1 rounded-[28px] overflow-hidden"
           style={{
-            background:
-              "linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))",
+            background: "linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))",
             border: "1px solid rgba(255,255,255,0.09)",
           }}
         >
           <div className="overflow-x-auto">
-            <table
-              className="w-full border-collapse"
-              style={{ minWidth: "520px" }}
-            >
+            <table className="w-full border-collapse" style={{ minWidth: "520px" }}>
               <thead>
                 <tr>
                   <th
@@ -174,10 +170,7 @@ export default function Comparison() {
                     <td className="px-6 py-[15px] text-[14px] font-medium text-white/75">
                       {feature}
                     </td>
-                    <td
-                      className="px-6 py-[15px]"
-                      style={{ background: "rgba(47,163,255,0.04)" }}
-                    >
+                    <td className="px-6 py-[15px]" style={{ background: "rgba(47,163,255,0.04)" }}>
                       <Cell text={ru} type={ruType} />
                     </td>
                     <td className="px-6 py-[15px]">

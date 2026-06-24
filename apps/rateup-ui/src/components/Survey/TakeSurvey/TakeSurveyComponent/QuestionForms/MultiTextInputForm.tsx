@@ -1,16 +1,14 @@
-"use client";
-
-import { useContext, useEffect } from "react";
-
 import { Stack } from "@mantine/core";
+import { useContext, useEffect } from "react";
 
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
-import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
+
+import classes from "../TakeSurvey.module.css";
 
 type CustomInputFields = {
   fieldKey: string;
@@ -22,10 +20,7 @@ const MultiTextInputForm = ({ features }) => {
   const fields: CustomInputFields[] = features?.[selectedLanguage]?.fields;
 
   useEffect(() => {
-    if (
-      response &&
-      Object.values(response).every((r: string) => !r?.trim().length)
-    )
+    if (response && Object.values(response).every((r: string) => !r?.trim().length))
       updateResponse(undefined);
   }, [response]);
 

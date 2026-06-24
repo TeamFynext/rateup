@@ -2,10 +2,7 @@ import { features } from "../TicketingConstants.tsx";
 
 const TicketFeatureSection = () => {
   return (
-    <section
-      className="relative py-20 px-6 lg:px-10 bg-[#1c518e] overflow-hidden"
-      id="features"
-    >
+    <section className="relative py-20 px-6 lg:px-10 bg-[#1c518e] overflow-hidden" id="features">
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16">
@@ -13,8 +10,8 @@ const TicketFeatureSection = () => {
             Enterprise-Grade WhatsApp Business Integration
           </h2>
           <p className="mt-4 text-lg sm:text-xl text-gray-200 max-w-3xl mx-auto">
-            Transform WhatsApp into your most powerful customer engagement and
-            lead generation channel.
+            Transform WhatsApp into your most powerful customer engagement and lead generation
+            channel.
           </p>
         </div>
 
@@ -34,12 +31,8 @@ const TicketFeatureSection = () => {
 
               {/* Content */}
               <div className="pt-10">
-                <h3 className="text-lg font-bold text-white mb-2">
-                  {step.title}
-                </h3>
-                <p className="text-base text-gray-200 leading-relaxed">
-                  {step.description}
-                </p>
+                <h3 className="text-lg font-bold text-white mb-2">{step.title}</h3>
+                <p className="text-base text-gray-200 leading-relaxed">{step.description}</p>
               </div>
             </div>
           ))}

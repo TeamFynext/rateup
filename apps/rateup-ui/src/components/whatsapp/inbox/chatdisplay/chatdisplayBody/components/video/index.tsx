@@ -1,9 +1,6 @@
-"use client";
-
-import { useRef } from "react";
-
 import { ActionIcon, Group, Stack, Text } from "@mantine/core";
 import { IconDownload } from "@tabler/icons-react";
+import { useRef } from "react";
 import { toast } from "sonner";
 
 import { useGetMediaFile } from "@/backend/whatsapp/inbox/message/wamessage.query";

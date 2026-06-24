@@ -24,9 +24,7 @@ export function ShareSection({
           <div>
             {title && (
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-semibold text-foreground">
-                  {title}
-                </span>
+                <span className="text-sm font-semibold text-foreground">{title}</span>
                 {badge}
               </div>
             )}
@@ -34,9 +32,7 @@ export function ShareSection({
           </div>
           <div>
             {rightTitle && (
-              <span className="text-sm font-semibold text-foreground block mb-1">
-                {rightTitle}
-              </span>
+              <span className="text-sm font-semibold text-foreground block mb-1">{rightTitle}</span>
             )}
             {rightContent}
           </div>

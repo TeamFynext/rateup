@@ -1,22 +1,11 @@
-"use client";
-
-import React, { useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import {
-  Calendar,
-  Clock,
-  CreditCard,
-  DollarSign,
-  Package,
-  Trash2,
-} from "lucide-react";
+import { Calendar, Clock, CreditCard, DollarSign, Package, Trash2 } from "lucide-react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { PaymentPlanStatus } from "@/types/enums.ts";
 import {
   useDeletePaymentPlanMutation,
   usePaymentPlanUpdate,
@@ -26,10 +15,7 @@ import {
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -39,12 +25,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select.tsx";
+import { PaymentPlanStatus } from "@/types/enums.ts";
 
 import { PlansDataTableToolbar } from "./plans-data-table-toolbar.tsx";
 
@@ -68,10 +50,8 @@ const RazorpayPlans = () => {
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const deletePaymentPlanMutation = useDeletePaymentPlanMutation();
 
-  const [
-    openedDeleteModal,
-    { open: openDeleteModal, close: closeDeleteModal },
-  ] = useDisclosure(false);
+  const [openedDeleteModal, { open: openDeleteModal, close: closeDeleteModal }] =
+    useDisclosure(false);
 
   const { data: plans, isLoading, isError } = usePaymentsPlans();
 
@@ -84,16 +64,12 @@ const RazorpayPlans = () => {
       ? plans?.data?.find((plan) => plan?.planId == selectedPlanId)?.id
       : "";
     const planInrateupPlans =
-      rateupPlans &&
-      rateupPlans?.find((plan) => plan.paymentPlanId === planIdLocal);
+      rateupPlans && rateupPlans?.find((plan) => plan.paymentPlanId === planIdLocal);
 
     if (planInrateupPlans) {
-      toast.error(
-        translations("Unable to delete.Plan is in use in rateup plan"),
-        {
-          id: "plan",
-        },
-      );
+      toast.error(translations("Unable to delete.Plan is in use in rateup plan"), {
+        id: "plan",
+      });
       return;
     }
     deletePaymentPlanMutation.mutate({
@@ -107,9 +83,7 @@ const RazorpayPlans = () => {
       accessorKey: "id",
       header: "Razorpay Plan ID",
       cell: ({ row }) => (
-        <div className="font-mono text-xs text-muted-foreground">
-          {row.getValue("id")}
-        </div>
+        <div className="font-mono text-xs text-muted-foreground">{row.getValue("id")}</div>
       ),
       meta: { title: "Razorpay Plan ID" },
     },
@@ -159,9 +133,7 @@ const RazorpayPlans = () => {
     {
       accessorKey: "period",
       header: "Period",
-      cell: ({ row }) => (
-        <Badge variant="secondary">{row.getValue("period")}</Badge>
-      ),
+      cell: ({ row }) => <Badge variant="secondary">{row.getValue("period")}</Badge>,
       meta: { title: "Period" },
     },
     {
@@ -198,8 +170,7 @@ const RazorpayPlans = () => {
             value={status}
             onValueChange={(value) => {
               const planIdLocal = Array.isArray(plans?.data)
-                ? plans?.data?.find((plan) => plan?.planId == row.original.id)
-                    ?.id
+                ? plans?.data?.find((plan) => plan?.planId == row.original.id)?.id
                 : "";
               handleUpdatePlans({
                 id: planIdLocal,
@@ -215,9 +186,7 @@ const RazorpayPlans = () => {
               <SelectItem value={PaymentPlanStatus.NULL}>NULL</SelectItem>
               <SelectItem value={PaymentPlanStatus.LIVE}>LIVE</SelectItem>
               <SelectItem value={PaymentPlanStatus.ACTIVE}>ACTIVE</SelectItem>
-              <SelectItem value={PaymentPlanStatus.INACTIVE}>
-                INACTIVE
-              </SelectItem>
+              <SelectItem value={PaymentPlanStatus.INACTIVE}>INACTIVE</SelectItem>
             </SelectContent>
           </Select>
         );
@@ -284,19 +253,14 @@ const RazorpayPlans = () => {
           interval: plan.interval,
           status: plan.status,
           description: plan.description,
-          canDelete: ![
-            PaymentPlanStatus.ACTIVE,
-            PaymentPlanStatus.LIVE,
-          ].includes(plan.status),
+          canDelete: ![PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(plan.status),
         }))
     : [];
 
   const activePlans = tableData.filter((p) =>
     [PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(p.status),
   );
-  const inactivePlans = tableData.filter(
-    (p) => p.status === PaymentPlanStatus.INACTIVE,
-  );
+  const inactivePlans = tableData.filter((p) => p.status === PaymentPlanStatus.INACTIVE);
 
   return (
     <div className="space-y-6">
@@ -318,9 +282,7 @@ const RazorpayPlans = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Plans
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Plans</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{tableData.length}</div>
@@ -334,9 +296,7 @@ const RazorpayPlans = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {activePlans.length}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{activePlans.length}</div>
           </CardContent>
         </Card>
 
@@ -347,17 +307,11 @@ const RazorpayPlans = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {inactivePlans.length}
-            </div>
+            <div className="text-2xl font-bold text-red-600">{inactivePlans.length}</div>
           </CardContent>
         </Card>
       </div>
-      <DataTable
-        columns={columns}
-        data={tableData}
-        DataTableToolbar={PlansDataTableToolbar}
-      />
+      <DataTable columns={columns} data={tableData} DataTableToolbar={PlansDataTableToolbar} />
       <ConfirmationModal
         opened={openedDeleteModal}
         onClose={closeDeleteModal}

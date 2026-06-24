@@ -1,27 +1,15 @@
-"use client";
-
-import { useContext, useEffect } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useContext, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
-import {
-  useCreateMenuMutation,
-  useUpdateMenuMutation,
-} from "@/backend/menu/menu.query";
+import { useCreateMenuMutation, useUpdateMenuMutation } from "@/backend/menu/menu.query";
 import SelectedTeamContext from "@/context/SelectedTeam.ts";
 
 import { TeamSelector } from "../input/TeamSelector.tsx";
 import { Button } from "../ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog.tsx";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
 import { Spinner } from "../ui/spinner.tsx";
@@ -39,11 +27,7 @@ interface CreateMenuModalProps {
   readonly close: () => void;
   readonly editingItem?: Menu;
 }
-export function CreateMenuModal({
-  opened,
-  close,
-  editingItem,
-}: CreateMenuModalProps) {
+export function CreateMenuModal({ opened, close, editingItem }: CreateMenuModalProps) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
   const { t: translations } = useTranslation();
 
@@ -62,13 +46,9 @@ export function CreateMenuModal({
     },
   });
 
-  const createMenuMutation = useCreateMenuMutation(
-    selectedTeamId,
-    close,
-    () => {
-      reset();
-    },
-  );
+  const createMenuMutation = useCreateMenuMutation(selectedTeamId, close, () => {
+    reset();
+  });
   const updateMenuMutation = useUpdateMenuMutation(
     selectedTeamId,
     () => {
@@ -85,8 +65,7 @@ export function CreateMenuModal({
     }
   }, [editingItem, reset]);
 
-  const isPending =
-    createMenuMutation.isPending || updateMenuMutation.isPending;
+  const isPending = createMenuMutation.isPending || updateMenuMutation.isPending;
 
   const onSubmit = (values: FormValues) => {
     if (editingItem) {
@@ -108,9 +87,7 @@ export function CreateMenuModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {editingItem
-              ? translations("Edit Menu")
-              : translations("Create Menu")}
+            {editingItem ? translations("Edit Menu") : translations("Create Menu")}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -136,14 +113,10 @@ export function CreateMenuModal({
                     />
                   )}
                 />
-                {errors.teamId && (
-                  <FieldError>{errors.teamId.message}</FieldError>
-                )}
+                {errors.teamId && <FieldError>{errors.teamId.message}</FieldError>}
               </Field>
               <Field data-invalid={!!errors.name}>
-                <FieldLabel htmlFor="name">
-                  {translations("Menu Name")}
-                </FieldLabel>
+                <FieldLabel htmlFor="name">{translations("Menu Name")}</FieldLabel>
                 <Input
                   id="name"
                   placeholder={translations("Menu 1")}
@@ -153,27 +126,21 @@ export function CreateMenuModal({
                 {errors.name && <FieldError>{errors.name.message}</FieldError>}
               </Field>
               <Field data-invalid={!!errors.displayName}>
-                <FieldLabel htmlFor="displayName">
-                  {translations("Display Name")}
-                </FieldLabel>
+                <FieldLabel htmlFor="displayName">{translations("Display Name")}</FieldLabel>
                 <Input
                   id="displayName"
                   placeholder={translations("Hotel Name")}
                   aria-invalid={!!errors.displayName}
                   {...register("displayName")}
                 />
-                {errors.displayName && (
-                  <FieldError>{errors.displayName.message}</FieldError>
-                )}
+                {errors.displayName && <FieldError>{errors.displayName.message}</FieldError>}
               </Field>
             </FieldGroup>
           </div>
           <DialogFooter className="mt-6">
             <Button type="submit" disabled={isPending}>
               {isPending && <Spinner data-icon="inline-end" />}
-              {editingItem
-                ? translations("Save Menu")
-                : translations("Create Menu")}
+              {editingItem ? translations("Save Menu") : translations("Create Menu")}
             </Button>
           </DialogFooter>
         </form>

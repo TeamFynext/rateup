@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
-
 import { ArrowRight, Clock, Loader2, Pencil, Zap } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -40,9 +39,7 @@ export default function InboxAutomation() {
   const [isPending, setIsPending] = useState(false);
 
   // Edit dialog state
-  const [editingRule, setEditingRule] = useState<
-    "UNASSIGNED" | "ASSIGNED" | null
-  >(null);
+  const [editingRule, setEditingRule] = useState<"UNASSIGNED" | "ASSIGNED" | null>(null);
   const [tempHours, setTempHours] = useState<number>(24);
   const [customMode, setCustomMode] = useState<boolean>(false);
   const [customVal, setCustomVal] = useState<string>("");
@@ -52,9 +49,7 @@ export default function InboxAutomation() {
   // Sync state with server data
   useEffect(() => {
     if (serverData) {
-      const unassignedAuto = serverData.find(
-        (a) => a.condition === "UNASSIGNED",
-      );
+      const unassignedAuto = serverData.find((a) => a.condition === "UNASSIGNED");
       const assignedAuto = serverData.find((a) => a.condition === "ASSIGNED");
 
       setUnassignedActive(!!unassignedAuto);
@@ -76,10 +71,7 @@ export default function InboxAutomation() {
   // Sync edit dialog state when editingRule changes
   useEffect(() => {
     if (editingRule) {
-      const currentHours =
-        editingRule === "UNASSIGNED"
-          ? unassignedDelayHours
-          : assignedDelayHours;
+      const currentHours = editingRule === "UNASSIGNED" ? unassignedDelayHours : assignedDelayHours;
       setTempHours(currentHours);
       const isStd = STD_HOURS.includes(currentHours);
       setCustomMode(!isStd);
@@ -100,7 +92,7 @@ export default function InboxAutomation() {
         setUnassignedActive(false);
         toast.success(t("Unassigned automation disabled successfully"));
       }
-    } catch (err) {
+    } catch {
       toast.error(t("Failed to update unassigned automation state"));
     } finally {
       setIsPending(false);
@@ -120,7 +112,7 @@ export default function InboxAutomation() {
         setAssignedActive(false);
         toast.success(t("Assigned automation disabled successfully"));
       }
-    } catch (err) {
+    } catch {
       toast.error(t("Failed to update assigned automation state"));
     } finally {
       setIsPending(false);
@@ -141,7 +133,7 @@ export default function InboxAutomation() {
         id: toastId,
       });
       setEditingRule(null);
-    } catch (err) {
+    } catch {
       toast.error(t("Failed to save settings"), { id: toastId });
     } finally {
       setIsPending(false);
@@ -157,9 +149,7 @@ export default function InboxAutomation() {
     return `${h}h`;
   };
 
-  const activeCount = (unassignedActive ? 1 : 0) + (assignedActive ? 1 : 0);
-  const previewHoursText =
-    customMode && customVal ? `${customVal}h` : getHourLabel(tempHours);
+  const previewHoursText = customMode && customVal ? `${customVal}h` : getHourLabel(tempHours);
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -167,14 +157,10 @@ export default function InboxAutomation() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-foreground">
-              {t("Auto-Close Rules")}
-            </span>
+            <span className="text-sm font-semibold text-foreground">{t("Auto-Close Rules")}</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1.5">
-            {t(
-              "Automatically close conversations that have been idle for a set period",
-            )}
+            {t("Automatically close conversations that have been idle for a set period")}
           </p>
         </div>
       </div>
@@ -246,9 +232,7 @@ export default function InboxAutomation() {
 
           {/* Title and subtitle */}
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-foreground">
-              {t("Assigned Chats")}
-            </div>
+            <div className="text-sm font-semibold text-foreground">{t("Assigned Chats")}</div>
             <div className="text-xs text-muted-foreground mt-1">
               {t("Inactive for {{time}} → Close Conversation", {
                 time: getHourLabel(assignedDelayHours),
@@ -305,9 +289,7 @@ export default function InboxAutomation() {
           <DialogHeader>
             <DialogTitle>{t("Edit Auto-Close Rule")}</DialogTitle>
             <DialogDescription>
-              {t(
-                "Automatically close conversations that have been idle for a set period.",
-              )}
+              {t("Automatically close conversations that have been idle for a set period.")}
             </DialogDescription>
           </DialogHeader>
 
@@ -391,9 +373,7 @@ export default function InboxAutomation() {
                     placeholder={t("e.g. 36")}
                     className="w-28 px-3 py-1.5 border border-border rounded-lg bg-zinc-50 dark:bg-zinc-900 text-xs outline-none focus:border-primary transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {t("hours")}
-                  </span>
+                  <span className="text-xs font-medium text-muted-foreground">{t("hours")}</span>
                 </div>
               )}
             </div>
@@ -423,9 +403,7 @@ export default function InboxAutomation() {
                     {t("Close Conversation")}
                   </div>
                   <div className="text-[11px] text-muted-foreground mt-0.5 leading-normal">
-                    {t(
-                      "Thread is marked closed. Agents can reopen at any time.",
-                    )}
+                    {t("Thread is marked closed. Agents can reopen at any time.")}
                   </div>
                 </div>
               </div>
@@ -433,32 +411,21 @@ export default function InboxAutomation() {
 
             {/* Rule Preview */}
             <div className="p-3 bg-muted rounded-lg text-xs text-muted-foreground leading-relaxed">
-              <span className="font-semibold text-foreground">
-                {t("Preview:")}{" "}
-              </span>
+              <span className="font-semibold text-foreground">{t("Preview:")} </span>
               {t("If a")}{" "}
               <strong className="text-primary">
-                {editingRule === "UNASSIGNED"
-                  ? t("New/Unassigned")
-                  : t("Assigned")}
+                {editingRule === "UNASSIGNED" ? t("New/Unassigned") : t("Assigned")}
               </strong>{" "}
               {t("chat is inactive for")}{" "}
-              <strong className="text-primary">{previewHoursText}</strong>,{" "}
-              {t("automatically")}{" "}
-              <strong className="text-emerald-600 dark:text-emerald-400">
-                {t("close")}
-              </strong>{" "}
+              <strong className="text-primary">{previewHoursText}</strong>, {t("automatically")}{" "}
+              <strong className="text-emerald-600 dark:text-emerald-400">{t("close")}</strong>{" "}
               {t("it.")}
             </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 mt-3">
             <DialogClose asChild>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="text-xs font-semibold px-4"
-              >
+              <Button variant="secondary" size="sm" className="text-xs font-semibold px-4">
                 {t("Cancel")}
               </Button>
             </DialogClose>

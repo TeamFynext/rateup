@@ -1,11 +1,8 @@
-"use client";
-
+import { createFileRoute } from "@tanstack/react-router";
 import React from "react";
 
-import { createFileRoute } from "@tanstack/react-router";
-
-import { useCheckSession } from "@/hooks/checkSession.tsx";
 import OnboardingWizard from "@/components/Form/completeSIgnup/OnboardingWizard.tsx";
+import { useCheckSession } from "@/hooks/checkSession.tsx";
 
 export const Route = createFileRoute("/(auth)/login/complete-login/")({
   component: page,

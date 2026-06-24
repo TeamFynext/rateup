@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import {
   Bot,
@@ -93,8 +91,7 @@ export default function FeaturesSection() {
             </h2>
           </div>
           <p className="text-gray-600 text-base sm:text-lg font-medium sm:max-w-sm leading-relaxed">
-            Discover how RateUp's smart tools simplify creating powerful,
-            automated workflows.
+            Discover how RateUp's smart tools simplify creating powerful, automated workflows.
           </p>
         </div>
 
@@ -113,12 +110,8 @@ export default function FeaturesSection() {
               variants={cardVariants}
             >
               <feature.icon className="text-[#1c518e] w-10 h-10 mb-4" />
-              <h3 className="text-xl font-semibold text-[#013553] mb-2">
-                {feature.title}
-              </h3>
-              <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-                {feature.description}
-              </p>
+              <h3 className="text-xl font-semibold text-[#013553] mb-2">{feature.title}</h3>
+              <p className="text-gray-600 text-sm mb-4 leading-relaxed">{feature.description}</p>
               <Link
                 to={feature.href}
                 className="text-[#1c518e] font-medium text-sm hover:underline flex items-center gap-1"

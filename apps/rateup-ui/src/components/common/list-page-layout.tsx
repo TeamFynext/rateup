@@ -1,11 +1,7 @@
-"use client";
-
+import { IconFolderCode, IconPlus } from "@tabler/icons-react";
+import { AlertCircle, ArrowUpDown, Search } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { IconFolderCode, IconPlus } from "@tabler/icons-react";
-import { AlertCircle, ArrowUpDown, Check, Search } from "lucide-react";
-
-import { cn } from "@/lib/utils.ts";
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -26,11 +22,8 @@ import {
 } from "@/components/ui/empty.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { cn } from "@/lib/utils.ts";
 import { docsPath } from "@/utils/constants.ts";
 
 import WelcomeTour from "../WelcomeTour/WelcomeTour.tsx";
@@ -130,12 +123,9 @@ export function ListPageLayout({
 
   const activeSortOptions = sortOptions ?? TEMPLATE_SORT_OPTIONS;
 
-  const hasSortControl = Boolean(
-    activeSortOptions.length && sortValue && onSortChange,
-  );
+  const hasSortControl = Boolean(activeSortOptions.length && sortValue && onSortChange);
   const currentSortLabel =
-    activeSortOptions.find((option) => option.value === sortValue)?.label ??
-    "Sort";
+    activeSortOptions.find((option) => option.value === sortValue)?.label ?? "Sort";
   const defaultSortValue = activeSortOptions[0]?.value;
 
   let renderedContent = children;
@@ -173,9 +163,7 @@ export function ListPageLayout({
             <AlertCircle className="size-5" />
           </EmptyMedia>
           <EmptyTitle>Something went wrong</EmptyTitle>
-          <EmptyDescription>
-            We could not load this list. Please try again.
-          </EmptyDescription>
+          <EmptyDescription>We could not load this list. Please try again.</EmptyDescription>
         </EmptyHeader>
         {onRetry ? (
           <EmptyContent>
@@ -253,8 +241,7 @@ export function ListPageLayout({
                   size="sm"
                   className={cn(
                     "gap-1.5 px-3 text-sm font-medium transition-all",
-                    sortValue !== defaultSortValue &&
-                      "border-primary/50 text-primary",
+                    sortValue !== defaultSortValue && "border-primary/50 text-primary",
                   )}
                 >
                   <ArrowUpDown className="h-3.5 w-3.5" />
@@ -267,10 +254,7 @@ export function ListPageLayout({
                   onValueChange={(val) => onSortChange?.(val)}
                 >
                   {activeSortOptions.map((option) => (
-                    <DropdownMenuRadioItem
-                      key={option.value}
-                      value={option.value}
-                    >
+                    <DropdownMenuRadioItem key={option.value} value={option.value}>
                       {option.label}
                     </DropdownMenuRadioItem>
                   ))}

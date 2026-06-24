@@ -1,16 +1,10 @@
-"use client";
-
-import React, { useMemo, useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useAllMenus } from "@/backend/menu/menu.query";
-import {
-  GenericActionCard,
-  GenericCardGrid,
-} from "@/components/common/generic-card.tsx";
+import { GenericActionCard, GenericCardGrid } from "@/components/common/generic-card.tsx";
 import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
@@ -19,10 +13,11 @@ import MenuCardMenu from "@/components/menu/MenuCardMenu.tsx";
 import { currencyLabel } from "@/components/menu/util/currencyData.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import DigitalMenuTourSteps from "@/components/WelcomeTour/components/DigitalMenuTourSteps.jsx";
-import styles from "@/components/WelcomeTour/components/Tour.module.css";
 import SelectedTeamContext from "@/context/SelectedTeam.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { UserRole } from "@/utils/enums/index.ts";
+
+import styles from "@/components/WelcomeTour/components/Tour.module.css";
 
 export const Route = createFileRoute("/dashboard/menu/")({
   component: MenuPage,
@@ -43,8 +38,7 @@ function MenuCardBadges({ menu }: Readonly<MenuCardBadgesProps>) {
 
       {menu?.currency ? (
         <Badge variant="default" className="text-xs">
-          {currencyLabel.find((data) => data.value === menu.currency)?.label ??
-            menu.currency}
+          {currencyLabel.find((data) => data.value === menu.currency)?.label ?? menu.currency}
         </Badge>
       ) : null}
     </div>
@@ -57,11 +51,7 @@ type MenuGridItemCardProps = {
   readonly onOpenMenu: (menuId: string) => void;
 };
 
-function MenuGridItemCard({
-  menu,
-  onEditClick,
-  onOpenMenu,
-}: Readonly<MenuGridItemCardProps>) {
+function MenuGridItemCard({ menu, onEditClick, onOpenMenu }: Readonly<MenuGridItemCardProps>) {
   return (
     <GenericActionCard
       title={menu.name}
@@ -117,9 +107,7 @@ function MenuPage() {
 
     const filtered = source.filter((menu) => {
       const matchTeam =
-        selectedTeamId === "all" || !selectedTeamId
-          ? true
-          : menu.teamId === selectedTeamId;
+        selectedTeamId === "all" || !selectedTeamId ? true : menu.teamId === selectedTeamId;
 
       const matchSearch =
         !searchValue ||
@@ -141,9 +129,7 @@ function MenuPage() {
       <ListPageLayout
         canCreate={canCreate}
         createLabel={translations("Create Menu")}
-        createDisabledText={translations(
-          "You don't have permission to create a menu",
-        )}
+        createDisabledText={translations("You don't have permission to create a menu")}
         docsUrl="menu"
         isLoading={isPending}
         queryKeys={["allMenus"]}
@@ -166,9 +152,7 @@ function MenuPage() {
         onRetry={refetch}
         isEmpty={!isPending && !isError && filteredSortedMenus.length === 0}
         emptyTitle={translations("No menus found")}
-        emptyDescription={translations(
-          "Try changing your team or search and create a new menu.",
-        )}
+        emptyDescription={translations("Try changing your team or search and create a new menu.")}
       >
         <GenericCardGrid
           items={filteredSortedMenus}

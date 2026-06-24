@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -10,11 +8,7 @@ import { Badge } from "../../ui/badge.tsx";
 import { Button } from "../../ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card.tsx";
 import type { ChartConfig } from "../../ui/chart.tsx";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "../../ui/chart.tsx";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../../ui/chart.tsx";
 import { Progress } from "../../ui/progress.tsx";
 import { Skeleton } from "../../ui/skeleton.tsx";
 
@@ -32,8 +26,7 @@ const MenuAnalytics = ({
   subscription,
 }: Readonly<MenuAnalyticsProps>) => {
   const { t: translations } = useTranslation();
-  const { data: surveyStats, isPending } =
-    useGetSurveyStatsBySurveyTeamMapId(surveyTeamMapId);
+  const { data: surveyStats, isPending } = useGetSurveyStatsBySurveyTeamMapId(surveyTeamMapId);
 
   if (isPending && !!surveyTeamMapId) {
     return (
@@ -73,8 +66,7 @@ const MenuAnalytics = ({
 
   const startedCount = surveyStages[1].count;
   const completedCount = surveyStages[2].count;
-  const completionRate =
-    startedCount > 0 ? Math.round((completedCount / startedCount) * 100) : 0;
+  const completionRate = startedCount > 0 ? Math.round((completedCount / startedCount) * 100) : 0;
   const showFreeQuota = !subscription;
 
   const funnelChartConfig = {
@@ -105,9 +97,7 @@ const MenuAnalytics = ({
           </CardHeader>
           <CardContent className="space-y-1">
             <p className="text-4xl font-black text-primary">{visitedCount}</p>
-            <p className="text-sm text-muted-foreground">
-              {translations("all-time visitors")}
-            </p>
+            <p className="text-sm text-muted-foreground">{translations("all-time visitors")}</p>
           </CardContent>
         </Card>
 
@@ -121,12 +111,8 @@ const MenuAnalytics = ({
             <CardContent className="space-y-3">
               <Progress value={quotaPercent} className="h-2" />
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {translations("Used")}
-                </span>
-                <span className="font-semibold text-primary">
-                  {quotaPercent}%
-                </span>
+                <span className="text-muted-foreground">{translations("Used")}</span>
+                <span className="font-semibold text-primary">{quotaPercent}%</span>
               </div>
             </CardContent>
           </Card>
@@ -170,24 +156,13 @@ const MenuAnalytics = ({
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
               <Card className="lg:col-span-2">
                 <CardContent className="pt-6">
-                  <ChartContainer
-                    config={funnelChartConfig}
-                    className="h-56 w-full"
-                  >
+                  <ChartContainer config={funnelChartConfig} className="h-56 w-full">
                     <BarChart accessibilityLayer data={surveyStages}>
                       <CartesianGrid vertical={false} />
-                      <XAxis
-                        dataKey="label"
-                        tickLine={false}
-                        axisLine={false}
-                      />
+                      <XAxis dataKey="label" tickLine={false} axisLine={false} />
                       <YAxis allowDecimals={false} />
                       <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar
-                        dataKey="count"
-                        radius={8}
-                        fill="var(--color-visited)"
-                      />
+                      <Bar dataKey="count" radius={8} fill="var(--color-visited)" />
                     </BarChart>
                   </ChartContainer>
                 </CardContent>
@@ -200,9 +175,7 @@ const MenuAnalytics = ({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <p className="text-4xl font-black text-primary">
-                    {completionRate}%
-                  </p>
+                  <p className="text-4xl font-black text-primary">{completionRate}%</p>
                   <p className="text-sm text-muted-foreground">
                     {translations("completed from started")}
                   </p>

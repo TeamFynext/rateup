@@ -1,34 +1,13 @@
-import React, { useEffect, useState } from "react";
-
 import { IconBrandWhatsapp } from "@tabler/icons-react";
-import {
-  CheckCircle,
-  ChevronDown,
-  Clock,
-  Download,
-  Filter,
-  RefreshCcw,
-  Search,
-  Users,
-  X,
-} from "lucide-react";
+import { CheckCircle, Clock, Download, Filter, RefreshCcw, Search, Users, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { cn } from "@/lib/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog.tsx";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import {
   Select,
   SelectContent,
@@ -38,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
 import WaInboxChatExport from "./chatExport/index.tsx";
@@ -115,9 +95,7 @@ const ChatselectPanelHeader = ({
               placeholder="Search contact..."
               className="h-8 w-full pl-8 pr-8 text-xs placeholder:text-sm"
               value={filter?.searchTerm}
-              onChange={(e) =>
-                setFilter({ ...filter, searchTerm: e.currentTarget.value })
-              }
+              onChange={(e) => setFilter({ ...filter, searchTerm: e.currentTarget.value })}
               autoFocus
             />
             <Button
@@ -141,11 +119,7 @@ const ChatselectPanelHeader = ({
             <CustomTooltip
               trigger={
                 <DialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className={actionButtonClass}
-                  >
+                  <Button size="sm" variant="ghost" className={actionButtonClass}>
                     <Users className="h-3.5 w-3.5" />
                   </Button>
                 </DialogTrigger>
@@ -201,8 +175,7 @@ const ChatselectPanelHeader = ({
                 variant="ghost"
                 className={cn(
                   actionButtonClass,
-                  isSelectionMode &&
-                    "bg-white text-primary dark:bg-slate-800 dark:text-primary",
+                  isSelectionMode && "bg-white text-primary dark:bg-slate-800 dark:text-primary",
                 )}
                 onClick={() => {
                   setIsSelectionMode(!isSelectionMode);
@@ -220,11 +193,7 @@ const ChatselectPanelHeader = ({
             <CustomTooltip
               trigger={
                 <PopoverTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className={cn(actionButtonClass, "relative")}
-                  >
+                  <Button size="sm" variant="ghost" className={cn(actionButtonClass, "relative")}>
                     <Filter className="h-3.5 w-3.5" />
                     <div className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] text-white">
                       {filterCount}
@@ -243,11 +212,7 @@ const ChatselectPanelHeader = ({
             <CustomTooltip
               trigger={
                 <PopoverTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className={actionButtonClass}
-                  >
+                  <Button size="sm" variant="ghost" className={actionButtonClass}>
                     <Download className="h-3.5 w-3.5" />
                   </Button>
                 </PopoverTrigger>
@@ -335,14 +300,10 @@ const SortMenu = ({
   return (
     <Select onValueChange={onChange} value={value} defaultValue={defaultValue}>
       <SelectTrigger className={selectTriggerClassName}>
-        <SelectValue
-          placeholder={
-            customSelectTrigger ?? <Clock className="w-3 h-3 mr-1" />
-          }
-        />
+        <SelectValue placeholder={customSelectTrigger ?? <Clock className="w-3 h-3 mr-1" />} />
       </SelectTrigger>
       <SelectContent>
-        {data.map((g, index) => (
+        {data.map((g, _index) => (
           <SelectGroup key={g?.groupName}>
             <SelectLabel>{g?.groupName}</SelectLabel>
             {g?.items?.map((item) => (

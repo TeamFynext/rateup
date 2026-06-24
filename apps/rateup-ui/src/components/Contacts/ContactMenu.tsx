@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-
 import { modals } from "@mantine/modals";
 import { Edit, EllipsisVertical, Eye, Send, Trash } from "lucide-react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useContactDeleteMutation } from "@/backend/campaign/contacts/contacts.query";
@@ -27,9 +26,7 @@ const ContactMenu = ({ contact, groupId }) => {
       title: translations("Delete contact"),
       centered: true,
       children: (
-        <p className="text-sm">
-          {translations("Are you sure you want to delete this contact?")}
-        </p>
+        <p className="text-sm">{translations("Are you sure you want to delete this contact?")}</p>
       ),
       labels: { confirm: "Ok", cancel: "cancel" },
       confirmProps: { color: "red" },
@@ -44,15 +41,7 @@ const ContactMenu = ({ contact, groupId }) => {
   const deleteContact = () => {
     deleteMutation.mutate(contact?.id);
   };
-  const {
-    ContactLabelMap,
-    contactGroups,
-    customFields,
-    campaignParticipants,
-    loyaltyCustomer,
-    waInboxAssign,
-    ...rest
-  } = contact;
+  const { ContactLabelMap, contactGroups, waInboxAssign, ...rest } = contact;
   const initialValues = {
     ...rest,
     labels: ContactLabelMap ? ContactLabelMap.map((c) => c.label.id) : [],
@@ -85,11 +74,7 @@ const ContactMenu = ({ contact, groupId }) => {
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          color="red"
-          onClick={openDeleteModal}
-          className="text-red-500"
-        >
+        <DropdownMenuItem color="red" onClick={openDeleteModal} className="text-red-500">
           <Trash className="text-red-500 w-4 h-4 mr-2" />
           {translations("Delete contact")}
         </DropdownMenuItem>

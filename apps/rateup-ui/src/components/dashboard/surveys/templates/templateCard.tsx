@@ -1,14 +1,13 @@
-"use client";
-
 import { BackgroundImage, Flex, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import { PageType } from "@/types/enums.ts";
 import { CreditsCard } from "@/components/Card/CreditsCard.tsx";
 import { getBgImgAndBgColor } from "@/components/Layout/TakeSurveyLayout/utils.ts";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
-import classes from "@/components/Survey/SurveyTheme/SurveyTheme.module.css";
 import { useSelectedPreview } from "@/components/Survey/SurveyTheme/SurveyThemeContext.tsx";
+import { PageType } from "@/types/enums.ts";
+
+import classes from "@/components/Survey/SurveyTheme/SurveyTheme.module.css";
 
 export default function TemplateCard({ survey }) {
   const webSurveyPagesTheme = survey?.webSurveyPagesTheme;
@@ -16,16 +15,14 @@ export default function TemplateCard({ survey }) {
   const questionsArr = survey?.questions;
   const selectedPreview = useSelectedPreview();
   const { t: translations } = useTranslation();
-  const shouldUseSurveyTheme =
-    webSurveyPagesTheme["welcomeTheme"]?.useSurveyTheme;
+  const shouldUseSurveyTheme = webSurveyPagesTheme["welcomeTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
     ? surveyThemeObj["surveyTheme"]
     : webSurveyPagesTheme["welcomeTheme"];
 
   const defaultTitleSubtitleStartButtonTexts = {
     titleText: translations("Welcome") || "Welcome",
-    subtitleText:
-      translations("Welcome to the survey") || "Welcome to the survey",
+    subtitleText: translations("Welcome to the survey") || "Welcome to the survey",
     startButtonText: translations("Start Survey") || "Start Survey",
   };
   const welcomeTypeQuestionObj =
@@ -60,9 +57,7 @@ export default function TemplateCard({ survey }) {
   return (
     <Flex align={"center"} h={200} w={300} style={{ backgroundColor }}>
       <CreditsCard
-        enableCredits={backgroundImageSrc?.startsWith(
-          "https://images.unsplash.com",
-        )}
+        enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
         url={backgroundImageSrc}
       >
         <BackgroundImage

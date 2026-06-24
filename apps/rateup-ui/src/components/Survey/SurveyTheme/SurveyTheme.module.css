@@ -185,8 +185,7 @@
   width: auto;
 }
 
-.start-btn-input-div
-  :global(.auto-save-input-edit-btn .mantine-Button-section) {
+.start-btn-input-div :global(.auto-save-input-edit-btn .mantine-Button-section) {
   position: absolute;
   right: -2.5rem;
 }

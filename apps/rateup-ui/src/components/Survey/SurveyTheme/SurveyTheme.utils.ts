@@ -6,21 +6,15 @@ import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { SelectedItemEnum } from "./SurveyTheme.enums";
 import type { SurveyTheme } from "./surveyTheme.types";
 
-function getImageUrl(
-  imageObject: string | Blob,
-  unsplashImage: boolean = false,
-) {
+function getImageUrl(imageObject: string | Blob, unsplashImage: boolean = false) {
   if (imageObject instanceof Blob) {
     const url = URL.createObjectURL(imageObject);
     return url;
   }
-  if (unsplashImage)
-    return encodeURI(`${import.meta.env.VITE_UNSPLASH_URL}${imageObject}`);
+  if (unsplashImage) return encodeURI(`${import.meta.env.VITE_UNSPLASH_URL}${imageObject}`);
 
   if (imageObject) {
-    return encodeURI(
-      `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${imageObject}`,
-    );
+    return encodeURI(`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${imageObject}`);
   }
   return "";
 }
@@ -156,10 +150,7 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
   return newSurveyTheme as unknown as SurveyTheme;
 }
 
-function getFeaturesBasedOnQuestionType(
-  selectedLanguage: string,
-  questionType: QuestionType,
-) {
+function getFeaturesBasedOnQuestionType(selectedLanguage: string, questionType: QuestionType) {
   const common = {
     email: {
       headText: "Email",

@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback, useRef } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BookOpen, Edit, Info, Plus } from "lucide-react";
+import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
@@ -24,13 +21,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 
-function CreateLandingPageModal({
-  opened,
-  onClose,
-  mode,
-  shortUrlId,
-  initialName,
-}) {
+function CreateLandingPageModal({ opened, onClose, mode, shortUrlId, initialName }) {
   const { t: translations } = useTranslation();
 
   const formSchema = z.object({
@@ -53,8 +44,6 @@ function CreateLandingPageModal({
   const createLandingPageMutation = useCreateLandingPageMutation();
   const updateLandingPageMutation = useUpdateLandingPageMutation(shortUrlId);
 
-  const formSubmitBtnRef = useRef(null);
-
   const handleCreateLandingPageFormSubmit = useCallback(async (values) => {
     await createLandingPageMutation.mutateAsync(values);
     form.reset();
@@ -66,10 +55,6 @@ function CreateLandingPageModal({
     await updateLandingPageMutation.mutateAsync({ shortUrlId, name });
     form.reset();
     onClose();
-  }, []);
-
-  const handleCreateLinkBtnClick = useCallback(() => {
-    formSubmitBtnRef?.current.click();
   }, []);
 
   const handleCancelBtnClick = useCallback(() => {
@@ -125,8 +110,7 @@ function CreateLandingPageModal({
                 <div className="w-5 h-5 bg-primary rounded-md flex items-center justify-center shadow-sm">
                   <Edit className="w-3 h-3 text-white" />
                 </div>
-                {translations("Landing Page Name")}{" "}
-                <span className="text-red-500">*</span>
+                {translations("Landing Page Name")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="display-name"
@@ -149,9 +133,7 @@ function CreateLandingPageModal({
                 <Info className="w-3 h-3 text-white" />
               </div>
               <p className="text-xs leading-relaxed">
-                <span className="font-semibold">
-                  {translations("Pro Tip")}:
-                </span>{" "}
+                <span className="font-semibold">{translations("Pro Tip")}:</span>{" "}
                 {translations(
                   "Landing pages can be customized with your brand colors, images, and content to maximize conversions",
                 )}
@@ -161,11 +143,7 @@ function CreateLandingPageModal({
 
           {/* Footer */}
           <DialogFooter className="px-6 py-4 border-t gap-3 sm:gap-3">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={handleCancelBtnClick}
-            >
+            <Button variant="outline" type="button" onClick={handleCancelBtnClick}>
               {translations("Cancel")}
             </Button>
             <Button
@@ -182,9 +160,7 @@ function CreateLandingPageModal({
               ) : (
                 <Edit className="w-4 h-4 mr-2" />
               )}
-              {mode === "create"
-                ? translations("Create Page")
-                : translations("Rename Page")}
+              {mode === "create" ? translations("Create Page") : translations("Rename Page")}
             </Button>
           </DialogFooter>
         </form>

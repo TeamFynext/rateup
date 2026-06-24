@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import {
   Button,
   Flex,
@@ -14,16 +10,18 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronRight } from "@tabler/icons-react";
 import classNames from "classnames/bind";
+import { useState } from "react";
 
-import { PageType } from "@/types/enums.ts";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
+import { PageType } from "@/types/enums.ts";
 
 import { CreditsCard } from "../../Card/CreditsCard.tsx";
-import styles from "../../Survey/SurveyTheme/components/previewcomponents/languagePage/languagePage.module.css";
-import surveyThemeStyles from "../../Survey/SurveyTheme/SurveyTheme.module.css";
 import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext.tsx";
 import { SingleSelectCard } from "../../Survey/TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard.tsx";
 import { getBgImgAndBgColor } from "../TakeSurveyLayout/utils.ts";
+
+import styles from "../../Survey/SurveyTheme/components/previewcomponents/languagePage/languagePage.module.css";
+import surveyThemeStyles from "../../Survey/SurveyTheme/SurveyTheme.module.css";
 
 const cx = classNames.bind(styles);
 const surveyThemeStylesCx = classNames.bind(surveyThemeStyles);
@@ -56,8 +54,7 @@ function LanguageSelectionPage({
   const { titleText, subtitleText, startButtonText } = languageTypeQuestionObj;
 
   const isOrgLogoPresent = logoUrl?.length > 0;
-  const isMobile =
-    useMediaQuery("(max-width: 768px)") || selectedPreview === "mobile";
+  const isMobile = useMediaQuery("(max-width: 768px)") || selectedPreview === "mobile";
 
   const shouldUseSurveyTheme = pagesThemeData["languageTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
@@ -83,9 +80,7 @@ function LanguageSelectionPage({
     isMobile,
   );
 
-  const isUnsplashImage = backgroundImageSrc?.startsWith(
-    "https://images.unsplash.com",
-  );
+  const isUnsplashImage = backgroundImageSrc?.startsWith("https://images.unsplash.com");
 
   const titleStyleNew = getInlineStyleFromStyleObj(titleStyles);
   const subtitleStylesNew = getInlineStyleFromStyleObj(subtitleStyles);
@@ -107,12 +102,7 @@ function LanguageSelectionPage({
       >
         {isOrgLogoPresent && (
           <Flex className={cx("logo-container")}>
-            <Image
-              className={cx("logo")}
-              src={logoUrl}
-              style={logoStyles}
-              fit="contain"
-            />
+            <Image className={cx("logo")} src={logoUrl} style={logoStyles} fit="contain" />
           </Flex>
         )}
 
@@ -127,18 +117,12 @@ function LanguageSelectionPage({
           </Stack>
 
           <Flex className={cx("languages-list-radio-grp-container")}>
-            <ScrollAreaAutosize
-              mah={"100%"}
-              offsetScrollbars
-              scrollbarSize={10}
-            >
+            <ScrollAreaAutosize mah={"100%"} offsetScrollbars scrollbarSize={10}>
               <MantineProvider
                 getRootElement={() => {
                   return typeof window === "undefined"
                     ? undefined
-                    : document.querySelector(
-                        `.${cx("languages-list-radio-grp-container")}`,
-                      );
+                    : document.querySelector(`.${cx("languages-list-radio-grp-container")}`);
                 }}
                 cssVariablesSelector={`.${cx("languages-list-radio-grp-container")}`}
                 theme={{
@@ -150,11 +134,7 @@ function LanguageSelectionPage({
                 }}
               >
                 <Radio.Group value={lang} onChange={setLang} miw={"200px"}>
-                  <SingleSelectCard
-                    data={languages}
-                    selectedValue={lang}
-                    sizeTrim
-                  />
+                  <SingleSelectCard data={languages} selectedValue={lang} sizeTrim />
                 </Radio.Group>
               </MantineProvider>
             </ScrollAreaAutosize>

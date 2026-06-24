@@ -128,9 +128,7 @@
   border-radius: 0.625rem;
 }
 
-.next-prev-btns-and-progress-container
-  button
-  :global(.mantine-ActionIcon-icon) {
+.next-prev-btns-and-progress-container button :global(.mantine-ActionIcon-icon) {
   width: 1.5rem;
 }
 

@@ -28,13 +28,8 @@ export async function getAllResponses(surveyId: string) {
   return res.data as Array<TeamWiseResponses>;
 }
 
-export async function getResponsesBySurveyId(
-  surveyId: string,
-  filter: string = "",
-) {
-  const res = await axiosClient.get(
-    `${RESPONSE_URL}/survey/${surveyId}?${filter}`,
-  );
+export async function getResponsesBySurveyId(surveyId: string, filter: string = "") {
+  const res = await axiosClient.get(`${RESPONSE_URL}/survey/${surveyId}?${filter}`);
   return res.data;
 }
 
@@ -48,16 +43,12 @@ export async function createResponsePublic(data: CreateResponseType) {
 }
 
 export async function resetResponsesStats(surveyTeamMapId: string) {
-  const res = await axiosClient.delete(
-    `${RESPONSE_URL}/reset/${surveyTeamMapId}`,
-  );
+  const res = await axiosClient.delete(`${RESPONSE_URL}/reset/${surveyTeamMapId}`);
   return res.data;
 }
 
 export async function deleteResponse(id: string, surveyTeamMapId: string) {
-  const res = await axiosClient.delete(
-    `${RESPONSE_URL}/${surveyTeamMapId}/delete/${id}`,
-  );
+  const res = await axiosClient.delete(`${RESPONSE_URL}/${surveyTeamMapId}/delete/${id}`);
   return res.data;
 }
 type generateResponseType = {
@@ -95,13 +86,9 @@ export type downloadExcelResponseType = {
 };
 
 export async function downloadExcelResponse(data: downloadExcelResponseType) {
-  const response = await axiosClient.post(
-    `${RESPONSE_URL}/download-response`,
-    data,
-    {
-      responseType: "blob",
-    },
-  );
+  const response = await axiosClient.post(`${RESPONSE_URL}/download-response`, data, {
+    responseType: "blob",
+  });
   const blob = new Blob([response.data], {
     type: response.headers["content-type"] as string,
   });
@@ -150,24 +137,16 @@ interface ResponseAnalytic {
   };
 }
 export async function getSurveyResponseAnalytics(surveyId, filter = "") {
-  return (
-    await axiosClient.get(`${RESPONSE_URL}/analytics/${surveyId}?${filter}`)
-  ).data as ResponseAnalytic;
+  return (await axiosClient.get(`${RESPONSE_URL}/analytics/${surveyId}?${filter}`))
+    .data as ResponseAnalytic;
 }
 
 export async function getResponseForComparison(surveyId) {
   return (await axiosClient.get(`${RESPONSE_URL}/comparison/${surveyId}`)).data;
 }
 
-export async function getSurveyHappyResponseAnalytics(
-  surveyId,
-  timeFilter = "",
-) {
-  return (
-    await axiosClient.get(
-      `${RESPONSE_URL}/npsanalytics/${surveyId}?${timeFilter}`,
-    )
-  ).data;
+export async function getSurveyHappyResponseAnalytics(surveyId, timeFilter = "") {
+  return (await axiosClient.get(`${RESPONSE_URL}/npsanalytics/${surveyId}?${timeFilter}`)).data;
 }
 
 export async function getHappyIndex(surveyId, surveyTeamMapIds) {

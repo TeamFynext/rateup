@@ -11,12 +11,8 @@ export const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
 
   let formatedResponse = "";
   if (columnId === "createdAt")
-    formatedResponse = dayjs(row.getValue(columnId)).format(
-      "DD-MM-YYYY hh:mm A",
-    );
-  else if (
-    [QuestionType.EmailPhone, QuestionType.CustomNPS].includes(responseType)
-  ) {
+    formatedResponse = dayjs(row.getValue(columnId)).format("DD-MM-YYYY hh:mm A");
+  else if ([QuestionType.EmailPhone, QuestionType.CustomNPS].includes(responseType)) {
     formatedResponse = Object.values(cellValue).join(" , ");
   } else if ([QuestionType.Date].includes(responseType)) {
     formatedResponse = dayjs(cellValue as string).format("DD, MMM YYYY");

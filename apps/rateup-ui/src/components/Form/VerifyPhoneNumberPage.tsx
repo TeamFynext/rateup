@@ -1,17 +1,11 @@
-"use client";
-
-import { useState } from "react";
-
 import { Flex, NavLink, Text, TextInput, Title } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconArrowAutofitLeft, IconSend } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import {
-  clearLoginAttemptInfo,
-  consumeCode,
-} from "supertokens-auth-react/recipe/passwordless";
+import { clearLoginAttemptInfo, consumeCode } from "supertokens-auth-react/recipe/passwordless";
 
 import { fetchUserProfile } from "@/backend/user/user.api";
 import { resendOTP } from "@/utils/auth/index.tsx";
@@ -19,6 +13,7 @@ import { SAVE_HOTKEY } from "@/utils/constants.ts";
 
 import { RateupButtonBlue } from "../Button/RateupButtons.tsx";
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
+
 import styles from "./AuthForm.module.css";
 
 function VerifyPhoneNumberPage() {
@@ -52,22 +47,16 @@ function VerifyPhoneNumberPage() {
       } else if (response.status === "INCORRECT_USER_INPUT_CODE_ERROR") {
         // the user entered an invalid OTP
         toast.error(
-          translations(
-            "Wrong OTP! Please try again. Number of attempts left: ",
-          ) +
-            (response.maximumCodeInputAttempts -
-              response.failedCodeInputAttemptCount),
+          translations("Wrong OTP! Please try again. Number of attempts left: ") +
+            (response.maximumCodeInputAttempts - response.failedCodeInputAttemptCount),
           { id: "incorrect-otp" },
         );
       } else if (response.status === "EXPIRED_USER_INPUT_CODE_ERROR") {
         // it can come here if the entered OTP was correct, but has expired because
         // it was generated too long ago.
-        toast.error(
-          translations(
-            "Old OTP entered. Please regenerate a new one and try again",
-          ),
-          { id: "expired-otp" },
-        );
+        toast.error(translations("Old OTP entered. Please regenerate a new one and try again"), {
+          id: "expired-otp",
+        });
       } else {
         // this can happen if the user tried an incorrect OTP too many times.
         // or if it was denied due to security reasons in case of automatic account linking
