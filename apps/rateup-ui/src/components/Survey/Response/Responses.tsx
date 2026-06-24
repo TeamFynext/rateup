@@ -165,7 +165,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
   );
 
   useEffect(() => {
-    selectedResponseId && responseTeamId && openTicketModal();
+    selectedResponseId && openTicketModal();
   }, [selectedResponseId, responseTeamId]);
 
   useEffect(() => {
@@ -288,6 +288,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
         selectedTeamId={responseTeamId}
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
+        selectedResponse={responseData?.responses?.find((r: any) => r.id === selectedResponseId)}
       />
       <ConfirmationModal
         opened={alertModalOpened}
