@@ -1,7 +1,7 @@
 import { Flex, Paper, Stack, Text, Title } from "@mantine/core";
 import { IconChevronLeft } from "@tabler/icons-react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetStripeCheckoutSession } from "@/backend/payment/stripe/stripe.query";

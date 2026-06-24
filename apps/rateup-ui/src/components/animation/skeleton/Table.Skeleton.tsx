@@ -1,5 +1,4 @@
 import { Skeleton } from "@mantine/core";
-import React from "react";
 
 import { TableCell, TableHead, TableRow } from "@/components/ui/table.tsx";
 import useTableLoadingDataCount from "@/hooks/useTableLoadingDataCount.tsx";

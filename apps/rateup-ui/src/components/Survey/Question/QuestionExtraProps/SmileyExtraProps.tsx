@@ -1,7 +1,6 @@
 import { ActionIcon, Collapse, Flex, Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
-import React from "react";
 
 import {
   ContainedColorInput,

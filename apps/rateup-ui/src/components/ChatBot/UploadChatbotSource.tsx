@@ -1,6 +1,6 @@
 import { Stack } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 

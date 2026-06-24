@@ -167,7 +167,7 @@ export function useDeleteInviteMutation(teamId) {
   });
 }
 
-function _useSurveyLanguagesFromTeam(teamId: string) {
+export function useSurveyLanguagesFromTeam(teamId: string) {
   return useQuery({
     queryKey: ["surveyLanguages", teamId],
     queryFn: () => getSurveyLanguagesFromTeam(teamId),

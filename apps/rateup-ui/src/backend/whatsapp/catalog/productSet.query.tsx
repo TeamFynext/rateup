@@ -25,7 +25,7 @@ export const useProductSetsByCatalog = (catalogId: string) => {
   });
 };
 
-const _useProductSetById = (productSetId: string) => {
+export const useProductSetById = (productSetId: string) => {
   return useQuery({
     queryKey: ["productSet", productSetId],
     queryFn: () => getProductSetById(productSetId),

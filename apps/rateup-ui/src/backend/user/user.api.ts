@@ -29,7 +29,7 @@ export interface IUpdateProfilePhoto {
   profilePhoto: string;
 }
 
-interface _IUserData {
+export interface _IUserData {
   orgId: string;
   role: string;
   userId: string;

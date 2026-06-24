@@ -1,7 +1,7 @@
 import { Group, Text } from "@mantine/core";
 import WavesurferPlayer from "@wavesurfer/react";
 import { Mic, Pause, Play, Square, Trash } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 

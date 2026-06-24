@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import OrdersTable from "@/components/dashboard/whatsapp/orders-and-payments/components/OrdersTable";

@@ -14,7 +14,6 @@ import {
   UserPlus,
   Zap,
 } from "lucide-react";
-import React from "react";
 
 import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";

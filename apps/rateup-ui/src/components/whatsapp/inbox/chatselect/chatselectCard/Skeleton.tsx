@@ -1,5 +1,4 @@
 import { Card, Divider, Group, Skeleton, Stack } from "@mantine/core";
-import React from "react";
 
 import classes from "./styles.module.css";
 

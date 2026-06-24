@@ -9,14 +9,14 @@ import {
   updateRedeem,
 } from "./redeems.api";
 
-const _useGetLoyaltyRedeems = () => {
+export const useGetLoyaltyRedeems = () => {
   return useQuery({
     queryKey: ["loyaltyRedeems"],
     queryFn: getLoyaltyRedeems,
   });
 };
 
-const _useGetRewardByShortCode = () => {
+export const useGetRewardByShortCode = () => {
   return useMutation({
     mutationFn: getRewardByShortCode,
   });
@@ -55,7 +55,7 @@ export const useRedeemReward = (selectedPhone: string) => {
   });
 };
 
-const _useUpdateRedeem = () => {
+export const useUpdateRedeem = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: updateRedeem,

@@ -1,5 +1,5 @@
 import { ArrowRight, Clock, Loader2, Pencil, Zap } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 

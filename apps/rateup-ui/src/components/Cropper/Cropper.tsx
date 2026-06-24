@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle } from "react";
+import { forwardRef, useEffect, useImperativeHandle } from "react";
 
 import { useCropperJS } from "@/hooks/useCropperJS.ts";
 

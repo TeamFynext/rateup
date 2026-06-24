@@ -134,7 +134,7 @@ function formatTestimonialResponse(response) {
   };
 }
 
-function formatDefaultResponse(q, response) {
+function formatDefaultResponse(_q, response) {
   // Handle other types or default case
   return response;
 }

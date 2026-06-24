@@ -9,7 +9,7 @@ import {
   Text,
 } from "@mantine/core";
 import { IconRobotFace, IconUserFilled } from "@tabler/icons-react";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useGetUserAiChats } from "@/backend/chatbot/chatbot.query";
 import { ChatBotSource } from "@/types/enums.ts";

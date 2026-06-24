@@ -1,6 +1,5 @@
 import { ArrowLeft, ArrowRight, Zap } from "lucide-react";
 import { motion } from "motion/react";
-import React from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";

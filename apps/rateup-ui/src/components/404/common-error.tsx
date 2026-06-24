@@ -1,6 +1,5 @@
 import { useRouterState } from "@tanstack/react-router";
 import { cx } from "class-variance-authority";
-import React from "react";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 

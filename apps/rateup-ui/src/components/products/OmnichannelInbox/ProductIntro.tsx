@@ -127,5 +127,5 @@ export default function ProductIntro() {
 }
 
 // suppress unused import warning
-const _i = IgIcon;
-const _m = MsgrIcon;
+export const i = IgIcon;
+export const m = MsgrIcon;

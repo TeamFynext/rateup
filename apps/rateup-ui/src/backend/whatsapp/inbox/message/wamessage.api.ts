@@ -104,7 +104,7 @@ type comments = {
   createdAt: string;
   ticketId: string;
 };
-type _tickets = {
+export type _tickets = {
   id: string;
   number: number;
   title: string;

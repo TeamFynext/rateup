@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { RichTextEditor } from "@mantine/tiptap";
 import { IconAddressBook } from "@tabler/icons-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";

@@ -21,7 +21,7 @@ export const useGetLoyaltyActions = (enabled = true) => {
   });
 };
 
-const _useGetLoyaltyActionById = (actionId) => {
+export const useGetLoyaltyActionById = (actionId) => {
   return useQuery({
     queryKey: ["loyaltyActions", actionId],
     queryFn: () => getLoyaltyActionById(actionId),
@@ -29,7 +29,7 @@ const _useGetLoyaltyActionById = (actionId) => {
   });
 };
 
-const _useCreateLoyaltyAction = () => {
+export const useCreateLoyaltyAction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createLoyaltyAction,
@@ -62,7 +62,7 @@ type LoyaltyAction = {
   description?: string;
 };
 
-const _useUpdateLoyaltyAction = (actionId) => {
+export const useUpdateLoyaltyAction = (actionId) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: Omit<LoyaltyAction, "type">) => updateLoyaltyAction(data, actionId),
@@ -77,7 +77,7 @@ const _useUpdateLoyaltyAction = (actionId) => {
   });
 };
 
-const _useDeleteLoyaltyAction = (actionId) => {
+export const useDeleteLoyaltyAction = (actionId) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => deleteLoyaltyActionById(actionId),
@@ -92,7 +92,7 @@ const _useDeleteLoyaltyAction = (actionId) => {
   });
 };
 
-const _useReferralLoyaltyAction = () => {
+export const useReferralLoyaltyAction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: referralLoyaltyAction,
@@ -107,7 +107,7 @@ const _useReferralLoyaltyAction = () => {
   });
 };
 
-const _useBulkLoyaltyAction = () => {
+export const useBulkLoyaltyAction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: bulkLoyaltyAction,

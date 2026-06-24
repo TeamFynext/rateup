@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import React from "react";
 
 import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection.tsx";
 import QrCTA from "@/components/products/Qr/helpers/QrCTA.tsx";

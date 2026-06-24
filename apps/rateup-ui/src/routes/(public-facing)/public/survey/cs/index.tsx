@@ -1,7 +1,7 @@
 import { Button, Container, Image, Paper, Stack, Text, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import React, { useState } from "react";
+import { useState } from "react";
 
 import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
 

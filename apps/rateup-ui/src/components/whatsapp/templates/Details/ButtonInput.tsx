@@ -522,7 +522,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             title="Add Sections"
             onClick={handleAddMPMSections}
           />
-          {form.values.defaultValues?.catalog?.mpm?.sections?.map((sec, index) => (
+          {form.values.defaultValues?.catalog?.mpm?.sections?.map((_sec, index) => (
             <Group
               bg={"var(--light-grey-color-4)"}
               p={"md"}

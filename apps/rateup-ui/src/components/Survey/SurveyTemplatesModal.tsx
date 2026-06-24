@@ -11,7 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconFileBroken, IconListDetails } from "@tabler/icons-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useSurveyTemplates } from "@/backend/surveys/surveys.query";

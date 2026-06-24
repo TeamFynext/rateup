@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import React from "react";
 
 import OnboardingWizard from "@/components/Form/completeSIgnup/OnboardingWizard.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";

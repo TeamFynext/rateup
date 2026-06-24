@@ -2,7 +2,7 @@ import { ActionIcon, Group, ScrollAreaAutosize, Stack, TextInput, Title } from "
 import { isNotEmpty, matches, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {

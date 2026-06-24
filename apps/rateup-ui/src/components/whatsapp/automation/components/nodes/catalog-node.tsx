@@ -1,6 +1,6 @@
 import { IconBuildingStore } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
-import React, { memo } from "react";
+import { memo } from "react";
 
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
 

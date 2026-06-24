@@ -1,4 +1,3 @@
-import React from "react";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 

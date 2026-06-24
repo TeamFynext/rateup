@@ -1,5 +1,5 @@
 import { animate, motion, useMotionValue, useTransform } from "motion/react";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 export const NumberAnimate = ({ value }) => {
   const count = useMotionValue(0);

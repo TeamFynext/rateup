@@ -1,6 +1,6 @@
 import { modals } from "@mantine/modals";
 import { Edit, EllipsisVertical, Eye, Send, Trash } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useContactDeleteMutation } from "@/backend/campaign/contacts/contacts.query";

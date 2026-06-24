@@ -124,7 +124,7 @@ export const useGetMediaFile = () => {
   });
 };
 
-export const useAssignInboxToUer = (contactId, filterData) => {
+export const useAssignInboxToUer = (_contactId, filterData) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: assignInboxToUser,
@@ -184,7 +184,7 @@ export const useGetInboxUserCount = (enabled: boolean) => {
   });
 };
 
-const _useMarkWaMessagesAsRead = (contactId: string, _filterData) => {
+export const useMarkWaMessagesAsRead = (contactId: string, _filterData) => {
   return useMutation({
     mutationFn: () => markWaMessagesAsRead(contactId),
     onSuccess: () => {},
@@ -240,7 +240,7 @@ interface InboxAnalytics {
   assignedUserCounts: AssignedUserCount[];
 }
 
-const _useGetInboxAnalytics = () => {
+export const useGetInboxAnalytics = () => {
   return useQuery<InboxAnalytics>({
     queryKey: ["inboxAnalytics"],
     queryFn: getInboxAnalytics,

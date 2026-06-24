@@ -9,7 +9,7 @@ import {
   UserRoundCheck,
   Users,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";

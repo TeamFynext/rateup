@@ -1,4 +1,3 @@
-import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { PageType as Page, QuestionType as Q } from "@/types/enums.ts";

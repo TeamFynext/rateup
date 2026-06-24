@@ -1,7 +1,6 @@
 import { ActionIcon, Group, Modal, Text, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPencil } from "@tabler/icons-react";
-import React from "react";
 
 import CustomTextEditor from "@/components/RichTextEditor/CustomTextEditor.tsx";
 

@@ -1,6 +1,5 @@
 import { Progress } from "@mantine/core";
 import { IconMoodHappy, IconTarget, IconUsers } from "@tabler/icons-react";
-import React from "react";
 import {
   Bar,
   BarChart,

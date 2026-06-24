@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { Clock, TimerIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Loader } from "@/components/ui/loader.tsx";

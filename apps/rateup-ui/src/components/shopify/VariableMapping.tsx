@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 
 import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
