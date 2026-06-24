@@ -1,5 +1,4 @@
 import { Button, Image, Stack } from "@mantine/core";
-import React from "react";
 
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
 import { PageType } from "@/types/enums.ts";

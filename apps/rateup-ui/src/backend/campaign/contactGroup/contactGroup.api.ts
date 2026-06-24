@@ -8,7 +8,7 @@ export interface ICreateContactGroup {
   teamId: string;
 }
 
-interface _ICreateNewContact {
+export interface _ICreateNewContact {
   name: string;
   phone?: string;
   email?: string;

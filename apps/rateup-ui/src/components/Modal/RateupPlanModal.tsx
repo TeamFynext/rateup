@@ -1,6 +1,6 @@
 import { Chip, Group, SimpleGrid, Stack, Text } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";

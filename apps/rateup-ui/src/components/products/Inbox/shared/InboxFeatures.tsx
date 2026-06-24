@@ -1,7 +1,6 @@
 import { Image } from "@unpic/react";
 import { TicketCheck } from "lucide-react";
 import { motion } from "motion/react";
-import React from "react";
 
 import { imagesPath } from "@/utils/constants.ts";
 

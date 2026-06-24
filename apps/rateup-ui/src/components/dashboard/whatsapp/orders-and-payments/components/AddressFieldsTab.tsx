@@ -9,7 +9,6 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import React from "react";
 import { toast } from "sonner";
 
 import { useCatalogSettings, useCreateAddressFlow } from "@/backend/whatsapp/catalog/catalog.query";

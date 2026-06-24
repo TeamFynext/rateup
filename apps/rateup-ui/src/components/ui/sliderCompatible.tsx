@@ -1,5 +1,3 @@
-import React from "react";
-
 import { Slider } from "./slider.tsx";
 
 // If your Slider wrapper uses a different prop name for change, adjust below.

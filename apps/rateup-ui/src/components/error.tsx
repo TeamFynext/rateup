@@ -1,5 +1,3 @@
-import React from "react";
-
 import CommonError from "@/components/404/common-error.tsx";
 
 const ErrorPage = (props) => {

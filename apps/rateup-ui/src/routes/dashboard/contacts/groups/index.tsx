@@ -1,7 +1,7 @@
 import { useDebouncedState } from "@mantine/hooks";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Edit, Folder, MoreVertical, Plus, Search, Trash2, Users } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 

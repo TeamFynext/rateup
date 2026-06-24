@@ -134,7 +134,7 @@ function WaTextEditor({
       editor.registerPlugin(
         new Plugin({
           props: {
-            handleTextInput(view, from, to, text) {
+            handleTextInput(view, from, _to, text) {
               if (text === "/" && !isQuickReplyEditor) {
                 const slice = view.state.doc.slice(0, from);
                 const textBefore = slice.content.textBetween(0, slice.content.size, "\n", "\n");
@@ -149,7 +149,7 @@ function WaTextEditor({
               return false;
             },
 
-            handlePaste(view, event) {
+            handlePaste(_view, event) {
               if (!allowFiles) return false;
               const items = event.clipboardData?.items;
               if (!items) return false;

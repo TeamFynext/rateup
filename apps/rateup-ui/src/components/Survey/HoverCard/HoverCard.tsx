@@ -1,5 +1,4 @@
 import { Badge, Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";
-import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { QuestionType } from "@/types/enums.ts";

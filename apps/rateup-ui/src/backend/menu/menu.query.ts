@@ -15,21 +15,21 @@ import {
 
 // TODO: update tanstack querykeys. (use teamId & create a proper hierarchy)
 
-const _useMenu = (menuId: string) =>
+export const useMenu = (menuId: string) =>
   useQuery({
     enabled: !!menuId,
     queryKey: ["menu", menuId],
     queryFn: () => getMenuById(menuId),
   });
 
-const _useFullMenu = (menuId: string) =>
+export const useFullMenu = (menuId: string) =>
   useQuery({
     enabled: !!menuId,
     queryKey: ["menu", "full", menuId],
     queryFn: () => getFullMenuById(menuId),
   });
 
-const _usePublicMenuById = (menuid: string) => {
+export const usePublicMenuById = (menuid: string) => {
   return useQuery({
     enabled: !!menuid,
     queryKey: ["menu", "public", menuid],
@@ -37,7 +37,7 @@ const _usePublicMenuById = (menuid: string) => {
   });
 };
 
-const _useMenusByTeamId = (teamId: string) =>
+export const useMenusByTeamId = (teamId: string) =>
   useQuery({
     enabled: !!teamId,
     queryKey: ["menus", teamId],
@@ -49,7 +49,7 @@ export const useAllMenus = () =>
     queryKey: ["allMenus"],
     queryFn: () => getAllMenus(),
   });
-export const useCreateMenuMutation = (teamId: string, close, setIsCreating) => {
+export const useCreateMenuMutation = (_teamId: string, close, setIsCreating) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createMenu,
@@ -89,7 +89,7 @@ export const useUpdateMenuMutation = (teamId, onSuccess, onError) => {
   return updateMutation;
 };
 
-export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
+export const useDeleteMenuMutation = (_teamId, onSuccess, onError) => {
   const queryClient = useQueryClient();
   const deleteMutation = useMutation({
     mutationFn: deleteMenu,
@@ -111,7 +111,7 @@ export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
   return deleteMutation;
 };
 
-function _useUpdateMenuVisitedMutation() {
+export function useUpdateMenuVisitedMutation() {
   return useMutation({
     mutationFn: (id: string) => updateMenuVisitedMutation(id),
   });

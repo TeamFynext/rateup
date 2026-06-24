@@ -68,7 +68,7 @@ export const useResponsesBySurvey = (surveyId, filter) => {
 };
 export function useResetResponsesStats(
   surveyId: string,
-  surveyTeamMapId: string,
+  _surveyTeamMapId: string,
   close: () => void,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
@@ -231,7 +231,11 @@ export const useResponseForComparison = (surveyId) => {
   });
 };
 
-function _useSurveyHappyResponseAnalytics(surveyId: string, timeFilter?: string, enabled = true) {
+export function useSurveyHappyResponseAnalytics(
+  surveyId: string,
+  timeFilter?: string,
+  enabled = true,
+) {
   return useQuery({
     queryKey: ["survey-happy-response-analytics", surveyId, timeFilter],
     queryFn: () => getSurveyHappyResponseAnalytics(surveyId, `timeFilter=${timeFilter}`),

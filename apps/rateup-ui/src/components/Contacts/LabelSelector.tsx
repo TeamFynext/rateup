@@ -1,5 +1,3 @@
-import React from "react";
-
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 
 import { Card } from "../ui/card.tsx";

@@ -1,6 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Calendar, CreditCard, DollarSign, Package, Play, Square } from "lucide-react";
-import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { usePaymentSubcription } from "@/backend/payment/payment.query";

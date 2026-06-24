@@ -1,6 +1,6 @@
 import { LoadingOverlay, Text } from "@mantine/core";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { signInAndUp } from "supertokens-auth-react/recipe/thirdparty";
 

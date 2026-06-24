@@ -1,5 +1,5 @@
 import { schemaResolver, useForm } from "@mantine/form";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type z from "zod";

@@ -194,11 +194,11 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
               }}
               error={error?.message}
               {...(field === "data-source" && {
-                insertListItem: (path: string, item: any) => {
+                insertListItem: (_path: string, item: any) => {
                   const currentValue = getValues(field) || [];
                   setValue(field, [...currentValue, item]);
                 },
-                removeListItem: (path: string, index: number) => {
+                removeListItem: (_path: string, index: number) => {
                   const currentValue = getValues(field) || [];
                   setValue(
                     field,

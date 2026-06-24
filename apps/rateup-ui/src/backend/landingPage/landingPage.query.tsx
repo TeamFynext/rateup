@@ -87,7 +87,7 @@ function useDeleteLandingPageMutation(id) {
 }
 
 // This is being used to get options for dropdowns in landingPage AddLinkOverlay component.
-function _useLinkTypeOptions(linkType) {
+export function useLinkTypeOptions(linkType) {
   return useQuery({
     queryKey: ["linktype-options", linkType],
     queryFn: getDropdownOptionsOfLinkType(linkType),

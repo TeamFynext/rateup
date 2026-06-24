@@ -1,7 +1,7 @@
 import { IconArrowDown } from "@tabler/icons-react";
 import { ClockIcon, EyeOffIcon, ScrollTextIcon, TrendingDownIcon } from "lucide-react";
 import { motion, useInView } from "motion/react";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function QrWhyIsStillStuck() {
   const problems = [

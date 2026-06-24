@@ -1,5 +1,5 @@
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import {

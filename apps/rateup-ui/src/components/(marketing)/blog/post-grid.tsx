@@ -1,6 +1,5 @@
 import { Avatar, Badge, Image } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
-import React from "react";
 
 import type { Post } from "@/lib/posts.ts";
 

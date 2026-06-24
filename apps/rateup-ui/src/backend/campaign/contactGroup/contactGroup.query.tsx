@@ -240,7 +240,7 @@ export const useRemoveContactsFromGroup = (groupId) => {
   });
 };
 
-const _useAddExistingContactToMultipleGroupsMutation = (
+export const useAddExistingContactToMultipleGroupsMutation = (
   groupIds: string[],
   onSuccess: () => void,
 ) => {
@@ -269,7 +269,7 @@ const _useAddExistingContactToMultipleGroupsMutation = (
   });
 };
 
-const _useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
+export const useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteManyContactGroups,

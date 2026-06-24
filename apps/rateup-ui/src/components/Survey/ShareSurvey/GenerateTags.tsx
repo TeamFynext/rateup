@@ -1,6 +1,5 @@
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
 import { IconDatabasePlus } from "@tabler/icons-react";
-import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { ContainedTagInput } from "../../input/ContainedInput/ContainedInput.tsx";

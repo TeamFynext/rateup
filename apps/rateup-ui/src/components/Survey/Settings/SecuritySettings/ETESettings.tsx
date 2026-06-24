@@ -2,7 +2,7 @@ import { ActionIcon, Badge, Box, Group, Stack, Text, Tooltip } from "@mantine/co
 import { useDisclosure } from "@mantine/hooks";
 import { IconKey } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 

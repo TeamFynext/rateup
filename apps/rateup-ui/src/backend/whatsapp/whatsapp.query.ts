@@ -171,7 +171,7 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
   });
 };
 
-const _useWaShareUrl = (surveyTeamMapShortId: string) =>
+export const useWaShareUrl = (surveyTeamMapShortId: string) =>
   useQuery({
     enabled: !!surveyTeamMapShortId,
     queryKey: ["wa-share-url", surveyTeamMapShortId],

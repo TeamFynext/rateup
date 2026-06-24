@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import React from "react";
 
 import AIAutomationHeader from "@/components/products/AiAutomation/helpers/AIAutomationHeader.tsx";
 import AutomationCta from "@/components/products/AiAutomation/helpers/AutomationCta.tsx";

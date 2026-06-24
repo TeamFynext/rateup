@@ -7,7 +7,7 @@ import {
 } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Range } from "react-date-range";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";

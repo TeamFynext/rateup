@@ -1,5 +1,4 @@
 import { ChevronDownIcon } from "lucide-react";
-import React from "react";
 import { useTranslation } from "react-i18next";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 

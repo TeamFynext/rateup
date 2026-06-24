@@ -1,5 +1,4 @@
 import { Image } from "@unpic/react";
-import React from "react";
 
 import { articles } from "../WhatsAppSurveyConstants.tsx";
 

@@ -11,7 +11,7 @@ import {
   getCampaignParticipants,
 } from "./campaignParticipants.api";
 
-const _useAddContactParticipantMutation = (campaignId) => {
+export const useAddContactParticipantMutation = (campaignId) => {
   const queryClient = useQueryClient();
   const { t: translations } = useTranslation();
   return useMutation({
@@ -31,7 +31,7 @@ const _useAddContactParticipantMutation = (campaignId) => {
   });
 };
 
-const _useAddGroupParticipantMutation = (campaignId) => {
+export const useAddGroupParticipantMutation = (campaignId) => {
   const queryClient = useQueryClient();
   const { t: translations } = useTranslation();
   return useMutation({

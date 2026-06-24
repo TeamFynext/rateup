@@ -2,7 +2,6 @@ import { ActionIcon } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, useReactFlow } from "@xyflow/react";
 import type { EdgeProps } from "@xyflow/react";
-import React from "react";
 
 export default function CustomEdge({
   id,

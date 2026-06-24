@@ -16,7 +16,7 @@ export default function ThankYou({
   googleLink = "",
   reviews = [],
   kioskMode = "",
-  surveyIdValue = "",
+  surveyIdValue: _surveyIdValue = "",
   fromShortUrl,
   redirect = null,
   surveyThemeData,
@@ -32,14 +32,11 @@ export default function ThankYou({
   const searchParams = useSearch({ strict: false });
   const err = searchParams.err && searchParams.err === "oops";
   let k,
-    _sid,
     surveyId = "";
   if (fromShortUrl) {
     k = kioskMode;
-    _sid = surveyIdValue;
   } else {
     k = searchParams.k;
-    _sid = searchParams.sid;
     surveyId = searchParams.surveyId as string;
   }
   const params = useParams({

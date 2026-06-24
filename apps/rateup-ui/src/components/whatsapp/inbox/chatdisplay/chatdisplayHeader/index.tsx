@@ -1,11 +1,5 @@
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import {
-  IconBrandInstagram,
-  IconBrandWhatsappFilled,
-  IconChevronDown,
-  IconTags,
-  IconWebhook,
-} from "@tabler/icons-react";
+import { IconChevronDown, IconTags } from "@tabler/icons-react";
 import { ArrowLeft, Ban, BellOff, Bot, CircleCheckBig, FolderClosed, Ticket } from "lucide-react";
 import { useMemo } from "react";
 
@@ -176,21 +170,6 @@ export default function WaInboxChatDisplayHeader({
   };
 
   const platform = contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
-
-  let _leftSectionIcon: React.ReactNode;
-
-  switch (platform) {
-    case MessagePlatform.INSTAGRAM:
-      _leftSectionIcon = <IconBrandInstagram size={13} />;
-      break;
-    case MessagePlatform.WEBCHAT:
-      _leftSectionIcon = <IconWebhook size={13} color="#25D366" />;
-      break;
-    case MessagePlatform.WHATSAPP:
-    default:
-      _leftSectionIcon = <IconBrandWhatsappFilled size={13} color="#25D366" />;
-      break;
-  }
 
   const isSessionExpired = isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
   const { updateContactById } = useContactsStore();

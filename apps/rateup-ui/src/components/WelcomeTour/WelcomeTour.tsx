@@ -1,6 +1,6 @@
 import { IconInfoCircle } from "@tabler/icons-react";
 import { driver } from "driver.js";
-import React, { useRef } from "react";
+import { useRef } from "react";
 
 import "driver.js/dist/driver.css";
 

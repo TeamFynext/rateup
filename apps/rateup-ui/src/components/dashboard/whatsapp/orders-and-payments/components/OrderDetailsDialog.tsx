@@ -1,7 +1,7 @@
 import { Image } from "@unpic/react";
 import dayjs from "dayjs";
 import { ExternalLink, Loader2, MapPin, Package, ShoppingBag, Truck } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { axiosClient } from "@/backend/apiClient";

@@ -33,7 +33,7 @@ import {
 } from "./tickets.api";
 
 // get all tickets
-const _useTickets = () =>
+export const useTickets = () =>
   useQuery({
     enabled: true,
     queryKey: ["tickets"],
@@ -63,7 +63,7 @@ export const useCreateTicketMutation = () => {
 };
 
 // get single ticket
-const _useTicket = (id: string) =>
+export const useTicket = (id: string) =>
   useQuery({
     enabled: !!id,
     queryKey: ["ticket", id],
@@ -71,7 +71,7 @@ const _useTicket = (id: string) =>
   });
 
 // update ticket status
-const _useUpdateTicketStatusMutation = (ticketId?: string) => {
+export const useUpdateTicketStatusMutation = (ticketId?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: IUpdateTicketStatusRequest) => {
@@ -96,7 +96,7 @@ const _useUpdateTicketStatusMutation = (ticketId?: string) => {
 };
 
 // update ticket
-const _useUpdateTicketMutation = (id) => {
+export const useUpdateTicketMutation = (id) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: IUpdateTicketRequest) => {
@@ -118,7 +118,7 @@ const _useUpdateTicketMutation = (id) => {
   });
 };
 
-function _useDeleteTicket() {
+export function useDeleteTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({

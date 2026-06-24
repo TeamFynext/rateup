@@ -23,7 +23,7 @@ export const useCustomerRewardsByPhone = (phone: string) => {
 /**
  * Hook to claim a reward for a customer
  */
-const _useClaimReward = () => {
+export const useClaimReward = () => {
   const queryClient = useQueryClient();
 
   return useMutation({

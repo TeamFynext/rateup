@@ -3,7 +3,7 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
-import React, { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCreateNewThemeMutation } from "@/backend/surveyTheme/surveyTheme.query";

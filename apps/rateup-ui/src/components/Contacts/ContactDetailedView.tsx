@@ -1,5 +1,5 @@
 import { CircleCheck, Edit, Folder, Mail, MapPin, Phone, Plus, Send, X } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { useRemoveContactsFromGroup } from "@/backend/campaign/contactGroup/contactGroup.query";

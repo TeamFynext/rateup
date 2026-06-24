@@ -2346,7 +2346,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
       <Group gap={2}>
         <ContainedSelection
           data={ads}
-          onChange={(value, option) =>
+          onChange={(_value, option) =>
             handleInputChange("ad", { id: option?.value, name: option?.label })
           }
           value={typedData?.ad?.id}

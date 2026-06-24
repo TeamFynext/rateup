@@ -14,7 +14,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconCircleCheck, IconX } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { gAnalyticsAndFbEvent } from "@/utils/gtag.ts";
 
