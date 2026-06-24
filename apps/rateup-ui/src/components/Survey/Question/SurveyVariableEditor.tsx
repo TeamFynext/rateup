@@ -1,27 +1,17 @@
-"use client";
-
-import React, { useContext, useEffect, useState } from "react";
-
-import {
-  ActionIcon,
-  Group,
-  ScrollAreaAutosize,
-  Stack,
-  TextInput,
-  Title,
-} from "@mantine/core";
+import { ActionIcon, Group, ScrollAreaAutosize, Stack, TextInput, Title } from "@mantine/core";
 import { isNotEmpty, matches, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import React, { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { SurveyVariableType } from "@/types/enums.ts";
 import {
   useCreateSurveyVariableMutation,
   useDeleteSurveyVariableMutation,
   useUpdateSurveyVariableMutation,
 } from "@/backend/surveys/surveys.query";
 import SurveyContext from "@/context/SurveyContext.ts";
+import { SurveyVariableType } from "@/types/enums.ts";
 
 import { RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
@@ -31,16 +21,11 @@ import { QuestionTabsEnum } from "../EditSurvey.tsx";
 
 const SurveyVariableEditor = ({ setActiveTab }) => {
   const { variables, surveyId } = useContext(SurveyContext);
-  const [
-    openedCreateVariable,
-    { open: openCreateVariable, close: closeCreateVariable },
-  ] = useDisclosure(false);
-  const [
-    openedEditVariable,
-    { open: openEditVariable, close: closeEditVariable },
-  ] = useDisclosure(false);
-  const [selectedVariable, setSelectedVariable] =
-    useState<SurveyVariable>(null);
+  const [openedCreateVariable, { open: openCreateVariable, close: closeCreateVariable }] =
+    useDisclosure(false);
+  const [openedEditVariable, { open: openEditVariable, close: closeEditVariable }] =
+    useDisclosure(false);
+  const [selectedVariable, setSelectedVariable] = useState<SurveyVariable>(null);
   const deleteVariable = useDeleteSurveyVariableMutation(surveyId);
 
   const handleDeleteVariable = (variable: SurveyVariable) => {
@@ -55,9 +40,7 @@ const SurveyVariableEditor = ({ setActiveTab }) => {
             <Title order={5}>{translations("Default Variables")}</Title>
             <Group gap={"xs"} pt={"sm"}>
               {variables
-                ?.filter(
-                  (variable) => variable?.type === SurveyVariableType.DEFAULT,
-                )
+                ?.filter((variable) => variable?.type === SurveyVariableType.DEFAULT)
                 .map((variable) => (
                   <Group key={variable?.id}>
                     <TextInput readOnly value={variable?.name} />
@@ -76,9 +59,7 @@ const SurveyVariableEditor = ({ setActiveTab }) => {
             </Group>
             <Stack gap={"xs"} pt={"sm"}>
               {variables
-                ?.filter(
-                  (variable) => variable?.type === SurveyVariableType.CUSTOM,
-                )
+                ?.filter((variable) => variable?.type === SurveyVariableType.CUSTOM)
                 .map((variable) => (
                   <Group key={variable?.id}>
                     <TextInput readOnly value={variable?.name} />
@@ -115,10 +96,7 @@ const SurveyVariableEditor = ({ setActiveTab }) => {
           onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
         />
       </Group>
-      <CreateSurveyVariableModal
-        opened={openedCreateVariable}
-        close={closeCreateVariable}
-      />
+      <CreateSurveyVariableModal opened={openedCreateVariable} close={closeCreateVariable} />
       <CreateSurveyVariableModal
         opened={openedEditVariable}
         close={closeEditVariable}
@@ -135,12 +113,7 @@ interface ICreateVariableProps {
   variable?: SurveyVariable;
   isEdit?: boolean;
 }
-const CreateSurveyVariableModal = ({
-  opened,
-  close,
-  variable,
-  isEdit,
-}: ICreateVariableProps) => {
+const CreateSurveyVariableModal = ({ opened, close, variable, isEdit }: ICreateVariableProps) => {
   const { surveyId, variables } = useContext(SurveyContext);
   const variableCreation = useCreateSurveyVariableMutation(surveyId);
   const variableUpdation = useUpdateSurveyVariableMutation(surveyId);
@@ -153,9 +126,7 @@ const CreateSurveyVariableModal = ({
     validate: {
       name: matches(
         /^[a-zA-Z0-9_]+$/,
-        translations(
-          "Variable name can only have letters, numbers and underscore",
-        ),
+        translations("Variable name can only have letters, numbers and underscore"),
       ),
       value: isNotEmpty("Assign a value to variable"),
     },
@@ -184,10 +155,7 @@ const CreateSurveyVariableModal = ({
   const handleUpdate = async () => {
     const validationRes = await form.validate();
     if (validationRes.hasErrors) return;
-    if (
-      variables.find((v) => v?.name == form.values.name) &&
-      variable?.name !== form.values.name
-    ) {
+    if (variables.find((v) => v?.name == form.values.name) && variable?.name !== form.values.name) {
       form.setFieldError("name", "Variable already exist");
       return;
     }
@@ -213,11 +181,7 @@ const CreateSurveyVariableModal = ({
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={
-        isEdit
-          ? translations("Update Variable")
-          : translations("Create Variable")
-      }
+      title={isEdit ? translations("Update Variable") : translations("Create Variable")}
       includeCancelButton
       buttonTitle={isEdit ? translations("Update") : translations("Create")}
       cancelOnClick={() => {
@@ -226,9 +190,7 @@ const CreateSurveyVariableModal = ({
       }}
       centered
       onSubmit={isEdit ? handleUpdate : handleSubmit}
-      isLoading={
-        isEdit ? variableUpdation.isPending : variableCreation.isPending
-      }
+      isLoading={isEdit ? variableUpdation.isPending : variableCreation.isPending}
     >
       <Stack>
         <ContainedTextField {...form.getInputProps("name")} label="Name" />

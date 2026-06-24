@@ -1,24 +1,11 @@
-"use client";
-
-import { useContext, useEffect, useState } from "react";
-
-import {
-  Button,
-  PinInput,
-  Stack,
-  Text,
-  TextInput,
-  useMantineTheme,
-} from "@mantine/core";
+import { Button, PinInput, Stack, Text, TextInput, useMantineTheme } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconMail } from "@tabler/icons-react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  useSendOTPEmail,
-  useValidateOtp,
-} from "@/backend/surveys/surveys.query";
+import { useSendOTPEmail, useValidateOtp } from "@/backend/surveys/surveys.query";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
@@ -26,9 +13,10 @@ import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { emailPattern } from "@/utils/constants.ts";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
-import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
+
+import classes from "../TakeSurvey.module.css";
 
 const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   const survey = !isPreview ? useSurveyContext() : null;
@@ -90,9 +78,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
         setTimerComplete(false);
       },
       onError: (error) => {
-        toast.error(
-          error?.message || translations("Something went wrong. please retry"),
-        );
+        toast.error(error?.message || translations("Something went wrong. please retry"));
       },
     });
   };
@@ -108,7 +94,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
             isValid: data?.isValid,
           });
         },
-        onError: (e) => {
+        onError: (_e) => {
           updateResponse(null);
         },
       },
@@ -124,9 +110,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
     <Stack w={"100%"}>
       {isOtpSend && !response?.isValid ? (
         <Stack>
-          <Text fz={"sm"}>
-            {translations("An OTP has been sent to your email")}
-          </Text>
+          <Text fz={"sm"}>{translations("An OTP has been sent to your email")}</Text>
           <Text fz={"sm"}>{translations("Enter OTP")}</Text>
           <PinInput
             length={6}
@@ -141,10 +125,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
             color={`var(--mantine-color-${theme.primaryColor}-filled)`}
           />
           {!timerComplete ? (
-            <Text
-              fz={"sm"}
-              c={`var(--mantine-color-${theme.primaryColor}-filled)`}
-            >
+            <Text fz={"sm"} c={`var(--mantine-color-${theme.primaryColor}-filled)`}>
               {translations(
                 "Note: * The OTP expires in 10 minutes once it is sent. You can resend in",
               )}{" "}
@@ -152,13 +133,8 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
             </Text>
           ) : !response?.isValid ? (
             <>
-              <Text
-                fz={"sm"}
-                c={`var(--mantine-color-${theme.primaryColor}-filled)`}
-              >
-                {translations(
-                  "Note: * The OTP expires in 10 minutes once it is sent.",
-                )}
+              <Text fz={"sm"} c={`var(--mantine-color-${theme.primaryColor}-filled)`}>
+                {translations("Note: * The OTP expires in 10 minutes once it is sent.")}
               </Text>
               <Button
                 onClick={handleGetOTP}
@@ -235,9 +211,7 @@ const CountDownTimer = ({ initialTime, onComplete }) => {
     return () => clearInterval(intervalId);
   }, [timeLeft]);
 
-  return timeLeft ? (
-    <Text span>{`${minutes}:${seconds < 10 ? "0" : ""}${seconds}`}</Text>
-  ) : null;
+  return timeLeft ? <Text span>{`${minutes}:${seconds < 10 ? "0" : ""}${seconds}`}</Text> : null;
 };
 
 export default EmailOTPForm;

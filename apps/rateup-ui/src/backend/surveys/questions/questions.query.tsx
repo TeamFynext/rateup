@@ -49,7 +49,7 @@ export const useQuestionUpdateMutation = ({ surveyId }: iProps) => {
   const updateMutation = useMutation({
     mutationFn: ({ qId, data }: QuestionUpdateMutationArgs) => {
       // stripping type from question data
-      const { type, ...rest } = data;
+      const { ...rest } = data;
       return updateQuestion(surveyId, qId, rest);
     },
     onSuccess: () => {
@@ -97,13 +97,7 @@ export const useQuestionDeleteMutation = (
 export const useReplaceQuestionsMutation = (surveyId: string) => {
   const queryClient = useQueryClient();
   const replaceMutation = useMutation({
-    mutationFn: ({
-      questions,
-      screenId,
-    }: {
-      questions: Question[];
-      screenId?: string;
-    }) => {
+    mutationFn: ({ questions, screenId }: { questions: Question[]; screenId?: string }) => {
       return replaceQuestions(surveyId, questions, screenId);
     },
     onSuccess: () => {

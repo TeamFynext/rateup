@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-
 import { CircleCheck, Users } from "lucide-react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -19,12 +18,7 @@ import { Label } from "../ui/label.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import LabelSelector from "./LabelSelector.tsx";
 
-const LabelContactModal = ({
-  opened,
-  setOpened,
-  contactIds,
-  onSuccess = null,
-}) => {
+const LabelContactModal = ({ opened, setOpened, contactIds, onSuccess = null }) => {
   const { t } = useTranslation();
   const [labelIds, setLabelIds] = useState([]);
   const assign = useAssignContactLabelsToMultipleContacts();

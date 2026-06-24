@@ -1,7 +1,3 @@
-"use client";
-
-import { useContext, useEffect, useState } from "react";
-
 import {
   Box,
   FileButton,
@@ -16,25 +12,23 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { fallbackImage } from "@/utils/constants.ts";
-import {
-  dataURItoBlob,
-  getFileUrlFromKey,
-  uploadFile,
-} from "@/utils/file-upload/upload.ts";
+import { dataURItoBlob, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
 import { RateupButtonBlue } from "../../../../Button/RateupButtons.tsx";
 import WebcamCapture from "../../../../input/WebCamCapture.tsx";
 import FormModalLayout from "../../../../Modal/FormModalLayout.tsx";
 import { ImageCropModal } from "../../../../Modal/ImageCropModal.tsx";
-import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
+
+import classes from "../TakeSurvey.module.css";
 
 interface TestimonialProps {
   features;
@@ -49,10 +43,8 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const [capturedImg, setCapturedImg] = useState(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [
-    openedCropDialog,
-    { toggle: toggleCropDialog, close: closeCropDialog },
-  ] = useDisclosure(false);
+  const [openedCropDialog, { toggle: toggleCropDialog, close: closeCropDialog }] =
+    useDisclosure(false);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateResponse({ ...response, name: e.currentTarget.value });
@@ -62,9 +54,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
     updateResponse({ ...response, jobTitle: e.currentTarget.value });
   };
 
-  const handleTestimonialChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-  ) => {
+  const handleTestimonialChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     updateResponse({ ...response, testimonial: e.currentTarget.value });
   };
 
@@ -88,7 +78,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         updateResponse({ ...response, photo: key });
         setIsUploading(false);
       })
-      .catch((err) => {
+      .catch((_err) => {
         toast.error(translations("Error uploading icon. Please try again."));
         setIsUploading(false);
       });
@@ -190,15 +180,10 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         <>
           <Stack gap={"xs"}>
             <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
-              {features?.[selectedLanguage]?.photoQn ||
-                translations("Upload Photo")}
+              {features?.[selectedLanguage]?.photoQn || translations("Upload Photo")}
             </Text>
             <Group>
-              <Box
-                style={{ border: "1px solid grey", borderRadius: "10px" }}
-                w={200}
-                h={150}
-              >
+              <Box style={{ border: "1px solid grey", borderRadius: "10px" }} w={200} h={150}>
                 <FormModalLayout
                   title={translations("Camera")}
                   onClose={close}
@@ -231,10 +216,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                   disabled={isPreview}
                 >
                   {(props) => (
-                    <RateupButtonBlue
-                      {...props}
-                      title={translations("Browse from device")}
-                    />
+                    <RateupButtonBlue {...props} title={translations("Browse from device")} />
                   )}
                 </FileButton>
                 <RateupButtonBlue

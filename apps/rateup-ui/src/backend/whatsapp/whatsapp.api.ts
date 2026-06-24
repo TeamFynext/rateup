@@ -1,8 +1,4 @@
-import type {
-  TemplateType,
-  WaTemplateCategory,
-  WaTemplateStatus,
-} from "@/types/enums.ts";
+import type { TemplateType, WaTemplateCategory, WaTemplateStatus } from "@/types/enums.ts";
 
 import { WHATSAPP_URL } from ".";
 import { axiosClient } from "../apiClient";
@@ -38,9 +34,7 @@ export type SyncTemplatesInput = {
  * Fetches whatsapp templates using orgId user belongs to.
  */
 export const getWaTemplates = async (templatType) => {
-  const url = templatType
-    ? `${TEMPLATES_URL}?templateType=${templatType}`
-    : TEMPLATES_URL;
+  const url = templatType ? `${TEMPLATES_URL}?templateType=${templatType}` : TEMPLATES_URL;
   const res = await axiosClient.get(url);
   return res.data as WaTemplate[];
 };
@@ -88,13 +82,9 @@ export async function uploadTemplateMedia(file: File) {
   formData.append("size", file.size?.toString());
   formData.append("file", file);
   try {
-    const response = await axiosClient.post(
-      `${TEMPLATES_URL}/upload`,
-      formData,
-      {
-        timeout: 0,
-      },
-    );
+    const response = await axiosClient.post(`${TEMPLATES_URL}/upload`, formData, {
+      timeout: 0,
+    });
     return response?.data as imageResponse;
   } catch (error) {
     throw new Error(error?.response?.data?.message);
@@ -117,9 +107,7 @@ export async function sendWaTemplateToUser(
   });
 }
 
-export async function getShareUrlFromSurveyTeamMapId(
-  surveyTeamMapShortId: string,
-) {
+export async function getShareUrlFromSurveyTeamMapId(surveyTeamMapShortId: string) {
   const res = await axiosClient.get(`${REDIRECT_URL}/${surveyTeamMapShortId}`);
   return res.data;
 }

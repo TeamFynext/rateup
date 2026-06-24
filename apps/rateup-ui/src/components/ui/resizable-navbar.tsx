@@ -1,16 +1,8 @@
-"use client";
-
-import React, { useRef, useState } from "react";
-
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import {
-  AnimatePresence,
-  motion,
-  useMotionValueEvent,
-  useScroll,
-} from "motion/react";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
+import React, { useRef, useState } from "react";
 
 import { cn } from "@/lib/utils.ts";
 
@@ -82,10 +74,7 @@ export const Navbar = ({ children, className }: NavbarProps) => {
     >
       {React.Children.map(children, (child) =>
         React.isValidElement(child)
-          ? React.cloneElement(
-              child as React.ReactElement<{ visible?: boolean }>,
-              { visible },
-            )
+          ? React.cloneElement(child as React.ReactElement<{ visible?: boolean }>, { visible })
           : child,
       )}
     </motion.nav>
@@ -127,11 +116,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
       )}
     >
       {/* Services Dropdown */}
-      <DropDownNavItems
-        style={
-          "text-[var(--nav-link-color)] hover:text-[var(--nav-link-hover)]"
-        }
-      />
+      <DropDownNavItems style={"text-[var(--nav-link-color)] hover:text-[var(--nav-link-hover)]"} />
       {items.map((item, idx) => (
         <Link
           onMouseEnter={() => setHovered(idx)}
@@ -176,27 +161,15 @@ export const MobileNav = ({ children, className, visible }: MobileNavProps) => {
   );
 };
 
-export const MobileNavHeader = ({
-  children,
-  className,
-}: MobileNavHeaderProps) => {
+export const MobileNavHeader = ({ children, className }: MobileNavHeaderProps) => {
   return (
-    <div
-      className={cn(
-        "mx-6 flex w-full flex-row items-center justify-between",
-        className,
-      )}
-    >
+    <div className={cn("mx-6 flex w-full flex-row items-center justify-between", className)}>
       {children}
     </div>
   );
 };
 
-export const MobileNavMenu = ({
-  children,
-  className,
-  isOpen,
-}: MobileNavMenuProps) => {
+export const MobileNavMenu = ({ children, className, isOpen }: MobileNavMenuProps) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -216,13 +189,7 @@ export const MobileNavMenu = ({
   );
 };
 
-export const MobileNavToggle = ({
-  isOpen,
-  onClick,
-}: {
-  isOpen: boolean;
-  onClick: () => void;
-}) => {
+export const MobileNavToggle = ({ isOpen, onClick }: { isOpen: boolean; onClick: () => void }) => {
   return (
     <button
       type="button"
@@ -246,12 +213,7 @@ const NavbarLogo = () => {
       to="#"
       className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
     >
-      <Image
-        src="https://assets.aceternity.com/logo-dark.png"
-        alt="logo"
-        width={60}
-        height={30}
-      />
+      <Image src="https://assets.aceternity.com/logo-dark.png" alt="logo" width={60} height={30} />
       <span className="font-medium text-black dark:text-white">Startup</span>
     </Link>
   );
@@ -270,10 +232,7 @@ const NavbarButton = ({
   children: React.ReactNode;
   className?: string;
   variant?: "primary" | "secondary" | "dark" | "gradient";
-} & (
-  | React.ComponentPropsWithoutRef<"a">
-  | React.ComponentPropsWithoutRef<"button">
-)) => {
+} & (React.ComponentPropsWithoutRef<"a"> | React.ComponentPropsWithoutRef<"button">)) => {
   const baseStyles =
     "px-4 py-2 rounded-md bg-white button bg-white text-black text-sm font-bold relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center";
 

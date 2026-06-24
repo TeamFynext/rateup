@@ -1,5 +1,3 @@
-"use client";
-
 import { Camera, CheckCircle, Heart, MessageSquare, Star } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -21,8 +19,7 @@ const TestimonialTemplate: React.FC<{
               ))}
             </div>
             <p className="text-sm italic">
-              "The testimonial collection increased our response rates by 7x.
-              Amazing service!"
+              "The testimonial collection increased our response rates by 7x. Amazing service!"
             </p>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xs font-bold">
@@ -30,9 +27,7 @@ const TestimonialTemplate: React.FC<{
               </div>
               <div>
                 <p className="text-xs font-semibold">John Doe</p>
-                <p className="text-xs text-muted-foreground">
-                  Marketing Director
-                </p>
+                <p className="text-xs text-muted-foreground">Marketing Director</p>
               </div>
             </div>
           </div>
@@ -41,8 +36,7 @@ const TestimonialTemplate: React.FC<{
         return (
           <div className="p-4 rounded-xl bg-linear-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/10 space-y-2">
             <p className="text-sm">
-              "Collecting testimonials has been a game-changer for our
-              business."
+              "Collecting testimonials has been a game-changer for our business."
             </p>
             <p className="text-xs text-right font-medium">- Sarah J., CEO</p>
           </div>
@@ -54,8 +48,7 @@ const TestimonialTemplate: React.FC<{
               <MessageSquare size={14} />
             </div>
             <p className="text-sm">
-              "The simplicity of giving feedback made it so easy for me to share
-              my experience."
+              "The simplicity of giving feedback made it so easy for me to share my experience."
             </p>
             <div className="flex justify-between items-center">
               <p className="text-xs font-medium">Michael T.</p>
@@ -82,8 +75,7 @@ const TestimonialTemplate: React.FC<{
               <Heart size={16} fill="white" />
             </div>
             <p className="text-sm">
-              "This product completely transformed how we collect customer
-              feedback!"
+              "This product completely transformed how we collect customer feedback!"
             </p>
             <div className="text-xs opacity-80 text-right">2 days ago</div>
           </div>
@@ -143,9 +135,7 @@ const TestimonialFeatureSection = () => {
               key={type}
               className="p-6 rounded-2xl bg-white/80 dark:bg-black/60 backdrop-blur-md border border-white/30 dark:border-white/10 shadow-md hover:shadow-xl transition-shadow duration-300"
             >
-              <h4 className="text-lg font-semibold mb-4 text-center capitalize">
-                {type} Style
-              </h4>
+              <h4 className="text-lg font-semibold mb-4 text-center capitalize">{type} Style</h4>
               <TestimonialTemplate type={type} delay={index * 0.1} />
             </Card>
           ))}
@@ -153,17 +143,14 @@ const TestimonialFeatureSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="p-6 rounded-2xl bg-white/80 dark:bg-black/60 backdrop-blur-md border border-white/30 dark:border-white/10 shadow-md hover:shadow-xl transition-shadow duration-300">
-            <h4 className="text-lg font-semibold mb-4 text-center">
-              Video Testimonials
-            </h4>
+            <h4 className="text-lg font-semibold mb-4 text-center">Video Testimonials</h4>
             <TestimonialTemplate type="video" delay={0.4} />
           </Card>
 
           <Card className="p-6 rounded-2xl bg-white/80 dark:bg-black/60 backdrop-blur-md border border-white/30 dark:border-white/10 shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col justify-center items-center text-center">
             <h4 className="text-lg font-semibold mb-4">Fully Customizable</h4>
             <p className="text-muted-foreground mb-4">
-              Create your own unique testimonial style with our flexible design
-              options.
+              Create your own unique testimonial style with our flexible design options.
             </p>
             <div className="flex gap-2 flex-wrap justify-center">
               {[
@@ -174,10 +161,7 @@ const TestimonialFeatureSection = () => {
                 "bg-amber-500",
                 "bg-emerald-500",
               ].map((color, idx) => (
-                <span
-                  key={idx}
-                  className={`inline-block h-6 w-6 rounded-full ${color}`}
-                ></span>
+                <span key={idx} className={`inline-block h-6 w-6 rounded-full ${color}`}></span>
               ))}
             </div>
           </Card>

@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import dayjs from "dayjs";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -32,9 +29,7 @@ const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
 
         <SelectContent>
           <SelectGroup>
-            <SelectItem value="latest">
-              {translations("Latest First")}
-            </SelectItem>
+            <SelectItem value="latest">{translations("Latest First")}</SelectItem>
             <SelectItem value="oldest">{translations("Old First")}</SelectItem>
             <SelectItem value="a-z">{translations("A - Z")}</SelectItem>
             <SelectItem value="z-a">{translations("Z - A")}</SelectItem>

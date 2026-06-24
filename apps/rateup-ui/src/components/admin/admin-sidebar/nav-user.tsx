@@ -1,13 +1,7 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { ChevronsUpDown, LogOut } from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,

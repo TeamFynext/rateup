@@ -15,9 +15,7 @@ export function SettingsCard({ title, icon, children }: SettingsCardProps) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2 [&_svg]:text-blue-600 dark:[&_svg]:text-blue-400 [&_svg]:w-5 [&_svg]:h-5">
             {icon}
-            <p className="text-base font-semibold text-gray-900 dark:text-gray-50 m-0">
-              {title}
-            </p>
+            <p className="text-base font-semibold text-gray-900 dark:text-gray-50 m-0">{title}</p>
           </div>
           {children}
         </div>

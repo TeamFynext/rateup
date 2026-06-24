@@ -1,20 +1,12 @@
-"use client";
-
 import { Cake, Info, Loader2, Save } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { TemplateType } from "@/types/enums.ts";
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import { useLoyaltyRewards } from "@/backend/loyalty/reward.query";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { FormField } from "@/components/ui/form.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import {
@@ -25,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { TemplateType } from "@/types/enums.ts";
 
 import { getLoyaltyTemplateLabel, LoyaltyTemplateTypes } from "./utils.ts";
 
@@ -48,10 +41,7 @@ export function BirthdayReminderSettings({
   disabled = false,
 }: Readonly<BirthdayReminderSettingsProps>) {
   const { t } = useTranslation();
-  const templateInfo = getLoyaltyTemplateLabel(
-    LoyaltyTemplateTypes.Birthday,
-    t,
-  );
+  const templateInfo = getLoyaltyTemplateLabel(LoyaltyTemplateTypes.Birthday, t);
 
   const { data: rewards, isLoading: isLoadingRewards } = useLoyaltyRewards();
 
@@ -66,16 +56,13 @@ export function BirthdayReminderSettings({
 
     if (rewards?.length === 0) {
       return (
-        <div className="p-2 text-sm text-center text-muted-foreground">
-          {t("No rewards found")}
-        </div>
+        <div className="p-2 text-sm text-center text-muted-foreground">{t("No rewards found")}</div>
       );
     }
 
     return rewards?.map((reward) => (
       <SelectItem key={reward.id} value={reward.id}>
-        {reward.name}{" "}
-        {reward.pointsCost > 0 ? `(${reward.pointsCost} pts)` : ""}
+        {reward.name} {reward.pointsCost > 0 ? `(${reward.pointsCost} pts)` : ""}
       </SelectItem>
     ));
   };
@@ -95,9 +82,7 @@ export function BirthdayReminderSettings({
           render={({ field }) => (
             <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
               <div>
-                <p className="text-sm font-medium">
-                  {t("Enable Birthday Reminders")}
-                </p>
+                <p className="text-sm font-medium">{t("Enable Birthday Reminders")}</p>
                 <p className="text-xs text-muted-foreground">
                   {t("Send birthday wishes with gifts")}
                 </p>
@@ -144,9 +129,7 @@ export function BirthdayReminderSettings({
                       <SelectContent>{renderRewardContent()}</SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      {t(
-                        "This gift will be automatically sent on customer's birthday",
-                      )}
+                      {t("This gift will be automatically sent on customer's birthday")}
                     </p>
                   </>
                 )}
@@ -179,13 +162,11 @@ export function BirthdayReminderSettings({
               <div className="flex items-start gap-2">
                 <Cake className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {t("Preview Message")}
-                  </p>
+                  <p className="text-sm font-medium text-foreground">{t("Preview Message")}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     "Happy Birthday {"{"}
-                    customer_name{"}"}! 🎉 We're celebrating with you! Here's a
-                    special gift from us: {"{"}
+                    customer_name{"}"}! 🎉 We're celebrating with you! Here's a special gift from
+                    us: {"{"}
                     gift_name{"}"}. Enjoy your special day! 🎂"
                   </p>
                 </div>
@@ -198,14 +179,8 @@ export function BirthdayReminderSettings({
                 <div className="text-xs text-muted-foreground">
                   <p className="font-medium mb-1">{t("How it works:")}</p>
                   <ul className="space-y-1 list-disc list-inside">
-                    <li>
-                      {t(
-                        "Messages are sent automatically on customer's birthday",
-                      )}
-                    </li>
-                    <li>
-                      {t("Gifts or points are credited to their account")}
-                    </li>
+                    <li>{t("Messages are sent automatically on customer's birthday")}</li>
+                    <li>{t("Gifts or points are credited to their account")}</li>
                     <li>{t("Customers receive notification via WhatsApp")}</li>
                   </ul>
                 </div>
@@ -213,11 +188,7 @@ export function BirthdayReminderSettings({
             </div>
 
             {isModified && (
-              <Button
-                size="sm"
-                onClick={onSave}
-                disabled={isPending || disabled}
-              >
+              <Button size="sm" onClick={onSave} disabled={isPending || disabled}>
                 {isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (

@@ -9,8 +9,7 @@ export async function getSubscription(orgId: string) {
   return (await axiosClient.get(`${SUBSCRIPTION_URL}/${orgId}`)).data;
 }
 export async function getAllSubscriptions() {
-  return (await axiosClient.get(`${SUBSCRIPTION_URL}/all`))
-    .data as Array<Subscription>;
+  return (await axiosClient.get(`${SUBSCRIPTION_URL}/all`)).data as Array<Subscription>;
 }
 export async function updateSubscription(
   orgId: string,
@@ -25,9 +24,6 @@ export async function updateSubscription(
 
 export async function getMessageStats(orgId, filter = "") {
   return (
-    await axiosClient.get(
-      `${SUBSCRIPTION_URL}/message-stats/${orgId}?${filter}`,
-      { timeout: 0 },
-    )
+    await axiosClient.get(`${SUBSCRIPTION_URL}/message-stats/${orgId}?${filter}`, { timeout: 0 })
   ).data;
 }

@@ -1,18 +1,4 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-
-import {
-  Flex,
-  Group,
-  Select,
-  Skeleton,
-  Stack,
-  Switch,
-  Tabs,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { Flex, Group, Select, Skeleton, Stack, Switch, Tabs, Text, Tooltip } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useListState } from "@mantine/hooks";
 import {
@@ -24,12 +10,10 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { ChatBotSource, SubscriptionFeaturePathName } from "@/types/enums.ts";
-import type { ChatBotMessage } from "@/types/global";
-import { useConfirmDialog } from "@/hooks/useConfirmDialog.tsx";
 import {
   useAllChatbots,
   useChatMutation,
@@ -56,7 +40,10 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import PremiumFeature from "@/components/Premium/PremiumFeature.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog.tsx";
 import { useChatbotStore } from "@/store/chatbot.store";
+import { ChatBotSource, SubscriptionFeaturePathName } from "@/types/enums.ts";
+import type { ChatBotMessage } from "@/types/global";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 export const Route = createFileRoute("/dashboard/chatbot/")({
@@ -80,8 +67,7 @@ function ChatBot() {
   const deleteChatMutation = useDeleteChatHistory();
   const [activetab, setActiveTab] = useState(ChatbotTab.ChatBot);
   const { setSelectedChatbotId: setGlobalChatbotId } = useChatbotStore();
-  const { mutate: deleteChatbot, isPending: isDeletingChatbot } =
-    useDeleteChatbot();
+  const { mutate: deleteChatbot } = useDeleteChatbot();
 
   const { confirm, ConfirmDialog } = useConfirmDialog();
 
@@ -94,9 +80,7 @@ function ChatBot() {
     isError: isErrorChatbots,
   } = useAllChatbots();
 
-  const [selectedChatbotId, setSelectedChatbotId] = useState<string | null>(
-    null,
-  );
+  const [selectedChatbotId, setSelectedChatbotId] = useState<string | null>(null);
 
   const handleCreateChatbot = (name: string) => {
     createChatbot(
@@ -147,17 +131,11 @@ function ChatBot() {
       onSuccess: () => {
         toast.success("Chatbot deleted successfully");
 
-        const updatedChatbots = allChatbots.filter(
-          (cb) => cb.id !== selectedChatbotId,
-        );
+        const updatedChatbots = allChatbots.filter((cb) => cb.id !== selectedChatbotId);
         if (updatedChatbots.length > 0) {
-          const deletedIndex = allChatbots.findIndex(
-            (cb) => cb.id === selectedChatbotId,
-          );
+          const deletedIndex = allChatbots.findIndex((cb) => cb.id === selectedChatbotId);
           const nextIndex =
-            deletedIndex < updatedChatbots.length
-              ? deletedIndex
-              : updatedChatbots.length - 1;
+            deletedIndex < updatedChatbots.length ? deletedIndex : updatedChatbots.length - 1;
           const nextChatbotId = updatedChatbots[nextIndex].id;
           setSelectedChatbotId(nextChatbotId);
           setGlobalChatbotId(nextChatbotId);
@@ -204,13 +182,9 @@ function ChatBot() {
       case ChatbotTab.Resources:
         return <IconFile size={"1.2rem"} color={"var(--grey-color)"} />;
       case ChatbotTab.WaSettings:
-        return (
-          <IconBrandWhatsapp size={"1.2rem"} color={"var(--grey-color)"} />
-        );
+        return <IconBrandWhatsapp size={"1.2rem"} color={"var(--grey-color)"} />;
       case ChatbotTab.UserChats:
-        return (
-          <IconMessageChatbot size={"1.2rem"} color={"var(--grey-color)"} />
-        );
+        return <IconMessageChatbot size={"1.2rem"} color={"var(--grey-color)"} />;
     }
   }
   return (
@@ -382,9 +356,7 @@ function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
                   />
                   <Tooltip
                     disabled={!chatbot?.enableAllWaChat}
-                    label={
-                      "Disable AI Chat for All Messages for command based chat"
-                    }
+                    label={"Disable AI Chat for All Messages for command based chat"}
                   >
                     <ContainedTextField
                       label={translations("Bot Command")}
@@ -404,10 +376,7 @@ function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
                       title="Save"
                       loading={updateChatbotdetMut.isPending}
                     />
-                    <RateupButtonSecondary
-                      onClick={() => form.reset()}
-                      title="Cancel"
-                    />
+                    <RateupButtonSecondary onClick={() => form.reset()} title="Cancel" />
                   </Group>
                 </Stack>
               )}

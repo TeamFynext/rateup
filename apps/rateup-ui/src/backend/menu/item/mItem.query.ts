@@ -98,13 +98,8 @@ export const useUpdateMenuItemMutation = (
 ) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
-    mutationFn: ({
-      menuItemId,
-      menuItem,
-    }: {
-      menuItemId: string;
-      menuItem: any;
-    }) => updateMenuItem(menuItemId, menuItem),
+    mutationFn: ({ menuItemId, menuItem }: { menuItemId: string; menuItem: any }) =>
+      updateMenuItem(menuItemId, menuItem),
     onSuccess: () => {
       toast.success("Menu item updated successfully");
       queryClient.invalidateQueries({
@@ -127,8 +122,7 @@ export const useUpdateSortOrderMenuItemMutation = (
 ) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
-    mutationFn: ({ menuItem }: { menuItem: any }) =>
-      updateSortOrderMenuItem(categoryId, menuItem),
+    mutationFn: ({ menuItem }: { menuItem: any }) => updateSortOrderMenuItem(categoryId, menuItem),
     onSuccess: () => {
       toast.success("Menu item updated successfully");
       queryClient.invalidateQueries({

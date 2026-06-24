@@ -1,5 +1,3 @@
-"use client";
-
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 function TabsListComp({ value, onChange, tabs }) {

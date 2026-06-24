@@ -1,10 +1,7 @@
-"use client";
-
-import { useContext } from "react";
-
 import { Menu } from "@mantine/core";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconVariable } from "@tabler/icons-react";
+import { useContext } from "react";
 
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
@@ -17,15 +14,9 @@ const InsertVariableControl = ({ question }) => {
   const { data: questions } = useQuestions(surveyId);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const fileteredVariables = variables?.length
-    ? getFilteredVariablesForQuestion(
-        variables,
-        selectedLanguage,
-        questions,
-        question,
-      )
+    ? getFilteredVariablesForQuestion(variables, selectedLanguage, questions, question)
     : [];
-  const variablesData =
-    fileteredVariables?.map((val: SurveyVariable) => val?.name) ?? [];
+  const variablesData = fileteredVariables?.map((val: SurveyVariable) => val?.name) ?? [];
 
   return (
     <RichTextEditor.Control aria-label="variables" title="variables">

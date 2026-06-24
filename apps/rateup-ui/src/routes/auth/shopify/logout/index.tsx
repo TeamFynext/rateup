@@ -1,10 +1,7 @@
-"use client";
-
-import { Suspense, useEffect } from "react";
-
 import { LoadingOverlay, Paper, Text } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Suspense, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 // import { signOut } from "supertokens-auth-react/recipe/session";
 import Session from "supertokens-auth-react/recipe/session";

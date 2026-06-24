@@ -20,11 +20,7 @@ export async function deleteQuestion(surveyId: string, questionId: string) {
 export async function reorderQuestions(surveyId: string, newOrder: string[]) {
   return axiosClient.put(`${QUESTION_URL}/${surveyId}/reorder`, newOrder);
 }
-export async function replaceQuestions(
-  surveyId: string,
-  questions: Question[],
-  screenId?: string,
-) {
+export async function replaceQuestions(surveyId: string, questions: Question[], screenId?: string) {
   return axiosClient.put(`${QUESTION_URL}/${surveyId}/replace`, {
     questions,
     screenId,
@@ -39,10 +35,6 @@ export async function updateQuestion(
 }
 
 export async function importEmailIds({ surveyId, questionId, data }) {
-  return (
-    await axiosClient.post(
-      `${QUESTION_URL}/${surveyId}/import-emails/${questionId}`,
-      data,
-    )
-  ).data;
+  return (await axiosClient.post(`${QUESTION_URL}/${surveyId}/import-emails/${questionId}`, data))
+    .data;
 }

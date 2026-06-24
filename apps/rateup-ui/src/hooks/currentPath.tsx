@@ -1,6 +1,4 @@
-"use client";
-
-import { useRouterState, useSearch } from "@tanstack/react-router";
+import { useRouterState } from "@tanstack/react-router";
 
 export function useCurrentPath() {
   const location = useRouterState({

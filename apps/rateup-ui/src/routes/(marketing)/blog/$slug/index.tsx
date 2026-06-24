@@ -1,10 +1,10 @@
 import { Avatar, Image } from "@mantine/core";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
-import { getMarkdownContent } from "@/lib/content.ts";
-import { getSinglePost } from "@/lib/posts.ts";
 import Layout from "@/components/blog/Layout.tsx";
 import SharePopover from "@/components/blog/ShareBlog.tsx";
+import { getMarkdownContent } from "@/lib/content.ts";
+import { getSinglePost } from "@/lib/posts.ts";
 import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
 
 export const Route = createFileRoute("/(marketing)/blog/$slug/")({
@@ -12,9 +12,7 @@ export const Route = createFileRoute("/(marketing)/blog/$slug/")({
     middleware: [
       createMarkdownMiddleware(async ({ request }) => {
         const pathname = new URL(request.url).pathname;
-        const slugPath = pathname
-          .replace(/^\/(?:[a-z]{2}\/)?blog\//i, "")
-          .replace(/\/$/, "");
+        const slugPath = pathname.replace(/^\/(?:[a-z]{2}\/)?blog\//i, "").replace(/\/$/, "");
         const content = await getMarkdownContent(slugPath);
 
         if (!content) {
@@ -99,10 +97,7 @@ function PostContent({ html }: Readonly<{ html: string }>) {
 function Page() {
   const post = Route.useLoaderData();
   return (
-    <Layout
-      title={post.title}
-      description={post.meta_description || post.excerpt}
-    >
+    <Layout title={post.title} description={post.meta_description || post.excerpt}>
       <article>
         {/* Hero section with featured image */}
         {post.feature_image && (
@@ -148,9 +143,7 @@ function Page() {
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <Link to={`/blog/author/${post.primary_author?.slug}`}>
-                    <div className="font-medium text-slate-900">
-                      {post.primary_author?.name}
-                    </div>
+                    <div className="font-medium text-slate-900">{post.primary_author?.name}</div>
                   </Link>
                   <div className="text-sm text-slate-500">
                     {new Date(post.published_at).toLocaleDateString("en-US", {
@@ -185,9 +178,7 @@ function Page() {
             {/* Tags */}
             {post.tags && post.tags.length > 0 && (
               <div className="mt-12 border-t border-slate-200 pt-8">
-                <h2 className="mb-4 text-lg font-semibold text-slate-900">
-                  Tags
-                </h2>
+                <h2 className="mb-4 text-lg font-semibold text-slate-900">Tags</h2>
                 <div className="flex flex-wrap gap-2">
                   {post.tags.map((tag) => (
                     <Link
@@ -302,8 +293,7 @@ function Page() {
             Ready to improve your business reviews?
           </h2>
           <p className="mx-auto pt-4 text-xl text-blue-100">
-            Join thousands of businesses using RateUp to enhance their online
-            reputation.
+            Join thousands of businesses using RateUp to enhance their online reputation.
           </p>
           <div className="mt-8 flex justify-center">
             <Link
@@ -318,5 +308,3 @@ function Page() {
     </Layout>
   );
 }
-
-const dynamic = "force-static";

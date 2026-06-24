@@ -1,9 +1,4 @@
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 
 import "@xyflow/react/dist/style.css";
 
@@ -11,30 +6,20 @@ import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Database, GitBranch, Settings } from "lucide-react";
 
-import { cn } from "@/lib/utils.ts";
 import { useWaAutomatedRepliesMessageById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useInstagramAutomationById } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import FlowEditor from "@/components/whatsapp/automation/components/flow-editor.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import { DataTableToolbar } from "../../../../../components/dashboard/whatsapp/flowbots/$flowbotId/data-table-toolbar.tsx";
 import { AutomatedReplyForm } from "../../../../../components/dashboard/whatsapp/flowbots/create.tsx";
 
-export const Route = createFileRoute(
-  "/dashboard/instagram/flowbots/$flowbotId/",
-)({
+export const Route = createFileRoute("/dashboard/instagram/flowbots/$flowbotId/")({
   component: InstagramFlowbotId,
 });
 
@@ -42,8 +27,7 @@ const column: ColumnDef<any>[] = [
   {
     accessorKey: "createdAt",
     header: createSortableHeader("Created At"),
-    cell: (info) =>
-      dayjs(info.getValue() as string).format("DD/MM/YYYY hh:mm A"),
+    cell: (info) => dayjs(info.getValue() as string).format("DD/MM/YYYY hh:mm A"),
     meta: { title: "Created At" },
   },
   {
@@ -82,8 +66,7 @@ function InstagramFlowbotId() {
     refetch: igRefetch,
   } = useInstagramAutomationById(flowbotId);
 
-  const { data: waAutomtedReplyMessage, isLoading } =
-    useWaAutomatedRepliesMessageById(flowbotId);
+  const { data: waAutomtedReplyMessage, isLoading } = useWaAutomatedRepliesMessageById(flowbotId);
   const { isPending: waPendingSettings } = useWaSettings();
 
   const isPending = igPending || isLoading || waPendingSettings;
@@ -99,10 +82,7 @@ function InstagramFlowbotId() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-red-500 mb-4">Failed to load automation</p>
-          <button
-            onClick={refetch}
-            className="px-4 py-2 bg-blue-500 text-white rounded"
-          >
+          <button onClick={refetch} className="px-4 py-2 bg-blue-500 text-white rounded">
             Retry
           </button>
         </div>

@@ -1,17 +1,6 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { IconPlus } from "@tabler/icons-react";
-import { useNavigate } from "@tanstack/react-router";
-import {
-  Calendar,
-  List,
-  NotebookTabs,
-  Sparkles,
-  Ticket,
-  Type,
-} from "lucide-react";
+import { Calendar, List, NotebookTabs, Sparkles, Ticket, Type } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -27,21 +16,10 @@ import { TeamSelector } from "../input/TeamSelector.tsx";
 import FormModalLayout from "../Modal/FormModalLayout.tsx";
 import Loading from "../Page/Loading.tsx";
 import { Button } from "../ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog.tsx";
 import { Input } from "../ui/input.tsx";
 import { Label } from "../ui/label.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 
 interface iProps {
@@ -63,7 +41,6 @@ const CreateTicketModal = ({
 }: iProps) => {
   const isCustomTicket = type === TicketType.CUSTOM;
   const { t: translations } = useTranslation();
-  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     title:
@@ -84,17 +61,12 @@ const CreateTicketModal = ({
     teamId: selectedTeamId,
     deadline: "",
     reviewId: type === TicketType.REVIEW ? rid : "",
-    surveyResponseId:
-      type === TicketType.SURVEY_RESPONSE ? surveyResponseId : "",
+    surveyResponseId: type === TicketType.SURVEY_RESPONSE ? surveyResponseId : "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const {
-    isLoading: isLoadingMembers,
-    data: teamsMembersData,
-    refetch: refetchInvitedTeamMembers,
-  } = useTeamMembersFromInvitation(
+  const { data: teamsMembersData } = useTeamMembersFromInvitation(
     selectedTeamId || formData.teamId,
   ) as UseTeamResult;
 
@@ -108,13 +80,11 @@ const CreateTicketModal = ({
   }, [rid]);
 
   useEffect(() => {
-    if (selectedTeamId)
-      setFormData((prev) => ({ ...prev, teamId: selectedTeamId }));
+    if (selectedTeamId) setFormData((prev) => ({ ...prev, teamId: selectedTeamId }));
   }, [selectedTeamId, createTicketOpened]);
 
   useEffect(() => {
-    if (surveyResponseId)
-      setFormData((prev) => ({ ...prev, surveyResponseId }));
+    if (surveyResponseId) setFormData((prev) => ({ ...prev, surveyResponseId }));
   }, [surveyResponseId]);
 
   const createTicket = useCreateTicketMutation();
@@ -126,8 +96,7 @@ const CreateTicketModal = ({
       newErrors.firstComment = translations("Minimum 2 words required");
     if (!formData.assignedToId)
       newErrors.assignedToId = translations("Team staff selection is required");
-    if (!formData.priority)
-      newErrors.priority = translations("Priority selection is required");
+    if (!formData.priority) newErrors.priority = translations("Priority selection is required");
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -182,20 +151,15 @@ const CreateTicketModal = ({
             <Input
               placeholder={translations("Enter Ticket Name")}
               value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
-            {errors.title && (
-              <p className="text-xs text-red-500">{errors.title}</p>
-            )}
+            {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
           </div>
 
           {isCustomTicket && (
             <div className="flex-1 space-y-1 min-w-[32%]">
               <Label>
-                {translations("Select Team")}{" "}
-                <span className="text-red-500">*</span>
+                {translations("Select Team")} <span className="text-red-500">*</span>
               </Label>
               <TeamSelector
                 value={formData.teamId}
@@ -208,44 +172,31 @@ const CreateTicketModal = ({
 
         <div className="space-y-1">
           <Label>
-            {isCustomTicket
-              ? translations("Description")
-              : translations("Comment")}
+            {isCustomTicket ? translations("Description") : translations("Comment")}
             <span className="text-red-500">*</span>
           </Label>
           <Textarea
             placeholder={
-              isCustomTicket
-                ? translations("Enter description")
-                : translations("Enter Comment")
+              isCustomTicket ? translations("Enter description") : translations("Enter Comment")
             }
             rows={4}
             value={formData.firstComment}
-            onChange={(e) =>
-              setFormData({ ...formData, firstComment: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, firstComment: e.target.value })}
           />
-          {errors.firstComment && (
-            <p className="text-xs text-red-500">{errors.firstComment}</p>
-          )}
+          {errors.firstComment && <p className="text-xs text-red-500">{errors.firstComment}</p>}
         </div>
 
         <div className="flex flex-wrap gap-4">
           <div className="flex-1 space-y-1 min-w-[30%]">
             <Label>
-              {translations("Assign to")}{" "}
-              <span className="text-red-500">*</span>
+              {translations("Assign to")} <span className="text-red-500">*</span>
             </Label>
             <Select
               value={formData.assignedToId}
-              onValueChange={(val) =>
-                setFormData({ ...formData, assignedToId: val })
-              }
+              onValueChange={(val) => setFormData({ ...formData, assignedToId: val })}
             >
               <SelectTrigger>
-                <SelectValue
-                  placeholder={translations("Select a team staff")}
-                />
+                <SelectValue placeholder={translations("Select a team staff")} />
               </SelectTrigger>
               <SelectContent>
                 {memberOptions?.map((member) => (
@@ -255,9 +206,7 @@ const CreateTicketModal = ({
                 ))}
               </SelectContent>
             </Select>
-            {errors.assignedToId && (
-              <p className="text-xs text-red-500">{errors.assignedToId}</p>
-            )}
+            {errors.assignedToId && <p className="text-xs text-red-500">{errors.assignedToId}</p>}
           </div>
 
           <div className="flex-1 space-y-1 min-w-[30%]">
@@ -266,9 +215,7 @@ const CreateTicketModal = ({
             </Label>
             <Select
               value={formData.priority}
-              onValueChange={(val) =>
-                setFormData({ ...formData, priority: val })
-              }
+              onValueChange={(val) => setFormData({ ...formData, priority: val })}
             >
               <SelectTrigger>
                 <SelectValue placeholder={translations("Select priority")} />
@@ -281,9 +228,7 @@ const CreateTicketModal = ({
                 ))}
               </SelectContent>
             </Select>
-            {errors.priority && (
-              <p className="text-xs text-red-500">{errors.priority}</p>
-            )}
+            {errors.priority && <p className="text-xs text-red-500">{errors.priority}</p>}
           </div>
 
           <div className="flex-1 space-y-1 min-w-[30%]">
@@ -291,13 +236,9 @@ const CreateTicketModal = ({
             <Input
               type="date"
               value={formData.deadline}
-              onChange={(e) =>
-                setFormData({ ...formData, deadline: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
               min={new Date().toISOString().split("T")[0]}
-              onClick={(e) =>
-                "showPicker" in e.target && (e.target as any).showPicker()
-              }
+              onClick={(e) => "showPicker" in e.target && (e.target as any).showPicker()}
             />
           </div>
         </div>
@@ -317,17 +258,10 @@ const CreateTicketModal = ({
   );
 };
 
-export const CreateTicketCard = ({
-  opened,
-  close,
-  type,
-  hasTicketFeature,
-  contactId,
-}: any) => {
+export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contactId }: any) => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState("");
-  const { boards, isLoading: isBoardsLoading } =
-    useBoardQueries(hasTicketFeature);
+  const { boards, isLoading: isBoardsLoading } = useBoardQueries(hasTicketFeature);
   const { createCard, board, isLoading } = useBoard(selectedBoardId);
 
   const { t } = useTranslation();
@@ -390,9 +324,7 @@ export const CreateTicketCard = ({
               <div className="bg-white/40 p-2 rounded-md text-white">
                 <Ticket />
               </div>
-              <h1 className="text-xl font-semibold text-white">
-                Create Ticket
-              </h1>
+              <h1 className="text-xl font-semibold text-white">Create Ticket</h1>
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -402,10 +334,7 @@ export const CreateTicketCard = ({
             <Loading />
           </div>
         ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="w-full p-4 flex flex-col gap-4 justify-center"
-          >
+          <form onSubmit={handleSubmit} className="w-full p-4 flex flex-col gap-4 justify-center">
             {/* Select Board */}
             <div className="space-y-1">
               <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
@@ -452,9 +381,7 @@ export const CreateTicketCard = ({
 
               <Select
                 value={formData.ticketColumnId}
-                onValueChange={(val) =>
-                  setFormData({ ...formData, ticketColumnId: val })
-                }
+                onValueChange={(val) => setFormData({ ...formData, ticketColumnId: val })}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={t("Select List")} />
@@ -470,9 +397,7 @@ export const CreateTicketCard = ({
               </Select>
 
               {errors.ticketColumnId && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.ticketColumnId}
-                </p>
+                <p className="text-xs text-red-500 mt-1">{errors.ticketColumnId}</p>
               )}
             </div>
 
@@ -490,13 +415,9 @@ export const CreateTicketCard = ({
               <Input
                 placeholder={t("Enter ticket title")}
                 value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               />
-              {errors.title && (
-                <p className="text-xs text-red-500 mt-1">{errors.title}</p>
-              )}
+              {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
             </div>
 
             {/* Description */}
@@ -514,9 +435,7 @@ export const CreateTicketCard = ({
               <Textarea
                 placeholder={t("Provide detailed information about the ticket")}
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
             </div>
 
@@ -532,13 +451,9 @@ export const CreateTicketCard = ({
               <Input
                 type="date"
                 value={formData.deadline}
-                onChange={(e) =>
-                  setFormData({ ...formData, deadline: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                 min={new Date().toISOString().split("T")[0]}
-                onClick={(e) =>
-                  "showPicker" in e.target && (e.target as any).showPicker()
-                }
+                onClick={(e) => "showPicker" in e.target && (e.target as any).showPicker()}
               />
             </div>
 

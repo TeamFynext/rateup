@@ -104,49 +104,42 @@ export default function UseCases() {
         </div>
 
         <div className="grid gap-5 grid-cols-1 md:grid-cols-3">
-          {personas.map(
-            (
-              { icon, iconBg, iconColor, title, quote, metricN, metricL },
-              i,
-            ) => (
+          {personas.map(({ icon, iconBg, iconColor, title, quote, metricN, metricL }, i) => (
+            <div
+              key={title}
+              className={`reveal ${i > 0 ? `d${i}` : ""} flex flex-col p-7 rounded-[28px] transition-all duration-300 hover:-translate-y-1`}
+              style={{
+                background:
+                  "linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))",
+                border: "1px solid rgba(255,255,255,0.09)",
+              }}
+            >
               <div
-                key={title}
-                className={`reveal ${i > 0 ? `d${i}` : ""} flex flex-col p-7 rounded-[28px] transition-all duration-300 hover:-translate-y-1`}
-                style={{
-                  background:
-                    "linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                }}
+                className="w-[46px] h-[46px] rounded-[13px] flex items-center justify-center mb-[18px] flex-shrink-0"
+                style={{ background: iconBg, color: iconColor }}
               >
-                <div
-                  className="w-[46px] h-[46px] rounded-[13px] flex items-center justify-center mb-[18px] flex-shrink-0"
-                  style={{ background: iconBg, color: iconColor }}
-                >
-                  {icon}
-                </div>
-                <h6 className="font-display font-black text-white text-[16px] mb-3.5 tracking-[-0.01em]">
-                  {title}
-                </h6>
-                <blockquote className="text-[14px] leading-[1.62] text-white/75 m-0 italic flex-1">
-                  {quote}
-                </blockquote>
-                <div
-                  className="flex items-center gap-2.5 mt-5 pt-[18px]"
-                  style={{ borderTop: "1px solid rgba(255,255,255,0.09)" }}
-                >
-                  <span
-                    className="font-display font-black text-[24px] leading-none tracking-[-0.02em]"
-                    style={{ color: "#4FC3FF" }}
-                  >
-                    {metricN}
-                  </span>
-                  <span className="text-[11.5px] text-white/50 leading-[1.35]">
-                    {metricL}
-                  </span>
-                </div>
+                {icon}
               </div>
-            ),
-          )}
+              <h6 className="font-display font-black text-white text-[16px] mb-3.5 tracking-[-0.01em]">
+                {title}
+              </h6>
+              <blockquote className="text-[14px] leading-[1.62] text-white/75 m-0 italic flex-1">
+                {quote}
+              </blockquote>
+              <div
+                className="flex items-center gap-2.5 mt-5 pt-[18px]"
+                style={{ borderTop: "1px solid rgba(255,255,255,0.09)" }}
+              >
+                <span
+                  className="font-display font-black text-[24px] leading-none tracking-[-0.02em]"
+                  style={{ color: "#4FC3FF" }}
+                >
+                  {metricN}
+                </span>
+                <span className="text-[11.5px] text-white/50 leading-[1.35]">{metricL}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

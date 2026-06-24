@@ -1,12 +1,10 @@
-"use client";
-
 import type { CSSProperties, ReactNode } from "react";
 
-import { useChatSocket } from "@/hooks/useChatSocket.tsx";
 import { RouteAccessGuard } from "@/components/common/RouteAccessGuard.tsx";
 import { CustomFieldsProvider } from "@/context/CustomFieldsContext.tsx";
 import { LifecycleContext } from "@/context/LifecycleContext.ts";
 import { TeamFeaturesProvider } from "@/context/TeamFeaturesContext.tsx";
+import { useChatSocket } from "@/hooks/useChatSocket.tsx";
 
 import NavbarSkeleton from "../../animation/skeleton/Navbar.Skeleton";
 import { SidebarProvider } from "../../ui/sidebar.tsx";
@@ -25,10 +23,7 @@ type MainSidebarProps = Readonly<{
   welcomeMessage?: boolean;
 }>;
 
-export default function MainSidebar({
-  children,
-  welcomeMessage = false,
-}: MainSidebarProps) {
+export default function MainSidebar({ children, welcomeMessage = false }: MainSidebarProps) {
   const {
     contactLabels,
     customFieldData,

@@ -1,14 +1,10 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { IconPlugConnected, IconTrash } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { RefreshCcw, Save, Settings } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { IntegratedApps } from "@/types/enums";
 import {
   useDeleteIntegrationMutation,
   useIntegrationByType,
@@ -32,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useUser } from "@/context/UserContext";
+import { IntegratedApps } from "@/types/enums";
 
 import {
   Dialog,
@@ -43,13 +40,7 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 export enum ZohoTriggers {
   CONTACT_CREATE = "contact_created",
@@ -92,25 +83,17 @@ export function Zoho() {
         </div>
 
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">
-            {t("Zoho CRM/Bigin")}
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("Zoho CRM/Bigin")}</h1>
 
           <p className="text-sm text-muted-foreground">
-            {t(
-              "Manage your Zoho CRM/Bigin integration and trigger subscriptions",
-            )}
+            {t("Manage your Zoho CRM/Bigin integration and trigger subscriptions")}
           </p>
         </div>
       </div>
 
       <div className="flex flex-col items-start gap-6">
         <ZohoAuthentication integration={integration} />
-        <ZohoTriggerList
-          integration={integration}
-          refetch={refetch}
-          isLoading={isRefetching}
-        />
+        <ZohoTriggerList integration={integration} refetch={refetch} isLoading={isRefetching} />
         {integration?.credential?.supportedProducts?.crm && (
           <ZohoLeadsTable integration={integration} />
         )}
@@ -128,9 +111,7 @@ export function Zoho() {
 const ZohoAuthentication = ({ integration }) => {
   const { t } = useTranslation();
   const user = useUser();
-  const [connectionMode, setConnectionMode] = useState<
-    "crm" | "bigin" | "both" | null
-  >(null);
+  const [connectionMode, setConnectionMode] = useState<"crm" | "bigin" | "both" | null>(null);
   const deleteMut = useDeleteIntegrationMutation(IntegratedApps.zoho);
   const disconnectMut = useUnsubscribeZoho();
 
@@ -223,11 +204,7 @@ const ZohoAuthentication = ({ integration }) => {
           </div>
         )}
         {integration ? (
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            className="w-full gap-2 rounded-xl"
-          >
+          <Button variant="destructive" onClick={handleDelete} className="w-full gap-2 rounded-xl">
             <IconTrash className="h-4 w-4" />
 
             {t("Disconnect Zoho")}
@@ -280,9 +257,7 @@ const ZohoTriggerList = ({
       ? zohoUsersResponse.users.users
       : [];
 
-  const triggers = integration
-    ? (integration.credential?.triggerSubscriptions ?? [])
-    : [];
+  const triggers = integration ? (integration.credential?.triggerSubscriptions ?? []) : [];
 
   const biginCreateEnabled = triggers.some(
     (t) =>
@@ -291,15 +266,11 @@ const ZohoTriggerList = ({
       t.active,
   );
 
-  const selectedOwner = zohoUsers.find(
-    (owner: any) => owner.id === selectedBiginOwnerId,
-  );
+  const selectedOwner = zohoUsers.find((owner: any) => owner.id === selectedBiginOwnerId);
 
-  const savedPipeline =
-    integration?.credential?.bigin?.pipeline?.selectedPipeline;
+  const savedPipeline = integration?.credential?.bigin?.pipeline?.selectedPipeline;
 
-  const savedSubPipeline =
-    integration?.credential?.bigin?.pipeline?.selectedSubPipeline;
+  const savedSubPipeline = integration?.credential?.bigin?.pipeline?.selectedSubPipeline;
 
   const savedRequiredFieldMappings =
     integration?.credential?.bigin?.pipeline?.requiredFieldMappings || {};
@@ -312,12 +283,11 @@ const ZohoTriggerList = ({
     savedSubPipeline?.id ? String(savedSubPipeline.id) : "",
   );
 
-  const [requiredFieldValues, setRequiredFieldValues] = useState<
-    Record<string, any>
-  >(savedRequiredFieldMappings);
+  const [requiredFieldValues, setRequiredFieldValues] = useState<Record<string, any>>(
+    savedRequiredFieldMappings,
+  );
 
-  const [openLifecycleMappingModal, setOpenLifecycleMappingModal] =
-    useState(false);
+  const [openLifecycleMappingModal, setOpenLifecycleMappingModal] = useState(false);
 
   const [lifecycleMappings, setLifecycleMappings] = useState<any[]>([]);
 
@@ -325,8 +295,7 @@ const ZohoTriggerList = ({
 
   const updateMut = useUpdateIntegrationMutation(IntegratedApps.zoho);
 
-  const { data: zohopipelines, isLoading: zohopipelinesLoading } =
-    useZohoPipelines("bigin");
+  const { data: zohopipelines } = useZohoPipelines("bigin");
 
   const pipelines = zohopipelines?.pipelines ?? [];
   const subPipelines = zohopipelines?.subPipelines ?? [];
@@ -370,13 +339,10 @@ const ZohoTriggerList = ({
   const handleOpenLifecycleMapping = () => {
     if (!lifecycles?.length) return;
 
-    const existingMappings =
-      integration?.credential?.bigin?.pipeline?.lifecycleStageMappings || [];
+    const existingMappings = integration?.credential?.bigin?.pipeline?.lifecycleStageMappings || [];
 
     const mappings = lifecycles.map((lifecycle: any) => {
-      const existing = existingMappings.find(
-        (m: any) => m.lifecycleId === lifecycle.id,
-      );
+      const existing = existingMappings.find((m: any) => m.lifecycleId === lifecycle.id);
 
       return {
         lifecycleId: lifecycle.id,
@@ -423,16 +389,11 @@ const ZohoTriggerList = ({
     setOpenLifecycleMappingModal(false);
   };
 
-  async function handleToggleTrigger(
-    triggerKey: ZohoTriggers,
-    enabled: boolean,
-  ) {
+  async function handleToggleTrigger(triggerKey: ZohoTriggers, enabled: boolean) {
     let updatedTriggers = [...triggers];
 
     if (enabled) {
-      const alreadyExists = updatedTriggers.find(
-        (t) => t.subscribed_field === triggerKey,
-      );
+      const alreadyExists = updatedTriggers.find((t) => t.subscribed_field === triggerKey);
 
       if (!alreadyExists) {
         updatedTriggers.push({
@@ -442,9 +403,7 @@ const ZohoTriggerList = ({
         });
       }
     } else {
-      updatedTriggers = updatedTriggers.filter(
-        (t) => t.subscribed_field !== triggerKey,
-      );
+      updatedTriggers = updatedTriggers.filter((t) => t.subscribed_field !== triggerKey);
     }
 
     updateMut.mutate({
@@ -504,9 +463,7 @@ const ZohoTriggerList = ({
 
         <CardContent className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
           {supportedTriggers.map((triggerKey) => {
-            const subscribed = triggers.find(
-              (t) => t.subscribed_field === triggerKey && t.active,
-            );
+            const subscribed = triggers.find((t) => t.subscribed_field === triggerKey && t.active);
 
             return (
               <div
@@ -523,9 +480,7 @@ const ZohoTriggerList = ({
                   </div>
 
                   <div className="space-y-1">
-                    <p className="font-semibold text-sm">
-                      {getTriggerLabel(triggerKey)}
-                    </p>
+                    <p className="font-semibold text-sm">{getTriggerLabel(triggerKey)}</p>
 
                     <p className="text-muted-foreground text-xs leading-relaxed">
                       {getTriggerDescription(triggerKey)}
@@ -539,9 +494,7 @@ const ZohoTriggerList = ({
 
                 <Switch
                   checked={!!subscribed}
-                  onCheckedChange={(checked) =>
-                    handleToggleTrigger(triggerKey, checked)
-                  }
+                  onCheckedChange={(checked) => handleToggleTrigger(triggerKey, checked)}
                 />
               </div>
             );
@@ -549,98 +502,86 @@ const ZohoTriggerList = ({
         </CardContent>
       </Card>
 
-      {biginCreateEnabled &&
-        integration?.credential?.supportedProducts?.bigin && (
-          <Card className="overflow-hidden rounded-3xl border shadow-sm">
-            <CardHeader className="border-b bg-muted/30">
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl border bg-background p-2 shadow-sm">
-                  <BiginLogo className="h-5 w-5" />
-                </div>
-
-                <div>
-                  <CardTitle className="text-lg">
-                    {t("Assign Bigin Owner")}
-                  </CardTitle>
-
-                  <p className="text-muted-foreground text-sm">
-                    {t(
-                      "Select a Zoho user to assign as the owner for created Bigin contacts and deals.",
-                    )}
-                  </p>
-                </div>
+      {biginCreateEnabled && integration?.credential?.supportedProducts?.bigin && (
+        <Card className="overflow-hidden rounded-3xl border shadow-sm">
+          <CardHeader className="border-b bg-muted/30">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl border bg-background p-2 shadow-sm">
+                <BiginLogo className="h-5 w-5" />
               </div>
-            </CardHeader>
 
-            <CardContent className="space-y-6 p-6">
-              <div className="space-y-2">
-                <Label>{t("Bigin Owner")}</Label>
-                <Select
-                  value={selectedBiginOwnerId}
-                  onValueChange={(value) =>
-                    setSelectedBiginOwnerId(String(value))
-                  }
-                  disabled={zohoUsersLoading}
-                >
-                  <SelectTrigger className="h-11 rounded-xl w-full">
-                    <SelectValue
-                      placeholder={
-                        zohoUsersLoading
-                          ? t("Loading users...")
-                          : t("Select a Zoho user")
-                      }
-                    />
-                  </SelectTrigger>
+              <div>
+                <CardTitle className="text-lg">{t("Assign Bigin Owner")}</CardTitle>
 
-                  <SelectContent>
-                    {zohoUsers.map((owner: any) => (
-                      <SelectItem key={owner.id} value={owner.id}>
-                        {owner.name} {owner.email ? `(${owner.email})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {t(
-                    "The selected user id will be saved as the Bigin owner in your Zoho credential.",
+                    "Select a Zoho user to assign as the owner for created Bigin contacts and deals.",
                   )}
                 </p>
               </div>
+            </div>
+          </CardHeader>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <Button
-                  onClick={() =>
-                    updateMut.mutate({
-                      credential: {
-                        ...integration.credential,
-                        bigin: {
-                          ...integration?.credential?.bigin,
-                          biginOwner: selectedBiginOwnerId,
-                        },
+          <CardContent className="space-y-6 p-6">
+            <div className="space-y-2">
+              <Label>{t("Bigin Owner")}</Label>
+              <Select
+                value={selectedBiginOwnerId}
+                onValueChange={(value) => setSelectedBiginOwnerId(String(value))}
+                disabled={zohoUsersLoading}
+              >
+                <SelectTrigger className="h-11 rounded-xl w-full">
+                  <SelectValue
+                    placeholder={zohoUsersLoading ? t("Loading users...") : t("Select a Zoho user")}
+                  />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {zohoUsers.map((owner: any) => (
+                    <SelectItem key={owner.id} value={owner.id}>
+                      {owner.name} {owner.email ? `(${owner.email})` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  "The selected user id will be saved as the Bigin owner in your Zoho credential.",
+                )}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <Button
+                onClick={() =>
+                  updateMut.mutate({
+                    credential: {
+                      ...integration.credential,
+                      bigin: {
+                        ...integration?.credential?.bigin,
+                        biginOwner: selectedBiginOwnerId,
                       },
-                    })
-                  }
-                  disabled={!selectedBiginOwnerId}
-                >
-                  {t("Save Owner")}
-                </Button>
+                    },
+                  })
+                }
+                disabled={!selectedBiginOwnerId}
+              >
+                {t("Save Owner")}
+              </Button>
 
-                {selectedOwner ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t("Current owner")}: {selectedOwner.name}
-                  </p>
-                ) : null}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              {selectedOwner ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("Current owner")}: {selectedOwner.name}
+                </p>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Bigin Config */}
-      {triggers.some(
-        (t) =>
-          t.subscribed_field === ZohoTriggers.BIGIN_DEAL_CREATE && t.active,
-      ) && (
+      {triggers.some((t) => t.subscribed_field === ZohoTriggers.BIGIN_DEAL_CREATE && t.active) && (
         <Card className="overflow-hidden rounded-3xl border bg-gradient-to-br from-background to-muted/30 shadow-sm">
           <CardHeader className="border-b bg-muted/30">
             <div className="flex items-center gap-3">
@@ -649,15 +590,10 @@ const ZohoTriggerList = ({
               </div>
 
               <div>
-                <CardTitle className="text-lg">
-                  {t("Bigin Deal Configuration")}
-                </CardTitle>
+                <CardTitle className="text-lg">{t("Bigin Deal Configuration")}</CardTitle>
 
                 <p className="text-muted-foreground text-sm">
-                  {t(
-                    "Configure where new deals should be created in Zoho Bigin",
-                  )}
-                  .
+                  {t("Configure where new deals should be created in Zoho Bigin")}.
                 </p>
               </div>
             </div>
@@ -680,10 +616,7 @@ const ZohoTriggerList = ({
 
                   <SelectContent>
                     {pipelines.map((pipeline: any) => (
-                      <SelectItem
-                        key={String(pipeline.id)}
-                        value={String(pipeline.id)}
-                      >
+                      <SelectItem key={String(pipeline.id)} value={String(pipeline.id)}>
                         {pipeline.name}
                       </SelectItem>
                     ))}
@@ -697,11 +630,7 @@ const ZohoTriggerList = ({
                   <Label>{t("Sub Pipeline")}</Label>
 
                   <p className="text-xs text-red-500 font-medium">
-                    (
-                    {t(
-                      "Select a sub pipeline that belongs to the selected pipeline",
-                    )}
-                    )
+                    ({t("Select a sub pipeline that belongs to the selected pipeline")})
                   </p>
                 </div>
                 <Select
@@ -716,10 +645,7 @@ const ZohoTriggerList = ({
 
                   <SelectContent>
                     {subPipelines.map((pipeline: any) => (
-                      <SelectItem
-                        key={String(pipeline.id)}
-                        value={String(pipeline.id)}
-                      >
+                      <SelectItem key={String(pipeline.id)} value={String(pipeline.id)}>
                         {pipeline.name}
                       </SelectItem>
                     ))}
@@ -741,10 +667,7 @@ const ZohoTriggerList = ({
 
                 <div className="grid gap-4 md:grid-cols-2">
                   {selectedPipeline.requiredFields
-                    .filter(
-                      (field: any) =>
-                        !autoManagedFields.includes(field.apiName),
-                    )
+                    .filter((field: any) => !autoManagedFields.includes(field.apiName))
                     .map((field: any) => (
                       <div key={field.apiName} className="space-y-2">
                         <Label>{field.label}</Label>
@@ -827,10 +750,7 @@ const ZohoTriggerList = ({
       )}
 
       {/* Lifecycle Modal */}
-      <Dialog
-        open={openLifecycleMappingModal}
-        onOpenChange={setOpenLifecycleMappingModal}
-      >
+      <Dialog open={openLifecycleMappingModal} onOpenChange={setOpenLifecycleMappingModal}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{t("Lifecycle Stage Mapping")}</DialogTitle>
@@ -850,17 +770,14 @@ const ZohoTriggerList = ({
               const unmatchedStages = stages.filter(
                 (stage: any) =>
                   !lifecycleMappings.some(
-                    (mapping) =>
-                      String(mapping.biginStageId) === String(stage.id),
+                    (mapping) => String(mapping.biginStageId) === String(stage.id),
                   ),
               );
 
               return (
                 <div className="rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
                   {t("Unmatched stages left")}:{" "}
-                  <span className="font-semibold">
-                    {unmatchedStages.length}
-                  </span>
+                  <span className="font-semibold">{unmatchedStages.length}</span>
                 </div>
               );
             })()}
@@ -876,9 +793,7 @@ const ZohoTriggerList = ({
                 <Select
                   value={mapping.biginStageId}
                   onValueChange={(value) => {
-                    const stage = stages.find(
-                      (s: any) => String(s.id) === String(value),
-                    );
+                    const stage = stages.find((s: any) => String(s.id) === String(value));
                     const updated = [...lifecycleMappings];
                     updated[index] = {
                       ...mapping,
@@ -952,27 +867,20 @@ function ZohoContactsTable({ integration }: { integration: any }) {
           <ZohoLogo className="h-8 w-8" />
           <div>
             <CardTitle>{t("Zoho Contacts")}</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {t("Synced contacts from Zoho CRM")}
-            </p>
+            <p className="text-sm text-muted-foreground">{t("Synced contacts from Zoho CRM")}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           {integration?.credential?.lastZohoSyncAt && (
             <p className="text-sm text-muted-foreground">
-              {t("Last Sync")}:{" "}
-              {new Date(integration.credential.lastZohoSyncAt).toLocaleString()}
+              {t("Last Sync")}: {new Date(integration.credential.lastZohoSyncAt).toLocaleString()}
             </p>
           )}
 
           <div className="flex items-center gap-2">
             <Button onClick={handleSync} disabled={syncMutation.isPending}>
-              <RefreshCcw
-                className={
-                  syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"
-                }
-              />
+              <RefreshCcw className={syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
               {syncMutation.isPending ? t("Syncing") : t("Sync to Rateup")}
             </Button>
           </div>
@@ -985,13 +893,10 @@ function ZohoContactsTable({ integration }: { integration: any }) {
 function ZohoLeadsTable({ integration }: { integration: any }) {
   const { user } = useUser();
   const { t } = useTranslation();
-  const { data: lifecycles, isLoading: isLifecycleLoading } =
-    useLifecyclesWithContactCount();
+  const { data: lifecycles } = useLifecyclesWithContactCount();
   const syncMutation = useSyncZohoLeadsMutation();
-  const updateIntegrationMutation = useUpdateIntegrationMutation(
-    IntegratedApps.zoho,
-  );
-  const { data, isLoading, refetch, isRefetching } = useZohoLeads(user.orgId);
+  const updateIntegrationMutation = useUpdateIntegrationMutation(IntegratedApps.zoho);
+  const { data } = useZohoLeads(user.orgId);
   const leads = data?.leads?.leads || [];
   const queryClient = useQueryClient();
   const [openMappingModal, setOpenMappingModal] = useState(false);
@@ -1001,19 +906,14 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
     if (!lifecycles || !leads.length) return;
     const uniqueLeadStatuses = Array.from(
       new Set<string>(
-        leads
-          .map((lead) => lead.Lead_Status)
-          .filter((status): status is string => !!status),
+        leads.map((lead) => lead.Lead_Status).filter((status): status is string => !!status),
       ),
     );
 
-    const existingMappings =
-      integration?.credential?.crm?.leadLifecycleMappings || [];
+    const existingMappings = integration?.credential?.crm?.leadLifecycleMappings || [];
 
     const mappings = uniqueLeadStatuses.map((status) => {
-      const existing = existingMappings.find(
-        (m: any) => m.zohoLeadStatus === status,
-      );
+      const existing = existingMappings.find((m: any) => m.zohoLeadStatus === status);
 
       return {
         zohoLeadStatus: status,
@@ -1054,7 +954,7 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
           ...integration.credential,
 
           crm: {
-            ...(integration?.credential?.crm || {}),
+            ...integration?.credential?.crm,
 
             leadLifecycleMappings: leadStatusMappings,
           },
@@ -1092,18 +992,14 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
             {integration?.credential?.lastZohoLeadSyncAt && (
               <p className="text-sm text-muted-foreground">
                 {t("Last Sync")}:{" "}
-                {new Date(
-                  integration.credential.lastZohoLeadSyncAt,
-                ).toLocaleString()}
+                {new Date(integration.credential.lastZohoLeadSyncAt).toLocaleString()}
               </p>
             )}
 
             <div className="flex items-center gap-2">
               <Button onClick={handleSync} disabled={syncMutation.isPending}>
                 <RefreshCcw
-                  className={
-                    syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"
-                  }
+                  className={syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"}
                 />
 
                 {syncMutation.isPending ? t("Syncing") : t("Configure & Sync")}
@@ -1125,9 +1021,7 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
 
           <div className="flex-1 overflow-y-auto pr-2 space-y-4">
             {(() => {
-              const unmatched = leadStatusMappings.filter(
-                (mapping) => !mapping.lifecycleId,
-              );
+              const unmatched = leadStatusMappings.filter((mapping) => !mapping.lifecycleId);
 
               return (
                 <div className="rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
@@ -1148,9 +1042,7 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
                   <Select
                     value={mapping.lifecycleId}
                     onValueChange={(value) => {
-                      const lifecycle = lifecycles?.find(
-                        (l) => String(l.id) === String(value),
-                      );
+                      const lifecycle = lifecycles?.find((l) => String(l.id) === String(value));
 
                       const updated = [...leadStatusMappings];
 
@@ -1171,10 +1063,7 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
 
                     <SelectContent>
                       {lifecycles?.map((lifecycle) => (
-                        <SelectItem
-                          key={lifecycle.id}
-                          value={String(lifecycle.id)}
-                        >
+                        <SelectItem key={lifecycle.id} value={String(lifecycle.id)}>
                           {lifecycle.name}
                         </SelectItem>
                       ))}
@@ -1192,10 +1081,7 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
           </div>
 
           <DialogFooter className="pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setOpenMappingModal(false)}
-            >
+            <Button variant="outline" onClick={() => setOpenMappingModal(false)}>
               {t("Cancel")}
             </Button>
 
@@ -1248,28 +1134,19 @@ function BiginContactsTable({ integration }: { integration: any }) {
           <div>
             <CardTitle>{t("Zoho Bigin Contacts")}</CardTitle>
 
-            <p className="text-sm text-muted-foreground">
-              {t("Synced contacts from Zoho Bigin")}
-            </p>
+            <p className="text-sm text-muted-foreground">{t("Synced contacts from Zoho Bigin")}</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
           {integration?.credential?.lastBiginSyncAt && (
             <p className="text-sm text-muted-foreground">
-              {t("Last Sync")}:{" "}
-              {new Date(
-                integration.credential.lastBiginSyncAt,
-              ).toLocaleString()}
+              {t("Last Sync")}: {new Date(integration.credential.lastBiginSyncAt).toLocaleString()}
             </p>
           )}
 
           <div className="flex items-center gap-2">
             <Button onClick={handleSync} disabled={syncMutation.isPending}>
-              <RefreshCcw
-                className={
-                  syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"
-                }
-              />
+              <RefreshCcw className={syncMutation.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
               {syncMutation.isPending ? t("Syncing") : t("Sync to Rateup")}
             </Button>
           </div>

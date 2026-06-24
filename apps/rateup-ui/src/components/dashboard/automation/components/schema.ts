@@ -2,10 +2,7 @@ import { z } from "zod";
 
 import { ShopifyEvents } from "@/types/enums.ts";
 
-const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents) as [
-  string,
-  ...string[],
-];
+const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents) as [string, ...string[]];
 
 // Single source of truth for condition fields
 export const CONDITION_FIELDS = [
@@ -84,9 +81,7 @@ const TRIGGER_EVENTS = [
 ] as const;
 
 export function getTriggerEventsForPlatform(platform: Platform) {
-  return TRIGGER_EVENTS.filter((e) =>
-    (e.platforms as readonly string[]).includes(platform),
-  );
+  return TRIGGER_EVENTS.filter((e) => (e.platforms as readonly string[]).includes(platform));
 }
 
 export const INSTAGRAM_SCOPE_OPTIONS = [
@@ -146,9 +141,7 @@ export const ACTION_TYPES = [
 ] as const;
 
 export function getActionTypesForPlatform(platform: Platform) {
-  return ACTION_TYPES.filter((a) =>
-    (a.platforms as readonly string[]).includes(platform),
-  );
+  return ACTION_TYPES.filter((a) => (a.platforms as readonly string[]).includes(platform));
 }
 
 // Single source of truth for group operators
@@ -160,9 +153,7 @@ const GROUP_OPERATORS = [
 const ruleConditionSchema = z.object({
   id: z.string().optional(),
   field: z.enum(CONDITION_FIELDS.map((f) => f.value) as [string, ...string[]]),
-  operator: z.enum(
-    CONDITION_OPERATORS.map((o) => o.value) as [string, ...string[]],
-  ),
+  operator: z.enum(CONDITION_OPERATORS.map((o) => o.value) as [string, ...string[]]),
   value: z.string().min(1, "Value is required"),
 });
 
@@ -187,10 +178,7 @@ const sendTemplateActionValueSchema = z.object({
 const sendTemplateActionSchema = z.object({
   id: z.string().optional(),
   type: z.literal("SEND_TEMPLATE"),
-  value: z.union([
-    z.string().min(1, "Template is required"),
-    sendTemplateActionValueSchema,
-  ]),
+  value: z.union([z.string().min(1, "Template is required"), sendTemplateActionValueSchema]),
 });
 
 const regularActionSchema = z.object({
@@ -211,9 +199,7 @@ const ruleActionSchema = z.union([
 
 const ruleGroupSchema = z.object({
   id: z.string().optional(),
-  operator: z
-    .enum(GROUP_OPERATORS.map((o) => o.value) as [string, ...string[]])
-    .default("AND"),
+  operator: z.enum(GROUP_OPERATORS.map((o) => o.value) as [string, ...string[]]).default("AND"),
   conditions: z.array(ruleConditionSchema).refine(
     (items) => {
       const seen = new Set();
@@ -250,20 +236,12 @@ const ruleOptionsSchema = z.object({
 });
 
 const createRuleBaseSchema = z.object({
-  platform: z
-    .enum(PLATFORMS.map((p) => p.value) as [string, ...string[]])
-    .default("WHATSAPP"),
-  whatsappSettingsPhoneIds: z
-    .array(z.string())
-    .min(1, "Select at least one account"),
+  platform: z.enum(PLATFORMS.map((p) => p.value) as [string, ...string[]]).default("WHATSAPP"),
+  whatsappSettingsPhoneIds: z.array(z.string()).min(1, "Select at least one account"),
   name: z.string().min(1, "Name is required"),
-  operator: z
-    .enum(GROUP_OPERATORS.map((o) => o.value) as [string, ...string[]])
-    .default("AND"),
+  operator: z.enum(GROUP_OPERATORS.map((o) => o.value) as [string, ...string[]]).default("AND"),
   isActive: z.boolean().default(true),
-  triggerEvent: z.enum(
-    TRIGGER_EVENTS.map((t) => t.value) as [string, ...string[]],
-  ),
+  triggerEvent: z.enum(TRIGGER_EVENTS.map((t) => t.value) as [string, ...string[]]),
   groups: z.array(ruleGroupSchema),
   actions: z
     .array(ruleActionSchema)
@@ -273,9 +251,7 @@ const createRuleBaseSchema = z.object({
         const seen = new Set();
         for (const item of items) {
           const valueKey =
-            typeof item.value === "string"
-              ? item.value
-              : JSON.stringify(item.value ?? {});
+            typeof item.value === "string" ? item.value : JSON.stringify(item.value ?? {});
           const key = `${item.type}-${valueKey}`;
           if (seen.has(key)) return false;
           seen.add(key);
@@ -299,48 +275,40 @@ const createRuleBaseSchema = z.object({
   }),
 });
 
-export const createRuleSchema = createRuleBaseSchema.superRefine(
-  (data, ctx) => {
-    if (data.triggerEvent === "MESSAGE_RECEIVED") {
-      if (
-        data.groups.length === 0 ||
-        !data.groups.some((group) => group.conditions.length > 0)
-      ) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["groups"],
-          message:
-            "At least one condition is required for Message Received trigger",
-        });
-      }
-    }
-
-    if (data.triggerEvent === "SHOPIFY_EVENT" && !data.options?.shopifyEvent) {
+export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => {
+  if (data.triggerEvent === "MESSAGE_RECEIVED") {
+    if (data.groups.length === 0 || !data.groups.some((group) => group.conditions.length > 0)) {
       ctx.addIssue({
         code: "custom",
-        path: ["options", "shopifyEvent"],
-        message: "Select a Shopify event",
+        path: ["groups"],
+        message: "At least one condition is required for Message Received trigger",
       });
     }
+  }
 
-    const isInstagramTrigger =
-      data.triggerEvent === "INSTAGRAM_COMMENT" ||
-      data.triggerEvent === "INSTAGRAM_STORY_MENTION";
+  if (data.triggerEvent === "SHOPIFY_EVENT" && !data.options?.shopifyEvent) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "shopifyEvent"],
+      message: "Select a Shopify event",
+    });
+  }
 
-    if (
-      isInstagramTrigger &&
-      data.options?.instagramScope === "SPECIFIC" &&
-      (!data.options?.instagramPostIds ||
-        data.options.instagramPostIds.length === 0)
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["options", "instagramPostIds"],
-        message: "Add at least one post ID",
-      });
-    }
-  },
-);
+  const isInstagramTrigger =
+    data.triggerEvent === "INSTAGRAM_COMMENT" || data.triggerEvent === "INSTAGRAM_STORY_MENTION";
+
+  if (
+    isInstagramTrigger &&
+    data.options?.instagramScope === "SPECIFIC" &&
+    (!data.options?.instagramPostIds || data.options.instagramPostIds.length === 0)
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "instagramPostIds"],
+      message: "Add at least one post ID",
+    });
+  }
+});
 
 export type CreateRuleInput = z.input<typeof createRuleSchema>;
 

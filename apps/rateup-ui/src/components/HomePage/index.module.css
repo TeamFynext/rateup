@@ -42,8 +42,7 @@
   margin-bottom: 0;
 }
 
-.illustration-container-as-first-element
-  .illustration-txt-section-text-container {
+.illustration-container-as-first-element .illustration-txt-section-text-container {
   order: 1;
 }
 

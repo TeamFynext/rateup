@@ -116,8 +116,7 @@ export const useCloneAndDeprecateFlowsMutation = () => {
 export const useCloneFlowsMutation = (onSucess: () => void) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ flowId, teamId }: cloneFlowsProps) =>
-      cloneFlows({ flowId, teamId }),
+    mutationFn: ({ flowId, teamId }: cloneFlowsProps) => cloneFlows({ flowId, teamId }),
     onSuccess: () => {
       onSucess();
       queryClient.invalidateQueries({ queryKey: ["flow"] });
@@ -151,10 +150,8 @@ export const useCreateFlowMutation = () => {
 export const useUpdateFlowMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
-      dbFlowId: string;
-      data: Partial<Omit<DbFlow, "dbFlowId">>;
-    }) => updateFlow(data.dbFlowId, data.data),
+    mutationFn: (data: { dbFlowId: string; data: Partial<Omit<DbFlow, "dbFlowId">> }) =>
+      updateFlow(data.dbFlowId, data.data),
     onSuccess: () => {
       toast.success("Saved Changes..", {
         id: "flow-update",
@@ -212,7 +209,6 @@ export const useDeprecateFlowMutation = () => {
 };
 
 export const useSendFlowToUser = (phone: string) => {
-  const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
       dbFlowId,
@@ -237,10 +233,8 @@ export const useSendFlowToUser = (phone: string) => {
 export const useUpdateFlowMetaDataMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
-      dbFlowId: string;
-      data: { name: string; anonymous: boolean };
-    }) => updateFlowMetaData(data.dbFlowId, data.data),
+    mutationFn: (data: { dbFlowId: string; data: { name: string; anonymous: boolean } }) =>
+      updateFlowMetaData(data.dbFlowId, data.data),
     onSuccess: () => {
       toast.success("Saved Changes..", {
         id: "flow-meta-data-update",

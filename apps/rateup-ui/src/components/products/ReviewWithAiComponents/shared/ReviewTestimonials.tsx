@@ -1,5 +1,3 @@
-"use client";
-
 import { Image } from "@unpic/react";
 import { Star } from "lucide-react";
 import { easeOut, motion } from "motion/react";
@@ -36,13 +34,7 @@ const Client = ({ icon }: { icon: string }) => (
     className="flex items-center justify-center h-28 w-40 rounded-xl border
    border-gray-200 bg-white shadow-sm mx-4 p-4"
   >
-    <Image
-      src={icon}
-      alt="Client logo"
-      width={160}
-      height={80}
-      className="object-contain mx-9"
-    />
+    <Image src={icon} alt="Client logo" width={160} height={80} className="object-contain mx-9" />
   </div>
 );
 const ReviewTestimonials = () => {
@@ -81,10 +73,7 @@ const ReviewTestimonials = () => {
             >
               <div className="flex mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-5 w-5 text-yellow-400 fill-yellow-400"
-                  />
+                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
                 ))}
               </div>
               <p className="text-gray-700 italic mb-6">"{testimonial.quote}"</p>
@@ -108,9 +97,7 @@ export const ClientLogoSectionNew = () => {
     <div className="py-20 px-6 lg:px-8 bg-gray-50 overflow-hidden">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-14">
-          <h2 className="text-2xl uppercase text-[#075E54]">
-            Powering growth for
-          </h2>
+          <h2 className="text-2xl uppercase text-[#075E54]">Powering growth for</h2>
         </div>
 
         <div className="relative w-full overflow-hidden">

@@ -14,14 +14,7 @@ const integrations = [
     desc: "Reply to DMs and story replies",
     bg: "linear-gradient(45deg,#F58529,#DD2A7B 55%,#8134AF)",
     icon: (
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="2"
-      >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
         <rect x="2" y="2" width="20" height="20" rx="5.5" />
         <circle cx="12" cy="12" r="4.2" />
         <circle cx="17.6" cy="6.4" r="1.1" fill="#fff" stroke="none" />
@@ -180,8 +173,8 @@ export default function Integrations() {
             </span>
           </h6>
           <p className="reveal d2 text-[17px] leading-[1.65] text-white/50 m-0 max-w-[560px] mx-auto">
-            RateUp Inbox plugs into your existing stack in minutes — no custom
-            code, no API headaches.
+            RateUp Inbox plugs into your existing stack in minutes — no custom code, no API
+            headaches.
           </p>
         </div>
 
@@ -202,9 +195,7 @@ export default function Integrations() {
                 {icon}
               </div>
               <div className="text-[12.5px] font-bold text-white">{name}</div>
-              <div className="text-[11px] text-white/35 leading-[1.48]">
-                {desc}
-              </div>
+              <div className="text-[11px] text-white/35 leading-[1.48]">{desc}</div>
             </div>
           ))}
         </div>

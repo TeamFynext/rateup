@@ -1,16 +1,11 @@
-import React, { useRef } from "react";
-
 import { IconInfoCircle } from "@tabler/icons-react";
 import { driver } from "driver.js";
+import React, { useRef } from "react";
 
 import "driver.js/dist/driver.css";
 
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import styles from "./Welcome.module.css";
 

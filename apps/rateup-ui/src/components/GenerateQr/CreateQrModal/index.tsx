@@ -1,17 +1,11 @@
-"use client";
-
-import { useCallback, useRef } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit, Info, Plus, QrCode } from "lucide-react";
+import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
 
-import {
-  useCreateQrMutation,
-  useUpdateQrMutation,
-} from "@/backend/generateQr/generateQr.query";
+import { useCreateQrMutation, useUpdateQrMutation } from "@/backend/generateQr/generateQr.query";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -87,8 +81,6 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
   const createQrMutation = useCreateQrMutation();
   const updateQrMutation = useUpdateQrMutation(shortUrlId);
 
-  const formSubmitBtnRef = useRef(null);
-
   const handleCreateQrFormSubmit = useCallback(async (values) => {
     await createQrMutation.mutateAsync({
       name: values.name,
@@ -110,10 +102,6 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
     },
     [shortUrlId],
   );
-
-  const handleCreateBtnClick = useCallback(() => {
-    formSubmitBtnRef?.current.click();
-  }, []);
 
   const handleCancelBtnClick = useCallback(() => {
     onClose();
@@ -199,20 +187,14 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
           </div>
           <div className="text-center relative">
             <DialogTitle className="text-xl font-semibold text-white">
-              {mode === "create"
-                ? translations("Create QR")
-                : translations("Rename QR")}
+              {mode === "create" ? translations("Create QR") : translations("Rename QR")}
             </DialogTitle>
             <p className="text-sm text-white/90 mt-1.5">
-              {mode === "create"
-                ? translations("Set up a QR Code")
-                : translations("Rename the QR")}
+              {mode === "create" ? translations("Set up a QR Code") : translations("Rename the QR")}
             </p>
           </div>
           <DialogDescription className="sr-only">
-            {mode === "create"
-              ? translations("Create a new QR")
-              : translations("Rename QR")}
+            {mode === "create" ? translations("Create a new QR") : translations("Rename QR")}
           </DialogDescription>
         </DialogHeader>
 
@@ -234,8 +216,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
                 <div className="w-5 h-5 bg-primary rounded-md flex items-center justify-center shadow-sm">
                   <Edit className="w-3 h-3 text-white" />
                 </div>
-                {translations("QR Name")}{" "}
-                <span className="text-red-500">*</span>
+                {translations("QR Name")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="display-name"
@@ -253,10 +234,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
             </div>
             {mode == "create" && (
               <div className="space-y-2">
-                <Label
-                  htmlFor="url"
-                  className="text-sm font-semibold flex items-center gap-2"
-                >
+                <Label htmlFor="url" className="text-sm font-semibold flex items-center gap-2">
                   <div className="w-5 h-5 bg-primary rounded-md flex items-center justify-center shadow-sm">
                     <Edit className="w-3 h-3 text-white" />
                   </div>
@@ -271,9 +249,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
                 />
 
                 {form.formState.errors.name?.message && (
-                  <p className="text-xs text-red-600 mt-1">
-                    {form.formState.errors.url.message}
-                  </p>
+                  <p className="text-xs text-red-600 mt-1">{form.formState.errors.url.message}</p>
                 )}
               </div>
             )}
@@ -284,9 +260,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
                 <Info className="w-3 h-3 text-white" />
               </div>
               <p className="text-xs leading-relaxed">
-                <span className="font-semibold">
-                  {translations("Pro Tip")}:
-                </span>{" "}
+                <span className="font-semibold">{translations("Pro Tip")}:</span>{" "}
                 {translations(
                   "QR codes let people access your link instantly—just scan and go, no typing needed",
                 )}
@@ -296,20 +270,12 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
 
           {/* Footer */}
           <DialogFooter className="px-6 py-4 border-t gap-3 sm:gap-3">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={handleCancelBtnClick}
-            >
+            <Button variant="outline" type="button" onClick={handleCancelBtnClick}>
               {translations("Cancel")}
             </Button>
             <Button
               type="submit"
-              disabled={
-                mode === "create"
-                  ? createQrMutation.isPending
-                  : updateQrMutation.isPending
-              }
+              disabled={mode === "create" ? createQrMutation.isPending : updateQrMutation.isPending}
               className="bg-primary"
             >
               {mode === "create" ? (
@@ -317,9 +283,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
               ) : (
                 <Edit className="w-4 h-4 mr-2" />
               )}
-              {mode === "create"
-                ? translations("Create QR")
-                : translations("Rename QR")}
+              {mode === "create" ? translations("Create QR") : translations("Rename QR")}
             </Button>
           </DialogFooter>
         </form>

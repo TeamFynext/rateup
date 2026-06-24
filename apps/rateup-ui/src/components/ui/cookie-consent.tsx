@@ -1,12 +1,9 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Link } from "@tanstack/react-router";
 import { CookieIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
-import { cn } from "@/lib/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
+import { cn } from "@/lib/utils.ts";
 
 export function CookieConsent({
   variant = "default",
@@ -70,24 +67,18 @@ export function CookieConsent({
       <div className="dark:bg-card bg-background rounded-lg sm:rounded-md border border-border shadow-lg">
         <div className="grid gap-2">
           <div className="border-b border-border h-12 sm:h-14 flex items-center justify-between p-3 sm:p-4">
-            <h6 className="text-base sm:text-lg font-medium text-black">
-              Cookie Preferences
-            </h6>
+            <h6 className="text-base sm:text-lg font-medium text-black">Cookie Preferences</h6>
             <CookieIcon className="h-4 w-4 sm:h-[1.2rem] sm:w-[1.2rem]" />
           </div>
           <div className="p-3 sm:p-4">
             <p className="text-xs sm:text-sm font-normal text-start text-muted-foreground">
-              We use cookies to ensure you get the best experience on our
-              website. For more information on how we use cookies, please see
-              our cookie policy.
+              We use cookies to ensure you get the best experience on our website. For more
+              information on how we use cookies, please see our cookie policy.
               <br />
               <br />
               <span className="text-xs">
-                By clicking{" "}
-                <span className="font-medium text-black dark:text-white">
-                  Accept
-                </span>
-                , you agree to our use of cookies.
+                By clicking <span className="font-medium text-black dark:text-white">Accept</span>,
+                you agree to our use of cookies.
               </span>
               <br />
               <Link to="/privacy-policy" className="text-xs underline">
@@ -118,15 +109,13 @@ export function CookieConsent({
     >
       <div className="m-0 sm:m-3 dark:bg-card bg-background border border-border rounded-lg shadow-lg">
         <div className="flex items-center justify-between p-3">
-          <h6 className="text-base sm:text-lg font-medium text-black">
-            Cookie Preferences
-          </h6>
+          <h6 className="text-base sm:text-lg font-medium text-black">Cookie Preferences</h6>
           <CookieIcon className="h-4 w-4 sm:h-[1.2rem] sm:w-[1.2rem] text-black" />
         </div>
         <div className="p-3 -mt-2">
           <p className="text-xs sm:text-sm text-left text-muted-foreground">
-            We use cookies to improve your experience and analyze website
-            traffic. Learn more in our Cookie Policy.
+            We use cookies to improve your experience and analyze website traffic. Learn more in our
+            Cookie Policy.
             <Link to="/privacy-policy" className="text-xs underline ml-1">
               Learn more.
             </Link>
@@ -136,11 +125,7 @@ export function CookieConsent({
           <Button onClick={accept} className="w-full">
             Accept
           </Button>
-          <Button
-            onClick={decline}
-            className="w-full text-black"
-            variant="outline"
-          >
+          <Button onClick={decline} className="w-full text-black" variant="outline">
             Decline
           </Button>
         </div>
@@ -161,9 +146,7 @@ export function CookieConsent({
           <div className="p-3 flex items-center justify-between border-b border-border">
             <div className="flex items-center gap-2">
               <CookieIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm font-medium">
-                Cookie Notice
-              </span>
+              <span className="text-xs sm:text-sm font-medium">Cookie Notice</span>
             </div>
           </div>
           <div className="p-3">

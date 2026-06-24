@@ -166,10 +166,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         src: z.string(),
         width: z.number().optional(),
         height: z.number().optional(),
-        "scale-type": z
-          .enum(["cover", "contain"])
-          .optional()
-          .default("contain"),
+        "scale-type": z.enum(["cover", "contain"]).optional().default("contain"),
         "aspect-ratio": z.number().optional().default(1),
         "alt-text": z.string().optional(),
       };
@@ -196,9 +193,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         name: z.string(),
         label: z.string().trim().min(1).max(80),
         description: z.string().max(300).optional(),
-        "photo-source": z
-          .enum(["camera_gallery", "camera", "gallery"])
-          .default("camera_gallery"),
+        "photo-source": z.enum(["camera_gallery", "camera", "gallery"]).default("camera_gallery"),
         "max-file-size-kb": z.number().min(1).max(25600).default(25600),
         "min-uploaded-photos": z.number().min(0).max(30).default(0),
         "max-uploaded-photos": z.number().min(1).max(30).default(30),
@@ -368,12 +363,7 @@ export const getValidationSchema = (type: QuestionType2) => {
 type InitialValues = {
   [key: string]: {
     type: string;
-    value:
-      | string
-      | number
-      | boolean
-      | string[]
-      | { id: string; title: string }[];
+    value: string | number | boolean | string[] | { id: string; title: string }[];
     extra?: any;
     metaType?: string;
   };
@@ -390,9 +380,8 @@ export const getInitialValues = (type: QuestionType2) => {
   const DESC_MAX = shape?.description?.def?.checks?.find(
     (data) => data?._zod?.def?.check === "max_length",
   )?._zod?.def?.maximum;
-  const TEXT_MAX = shape?.text?.def?.checks?.find(
-    (data) => data?._zod?.def?.check === "max_length",
-  )?._zod?.def?.maximum;
+  const TEXT_MAX = shape?.text?.def?.checks?.find((data) => data?._zod?.def?.check === "max_length")
+    ?._zod?.def?.maximum;
 
   const TITLE_MAX = 4090;
   const HELPER_TEXT_MAX = 80;

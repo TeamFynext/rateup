@@ -2,21 +2,10 @@ import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.qu
 
 import { Card } from "../ui/card.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 
-const ContactGroupSelector = ({
-  value,
-  onChange,
-  className = "",
-  allowMultiSelect = false,
-}) => {
+const ContactGroupSelector = ({ value, onChange, className = "", allowMultiSelect = false }) => {
   const { data: groups, isLoading } = useContactGroup();
   if (isLoading) {
     return (

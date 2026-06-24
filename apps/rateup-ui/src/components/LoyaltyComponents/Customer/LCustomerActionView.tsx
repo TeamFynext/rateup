@@ -1,18 +1,11 @@
-import { useState } from "react";
-
 import { IconCalendar } from "@tabler/icons-react";
+import { useState } from "react";
 
 import { DateRangePickerModal } from "@/components/DateAndTime/DatePicker/DateRangePicker.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
-const getButtonVariant = (
-  variant?: string,
-): "secondary" | "ghost" | "outline" => {
+const getButtonVariant = (variant?: string): "secondary" | "ghost" | "outline" => {
   if (variant === "light") return "secondary";
   if (variant === "subtle") return "ghost";
   return "outline";

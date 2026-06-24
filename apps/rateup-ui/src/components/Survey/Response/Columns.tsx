@@ -1,18 +1,9 @@
-"use client";
-
-import { useContext, useMemo, useState } from "react";
-
-import {
-  IconChevronDown,
-  IconEye,
-  IconTicket,
-  IconTrashXFilled,
-} from "@tabler/icons-react";
+import { IconChevronDown, IconEye, IconTicket, IconTrashXFilled } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import { useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { QuestionType } from "@/types/enums.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -21,20 +12,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
-import {
-  getFileNameFromKey,
-  getFileUrlFromKey,
-} from "@/utils/file-upload/upload.ts";
-import {
-  getResponse,
-  getResponseArrayByQuestionType,
-} from "@/utils/response.ts";
+import { QuestionType } from "@/types/enums.ts";
+import { getFileNameFromKey, getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
+import { getResponse, getResponseArrayByQuestionType } from "@/utils/response.ts";
 
 import PreviewModal from "../../Modal/PreviewModal.tsx";
 import { HoverCardComponent } from "../HoverCard/HoverCard.tsx";
@@ -60,47 +42,31 @@ export const useSurveyResponseColumns = ({
         header: translations("Created At"),
         filterFn: fuzzyFilter,
         accessorKey: "createdAt",
-        cell: (info) =>
-          dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+        cell: (info) => dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
       },
       ...(questions?.length > 0
         ? questions?.map((q: any) => {
             const content =
               getReplacedTitleFromVariable({
-                title:
-                  q?.title[
-                    selectedLanguage ? selectedLanguage : defaultLanguage
-                  ],
+                title: q?.title[selectedLanguage ? selectedLanguage : defaultLanguage],
                 surveyId,
               }) ||
               q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
-              q?.description[
-                selectedLanguage ? selectedLanguage : defaultLanguage
-              ] ||
-              q?.label?.[
-                selectedLanguage ? selectedLanguage : defaultLanguage
-              ] ||
+              q?.description[selectedLanguage ? selectedLanguage : defaultLanguage] ||
+              q?.label?.[selectedLanguage ? selectedLanguage : defaultLanguage] ||
               "";
             return {
-              ...(![
-                QuestionType.Rating,
-                QuestionType.Opinion,
-                QuestionType.Number,
-              ].includes(q?.type) && {
+              ...(![QuestionType.Rating, QuestionType.Opinion, QuestionType.Number].includes(
+                q?.type,
+              ) && {
                 filterFn: fuzzyFilter,
               }),
               accessorFn: (row: any) => {
                 const response = row.responses
                   ?.filter((item: any) => item?.questionId === q.id)
-                  ?.find((item: any) => item?.type === q.type)?.response[
-                  q.type
-                ];
+                  ?.find((item: any) => item?.type === q.type)?.response[q.type];
                 if (
-                  [
-                    QuestionType.Rating,
-                    QuestionType.Opinion,
-                    QuestionType.Number,
-                  ].includes(q.type)
+                  [QuestionType.Rating, QuestionType.Opinion, QuestionType.Number].includes(q.type)
                 ) {
                   return Number(response);
                 }
@@ -182,9 +148,7 @@ export const useSurveyResponseColumns = ({
                           <IconTicket color="orange" className="w-9 h-9" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent side="right">
-                        {translations("View Ticket")}
-                      </TooltipContent>
+                      <TooltipContent side="right">{translations("View Ticket")}</TooltipContent>
                     </Tooltip>
                   </div>
                 );
@@ -201,10 +165,7 @@ export const useSurveyResponseColumns = ({
             <ActionMenu
               open={open}
               resId={info.row.original.id}
-              resTeamId={
-                info.row.original.surveyTeamMap?.teamId ||
-                info.row.original.teamId
-              }
+              resTeamId={info.row.original.surveyTeamMap?.teamId || info.row.original.teamId}
               setSelectedResponseId={setSelectedResponseId}
               setResponseTeamId={setResponseTeamId}
               setSelectedRowId={setSelectedRowId}
@@ -309,12 +270,7 @@ function BadgeorTextorPreview({
               <span className="font-light text-md text-gray-700 dark:text-gray-300">
                 {translations("Profile Picture:")}{" "}
               </span>
-              <Button
-                className="w-fit"
-                onClick={open}
-                size="sm"
-                variant="outline"
-              >
+              <Button className="w-fit" onClick={open} size="sm" variant="outline">
                 <IconEye className="mr-2 h-4 w-4" />
                 {translations("Preview")}
               </Button>
@@ -327,10 +283,7 @@ function BadgeorTextorPreview({
             />
           </>
         ) : null}
-        <HoverCardComponent
-          content={response?.content}
-          questionType={questionType}
-        />
+        <HoverCardComponent content={response?.content} questionType={questionType} />
       </div>
     );
   } else if (questionType == QuestionType.File) {
@@ -352,9 +305,7 @@ function BadgeorTextorPreview({
       </div>
     ) : null;
   } else {
-    return (
-      <HoverCardComponent content={response} questionType={questionType} />
-    );
+    return <HoverCardComponent content={response} questionType={questionType} />;
   }
 }
 
@@ -399,9 +350,7 @@ export function ActionMenu({
               }}
             >
               <IconTicket className="mr-2 h-3.5 w-3.5" />
-              {ticketExist
-                ? translations("View Ticket")
-                : translations("Create Ticket")}
+              {ticketExist ? translations("View Ticket") : translations("Create Ticket")}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem

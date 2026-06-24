@@ -1,18 +1,13 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "motion/react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { connectZoho } from "@/backend/appsIntegration/integration.api";
 import { RateupStar, ZohoLogo } from "@/components/integrations/logos";
 
-export const Route = createFileRoute(
-  "/dashboard/settings/integrations/zoho/callback/",
-)({
+export const Route = createFileRoute("/dashboard/settings/integrations/zoho/callback/")({
   component: ZohoCallback,
 });
 
@@ -36,7 +31,7 @@ function ZohoCallback() {
         await connectZoho(code, orgId);
         toast.success(t("Successfully connected to Zoho."));
         navigate({ to: "/dashboard/settings/integrations/zoho" });
-      } catch (error) {
+      } catch {
         toast.error(t("Could not connect zoho."));
         navigate({ to: "/dashboard/settings/integrations/zoho" });
       }
@@ -104,10 +99,7 @@ function ZohoCallback() {
             </p>
 
             <p className="text-sm text-slate-500 text-center max-w-md">
-              {t(
-                "Please wait while we securely connect your Zoho CRM account with Rateup",
-              )}
-              .
+              {t("Please wait while we securely connect your Zoho CRM account with Rateup")}.
             </p>
           </motion.div>
 

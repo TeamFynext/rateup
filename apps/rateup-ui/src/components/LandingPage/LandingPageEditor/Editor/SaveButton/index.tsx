@@ -1,14 +1,12 @@
-"use client";
-
-import { useCallback, useState } from "react";
-
 import { Button, Flex } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateLandingPageMutation } from "@/backend/landingPage/landingPage.query";
 
 import { useTiptapEditorInstance } from "../../LandingPageContext/LandingPageContext.tsx";
+
 import styles from "./SaveButton.module.css";
 
 function SaveButton() {
@@ -20,8 +18,7 @@ function SaveButton() {
     strict: false,
   });
   const shortUrlId = params?.shortUrlId as string;
-  const { mutateAsync: landingPageUpdateMutateAsync } =
-    useUpdateLandingPageMutation(shortUrlId);
+  const { mutateAsync: landingPageUpdateMutateAsync } = useUpdateLandingPageMutation(shortUrlId);
   const { t: translations } = useTranslation();
   const handleSaveBtnClick = useCallback(async () => {
     setIsSaving(true);
@@ -31,7 +28,7 @@ function SaveButton() {
           shortUrlId,
           tiptapEditorContent: editorInstance.getHTML(),
         });
-      } catch (err) {
+      } catch {
         setIsSaving(false);
       }
     }
@@ -40,11 +37,7 @@ function SaveButton() {
 
   return (
     <Flex className={styles["save-btn-container"]}>
-      <Button
-        className={styles["save-btn"]}
-        onClick={handleSaveBtnClick}
-        loading={isSaving}
-      >
+      <Button className={styles["save-btn"]} onClick={handleSaveBtnClick} loading={isSaving}>
         {translations("Save")}
       </Button>
     </Flex>

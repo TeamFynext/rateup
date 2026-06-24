@@ -1,13 +1,9 @@
 import { ThemeIcon } from "@mantine/core";
-import {
-  IconBrandFacebook,
-  IconBrandInstagram,
-  IconBrandWhatsapp,
-} from "@tabler/icons-react";
+import { IconBrandFacebook, IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
 import { MessageCircle } from "lucide-react";
 
-import { MessagePlatform } from "@/types/enums.ts";
 import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
+import { MessagePlatform } from "@/types/enums.ts";
 
 export function getSoucePlatformIconAndColor(sourcePlatform) {
   switch (sourcePlatform) {
@@ -64,9 +60,7 @@ function getRandomHex(size: number): string {
     }
   }
 
-  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join(
-    "",
-  );
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
 }
 
 export function generateInternalMessageId() {

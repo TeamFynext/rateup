@@ -1,15 +1,13 @@
-"use client";
-
 import { Loader2, Save } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { TemplateType } from "@/types/enums.ts";
 import type { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { FormField } from "@/components/ui/form.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { TemplateType } from "@/types/enums.ts";
 
 import type { LoyaltyTemplateTypes } from "./utils.ts";
 import { getLoyaltyTemplateLabel } from "./utils.ts";
@@ -53,9 +51,7 @@ export function EventTriggerItem({
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="font-medium text-sm">{title}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {description}
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">{description}</p>
             </div>
             <Switch
               checked={field.value}
@@ -86,12 +82,7 @@ export function EventTriggerItem({
           />
 
           {isModified && (
-            <Button
-              size="sm"
-              onClick={onSave}
-              disabled={isPending || disabled}
-              className="w-full"
-            >
+            <Button size="sm" onClick={onSave} disabled={isPending || disabled} className="w-full">
               {isPending ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (

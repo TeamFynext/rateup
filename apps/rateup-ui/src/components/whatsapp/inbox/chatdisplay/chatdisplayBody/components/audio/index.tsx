@@ -1,10 +1,7 @@
-"use client";
-
-import type { JSX } from "react";
-import { useRef } from "react";
-
 import { ActionIcon, Group } from "@mantine/core";
 import { IconDownload } from "@tabler/icons-react";
+import type { JSX } from "react";
+import { useRef } from "react";
 import { toast } from "sonner";
 
 import { useGetMediaFile } from "@/backend/whatsapp/inbox/message/wamessage.query";
@@ -15,7 +12,7 @@ interface Props {
 
 export default function WaInboxAudio({ messageContent }: Props): JSX.Element {
   const { mutate, isPending } = useGetMediaFile();
-  const [id, caption] = messageContent.split("_caption_");
+  const [id] = messageContent.split("_caption_");
   const audioRef = useRef<HTMLAudioElement>(null);
   const link = messageContent.startsWith("http")
     ? messageContent

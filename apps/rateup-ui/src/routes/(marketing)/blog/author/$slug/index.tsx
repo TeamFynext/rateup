@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { getPosts } from "@/lib/posts.ts";
 import BlogLayout from "@/components/blog/Layout.tsx";
+import { getPosts } from "@/lib/posts.ts";
 
 import PostGrid from "../../../../../components/(marketing)/blog/post-grid.tsx";
 
@@ -15,8 +15,6 @@ export const Route = createFileRoute("/(marketing)/blog/author/$slug/")({
     return posts;
   },
 });
-
-const revalidate = 60;
 
 function Author() {
   const posts = Route.useLoaderData();

@@ -1,12 +1,7 @@
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
-import { useNavigate, useRouterState } from "@tanstack/react-router";
-
-import useLocalStorage from "@/hooks/localStorage.tsx";
-import {
-  useContactLabels,
-  useCustomFields,
-} from "@/backend/campaign/contacts/contacts.query";
+import { useContactLabels, useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
@@ -16,6 +11,7 @@ import { useUserInfo } from "@/backend/user/user.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import useLocalStorage from "@/hooks/localStorage.tsx";
 
 import { useChatFilterStore } from "../../whatsapp/inbox/chatselect/chatFilter/index.tsx";
 import {
@@ -31,13 +27,7 @@ type UseMainSidebarArgs = Readonly<{
 }>;
 
 export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
-  const {
-    isPending: isLoadingUserInfo,
-    data,
-    isFetched,
-    refetch,
-    error,
-  } = useUserInfo();
+  const { isPending: isLoadingUserInfo, data, isFetched, refetch, error } = useUserInfo();
 
   const navigate = useNavigate();
   const location = useRouterState({
@@ -46,19 +36,18 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   const pathname = location.pathname;
   const search = location.search as Record<string, unknown>;
 
-  const [storedUserInfo, setStoredUserInfo] =
-    useLocalStorage<IUserInfoApiResponse | null>("userInfo", null);
+  const [storedUserInfo, setStoredUserInfo] = useLocalStorage<IUserInfoApiResponse | null>(
+    "userInfo",
+    null,
+  );
 
   const { setUser } = useUser();
   const welcomeRefetchDone = useRef(false);
 
   const { data: sub, isPending } = useSubscription();
-  const { data: lifecycles, isPending: isPendingLifecycles } =
-    useLifeCyclesQuery();
-  const { data: customFieldData, isPending: isCustomFieldPending } =
-    useCustomFields();
-  const { data: contactLabels = [], isPending: isPendingContactLabels } =
-    useContactLabels();
+  const { data: lifecycles, isPending: isPendingLifecycles } = useLifeCyclesQuery();
+  const { data: customFieldData, isPending: isCustomFieldPending } = useCustomFields();
+  const { data: contactLabels = [], isPending: isPendingContactLabels } = useContactLabels();
   const { data: userRes, isLoading: isStaffLoading } = useTeamsMembersOfOrg();
   const { data: teamRes, isLoading: isTeamLoading } = useTeamsByUser();
 
@@ -75,9 +64,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   const userQueryData = hasUserData ? data : null;
   const resolvedUserInfo = userQueryData ?? storedUserInfo;
   const resolvedUserData = resolvedUserInfo?.data ?? null;
-  const missingOrgId = Boolean(
-    userQueryData?.data?.email && !userQueryData?.data?.orgId,
-  );
+  const missingOrgId = Boolean(userQueryData?.data?.email && !userQueryData?.data?.orgId);
 
   const userInfoErrorMessage = getUserInfoErrorMessage(data, error);
 
@@ -92,12 +79,9 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   const { setTotalCount } = useChatContactCountStore();
   const { filter } = useChatFilterStore();
   const isInbox = pathname?.includes("/dashboard/inbox");
-  const isTicketsBoard =
-    pathname?.includes("/dashboard/tickets") && Boolean(search?.b);
+  const isTicketsBoard = pathname?.includes("/dashboard/tickets") && Boolean(search?.b);
   const paddingExclusion =
-    isInbox || isTicketsBoard
-      ? true
-      : pathname?.includes("/dashboard/whatsapp/flows/v2/");
+    isInbox || isTicketsBoard ? true : pathname?.includes("/dashboard/whatsapp/flows/v2/");
   const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
 
   useEffect(() => {
@@ -163,9 +147,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       return;
     }
 
-    const shopifySubscriptionReturn = getStoredRedirect(
-      "shopify-subscription-callback",
-    );
+    const shopifySubscriptionReturn = getStoredRedirect("shopify-subscription-callback");
     if (shopifySubscriptionReturn) {
       void navigate({
         to: shopifySubscriptionReturn,
@@ -179,10 +161,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       return;
     }
 
-    const mergedCount = mergeInboxCountByAssignedTeams(
-      inboxCount,
-      filter.assignedTeams,
-    );
+    const mergedCount = mergeInboxCountByAssignedTeams(inboxCount, filter.assignedTeams);
     setTotalCount(mergedCount);
   }, [filter.assignedTeams, inboxCount, setTotalCount]);
 

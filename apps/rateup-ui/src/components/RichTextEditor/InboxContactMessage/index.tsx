@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import {
   Avatar,
   Checkbox,
@@ -19,14 +15,12 @@ import {
 } from "@mantine/core";
 import { RichTextEditor } from "@mantine/tiptap";
 import { IconAddressBook } from "@tabler/icons-react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "@/components/Button/RateupButtons.tsx";
+import { RateupButtonPrimary, RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
 import ContactPagination from "@/components/Contacts/ContactPagination.tsx";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
@@ -51,15 +45,10 @@ const InboxContactsControl = () => {
           inline
           size={16}
           position="top-end"
-          disabled={
-            !body.contacts.contactIds.length && !body.contacts.groupIds.length
-          }
+          disabled={!body.contacts.contactIds.length && !body.contacts.groupIds.length}
           label={`${body.contacts.contactIds.length} contacts, ${body.contacts.groupIds.length} groups selected`}
         >
-          <RichTextEditor.Control
-            title="Contacts"
-            onClick={() => setOpened((o) => !o)}
-          >
+          <RichTextEditor.Control title="Contacts" onClick={() => setOpened((o) => !o)}>
             <IconAddressBook size={16} />
           </RichTextEditor.Control>
         </Indicator>
@@ -85,13 +74,7 @@ enum ContactMethods {
   Group = "Group",
 }
 
-const SelectContacts = ({
-  submitbtnTitle,
-  onSubmit,
-  onCancel,
-  contactIds = [],
-  groupIds = [],
-}) => {
+const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], groupIds = [] }) => {
   const { t: translations } = useTranslation();
   const [selectedTab, setSelectedTab] = useState(ContactMethods.Individual);
   const [searchText, setSearchText] = useState("");
@@ -137,17 +120,8 @@ const SelectContacts = ({
           size="xs"
         />
         <Group gap={4}>
-          <RateupButtonSecondary
-            variant="light"
-            title="Cancel"
-            onClick={handleCancel}
-            size="xs"
-          />
-          <RateupButtonPrimary
-            title={submitbtnTitle}
-            onClick={handleSubmit}
-            size="xs"
-          />
+          <RateupButtonSecondary variant="light" title="Cancel" onClick={handleCancel} size="xs" />
+          <RateupButtonPrimary title={submitbtnTitle} onClick={handleSubmit} size="xs" />
         </Group>
       </Flex>
       <ContainedTextField
@@ -166,21 +140,14 @@ const SelectContacts = ({
       />
       <Group justify="space-between" mb={4}>
         <Title order={6}>
-          {translations("Select")} {selectedTab?.toLowerCase()} (Max 100
-          contacts/members)
+          {translations("Select")} {selectedTab?.toLowerCase()} (Max 100 contacts/members)
         </Title>
       </Group>
-      <ScrollArea
-        h={selectedTab === ContactMethods.Individual ? 280 : 342}
-        pr={"sm"}
-      >
+      <ScrollArea h={selectedTab === ContactMethods.Individual ? 280 : 342} pr={"sm"}>
         <Tabs value={selectedTab} color="var(--tertiary-color)">
           <Tabs.Panel value={ContactMethods.Individual}>
             {contacts.users?.length > 0 ? (
-              <Checkbox.Group
-                value={selectedContactIds}
-                onChange={setSelectedContactIds}
-              >
+              <Checkbox.Group value={selectedContactIds} onChange={setSelectedContactIds}>
                 {contacts.users.map((contact) => {
                   return <ContactSelectCard contact={contact} />;
                 })}
@@ -191,10 +158,7 @@ const SelectContacts = ({
           </Tabs.Panel>
           <Tabs.Panel value={ContactMethods.Group}>
             {groups?.length > 0 ? (
-              <Checkbox.Group
-                value={selectedGroupIds}
-                onChange={setSelectedGroupIds}
-              >
+              <Checkbox.Group value={selectedGroupIds} onChange={setSelectedGroupIds}>
                 {groups.map((group) => (
                   <ContactGroupSelectCard group={group} />
                 ))}
@@ -205,14 +169,13 @@ const SelectContacts = ({
           </Tabs.Panel>
         </Tabs>
       </ScrollArea>
-      {selectedTab === ContactMethods.Individual &&
-        contacts?.users?.length > 0 && (
-          <ContactPagination
-            pagination={pagination}
-            setPagination={setPagination}
-            totalPageCount={totalPageCount}
-          />
-        )}
+      {selectedTab === ContactMethods.Individual && contacts?.users?.length > 0 && (
+        <ContactPagination
+          pagination={pagination}
+          setPagination={setPagination}
+          totalPageCount={totalPageCount}
+        />
+      )}
     </Stack>
   );
 };

@@ -1,32 +1,16 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 import { schemaResolver, useForm } from "@mantine/form";
 import { useClickOutside, useScrollIntoView } from "@mantine/hooks";
 import axios from "axios";
 import { isValidPhoneNumber } from "libphonenumber-js";
-import {
-  ArrowRight,
-  Home,
-  MessageCircle,
-  Minus,
-  MoreHorizontal,
-  Send,
-  Smile,
-} from "lucide-react";
+import { ArrowRight, Home, MessageCircle, Minus, MoreHorizontal, Send, Smile } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 
-import { getBrowserId } from "@/lib/browserId.ts";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { getBrowserId } from "@/lib/browserId.ts";
 
 import PhoneInputWithCountry from "../input/PhoneInputWithCountry.tsx";
 import { parseWhatsAppToReact } from "../RichTextEditor/waTextEditor.tsx";
@@ -100,8 +84,7 @@ export default function SupportWidget({
   const ref = useClickOutside(() => setIsOpen(false));
   const API_URL = backendUrl || import.meta.env.VITE_API_URL;
   const WEBHOOK_URL =
-    webhookUrl ||
-    `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${browserId}/ws/${orgId}?role=fab`;
+    webhookUrl || `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${browserId}/ws/${orgId}?role=fab`;
   const queryParams = orgId ? `?orgId=${orgId}` : "";
 
   const form = useForm<z.infer<typeof supportSchema>>({
@@ -198,15 +181,11 @@ export default function SupportWidget({
     };
 
     try {
-      const res = await axios.post(
-        `${API_URL}/api/support/contact${queryParams}`,
-        values,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const res = await axios.post(`${API_URL}/api/support/contact${queryParams}`, values, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
       const newContactId = res.data;
       localStorage.setItem("support_contact_id", newContactId);
       localStorage.setItem("support_contact_name", values.phone);
@@ -220,10 +199,7 @@ export default function SupportWidget({
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent(`Hello! I need support.`);
-    window.open(
-      `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${message}`,
-      "_blank",
-    );
+    window.open(`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${message}`, "_blank");
   };
 
   const handleSendMessage = async () => {
@@ -233,9 +209,7 @@ export default function SupportWidget({
       // Send message to API
       try {
         const support_contact_id = localStorage.getItem("support_contact_id");
-        const support_contact_name = localStorage.getItem(
-          "support_contact_name",
-        );
+        const support_contact_name = localStorage.getItem("support_contact_name");
         const phone = support_contact_name;
         if (!support_contact_id) return;
         const timestamp = Math.floor(Date.now() / 1000);
@@ -291,14 +265,10 @@ export default function SupportWidget({
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/90">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-full bg-linear-to-br from-[#66D7FF] to-[#2D74E0] flex items-center justify-center">
-                  <span className="text-white font-bold text-base">
-                    {companyName[0]}
-                  </span>
+                  <span className="text-white font-bold text-base">{companyName[0]}</span>
                 </div>
                 <div>
-                  <div className="font-semibold text-foreground text-sm">
-                    {companyName} 👋
-                  </div>
+                  <div className="font-semibold text-foreground text-sm">{companyName} 👋</div>
                   <div className="text-xs text-muted-foreground">Support</div>
                 </div>
               </div>
@@ -320,16 +290,11 @@ export default function SupportWidget({
               <TabsContent value="contact" className="flex flex-col">
                 {currentStep === 1 && !contactId && (
                   <div className="px-4 py-6 space-y-6 animate-fade-in">
-                    <h2 className="text-lg font-bold text-foreground mb-1">
-                      Welcome!
-                    </h2>
+                    <h2 className="text-lg font-bold text-foreground mb-1">Welcome!</h2>
                     <p className="text-muted-foreground mb-4 text-sm">
                       Let us know how we can help you today.
                     </p>
-                    <form
-                      onSubmit={form.onSubmit(handleNext)}
-                      className="space-y-3"
-                    >
+                    <form onSubmit={form.onSubmit(handleNext)} className="space-y-3">
                       <div className="relative">
                         <Label className="text-xs font-medium text-muted-foreground mb-1">
                           Name <span className="text-orange-500">*</span>
@@ -343,9 +308,7 @@ export default function SupportWidget({
                           />
                         </div>
                         {form.errors.name && (
-                          <div className="text-xs text-red-500 mt-1">
-                            {form.errors.name}
-                          </div>
+                          <div className="text-xs text-red-500 mt-1">{form.errors.name}</div>
                         )}
                       </div>
                       <div className="relative">
@@ -365,9 +328,7 @@ export default function SupportWidget({
                           />
                         </div>
                         {form.errors.phone && (
-                          <div className="text-xs text-red-500 mt-1">
-                            {form.errors.phone}
-                          </div>
+                          <div className="text-xs text-red-500 mt-1">{form.errors.phone}</div>
                         )}
                       </div>
                       <div className="relative">
@@ -385,17 +346,13 @@ export default function SupportWidget({
                           />
                         </div>
                         {form.errors.email && (
-                          <div className="text-xs text-red-500 mt-1">
-                            {form.errors.email}
-                          </div>
+                          <div className="text-xs text-red-500 mt-1">{form.errors.email}</div>
                         )}
                       </div>
                       <div className="flex justify-end pt-2">
                         <Button
                           type="submit"
-                          disabled={
-                            form.isDirty && Object.keys(form.errors).length > 0
-                          }
+                          disabled={form.isDirty && Object.keys(form.errors).length > 0}
                           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-full shadow disabled:opacity-50 text-xs h-8 min-w-[70px] transition-transform duration-200 hover:scale-105"
                           size="sm"
                         >
@@ -408,18 +365,14 @@ export default function SupportWidget({
                 {contactId && (
                   <>
                     <div className="flex-1 ">
-                      <div
-                        style={{ maxHeight: 370, overflowX: "scroll" }}
-                        ref={scrollableRef}
-                      >
+                      <div style={{ maxHeight: 370, overflowX: "scroll" }} ref={scrollableRef}>
                         <div className="py-4 pr-2 space-y-3 animate-fade-in">
                           {messages.map((message) => (
                             <div
                               key={message.id}
                               className={`flex items-end gap-2 ${message.messageBody?.exchangeProcess === "receive" ? "justify-end" : ""}`}
                             >
-                              {message.messageBody?.exchangeProcess ===
-                                "send" && (
+                              {message.messageBody?.exchangeProcess === "send" && (
                                 <div className="h-7 w-7 rounded-full bg-linear-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shrink-0 animate-pop-in">
                                   <div className="h-3 w-3 bg-white rounded-sm"></div>
                                 </div>
@@ -432,8 +385,7 @@ export default function SupportWidget({
                                 >
                                   <p className="leading-relaxed">
                                     {parseWhatsAppToReact(
-                                      message.messageBody?.receive
-                                        ?.messages?.[0]?.text?.body ||
+                                      message.messageBody?.receive?.messages?.[0]?.text?.body ||
                                         message.messageBody?.send?.text?.body,
                                     )}
                                   </p>
@@ -451,9 +403,7 @@ export default function SupportWidget({
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Type your message..."
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && handleSendMessage()
-                          }
+                          onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                         />
                         <Button size="sm">
                           <Send className="h-3 w-3" />
@@ -475,8 +425,8 @@ export default function SupportWidget({
                     </span>
                   </div>
                   <p className="text-muted-foreground text-center text-sm mb-4">
-                    Start a conversation using the button below and we will try
-                    to reply as soon as possible.
+                    Start a conversation using the button below and we will try to reply as soon as
+                    possible.
                   </p>
                   <Button
                     onClick={handleWhatsAppClick}

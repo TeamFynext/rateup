@@ -14,12 +14,7 @@ const NextPrevFuncsAndLastQuestionContext = createContext({
   isFirstQuestion: false,
 });
 
-function NextPrevFuncsAndLastQuestionContextProvider({
-  nextFn,
-  prevFn,
-  survey,
-  children,
-}) {
+function NextPrevFuncsAndLastQuestionContextProvider({ nextFn, prevFn, survey, children }) {
   const { selectedQ } = useContext(SelectedQContext);
 
   const firstQuestion = getFirstQuestion(survey);

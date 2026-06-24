@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -24,6 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
@@ -39,13 +38,7 @@ import { Checkbox } from "../ui/checkbox.tsx";
 import { Input } from "../ui/input.tsx";
 import { Label } from "../ui/label.tsx";
 import { Loader } from "../ui/loader.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import AppleSignInButton from "./AppleSigninButton.tsx";
 import { AuthHeader } from "./AuthHeader.tsx";
 import GoogleSignInButton from "./GoogleSigninButton.tsx";
@@ -60,7 +53,7 @@ const signUpType = {
 export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [signUpTypeValue, setSignUpTypeValue] = useState("");
+  const [signUpTypeValue] = useState("");
   const { t: translations } = useTranslation();
 
   const signUpSchema =
@@ -70,9 +63,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
             .string()
             .min(1, translations("Phone number is required"))
             .refine(
-              (val) =>
-                signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE ||
-                isValidPhoneNumber(val),
+              (val) => signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE || isValidPhoneNumber(val),
               { message: translations("Enter a valid phone number") },
             ),
           orgName: z.string().min(1, translations("Business name is required")),
@@ -90,18 +81,11 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
             .min(1, translations("Email is required")),
           password: z
             .string()
-            .min(
-              5,
-              translations("Password should be at least 5 characters long"),
-            )
+            .min(5, translations("Password should be at least 5 characters long"))
             .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
-              message: translations(
-                "Password should contain at least one letter and one number",
-              ),
+              message: translations("Password should contain at least one letter and one number"),
             }),
-          confirmPassword: z
-            .string()
-            .min(1, translations("Confirm password is required")),
+          confirmPassword: z.string().min(1, translations("Confirm password is required")),
           name: z.string().min(1, translations("Name is required")),
           orgName: z.string().min(1, translations("Business name is required")),
           website: z.string().optional(),
@@ -131,9 +115,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
   });
 
   useEffect(() => {
-    const newUserFromPricingPage = localStorage.getItem(
-      "newUserFromPricingPage",
-    );
+    const newUserFromPricingPage = localStorage.getItem("newUserFromPricingPage");
     if (newUserFromPricingPage) {
       const data = JSON.parse(newUserFromPricingPage);
       signupForm.reset({
@@ -221,22 +203,19 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
       case 1:
         return (
           <div className="text-primary flex items-center gap-1">
-            <UserPlus size={12} strokeWidth={2.5} />{" "}
-            <span className="text-xs">Get started</span>
+            <UserPlus size={12} strokeWidth={2.5} /> <span className="text-xs">Get started</span>
           </div>
         );
       case 2:
         return (
           <div className="text-primary flex items-center gap-1">
-            <Briefcase size={12} strokeWidth={2.5} />{" "}
-            <span className="text-xs">Your business</span>
+            <Briefcase size={12} strokeWidth={2.5} /> <span className="text-xs">Your business</span>
           </div>
         );
       case 3:
         return (
           <div className="text-primary flex items-center gap-1">
-            <Sparkles size={12} strokeWidth={2.5} />{" "}
-            <span className="text-xs">Personalize</span>
+            <Sparkles size={12} strokeWidth={2.5} /> <span className="text-xs">Personalize</span>
           </div>
         );
       default:
@@ -275,10 +254,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
                 const isActive = index === currentStep - 1;
 
                 return (
-                  <div
-                    key={index}
-                    className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden"
-                  >
+                  <div key={index} className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <motion.div
                       className={`h-full bg-primary ${isActive ? "shadow-md" : ""}`}
                       initial={{ scaleX: 0 }}
@@ -296,9 +272,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
           </div>
           <Card className="p-6 shadow-sm border border-gray-200 mb-8">
             <div className="flex flex-col">
-              <p className="text-sm font-semibold capitalize text-primary">
-                {getStepShortTitle()}
-              </p>
+              <p className="text-sm font-semibold capitalize text-primary">{getStepShortTitle()}</p>
               <h2 className="text-xl font-bold">{getStepTitle()}</h2>
               <p className="font-normal text-[11px]">{getStepSubtitle()}</p>
             </div>
@@ -310,11 +284,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
               />
             )}
             {currentStep === 2 && (
-              <Step2
-                formData={signupForm}
-                handleBack={handleBack}
-                handleNext={handleNext}
-              />
+              <Step2 formData={signupForm} handleBack={handleBack} handleNext={handleNext} />
             )}
             {currentStep === 3 && (
               <Step3
@@ -334,9 +304,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
               }
               className="hover:text-gray-600 uppercase tracking-wider text-xs"
             >
-              <span className="uppercase tracking-wider text-xs">
-                Privacy Policy
-              </span>
+              <span className="uppercase tracking-wider text-xs">Privacy Policy</span>
             </button>
             <button
               onClick={() =>
@@ -346,17 +314,13 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
               }
               className="hover:text-gray-600 uppercase tracking-wider text-xs"
             >
-              <span className="uppercase tracking-wider text-xs">
-                Terms of Service
-              </span>
+              <span className="uppercase tracking-wider text-xs">Terms of Service</span>
             </button>
             <button
               className="hover:text-gray-600 uppercase tracking-wider text-xs"
               onClick={() => window.open("https://docs.rateup.app", "_blank")}
             >
-              <span className="uppercase tracking-wider text-xs">
-                Help Center
-              </span>
+              <span className="uppercase tracking-wider text-xs">Help Center</span>
             </button>
           </div>
         </div>
@@ -582,7 +546,7 @@ export function Step1({ formData, handleNext, authType }) {
                         type={showPassword ? "text" : "password"}
                         placeholder="Create a strong password"
                         onFocus={() => setIsPasswordFocused(true)}
-                        onBlur={(e) => {
+                        onBlur={(_e) => {
                           field.onBlur();
                           setIsPasswordFocused(false);
                         }}
@@ -595,11 +559,7 @@ export function Step1({ formData, handleNext, authType }) {
                     onClick={() => setShowPassword((prev) => !prev)}
                     className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -628,9 +588,7 @@ export function Step1({ formData, handleNext, authType }) {
                         d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    {translations(
-                      "Your password must meet all security requirements",
-                    )}
+                    {translations("Your password must meet all security requirements")}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -648,30 +606,19 @@ export function Step1({ formData, handleNext, authType }) {
                     {translations("Password must have")}:
                     <ul className="list-none mt-0.5 sm:mt-1 space-y-0.5 sm:space-y-1">
                       {rules.map((rule) => (
-                        <li
-                          key={rule.label}
-                          className="flex items-center space-x-1"
-                        >
+                        <li key={rule.label} className="flex items-center space-x-1">
                           {rule.valid ? (
                             <span className="text-green-600">
-                              <Check
-                                size={16}
-                                className="sm:w-[18px] sm:h-[18px]"
-                              />
+                              <Check size={16} className="sm:w-[18px] sm:h-[18px]" />
                             </span>
                           ) : (
                             <span className="text-gray-400">
-                              <Dot
-                                size={16}
-                                className="sm:w-[18px] sm:h-[18px]"
-                              />
+                              <Dot size={16} className="sm:w-[18px] sm:h-[18px]" />
                             </span>
                           )}
                           <span
                             className={
-                              rule.valid
-                                ? "text-gray-800 dark:text-gray-100"
-                                : "text-gray-500"
+                              rule.valid ? "text-gray-800 dark:text-gray-100" : "text-gray-500"
                             }
                           >
                             {rule.label}
@@ -695,10 +642,7 @@ export function Step1({ formData, handleNext, authType }) {
             onCheckedChange={(checked) => setAgreesToTerms(checked as boolean)}
             className="border-2 border-gray-300 h-4 w-4 shrink mt-0.5"
           />
-          <Label
-            htmlFor="terms"
-            className="text-xs leading-relaxed cursor-pointer"
-          >
+          <Label htmlFor="terms" className="text-xs leading-relaxed cursor-pointer">
             I agree to the{" "}
             <button
               onClick={() =>
@@ -990,11 +934,7 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
               key={goal.id}
               onClick={() => handleGoalToggle(goal.id)}
               className={`relative p-3 rounded-xl border cursor-pointer transition-all
-          ${
-            isActive
-              ? "border-primary bg-blue-50"
-              : "border-gray-300 hover:border-gray-400"
-          }`}
+          ${isActive ? "border-primary bg-blue-50" : "border-gray-300 hover:border-gray-400"}`}
             >
               {/* Top Right Circle */}
               <div
@@ -1008,25 +948,17 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
                   className={`w-8 h-8 rounded-md flex items-center justify-center
             ${isActive ? "bg-primary" : "bg-gray-100"}`}
                 >
-                  <goal.icon
-                    className={`w-4 h-4 ${
-                      isActive ? "text-white" : "text-gray-500"
-                    }`}
-                  />
+                  <goal.icon className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-500"}`} />
                 </div>
 
                 {/* Title */}
-                <p
-                  className={`text-xs font-medium max-w-30 ${isActive && "text-gray-900"}`}
-                >
+                <p className={`text-xs font-medium max-w-30 ${isActive && "text-gray-900"}`}>
                   {goal.label}
                 </p>
               </div>
 
               {/* Description */}
-              <p className="text-[11px] text-gray-500 mt-1 leading-snug">
-                {goal.description}
-              </p>
+              <p className="text-[11px] text-gray-500 mt-1 leading-snug">{goal.description}</p>
             </div>
           );
         })}

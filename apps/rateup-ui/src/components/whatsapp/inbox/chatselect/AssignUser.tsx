@@ -1,11 +1,7 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { WaMessageAssignStatus } from "@/types/enums.ts";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useBulkAssignInboxToUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
@@ -22,11 +18,11 @@ import {
 } from "@/components/ui/select.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
   const { user } = useUser();
-  const { data: teamMembers, isLoading: membersLoading } =
-    useTeamsMembersOfOrg();
+  const { data: teamMembers, isLoading: membersLoading } = useTeamsMembersOfOrg();
   const { data: teamsRes, isLoading: teamsLoading } = useTeamsByUser();
   const { updateContactById } = useContactsStore();
   const [actionType, setActionType] = useState<"assign" | "self" | null>(null);
@@ -156,11 +152,7 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
         {membersLoading ? (
           <Skeleton className="h-10 w-full rounded-md" />
         ) : (
-          <Select
-            value={selectedUser}
-            onValueChange={setSelectedUser}
-            disabled={!selectedTeam}
-          >
+          <Select value={selectedUser} onValueChange={setSelectedUser} disabled={!selectedTeam}>
             <SelectTrigger className="h-10 w-full">
               <SelectValue placeholder={t("Select team member")} />
             </SelectTrigger>
@@ -188,9 +180,7 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
         {/* PRIMARY ACTION */}
         <Button
           onClick={handleAssign}
-          disabled={
-            !selectedTeam || !selectedUser || bulkAssignMutation.isPending
-          }
+          disabled={!selectedTeam || !selectedUser || bulkAssignMutation.isPending}
           className="w-full h-10 flex items-center justify-center gap-2"
         >
           {bulkAssignMutation.isPending && actionType === "assign" && (

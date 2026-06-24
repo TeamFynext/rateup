@@ -1,7 +1,3 @@
-"use client";
-
-import React from "react";
-
 import {
   ActionIcon,
   Avatar,
@@ -16,17 +12,14 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronRight, IconUserPlus } from "@tabler/icons-react";
+import React from "react";
 
-import type { WaSendMessageBody } from "@/types/global";
 import { useImportCSVContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import CreateContactModal from "@/components/Contacts/CreateContactModal.tsx";
+import type { WaSendMessageBody } from "@/types/global";
 import { importMethod } from "@/utils/enums/index.ts";
 
-const WaInboxContact = ({
-  messageContent,
-}: {
-  messageContent: WaSendMessageBody["contacts"];
-}) => {
+const WaInboxContact = ({ messageContent }: { messageContent: WaSendMessageBody["contacts"] }) => {
   const contacts = [...messageContent];
   const [opened, { open, close }] = useDisclosure(false);
   if (contacts.length === 1) {
@@ -38,23 +31,15 @@ const WaInboxContact = ({
       <Group gap={"xs"}>
         <Avatar size={"sm"} />
         <Text>
-          {contacts[0].name
-            ? contacts[0].name.formatted_name
-            : contacts[0].phones[0].phone}{" "}
-          and {contacts.length - 1} other contacts
+          {contacts[0].name ? contacts[0].name.formatted_name : contacts[0].phones[0].phone} and{" "}
+          {contacts.length - 1} other contacts
         </Text>
       </Group>
       <Divider />
       <Button variant="transparent" onClick={open}>
         View All
       </Button>
-      <Modal
-        opened={opened}
-        onClose={close}
-        title={"All contacts"}
-        centered
-        zIndex={2}
-      >
+      <Modal opened={opened} onClose={close} title={"All contacts"} centered zIndex={2}>
         {contacts?.map((contact, index) => (
           <>
             <Contact contact={contact} />
@@ -92,11 +77,7 @@ const Contact = ({
         <Group justify="space-between">
           <Group gap={"xs"} p={"5px"}>
             <Avatar size={"sm"} />
-            <Text>
-              {contact.name
-                ? contact.name.formatted_name
-                : contact.phones[0].phone}
-            </Text>
+            <Text>{contact.name ? contact.name.formatted_name : contact.phones[0].phone}</Text>
           </Group>
           <Popover position="right" zIndex={2}>
             <Popover.Target>
@@ -105,11 +86,7 @@ const Contact = ({
               </ActionIcon>
             </Popover.Target>
             <Popover.Dropdown>
-              <ContactInfo
-                contact={contact}
-                showAddtoContact={!showAddtoContact}
-                open={open}
-              />
+              <ContactInfo contact={contact} showAddtoContact={!showAddtoContact} open={open} />
             </Popover.Dropdown>
           </Popover>
         </Group>
@@ -159,18 +136,10 @@ const ContactInfo = ({
       <Group justify="space-between">
         <Group gap={"xs"}>
           <Avatar size={"sm"} />
-          <Text>
-            {contact.name
-              ? contact.name.formatted_name
-              : contact.phones[0].phone}
-          </Text>
+          <Text>{contact.name ? contact.name.formatted_name : contact.phones[0].phone}</Text>
         </Group>
         {showAddtoContact && (
-          <Button
-            bd={0}
-            onClick={open}
-            leftSection={<IconUserPlus size={16} />}
-          >
+          <Button bd={0} onClick={open} leftSection={<IconUserPlus size={16} />}>
             Add to contact
           </Button>
         )}

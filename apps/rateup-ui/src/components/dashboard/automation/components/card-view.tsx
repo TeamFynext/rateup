@@ -1,14 +1,10 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { IconFolderCode } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { Rule } from "@/types/rule.ts";
 import { GenericCardGrid } from "@/components/common/generic-card.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
@@ -23,6 +19,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import type { Rule } from "@/types/rule.ts";
 
 import { RuleCard } from "./rule-card.tsx";
 
@@ -33,12 +30,7 @@ interface CardViewProps {
   onDelete: (id: string) => void;
 }
 
-export function CardView({
-  data,
-  viewMode,
-  onToggleActive,
-  onDelete,
-}: Readonly<CardViewProps>) {
+export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<CardViewProps>) {
   const [deleteDialogOpened, setDeleteDialogOpened] = useState(false);
   const [ruleToDelete, setRuleToDelete] = useState<string | null>(null);
   const { t: translations } = useTranslation();
@@ -51,12 +43,8 @@ export function CardView({
         header: "Name",
         cell: ({ row }) => (
           <div className="flex flex-col">
-            <span className="font-medium text-foreground">
-              {row.original.name}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {row.original.triggerEvent}
-            </span>
+            <span className="font-medium text-foreground">{row.original.name}</span>
+            <span className="text-xs text-muted-foreground">{row.original.triggerEvent}</span>
           </div>
         ),
       },
@@ -84,9 +72,7 @@ export function CardView({
         id: "actions",
         header: "Actions",
         cell: ({ row }) => (
-          <span className="text-sm font-semibold">
-            {row.original.actions?.length || 0}
-          </span>
+          <span className="text-sm font-semibold">{row.original.actions?.length || 0}</span>
         ),
       },
       {
@@ -155,8 +141,8 @@ export function CardView({
               </EmptyMedia>
               <EmptyTitle>No Automation Yet</EmptyTitle>
               <EmptyDescription>
-                You haven&apos;t created any automation yet. Get started by
-                creating your first automation.
+                You haven&apos;t created any automation yet. Get started by creating your first
+                automation.
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>

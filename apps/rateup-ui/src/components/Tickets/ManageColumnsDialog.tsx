@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-
 import { Columns3, GripVertical, Plus, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { Column as ColumnType } from "./types.ts";
@@ -33,7 +32,7 @@ export function ManageColumnsDialog({
 
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [, setEditingId] = useState<string | null>(null);
   const [addingNew, setAddingNew] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newColor, setNewColor] = useState("#8B8E8A");
@@ -51,9 +50,7 @@ export function ManageColumnsDialog({
   }, [columns]);
 
   const updateCol = (id: string, patch: Partial<(typeof localCols)[0]>) => {
-    setLocalCols((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...patch } : c)),
-    );
+    setLocalCols((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   };
 
   const deleteCol = (id: string, isNew?: boolean) => {
@@ -123,10 +120,7 @@ export function ManageColumnsDialog({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div
-          className="flex items-center gap-3 shrink-0"
-          style={{ padding: "24px 28px 0" }}
-        >
+        <div className="flex items-center gap-3 shrink-0" style={{ padding: "24px 28px 0" }}>
           <div
             className="w-[42px] h-[42px] rounded-xl flex items-center justify-center"
             style={{ background: "#1C518E18" }}
@@ -150,10 +144,7 @@ export function ManageColumnsDialog({
         </div>
 
         {/* Column list */}
-        <div
-          className="flex-1 overflow-y-auto"
-          style={{ padding: "20px 28px" }}
-        >
+        <div className="flex-1 overflow-y-auto" style={{ padding: "20px 28px" }}>
           <div className="flex flex-col gap-2">
             {localCols.map((col, idx) => (
               <div
@@ -169,10 +160,8 @@ export function ManageColumnsDialog({
                 className="group flex items-center gap-2.5 rounded-[10px] border transition-all duration-150"
                 style={{
                   padding: "10px 12px",
-                  background:
-                    dragOverIdx === idx ? "var(--muted)" : "var(--background)",
-                  borderColor:
-                    dragOverIdx === idx ? "var(--primary)" : "var(--border)",
+                  background: dragOverIdx === idx ? "var(--muted)" : "var(--background)",
+                  borderColor: dragOverIdx === idx ? "var(--primary)" : "var(--border)",
                   opacity: dragIdx === idx ? 0.4 : 1,
                 }}
               >
@@ -296,8 +285,7 @@ export function ManageColumnsDialog({
             className="font-body text-[13px] font-semibold text-primary-foreground bg-primary border-none rounded-[7px] cursor-pointer flex items-center gap-[5px] disabled:opacity-45 hover:opacity-90"
             style={{
               padding: "8px 16px",
-              boxShadow:
-                "0 1px 2px rgba(11,31,72,.12),0 4px 12px rgba(28,81,142,.16)",
+              boxShadow: "0 1px 2px rgba(11,31,72,.12),0 4px 12px rgba(28,81,142,.16)",
             }}
           >
             <Columns3 size={14} strokeWidth={2} /> {t("Save Columns")}

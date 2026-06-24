@@ -1,5 +1,3 @@
-"use client";
-
 import { useContext } from "react";
 
 import { WaFlowFormElementType } from "@/types/enums.ts";
@@ -13,10 +11,7 @@ import { FlowTextDetailedView } from "./FlowTextDetailedView.tsx";
 export function FlowNonQuestionDetailedView() {
   const { selectedFormElementId, flowJson } = useContext(EditFlowContext);
 
-  const selectedFormElement = getFlowFormElementById(
-    selectedFormElementId,
-    flowJson,
-  );
+  const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
 
   switch (selectedFormElement.type) {
     case WaFlowFormElementType.image:

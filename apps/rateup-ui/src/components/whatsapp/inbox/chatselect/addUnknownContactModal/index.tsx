@@ -1,10 +1,7 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
@@ -26,9 +23,7 @@ interface UnknownContactModalProps {
   successCallback?: (contact: ContactsData) => void;
   triggerType?: "action_button" | "card";
 }
-export default function AddUnknownContactModal(
-  props: UnknownContactModalProps,
-) {
+export default function AddUnknownContactModal(props: UnknownContactModalProps) {
   const { successCallback, ...rest } = props;
   const [opened, { open, close: onClose }] = useDisclosure(false);
   const { t: translations } = useTranslation();
@@ -79,8 +74,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
       source: importMethod.MANUAL,
     },
     validate: {
-      name: (value) =>
-        value && value.length ? null : translations("Name cannot be blank"),
+      name: (value) => (value && value.length ? null : translations("Name cannot be blank")),
       phone: (value) =>
         !value
           ? translations("Phone Number cannot be blank")
@@ -151,22 +145,15 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
           <Label htmlFor="fullName">
             {translations("Full Name")} <span className="text-red-500">*</span>
           </Label>
-          <Input
-            id="fullName"
-            placeholder="Enter contact name"
-            {...form.getInputProps("name")}
-          />
-          {nameError && (
-            <p className="text-xs text-red-500 mt-1">{nameError}</p>
-          )}
+          <Input id="fullName" placeholder="Enter contact name" {...form.getInputProps("name")} />
+          {nameError && <p className="text-xs text-red-500 mt-1">{nameError}</p>}
         </div>
 
         {/* two-column row: WhatsApp + Email */}
         <div className="flex items-center justify-center gap-4">
           <div className="flex flex-col gap-1">
             <Label htmlFor="whatsapp">
-              {translations("WhatsApp Number")}{" "}
-              <span className="text-red-500">*</span>
+              {translations("WhatsApp Number")} <span className="text-red-500">*</span>
             </Label>
             <PhoneInput
               international
@@ -175,21 +162,13 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
               onChange={(val) => form.setFieldValue("phone", val || "")}
               className="border-2 border-gray-200 focus:border-rateup-blue focus-within:ring-2 focus-within:ring-rateup-blue/20 rounded-md px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm bg-white [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full"
             />
-            {phoneError && (
-              <p className="text-xs text-red-500 mt-1">{phoneError}</p>
-            )}
+            {phoneError && <p className="text-xs text-red-500 mt-1">{phoneError}</p>}
           </div>
 
           <div className="flex flex-col gap-1">
             <Label htmlFor="email">{translations("Email Address")}</Label>
-            <Input
-              id="email"
-              placeholder="contact@email.com"
-              {...form.getInputProps("email")}
-            />
-            {emailError && (
-              <p className="text-xs text-red-500 mt-1">{emailError}</p>
-            )}
+            <Input id="email" placeholder="contact@email.com" {...form.getInputProps("email")} />
+            {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
           </div>
         </div>
         <div className="flex flex-col gap-1">
@@ -209,9 +188,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
           >
             <IconBrandWhatsapp color="white" size={28} />
             <span className="font-semibold">
-              {loading
-                ? translations("Please wait..")
-                : translations("Start Conversation")}
+              {loading ? translations("Please wait..") : translations("Start Conversation")}
             </span>
           </Button>
         </div>

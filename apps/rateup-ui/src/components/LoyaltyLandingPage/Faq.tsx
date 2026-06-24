@@ -82,11 +82,7 @@ function FAQItem({ q, a }: Readonly<{ q: string; a: string }>) {
 
 export default function Faq() {
   return (
-    <section
-      className={`${styles.faq} ${styles["on-dark"]}`}
-      id="faq"
-      data-screen-label="FAQ"
-    >
+    <section className={`${styles.faq} ${styles["on-dark"]}`} id="faq" data-screen-label="FAQ">
       <div className={styles.wrap}>
         <div className={`${styles["sec-head"]} ${styles.reveal}`}>
           <h2>Frequently Asked Questions</h2>

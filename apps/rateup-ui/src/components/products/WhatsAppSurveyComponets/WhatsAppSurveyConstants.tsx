@@ -1,12 +1,5 @@
 import { IconGps } from "@tabler/icons-react";
-import {
-  BarChart3,
-  ChartBar,
-  Coins,
-  Funnel,
-  Layers,
-  Settings,
-} from "lucide-react";
+import { BarChart3, ChartBar, Coins, Funnel, Layers, Settings } from "lucide-react";
 
 import { imagesPath } from "@/utils/constants.ts";
 
@@ -24,8 +17,7 @@ export const Surveysteps = [
   {
     number: 2,
     title: "Define Destination",
-    description:
-      "Link to surveys, landing pages, forms, websites, or social media.",
+    description: "Link to surveys, landing pages, forms, websites, or social media.",
     icon: <IconGps size={32} />,
   },
   {

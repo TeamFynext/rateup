@@ -1,9 +1,6 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   useDeleteInstagramPersistentMenuMutation,
@@ -60,9 +57,7 @@ function InstagramPersistentMenuPage() {
   );
 }
 
-function PersistentMenuEditor({
-  waSettingId,
-}: Readonly<{ waSettingId: string }>) {
+function PersistentMenuEditor({ waSettingId }: Readonly<{ waSettingId: string }>) {
   const { data } = useInstagramProfile(waSettingId);
   const setMutation = useSetInstagramPersistentMenuMutation(waSettingId);
   const syncMutation = useSyncInstagramPersistentMenuMutation(waSettingId);
@@ -93,15 +88,10 @@ function PersistentMenuEditor({
     );
   }, [data]);
 
-  const canSave = useMemo(
-    () => items.some((item) => item.title.trim().length > 0),
-    [items],
-  );
+  const canSave = useMemo(() => items.some((item) => item.title.trim().length > 0), [items]);
 
   const updateItem = (index: number, patch: Partial<DraftMenuItem>) => {
-    setItems((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, ...patch } : item)),
-    );
+    setItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
   };
 
   const save = () => {
@@ -127,10 +117,9 @@ function PersistentMenuEditor({
     <div className="space-y-4">
       <Alert>
         <AlertDescription>
-          The persistent menu is not updated in real time — existing
-          conversations must refresh their inbox to see changes. Limit menu
-          items to 5 for the best user experience. Use descriptive titles that
-          highlight your core features. Requires Messenger API support for
+          The persistent menu is not updated in real time — existing conversations must refresh
+          their inbox to see changes. Limit menu items to 5 for the best user experience. Use
+          descriptive titles that highlight your core features. Requires Messenger API support for
           Instagram v226+ on iOS or Android.
         </AlertDescription>
       </Alert>
@@ -139,22 +128,17 @@ function PersistentMenuEditor({
         <CardHeader className="border-b">
           <CardTitle className="text-base">Menu entries</CardTitle>
           <CardDescription>
-            Use <strong>postback</strong> items for in-conversation actions
-            (triggers a webhook with the payload you define) and{" "}
-            <strong>web URL</strong> items for off-platform links.
+            Use <strong>postback</strong> items for in-conversation actions (triggers a webhook with
+            the payload you define) and <strong>web URL</strong> items for off-platform links.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
-          <p className="text-muted-foreground text-xs">
-            {items.length}/5 menu items
-          </p>
+          <p className="text-muted-foreground text-xs">{items.length}/5 menu items</p>
 
           {items.map((item, index) => (
             <div key={item.id} className="space-y-3 rounded-xl border p-4">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-sm font-medium">
-                  Item {index + 1}
-                </span>
+                <span className="text-muted-foreground text-sm font-medium">Item {index + 1}</span>
                 <Button
                   type="button"
                   variant="ghost"
@@ -179,12 +163,8 @@ function PersistentMenuEditor({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="postback">
-                      Postback — triggers a webhook
-                    </SelectItem>
-                    <SelectItem value="web_url">
-                      Web URL — opens a link
-                    </SelectItem>
+                    <SelectItem value="postback">Postback — triggers a webhook</SelectItem>
+                    <SelectItem value="web_url">Web URL — opens a link</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -194,9 +174,7 @@ function PersistentMenuEditor({
                 <Input
                   value={item.title}
                   placeholder="e.g. Talk to an agent"
-                  onChange={(event) =>
-                    updateItem(index, { title: event.target.value })
-                  }
+                  onChange={(event) => updateItem(index, { title: event.target.value })}
                 />
               </div>
 
@@ -206,13 +184,10 @@ function PersistentMenuEditor({
                   <Textarea
                     value={item.payload}
                     placeholder="e.g. CARE_HELP"
-                    onChange={(event) =>
-                      updateItem(index, { payload: event.target.value })
-                    }
+                    onChange={(event) => updateItem(index, { payload: event.target.value })}
                   />
                   <p className="text-muted-foreground text-xs">
-                    Sent to your webhook when the user taps this item. You have
-                    24 hours to respond.
+                    Sent to your webhook when the user taps this item. You have 24 hours to respond.
                   </p>
                 </div>
               ) : (
@@ -222,9 +197,7 @@ function PersistentMenuEditor({
                     value={item.url}
                     placeholder="https://www.example.com/"
                     type="url"
-                    onChange={(event) =>
-                      updateItem(index, { url: event.target.value })
-                    }
+                    onChange={(event) => updateItem(index, { url: event.target.value })}
                   />
                 </div>
               )}
@@ -252,11 +225,7 @@ function PersistentMenuEditor({
               <IconPlus className="mr-2 h-4 w-4" />
               Add item
             </Button>
-            <Button
-              type="button"
-              onClick={save}
-              disabled={!canSave || setMutation.isPending}
-            >
+            <Button type="button" onClick={save} disabled={!canSave || setMutation.isPending}>
               Save to DB
             </Button>
             <Button

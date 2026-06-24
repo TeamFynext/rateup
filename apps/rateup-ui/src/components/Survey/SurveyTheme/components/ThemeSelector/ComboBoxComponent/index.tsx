@@ -1,15 +1,7 @@
-"use client";
-
-import {
-  Combobox,
-  Input,
-  InputBase,
-  Loader,
-  ScrollArea,
-  useCombobox,
-} from "@mantine/core";
+import { Combobox, Input, InputBase, Loader, ScrollArea, useCombobox } from "@mantine/core";
 
 import RenderOption from "../RenderOption.tsx";
+
 import styles from "./ComboBoxComponent.module.css";
 
 function ComboBoxComponent({
@@ -52,9 +44,7 @@ function ComboBoxComponent({
   return (
     <Combobox
       classNames={{
-        ...{
-          dropdown: `${styles["dropdown"]}`,
-        },
+        dropdown: `${styles["dropdown"]}`,
         ...classNames,
       }}
       store={combobox}
@@ -72,9 +62,7 @@ function ComboBoxComponent({
           component="button"
           type="button"
           pointer
-          rightSection={
-            isLoading ? <Loader size={"1rem"} /> : <Combobox.Chevron />
-          }
+          rightSection={isLoading ? <Loader size={"1rem"} /> : <Combobox.Chevron />}
           rightSectionPointerEvents="none"
           onClick={() => combobox.toggleDropdown()}
           className={`${styles["combobox-input-base-root"]} ${className}`}

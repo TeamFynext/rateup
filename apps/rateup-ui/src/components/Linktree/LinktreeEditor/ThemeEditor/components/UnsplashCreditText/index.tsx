@@ -5,8 +5,7 @@ function UnsplashCreditText({ url }) {
   const author = params?.get("author");
   const username = params?.get("username");
   const unsplashUserProfileLink = `https://unsplash.com/@${username}?utm_source=Rateup&utm_medium=referral`;
-  const unsplashWebsiteLink =
-    "https://unsplash.com/?utm_source=Rateup&utm_medium=referral";
+  const unsplashWebsiteLink = "https://unsplash.com/?utm_source=Rateup&utm_medium=referral";
 
   return (
     <>

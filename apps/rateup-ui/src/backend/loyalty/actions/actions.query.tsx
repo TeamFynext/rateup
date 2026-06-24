@@ -39,10 +39,7 @@ const useCreateLoyaltyAction = () => {
       toast.success("Loyalty Action created successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          "Error in creating loyalty action. " + (error?.message ?? ""),
-      );
+      toast.error(error?.message || "Error in creating loyalty action. " + (error?.message ?? ""));
     },
   });
 };
@@ -68,18 +65,14 @@ type LoyaltyAction = {
 const useUpdateLoyaltyAction = (actionId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<LoyaltyAction, "type">) =>
-      updateLoyaltyAction(data, actionId),
+    mutationFn: (data: Omit<LoyaltyAction, "type">) => updateLoyaltyAction(data, actionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions", actionId] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions"] });
       toast.success("Loyalty Action updated successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          "Error in updating loyalty action. " + (error?.message ?? ""),
-      );
+      toast.error(error?.message || "Error in updating loyalty action. " + (error?.message ?? ""));
     },
   });
 };
@@ -118,7 +111,7 @@ const useBulkLoyaltyAction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: bulkLoyaltyAction,
-    onSuccess: (res: any) => {
+    onSuccess: (_res: any) => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
     },

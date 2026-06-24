@@ -1,7 +1,3 @@
-"use client";
-
-import { useCallback } from "react";
-
 import {
   IconAlertTriangle,
   IconBrandWhatsappFilled,
@@ -10,6 +6,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
+import { useCallback } from "react";
 
 import { useDeleteNotification } from "@/backend/notification/notification.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
@@ -43,10 +40,7 @@ const NotificationList = ({ close, data, isLoading }) => {
         return (
           <div className="flex flex-col gap-2">
             <p className="w-70 text-sm text-muted-foreground">
-              A chat from{" "}
-              <span className="font-medium text-foreground">
-                {data?.contactName}
-              </span>{" "}
+              A chat from <span className="font-medium text-foreground">{data?.contactName}</span>{" "}
               has been assigned to you.
               <Link
                 to={`/dashboard/inbox?tab=mine&contactId=${data?.contactId}`}
@@ -62,11 +56,8 @@ const NotificationList = ({ close, data, isLoading }) => {
         return (
           <div className="flex flex-col gap-2">
             <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
-              Chat from{" "}
-              <span className="font-medium text-foreground">
-                {data?.contactName}
-              </span>{" "}
-              has been closed.
+              Chat from <span className="font-medium text-foreground">{data?.contactName}</span> has
+              been closed.
               <Link
                 to={`/dashboard/inbox?tab=closed&contactId=${data?.contactId}`}
                 onClick={close}
@@ -82,10 +73,8 @@ const NotificationList = ({ close, data, isLoading }) => {
           <div className="flex flex-col gap-2">
             <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
               A ticket from board{" "}
-              <span className="font-medium text-foreground">
-                {data?.board_name}
-              </span>{" "}
-              has been assigned to you.
+              <span className="font-medium text-foreground">{data?.board_name}</span> has been
+              assigned to you.
               <Link
                 to={`/dashboard/tickets/${data?.cardId}`}
                 onClick={close}
@@ -101,9 +90,7 @@ const NotificationList = ({ close, data, isLoading }) => {
           <div className="flex flex-col gap-2">
             <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
               You were mentioned in a chat from{" "}
-              <span className="font-medium text-foreground">
-                {data?.contactName}
-              </span>{" "}
+              <span className="font-medium text-foreground">{data?.contactName}</span>{" "}
               <Link
                 to={`/dashboard/inbox?tab=mine&contactId=${data?.contactId}`}
                 onClick={close}
@@ -134,13 +121,8 @@ const NotificationList = ({ close, data, isLoading }) => {
           <div className="flex flex-col gap-2">
             <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
               Meta CAPI failed for{" "}
-              <span className="font-medium text-foreground">
-                {data?.contactName}
-              </span>
-              . Error:{" "}
-              <span className="font-medium text-destructive">
-                {data?.error}
-              </span>
+              <span className="font-medium text-foreground">{data?.contactName}</span>. Error:{" "}
+              <span className="font-medium text-destructive">{data?.error}</span>
             </p>
           </div>
         );
@@ -154,10 +136,7 @@ const NotificationList = ({ close, data, isLoading }) => {
       <ScrollArea className="h-[calc(100vh-180px)] px-2">
         <div className="flex flex-col gap-1">
           {data?.map((notification) => (
-            <div
-              key={notification?.id}
-              className="rounded-lg border border-border bg-muted/40 p-2"
-            >
+            <div key={notification?.id} className="rounded-lg border border-border bg-muted/40 p-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-start gap-2">
                   {getNotificationIcon(notification?.source)}

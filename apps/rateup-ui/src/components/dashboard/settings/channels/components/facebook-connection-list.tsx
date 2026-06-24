@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import { IconBrandFacebook } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -38,8 +35,7 @@ export function FacebookConnectionsList({
   waSettings: WaSettings | undefined;
 }>) {
   const { t: translations } = useTranslation();
-  const [selectedWaSettings, setSelectedWaSettings] =
-    useState<WaSetting | null>(null);
+  const [selectedWaSettings, setSelectedWaSettings] = useState<WaSetting | null>(null);
   const [openedFacebookModal, setOpenedFacebookModal] = useState(false);
   const upsertMutation = useUpsertWaSettingsMutation();
 
@@ -49,7 +45,7 @@ export function FacebookConnectionsList({
   };
 
   const disconnectFacebook = (setting: WaSetting) => {
-    const { id, ...rest } = setting;
+    const { ...rest } = setting;
 
     upsertMutation.mutate({
       ...rest,
@@ -68,13 +64,9 @@ export function FacebookConnectionsList({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold">
-          {translations("Facebook Messenger Connections")}
-        </h3>
+        <h3 className="text-lg font-semibold">{translations("Facebook Messenger Connections")}</h3>
         <p className="text-xs text-muted-foreground mt-1">
-          {translations(
-            "Connect Facebook Pages (Messenger) to your WhatsApp channels",
-          )}
+          {translations("Connect Facebook Pages (Messenger) to your WhatsApp channels")}
         </p>
       </div>
 
@@ -134,9 +126,7 @@ export function FacebookConnectionsList({
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle className="text-red-500">
-                              {translations(
-                                "Disconnect Facebook Page and Instagram?",
-                              )}
+                              {translations("Disconnect Facebook Page and Instagram?")}
                             </AlertDialogTitle>
 
                             <AlertDialogDescription>
@@ -147,9 +137,7 @@ export function FacebookConnectionsList({
                           </AlertDialogHeader>
 
                           <AlertDialogFooter>
-                            <AlertDialogCancel>
-                              {translations("Cancel")}
-                            </AlertDialogCancel>
+                            <AlertDialogCancel>{translations("Cancel")}</AlertDialogCancel>
 
                             <AlertDialogAction
                               onClick={() => disconnectFacebook(setting)}
@@ -173,9 +161,7 @@ export function FacebookConnectionsList({
                           <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wide mb-1">
                             {translations("Facebook Page Name")}
                           </p>
-                          <p className="text-sm font-medium">
-                            {setting.fbUserName}
-                          </p>
+                          <p className="text-sm font-medium">{setting.fbUserName}</p>
                         </div>
                       </div>
                     </>

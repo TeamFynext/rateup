@@ -1,10 +1,8 @@
-"use client";
-
 import type { SelectProps } from "@mantine/core";
 import { Skeleton } from "@mantine/core";
 
-import { WaFlowStatus } from "@/types/enums.ts";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { WaFlowStatus } from "@/types/enums.ts";
 
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput.tsx";
 

@@ -1,6 +1,5 @@
-import React from "react";
-
 import { Box, Flex, Stack, Text } from "@mantine/core";
+import React from "react";
 
 import PlanCard from "../Card/PlanCard.tsx";
 import { PlanCardWidth } from "../Utils/constants.ts";
@@ -26,8 +25,7 @@ export const CustomSection = ({
       },
     });
   }
-  const inversePeriod =
-    customPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
+  const inversePeriod = customPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
 
   const customPlans = [...customPlan];
 

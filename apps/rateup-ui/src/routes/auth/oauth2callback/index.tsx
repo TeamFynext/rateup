@@ -1,11 +1,6 @@
-import { useEffect, useState } from "react";
-
 import { Flex, Loader, Paper, Stack, Text, Title } from "@mantine/core";
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 import { useCreateAuthToken } from "@/backend/appsIntegration/integration.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
@@ -25,9 +20,7 @@ function AuthCallBack() {
   const mut = useCreateAuthToken();
 
   useEffect(() => {
-    setCallBackRoute(
-      JSON.parse(localStorage?.getItem("google-callback-route")),
-    );
+    setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route")));
     if (error) {
       navigate({
         to: callbackRoute,
@@ -38,9 +31,7 @@ function AuthCallBack() {
         {
           onSuccess: () => {
             setIsLoading(false);
-            setCallBackRoute(
-              JSON.parse(localStorage?.getItem("google-callback-route")),
-            );
+            setCallBackRoute(JSON.parse(localStorage?.getItem("google-callback-route")));
           },
         },
       );

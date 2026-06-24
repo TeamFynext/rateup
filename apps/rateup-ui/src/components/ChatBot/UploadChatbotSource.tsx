@@ -1,15 +1,12 @@
-"use client";
-
-import React, { useState } from "react";
-
 import { Stack } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { ChatBotDataSourceType } from "@/types/enums.ts";
 import { uploadFileForEmbed } from "@/backend/chatbot/chatbot.api";
 import { useUploadSourceForEmbed } from "@/backend/chatbot/chatbot.query";
+import { ChatBotDataSourceType } from "@/types/enums.ts";
 
 import { RateupButtonBlue } from "../Button/RateupButtons.tsx";
 import {
@@ -50,9 +47,7 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
         if (!file) return;
         if (file.size > 1048576 * 10)
           toast.loading(
-            translations(
-              "Hold on..file is getting uploaded. It may take few minutes",
-            ),
+            translations("Hold on..file is getting uploaded. It may take few minutes"),
             {
               id: "file-upload",
             },
@@ -83,12 +78,7 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
   };
 
   return (
-    <FormModalLayout
-      opened={opened}
-      onClose={close}
-      title={translations("Upload Source")}
-      centered
-    >
+    <FormModalLayout opened={opened} onClose={close} title={translations("Upload Source")} centered>
       <Stack gap={"sm"}>
         <ContainedSelection
           label={translations("Select Source")}

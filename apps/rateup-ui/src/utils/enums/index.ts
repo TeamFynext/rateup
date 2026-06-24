@@ -16,10 +16,6 @@ export const AuthMode = {
   VERIFY_PHONE_NO: "VERIFY_PHONE_NO",
 };
 
-const UserMode = {
-  GUEST: "GUEST",
-};
-
 export const UserRole = {
   SUPADM: "SUPER_ADMIN",
   ADM: "ADMIN",
@@ -64,9 +60,7 @@ export function getPageTypeLabel(type: PageType) {
       return false;
   }
 }
-export function getQuestionTypeLabel(
-  type: QuestionType | WaFlowFormNonInputElementType,
-) {
+export function getQuestionTypeLabel(type: QuestionType | WaFlowFormNonInputElementType) {
   switch (type) {
     case QuestionType.Rating:
       return "Rating";

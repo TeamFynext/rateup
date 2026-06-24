@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import { motion } from "motion/react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
@@ -21,8 +18,8 @@ export default function TestimonialCustomizer() {
   const previewText = (
     <>
       <div className="mb-4 text-xl font-medium leading-relaxed">
-        "The WhatsApp integration made collecting testimonials so simple. Our
-        response rate went through the roof!"
+        "The WhatsApp integration made collecting testimonials so simple. Our response rate went
+        through the roof!"
       </div>
       <div className="text-sm">John Smith, CEO at Acme Inc</div>
     </>
@@ -58,26 +55,18 @@ export default function TestimonialCustomizer() {
             viewport={{ once: true }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto"
           >
-            Customize the look and feel of your testimonials to seamlessly
-            integrate with your website
+            Customize the look and feel of your testimonials to seamlessly integrate with your
+            website
           </motion.p>
         </div>
 
         {/* Customization Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Left: Controls + Tabs */}
-          <Tabs
-            defaultValue="modern"
-            className="w-full"
-            onValueChange={setCustomTheme}
-          >
+          <Tabs defaultValue="modern" className="w-full" onValueChange={setCustomTheme}>
             <TabsList className="grid w-full  grid-cols-3 mb-6">
               {themes.map(({ value, label }) => (
-                <TabsTrigger
-                  className="cursor-pointer"
-                  key={value}
-                  value={value}
-                >
+                <TabsTrigger className="cursor-pointer" key={value} value={value}>
                   {label}
                 </TabsTrigger>
               ))}
@@ -135,9 +124,7 @@ export default function TestimonialCustomizer() {
                 </div>
               ))}
 
-              <Button className="w-full mt-4 bg-[#00397b] hover:bg-[#00397b]">
-                Apply Changes
-              </Button>
+              <Button className="w-full mt-4 bg-[#00397b] hover:bg-[#00397b]">Apply Changes</Button>
             </div>
 
             {/* Main Preview (for mobile) */}
@@ -145,9 +132,7 @@ export default function TestimonialCustomizer() {
 
           {/* Right: Static Preview (desktop only) */}
           <div className=" p-6 bg-white/60 dark:bg-black/60 backdrop-blur-sm rounded-xl border border-white/30 dark:border-white/10 shadow-soft">
-            <div className="text-sm font-medium text-muted-foreground mb-4">
-              Preview
-            </div>
+            <div className="text-sm font-medium text-muted-foreground mb-4">Preview</div>
             {customTheme === "modern" ? (
               <TestimonialCard
                 quote="The WhatsApp integration made collecting testimonials so simple. Our response rate went through the roof!"

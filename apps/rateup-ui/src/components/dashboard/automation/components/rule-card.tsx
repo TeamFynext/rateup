@@ -1,11 +1,7 @@
-"use client";
-
-import type { MouseEvent } from "react";
-
 import { IconDots } from "@tabler/icons-react";
 import { Trash2 } from "lucide-react";
+import type { MouseEvent } from "react";
 
-import type { Rule } from "@/types/rule.ts";
 import { GenericActionCard } from "@/components/common/generic-card.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -16,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import type { Rule } from "@/types/rule.ts";
 
 interface RuleCardProps {
   item: Rule;
@@ -23,14 +20,7 @@ interface RuleCardProps {
   onDelete: (e) => void;
 }
 
-export function RuleCard({
-  item,
-  onToggleActive,
-  onDelete,
-}: Readonly<RuleCardProps>) {
-  const conditionCount = item.groups[0]?.conditions?.length || 0;
-  const actionCount = item.actions?.length || 0;
-
+export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardProps>) {
   const menu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

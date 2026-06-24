@@ -1,9 +1,6 @@
-"use client";
-
-import { useEffect, useState, type CSSProperties } from "react";
-
-import { IconGripVertical } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { IconGripVertical } from "@tabler/icons-react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateSortOrderMenuCategoryMutation } from "@/backend/menu/category/mCategory.query";
@@ -20,6 +17,7 @@ import {
   DialogTitle,
 } from "../../../ui/dialog.tsx";
 import { Spinner } from "../../../ui/spinner.tsx";
+
 import classes from "./DndListHandle.module.css";
 
 interface Idata {
@@ -62,10 +60,12 @@ const SortDrawer = ({
     },
   );
 
-  const updateSortOrderMenuCategoryMutation =
-    useUpdateSortOrderMenuCategoryMutation(category.menuId, () => {
+  const updateSortOrderMenuCategoryMutation = useUpdateSortOrderMenuCategoryMutation(
+    category.menuId,
+    () => {
       close();
-    });
+    },
+  );
 
   const reorderState = (from: number, to: number) => {
     setState((prev) => {
@@ -95,8 +95,7 @@ const SortDrawer = ({
   };
 
   const isPending =
-    updateSortOrderMenuItemMutation.isPending ||
-    updateSortOrderMenuCategoryMutation.isPending;
+    updateSortOrderMenuItemMutation.isPending || updateSortOrderMenuCategoryMutation.isPending;
 
   const items = state.map((item, index) => (
     <Draggable key={item.id} index={index} draggableId={item.id}>
@@ -107,17 +106,11 @@ const SortDrawer = ({
           {...provided.draggableProps}
           style={provided.draggableProps.style as CSSProperties}
         >
-          <div
-            {...provided.dragHandleProps}
-            className="flex items-center justify-center"
-          >
+          <div {...provided.dragHandleProps} className="flex items-center justify-center">
             <IconGripVertical size={24} stroke={1.5} />
           </div>
 
-          <Card
-            className="w-[90%] p-2"
-            style={{ opacity: item.disabled ? 0.5 : 1 }}
-          >
+          <Card className="w-[90%] p-2" style={{ opacity: item.disabled ? 0.5 : 1 }}>
             <div className="flex items-center gap-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

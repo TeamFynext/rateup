@@ -2,7 +2,6 @@ import { axiosClient, axiosClientIP } from "../apiClient";
 
 const SURVEYURL = "/survey";
 const SURVEY_PUBLIC_URL = "/public/survey";
-const WHATSAPPSURVEYURL = "/whatsappsurvey";
 
 export interface CreateSurveyResponse {
   title: string;
@@ -16,8 +15,7 @@ export interface CreateSurveyResponse {
 }
 
 export async function createSurvey(data) {
-  const res: CreateSurveyResponse = (await axiosClient.post(SURVEYURL, data))
-    .data;
+  const res: CreateSurveyResponse = (await axiosClient.post(SURVEYURL, data)).data;
   return res;
 }
 
@@ -39,9 +37,8 @@ export async function cloneSurvey(surveyId: string, teamIds: string[]) {
 
 export async function getSurveyTemplates(surveyType) {
   try {
-    const surveyTemplates: any = (
-      await axiosClient.get(`${SURVEYURL}/templates/${surveyType}`)
-    ).data;
+    const surveyTemplates: any = (await axiosClient.get(`${SURVEYURL}/templates/${surveyType}`))
+      .data;
     return surveyTemplates;
   } catch (e) {
     console.error(e);
@@ -61,9 +58,8 @@ export async function getSurveys() {
 
 export async function getSurveyWithQuestions() {
   try {
-    const surveys: Array<Survey> = (
-      await axiosClient.get(`${SURVEYURL}/all/survey-with-questions`)
-    ).data;
+    const surveys: Array<Survey> = (await axiosClient.get(`${SURVEYURL}/all/survey-with-questions`))
+      .data;
     return surveys;
   } catch (e) {
     console.error(e);
@@ -71,16 +67,14 @@ export async function getSurveyWithQuestions() {
 }
 
 export async function getActiveSurveysSummary() {
-  const surveysSummary: SurveySummaryData = (
-    await axiosClient.get(`${SURVEYURL}/summary/active`)
-  ).data;
+  const surveysSummary: SurveySummaryData = (await axiosClient.get(`${SURVEYURL}/summary/active`))
+    .data;
   return surveysSummary;
 }
 
 export async function getSurveysSummary() {
-  const allSurveysSummary: SurveySummaryData = (
-    await axiosClient.get(`${SURVEYURL}/summary/all`)
-  ).data;
+  const allSurveysSummary: SurveySummaryData = (await axiosClient.get(`${SURVEYURL}/summary/all`))
+    .data;
   return allSurveysSummary;
 }
 
@@ -103,9 +97,7 @@ export async function getSurveyLandings() {
 }
 async function getSurveysLandingPage() {
   try {
-    const surveys: Array<Survey> = (
-      await axiosClient.get(`${SURVEYURL}/createlanding`)
-    ).data;
+    const surveys: Array<Survey> = (await axiosClient.get(`${SURVEYURL}/createlanding`)).data;
     return surveys;
   } catch (e) {
     console.error(e);
@@ -114,9 +106,7 @@ async function getSurveysLandingPage() {
 }
 // ----get whatsapp survey list ------------
 export async function getWhatsappSurveys() {
-  const surveys: Array<Survey> = (
-    await axiosClient.get(`${SURVEYURL}/whatsappsurveys`)
-  ).data;
+  const surveys: Array<Survey> = (await axiosClient.get(`${SURVEYURL}/whatsappsurveys`)).data;
   return surveys;
 }
 
@@ -163,26 +153,17 @@ export async function getPublicSurvey(surveyId: string, ip?: string) {
     };
   }
 
-  const res = await axiosClientIP.get(
-    `${SURVEY_PUBLIC_URL}/${surveyId}`,
-    config,
-  );
+  const res = await axiosClientIP.get(`${SURVEY_PUBLIC_URL}/${surveyId}`, config);
   return res.data as ExtendedSurvey;
 }
 
 export async function getPublicSurveyGoogleLink(surveyTeamMapId: string) {
-  const res = await axiosClientIP.get(
-    `${SURVEY_PUBLIC_URL}/googlelink/${surveyTeamMapId}`,
-  );
+  const res = await axiosClientIP.get(`${SURVEY_PUBLIC_URL}/googlelink/${surveyTeamMapId}`);
   return res.data as string;
 }
 
-export async function getPhoneNumberFromSurveyTeamMapId(
-  surveyTeamMapId: string,
-) {
-  const res = await axiosClientIP.get(
-    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/phone`,
-  );
+export async function getPhoneNumberFromSurveyTeamMapId(surveyTeamMapId: string) {
+  const res = await axiosClientIP.get(`${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/phone`);
   return res.data as { phone: string };
 }
 
@@ -206,61 +187,41 @@ export async function updateSurvey(surveyId: string, data) {
 }
 
 export async function updateSurveyGoogleLink(surveyTeamMapId: string, data) {
-  return await axiosClient.put(
-    `${SURVEYURL}/googlelink-update/${surveyTeamMapId}`,
-    data,
-  );
+  return await axiosClient.put(`${SURVEYURL}/googlelink-update/${surveyTeamMapId}`, data);
 }
 
 export async function updateSurveyPassword({ surveyId, password }) {
   const data = { password: password };
-  return await axiosClient.put(
-    `${SURVEYURL}/password-update/${surveyId}`,
-    data,
-  );
+  return await axiosClient.put(`${SURVEYURL}/password-update/${surveyId}`, data);
 }
 
 export async function verifySurveyPassword(surveyId: string, data) {
-  return await axiosClient.post(
-    `${SURVEY_PUBLIC_URL}/check-password/${surveyId}`,
-    data,
-  );
+  return await axiosClient.post(`${SURVEY_PUBLIC_URL}/check-password/${surveyId}`, data);
 }
 
 export async function updateSurveyVisited(surveyTeamMapId: string) {
-  return await axiosClient.post(
-    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/visited`,
-  );
+  return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/visited`);
 }
 
 export async function updateSurveyStarted(surveyTeamMapId: string) {
-  return await axiosClient.post(
-    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/started`,
-  );
+  return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/started`);
 }
 
 export async function updateSurveyCompleted(surveyTeamMapId: string) {
-  return await axiosClient.post(
-    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/completed`,
-  );
+  return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/completed`);
 }
 
 export async function updateReviewLinkStatsOnSurvey(surveyTeamMapId: string) {
-  return await axiosClient.post(
-    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/review/visited`,
-  );
+  return await axiosClient.post(`${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/review/visited`);
 }
 
 export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string) {
-  const res = await axiosClient.get(
-    `${SURVEYURL}/surveyStats/${surveyTeamMapId}`,
-  );
+  const res = await axiosClient.get(`${SURVEYURL}/surveyStats/${surveyTeamMapId}`);
   return res.data as STStats;
 }
 
 export async function getSurveyStats(surveyId) {
-  return (await axiosClient.get(`${SURVEYURL}/surveyStats/all/${surveyId}`))
-    .data;
+  return (await axiosClient.get(`${SURVEYURL}/surveyStats/all/${surveyId}`)).data;
 }
 
 export async function getSurveyVariables(surveyId, isPublic) {
@@ -272,21 +233,15 @@ export async function getSurveyVariables(surveyId, isPublic) {
 }
 
 export async function createSurveyVariable({ surveyId, data }) {
-  return (
-    await axiosClient.post(`${SURVEYURL}/survey-variables/${surveyId}`, data)
-  ).data;
+  return (await axiosClient.post(`${SURVEYURL}/survey-variables/${surveyId}`, data)).data;
 }
 
 export async function updateSurveyVariable({ variableId, data }) {
-  return (
-    await axiosClient.put(`${SURVEYURL}/survey-variables/${variableId}`, data)
-  ).data;
+  return (await axiosClient.put(`${SURVEYURL}/survey-variables/${variableId}`, data)).data;
 }
 
 export async function deleteSurveyVariable({ variableId }) {
-  return (
-    await axiosClient.delete(`${SURVEYURL}/survey-variables/${variableId}`)
-  ).data;
+  return (await axiosClient.delete(`${SURVEYURL}/survey-variables/${variableId}`)).data;
 }
 
 export async function sendEmail(data) {
@@ -301,12 +256,7 @@ export async function validateOTP(data) {
   return (await axiosClient.post(`email/otp/validate`, data)).data;
 }
 
-export async function getSurveyResponseForGraph(
-  timePeriod,
-  userTimeZone,
-  surveyId,
-  teamMapIds,
-) {
+export async function getSurveyResponseForGraph(timePeriod, userTimeZone, surveyId, teamMapIds) {
   return (
     await axiosClient.get(
       `${SURVEYURL}/summary/response?timePeriod=${timePeriod}&userTimeZone=${userTimeZone}&surveyId=${surveyId}&teamMapIds=${teamMapIds}`,
@@ -314,12 +264,7 @@ export async function getSurveyResponseForGraph(
   ).data;
 }
 
-export async function getNPSSurveyResponseForGraph(
-  timePeriod,
-  userTimeZone,
-  surveyId,
-  teamMapIds,
-) {
+export async function getNPSSurveyResponseForGraph(timePeriod, userTimeZone, surveyId, teamMapIds) {
   return (
     await axiosClient.get(
       `${SURVEYURL}/summary/response/nps?timePeriod=${timePeriod}&userTimeZone=${userTimeZone}&surveyId=${surveyId}&teamMapIds=${teamMapIds}`,

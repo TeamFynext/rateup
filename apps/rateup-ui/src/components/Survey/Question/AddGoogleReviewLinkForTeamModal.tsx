@@ -1,11 +1,8 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { ActionIcon, Group, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit } from "@tabler/icons-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useEditTeamMutation } from "@/backend/team/team.query";
@@ -42,10 +39,7 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId, platform }) => {
         [platform]: form.getValues().url,
       };
     } else if (team.reviewPageLinks) {
-      if (
-        "" in team.reviewPageLinks &&
-        platform === ReviewPagePlatform.Google
-      ) {
+      if ("" in team.reviewPageLinks && platform === ReviewPagePlatform.Google) {
         newReviewPageLinks = {
           ...team.reviewPageLinks,
           [platform]: form.getValues().url,

@@ -60,6 +60,7 @@
     "Add checklist": "चेकलिस्ट जोड़ें",
     "Add choice": "विकल्प जोड़ें",
     "Add Column": "कॉलम जोड़ें",
+    "Add Command": "कमांड जोड़ें",
     "Add Components": "घटक जोड़ें",
     "Add Condition": "शर्त जोड़ें",
     "Add Contact": "संपर्क जोड़ें",
@@ -69,6 +70,7 @@
     "Add Else Component": "अन्य घटक जोड़ें",
     "Add Existing Contacts": "मौजूदा संपर्क जोड़ें",
     "Add Field": "क्षेत्र जोड़ें",
+    "Add Ice Breaker": "आइस ब्रेकर जोड़ें",
     "Add If Block": "यदि ब्लॉक करें तो जोड़ें",
     "Add Images (max 3)": "छवियाँ जोड़ें (अधिकतम 3)",
     "Add job title": "नौकरी का शीर्षक जोड़ें",
@@ -514,6 +516,7 @@
     "Continue to Payment": "भुगतान जारी रखें",
     "Contrast color": "कंट्रास्ट रंग",
     "Conversation Trends": "बातचीत के रुझान",
+    "Conversational": "संवादी",
     "Conversations": "बात चिट",
     "copied": "की नकल की",
     "Copied": "कॉपी किया गया",
@@ -1326,6 +1329,7 @@
     "Max size 2MB": "अधिकतम आकार 2एमबी",
     "max uploaded documents": "अधिकतम अपलोड किए गए दस्तावेज़",
     "max uploaded photos": "अधिकतम अपलोड की गई तस्वीरें",
+    "Maximum 4 ice breakers allowed": "अधिकतम 4 बर्फ तोड़ने वालों की अनुमति है",
     "maximum file size (in kilobytes) that can be uploaded": "अधिकतम फ़ाइल आकार (किलोबाइट में) जिसे अपलोड किया जा सकता है",
     "maximum number of documents that can be uploaded": "अपलोड किए जा सकने वाले दस्तावेज़ों की अधिकतम संख्या",
     "maximum number of photos that can be uploaded": "अपलोड की जा सकने वाली फ़ोटो की अधिकतम संख्या",
@@ -1652,6 +1656,7 @@
     "Please retry loading the application. If the problem continues, you may need to logout and login again": "कृपया एप्लिकेशन लोड करने का पुनः प्रयास करें। यदि समस्या बनी रहती है, तो आपको लॉगआउट करके दोबारा लॉगिन करना पड़ सकता है",
     "Please select a CSV file to import.": "आयात करने के लिए कृपया एक CSV फ़ाइल चुनें.",
     "Please select a page": "कृपया एक पेज चुनें",
+    "Please select a phone account to configure conversational settings.": "कृपया वार्तालाप संबंधी सेटिंग कॉन्फ़िगर करने के लिए एक फ़ोन खाता चुनें।",
     "Please select a redemption": "कृपया एक मोचन का चयन करें",
     "Please select a reward": "एक पुरस्कार का चयन करें",
     "Please select a screen first": "कृपया पहले एक स्क्रीन चुनें",
@@ -2099,6 +2104,7 @@
     "Skip approval flow": "अनुमोदन प्रवाह छोड़ें",
     "Skip Preview Screen": "पूर्वावलोकन स्क्रीन छोड़ें",
     "Skips Responses preview screen on survey completion": "सर्वेक्षण पूरा होने पर प्रतिक्रियाएँ पूर्वावलोकन स्क्रीन छोड़ देता है",
+    "Slash commands users can access by typing '/' in chat. Maximum 30 commands. Name up to 32 chars, description up to 256 chars.": "स्लैश कमांड को उपयोगकर्ता चैट में '/' टाइप करके एक्सेस कर सकते हैं। अधिकतम 30 आदेश. 32 वर्णों तक नाम, 256 वर्णों तक विवरण।",
     "Sliding banners to be shown in top of menu. You can add upto 4 banners.": "स्लाइडिंग बैनर मेनू के शीर्ष पर दिखाए जाएंगे। आप अधिकतम 4 बैनर जोड़ सकते हैं.",
     "slower vs last week": "पिछले सप्ताह की तुलना में धीमा",
     "Slug is required": "स्लग आवश्यक है",
@@ -2169,6 +2175,7 @@
     "Swap the order of flow screens": "फ्लो स्क्रीन का क्रम बदलें",
     "Sync": "साथ-साथ करना",
     "Sync FB pages": "FB पेज सिंक करें",
+    "Sync from WhatsApp": "व्हाट्सएप से सिंक करें",
     "Sync Google Account": "Google खाता सिंक करें",
     "Sync Google Sheet": "Google शीट सिंक करें",
     "Sync products": "उत्पादों को सिंक करें",
@@ -2183,10 +2190,12 @@
     "Syncing Shopify products": "Shopify उत्पादों को सिंक करना",
     "Syncing Zoho contacts to Rateup...": "ज़ोहो संपर्कों को रेटअप में समन्वयित किया जा रहा है...",
     "Syncing Zoho leads to Rateup...": "ज़ोहो को सिंक करने से रेटअप होता है...",
+    "Syncing...": "सिंक हो रहा है...",
     "System Settings": "सिस्टम सेटिंग्स",
     "tags": "टैग",
     "Tags": "टैग",
     "Tags/ Groups/ Campaigns": "टैग/समूह/अभियान",
+    "Tappable text prompts shown to users the first time they message you. Maximum 4, up to 80 characters each.": "टैप करने योग्य टेक्स्ट संकेत उपयोगकर्ताओं को पहली बार आपको संदेश भेजने पर दिखाए जाते हैं। अधिकतम 4, प्रत्येक 80 वर्ण तक।",
     "Target URL for redirection": "पुनर्निर्देशन के लिए लक्ष्य URL",
     "tax": "कर",
     "Tax": "कर",
@@ -2562,13 +2571,6 @@
   "Example": {
     " /points": "उदाहरण: /अंक"
   },
-  "Eg": {
-    "https://www": {
-      "example": {
-        "com": "जैसे:https://www.example.com"
-      }
-    }
-  },
   "campaign.resend": {
     "Cancel": "रद्द करना",
     "Choose when to send and which participants to resend to": "चुनें कि कब भेजना है और किन प्रतिभागियों को दोबारा भेजना है",
@@ -2696,8 +2698,12 @@
     "Selected": "चयनित",
     "You have not selected any participant": "आपने किसी भी प्रतिभागी का चयन नहीं किया है"
   },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "केवल उन चरणों का चयन करें जो चयनित पाइपलाइन और उप पाइपलाइन कॉन्फ़िगरेशन से संबंधित हैं।"
+  "Eg": {
+    "https://www": {
+      "example": {
+        "com": "जैसे:https://www.example.com"
+      }
+    }
   },
   "apianalytics": {
     "All": "सभी",
@@ -2724,6 +2730,9 @@
     "Total Messages Sent": "भेजे गए कुल संदेश",
     "WhatsApp Messages Analytics": "व्हाट्सएप संदेश विश्लेषण",
     "WhatsApp Template Analytics": "व्हाट्सएप टेम्पलेट एनालिटिक्स"
+  },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "केवल उन चरणों का चयन करें जो चयनित पाइपलाइन और उप पाइपलाइन कॉन्फ़िगरेशन से संबंधित हैं।"
   },
   "campaign.list": {
     "Active": "सक्रिय",

@@ -1,11 +1,8 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { Plus, RefreshCw, Search } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLinktrees } from "@/backend/linktree/linktree.query";
@@ -23,8 +20,9 @@ function LinktreeDashboard() {
   const searchParams = useSearch({ strict: false });
   const action = searchParams.action;
 
-  const [isCreateLinktreeModalOpen, createLinktreeModalHandlers] =
-    useDisclosure(action === "create");
+  const [isCreateLinktreeModalOpen, createLinktreeModalHandlers] = useDisclosure(
+    action === "create",
+  );
   const queryClient = useQueryClient();
   const { data, isPending, isError } = useLinktrees();
   const [linktrees, setLinktrees] = useState([]);
@@ -93,9 +91,7 @@ function LinktreeDashboard() {
       <div className="border-b px-6 py-4 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">
-              {translations("Access Links")}
-            </h1>
+            <h1 className="text-xl font-semibold">{translations("Access Links")}</h1>
             <p className="text-sm text-gray-600">
               {translations(
                 "Create and manage quick access links for surveys, landing pages, and QR codes",
@@ -118,10 +114,7 @@ function LinktreeDashboard() {
 
         {/* Search and Filter Bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
-          <Button
-            className="flex-none bg-primary"
-            onClick={createLinktreeModalHandlers.open}
-          >
+          <Button className="flex-none bg-primary" onClick={createLinktreeModalHandlers.open}>
             <Plus className="w-4 h-4 mr-2" />
             {translations("Create Access Link")}
           </Button>
@@ -138,10 +131,7 @@ function LinktreeDashboard() {
           </div>
 
           <div className="flex-none">
-            <SortDropdown
-              onSortChange={handleSortChange}
-              defaultSortOption={sortOption}
-            />
+            <SortDropdown onSortChange={handleSortChange} defaultSortOption={sortOption} />
           </div>
         </div>
       </div>

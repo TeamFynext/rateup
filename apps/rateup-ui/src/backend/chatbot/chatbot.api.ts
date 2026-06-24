@@ -1,7 +1,4 @@
-import type {
-  ChatBotDataSourceType,
-  ChatbotPublicPageStatus,
-} from "@/types/enums.ts";
+import type { ChatBotDataSourceType, ChatbotPublicPageStatus } from "@/types/enums.ts";
 
 import { axiosClient, axiosClientIP } from "../apiClient";
 
@@ -41,16 +38,12 @@ export async function uploadFileForEmbed(file, selectedChatbotId) {
   formData.append("file", file);
   formData.append("chatbotId", selectedChatbotId);
   try {
-    const response = await axiosClient.post(
-      `${CHATBOT_BASEURL}/embed-doc/file`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        timeout: 0,
+    const response = await axiosClient.post(`${CHATBOT_BASEURL}/embed-doc/file`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
       },
-    );
+      timeout: 0,
+    });
     return response;
   } catch (error: any) {
     throw error?.response?.data?.message;
@@ -83,13 +76,13 @@ export async function deletePublicChatHistory({ userId }) {
 }
 
 export async function getChatbotPublicPageStatus(chatbotId) {
-  return (await axiosClientIP.get(`${CHATBOT_PUBLIC_BASEURL}/${chatbotId}`))
-    ?.data as { publicPageStatus: ChatbotPublicPageStatus };
+  return (await axiosClientIP.get(`${CHATBOT_PUBLIC_BASEURL}/${chatbotId}`))?.data as {
+    publicPageStatus: ChatbotPublicPageStatus;
+  };
 }
 
 export async function getChatbotDetails(chatbotId: string) {
-  return (await axiosClient.get(`${CHATBOT_BASEURL}/chatbot/${chatbotId}`))
-    .data;
+  return (await axiosClient.get(`${CHATBOT_BASEURL}/chatbot/${chatbotId}`)).data;
 }
 export async function getAllChatbots() {
   return (await axiosClient.get(`${CHATBOT_BASEURL}/chatbots`)).data;
@@ -117,11 +110,9 @@ export async function updateChatbot({ chatbotId, data }: IUpdateChatbotArgs) {
 }
 
 export async function getUserAiChats(chatbotId: string) {
-  return (await axiosClient.get(`${CHATBOT_BASEURL}/chathistory/${chatbotId}`))
-    .data;
+  return (await axiosClient.get(`${CHATBOT_BASEURL}/chathistory/${chatbotId}`)).data;
 }
 
 export async function deleteChatbot(chatbotId: string) {
-  return (await axiosClient.delete(`${CHATBOT_BASEURL}/chatbot/${chatbotId}`))
-    .data;
+  return (await axiosClient.delete(`${CHATBOT_BASEURL}/chatbot/${chatbotId}`)).data;
 }

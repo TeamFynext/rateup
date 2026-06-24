@@ -1,6 +1,5 @@
-import React from "react";
-
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import timezones from "timezones-list";
 
@@ -47,9 +46,7 @@ const TimeZoneSelector = ({ value, onChange }) => {
           aria-expanded={timezoneOpen}
           className="w-full justify-between"
         >
-          {value
-            ? timezoneList.find((tz) => tz?.tzCode === value)?.label
-            : t("Select a timezone")}
+          {value ? timezoneList.find((tz) => tz?.tzCode === value)?.label : t("Select a timezone")}
           <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

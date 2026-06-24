@@ -1,16 +1,4 @@
-"use client";
-
-import React, { useContext } from "react";
-
-import {
-  Card,
-  Center,
-  Progress,
-  RingProgress,
-  Skeleton,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Card, Center, Progress, RingProgress, Skeleton, Text, Title } from "@mantine/core";
 import {
   IconMoodAngry,
   IconMoodCry,
@@ -21,13 +9,12 @@ import {
   IconMoodSmile,
   IconNavigationFilled,
 } from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
+import React, { useContext } from "react";
 
 import { useHappyIndex } from "@/backend/surveys/response/response.query";
 import SurveyContext from "@/context/SurveyContext.ts";
 
 const HappyIndex = ({ surveyId }) => {
-  const { t: translations } = useTranslation();
   const { filterTeams } = useContext(SurveyContext);
   const { data, isLoading } = useHappyIndex(surveyId, filterTeams);
   const h_index = Number(((data?.happinessIndex ?? 0) / 10).toFixed(1));
@@ -159,39 +146,33 @@ const HappyIndex = ({ surveyId }) => {
             }
           />
           <div className="flex flex-col gap-4 w-full">
-            {moodList?.map(
-              ({ label, value, percentage, icon: Icon, color }) => (
-                <div key={label} className="flex items-center gap-2 w-full">
-                  <div className="bg-[#004F981F] rounded-full p-0.5">
-                    <Icon color={"#004F98"} size={45} />
-                  </div>
-                  <div className="flex w-full flex-col justify-center gap-2 items-start">
-                    <div className="flex w-full justify-between">
-                      <Text size="xs" c={"#343A40"} style={{ fontWeight: 700 }}>
-                        {label}
+            {moodList?.map(({ label, value, percentage, icon: Icon, color }) => (
+              <div key={label} className="flex items-center gap-2 w-full">
+                <div className="bg-[#004F981F] rounded-full p-0.5">
+                  <Icon color={"#004F98"} size={45} />
+                </div>
+                <div className="flex w-full flex-col justify-center gap-2 items-start">
+                  <div className="flex w-full justify-between">
+                    <Text size="xs" c={"#343A40"} style={{ fontWeight: 700 }}>
+                      {label}
+                    </Text>
+                    <div className="flex items-center justify-center gap-1">
+                      <Text size="xs" c="#7A8289">
+                        ({value ?? 0})
                       </Text>
-                      <div className="flex items-center justify-center gap-1">
-                        <Text size="xs" c="#7A8289">
-                          ({value ?? 0})
+                      <div className="bg-[#004F98] max-w-10 px-3 py-0.5 rounded-full flex items-center justify-center">
+                        <Text size="xs" c="white">
+                          {Math.round(percentage)}%
                         </Text>
-                        <div className="bg-[#004F98] max-w-10 px-3 py-0.5 rounded-full flex items-center justify-center">
-                          <Text size="xs" c="white">
-                            {Math.round(percentage)}%
-                          </Text>
-                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 w-full">
-                      <Progress
-                        color={color}
-                        value={percentage}
-                        className="flex-1"
-                      />
-                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 w-full">
+                    <Progress color={color} value={percentage} className="flex-1" />
                   </div>
                 </div>
-              ),
-            )}
+              </div>
+            ))}
           </div>
         </div>
       </Card>
@@ -211,22 +192,20 @@ const HappyIndex = ({ surveyId }) => {
             detractors={data.detractors}
           />
           <div className="flex justify-around w-full mt-4">
-            {npsList?.map(
-              ({ label, percentage, value, color, icon: Icon, bg }) => (
-                <div key={label} className="flex flex-col items-center">
-                  <div className="rounded-full" style={{ backgroundColor: bg }}>
-                    <Icon color={color} width={25} height={25} />
-                  </div>
-                  <div className="text-xs font-medium">{label}</div>
-                  <div className="font-bold text-3xl" style={{ color }}>
-                    {percentage}%
-                  </div>
-                  <div className="bg-[#F5F5F5] px-2 py-0.5 text-[#7A8289] text-xs rounded-full font-medium">
-                    {value} Responses
-                  </div>
+            {npsList?.map(({ label, percentage, value, color, icon: Icon, bg }) => (
+              <div key={label} className="flex flex-col items-center">
+                <div className="rounded-full" style={{ backgroundColor: bg }}>
+                  <Icon color={color} width={25} height={25} />
                 </div>
-              ),
-            )}
+                <div className="text-xs font-medium">{label}</div>
+                <div className="font-bold text-3xl" style={{ color }}>
+                  {percentage}%
+                </div>
+                <div className="bg-[#F5F5F5] px-2 py-0.5 text-[#7A8289] text-xs rounded-full font-medium">
+                  {value} Responses
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </Card>
@@ -280,12 +259,7 @@ const NPSGaugeWithNeedle = ({ nps, promoters, passives, detractors }) => {
     <div className="flex flex-col items-center justify-center">
       <svg width="220" height="140" viewBox="0 0 220 160">
         {/* Background track */}
-        <path
-          d="M 20 110 A 90 90 0 0 1 200 110"
-          fill="none"
-          stroke="#f3f4f6"
-          strokeWidth="20"
-        />
+        <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="#f3f4f6" strokeWidth="20" />
 
         {/* Promoters */}
         {getArc(currentStartAngle, detractorAngle, 90, "#FF6161")}
@@ -301,24 +275,13 @@ const NPSGaugeWithNeedle = ({ nps, promoters, passives, detractors }) => {
         {/* Needle */}
         <g transform={`rotate(${rotation}, 110, 110)`}>
           <foreignObject x="100" y="45" width="30" height="60">
-            <IconNavigationFilled
-              color="#343A40"
-              size={30}
-              style={{ transform: "rotate(0deg)" }}
-            />
+            <IconNavigationFilled color="#343A40" size={30} style={{ transform: "rotate(0deg)" }} />
           </foreignObject>
         </g>
 
         {/* Center Circle */}
         <circle cx="110" cy="110" r="30" fill="#F5F5F5" />
-        <text
-          x="110"
-          y="118"
-          textAnchor="middle"
-          fontSize="24"
-          fontWeight="bold"
-          fill="#343A40"
-        >
+        <text x="110" y="118" textAnchor="middle" fontSize="24" fontWeight="bold" fill="#343A40">
           {(nps >= 0 ? `+${nps}` : nps) ?? 0}
         </text>
       </svg>
@@ -336,13 +299,7 @@ const NPSGaugeWithNeedle = ({ nps, promoters, passives, detractors }) => {
                   : "bg-[#FF6161]"
           }`}
         >
-          {nps >= 50
-            ? "Excellent"
-            : nps >= 30
-              ? "Great"
-              : nps >= 0
-                ? "Okay"
-                : "Poor"}
+          {nps >= 50 ? "Excellent" : nps >= 30 ? "Great" : nps >= 0 ? "Okay" : "Poor"}
         </span>
       </div>
     </div>

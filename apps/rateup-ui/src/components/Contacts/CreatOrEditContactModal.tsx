@@ -1,17 +1,16 @@
-import { useEffect } from "react";
-
 import { useForm } from "@mantine/form";
 import { CheckCircle2, UserPlus } from "lucide-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
-import { ContactGroupType } from "@/types/enums.ts";
 import {
   useCreateContactMutation,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import { ContactGroupType } from "@/types/enums.ts";
 import { importMethod } from "@/utils/enums/index.ts";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar.tsx";
@@ -77,14 +76,11 @@ const CreateOrEditContactModal = ({
               : null;
       },
       name: (value, values) =>
-        values.source == importMethod.MANUAL &&
-        (value.length ? null : t("Name cannot be blank")),
+        values.source == importMethod.MANUAL && (value.length ? null : t("Name cannot be blank")),
       customFields: {
         "*": (value, values, path) => {
           const fieldId = path.split(".")[1];
-          const customField = customFields.find(
-            (field) => field.slug === fieldId,
-          );
+          const customField = customFields.find((field) => field.slug === fieldId);
 
           if (!customField) return null;
 
@@ -113,15 +109,11 @@ const CreateOrEditContactModal = ({
     }
     const contactData = {
       ...form.getValues(),
-      dob: form.getValues()?.dob
-        ? new Date(form.getValues().dob).toISOString()
-        : null,
+      dob: form.getValues()?.dob ? new Date(form.getValues().dob).toISOString() : null,
       external_id: form.getValues()?.external_id || undefined,
       phone: form.getValues()?.phone?.replace(/^\+/, "") || "",
       source:
-        type === ContactGroupType.LOYALTY
-          ? ContactGroupType.LOYALTY
-          : form.getValues().source,
+        type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : form.getValues().source,
       lastReceivedMessageTimeStamp: undefined,
     };
     if (initialValues) {
@@ -169,10 +161,7 @@ const CreateOrEditContactModal = ({
       ...form.values,
       contactType: customFields?.map((field) => field.slug) || [],
     });
-    form.setFieldValue(
-      "contactType",
-      customFields?.map((field) => field.slug) || [],
-    );
+    form.setFieldValue("contactType", customFields?.map((field) => field.slug) || []);
   }, [customFields]);
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
@@ -212,10 +201,7 @@ const CreateOrEditContactModal = ({
           {customFields?.length > 0 && (
             <div className="border flex self-end gap-1 p-1 w-fit">
               {customFields.map((field) => (
-                <div
-                  className="flex items-center gap-1 rounded-lg p-1 w-fit px-2"
-                  key={field.id}
-                >
+                <div className="flex items-center gap-1 rounded-lg p-1 w-fit px-2" key={field.id}>
                   <Checkbox
                     checked={form.values.contactType?.includes(field?.slug)}
                     id={field.slug}
@@ -225,9 +211,7 @@ const CreateOrEditContactModal = ({
                         "contactType",
                         checked
                           ? [...form.values.contactType, field.slug]
-                          : form.values.contactType.filter(
-                              (slug) => field.slug !== slug,
-                            ),
+                          : form.values.contactType.filter((slug) => field.slug !== slug),
                       );
                     }}
                   />

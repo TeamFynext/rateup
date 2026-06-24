@@ -68,12 +68,8 @@
   max-width: 18.75rem;
 }
 
-.styles-component-root-div
-  .styles-component-div
-  :global(.custom-color-picker-container button),
-.styles-component-root-div
-  .styles-component-div
-  :global(.custom-color-picker-container input) {
+.styles-component-root-div .styles-component-div :global(.custom-color-picker-container button),
+.styles-component-root-div .styles-component-div :global(.custom-color-picker-container input) {
   height: 2rem;
 }
 
@@ -211,36 +207,17 @@
   right: 4px;
 }
 
-.header-styles
-  :global(
-    .mantine-NumberInput-root .mantine-NumberInput-control[data-direction="up"]
-  ),
-.desc-styles
-  :global(
-    .mantine-NumberInput-root .mantine-NumberInput-control[data-direction="up"]
-  ),
-.logo-styles
-  :global(
-    .mantine-NumberInput-root .mantine-NumberInput-control[data-direction="up"]
-  ) {
+.header-styles :global(.mantine-NumberInput-root .mantine-NumberInput-control[data-direction="up"]),
+.desc-styles :global(.mantine-NumberInput-root .mantine-NumberInput-control[data-direction="up"]),
+.logo-styles :global(.mantine-NumberInput-root .mantine-NumberInput-control[data-direction="up"]) {
   border-top-right-radius: 0.75rem;
 }
 
 .header-styles
-  :global(
-    .mantine-NumberInput-root
-      .mantine-NumberInput-control[data-direction="down"]
-  ),
-.desc-styles
-  :global(
-    .mantine-NumberInput-root
-      .mantine-NumberInput-control[data-direction="down"]
-  ),
+  :global(.mantine-NumberInput-root .mantine-NumberInput-control[data-direction="down"]),
+.desc-styles :global(.mantine-NumberInput-root .mantine-NumberInput-control[data-direction="down"]),
 .logo-styles
-  :global(
-    .mantine-NumberInput-root
-      .mantine-NumberInput-control[data-direction="down"]
-  ) {
+  :global(.mantine-NumberInput-root .mantine-NumberInput-control[data-direction="down"]) {
   border-bottom-right-radius: 0.75rem;
 }
 

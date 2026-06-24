@@ -1,10 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import {
-  getShareSettings,
-  upadateShareSettings,
-} from "./surveyShareSettings.api";
+import { getShareSettings, upadateShareSettings } from "./surveyShareSettings.api";
 
 const useGetShareSettings = (queryKey, resourceName, id) => {
   return useQuery({
@@ -28,12 +25,9 @@ const useUpdateShareSettingsMutation = (queryKey, resourceName, id) => {
       }
     },
     onError: (error) => {
-      toast.error(
-        error?.message || `Something went wrong, Please try again later`,
-        {
-          id: "campaign-create",
-        },
-      );
+      toast.error(error?.message || `Something went wrong, Please try again later`, {
+        id: "campaign-create",
+      });
     },
   });
 };

@@ -1,22 +1,17 @@
-"use client";
-
-import { useCallback, useState } from "react";
-
 import { Button, Group } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
 import { produce } from "immer";
 import { isEqual } from "lodash";
+import { useCallback, useState } from "react";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 
 import { useLinktreeObj } from "../../../LinktreeContext/LinktreeContext.tsx";
 import { initialState as defaultThemeobj } from "../../ThemeContext/constants.ts";
-import {
-  useThemeDispatch,
-  useThemeObj,
-} from "../../ThemeContext/ThemeContext.tsx";
-import styles from "./SaveChangesBtn.module.css";
+import { useThemeDispatch, useThemeObj } from "../../ThemeContext/ThemeContext.tsx";
 import { uploadFile } from "./uploadFile.tsx";
+
+import styles from "./SaveChangesBtn.module.css";
 
 function SaveChangesBtn() {
   // Theme obj from api.
@@ -90,7 +85,7 @@ function SaveChangesBtn() {
         payload: theme,
       });
       setIsSaving(false);
-    } catch (err) {
+    } catch {
       setIsSaving(false);
     }
   }, [currentThemeObj]);

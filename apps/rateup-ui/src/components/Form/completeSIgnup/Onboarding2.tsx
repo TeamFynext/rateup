@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowLeft, ArrowRight, Building, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -95,12 +93,9 @@ export default function OnboardingStep2({
             <div className="flex items-start space-x-3">
               <Sparkles className="w-3 h-3 text-orange-600" />
               <div>
-                <p className="text-orange-700 text-sm">
-                  Perfect! We'll customize your experience
-                </p>
+                <p className="text-orange-700 text-sm">Perfect! We'll customize your experience</p>
                 <p className="text-gray-700 text-sm">
-                  Expect industry-specific templates and features for{" "}
-                  {data.industry}
+                  Expect industry-specific templates and features for {data.industry}
                 </p>
               </div>
             </div>

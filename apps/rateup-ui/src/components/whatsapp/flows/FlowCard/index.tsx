@@ -1,14 +1,10 @@
-"use client";
-
-import type { FormEvent } from "react";
-import { useState } from "react";
-
 import { IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
+import type { FormEvent } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { WaFlowStatus } from "@/types/enums.ts";
 import {
   useCloneAndDeprecateFlowsMutation,
   useCloneFlowsMutation,
@@ -27,11 +23,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { WaFlowStatus } from "@/types/enums.ts";
 
 import styles from "./FlowCard.module.css";
 
@@ -125,9 +118,7 @@ function FlowCard({
             <p>
               {status === WaFlowStatus.DRAFT
                 ? translations("Delete Flow")
-                : translations(
-                    "It will be deprecated and will be removed from the system",
-                  )}
+                : translations("It will be deprecated and will be removed from the system")}
             </p>
           </TooltipContent>
         </Tooltip>
@@ -171,9 +162,7 @@ function FlowCard({
             <p>
               {status === WaFlowStatus.PUBLISHED
                 ? translations("Copy & Renew Flow")
-                : translations(
-                    "You can only Copy & Renew Flow in PUBLISHED state",
-                  )}
+                : translations("You can only Copy & Renew Flow in PUBLISHED state")}
             </p>
           </TooltipContent>
         </Tooltip>
@@ -194,10 +183,7 @@ function FlowCard({
           </p>
         }
         footerLeft={
-          <Badge
-            variant="secondary"
-            className={styles[`${status.toLowerCase()}-badge`]}
-          >
+          <Badge variant="secondary" className={styles[`${status.toLowerCase()}-badge`]}>
             {status === WaFlowStatus.PUBLISHED ? "Active" : status}
           </Badge>
         }
@@ -217,7 +203,7 @@ function FlowCard({
         headerLabel={translations("Are you sure to delete this Flow?")}
         headerTitle={translations("Delete Flow?")}
         confirmLabel={translations("Delete")}
-        onConfirm={(e) => {
+        onConfirm={(_e) => {
           if (status === WaFlowStatus.DRAFT) {
             deleteMutation.mutate(dbFlowId);
           } else if (status !== WaFlowStatus.DEPRECATED) {
@@ -235,12 +221,10 @@ function FlowCard({
         )}
         headerTitle={translations("Copy & Renew Flow")}
         confirmLabel={translations("Copy & Renew Flow")}
-        onConfirm={(e) => {
+        onConfirm={(_e) => {
           toast.loading(translations("Copy & Renew whatapp flow"), {
             id: "copy-renew",
-            description: translations(
-              "Hold.. your flow data is getting Coping & Renew...",
-            ),
+            description: translations("Hold.. your flow data is getting Coping & Renew..."),
           });
           cloneAndDeprecateFlowsMutation.mutate(dbFlowId);
           setCloneAandRenewOpened(false);
@@ -261,9 +245,7 @@ function FlowCard({
       >
         <div className="flex flex-col gap-4">
           <p className="text-muted-foreground">
-            {translations(
-              "Select the team in which the whatsapp flow copy to be created.",
-            )}
+            {translations("Select the team in which the whatsapp flow copy to be created.")}
           </p>
           <ContainedSelection
             radius="md"

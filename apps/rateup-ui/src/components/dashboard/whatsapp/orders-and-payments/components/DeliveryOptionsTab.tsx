@@ -1,8 +1,5 @@
-"use client";
-
-import React, { useState } from "react";
-
 import { Check, Loader2, Pencil, Plus, Trash2, Truck, X } from "lucide-react";
+import React, { useState } from "react";
 
 import type { DeliveryOption } from "@/backend/whatsapp/catalog/catalog.api";
 import {
@@ -24,14 +21,9 @@ const emptyOption = (): DeliveryOption => ({
   enabled: true,
 });
 
-export default function DeliveryOptionsTab({
-  catalogId,
-}: {
-  catalogId: string;
-}) {
+export default function DeliveryOptionsTab({ catalogId }: { catalogId: string }) {
   const { data: settings, isLoading } = useCatalogSettings(catalogId);
-  const { mutateAsync: save, isPending: isSaving } =
-    useUpdateCatalogSettings(catalogId);
+  const { mutateAsync: save, isPending: isSaving } = useUpdateCatalogSettings(catalogId);
 
   const [options, setOptions] = useState<DeliveryOption[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -51,9 +43,7 @@ export default function DeliveryOptionsTab({
   };
 
   const toggleEnabled = async (id: string) => {
-    const updated = options.map((o) =>
-      o.id === id ? { ...o, enabled: !o.enabled } : o,
-    );
+    const updated = options.map((o) => (o.id === id ? { ...o, enabled: !o.enabled } : o));
     await persist(updated);
   };
 
@@ -79,10 +69,7 @@ export default function DeliveryOptionsTab({
 
   const saveNew = async () => {
     if (!newDraft.name.trim()) return;
-    const updated = [
-      ...options,
-      { ...newDraft, charge: Number(newDraft.charge) },
-    ];
+    const updated = [...options, { ...newDraft, charge: Number(newDraft.charge) }];
     await persist(updated);
     setAddingNew(false);
     setNewDraft(emptyOption());
@@ -104,8 +91,8 @@ export default function DeliveryOptionsTab({
         <div>
           <h3 className="font-semibold">Delivery Partners</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Enabled options appear as choices in the WhatsApp List Message sent
-            after address collection.
+            Enabled options appear as choices in the WhatsApp List Message sent after address
+            collection.
           </p>
         </div>
         <Button
@@ -129,15 +116,10 @@ export default function DeliveryOptionsTab({
             <div>
               <p className="font-medium text-sm">No delivery options yet</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Add your first delivery partner to enable delivery selection in
-                WhatsApp.
+                Add your first delivery partner to enable delivery selection in WhatsApp.
               </p>
             </div>
-            <Button
-              size="sm"
-              onClick={() => setAddingNew(true)}
-              className="gap-1.5 mt-1"
-            >
+            <Button size="sm" onClick={() => setAddingNew(true)} className="gap-1.5 mt-1">
               <Plus className="h-3.5 w-3.5" /> Add First Option
             </Button>
           </CardContent>
@@ -147,10 +129,7 @@ export default function DeliveryOptionsTab({
       {/* Option list */}
       <div className="space-y-2">
         {options.map((opt) => (
-          <Card
-            key={opt.id}
-            className={`transition-all ${!opt.enabled ? "opacity-60" : ""}`}
-          >
+          <Card key={opt.id} className={`transition-all ${!opt.enabled ? "opacity-60" : ""}`}>
             <CardContent className="p-4">
               {editingId === opt.id ? (
                 <div className="space-y-3">
@@ -159,9 +138,7 @@ export default function DeliveryOptionsTab({
                       <Label className="text-xs">Partner Name</Label>
                       <Input
                         value={editDraft.name ?? ""}
-                        onChange={(e) =>
-                          setEditDraft((p) => ({ ...p, name: e.target.value }))
-                        }
+                        onChange={(e) => setEditDraft((p) => ({ ...p, name: e.target.value }))}
                         className="h-8 text-sm"
                         placeholder="e.g. Delhivery"
                       />
@@ -185,9 +162,7 @@ export default function DeliveryOptionsTab({
                       <Label className="text-xs">Est. Days</Label>
                       <Input
                         value={editDraft.days ?? ""}
-                        onChange={(e) =>
-                          setEditDraft((p) => ({ ...p, days: e.target.value }))
-                        }
+                        onChange={(e) => setEditDraft((p) => ({ ...p, days: e.target.value }))}
                         className="h-8 text-sm"
                         placeholder="3-5"
                       />
@@ -224,16 +199,12 @@ export default function DeliveryOptionsTab({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm truncate">
-                        {opt.name}
-                      </span>
+                      <span className="font-medium text-sm truncate">{opt.name}</span>
                       <Badge variant="secondary" className="text-xs shrink-0">
                         ₹{opt.charge}
                       </Badge>
                       {opt.days && (
-                        <span className="text-xs text-muted-foreground">
-                          {opt.days} days
-                        </span>
+                        <span className="text-xs text-muted-foreground">{opt.days} days</span>
                       )}
                     </div>
                   </div>
@@ -278,9 +249,7 @@ export default function DeliveryOptionsTab({
                 <Label className="text-xs">Partner Name</Label>
                 <Input
                   value={newDraft.name}
-                  onChange={(e) =>
-                    setNewDraft((p) => ({ ...p, name: e.target.value }))
-                  }
+                  onChange={(e) => setNewDraft((p) => ({ ...p, name: e.target.value }))}
                   className="h-8 text-sm"
                   placeholder="e.g. Delhivery"
                   autoFocus
@@ -305,9 +274,7 @@ export default function DeliveryOptionsTab({
                 <Label className="text-xs">Est. Days</Label>
                 <Input
                   value={newDraft.days ?? ""}
-                  onChange={(e) =>
-                    setNewDraft((p) => ({ ...p, days: e.target.value }))
-                  }
+                  onChange={(e) => setNewDraft((p) => ({ ...p, days: e.target.value }))}
                   className="h-8 text-sm"
                   placeholder="3-5"
                 />
@@ -345,9 +312,8 @@ export default function DeliveryOptionsTab({
 
       {options.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          💡 Only <strong>enabled</strong> options appear in the WhatsApp
-          delivery selection message. Toggle off to temporarily hide a partner
-          without deleting it.
+          💡 Only <strong>enabled</strong> options appear in the WhatsApp delivery selection
+          message. Toggle off to temporarily hide a partner without deleting it.
         </p>
       )}
     </div>

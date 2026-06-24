@@ -19,9 +19,8 @@ const QrFinalCTA = () => {
             Ready to Revolutionize Your Engagement?
           </h2>
           <p className="text-lg sm:text-xl text-white/90">
-            Don’t let your customer potential go untapped. RateUp’s powerful QR
-            solutions help you capture attention, convert leads, and track
-            results effortlessly.
+            Don’t let your customer potential go untapped. RateUp’s powerful QR solutions help you
+            capture attention, convert leads, and track results effortlessly.
           </p>
         </div>
 

@@ -1,11 +1,9 @@
-import { useEffect, useRef } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
+import { useEffect, useRef } from "react";
 import { z } from "zod";
 
-import { buildPageHead } from "@/lib/metadata";
 import { useTrackVisitMutation } from "@/backend/referrals/referrals.query";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
 import Features from "@/components/RateupHomePage/shared/Features";
@@ -14,14 +12,13 @@ import HowItWorks from "@/components/RateupHomePage/shared/HowItWorks";
 import LoyaltySection from "@/components/RateupHomePage/shared/LoyaltySection";
 import Problem from "@/components/RateupHomePage/shared/Problem";
 import TrustedBy from "@/components/RateupHomePage/shared/TrustedBy";
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
-import {
-  rateupLogoStackedWhiteTransparent,
-  rateupUrl,
-} from "@/utils/constants.ts";
+import { buildPageHead } from "@/lib/metadata";
+import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 import { homepageMarkdown } from "../../markdown/homepage";
 import { createMarkdownMiddleware } from "../../markdown/serveMarkdown";
+
+import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 const setApiCatalogHeader = createServerFn().handler(async () => {
   setResponseHeader(

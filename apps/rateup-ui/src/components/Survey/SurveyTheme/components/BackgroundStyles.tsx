@@ -1,8 +1,5 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Box, Group, Overlay, Radio, RadioGroup, Stack } from "@mantine/core";
+import { useCallback } from "react";
 
 import LocalOrUnsplashImagePicker from "../../../LocalOrUnsplashImagePicker/index.tsx";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker/index.tsx";
@@ -15,14 +12,14 @@ import {
   useSurveyThemeStateDispatch,
 } from "../SurveyThemeContext.tsx";
 import CustomSwitch from "./stylescomponent/CustomSwitch/index.tsx";
+
 import styles from "./stylescomponent/StylesComponent.module.css";
 
 function BackgroundStyles() {
   const selectedPageTab = useSelectedPageTab();
   const selectedPreview = useSelectedPreview();
   const surveyTheme = useSurveyThemeContextValue();
-  const { bg, confettiEnabled } =
-    surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
+  const { bg, confettiEnabled } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
 
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
@@ -75,8 +72,7 @@ function BackgroundStyles() {
     [selectedPreview],
   );
 
-  const { bgColor, chooseBgRadioInputValue, imageUrl } =
-    bg[selectedPreview + "Bg"];
+  const { bgColor, chooseBgRadioInputValue, imageUrl } = bg[selectedPreview + "Bg"];
 
   const isSurveyPageTab = selectedPageTab === ThemeTabEnum.SURVEY;
   const useSurveyBackground = !isSurveyPageTab && bg.useSurveyBackground;

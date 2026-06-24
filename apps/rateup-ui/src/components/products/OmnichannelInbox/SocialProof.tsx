@@ -2,16 +2,7 @@ import { useEffect, useRef } from "react";
 
 import style from "./omnichannel.module.css";
 
-const brands = [
-  "Noon",
-  "Namshi",
-  "myG",
-  "VOYE Homes",
-  "ShopDoc",
-  "ELANCE",
-  "Beleaf",
-  "Fableut",
-];
+const brands = ["Noon", "Namshi", "myG", "VOYE Homes", "ShopDoc", "ELANCE", "Beleaf", "Fableut"];
 
 function CountUp({ target, suffix }: { target: number; suffix: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -29,8 +20,7 @@ function CountUp({ target, suffix }: { target: number; suffix: string }) {
         const tick = (now: number) => {
           const p = Math.min((now - start) / dur, 1);
           const v = target * (1 - Math.pow(1 - p, 3));
-          el.textContent =
-            (target % 1 === 0 ? Math.round(v) : v.toFixed(1)) + suffix;
+          el.textContent = (target % 1 === 0 ? Math.round(v) : v.toFixed(1)) + suffix;
           if (p < 1) requestAnimationFrame(tick);
           else el.textContent = target + suffix;
         };
@@ -111,8 +101,8 @@ export default function SocialProof() {
               className="font-display font-black leading-none tracking-[-0.02em]"
               style={{ fontSize: "clamp(24px,3vw,38px)", color: "#FFB638" }}
             >
-              6<span style={{ fontSize: "0.55em", fontWeight: 800 }}>hr</span> →
-              20<span style={{ fontSize: "0.55em", fontWeight: 800 }}>min</span>
+              6<span style={{ fontSize: "0.55em", fontWeight: 800 }}>hr</span> → 20
+              <span style={{ fontSize: "0.55em", fontWeight: 800 }}>min</span>
             </div>
             <div className="text-[13px] text-white/75 mt-[7px] font-medium">
               Avg. response time improvement

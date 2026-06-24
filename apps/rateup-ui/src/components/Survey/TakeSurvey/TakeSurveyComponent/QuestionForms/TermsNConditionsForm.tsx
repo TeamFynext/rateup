@@ -1,17 +1,6 @@
-"use client";
-
-import { useContext } from "react";
-
-import {
-  Anchor,
-  Checkbox,
-  Group,
-  luminance,
-  Modal,
-  Text,
-  useMantineTheme,
-} from "@mantine/core";
+import { Anchor, Checkbox, Group, luminance, Modal, Text, useMantineTheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
@@ -27,16 +16,12 @@ export function TermsNConditionsForm({ tncData }) {
   const theme = useMantineTheme();
   const primaryColor = theme.colors[theme.primaryColor][8];
   const { t: translations } = useTranslation();
-  const textColor =
-    luminance(primaryColor) > 0.8
-      ? `var(--mantine-color-gray-7)`
-      : primaryColor;
+  const textColor = luminance(primaryColor) > 0.8 ? `var(--mantine-color-gray-7)` : primaryColor;
 
   const tnc = tncData?.[selectedLanguage] || {
     title: translations("I agree to"),
     urlTitle: translations("terms and conditions"),
-    content:
-      "Terms & conditions.... \n conditions 1....\n conditions 3.... \n conditions 3....",
+    content: "Terms & conditions.... \n conditions 1....\n conditions 3.... \n conditions 3....",
   };
 
   return (
@@ -67,12 +52,7 @@ export function TermsNConditionsForm({ tncData }) {
           }
         />
       </FormPaperLayout>
-      <Modal
-        opened={opened}
-        onClose={close}
-        title={translations("Terms & Conditions")}
-        centered
-      >
+      <Modal opened={opened} onClose={close} title={translations("Terms & Conditions")} centered>
         <Text pb="50px">{tnc?.content}</Text>
 
         <Group justify="flex-end">

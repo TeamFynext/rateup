@@ -68,8 +68,7 @@ export const useSaveTemplateAsDraftMutation = (id, onSuccess, onError) => {
 export const useUpdateTemplateMutation = (id, onSuccess?, onError?) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
-    mutationFn: ({ templateId, templateData }: any) =>
-      updateWaTemplate(templateId, templateData),
+    mutationFn: ({ templateId, templateData }: any) => updateWaTemplate(templateId, templateData),
     onSuccess: () => {
       toast.success("Template Updated Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
@@ -159,14 +158,7 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
       parameterData: any;
       teamId: string;
       whatsappSettingsPhoneId: string;
-    }) =>
-      sendWaTemplateToUser(
-        templateId,
-        phone,
-        parameterData,
-        teamId,
-        whatsappSettingsPhoneId,
-      ),
+    }) => sendWaTemplateToUser(templateId, phone, parameterData, teamId, whatsappSettingsPhoneId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wa-messages", contactId] });
       queryClient.invalidateQueries({ queryKey: ["wa-contacts"] });

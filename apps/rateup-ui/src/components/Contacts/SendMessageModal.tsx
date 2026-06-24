@@ -1,11 +1,10 @@
-import React, { useState } from "react";
-
 import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
 import { Send } from "lucide-react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 
-import { MessagePlatform } from "@/types/enums.ts";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { MessagePlatform } from "@/types/enums.ts";
 
 import { AccountSelector } from "../input/AccountSelector.tsx";
 import { Button } from "../ui/button.tsx";
@@ -18,13 +17,7 @@ import {
   DialogTitle,
 } from "../ui/dialog.tsx";
 import { Label } from "../ui/label.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 
 const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
@@ -53,9 +46,7 @@ const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Send Message</DialogTitle>
-          <DialogDescription>
-            {`Send a message to ${selectedContact.name}`}
-          </DialogDescription>
+          <DialogDescription>{`Send a message to ${selectedContact.name}`}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2 w-full">

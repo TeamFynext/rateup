@@ -1,16 +1,6 @@
-"use client";
-
-import { useContext, useEffect, useRef, useState } from "react";
-
-import {
-  Box,
-  Checkbox,
-  FocusTrap,
-  Input,
-  Stack,
-  useMantineTheme,
-} from "@mantine/core";
+import { Box, Checkbox, FocusTrap, Input, Stack, useMantineTheme } from "@mantine/core";
 import { AnimatePresence, motion } from "motion/react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
@@ -18,6 +8,7 @@ import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
 
 import { MultipleSelectCard } from "../SelectionCard/MultipleSelectCard.tsx";
+
 import classes from "../TakeSurvey.module.css";
 
 interface MSQFormProps {
@@ -40,22 +31,15 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
   const selectedFeature = features?.[selectedLanguage];
   const otherInputContainerRef = useRef(null);
   const bDivRef = useRef(null);
-  const [isOtherInputFocusTrapActive, setIsOtherInputFocusTrapActive] =
-    useState(false);
+  const [isOtherInputFocusTrapActive, setIsOtherInputFocusTrapActive] = useState(false);
 
   const data = options?.map((op) => op?.value);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const [otherInput, setOtherInput] = useState(
-    response?.find((r) => r?.other)?.other || "",
-  );
+  const [otherInput, setOtherInput] = useState(response?.find((r) => r?.other)?.other || "");
 
   useEffect(() => {
     if (response) {
-      setSelectedOp(
-        response?.map((r) =>
-          r?.other ? selectedFeature?.other.title : r?.value,
-        ),
-      );
+      setSelectedOp(response?.map((r) => (r?.other ? selectedFeature?.other.title : r?.value)));
     }
   }, [response]);
 
@@ -72,10 +56,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
   };
 
   useEffect(() => {
-    if (
-      selectedOp.includes(selectedFeature?.other?.title) &&
-      otherInputContainerRef.current
-    ) {
+    if (selectedOp.includes(selectedFeature?.other?.title) && otherInputContainerRef.current) {
       bDivRef.current.scrollIntoView({ behavior: "smooth" });
     } else if (isOtherInputFocusTrapActive) {
       setIsOtherInputFocusTrapActive(false);
@@ -90,17 +71,8 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
 
   return (
     <Stack w={"100%"} mr="sm" style={{ overflow: "hidden" }}>
-      <Checkbox.Group
-        value={selectedOp}
-        onChange={handleSelectedOp}
-        mr={"sm"}
-        w={"100%"}
-      >
-        <MultipleSelectCard
-          data={data}
-          checkBoxEnable
-          selectedValue={selectedOp}
-        />
+      <Checkbox.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"} w={"100%"}>
+        <MultipleSelectCard data={data} checkBoxEnable selectedValue={selectedOp} />
       </Checkbox.Group>
       <AnimatePresence initial={false}>
         {selectedFeature?.other?.isEnabled &&
@@ -136,13 +108,8 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
                     value={otherInput || ""}
                     onChange={(e) => {
                       setOtherInput(e.currentTarget.value);
-                      const res = options?.filter((op) =>
-                        selectedOp?.includes(op?.value),
-                      );
-                      updateResponse([
-                        ...res,
-                        { other: e.currentTarget.value },
-                      ]);
+                      const res = options?.filter((op) => selectedOp?.includes(op?.value));
+                      updateResponse([...res, { other: e.currentTarget.value }]);
                     }}
                     variant="unstyled"
                     classNames={{

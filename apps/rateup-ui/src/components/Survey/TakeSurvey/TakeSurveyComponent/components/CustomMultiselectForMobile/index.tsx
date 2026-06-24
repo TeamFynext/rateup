@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 import {
   ActionIcon,
   Button,
@@ -22,38 +18,30 @@ import {
 import { IconArrowLeft, IconCheck, IconDeselect } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { motion, useAnimate } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
 
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils.ts";
+
 import commonStyles from "../CustomSelectForMobile/CustomSelectForMobile.module.css";
 import styles from "./CustomMultiselectForMobile.module.css";
 
 const cxCommon = classNames.bind(commonStyles);
 const cx = classNames.bind(styles);
 
-function CustomMultiselectForMobile({
-  value,
-  data,
-  onChange,
-  placeholder,
-  portalProps = {},
-}) {
+function CustomMultiselectForMobile({ value, data, onChange, placeholder, portalProps = {} }) {
   const mantineTheme = useMantineTheme();
   const themePrimaryColor = mantineTheme.colors.primaryColor
     ? mantineTheme.colors.primaryColor[5]
     : "#1C518E";
 
   const primaryColor =
-    luminance(themePrimaryColor) > 0.8
-      ? `var(--mantine-color-gray-7)`
-      : themePrimaryColor;
+    luminance(themePrimaryColor) > 0.8 ? `var(--mantine-color-gray-7)` : themePrimaryColor;
   const pillTextColor = isLightColor(primaryColor) ? "#000000" : "#FFFFFF";
 
-  const foregroundColor = isLightColor(themePrimaryColor)
-    ? "#000000"
-    : "#FFFFFF";
+  const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
   const surveyThemeData = useSurveyThemeData();
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
@@ -62,12 +50,11 @@ function CustomMultiselectForMobile({
     true,
   );
 
-  const [scope, animate] = useAnimate();
+  const [, animate] = useAnimate();
   const optionsMotionDivRefs = useRef(null);
 
   const [search, setSearch] = useState("");
-  const [isOptionSelectionDivVisible, setIsOptionSelectionDivVisible] =
-    useState(false);
+  const [isOptionSelectionDivVisible, setIsOptionSelectionDivVisible] = useState(false);
   const combobox = useCombobox({
     onDropdownClose: () => {
       setSearch("");
@@ -76,9 +63,7 @@ function CustomMultiselectForMobile({
   const { t: translations } = useTranslation();
   const handleValueSelect = async (val) => {
     const valuesArr = value;
-    const newValuesArr = value.includes(val)
-      ? value.filter((v) => v !== val)
-      : [...value, val];
+    const newValuesArr = value.includes(val) ? value.filter((v) => v !== val) : [...value, val];
 
     onChange(newValuesArr);
 
@@ -141,9 +126,7 @@ function CustomMultiselectForMobile({
         color: foregroundColor,
         borderColor: primaryColor,
       };
-      const styleObj = isSelectedItem
-        ? selectedOptionStyleObj
-        : unSelectedOptionStyleObj;
+      const styleObj = isSelectedItem ? selectedOptionStyleObj : unSelectedOptionStyleObj;
 
       return (
         <Combobox.Option
@@ -210,9 +193,7 @@ function CustomMultiselectForMobile({
         >
           <Pill.Group className={cx("pills-group")}>
             {values.length > 0 && values}
-            <Input.Placeholder>
-              {placeholder || "Pick values"}
-            </Input.Placeholder>
+            <Input.Placeholder>{placeholder || "Pick values"}</Input.Placeholder>
           </Pill.Group>
           <ComboboxChevron />
         </PillsInput>
@@ -247,9 +228,7 @@ function CustomMultiselectForMobile({
                   {options.length > 0 ? (
                     options
                   ) : (
-                    <Combobox.Empty>
-                      {translations("Nothing found...")}
-                    </Combobox.Empty>
+                    <Combobox.Empty>{translations("Nothing found...")}</Combobox.Empty>
                   )}
                 </Stack>
               </ScrollAreaAutosize>

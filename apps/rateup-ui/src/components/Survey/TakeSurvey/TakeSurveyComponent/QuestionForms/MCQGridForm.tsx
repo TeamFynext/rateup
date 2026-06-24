@@ -1,7 +1,3 @@
-"use client";
-
-import { useContext, useEffect, useRef, useState } from "react";
-
 import {
   CheckIcon,
   Divider,
@@ -16,6 +12,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
@@ -30,17 +27,11 @@ interface MCQGridFormProps {
   previewChoices?: Choice[];
   isPreview?: boolean;
 }
-const MCQGridForm = ({
-  features,
-  previewChoices,
-  isPreview,
-}: MCQGridFormProps) => {
+const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { selectedQ } = useContext(SelectedQContext);
   const choices =
-    selectedQ?.choices?.[selectedLanguage] ||
-    previewChoices?.[selectedLanguage] ||
-    sampleChoices;
+    selectedQ?.choices?.[selectedLanguage] || previewChoices?.[selectedLanguage] || sampleChoices;
   const questions = features?.[selectedLanguage]?.questions;
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -57,8 +48,7 @@ const MCQGridForm = ({
   };
 
   const selectedPreview = useSelectedPreview();
-  const isMobile =
-    useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
+  const isMobile = useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
 
   const [tableHeight, setTableHeight] = useState<number>(null);
   const [tableWidth, setTableWidth] = useState<number>(null);
@@ -84,10 +74,7 @@ const MCQGridForm = ({
   const TableComponent = () => {
     const rows = questions?.map((question) => (
       <Table.Tr key={question}>
-        <Table.Td
-          style={{ position: "sticky", left: 0, top: 0, zIndex: 1 }}
-          bg={`#E4E6ED`}
-        >
+        <Table.Td style={{ position: "sticky", left: 0, top: 0, zIndex: 1 }} bg={`#E4E6ED`}>
           {question}
         </Table.Td>
         {choices?.map((choice) => (
@@ -95,15 +82,11 @@ const MCQGridForm = ({
             <Radio
               value={choice?.value}
               checked={response?.[question]?.value == choice?.value}
-              onChange={(e) =>
-                handleUpdateResponse(e.currentTarget.value, question)
-              }
+              onChange={(e) => handleUpdateResponse(e.currentTarget.value, question)}
               size="md"
               icon={CheckIcon}
               color={themePrimaryColor}
-              iconColor={
-                isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF"
-              }
+              iconColor={isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF"}
             />
           </Table.Td>
         ))}
@@ -170,23 +153,15 @@ const MCQGridMobileForm = ({
   questions,
   handleUpdateResponse,
 }: MCQGridMobileFormProps) => {
-  const { response, updateResponse } = useContext(CurrentResponsesContext);
+  const { response } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
-  const themePrimaryColor = theme.colors.primaryColor
-    ? theme.colors.primaryColor[5]
-    : "#1C518E";
+  const themePrimaryColor = theme.colors.primaryColor ? theme.colors.primaryColor[5] : "#1C518E";
   const textColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
   const surveyTheme = useSurveyThemeData()?.surveyTheme;
   const titleColor = surveyTheme?.title.styles?.color;
 
   return (
-    <ScrollAreaAutosize
-      mah={"100%"}
-      w={"100%"}
-      scrollbarSize={4}
-      offsetScrollbars
-      p={"sm"}
-    >
+    <ScrollAreaAutosize mah={"100%"} w={"100%"} scrollbarSize={4} offsetScrollbars p={"sm"}>
       {questions?.map((question, index) => (
         <Stack key={index}>
           <Title order={5} c={titleColor || "black"}>
@@ -209,9 +184,7 @@ const MCQGridMobileForm = ({
                   <Radio
                     value={choice?.value as string}
                     checked={response?.[question]?.value == choice?.value}
-                    onChange={(e) =>
-                      handleUpdateResponse(e.currentTarget.value, question)
-                    }
+                    onChange={(e) => handleUpdateResponse(e.currentTarget.value, question)}
                     size="md"
                     icon={CheckIcon}
                     label={choice?.value as string}

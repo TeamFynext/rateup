@@ -1,32 +1,14 @@
-"use client";
-
-import React from "react";
-
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  Calendar,
-  CreditCard,
-  DollarSign,
-  Package,
-  Play,
-  Square,
-} from "lucide-react";
+import { Calendar, CreditCard, DollarSign, Package, Play, Square } from "lucide-react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { usePaymentSubcription } from "@/backend/payment/payment.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 
 import { SubscriptionsDataTableToolbar } from "./subscriptions-data-table-toolbar.tsx";
 
@@ -140,9 +122,7 @@ const RazorpaySubscriptions = () => {
     {
       accessorKey: "start",
       header: createSortableHeader("Starts At"),
-      cell: ({ row }) => (
-        <span className="text-sm">{row.getValue("start")}</span>
-      ),
+      cell: ({ row }) => <span className="text-sm">{row.getValue("start")}</span>,
       meta: { title: "Starts At" },
     },
     {
@@ -200,40 +180,28 @@ const RazorpaySubscriptions = () => {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Active
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {activeSubscriptions}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{activeSubscriptions}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Completed
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {completedSubscriptions}
-            </div>
+            <div className="text-2xl font-bold text-blue-600">{completedSubscriptions}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Cancelled
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Cancelled</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {cancelledSubscriptions}
-            </div>
+            <div className="text-2xl font-bold text-red-600">{cancelledSubscriptions}</div>
           </CardContent>
         </Card>
       </div>

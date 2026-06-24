@@ -176,12 +176,9 @@ export function useCancelRazorpaySubscriptionMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
-      toast.success(
-        "Rateup Subscription cancelled. Enjoy services till expiry date.",
-        {
-          id: "load-data",
-        },
-      );
+      toast.success("Rateup Subscription cancelled. Enjoy services till expiry date.", {
+        id: "load-data",
+      });
     },
     onError: (error) => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
@@ -219,7 +216,6 @@ export const useDeletePaymentPlanMutation = () => {
 };
 
 export function useSendMailPlanSelectDetails() {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: sendMailPlanSelectDetails,
   });

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { PageType } from "@/types/enums.ts";
 import { getPublicSurvey } from "@/backend/surveys/survey.api";
 import ThankYou from "@/components/(public-facing)/public/survey/$surveyId/end";
+import { PageType } from "@/types/enums.ts";
 
 export const Route = createFileRoute("/(public-facing)/ws/$shortId/end/")({
   loader: async ({ params }) => {
@@ -28,22 +28,14 @@ export const Route = createFileRoute("/(public-facing)/ws/$shortId/end/")({
 });
 
 function End() {
-  const {
-    surveyId,
-    kioskMode,
-    redirect,
-    surveyThemeData,
-    pagesThemeData,
-    questions,
-  } = Route.useLoaderData();
+  const { surveyId, kioskMode, redirect, surveyThemeData, pagesThemeData, questions } =
+    Route.useLoaderData();
 
   const defaultTitleSubtitleTexts = {
     titleText: `<h3 style="text-align: center">Thank you</h3><p style="text-align: center">Thank you for taking the survey</p>`,
   };
 
-  const texts = questions?.find(
-    (questionObj) => questionObj.type === PageType.ThankYou,
-  );
+  const texts = questions?.find((questionObj) => questionObj.type === PageType.ThankYou);
 
   return (
     <ThankYou

@@ -1,8 +1,3 @@
-"use client";
-
-import * as React from "react";
-import { useMemo, useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Activity,
@@ -19,11 +14,11 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import * as React from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { cn } from "@/lib/utils";
-import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import {
   useCreateLifeCycleMutation,
   useDeleteLifeCycleMutation,
@@ -41,13 +36,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -61,6 +50,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/contacts/lifecycle/")({
   component: ContactSettings,
@@ -146,16 +137,9 @@ interface SetupViewProps {
   readonly handleCreateStage: (isLost: boolean) => void;
   readonly handleRenameStage: (id: string, newName: string) => void;
   readonly handleUpdateDescription: (id: string, newDesc: string) => void;
-  readonly handleUpdateStageCategory: (
-    id: string,
-    category: "active" | "won",
-  ) => void;
+  readonly handleUpdateStageCategory: (id: string, category: "active" | "won") => void;
   readonly handleDeleteStage: (id: string) => void;
-  readonly handleMoveStage: (
-    index: number,
-    direction: "up" | "down",
-    isLost: boolean,
-  ) => void;
+  readonly handleMoveStage: (index: number, direction: "up" | "down", isLost: boolean) => void;
   readonly setIsSettingUp: (show: boolean) => void;
   readonly isCreating: boolean;
   readonly isReordering: boolean;
@@ -205,9 +189,7 @@ interface EmojiColorPickerProps {
 const sortStages = (stages: BackendLifecycleStage[]) =>
   [...stages].sort((a, b) => a.ordering - b.ordering);
 
-const transformToUIStage = (
-  backendStage: BackendLifecycleStage,
-): UILifecycleStage => ({
+const transformToUIStage = (backendStage: BackendLifecycleStage): UILifecycleStage => ({
   id: backendStage.id,
   name: backendStage.name,
   count: backendStage._count.contacts,
@@ -215,11 +197,7 @@ const transformToUIStage = (
   emoji: backendStage.emoji || "🔹",
   statusBadge: backendStage.category,
   statusBadgeType:
-    backendStage.category === "won"
-      ? "won"
-      : backendStage.category === "lost"
-        ? "lost"
-        : "active",
+    backendStage.category === "won" ? "won" : backendStage.category === "lost" ? "lost" : "active",
   isDefault: backendStage.isDefault,
   description: backendStage.description || "",
 });
@@ -228,10 +206,7 @@ const getStageToneStyle = (color: string): React.CSSProperties => ({
   backgroundColor: color || "#0ea5e9",
 });
 
-const getProgressToneStyle = (
-  color: string,
-  isLost: boolean,
-): React.CSSProperties => ({
+const getProgressToneStyle = (color: string, isLost: boolean): React.CSSProperties => ({
   backgroundColor: isLost ? "#f43f5e" : color || "#0ea5e9",
 });
 
@@ -239,14 +214,12 @@ function ContactSettings() {
   const { t } = useTranslation("contacts.lifecycle");
   const { data: lifecycles, isLoading } = useLifecyclesWithContactCount();
   const { confirm, ConfirmDialog } = useConfirmDialog();
-  const { data: userInfo, isLoading: userLoading } = useUserInfo();
+  const { data: userInfo } = useUserInfo();
 
   const { data: waSettingsData } = useWaSettings();
   const updateOrgDetails = useUpdateOrgDetailsMutation();
   const updateWaSettings = useUpdateWaSettingsMutation(waSettingsData?.[0]?.id);
-  const syncDatasetsMutation = useSyncDatasetsMutation(
-    waSettingsData?.[0]?.id || "",
-  );
+  const syncDatasetsMutation = useSyncDatasetsMutation(waSettingsData?.[0]?.id || "");
 
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [isConversionApiActive, setIsConversionApiActive] = useState(false);
@@ -268,8 +241,7 @@ function ContactSettings() {
       setConversionData({
         event_name: waSettingsData[0].conversionData?.event_name || "Purchase",
         currency: waSettingsData[0].conversionData?.currency || "INR",
-        conversionsApiDatasetId:
-          waSettingsData[0].conversionsApiDatasetId || "",
+        conversionsApiDatasetId: waSettingsData[0].conversionsApiDatasetId || "",
       });
     }
   }, [waSettingsData]);
@@ -289,11 +261,7 @@ function ContactSettings() {
         await updateOrgDetails.mutateAsync({ isConversionApiActive: active });
         setIsConversionApiActive(active);
 
-        if (
-          active &&
-          waSettingsData?.[0]?.id &&
-          !finalData.conversionsApiDatasetId
-        ) {
+        if (active && waSettingsData?.[0]?.id && !finalData.conversionsApiDatasetId) {
           try {
             const datasets = await syncDatasetsMutation.mutateAsync();
             if (datasets && datasets.length > 0) {
@@ -302,7 +270,7 @@ function ContactSettings() {
             } else {
               toast.info(t("No Meta datasets found for this account."));
             }
-          } catch (e) {
+          } catch {
             toast.error(t("Failed to auto-fetch Meta datasets."));
           }
         }
@@ -312,8 +280,7 @@ function ContactSettings() {
         waSettingsData?.[0]?.id &&
         (finalData.event_name !== conversionData.event_name ||
           finalData.currency !== conversionData.currency ||
-          finalData.conversionsApiDatasetId !==
-            conversionData.conversionsApiDatasetId)
+          finalData.conversionsApiDatasetId !== conversionData.conversionsApiDatasetId)
       ) {
         await updateWaSettings.mutateAsync({
           conversionData: {
@@ -325,7 +292,7 @@ function ContactSettings() {
         setConversionData(finalData);
       }
       toast.success(t("Settings saved successfully"));
-    } catch (error) {
+    } catch {
       toast.error(t("Failed to save settings"));
     }
   };
@@ -347,9 +314,7 @@ function ContactSettings() {
   const activeStages = useMemo(() => {
     if (!lifecycles) return [];
     return sortStages(
-      lifecycles.filter(
-        (stage) => stage.category === "active" || stage.category === "won",
-      ),
+      lifecycles.filter((stage) => stage.category === "active" || stage.category === "won"),
     );
   }, [lifecycles]);
 
@@ -358,27 +323,15 @@ function ContactSettings() {
     return sortStages(lifecycles.filter((stage) => stage.category === "lost"));
   }, [lifecycles]);
 
-  const uiStages = useMemo(
-    () => activeStages.map(transformToUIStage),
-    [activeStages],
-  );
-  const uiLostStages = useMemo(
-    () => lostStages.map(transformToUIStage),
-    [lostStages],
-  );
+  const uiStages = useMemo(() => activeStages.map(transformToUIStage), [activeStages]);
+  const uiLostStages = useMemo(() => lostStages.map(transformToUIStage), [lostStages]);
 
-  const allStages = useMemo(
-    () => [...uiStages, ...uiLostStages],
-    [uiStages, uiLostStages],
-  );
+  const allStages = useMemo(() => [...uiStages, ...uiLostStages], [uiStages, uiLostStages]);
   const totalContacts = useMemo(
     () => allStages.reduce((sum, stage) => sum + stage.count, 0),
     [allStages],
   );
-  const funnelStages = useMemo(
-    () => [...uiStages, ...uiLostStages],
-    [uiStages, uiLostStages],
-  );
+  const funnelStages = useMemo(() => [...uiStages, ...uiLostStages], [uiStages, uiLostStages]);
 
   const getPercentage = (count: number) => {
     if (totalContacts === 0) return 0;
@@ -417,24 +370,16 @@ function ContactSettings() {
     });
   };
 
-  const handleUpdateStageCategory = (
-    id: string,
-    category: "active" | "won",
-  ) => {
+  const handleUpdateStageCategory = (id: string, category: "active" | "won") => {
     const stage = lifecycles?.find((item) => item.id === id);
     if (!stage || stage.category === "lost" || stage.category === category) {
       return;
     }
 
     if (stage.category === "won" && category === "active") {
-      const wonStages =
-        lifecycles?.filter((item) => item.category === "won") || [];
+      const wonStages = lifecycles?.filter((item) => item.category === "won") || [];
       if (wonStages.length === 1) {
-        toast.error(
-          t(
-            "Cannot change the last won stage. There must be at least one won stage.",
-          ),
-        );
+        toast.error(t("Cannot change the last won stage. There must be at least one won stage."));
         return;
       }
     }
@@ -449,11 +394,7 @@ function ContactSettings() {
     });
   };
 
-  const handleMoveStage = (
-    index: number,
-    direction: "up" | "down",
-    isLost: boolean,
-  ) => {
+  const handleMoveStage = (index: number, direction: "up" | "down", isLost: boolean) => {
     const relevantStages = isLost ? lostStages : activeStages;
     const targetIndex = direction === "up" ? index - 1 : index + 1;
 
@@ -484,14 +425,9 @@ function ContactSettings() {
     }
 
     if (stage.category === "won") {
-      const wonStages =
-        lifecycles?.filter((item) => item.category === "won") || [];
+      const wonStages = lifecycles?.filter((item) => item.category === "won") || [];
       if (wonStages.length === 1) {
-        toast.error(
-          t(
-            "Cannot delete the last won stage. There must be at least one won stage.",
-          ),
-        );
+        toast.error(t("Cannot delete the last won stage. There must be at least one won stage."));
         return;
       }
     }
@@ -599,9 +535,7 @@ function ContactSettings() {
                     {t("Lifecycle Management")}
                   </h1>
                   <p className="mt-1 text-xs font-medium text-muted-foreground">
-                    {t(
-                      "Track and manage customer journey across different lifecycle stages",
-                    )}
+                    {t("Track and manage customer journey across different lifecycle stages")}
                   </p>
                 </div>
                 <Button
@@ -644,9 +578,7 @@ function ContactSettings() {
                         {t("Lifecycle Stages")}
                       </h2>
                       <p className="text-[11px] font-medium text-muted-foreground">
-                        {t(
-                          "Distribution of contacts across active journey stages",
-                        )}
+                        {t("Distribution of contacts across active journey stages")}
                       </p>
                     </div>
 
@@ -669,9 +601,7 @@ function ContactSettings() {
                         {t("Lost Stages")}
                       </h2>
                       <p className="text-[11px] font-medium text-muted-foreground">
-                        {t(
-                          "Distribution of contacts across different lost stages",
-                        )}
+                        {t("Distribution of contacts across different lost stages")}
                       </p>
                     </div>
 
@@ -705,9 +635,7 @@ function ContactSettings() {
               conversionData={conversionData}
               handleUpdateConversionApi={handleUpdateConversionApi}
               hasWhatsAppSettings={
-                userInfo && "data" in userInfo
-                  ? userInfo.data.hasWhatsAppSettings
-                  : false
+                userInfo && "data" in userInfo ? userInfo.data.hasWhatsAppSettings : false
               }
               showAddActiveForm={showAddActiveForm}
               setShowAddActiveForm={setShowAddActiveForm}
@@ -868,14 +796,10 @@ function FunnelVisualization({
         <div className="hidden items-center gap-4 rounded-xl border border-border bg-card px-3 py-1 text-[10px] font-bold text-muted-foreground sm:flex">
           <div className="flex items-center gap-1.5">
             <span className="size-1.5 rounded-full bg-primary" />
-            <span>
-              {t("Total Funnel Depth: {count}", { count: totalContacts })}
-            </span>
+            <span>{t("Total Funnel Depth: {count}", { count: totalContacts })}</span>
           </div>
           <div className="h-3 w-px bg-border" />
-          <div className="uppercase tracking-widest text-primary">
-            {t("Live Flow Sync")}
-          </div>
+          <div className="uppercase tracking-widest text-primary">{t("Live Flow Sync")}</div>
         </div>
       </div>
 
@@ -886,18 +810,8 @@ function FunnelVisualization({
 
             {stages.map((stage, index) => {
               const pct = getPercentage(stage.count);
-              const previousStage = index > 0 ? stages[index - 1] : null;
+
               const width = `${Math.max(55, 100 - index * 15)}%`;
-              const dropoffPercent = previousStage?.count
-                ? Math.max(
-                    0,
-                    Math.round(
-                      ((previousStage.count - stage.count) /
-                        previousStage.count) *
-                        100,
-                    ),
-                  )
-                : 0;
 
               return (
                 <div
@@ -1007,22 +921,16 @@ function SetupView({
 }: Readonly<SetupViewProps>) {
   const { t } = useTranslation("contacts.lifecycle");
   const stages = useMemo(
-    () =>
-      sortStages(backendStages.filter((stage) => stage.category !== "lost")),
+    () => sortStages(backendStages.filter((stage) => stage.category !== "lost")),
     [backendStages],
   );
   const lostStages = useMemo(
-    () =>
-      sortStages(backendStages.filter((stage) => stage.category === "lost")),
+    () => sortStages(backendStages.filter((stage) => stage.category === "lost")),
     [backendStages],
   );
-  const [visibleDescriptions, setVisibleDescriptions] = useState<
-    Record<string, boolean>
-  >({});
+  const [visibleDescriptions, setVisibleDescriptions] = useState<Record<string, boolean>>({});
 
-  const [pixelIdDraft, setPixelIdDraft] = useState(
-    conversionData?.conversionsApiDatasetId || "",
-  );
+  const [pixelIdDraft, setPixelIdDraft] = useState(conversionData?.conversionsApiDatasetId || "");
 
   React.useEffect(() => {
     setPixelIdDraft(conversionData?.conversionsApiDatasetId || "");
@@ -1048,10 +956,7 @@ function SetupView({
             )}
           </p>
         </div>
-        <Switch
-          checked={showStagesGlobal}
-          onCheckedChange={setShowStagesGlobal}
-        />
+        <Switch checked={showStagesGlobal} onCheckedChange={setShowStagesGlobal} />
       </Card>
 
       {hasWhatsAppSettings ? (
@@ -1069,9 +974,7 @@ function SetupView({
             </div>
             <Switch
               checked={isConversionApiActive}
-              onCheckedChange={(checked) =>
-                handleUpdateConversionApi(checked, conversionData)
-              }
+              onCheckedChange={(checked) => handleUpdateConversionApi(checked, conversionData)}
             />
           </div>
 
@@ -1085,9 +988,7 @@ function SetupView({
               )}
             >
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-muted-foreground">
-                  {t("Event Name")}
-                </Label>
+                <Label className="text-xs font-bold text-muted-foreground">{t("Event Name")}</Label>
                 <Select
                   value={conversionData.event_name || "Purchase"}
                   onValueChange={(val) =>
@@ -1108,9 +1009,7 @@ function SetupView({
               </div>
               {conversionData.event_name === "Purchase" && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-muted-foreground">
-                    {t("Currency")}
-                  </Label>
+                  <Label className="text-xs font-bold text-muted-foreground">{t("Currency")}</Label>
                   <Select
                     value={conversionData.currency || "INR"}
                     onValueChange={(val) =>
@@ -1134,9 +1033,7 @@ function SetupView({
                 </div>
               )}
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-muted-foreground">
-                  {t("Pixel ID")}
-                </Label>
+                <Label className="text-xs font-bold text-muted-foreground">{t("Pixel ID")}</Label>
                 <div className="relative">
                   <Input
                     value={pixelIdDraft}
@@ -1144,8 +1041,7 @@ function SetupView({
                     placeholder={t("Enter Pixel ID")}
                     className="w-full border-input bg-background pr-8 text-xs font-semibold text-foreground"
                   />
-                  {pixelIdDraft !==
-                    (conversionData?.conversionsApiDatasetId || "") && (
+                  {pixelIdDraft !== (conversionData?.conversionsApiDatasetId || "") && (
                     <Button
                       type="button"
                       size="icon"
@@ -1172,9 +1068,7 @@ function SetupView({
               {t("Meta Conversions API (CAPI)")}
             </h3>
             <p className="mt-1 max-w-4xl text-xs font-medium leading-relaxed text-muted-foreground">
-              {t(
-                "Please connect WhatsApp to configure Meta Conversions API for tracking.",
-              )}
+              {t("Please connect WhatsApp to configure Meta Conversions API for tracking.")}
             </p>
           </div>
         </Card>
@@ -1224,9 +1118,7 @@ function SetupView({
                   onUpdateStageCategory={(category) =>
                     handleUpdateStageCategory(stage.id, category)
                   }
-                  onMoveStage={(direction) =>
-                    handleMoveStage(index, direction, false)
-                  }
+                  onMoveStage={(direction) => handleMoveStage(index, direction, false)}
                   visibleDescription={visibleDescriptions[stage.id] || false}
                   onToggleDescription={() => toggleDescription(stage.id)}
                   canDelete={!stage.isDefault}
@@ -1299,9 +1191,7 @@ function SetupView({
                     handleUpdateDescription(stage.id, description)
                   }
                   onUpdateStageCategory={() => undefined}
-                  onMoveStage={(direction) =>
-                    handleMoveStage(index, direction, true)
-                  }
+                  onMoveStage={(direction) => handleMoveStage(index, direction, true)}
                   visibleDescription={visibleDescriptions[stage.id] || false}
                   onToggleDescription={() => toggleDescription(stage.id)}
                   canDelete={!stage.isDefault}
@@ -1351,9 +1241,7 @@ function SetupView({
         <CardFooter className="flex items-center justify-between border-t border-border bg-muted/30 px-6 py-4">
           <p className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
             <span>💡</span>
-            <span>
-              {t("Stages created are available instantly in active pipelines.")}
-            </span>
+            <span>{t("Stages created are available instantly in active pipelines.")}</span>
           </p>
           <Button
             onClick={() => setIsSettingUp(false)}
@@ -1383,9 +1271,7 @@ function StageListItem({
 }: Readonly<StageListItemProps>) {
   const { t } = useTranslation("contacts.lifecycle");
   const [nameDraft, setNameDraft] = useState(stage.name);
-  const [descriptionDraft, setDescriptionDraft] = useState(
-    stage.description || "",
-  );
+  const [descriptionDraft, setDescriptionDraft] = useState(stage.description || "");
 
   React.useEffect(() => {
     setNameDraft(stage.name);
@@ -1406,9 +1292,7 @@ function StageListItem({
           className="flex size-6 shrink-0 items-center justify-center rounded text-xs font-bold text-white shadow-sm"
           style={getStageToneStyle(stage.color)}
         >
-          <span>
-            {stage.emoji || (stage.category === "lost" ? "🛑" : "🔹")}
-          </span>
+          <span>{stage.emoji || (stage.category === "lost" ? "🛑" : "🔹")}</span>
         </div>
 
         <div className="flex-1">
@@ -1416,11 +1300,7 @@ function StageListItem({
             value={nameDraft}
             onChange={(event) => setNameDraft(event.target.value)}
             onBlur={() => onRename(nameDraft)}
-            placeholder={
-              stage.category === "lost"
-                ? t("Lost stage name")
-                : t("Stage title")
-            }
+            placeholder={stage.category === "lost" ? t("Lost stage name") : t("Stage title")}
             className="h-auto border-0 border-transparent bg-transparent px-0.5 py-0.5 text-xs font-bold text-foreground shadow-none hover:border-border focus-visible:border-ring focus-visible:ring-0"
           />
           <span className="block text-[9px] font-bold text-muted-foreground">
@@ -1430,18 +1310,12 @@ function StageListItem({
 
         <div className="flex shrink-0 items-center gap-1.5">
           {stage.isDefault ? (
-            <Badge
-              variant="secondary"
-              className="rounded px-1.5 py-0.5 text-[9px] font-extrabold"
-            >
+            <Badge variant="secondary" className="rounded px-1.5 py-0.5 text-[9px] font-extrabold">
               {t("Default")}
             </Badge>
           ) : null}
           {stage.category === "won" ? (
-            <Badge
-              variant="default"
-              className="rounded px-1.5 py-0.5 text-[9px] font-extrabold"
-            >
+            <Badge variant="default" className="rounded px-1.5 py-0.5 text-[9px] font-extrabold">
               {t("Won stage")}
             </Badge>
           ) : null}
@@ -1535,12 +1409,7 @@ function AddStageForm({
     >
       <div className="flex items-center justify-between">
         <h4 className="flex items-center gap-1 text-[12px] font-black tracking-tight text-foreground">
-          <Layers
-            className={cn(
-              "size-3",
-              isLost ? "text-destructive" : "text-primary",
-            )}
-          />
+          <Layers className={cn("size-3", isLost ? "text-destructive" : "text-primary")} />
           {isLost ? t("Add Lost Stage") : t("Add Lifecycle Stage")}
         </h4>
         <Button
@@ -1559,9 +1428,7 @@ function AddStageForm({
           {t("Name")}
         </Label>
         <Input
-          placeholder={
-            isLost ? t("Enter name. eg: Lost") : t("Enter name. eg: New Lead")
-          }
+          placeholder={isLost ? t("Enter name. eg: Lost") : t("Enter name. eg: New Lead")}
           value={addName}
           onChange={(event) => setAddName(event.target.value)}
           className="border-input bg-background text-xs font-semibold text-foreground"
@@ -1640,11 +1507,7 @@ function AddStageForm({
           disabled={isCreating || !addName.trim()}
           className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isCreating ? (
-            <Spinner data-icon="inline-start" />
-          ) : (
-            <Check className="size-3" />
-          )}
+          {isCreating ? <Spinner data-icon="inline-start" /> : <Check className="size-3" />}
           <span>{isCreating ? t("Adding...") : t("Add Stage")}</span>
         </Button>
       </div>
@@ -1680,8 +1543,7 @@ function EmojiPicker({
               onClick={() => setAddEmoji(emojiOption)}
               className={cn(
                 "flex size-7 items-center justify-center rounded text-xs transition-transform hover:scale-110 hover:bg-muted",
-                addEmoji === emojiOption &&
-                  "bg-muted font-bold ring-1 ring-border",
+                addEmoji === emojiOption && "bg-muted font-bold ring-1 ring-border",
               )}
             >
               {emojiOption}

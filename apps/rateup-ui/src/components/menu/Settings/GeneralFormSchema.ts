@@ -50,8 +50,7 @@ export const schema = z
   .check((ctx) => {
     const { value: values } = ctx;
     values.menuButtons?.map((data, index) => {
-      const isPhoneButton =
-        data.name === MenuButtons.CONTACT || data.name === MenuButtons.WHATSAPP;
+      const isPhoneButton = data.name === MenuButtons.CONTACT || data.name === MenuButtons.WHATSAPP;
 
       if (isPhoneButton && !isValidPhoneNumber(data.link)) {
         ctx.issues.push({

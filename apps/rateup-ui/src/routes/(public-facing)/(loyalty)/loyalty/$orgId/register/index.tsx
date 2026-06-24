@@ -1,12 +1,6 @@
-import { Suspense, useEffect } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  createFileRoute,
-  notFound,
-  useParams,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, notFound, useParams, useSearch } from "@tanstack/react-router";
+import { Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
@@ -33,9 +27,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 
-export const Route = createFileRoute(
-  "/(public-facing)/(loyalty)/loyalty/$orgId/register/",
-)({
+export const Route = createFileRoute("/(public-facing)/(loyalty)/loyalty/$orgId/register/")({
   component: RegisterPage,
 });
 
@@ -90,9 +82,7 @@ function RegisterForm() {
       { ...data, orgId: params.orgId as string, isPublic: true },
       {
         onSuccess: () => {
-          toast.success(
-            "Registration successful! Welcome to our loyalty program.",
-          );
+          toast.success("Registration successful! Welcome to our loyalty program.");
           form.reset();
         },
       },
@@ -103,9 +93,7 @@ function RegisterForm() {
   return (
     <Card className="w-full max-w-md mx-auto mt-10 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl text-center">
-          Loyalty Registration
-        </CardTitle>
+        <CardTitle className="text-2xl text-center">Loyalty Registration</CardTitle>
         <CardDescription className="text-center">
           Sign up to earn points and rewards!
         </CardDescription>
@@ -153,11 +141,7 @@ function RegisterForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="your.email@example.com"
-                      type="email"
-                      {...field}
-                    />
+                    <Input placeholder="your.email@example.com" type="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -1,11 +1,6 @@
-import { useEffect } from "react";
-
 import { useMediaQuery } from "@mantine/hooks";
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { useContactById } from "@/backend/campaign/contacts/contacts.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
@@ -24,6 +19,7 @@ import InboxSettings from "@/components/whatsapp/inbox/InboxSettings/index.tsx";
 import ChatDisplayContext, {
   useIsChatDisplayOpen,
 } from "../../../components/dashboard/inbox/ChatDisplayContext.tsx";
+
 import styles from "../../../components/dashboard/inbox/WhatsappInbox.module.css";
 
 export const Route = createFileRoute("/dashboard/inbox/")({
@@ -38,8 +34,7 @@ function WhatsAppInbox() {
   const contactId = searchParams.contactId;
   const navigate = useNavigate();
 
-  const { selectedContact, setSelectedContact, contactsById } =
-    useContactsStore();
+  const { selectedContact, setSelectedContact, contactsById } = useContactsStore();
   const { data: fetchedContact } = useContactById(
     contactId && !contactsById.has(contactId) ? contactId : "",
   );

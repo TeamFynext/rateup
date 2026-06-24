@@ -1,19 +1,11 @@
-"use client";
-
-import { useState } from "react";
-
 import { Group, Skeleton, Stack, Tooltip } from "@mantine/core";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { WaConfigType } from "@/types/enums.ts";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { WaConfigType } from "@/types/enums.ts";
 
 import { MetaLoginStatus } from "./meta-login-status.tsx";
 import { WhatsAppManualConfiguration } from "./whatsapp-manual-configuration.tsx";
@@ -25,9 +17,7 @@ export function WhatsAppSettingsDetail({
   waSettings: WaSettings | undefined;
   isLoading: boolean;
 }>) {
-  const [tab, setTab] = useState<string>(
-    waSettings?.[0]?.type ?? WaConfigType.Automated,
-  );
+  const [tab, setTab] = useState<string>(waSettings?.[0]?.type ?? WaConfigType.Automated);
   const { t: translations } = useTranslation();
 
   const isAutomated = waSettings?.[0]?.type === WaConfigType.Automated;

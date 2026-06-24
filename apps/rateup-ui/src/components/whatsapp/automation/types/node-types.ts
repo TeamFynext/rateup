@@ -407,10 +407,7 @@ export type NodeData =
   | InstagramIceBreakerNodeData;
 
 // Extended Node type with typed data
-export type TypedNode<T extends NodeType = NodeType> = Omit<
-  Node,
-  "data" | "type"
-> & {
+export type TypedNode<T extends NodeType = NodeType> = Omit<Node, "data" | "type"> & {
   type: T;
   data: NodeTypeMap[T];
 };
@@ -426,10 +423,7 @@ function assertNodeType<T extends NodeType>(
 }
 
 // Simplified helper to safely get typed data from a node
-function getTypedNodeData<T extends NodeType>(
-  node: TypedNode,
-  nodeType: T,
-): NodeTypeMap[T] | null {
+function getTypedNodeData<T extends NodeType>(node: TypedNode, nodeType: T): NodeTypeMap[T] | null {
   return node.type === nodeType ? (node.data as NodeTypeMap[T]) : null;
 }
 
@@ -493,9 +487,7 @@ export function validateNodeData(node: TypedNode): {
         };
       }
       // Check if any option is empty
-      const emptyOption = data.options.some(
-        (option) => !option || option.trim() === "",
-      );
+      const emptyOption = data.options.some((option) => !option || option.trim() === "");
       if (emptyOption) {
         return {
           valid: false,
@@ -632,10 +624,7 @@ export function validateNodeData(node: TypedNode): {
 
       // Validate header content based on headerType
       if (data.headerType) {
-        if (
-          data.headerType === "text" &&
-          (!data.header || data.header === "")
-        ) {
+        if (data.headerType === "text" && (!data.header || data.header === "")) {
           return {
             valid: false,
             message: `${node.data.label}: Text header content is required when header type is 'text'.`,
@@ -651,10 +640,7 @@ export function validateNodeData(node: TypedNode): {
         }
 
         // If document header type, filename is required
-        if (
-          data.headerType === "document" &&
-          (!data.filename || data.filename.trim() === "")
-        ) {
+        if (data.headerType === "document" && (!data.filename || data.filename.trim() === "")) {
           return {
             valid: false,
             message: `${node.data.label}: Filename is required for document header type.`,
@@ -942,9 +928,7 @@ export function validateNodeData(node: TypedNode): {
 
         // Validate URLs
         if (contact.urls && contact.urls.length > 0) {
-          const invalidUrl = contact.urls.some(
-            (url) => !url.url || url.url.trim() === "",
-          );
+          const invalidUrl = contact.urls.some((url) => !url.url || url.url.trim() === "");
           if (invalidUrl) {
             return {
               valid: false,
@@ -958,10 +942,7 @@ export function validateNodeData(node: TypedNode): {
 
     case "ticketNode": {
       const data = node.data as NodeTypeMap["ticketNode"];
-      if (
-        !data.ticket?.selectedBoardColumnId ||
-        data.ticket.selectedBoardColumnId.trim() === ""
-      ) {
+      if (!data.ticket?.selectedBoardColumnId || data.ticket.selectedBoardColumnId.trim() === "") {
         return {
           valid: false,
           message: `${node.data.label}: Selected column ID is required.`,
@@ -1019,10 +1000,7 @@ export function validateNodeData(node: TypedNode): {
             message: `${data.label}: At least one section required`,
           };
         let sum = 0;
-        if (
-          data.sections.length > 1 &&
-          data.sections.some((s) => !safeStrOrNull(s.title))
-        ) {
+        if (data.sections.length > 1 && data.sections.some((s) => !safeStrOrNull(s.title))) {
           return {
             valid: false,
             message: `${data.label}: Section title is required`,
@@ -1052,10 +1030,7 @@ export function validateNodeData(node: TypedNode): {
           };
         }
       }
-      if (
-        data.type === CatalogMessages.SingleProduct &&
-        !safeStrOrNull(data.productRetailerId)
-      ) {
+      if (data.type === CatalogMessages.SingleProduct && !safeStrOrNull(data.productRetailerId)) {
         return {
           valid: false,
           message: `${data.label}: product is required.`,
@@ -1075,8 +1050,7 @@ export function validateNodeData(node: TypedNode): {
       }
       // Check if any ice breaker has an empty question
       const emptyQuestion = data.iceBreakers.some(
-        (iceBreaker) =>
-          !iceBreaker.question || iceBreaker.question.trim() === "",
+        (iceBreaker) => !iceBreaker.question || iceBreaker.question.trim() === "",
       );
       if (emptyQuestion) {
         return {

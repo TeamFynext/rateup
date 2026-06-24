@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState } from "react";
 
+import type { UserAvailabilityStatus } from "@/backend/user/user.api";
 import type { WaAssignedChatPermission } from "@/types/enums.ts";
 import type { orgWsMessage } from "@/types/global";
-import type { UserAvailabilityStatus } from "@/backend/user/user.api";
 
 export interface User {
   role: string;

@@ -1,7 +1,3 @@
-"use client";
-
-import { useMemo } from "react";
-
 import { Group, Radio, RadioGroup, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
@@ -11,22 +7,9 @@ import {
   IconTags,
   IconWebhook,
 } from "@tabler/icons-react";
-import {
-  ArrowLeft,
-  Ban,
-  BellOff,
-  Bot,
-  CircleCheckBig,
-  FolderClosed,
-  Ticket,
-} from "lucide-react";
+import { ArrowLeft, Ban, BellOff, Bot, CircleCheckBig, FolderClosed, Ticket } from "lucide-react";
+import { useMemo } from "react";
 
-import {
-  MessagePlatform,
-  SubscriptionFeaturePathName,
-  WaMessageAssignStatus,
-} from "@/types/enums.ts";
-import { cn } from "@/lib/utils.ts";
 import {
   useContactGroup,
   useContactGroupsByContactId,
@@ -42,10 +25,7 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBlockWhatsAppUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
 import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
@@ -62,24 +42,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import { cn } from "@/lib/utils.ts";
 import { useChatbotStore } from "@/store/chatbot.store";
+import {
+  MessagePlatform,
+  SubscriptionFeaturePathName,
+  WaMessageAssignStatus,
+} from "@/types/enums.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 import { getContactClosedIcon } from "../../chatselect/chatselectCard/index.tsx";
-import {
-  generateInternalMessageId,
-  getSoucePlatformIconAndColor,
-} from "../../util.tsx";
+import { generateInternalMessageId, getSoucePlatformIconAndColor } from "../../util.tsx";
 import AssignUser from "./AssignUser.tsx";
 import WaInboxCountdownTimer from "./countDown/index.tsx";
 
@@ -104,12 +83,11 @@ export default function WaInboxChatDisplayHeader({
   const { data: chatbot } = useGetChatbotDetails(selectedChatbotId);
   const { data: subscription } = useSubscription();
 
-  const { data: contactgroups, isLoading: contactGroupsLoading } =
-    useContactGroupsByContactId(contact.id);
-  const { data: groups, isLoading: groupsLoading } = useContactGroup();
-  const updateGroupsMutation = useUpdateContactGroupsForContactMutation(
+  const { data: contactgroups, isLoading: contactGroupsLoading } = useContactGroupsByContactId(
     contact.id,
   );
+  const { data: groups, isLoading: groupsLoading } = useContactGroup();
+  const updateGroupsMutation = useUpdateContactGroupsForContactMutation(contact.id);
   const activeGroupIds = contactgroups?.map((g) => g.id) ?? [];
 
   const hasAIFeature = useMemo(
@@ -158,10 +136,7 @@ export default function WaInboxChatDisplayHeader({
     [tags],
   );
 
-  const allLifecycles = [
-    ...lifecycleGroups[0].items,
-    ...lifecycleGroups[1].items,
-  ];
+  const allLifecycles = [...lifecycleGroups[0].items, ...lifecycleGroups[1].items];
 
   const activeLabels = (contact as any)?.contactLabels || [];
   const assign = useAssignContactLabelsToContactId();
@@ -173,9 +148,7 @@ export default function WaInboxChatDisplayHeader({
     const nextLabelIds = isActive(labelId)
       ? activeIds.filter((id) => id !== labelId)
       : [...activeIds, labelId];
-    const updatedLabels = contactLabels.filter((label) =>
-      nextLabelIds.includes(label.id),
-    );
+    const updatedLabels = contactLabels.filter((label) => nextLabelIds.includes(label.id));
 
     assign.mutate(
       {
@@ -209,27 +182,24 @@ export default function WaInboxChatDisplayHeader({
     });
   };
 
-  const platform =
-    contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
-  const isInsta = platform === MessagePlatform.INSTAGRAM;
-  let leftSectionIcon: React.ReactNode;
+  const platform = contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+
+  let _leftSectionIcon: React.ReactNode;
 
   switch (platform) {
     case MessagePlatform.INSTAGRAM:
-      leftSectionIcon = <IconBrandInstagram size={13} />;
+      _leftSectionIcon = <IconBrandInstagram size={13} />;
       break;
     case MessagePlatform.WEBCHAT:
-      leftSectionIcon = <IconWebhook size={13} color="#25D366" />;
+      _leftSectionIcon = <IconWebhook size={13} color="#25D366" />;
       break;
     case MessagePlatform.WHATSAPP:
     default:
-      leftSectionIcon = <IconBrandWhatsappFilled size={13} color="#25D366" />;
+      _leftSectionIcon = <IconBrandWhatsappFilled size={13} color="#25D366" />;
       break;
   }
 
-  const isSessionExpired = isInboxSessionExpired(
-    contact?.lastReceivedMessageTimeStamp,
-  );
+  const isSessionExpired = isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
   const { updateContactById } = useContactsStore();
 
   function handleLifecycleChange(value, lifecycleObj) {
@@ -311,10 +281,7 @@ export default function WaInboxChatDisplayHeader({
                       </Badge>
                     }
                     content={
-                      <span>
-                        This contact has not consented to receive template
-                        messages.
-                      </span>
+                      <span>This contact has not consented to receive template messages.</span>
                     }
                   />
                 )}
@@ -327,17 +294,12 @@ export default function WaInboxChatDisplayHeader({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="h-8">
                 <IconTags className="h-5 w-5 text-primary" />
-                <span className="text-primary font-semibold text-xs">
-                  Attributes
-                </span>
+                <span className="text-primary font-semibold text-xs">Attributes</span>
                 <IconChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent
-              align="end"
-              className="p-1 w-fit min-w-60 max-w-70"
-            >
+            <DropdownMenuContent align="end" className="p-1 w-fit min-w-60 max-w-70">
               <div className="flex flex-col gap-2 p-2">
                 {/* Lifecycle */}
                 <div>
@@ -371,20 +333,16 @@ export default function WaInboxChatDisplayHeader({
                           size="xs"
                           variant="outline"
                           key={lifecycle.id}
-                          onClick={() =>
-                            handleLifecycleChange(lifecycle.id, lifecycle)
-                          }
+                          onClick={() => handleLifecycleChange(lifecycle.id, lifecycle)}
                           className={cn(
-                            contact.lifecycleId === lifecycle.id &&
-                              "border-blue-300 bg-blue-100",
+                            contact.lifecycleId === lifecycle.id && "border-blue-300 bg-blue-100",
                           )}
                         >
                           <span>{lifecycle.emoji}</span>
                           <span
                             className={cn(
                               "text-[11px] font-bold text-muted-foreground tracking-wide",
-                              contact.lifecycleId === lifecycle.id &&
-                                "text-primary",
+                              contact.lifecycleId === lifecycle.id && "text-primary",
                             )}
                           >
                             {lifecycle.name}
@@ -440,9 +398,7 @@ export default function WaInboxChatDisplayHeader({
                             variant="outline"
                             disabled={isPending}
                             onClick={() => handleToggleLabel(label.id)}
-                            className={cn(
-                              active && "border-purple-300 bg-purple-100",
-                            )}
+                            className={cn(active && "border-purple-300 bg-purple-100")}
                           >
                             <span
                               style={{ backgroundColor: label.color }}
@@ -528,38 +484,31 @@ export default function WaInboxChatDisplayHeader({
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-          {hasAIFeature &&
-            chatbot?.enableWaChat &&
-            chatbot?.enableAllWaChat && (
-              <Popover>
-                <PopoverTrigger
-                  asChild
-                  className="hover:bg-accent p-1 rounded-md"
-                >
-                  <Bot
-                    className={`h-7 w-7 ${contact.aiWaChat ? "text-blue-600" : "text-gray-200"} cursor-pointer`}
+          {hasAIFeature && chatbot?.enableWaChat && chatbot?.enableAllWaChat && (
+            <Popover>
+              <PopoverTrigger asChild className="hover:bg-accent p-1 rounded-md">
+                <Bot
+                  className={`h-7 w-7 ${contact.aiWaChat ? "text-blue-600" : "text-gray-200"} cursor-pointer`}
+                />
+              </PopoverTrigger>
+              <PopoverContent className="w-40 break-words">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Enable/Disable AI response for this contact
+                </p>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={contact.aiWaChat}
+                    onCheckedChange={handleAiWaChat}
+                    id="ai-chat-switch"
                   />
-                </PopoverTrigger>
-                <PopoverContent className="w-40 break-words">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Enable/Disable AI response for this contact
-                  </p>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      checked={contact.aiWaChat}
-                      onCheckedChange={handleAiWaChat}
-                      id="ai-chat-switch"
-                    />
-                    <Label htmlFor="ai-chat-switchh" className="text-sm">
-                      AI Chat
-                    </Label>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
-          <WaInboxCountdownTimer
-            timeStamp={contact?.lastReceivedMessageTimeStamp}
-          />
+                  <Label htmlFor="ai-chat-switchh" className="text-sm">
+                    AI Chat
+                  </Label>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          <WaInboxCountdownTimer timeStamp={contact?.lastReceivedMessageTimeStamp} />
           <AssignUser contactId={contact?.id} />
           <ChatHeaderMenu contact={contact} />
         </div>
@@ -573,13 +522,10 @@ const ChatHeaderMenu = ({ contact }) => {
   const messagesStore = useMessagesStore();
   const { user } = useUser();
   const { updateContactById, setSelectedContact } = useContactsStore();
-  const [
-    openedCreateTicket,
-    { open: openCreateTicket, close: closeCreateTicket },
-  ] = useDisclosure(false);
-  const { data: subscription } = useSubscription();
-  const [openedConfirmation, { open: openConfirm, close: closeConfirm }] =
+  const [openedCreateTicket, { open: openCreateTicket, close: closeCreateTicket }] =
     useDisclosure(false);
+  const { data: subscription } = useSubscription();
+  const [openedConfirmation, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
   const blockmut = useBlockWhatsAppUser();
   const hasTicketFeature = useMemo(
     () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
@@ -688,9 +634,7 @@ const ChatHeaderMenu = ({ contact }) => {
           }
         >
           {(() => {
-            const closedStatusIcon = getContactClosedIcon(
-              WaMessageAssignStatus.RESOLVED,
-            );
+            const closedStatusIcon = getContactClosedIcon(WaMessageAssignStatus.RESOLVED);
             const Icon = closedStatusIcon.icon;
             return <Icon className={closedStatusIcon.color} />;
           })()}
@@ -704,9 +648,7 @@ const ChatHeaderMenu = ({ contact }) => {
           }
         >
           {(() => {
-            const closedStatusIcon = getContactClosedIcon(
-              WaMessageAssignStatus.CLOSED,
-            );
+            const closedStatusIcon = getContactClosedIcon(WaMessageAssignStatus.CLOSED);
             const Icon = closedStatusIcon.icon;
             return <Icon className={closedStatusIcon.color} />;
           })()}
@@ -720,9 +662,7 @@ const ChatHeaderMenu = ({ contact }) => {
           }
         >
           {(() => {
-            const closedStatusIcon = getContactClosedIcon(
-              WaMessageAssignStatus.SPAM,
-            );
+            const closedStatusIcon = getContactClosedIcon(WaMessageAssignStatus.SPAM);
             const Icon = closedStatusIcon.icon;
             return <Icon className={closedStatusIcon.color} />;
           })()}
@@ -736,19 +676,13 @@ const ChatHeaderMenu = ({ contact }) => {
           }
         >
           {(() => {
-            const closedStatusIcon = getContactClosedIcon(
-              WaMessageAssignStatus.UNRESOLVED,
-            );
+            const closedStatusIcon = getContactClosedIcon(WaMessageAssignStatus.UNRESOLVED);
             const Icon = closedStatusIcon.icon;
             return <Icon className={closedStatusIcon.color} />;
           })()}
           <CustomTooltip
             trigger={<p>Mark as Unresolved</p>}
-            content={
-              <p>
-                All the assignees will be removed as closed,resolved and spam
-              </p>
-            }
+            content={<p>All the assignees will be removed as closed,resolved and spam</p>}
           />
         </DropdownMenuItem>
         {hasTicketFeature && (
@@ -761,10 +695,7 @@ const ChatHeaderMenu = ({ contact }) => {
           !contact?.blockedOnWhatsApp && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={openConfirm}
-                className="text-destructive"
-              >
+              <DropdownMenuItem onClick={openConfirm} className="text-destructive">
                 <Ban className="w-4 h-4 mr-2 text-destructive" />
                 Block contact
               </DropdownMenuItem>
@@ -793,20 +724,11 @@ const ChatHeaderMenu = ({ contact }) => {
   );
 };
 
-const AssignInboxContent = ({
-  form,
-  memberChoice,
-  setMemberChoice,
-  isLoading,
-  members,
-}) => {
+const AssignInboxContent = ({ form, memberChoice, setMemberChoice, isLoading, members }) => {
   return (
     <Stack>
       <TeamSelector label="Select Team" {...form.getInputProps("teamId")} />
-      <RadioGroup
-        value={memberChoice}
-        onChange={(value) => setMemberChoice(value)}
-      >
+      <RadioGroup value={memberChoice} onChange={(value) => setMemberChoice(value)}>
         <Group>
           <Radio value={"all"} label={"All Members"} />
           <Radio value={"manual"} label={"Select Manually"} />
@@ -818,8 +740,7 @@ const AssignInboxContent = ({
             data={members}
             styles={{
               label: {
-                color:
-                  "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))",
+                color: "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))",
                 fontSize: 12,
               },
             }}

@@ -1,5 +1,3 @@
-"use client";
-
 import { easeOut, motion } from "motion/react";
 
 import { cardData } from "../constants.tsx";
@@ -31,9 +29,7 @@ const ReviewAiHowItWorks = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Heading */}
         <div className="text-center mb-20 max-w-3xl mx-auto">
-          <h2 className="text-5xl font-bold text-gray-900 tracking-tight">
-            How RateUp Works
-          </h2>
+          <h2 className="text-5xl font-bold text-gray-900 tracking-tight">How RateUp Works</h2>
           <div className="w-16 h-1 bg-[#009987] mx-auto mt-4 rounded-full" />
           <p className="mt-5 text-lg text-gray-600 leading-relaxed">
             Get More Reviews in 3 Simple Steps
@@ -62,12 +58,8 @@ const ReviewAiHowItWorks = () => {
                 </div>
               </div>
 
-              <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">
-                {card.label}
-              </h3>
-              <p className="text-sm text-gray-600 text-center">
-                {card.description}
-              </p>
+              <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">{card.label}</h3>
+              <p className="text-sm text-gray-600 text-center">{card.description}</p>
             </motion.div>
           ))}
         </motion.div>

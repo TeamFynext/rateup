@@ -68,95 +68,53 @@ export const getIconStyle = (
   };
 };
 
-export const getEmptyIcon = (
-  value: number,
-  color: string,
-  iconStyle,
-  response,
-) => {
+export const getEmptyIcon = (value: number, color: string, iconStyle, response) => {
   const { variant, emojies } = iconStyle;
   if (!variant || variant === SmileyVariantStyle.Default) {
     return (
       <div style={{ margin: "0px 5px 5px" }}>
-        <Image
-          src={getDefaultSmileySrc(value)}
-          alt={"smiley icon"}
-          width={40}
-          height={40}
-        />
+        <Image src={getDefaultSmileySrc(value)} alt={"smiley icon"} width={40} height={40} />
       </div>
     );
   } else if (variant === SmileyVariantStyle.Emojis) {
     return (
-      <Text
-        size={value === response ? "3rem" : "2.3rem"}
-        style={{ margin: "0px 4px 4px" }}
-      >
+      <Text size={value === response ? "3rem" : "2.3rem"} style={{ margin: "0px 4px 4px" }}>
         {getSmileyEmojies(value)}
       </Text>
     );
   } else if (variant === SmileyVariantStyle.Custom) {
     return (
-      <Text
-        size={value === response ? "3rem" : "2.3rem"}
-        style={{ margin: "0px 4px 4px" }}
-      >
+      <Text size={value === response ? "3rem" : "2.3rem"} style={{ margin: "0px 4px 4px" }}>
         {emojies?.[value]}
       </Text>
     );
   } else if (variant === SmileyVariantStyle.Filled) {
     switch (value) {
       case 1:
-        return (
-          <IconMoodAngryFilled
-            style={getIconStyle(color, "empty", iconStyle)}
-          />
-        );
+        return <IconMoodAngryFilled style={getIconStyle(color, "empty", iconStyle)} />;
       case 2:
-        return (
-          <IconMoodSadFilled style={getIconStyle(color, "empty", iconStyle)} />
-        );
+        return <IconMoodSadFilled style={getIconStyle(color, "empty", iconStyle)} />;
       case 3:
-        return (
-          <IconMoodEmptyFilled
-            style={getIconStyle(color, "empty", iconStyle)}
-          />
-        );
+        return <IconMoodEmptyFilled style={getIconStyle(color, "empty", iconStyle)} />;
       case 4:
-        return (
-          <IconMoodHappyFilled
-            style={getIconStyle(color, "empty", iconStyle)}
-          />
-        );
+        return <IconMoodHappyFilled style={getIconStyle(color, "empty", iconStyle)} />;
       case 5:
-        return (
-          <IconMoodCrazyHappyFilled
-            style={getIconStyle(color, "empty", iconStyle)}
-          />
-        );
+        return <IconMoodCrazyHappyFilled style={getIconStyle(color, "empty", iconStyle)} />;
       default:
         return null;
     }
   } else {
     switch (value) {
       case 1:
-        return (
-          <IconMoodAngry style={getIconStyle(color, "empty", iconStyle)} />
-        );
+        return <IconMoodAngry style={getIconStyle(color, "empty", iconStyle)} />;
       case 2:
         return <IconMoodSad style={getIconStyle(color, "empty", iconStyle)} />;
       case 3:
-        return (
-          <IconMoodEmpty style={getIconStyle(color, "empty", iconStyle)} />
-        );
+        return <IconMoodEmpty style={getIconStyle(color, "empty", iconStyle)} />;
       case 4:
-        return (
-          <IconMoodHappy style={getIconStyle(color, "empty", iconStyle)} />
-        );
+        return <IconMoodHappy style={getIconStyle(color, "empty", iconStyle)} />;
       case 5:
-        return (
-          <IconMoodCrazyHappy style={getIconStyle(color, "empty", iconStyle)} />
-        );
+        return <IconMoodCrazyHappy style={getIconStyle(color, "empty", iconStyle)} />;
       default:
         return null;
     }
@@ -168,12 +126,7 @@ export const getFullIcon = (value: number, color: string, iconStyle) => {
   if (!variant || variant === SmileyVariantStyle.Default) {
     return (
       <div style={{ margin: "-8px 5px 5px" }}>
-        <Image
-          src={getDefaultSmileySrc(value)}
-          alt={"smiley icon"}
-          width={55}
-          height={55}
-        />
+        <Image src={getDefaultSmileySrc(value)} alt={"smiley icon"} width={55} height={55} />
       </div>
     );
   } else if (variant === SmileyVariantStyle.Emojis) {
@@ -188,34 +141,18 @@ export const getFullIcon = (value: number, color: string, iconStyle) => {
         {emojies?.[value]}
       </Text>
     );
-  } else if (
-    [SmileyVariantStyle.Filled, SmileyVariantStyle.FilledOnHover].includes(
-      variant,
-    )
-  ) {
+  } else if ([SmileyVariantStyle.Filled, SmileyVariantStyle.FilledOnHover].includes(variant)) {
     switch (value) {
       case 1:
-        return (
-          <IconMoodAngryFilled style={getIconStyle(color, "full", iconStyle)} />
-        );
+        return <IconMoodAngryFilled style={getIconStyle(color, "full", iconStyle)} />;
       case 2:
-        return (
-          <IconMoodSadFilled style={getIconStyle(color, "full", iconStyle)} />
-        );
+        return <IconMoodSadFilled style={getIconStyle(color, "full", iconStyle)} />;
       case 3:
-        return (
-          <IconMoodEmptyFilled style={getIconStyle(color, "full", iconStyle)} />
-        );
+        return <IconMoodEmptyFilled style={getIconStyle(color, "full", iconStyle)} />;
       case 4:
-        return (
-          <IconMoodHappyFilled style={getIconStyle(color, "full", iconStyle)} />
-        );
+        return <IconMoodHappyFilled style={getIconStyle(color, "full", iconStyle)} />;
       case 5:
-        return (
-          <IconMoodCrazyHappyFilled
-            style={getIconStyle(color, "full", iconStyle)}
-          />
-        );
+        return <IconMoodCrazyHappyFilled style={getIconStyle(color, "full", iconStyle)} />;
       default:
         return null;
     }
@@ -230,9 +167,7 @@ export const getFullIcon = (value: number, color: string, iconStyle) => {
       case 4:
         return <IconMoodHappy style={getIconStyle(color, "full", iconStyle)} />;
       case 5:
-        return (
-          <IconMoodCrazyHappy style={getIconStyle(color, "full", iconStyle)} />
-        );
+        return <IconMoodCrazyHappy style={getIconStyle(color, "full", iconStyle)} />;
       default:
         return null;
     }

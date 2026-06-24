@@ -1,6 +1,5 @@
-import { useCallback } from "react";
-
 import { useNavigate } from "@tanstack/react-router";
+import { useCallback } from "react";
 import { toast } from "sonner";
 import { signIn, signUp } from "supertokens-auth-react/recipe/emailpassword";
 import {
@@ -15,10 +14,7 @@ import {
 
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 
-const handleCreateCode = async (
-  phoneNumber: string,
-  navigate: ReturnType<typeof useNavigate>,
-) => {
+const handleCreateCode = async (phoneNumber: string, navigate: ReturnType<typeof useNavigate>) => {
   try {
     const response = await createCode({
       phoneNumber,

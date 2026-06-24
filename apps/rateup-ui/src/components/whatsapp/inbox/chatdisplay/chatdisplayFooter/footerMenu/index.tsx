@@ -1,20 +1,12 @@
-"use client";
-
-import { useRef } from "react";
-
 import { ActionIcon, Divider, Indicator, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconAutomation,
-  IconMessage2Code,
-  IconPlus,
-  IconWaveSine,
-} from "@tabler/icons-react";
-import { useTranslation } from "react-i18next";
+import { IconAutomation, IconMessage2Code, IconPlus, IconWaveSine } from "@tabler/icons-react";
+import { useRef } from "react";
 
 import WaInboxAutomationDisplayModal from "../automationDisplayModal/index.tsx";
 import WaInboxFlowDisplayModal from "../flowDisplayModel/index.tsx";
 import WaInboxTemplateDisplayModal from "../templateDisplayModal/index.tsx";
+
 import classes from "./styles.module.css";
 
 interface Props {
@@ -32,15 +24,11 @@ export default function WaInboxFooterMenu(props: Props) {
     ref.current.classList.remove(classes.action_icon_rotate);
   }
 
-  const [isModalOpened, { close: onModalClose, open: openModal }] =
+  const [isModalOpened, { close: onModalClose, open: openModal }] = useDisclosure(false);
+  const [flowModalOpened, { close: flowModalClose, open: openFlowModal }] = useDisclosure(false);
+  const [automationModalOpened, { close: automationModalClose, open: openAutomationModal }] =
     useDisclosure(false);
-  const [flowModalOpened, { close: flowModalClose, open: openFlowModal }] =
-    useDisclosure(false);
-  const [
-    automationModalOpened,
-    { close: automationModalClose, open: openAutomationModal },
-  ] = useDisclosure(false);
-  const { t: translations } = useTranslation();
+
   return (
     <>
       <Menu
@@ -58,9 +46,7 @@ export default function WaInboxFooterMenu(props: Props) {
               ref={ref}
               className={classes.action_icon}
               onClick={(e) => {
-                console.log(
-                  e.currentTarget.classList.add(classes.action_icon_rotate),
-                );
+                console.log(e.currentTarget.classList.add(classes.action_icon_rotate));
               }}
             >
               <IconPlus size={18} />
@@ -71,18 +57,14 @@ export default function WaInboxFooterMenu(props: Props) {
           {!props?.sessionExpired && (
             <>
               <Menu.Item
-                leftSection={
-                  <IconAutomation color="var(--mantine-primary-color-6)" />
-                }
+                leftSection={<IconAutomation color="var(--mantine-primary-color-6)" />}
                 onClick={openAutomationModal}
               >
                 Initiate Automation
               </Menu.Item>
               <Divider />
               <Menu.Item
-                leftSection={
-                  <IconWaveSine color="var(--mantine-primary-color-6)" />
-                }
+                leftSection={<IconWaveSine color="var(--mantine-primary-color-6)" />}
                 onClick={openFlowModal}
               >
                 Send WhatsApp Flow
@@ -91,14 +73,8 @@ export default function WaInboxFooterMenu(props: Props) {
             </>
           )}
           <Menu.Item
-            leftSection={
-              <IconMessage2Code color="var(--mantine-primary-color-6)" />
-            }
-            rightSection={
-              <SessionBasedIndicatorRenderer
-                sessionExpired={props.sessionExpired}
-              />
-            }
+            leftSection={<IconMessage2Code color="var(--mantine-primary-color-6)" />}
+            rightSection={<SessionBasedIndicatorRenderer sessionExpired={props.sessionExpired} />}
             onClick={() => openModal()}
           >
             Send WhatsApp Template

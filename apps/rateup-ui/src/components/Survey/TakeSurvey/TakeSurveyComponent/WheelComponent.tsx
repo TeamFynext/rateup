@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 type WheelComponentProps = {
@@ -81,11 +79,7 @@ const WheelComponent = ({
       ctx.arc(centerX, centerY, size, lastAngle, angle, false);
       ctx.lineTo(centerX, centerY);
       ctx.closePath();
-      ctx.fillStyle = imageSrc
-        ? isLoading
-          ? "lightblue"
-          : "transparent"
-        : segColors[key];
+      ctx.fillStyle = imageSrc ? (isLoading ? "lightblue" : "transparent") : segColors[key];
       ctx.fill();
       ctx.stroke();
       ctx.save();
@@ -144,13 +138,7 @@ const WheelComponent = ({
           ctx.clip();
 
           // Draw the image within the clipped region
-          ctx.drawImage(
-            image,
-            centerX - imgRadius,
-            centerY - imgRadius,
-            imgSize,
-            imgSize,
-          );
+          ctx.drawImage(image, centerX - imgRadius, centerY - imgRadius, imgSize, imgSize);
 
           ctx.restore();
 
@@ -238,22 +226,14 @@ const WheelComponent = ({
     ctx.closePath();
     ctx.fill();
     const change = angleCurrentRef.current + Math.PI / 2;
-    let i =
-      segments.length -
-      Math.floor((change / (Math.PI * 2)) * segments.length) -
-      1;
+    let i = segments.length - Math.floor((change / (Math.PI * 2)) * segments.length) - 1;
     if (i < 0) i = i + segments.length;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "transparent";
     ctx.font = "bold 1.5em " + fontFamily;
     currentSegmentRef.current = segments[i];
-    isStartedRef &&
-      ctx.fillText(
-        currentSegmentRef.current,
-        centerX + 10,
-        centerY + size + 50,
-      );
+    isStartedRef && ctx.fillText(currentSegmentRef.current, centerX + 10, centerY + size + 50);
   }, [contrastColor, fontFamily, segments, size]);
 
   // all redrawing function to draw a wheel
@@ -282,13 +262,11 @@ const WheelComponent = ({
           framesRef.current > segmentLengthRef.current
         ) {
           progress = duration / upTime;
-          angleDeltaRef.current =
-            maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
+          angleDeltaRef.current = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
           progress = 1;
         } else {
           progress = duration / downTime;
-          angleDeltaRef.current =
-            maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
+          angleDeltaRef.current = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
         }
       } else {
         progress = duration / downTime;
@@ -296,18 +274,14 @@ const WheelComponent = ({
           angleDeltaRef.current =
             (maxSpeed / 1.2) * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
         } else if (progress >= 0.98) {
-          angleDeltaRef.current =
-            (maxSpeed / 2) * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-        } else
-          angleDeltaRef.current =
-            maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
+          angleDeltaRef.current = (maxSpeed / 2) * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
+        } else angleDeltaRef.current = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
       }
       if (progress >= 1) finished = true;
     }
 
     angleCurrentRef.current += angleDeltaRef.current;
-    while (angleCurrentRef.current >= Math.PI * 2)
-      angleCurrentRef.current -= Math.PI * 2;
+    while (angleCurrentRef.current >= Math.PI * 2) angleCurrentRef.current -= Math.PI * 2;
     if (finished) {
       setIsFinished(true);
       onFinished(currentSegmentRef.current);
@@ -326,10 +300,7 @@ const WheelComponent = ({
       spinStartRef.current = new Date().getTime();
       maxSpeedRef.current = Math.PI / segmentLengthRef.current;
       framesRef.current = 0;
-      timerHandleRef.current = window.setInterval(
-        onTimerTick,
-        timerDelayRef.current,
-      );
+      timerHandleRef.current = window.setInterval(onTimerTick, timerDelayRef.current);
     }
   }, [onRotate, onTimerTick]);
 

@@ -1,15 +1,13 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { useParams } from "@tanstack/react-router";
+import { useCallback } from "react";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 
-import styles from "../LinksEditor.module.css";
 import LinkCard from "./LinkCard.tsx";
 import Reorder from "./Reorder/index.tsx";
 import ReorderItem from "./Reorder/ReorderItem.tsx";
+
+import styles from "../LinksEditor.module.css";
 
 function LinksList({ links }) {
   const params = useParams({
@@ -17,8 +15,7 @@ function LinksList({ links }) {
   });
   const shortUrlId = params?.shortUrlId as string;
   const updateLinktreeMutation = useUpdateLinktreeMutation(shortUrlId);
-  const { mutateAsync: linktreeUpdateMutateAsync } =
-    useUpdateLinktreeMutation(shortUrlId);
+  const { mutateAsync: linktreeUpdateMutateAsync } = useUpdateLinktreeMutation(shortUrlId);
 
   const handleDragEnd = useCallback(
     async (reorderedLinks) => {

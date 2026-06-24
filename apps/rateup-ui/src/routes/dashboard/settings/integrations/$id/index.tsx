@@ -1,12 +1,7 @@
+import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
+import { ChevronLeft } from "lucide-react";
 // Lazy load integration pages
 import { lazy, Suspense } from "react";
-
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-} from "@tanstack/react-router";
-import { ChevronLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -57,18 +52,14 @@ const ApiServicePage = lazy(() =>
   })),
 );
 const WidgetPage = lazy(() =>
-  import("@/components/dashboard/settings/integrations/WidgetIntegration.tsx").then(
-    (m) => ({
-      default: m.default,
-    }),
-  ),
+  import("@/components/dashboard/settings/integrations/WidgetIntegration.tsx").then((m) => ({
+    default: m.default,
+  })),
 );
 const WebhookPage = lazy(() =>
-  import("@/components/dashboard/settings/integrations/WebhookIntegration.tsx").then(
-    (m) => ({
-      default: m.default,
-    }),
-  ),
+  import("@/components/dashboard/settings/integrations/WebhookIntegration.tsx").then((m) => ({
+    default: m.default,
+  })),
 );
 
 const INTEGRATION_PAGES: Record<string, React.ComponentType<any>> = {
@@ -110,8 +101,7 @@ function IntegrationDetailPage() {
   const Component = INTEGRATION_PAGES[id];
   const integrationName = INTEGRATION_NAMES[id];
   const isInternalService = INTERNAL_SERVICE_IDS.has(id);
-  const backToIntegrations = () =>
-    navigate({ to: "/dashboard/settings/integrations/" });
+  const backToIntegrations = () => navigate({ to: "/dashboard/settings/integrations/" });
 
   if (!Component) {
     return (
@@ -122,9 +112,7 @@ function IntegrationDetailPage() {
         </Button>
         <Card>
           <CardHeader>
-            <CardTitle className="text-red-600">
-              {t("Integration not found")}
-            </CardTitle>
+            <CardTitle className="text-red-600">{t("Integration not found")}</CardTitle>
           </CardHeader>
         </Card>
       </div>
@@ -145,13 +133,7 @@ function IntegrationDetailPage() {
             : `${t("Configure your")} ${integrationName} ${t("integration")}`}
         </p>
       </div>
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center h-64">
-            Loading...
-          </div>
-        }
-      >
+      <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
         <Component />
       </Suspense>
     </div>

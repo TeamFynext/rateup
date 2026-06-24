@@ -1,6 +1,5 @@
-import React from "react";
-
 import { Link } from "@tanstack/react-router";
+import React from "react";
 
 export default function AutomationCta() {
   return (
@@ -10,8 +9,8 @@ export default function AutomationCta() {
           Ready to Revolutionize Your Workflows?
         </h2>
         <p className="pt-5 text-lg md:text-xl opacity-90">
-          Experience the power of AI-enabled automation. Get started with RateUp
-          today and build smarter, more efficient customer journeys.
+          Experience the power of AI-enabled automation. Get started with RateUp today and build
+          smarter, more efficient customer journeys.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">

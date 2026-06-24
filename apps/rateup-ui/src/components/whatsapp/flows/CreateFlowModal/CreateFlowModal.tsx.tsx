@@ -1,11 +1,8 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Box, Button, Modal, MultiSelect } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
@@ -17,6 +14,7 @@ import {
   ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput.tsx";
 import { flowsCategories } from "../constants.tsx";
+
 import styles from "./CreateFlowModal.module.css";
 
 function CreateFlowModal({ opened, onClose }) {
@@ -28,8 +26,7 @@ function CreateFlowModal({ opened, onClose }) {
     },
     validate: {
       name: (value) => (value.length === 0 ? "Please enter a name" : null),
-      categories: (value) =>
-        value.length === 0 ? "Please select a category" : null,
+      categories: (value) => (value.length === 0 ? "Please select a category" : null),
     },
   });
   const { t: translations } = useTranslation();
@@ -78,10 +75,7 @@ function CreateFlowModal({ opened, onClose }) {
         close: styles["modal-close-button"],
       }}
       onKeyDown={getHotkeyHandler([
-        [
-          SAVE_HOTKEY,
-          (event: any) => form.onSubmit(handleSubmitBtnClick)(event),
-        ],
+        [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmitBtnClick)(event)],
       ])}
     >
       <Box className={styles["create-flow-modal-body"]}>
@@ -114,10 +108,7 @@ function CreateFlowModal({ opened, onClose }) {
         <Button variant="default" onClick={handleModalClose}>
           {translations("Cancel")}
         </Button>
-        <Button
-          loading={createFlowMutation.isPending}
-          onClick={handleSubmitBtnClick}
-        >
+        <Button loading={createFlowMutation.isPending} onClick={handleSubmitBtnClick}>
           {translations("Submit")}
         </Button>
       </Box>

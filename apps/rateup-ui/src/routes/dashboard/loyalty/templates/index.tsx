@@ -1,20 +1,10 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 // ...existing code...
 import { toast } from "sonner";
 
-import { TemplateType } from "@/types/enums.ts";
-import {
-  useSaveTemplateAsDraftMutation,
-  useWaTemplates,
-} from "@/backend/whatsapp/whatsapp.query";
-import {
-  GenericActionCard,
-  GenericCardGrid,
-} from "@/components/common/generic-card.tsx";
+import { useSaveTemplateAsDraftMutation, useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
+import { GenericActionCard, GenericCardGrid } from "@/components/common/generic-card.tsx";
 import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 // ...existing code...
@@ -30,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge.tsx";
+import { TemplateType } from "@/types/enums.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/templates/")({
   component: LoyaltyTemplateListPage,
@@ -123,12 +114,7 @@ const PREDEFINED_TEMPLATES = [
 ];
 
 function LoyaltyTemplateListPage() {
-  const {
-    data: templates,
-    isPending,
-    isError,
-    refetch,
-  } = useWaTemplates(TemplateType.LOYALTY);
+  const { data: templates, isPending, isError, refetch } = useWaTemplates(TemplateType.LOYALTY);
   const [search, setSearch] = useState("");
   const [sortOption, setSortOption] = useState("latest");
   const navigate = useNavigate();
@@ -261,9 +247,7 @@ function LoyaltyTemplateListPage() {
               actions={null}
               content={
                 <div className="flex flex-wrap gap-2">
-                  <WaTemplateStatusBadge
-                    status={template?.data?.status as never}
-                  />
+                  <WaTemplateStatusBadge status={template?.data?.status as never} />
                 </div>
               }
               createdAt={template.createdAt}
@@ -290,9 +274,7 @@ function LoyaltyTemplateListPage() {
         >
           <DialogHeader>
             <DialogTitle>
-              {step === "pick"
-                ? "Pick a Template"
-                : "Create Draft from Predefined Template"}
+              {step === "pick" ? "Pick a Template" : "Create Draft from Predefined Template"}
             </DialogTitle>
             <DialogDescription>
               {(() => {
@@ -313,11 +295,7 @@ function LoyaltyTemplateListPage() {
                     title={tpl.name}
                     titleTooltip={tpl.name}
                     subtitle={tpl.description}
-                    content={
-                      <div className="text-xs text-muted-foreground">
-                        {tpl.body}
-                      </div>
-                    }
+                    content={<div className="text-xs text-muted-foreground">{tpl.body}</div>}
                     onClick={() => handleCreateFromPredefined(tpl)}
                     footerLeft={<Badge variant="secondary">{tpl.type}</Badge>}
                   />

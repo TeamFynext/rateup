@@ -1,37 +1,25 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-
-import {
-  Box,
-  Flex,
-  Image,
-  MantineProvider,
-  Radio,
-  ScrollAreaAutosize,
-  Stack,
-} from "@mantine/core";
+import { Box, Flex, Image, MantineProvider, Radio, ScrollAreaAutosize, Stack } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 import classNames from "classnames/bind";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import AutosaveInput from "@/components/input/AutosaveInput/index.tsx";
-import startBtnWrapperStyles from "@/components/Survey/SurveyTheme/SurveyTheme.module.css";
 
 import { CreditsCard } from "../../../../../Card/CreditsCard.tsx";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils.ts";
 import { SingleSelectCard } from "../../../../TakeSurvey/TakeSurveyComponent/SelectionCard/SingleSelectCard.tsx";
-import surveyThemeStyles from "../../../SurveyTheme.module.css";
 import {
   useEditSurveySelectedQuestion,
   useSelectedPreview,
-  useSetOpenEditors,
   useSurveyThemeContextValue,
-  useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext.tsx";
 import ThemeTitle from "../../ThemeTitle.tsx";
 import { getInlineStyleFromStyleObj } from "../welcomepage/index.tsx";
+
+import surveyThemeStyles from "../../../SurveyTheme.module.css";
 import styles from "./languagePage.module.css";
+import startBtnWrapperStyles from "@/components/Survey/SurveyTheme/SurveyTheme.module.css";
 
 const cx = classNames.bind(styles);
 const surveyThemeStylesCx = classNames.bind(surveyThemeStyles);
@@ -41,13 +29,9 @@ function LanguagePage({ survey }) {
   const surveyThemeObj = survey?.webSurveyTheme?.theme;
 
   const selectedPreview = useSelectedPreview();
-  const setOpenEditors = useSetOpenEditors();
 
-  const subtitleInputRef = useRef(null);
-  const titleInputRef = useRef(null);
   const startBtnInputRef = useRef(null);
 
-  const surveyThemeDispatch = useSurveyThemeStateDispatch();
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId: survey.id,
@@ -64,8 +48,7 @@ function LanguagePage({ survey }) {
   const isOrgLogoPresent = logoUrl?.length > 0;
   const isMobile = selectedPreview === "mobile";
 
-  const shouldUseSurveyTheme =
-    webSurveyPagesTheme["languageTheme"]?.useSurveyTheme;
+  const shouldUseSurveyTheme = webSurveyPagesTheme["languageTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
     ? surveyThemeObj["surveyTheme"]
     : webSurveyPagesTheme["languageTheme"];
@@ -101,9 +84,7 @@ function LanguagePage({ survey }) {
     }
   }, [startBtnLabel]);
 
-  const isUnsplashImage = backgroundImageSrc?.startsWith(
-    "https://images.unsplash.com",
-  );
+  const isUnsplashImage = backgroundImageSrc?.startsWith("https://images.unsplash.com");
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
     async (value, name) => {
@@ -111,8 +92,7 @@ function LanguagePage({ survey }) {
       switch (name) {
         case "title": {
           data["titleText"] = value;
-          if (editSurveySelectedQuestion["subtitleText"])
-            data["subtitleText"] = null;
+          if (editSurveySelectedQuestion["subtitleText"]) data["subtitleText"] = null;
           break;
         }
         case "subtitle": {
@@ -154,12 +134,7 @@ function LanguagePage({ survey }) {
       >
         {isOrgLogoPresent && (
           <Flex className={cx("logo-container")}>
-            <Image
-              className={cx("logo")}
-              src={logoUrl}
-              style={logoStyles}
-              fit="contain"
-            />
+            <Image className={cx("logo")} src={logoUrl} style={logoStyles} fit="contain" />
           </Flex>
         )}
 
@@ -168,27 +143,19 @@ function LanguagePage({ survey }) {
             <Stack className={surveyThemeStylesCx("titleBox")}>
               <ThemeTitle
                 value={newTitle}
-                onChange={(value) =>
-                  handleSaveTitleSubtitleStartTextSave(value, "title")
-                }
+                onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
                 styles={{ color: titleStyles?.color }}
               />
             </Stack>
           </Stack>
 
           <Flex className={cx("languages-list-radio-grp-container")}>
-            <ScrollAreaAutosize
-              mah={"100%"}
-              offsetScrollbars
-              scrollbarSize={10}
-            >
+            <ScrollAreaAutosize mah={"100%"} offsetScrollbars scrollbarSize={10}>
               <MantineProvider
                 getRootElement={() => {
                   return typeof window === "undefined"
                     ? undefined
-                    : document.querySelector(
-                        `.${cx("languages-list-radio-grp-container")}`,
-                      );
+                    : document.querySelector(`.${cx("languages-list-radio-grp-container")}`);
                 }}
                 cssVariablesSelector={`.${cx("languages-list-radio-grp-container")}`}
                 theme={{
@@ -200,22 +167,14 @@ function LanguagePage({ survey }) {
                 }}
               >
                 <Radio.Group value={lang} onChange={setLang} miw={"200px"}>
-                  <SingleSelectCard
-                    data={languages}
-                    selectedValue={lang}
-                    sizeTrim
-                  />
+                  <SingleSelectCard data={languages} selectedValue={lang} sizeTrim />
                 </Radio.Group>
               </MantineProvider>
             </ScrollAreaAutosize>
           </Flex>
 
-          <Flex
-            className={`${startBtnWrapperStyles["titleBox"]} ${cx("start-btn-wrapper")}`}
-          >
-            <Box
-              className={`${cx("autosave-input-right-chevron-icon-container")}`}
-            >
+          <Flex className={`${startBtnWrapperStyles["titleBox"]} ${cx("start-btn-wrapper")}`}>
+            <Box className={`${cx("autosave-input-right-chevron-icon-container")}`}>
               <AutosaveInput
                 className={`${startBtnWrapperStyles["start-btn-input-div"]} ${cx("start-btn-auto-save-input-div")}`}
                 name="startBtn"

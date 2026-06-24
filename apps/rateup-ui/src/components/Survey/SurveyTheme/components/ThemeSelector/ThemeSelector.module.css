@@ -53,8 +53,7 @@
 .render-option-btn:hover {
   background-color: var(--tertiary-color);
 }
-.choose-theme-dropdown-option[data-combobox-active="true"]
-  .render-option-btn:hover {
+.choose-theme-dropdown-option[data-combobox-active="true"] .render-option-btn:hover {
   background-color: white;
 }
 
@@ -62,8 +61,7 @@
   color: white;
 }
 
-.choose-theme-dropdown-option[data-combobox-active="true"]
-  .edit-action-btn:hover {
+.choose-theme-dropdown-option[data-combobox-active="true"] .edit-action-btn:hover {
   color: var(--tertiary-color);
 }
 
@@ -81,32 +79,23 @@
   border: 1px solid var(--mantine-color-gray-3);
 }
 
-.choose-theme-dropdown-option[data-combobox-active="true"]
-  .render-option-delete-btn {
+.choose-theme-dropdown-option[data-combobox-active="true"] .render-option-delete-btn {
   color: white;
 }
 
-.choose-theme-dropdown-option[data-combobox-active="true"]
-  .render-option-delete-btn:hover {
+.choose-theme-dropdown-option[data-combobox-active="true"] .render-option-delete-btn:hover {
   background-color: white;
   color: red;
 }
 
-.choose-theme-dropdown-option[data-combobox-active="true"]
-  .loader-btn
-  .delete-loader::after,
-.choose-theme-dropdown-option[data-combobox-active="true"]
-  .loader-btn:hover
-  .delete-loader::after,
+.choose-theme-dropdown-option[data-combobox-active="true"] .loader-btn .delete-loader::after,
+.choose-theme-dropdown-option[data-combobox-active="true"] .loader-btn:hover .delete-loader::after,
 .loader-btn:hover .delete-loader::after {
   border-color: white white white transparent;
 }
 
-.choose-theme-dropdown-option[data-combobox-active="true"]
-  .loader-btn:hover
-  .delete-loader::after {
-  border-color: var(--tertiary-color) var(--tertiary-color)
-    var(--tertiary-color) transparent;
+.choose-theme-dropdown-option[data-combobox-active="true"] .loader-btn:hover .delete-loader::after {
+  border-color: var(--tertiary-color) var(--tertiary-color) var(--tertiary-color) transparent;
 }
 
 .active-badge {

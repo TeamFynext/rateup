@@ -1,7 +1,6 @@
-import React, { useEffect } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useRouter } from "@tanstack/react-router";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 import {
@@ -9,12 +8,7 @@ import {
   useRuleById,
   useUpdateRuleMutation,
 } from "@/backend/whatsapp/rule/rule.query";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import RuleBuilderForm from "./RuleBuilderForm.tsx";
 import RuleShare from "./RuleShare.tsx";
@@ -52,13 +46,13 @@ const defaultValues: Partial<CreateRuleInput> = {
   },
 };
 
-const WhatsappAutomationRuleBuilder: React.FC<
-  WhatsappAutomationRuleBuilderProps
-> = ({ ruleId, initialPlatform, initialTriggerEvent }) => {
+const WhatsappAutomationRuleBuilder: React.FC<WhatsappAutomationRuleBuilderProps> = ({
+  ruleId,
+  initialPlatform,
+  initialTriggerEvent,
+}) => {
   const isEditMode = ruleId && ruleId !== "new";
-  const { data: ruleData, isLoading: isRuleLoading } = useRuleById(
-    isEditMode ? ruleId : "",
-  );
+  const { data: ruleData, isLoading: isRuleLoading } = useRuleById(isEditMode ? ruleId : "");
   const navigate = useNavigate();
   const { history } = useRouter();
   const createMutation = useCreateRuleMutation();

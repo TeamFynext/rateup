@@ -1,6 +1,5 @@
-import React from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
+import React from "react";
 
 import InboxFooter from "@/components/products/Inbox/helpers/InboxFooter.tsx";
 import InboxHeader from "@/components/products/Inbox/helpers/InboxHeader.tsx";

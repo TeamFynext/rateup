@@ -1,10 +1,4 @@
-import {
-  useMutation,
-  useQueries,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { getOrgIdRole, getUserID } from "@/utils/userInfo.ts";
@@ -87,7 +81,7 @@ export function useEditTeamMutation(
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: IEditTeam) => editTeam(id, values, onlyTag),
-    onSuccess: (res) => {
+    onSuccess: (_res) => {
       toast.success("Team Details Updated Successfully!", {
         id: "load-data",
       });

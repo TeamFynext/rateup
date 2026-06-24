@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-
 import { Group, Stack } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
 
@@ -18,6 +15,7 @@ import {
   logoTabPanelReducer,
 } from "../../../Survey/ShareSurvey/ShareQR/LogoTabPanel/LogoTabPanelReducer.tsx";
 import { useLinktreeObj } from "../LinktreeContext/LinktreeContext.tsx";
+
 import styles from "./ShareLinktree.module.css";
 
 function ShareLinktree({ url, isPublished, title }) {
@@ -30,8 +28,7 @@ function ShareLinktree({ url, isPublished, title }) {
     strict: false,
   });
   const shortUrlId = params?.shortUrlId as string;
-  const { mutateAsync: linktreeUpdateMutateAsync } =
-    useUpdateLinktreeMutation(shortUrlId);
+  const { mutateAsync: linktreeUpdateMutateAsync } = useUpdateLinktreeMutation(shortUrlId);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const { shareSettings } = useLinktreeObj();
 
@@ -50,8 +47,7 @@ function ShareLinktree({ url, isPublished, title }) {
       const newState = { ...logoTabPanelState };
       if (newState?.logoFile instanceof File) {
         const uploadedFileKey = await uploadFile(newState.logoFile);
-        newState["logoFile"] =
-          `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${uploadedFileKey}`;
+        newState["logoFile"] = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${uploadedFileKey}`;
       }
       const formData = new FormData();
       for (const property in newState) {
@@ -63,7 +59,7 @@ function ShareLinktree({ url, isPublished, title }) {
           shortUrlId,
           shareSettings: newState,
         });
-      } catch (err) {
+      } catch {
         toast.error("Unable to save settings, Please try again later");
       }
     }

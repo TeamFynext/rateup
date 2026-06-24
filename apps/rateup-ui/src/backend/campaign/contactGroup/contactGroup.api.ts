@@ -41,9 +41,7 @@ export const getContactGroupById = async (
   },
   columnFilters: { id: string; value: string }[],
 ) => {
-  const filter = columnFilters
-    .map((data) => `&${data.id}=${data.value}`)
-    .join("&");
+  const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
   const desc = sort.desc ? "desc" : "asc";
   const groupDataById = await axiosClient.get(
     `${CONTACT_GROUP_BASE_URL}?contactGroupId=${groupId}`,
@@ -56,10 +54,7 @@ export const getContactGroupById = async (
   return groupDataById?.data as ContactGroupwithContacts;
 };
 
-const getContactsByGroupId = async (
-  groupId: string,
-  paginationParams: string,
-) => {
+const getContactsByGroupId = async (groupId: string, paginationParams: string) => {
   const contacts = await axiosClient.get(
     `${CONTACT_GROUP_BASE_URL}/${groupId}/contacts?${paginationParams}`,
   );
@@ -72,10 +67,7 @@ export const createContactGroup = (data: ICreateContactGroup) => {
 };
 
 export const addNewContact = ({ data, groupId }) => {
-  const res = axiosClient.post(
-    `${CONTACT_GROUP_BASE_URL}/${groupId}/contacts/new`,
-    data,
-  );
+  const res = axiosClient.post(`${CONTACT_GROUP_BASE_URL}/${groupId}/contacts/new`, data);
   return res;
 };
 
@@ -103,11 +95,7 @@ export const updateContactGroup = (groupId, data) => {
   return res;
 };
 
-export const addExistingContactsToGroup = ({
-  customerList,
-  groupId,
-  isCustomer = false,
-}) => {
+export const addExistingContactsToGroup = ({ customerList, groupId, isCustomer = false }) => {
   const customerListObj = {
     contactIds: customerList,
     isCustomer,
@@ -120,10 +108,7 @@ export const addExistingContactsToGroup = ({
 };
 
 export const removeContactsFromGroup = async ({ contactIds, groupId }) => {
-  const res = await axiosClient.put(
-    `${CONTACT_GROUP_BASE_URL}/${groupId}/contacts`,
-    contactIds,
-  );
+  const res = await axiosClient.put(`${CONTACT_GROUP_BASE_URL}/${groupId}/contacts`, contactIds);
   return res?.data;
 };
 
@@ -148,9 +133,7 @@ export const deleteManyContactGroups = async (contactGroupIds: string[]) => {
 };
 
 export const getContactGroupsByContactId = async (contactId: string) => {
-  const res = await axiosClient.get(
-    `${CONTACT_GROUP_BASE_URL}/contact/${contactId}`,
-  );
+  const res = await axiosClient.get(`${CONTACT_GROUP_BASE_URL}/contact/${contactId}`);
   return res.data;
 };
 
@@ -159,12 +142,9 @@ export const updateContactGroupsForContact = async (
   addGroupIds: string[],
   removeGroupIds: string[],
 ) => {
-  const res = await axiosClient.post(
-    `${CONTACT_GROUP_BASE_URL}/contact/${contactId}/groups`,
-    {
-      addGroupIds,
-      removeGroupIds,
-    },
-  );
+  const res = await axiosClient.post(`${CONTACT_GROUP_BASE_URL}/contact/${contactId}/groups`, {
+    addGroupIds,
+    removeGroupIds,
+  });
   return res;
 };

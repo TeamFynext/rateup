@@ -40,10 +40,7 @@ export async function getInstagramAutomationById(automationId: string) {
   };
 }
 
-export async function updateInstagramAutomation(
-  automationId: string,
-  data: any,
-) {
+export async function updateInstagramAutomation(automationId: string, data: any) {
   const res = await axiosClient.put(`${base}/${automationId}`, data);
   const result = res.data as { success: boolean; data: WaAutomatedReply };
   return {
@@ -57,10 +54,7 @@ export async function deleteInstagramAutomation(automationId: string) {
   return res.data as { success: boolean; message: string };
 }
 
-export async function initiateInstagramAutomation(
-  automationId: string,
-  igsId: string,
-) {
+export async function initiateInstagramAutomation(automationId: string, igsId: string) {
   const res = await axiosClient.post(`${base}/${automationId}/initiate`, {
     igsId,
   });

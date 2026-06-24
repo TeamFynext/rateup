@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 
@@ -18,8 +16,7 @@ const TestimonialFAQSection = () => {
       id="faq-testimonials"
       className="py-28 px-4"
       style={{
-        background:
-          "linear-gradient(to bottom right, #00397b, #013553, #1c518e)",
+        background: "linear-gradient(to bottom right, #00397b, #013553, #1c518e)",
       }}
     >
       <div className="container max-w-4xl mx-auto">
@@ -63,10 +60,7 @@ const TestimonialFAQSection = () => {
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 viewport={{ once: true, margin: "-100px" }}
               >
-                <AccordionItem
-                  value={`item-${index}`}
-                  className="border-b border-white/20"
-                >
+                <AccordionItem value={`item-${index}`} className="border-b border-white/20">
                   <AccordionTrigger className="cursor-pointer font-semibold py-6 hover:text-[#f8951d] transition-colors duration-200">
                     <span className="text-lg">{faq.question}</span>
                   </AccordionTrigger>

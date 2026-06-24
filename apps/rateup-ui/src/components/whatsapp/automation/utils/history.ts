@@ -132,7 +132,7 @@ export class HistoryManager {
     // This is a simplified equality check - in a real app you might need more sophisticated comparison
     try {
       return JSON.stringify(state1) === JSON.stringify(state2);
-    } catch (e) {
+    } catch {
       // If JSON stringification fails, consider them different
       return false;
     }

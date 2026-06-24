@@ -55,11 +55,7 @@ export const getUserInfoErrorMessage = (
     return queryError.message;
   }
 
-  if (
-    userQueryData &&
-    typeof userQueryData === "object" &&
-    "error" in userQueryData
-  ) {
+  if (userQueryData && typeof userQueryData === "object" && "error" in userQueryData) {
     const maybeError = userQueryData.error as { message?: unknown } | undefined;
     return typeof maybeError?.message === "string" ? maybeError.message : null;
   }
@@ -84,21 +80,15 @@ export const mergeInboxCountByAssignedTeams = (
   return {
     ...rest,
     assigned: assignedTeamWiseCount.reduce((count, teamCount) => {
-      return assignedTeams.includes(teamCount.teamId)
-        ? count + teamCount.assignedCount
-        : count;
+      return assignedTeams.includes(teamCount.teamId) ? count + teamCount.assignedCount : count;
     }, 0),
     assignedToMe: assignedTeamWiseCount.reduce((count, teamCount) => {
-      return assignedTeams.includes(teamCount.teamId)
-        ? count + teamCount.assignedToMeCount
-        : count;
+      return assignedTeams.includes(teamCount.teamId) ? count + teamCount.assignedToMeCount : count;
     }, 0),
   };
 };
 
-export const hasUserPayload = (
-  userQueryData: unknown,
-): userQueryData is IUserInfoApiResponse => {
+export const hasUserPayload = (userQueryData: unknown): userQueryData is IUserInfoApiResponse => {
   if (!userQueryData || typeof userQueryData !== "object") {
     return false;
   }

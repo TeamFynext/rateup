@@ -1,15 +1,13 @@
-"use client";
-
-import { useCallback, useState } from "react";
-
 import { Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useCallback, useState } from "react";
 
 import { useSurveyThemeStateDispatch } from "../../SurveyThemeContext.tsx";
 import ComboBoxComponent from "./ComboBoxComponent/index.tsx";
 import { getOptions } from "./constants.tsx";
 import CreateNewThemeModal from "./CreateNewThemeModal.tsx";
 import RenameThemeModal from "./RenameThemeModal.tsx";
+
 import styles from "./ThemeSelector.module.css";
 
 function ThemeSelector({
@@ -22,12 +20,9 @@ function ThemeSelector({
 }) {
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
-  const [
-    isRenameThemeModalOpened,
-    { open: openRenameThemeModal, close: closeRenameThemeModal },
-  ] = useDisclosure();
-  const [selectedThemeIdToBeRenamed, setSelectedThemeIdToBeRename] =
-    useState(null);
+  const [isRenameThemeModalOpened, { open: openRenameThemeModal, close: closeRenameThemeModal }] =
+    useDisclosure();
+  const [selectedThemeIdToBeRenamed, setSelectedThemeIdToBeRename] = useState(null);
   const [selectedThemesThemeName, setSelectedThemesThemeName] = useState("");
 
   const handleChange = useCallback(

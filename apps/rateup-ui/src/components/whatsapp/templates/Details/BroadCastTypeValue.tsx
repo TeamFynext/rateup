@@ -1,8 +1,5 @@
-"use client";
-
-import { useRef } from "react";
-
 import { Text } from "@mantine/core";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -57,13 +54,7 @@ export const BroadCastTypeValue = ({ form, type }) => {
         mt={"md"}
         placeholder={translations("Header")}
         {...form.getInputProps("header")}
-        rightSection={
-          <LengthTracker
-            length={form?.values?.header?.length}
-            maxValue={60}
-            atStart
-          />
-        }
+        rightSection={<LengthTracker length={form?.values?.header?.length} maxValue={60} atStart />}
       />
     );
   }
@@ -83,9 +74,7 @@ export const BroadCastTypeValue = ({ form, type }) => {
         if (!file) return;
 
         if (file.size > config.maxSize) {
-          toast.error(
-            `${config.label} must be smaller than ${config.sizeText}`,
-          );
+          toast.error(`${config.label} must be smaller than ${config.sizeText}`);
           form.setFieldValue("header", null);
           resetRef.current?.();
           return;

@@ -1,15 +1,8 @@
-"use client";
-
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import {
   Form,
   FormControl,
@@ -50,9 +43,7 @@ export function NotificationSettings({
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between p-2.5 border rounded-lg space-y-0">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-sm font-medium">
-                        {t("Program Active")}
-                      </FormLabel>
+                      <FormLabel className="text-sm font-medium">{t("Program Active")}</FormLabel>
                       <FormDescription className="text-xs text-muted-foreground">
                         {t("Enable/disable program")}
                       </FormDescription>

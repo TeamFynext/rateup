@@ -131,13 +131,9 @@ export const useDeleteShopifyIntegrationByShop = () => {
       queryClient.invalidateQueries({ queryKey: ["integrations"] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          `Error in deleting integration ${error?.message ?? ""}`,
-        {
-          id: "integration",
-        },
-      );
+      toast.error(error?.message || `Error in deleting integration ${error?.message ?? ""}`, {
+        id: "integration",
+      });
     },
   });
 };

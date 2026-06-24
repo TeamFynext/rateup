@@ -1,34 +1,23 @@
-"use client";
-
-import React, { useContext } from "react";
-
-import {
-  ActionIcon,
-  Badge,
-  Box,
-  Flex,
-  Group,
-  Image,
-  Text,
-  useMantineTheme,
-} from "@mantine/core";
+import { Draggable } from "@hello-pangea/dnd";
+import { ActionIcon, Badge, Box, Flex, Group, Image, Text } from "@mantine/core";
 import { useDisclosure, useHover } from "@mantine/hooks";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
-import { Draggable } from "@hello-pangea/dnd";
 import { useParams } from "@tanstack/react-router";
 import cx from "clsx";
+import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
 
-import { PageType } from "@/types/enums.ts";
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { PageType } from "@/types/enums.ts";
 import { extractText } from "@/utils/index.ts";
 
 import { pageIcons } from "../../Page/PageIcons.ts";
 import { getReplacedTitleFromVariable } from "../../TakeSurvey/TakeSurveyComponent/util.tsx";
 import { reviewPageLogosObj } from "../QuestionReviewPageEditor/constants.tsx";
 import { questionIcons } from "../QuestionTypeSelection.tsx";
+
 import classes from "./DraggableQuestionCard.module.css";
 
 interface DraggableQuestionCardProps {
@@ -49,19 +38,17 @@ export function DraggableQuestionCard({
   isWaSurvey,
 }: DraggableQuestionCardProps) {
   // TODO: ref lost when card is dragged to new place
-  const { hovered, ref: hoverRef } = useHover();
+  const { ref: hoverRef } = useHover();
   const params = useParams({
     strict: false,
   });
   const surveyId = params.surveyId as string;
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
-  const theme = useMantineTheme();
+
   const questionTitle =
     getReplacedTitleFromVariable({
-      title:
-        question.title[selectedLanguage] ||
-        question.description[selectedLanguage],
+      title: question.title[selectedLanguage] || question.description[selectedLanguage],
       surveyId,
     }) ||
     question.title[selectedLanguage] ||
@@ -163,8 +150,7 @@ export function DraggableQuestionCard({
                     alt="image of logic jump"
                   />
                 )}
-                {question.reviewPageOptions &&
-                  reviewPageLogosObj[question.reviewPagePlatform]}
+                {question.reviewPageOptions && reviewPageLogosObj[question.reviewPagePlatform]}
 
                 {!nonDeletablePagetypeStrs.includes(question.type) && (
                   <ActionIcon

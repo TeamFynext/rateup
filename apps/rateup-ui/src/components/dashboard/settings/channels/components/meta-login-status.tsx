@@ -1,19 +1,7 @@
-"use client";
-
-import { useState } from "react";
-
-import {
-  ActionIcon,
-  Center,
-  Divider,
-  Flex,
-  Group,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Center, Divider, Flex, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconLogout, IconPencilMinus } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -27,18 +15,12 @@ import { WaSettingEditModal } from "./wa-setting-edit-modal.tsx";
 
 type WaSetting = WaSettings[number];
 
-export function MetaLoginStatus({
-  waSettings,
-}: Readonly<{ waSettings?: WaSettings }>) {
+export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettings }>) {
   const deRegisterMutation = useDeregisterBusinessClientMutation();
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
-    null,
-  );
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [openDeleteConfirmation, { open, close }] = useDisclosure(false);
-  const [selectedWaSettings, setSelectedWaSettings] =
-    useState<WaSetting | null>(null);
-  const [openedEdit, { open: openEdit, close: closeEdit }] =
-    useDisclosure(false);
+  const [selectedWaSettings, setSelectedWaSettings] = useState<WaSetting | null>(null);
+  const [openedEdit, { open: openEdit, close: closeEdit }] = useDisclosure(false);
   const { t: translations } = useTranslation();
 
   function handleDeRegister() {
@@ -66,9 +48,7 @@ export function MetaLoginStatus({
             {translations("Linked WhatsApp Business Accounts")}
           </h3>
           <p className="text-xs text-muted-foreground mt-1">
-            {translations(
-              "Manage your connected WhatsApp Business accounts and team access",
-            )}
+            {translations("Manage your connected WhatsApp Business accounts and team access")}
           </p>
         </div>
         <ConnectMetaAccountButton />
@@ -87,17 +67,13 @@ export function MetaLoginStatus({
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h4 className="font-semibold text-base">
-                          {setting.phoneDisplayName ||
-                            setting.phone ||
-                            "Unnamed Account"}
+                          {setting.phoneDisplayName || setting.phone || "Unnamed Account"}
                         </h4>
                         <Badge variant="secondary" className="text-[10px]">
                           {setting.type || "Automated"}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {setting.phone}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{setting.phone}</p>
                     </div>
                     <Group gap="xs">
                       <Tooltip label={translations("Edit Display Name")}>
@@ -112,11 +88,7 @@ export function MetaLoginStatus({
                           <IconPencilMinus size={18} />
                         </ActionIcon>
                       </Tooltip>
-                      <Tooltip
-                        label={translations(
-                          "Logout from this WhatsApp Business Account",
-                        )}
-                      >
+                      <Tooltip label={translations("Logout from this WhatsApp Business Account")}>
                         <ActionIcon
                           variant="subtle"
                           color="red"
@@ -179,11 +151,7 @@ export function MetaLoginStatus({
         headerLabel={translations("DeRegister WhatsApp Business Account")}
         headerTitle={translations("Confirmation Dialog")}
       />
-      <WaSettingEditModal
-        opened={openedEdit}
-        close={closeEdit}
-        waSetting={selectedWaSettings}
-      />
+      <WaSettingEditModal opened={openedEdit} close={closeEdit} waSetting={selectedWaSettings} />
     </div>
   );
 }

@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-
 import type { QRCodeErrorCorrectionLevel } from "qrcode";
 import QRCode from "qrcode";
+import { useCallback, useEffect, useState } from "react";
 
 type CustomQRCodeProps = {
   textToBeEmbedded: string;
@@ -45,10 +42,7 @@ function CustomQRCode({
           (((i + 1) % size > 0 && (i + 1) % size < 8) ||
             (i + 1) % size > size - 7 ||
             (i + 1) % size === 0)) ||
-        (rows.length >= size - 7 &&
-          rows.length < size &&
-          (i + 1) % size > 0 &&
-          (i + 1) % size < 8)
+        (rows.length >= size - 7 && rows.length < size && (i + 1) % size > 0 && (i + 1) % size < 8)
       ) {
         return true;
       }
@@ -56,9 +50,7 @@ function CustomQRCode({
     };
     for (let i = 0; i < qrData.length; i++) {
       const findingPatternModuleTransform = `translate(${x} ${y})`;
-      const dataModuleTransform = `translate(${x + width / 4} ${
-        y + height / 4
-      }) scale(1)`;
+      const dataModuleTransform = `translate(${x + width / 4} ${y + height / 4}) scale(1)`;
       const isFindingPatternModule = checkIsFindingPatternModule(i);
 
       const rect = (
@@ -67,11 +59,7 @@ function CustomQRCode({
           key={`${i}`}
           width={width}
           height={height}
-          transform={
-            isFindingPatternModule
-              ? findingPatternModuleTransform
-              : dataModuleTransform
-          }
+          transform={isFindingPatternModule ? findingPatternModuleTransform : dataModuleTransform}
           shapeRendering={"crispEdges"}
           // shapeRendering={isFindingPatternModule ? "crispEdges" : "auto"}
           // fill={qrData[i] === 0 ? "rgba(0, 0, 0, 0)" : `${qrColor?qrColor:'black'}`}

@@ -1,9 +1,6 @@
-"use client";
-
 import { Edit2, Save, Trash2, X } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 
-import { LoyaltyRewardStatus } from "@/types/enums.ts";
 import type {
   CouponFormValues,
   GiftFormValues,
@@ -14,6 +11,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { LoyaltyRewardStatus } from "@/types/enums.ts";
 
 import { LoyaltyRewardForm } from "./LoyaltyRewardForm.tsx";
 
@@ -91,9 +89,7 @@ export function RewardCard({
       return (
         <>
           <div className={`px-2 py-1 rounded border ${lightBlue}`}>
-            <p className="text-xs font-medium text-blue-700">
-              {reward.pointsCost || 0} pts
-            </p>
+            <p className="text-xs font-medium text-blue-700">{reward.pointsCost || 0} pts</p>
           </div>
           <div className={`px-2 py-1 rounded border ${lightGreen}`}>
             <p className="text-xs font-medium text-green-700">
@@ -127,25 +123,16 @@ export function RewardCard({
   return (
     <Card
       className={`transition-all p-2 ${
-        reward.status === LoyaltyRewardStatus.ACTIVE
-          ? "bg-card"
-          : "bg-muted/50 opacity-60"
+        reward.status === LoyaltyRewardStatus.ACTIVE ? "bg-card" : "bg-muted/50 opacity-60"
       }`}
     >
       <CardContent className="p-3">
         {isEditing ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-sm">
-                Edit {getCategoryLabel()}
-              </h4>
+              <h4 className="font-semibold text-sm">Edit {getCategoryLabel()}</h4>
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={onEditCancel}
-                  className="h-8"
-                >
+                <Button size="sm" variant="outline" onClick={onEditCancel} className="h-8">
                   <X className="w-3.5 h-3.5 mr-1" />
                   Cancel
                 </Button>
@@ -178,12 +165,7 @@ export function RewardCard({
                   onCheckedChange={onToggleStatus}
                 />
               </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                className="h-8"
-                onClick={onDelete}
-              >
+              <Button variant="destructive" size="sm" className="h-8" onClick={onDelete}>
                 <Trash2 className="w-3.5 h-3.5 mr-1" />
                 Delete Reward
               </Button>
@@ -192,14 +174,10 @@ export function RewardCard({
         ) : (
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2.5 flex-1 min-w-0">
-              <span className="text-xl shrink-0">
-                {getRewardIcon(reward.rewardType || "")}
-              </span>
+              <span className="text-xl shrink-0">{getRewardIcon(reward.rewardType || "")}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <h4 className="font-medium text-sm leading-tight">
-                    {reward.name}
-                  </h4>
+                  <h4 className="font-medium text-sm leading-tight">{reward.name}</h4>
                   {category === "coupons" && reward.rewardValue?.code && (
                     <Badge variant="outline" className="text-xs font-mono h-5">
                       {reward.rewardValue.code}
@@ -208,9 +186,7 @@ export function RewardCard({
                 </div>
                 <p className="text-xs text-muted-foreground truncate">
                   {category === "coupons"
-                    ? reward.rewardValue?.description ||
-                      reward.description ||
-                      "No description"
+                    ? reward.rewardValue?.description || reward.description || "No description"
                     : reward.description || "No description"}
                 </p>
               </div>
@@ -219,38 +195,33 @@ export function RewardCard({
             <div className="flex items-center gap-2 shrink-0">
               {renderStats()}
 
-              {reward.availableForTiers &&
-                reward.availableForTiers.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    {reward.availableForTiers
-                      .slice(0, 3)
-                      .map((tierId: string) => {
-                        const tier = loyaltyTiers?.find((t) => t.id === tierId);
-                        return tier ? (
-                          <div
-                            key={tier.id}
-                            className="w-4 h-4 rounded-full border border-background shadow-sm"
-                            style={{
-                              backgroundColor: tier.color,
-                            }}
-                            title={tier.name}
-                          />
-                        ) : null;
-                      })}
-                    {reward.availableForTiers.length > 3 && (
-                      <span className="text-xs text-muted-foreground">
-                        +{reward.availableForTiers.length - 3}
-                      </span>
-                    )}
-                  </div>
-                )}
+              {reward.availableForTiers && reward.availableForTiers.length > 0 && (
+                <div className="flex items-center gap-1">
+                  {reward.availableForTiers.slice(0, 3).map((tierId: string) => {
+                    const tier = loyaltyTiers?.find((t) => t.id === tierId);
+                    return tier ? (
+                      <div
+                        key={tier.id}
+                        className="w-4 h-4 rounded-full border border-background shadow-sm"
+                        style={{
+                          backgroundColor: tier.color,
+                        }}
+                        title={tier.name}
+                      />
+                    ) : null;
+                  })}
+                  {reward.availableForTiers.length > 3 && (
+                    <span className="text-xs text-muted-foreground">
+                      +{reward.availableForTiers.length - 3}
+                    </span>
+                  )}
+                </div>
+              )}
               <Badge
                 variant="secondary"
                 className={`text-xs h-5 ${reward.status === LoyaltyRewardStatus.ACTIVE ? lightGreen : lightGray} `}
               >
-                {reward.status === LoyaltyRewardStatus.ACTIVE
-                  ? "Active"
-                  : "Inactive"}
+                {reward.status === LoyaltyRewardStatus.ACTIVE ? "Active" : "Inactive"}
               </Badge>
             </div>
 
@@ -259,12 +230,7 @@ export function RewardCard({
                 checked={reward.status === LoyaltyRewardStatus.ACTIVE}
                 onCheckedChange={onToggleStatus}
               />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={onEditStart}
-              >
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEditStart}>
                 <Edit2 className="w-3.5 h-3.5" />
               </Button>
               <Button

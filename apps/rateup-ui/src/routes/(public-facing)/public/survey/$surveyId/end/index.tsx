@@ -1,18 +1,13 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import z from "zod";
 
-import { PageType } from "@/types/enums.ts";
-import {
-  getPublicSurvey,
-  getPublicSurveyGoogleLink,
-} from "@/backend/surveys/survey.api";
+import { getPublicSurvey, getPublicSurveyGoogleLink } from "@/backend/surveys/survey.api";
 import { getPublicReviewsBySurveyTeamMapId } from "@/backend/team/reviewSuggestion/reviewSuggestion.api";
 import ThankYou from "@/components/(public-facing)/public/survey/$surveyId/end";
 import { ReviewPagePlatform } from "@/components/Survey/Question/QuestionReviewPageEditor/index.tsx";
+import { PageType } from "@/types/enums.ts";
 
-export const Route = createFileRoute(
-  "/(public-facing)/public/survey/$surveyId/end/",
-)({
+export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/end/")({
   component: End,
   validateSearch: z.object({
     language: z.string().optional(),
@@ -35,8 +30,7 @@ export const Route = createFileRoute(
       );
       const reviewPageLinks = { ...survey.reviewPageLinks };
       if ("" in reviewPageLinks || googleLink?.length) {
-        reviewPageLinks[ReviewPagePlatform.Google] =
-          reviewPageLinks[""] ?? googleLink;
+        reviewPageLinks[ReviewPagePlatform.Google] = reviewPageLinks[""] ?? googleLink;
         delete reviewPageLinks[""];
       }
       return {

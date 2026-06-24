@@ -5,11 +5,7 @@ import dagre from "dagre";
 const nodeWidth = 220;
 const nodeHeight = 120;
 
-export function getLayoutedElements(
-  nodes: Node[],
-  edges: Edge[],
-  direction = "TB",
-) {
+export function getLayoutedElements(nodes: Node[], edges: Edge[], direction = "TB") {
   // Create a new directed graph
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));

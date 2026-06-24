@@ -1,7 +1,3 @@
-"use client";
-
-import { useContext, useEffect } from "react";
-
 import { Group } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -10,6 +6,7 @@ import { Color, TextStyle } from "@tiptap/extension-text-style";
 import { Youtube } from "@tiptap/extension-youtube";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { useContext, useEffect } from "react";
 
 import SurveyContext from "@/context/SurveyContext.ts";
 

@@ -1,5 +1,5 @@
-import type { ShopifyEvents } from "@/types/enums.ts";
 import { axiosClient } from "@/backend/apiClient";
+import type { ShopifyEvents } from "@/types/enums.ts";
 
 const SHOPIFY_BASE_URL = "/integrations/shopify";
 
@@ -8,8 +8,7 @@ export async function getProductsFromShopify() {
 }
 
 export async function getRegisteredWebhooks() {
-  return (await axiosClient.get(`${SHOPIFY_BASE_URL}/registered-webhooks`))
-    .data as ShopifyEvents[];
+  return (await axiosClient.get(`${SHOPIFY_BASE_URL}/registered-webhooks`)).data as ShopifyEvents[];
 }
 
 export async function updateShopifySession({ shop, data }) {
@@ -22,9 +21,7 @@ export async function registerShopifyWebhooks() {
   });
 }
 
-export async function registerShopifyWebhookbyTopic(data: {
-  topic: ShopifyEvents;
-}) {
+export async function registerShopifyWebhookbyTopic(data: { topic: ShopifyEvents }) {
   return await axiosClient.post(`${SHOPIFY_BASE_URL}/webhooks/topic`, data, {
     timeout: 0,
   });
@@ -34,9 +31,7 @@ export async function deleteAllShopifyWebhooks() {
   return await axiosClient.delete(`${SHOPIFY_BASE_URL}/delete-webhooks`);
 }
 
-export async function deleteShopifyWebhookByTopic(data: {
-  topic: ShopifyEvents;
-}) {
+export async function deleteShopifyWebhookByTopic(data: { topic: ShopifyEvents }) {
   return await axiosClient.delete(`${SHOPIFY_BASE_URL}/webhooks/topic`, {
     data,
   });

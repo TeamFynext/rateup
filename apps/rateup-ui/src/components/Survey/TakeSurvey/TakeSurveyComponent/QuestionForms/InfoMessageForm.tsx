@@ -1,5 +1,3 @@
-"use client";
-
 import { Alert } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";

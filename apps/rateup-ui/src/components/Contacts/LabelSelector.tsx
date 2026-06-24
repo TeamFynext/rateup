@@ -4,21 +4,10 @@ import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 
 import { Card } from "../ui/card.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 
-const LabelSelector = ({
-  value,
-  onChange,
-  className = "",
-  allowMultiSelect = false,
-}) => {
+const LabelSelector = ({ value, onChange, className = "", allowMultiSelect = false }) => {
   const { data: labels = [], isLoading } = useContactLabels();
   if (isLoading) {
     return (

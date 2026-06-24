@@ -1,21 +1,9 @@
-"use client";
-
-import type { Dispatch, SetStateAction } from "react";
-import { useEffect, useRef, useState } from "react";
-
-import {
-  ActionIcon,
-  Box,
-  Checkbox,
-  Group,
-  Image,
-  SimpleGrid,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { ActionIcon, Box, Checkbox, Group, Image, SimpleGrid, Stack, Text } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import type { Dispatch, SetStateAction } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -37,6 +25,7 @@ import {
 } from "@/utils/constants.ts";
 
 import { PopoverEmojiPicker } from "../../templates/Details/TextFormateToolBar.tsx";
+
 import inputStyles from "../EditFlow.module.css";
 
 interface Choice {
@@ -116,7 +105,7 @@ export function DataSourceInput(props) {
       };
       props.insertListItem("data-source", choiceObj);
       choiceForm.reset();
-    } catch (error) {
+    } catch {
       choiceForm.reset();
       setFileUploadLoading(false);
     }
@@ -129,8 +118,7 @@ export function DataSourceInput(props) {
   const handleFileChange = async (file: File) => {
     try {
       if (!file) return;
-      if (file.size > 300000)
-        return choiceForm.setFieldError("image", "max image size is 300KB");
+      if (file.size > 300000) return choiceForm.setFieldError("image", "max image size is 300KB");
       choiceForm.clearFieldError("image");
       const base64String = await FileConverter.fileToBase64(file);
       choiceForm.setFieldValue("image", base64String);
@@ -145,8 +133,7 @@ export function DataSourceInput(props) {
     choiceForm.setFieldValue("image", null);
     choiceResetRef.current?.();
   };
-  const disabled =
-    Object.values(WaNPSQuestions2).includes(props?.metaType) || props.disabled;
+  const disabled = Object.values(WaNPSQuestions2).includes(props?.metaType) || props.disabled;
 
   return (
     <Card className="p-4 gap-2">
@@ -197,10 +184,7 @@ export function DataSourceInput(props) {
               <Box mt={24}>
                 <PopoverEmojiPicker
                   onEmojiClick={(e) =>
-                    choiceForm.setFieldValue(
-                      "title",
-                      choiceForm.getValues().title + e,
-                    )
+                    choiceForm.setFieldValue("title", choiceForm.getValues().title + e)
                   }
                   size="lg"
                 />
@@ -214,9 +198,7 @@ export function DataSourceInput(props) {
                   rightSection={
                     MAX_DESCRIPTION_COUNT && (
                       <LengthTracker
-                        length={
-                          (choiceForm.getValues().description as string)?.length
-                        }
+                        length={(choiceForm.getValues().description as string)?.length}
                         maxValue={MAX_DESCRIPTION_COUNT}
                       />
                     )
@@ -230,9 +212,7 @@ export function DataSourceInput(props) {
                     rightSection={
                       MAX_METADATA_COUNT && (
                         <LengthTracker
-                          length={
-                            (choiceForm.getValues().metadata as string)?.length
-                          }
+                          length={(choiceForm.getValues().metadata as string)?.length}
                           maxValue={MAX_METADATA_COUNT}
                         />
                       )
@@ -266,10 +246,7 @@ export function DataSourceInput(props) {
 }
 
 export class FileConverter {
-  public static async fileToBase64(
-    file: File,
-    withStart: boolean = false,
-  ): Promise<string> {
+  public static async fileToBase64(file: File, withStart: boolean = false): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -278,10 +255,7 @@ export class FileConverter {
           resolve(base64URL);
           return;
         }
-        const base64Data = base64URL.replace(
-          /^data:image\/[a-zA-Z]+;base64,/,
-          "",
-        );
+        const base64Data = base64URL.replace(/^data:image\/[a-zA-Z]+;base64,/, "");
         resolve(base64Data);
       };
       reader.onerror = (error) => {
@@ -313,8 +287,7 @@ function Choice({
   disabled,
   onlyTitle,
 }: ChoiceProps) {
-  const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
-    useDisclosure(false);
+  const [openedEditModal, { open: openEditModal, close: closeEditModal }] = useDisclosure(false);
   const resetRef = useRef<() => void>(null);
   const choiceResetRef = useRef<() => void>(null);
   const { t: translations } = useTranslation();
@@ -369,9 +342,7 @@ function Choice({
         ([key, value]) => typeof value === "string" && value.trim() !== "",
       ),
     );
-    const updatedChoices = choices.map((c, i) =>
-      i === index ? { ...c, ...choiceObj } : c,
-    );
+    const updatedChoices = choices.map((c, i) => (i === index ? { ...c, ...choiceObj } : c));
     setChoices(updatedChoices);
     closeEditModal();
   };
@@ -384,19 +355,14 @@ function Choice({
   const handleFileChange = async (file: File) => {
     try {
       if (!file) return;
-      if (file.size > 300000)
-        return choiceForm.setFieldError("image", "max image size is 300KB");
+      if (file.size > 300000) return choiceForm.setFieldError("image", "max image size is 300KB");
       choiceForm.clearFieldError("image");
       const base64String = await FileConverter.fileToBase64(file);
       choiceForm.setFieldValue("image", base64String);
     } catch (error) {
-      toast.error(
-        translations("Error converting file to Base64:") +
-          JSON.stringify(error),
-        {
-          id: "file-converting",
-        },
-      );
+      toast.error(translations("Error converting file to Base64:") + JSON.stringify(error), {
+        id: "file-converting",
+      });
     }
   };
 
@@ -435,12 +401,7 @@ function Choice({
           </>
         </Box>
       </Group>
-      <ActionIcon
-        variant="transparent"
-        onClick={openEditModal}
-        size={"sm"}
-        disabled={disabled}
-      >
+      <ActionIcon variant="transparent" onClick={openEditModal} size={"sm"} disabled={disabled}>
         <IconEdit />
       </ActionIcon>
       <ActionIcon
@@ -483,9 +444,7 @@ function Choice({
                   rightSection={
                     MAX_DESCRIPTION_COUNT && (
                       <LengthTracker
-                        length={
-                          (choiceForm.getValues().description as string)?.length
-                        }
+                        length={(choiceForm.getValues().description as string)?.length}
                         maxValue={MAX_DESCRIPTION_COUNT}
                       />
                     )
@@ -498,9 +457,7 @@ function Choice({
                   rightSection={
                     MAX_METADATA_COUNT && (
                       <LengthTracker
-                        length={
-                          (choiceForm.getValues().metadata as string)?.length
-                        }
+                        length={(choiceForm.getValues().metadata as string)?.length}
                         maxValue={MAX_METADATA_COUNT}
                       />
                     )
@@ -517,10 +474,7 @@ function Choice({
               </>
             )}
           </Stack>
-          <RateupButtonBlue
-            title={translations("Update Choice")}
-            onClick={handleEditChoice}
-          />
+          <RateupButtonBlue title={translations("Update Choice")} onClick={handleEditChoice} />
         </Stack>
       </FormModalLayout>
     </Group>

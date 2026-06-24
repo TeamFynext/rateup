@@ -1,8 +1,3 @@
-"use client";
-
-import { memo, useContext, useEffect, useRef, useState } from "react";
-
-import { IconDots, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
@@ -13,18 +8,15 @@ import {
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
+import { IconDots, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { Ticket } from "lucide-react";
+import { memo, useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import invariant from "tiny-invariant";
 
 import { useBoard } from "@/backend/tickets/tickets.query";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,13 +58,6 @@ type TColumnState =
       type: "is-dragging";
     };
 
-const stateStyles = {
-  idle: { cursor: "grab" },
-  "is-card-over": { outline: "2px solid var(--board-card-over)" },
-  "is-dragging": { opacity: 0.4 },
-  "is-column-over": { backgroundColor: "var(--is-column-over)" },
-};
-
 const idle = { type: "idle" } satisfies TColumnState;
 
 const CardList = memo(function CardList({
@@ -85,12 +70,7 @@ const CardList = memo(function CardList({
   return (
     <>
       {column.ticketCards.map((card) => (
-        <Card
-          key={card.id}
-          card={card}
-          columnId={column.id}
-          onDelete={onCardDelete}
-        />
+        <Card key={card.id} card={card} columnId={column.id} onDelete={onCardDelete} />
       ))}
     </>
   );
@@ -107,11 +87,7 @@ export function Column({
   column: ColumnType;
   onDelete?: (columnId: string) => void;
   onUpdate?: (columnId: string, updates: Partial<ColumnType>) => void;
-  onMoveToBoard?: (
-    columnId: string,
-    targetBoardId: string,
-    updatedTitle?: string,
-  ) => void;
+  onMoveToBoard?: (columnId: string, targetBoardId: string, updatedTitle?: string) => void;
   availableBoards?: BoardInfo[];
   currentBoardId?: string;
 }>) {
@@ -144,7 +120,7 @@ export function Column({
     setTitleError(false);
   };
 
-  const { createCard, updateCard, deleteCard } = useBoard(currentBoardId || "");
+  const { createCard, deleteCard } = useBoard(currentBoardId || "");
 
   const handleOpenAddCardModal = () => {
     openAddCardModal();
@@ -164,11 +140,7 @@ export function Column({
       }
 
       // Move to a different board if needed
-      if (
-        onMoveToBoard &&
-        selectedBoardId !== currentBoardId &&
-        selectedBoardId
-      ) {
+      if (onMoveToBoard && selectedBoardId !== currentBoardId && selectedBoardId) {
         onMoveToBoard(column.id, selectedBoardId, editTitle);
       }
 
@@ -229,17 +201,9 @@ export function Column({
 
     const data = getColumnData({ ticketColumn: column });
 
-    function setIsCardOver({
-      data,
-      location,
-    }: {
-      data: CardData;
-      location: DragLocationHistory;
-    }) {
+    function setIsCardOver({ data, location }: { data: CardData; location: DragLocationHistory }) {
       const innerMost = location.current.dropTargets[0];
-      const isOverChildCard = Boolean(
-        innerMost && isCardDropTargetData(innerMost.data),
-      );
+      const isOverChildCard = Boolean(innerMost && isCardDropTargetData(innerMost.data));
 
       const proposed: TColumnState = {
         type: "is-card-over",
@@ -304,10 +268,7 @@ export function Column({
             setIsCardOver({ data: source.data, location });
             return;
           }
-          if (
-            isColumnData(source.data) &&
-            source.data.ticketColumn.id !== column.id
-          ) {
+          if (isColumnData(source.data) && source.data.ticketColumn.id !== column.id) {
             setState({ type: "is-column-over" });
           }
         },
@@ -318,10 +279,7 @@ export function Column({
           }
         },
         onDragLeave({ source }) {
-          if (
-            isColumnData(source.data) &&
-            source.data.ticketColumn.id === column.id
-          ) {
+          if (isColumnData(source.data) && source.data.ticketColumn.id === column.id) {
             return;
           }
           setState(idle);
@@ -374,10 +332,7 @@ export function Column({
   }, [column, settings]);
 
   return (
-    <div
-      className="w-xs shrink-0 flex flex-col max-h-full"
-      ref={outerFullHeightRef}
-    >
+    <div className="w-xs shrink-0 flex flex-col max-h-full" ref={outerFullHeightRef}>
       <div
         className={`transition-all duration-150 border rounded-xl p-1.5 ${
           state.type === "is-column-over"
@@ -474,12 +429,11 @@ export function Column({
                 <CardShadow dragging={state.dragging} />
               </div>
             ) : null}
-            {column.ticketCards.length === 0 &&
-              state.type !== "is-card-over" && (
-                <div className="h-14 flex items-center justify-center text-muted-foreground font-body text-xs border-2 border-dashed border-border rounded-lg">
-                  {t("No tickets")}
-                </div>
-              )}
+            {column.ticketCards.length === 0 && state.type !== "is-card-over" && (
+              <div className="h-14 flex items-center justify-center text-muted-foreground font-body text-xs border-2 border-dashed border-border rounded-lg">
+                {t("No tickets")}
+              </div>
+            )}
           </div>
           {isAddCardModalOpen ? null : (
             <button
@@ -492,10 +446,7 @@ export function Column({
         </div>
       </div>
 
-      <Dialog
-        open={isEditModalOpen}
-        onOpenChange={(open) => !open && closeEditModal()}
-      >
+      <Dialog open={isEditModalOpen} onOpenChange={(open) => !open && closeEditModal()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t("Edit Column")}</DialogTitle>
@@ -521,10 +472,7 @@ export function Column({
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={isAddCardModalOpen}
-        onOpenChange={(open) => !open && closeAddCardModal()}
-      >
+      <Dialog open={isAddCardModalOpen} onOpenChange={(open) => !open && closeAddCardModal()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t("Add Ticket")}</DialogTitle>
@@ -553,9 +501,7 @@ export function Column({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label className="text-sm font-semibold">
-                {t("Description")}
-              </Label>
+              <Label className="text-sm font-semibold">{t("Description")}</Label>
               <Textarea
                 value={newCard.description}
                 onChange={(e) =>
@@ -591,14 +537,10 @@ export function Column({
                         className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
                         style={{
                           padding: "4px 10px",
-                          border: isSelected
-                            ? `2px solid ${v.dot}`
-                            : `2px solid ${v.bg}`,
+                          border: isSelected ? `2px solid ${v.dot}` : `2px solid ${v.bg}`,
                           background: v.bg,
                           color: v.color,
-                          boxShadow: isSelected
-                            ? `0 0 0 2px ${v.dot}22`
-                            : "none",
+                          boxShadow: isSelected ? `0 0 0 2px ${v.dot}22` : "none",
                         }}
                       >
                         {t(v.label)}
@@ -613,29 +555,18 @@ export function Column({
               <Input
                 type="date"
                 value={newCard.deadline}
-                onChange={(e) =>
-                  setNewCard((prev) => ({ ...prev, deadline: e.target.value }))
-                }
+                onChange={(e) => setNewCard((prev) => ({ ...prev, deadline: e.target.value }))}
                 min={new Date().toISOString().split("T")[0]}
                 className="h-10"
-                onClick={(e) =>
-                  "showPicker" in e.target && (e.target as any).showPicker()
-                }
+                onClick={(e) => "showPicker" in e.target && (e.target as any).showPicker()}
               />
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-4">
-            <Button
-              variant="outline"
-              onClick={closeAddCardModal}
-              className="h-10 px-5"
-            >
+            <Button variant="outline" onClick={closeAddCardModal} className="h-10 px-5">
               {t("Cancel")}
             </Button>
-            <Button
-              onClick={handleAddCard}
-              className="h-10 px-5 font-semibold shadow-sm"
-            >
+            <Button onClick={handleAddCard} className="h-10 px-5 font-semibold shadow-sm">
               <Ticket size={16} className="mr-2" /> {t("Add Ticket")}
             </Button>
           </div>

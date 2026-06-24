@@ -1,20 +1,16 @@
-"use client";
-
 import { useContext, useState } from "react";
-
-import { useMantineTheme } from "@mantine/core";
-import { useTranslation } from "react-i18next";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 
 import { ContainedTextArea } from "../../../../input/ContainedInput/ContainedInput.tsx";
-import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
+import classes from "../TakeSurvey.module.css";
+
 export function TextAreaForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const theme = useMantineTheme();
+
   const [inputValue, setInputValue] = useState(response || "");
 
   const handleChange = (e) => {
@@ -24,7 +20,7 @@ export function TextAreaForm() {
     updateResponse(updatedResponse);
     setInputValue(newValue);
   };
-  const { t: translations } = useTranslation();
+
   return (
     <FormPaperLayout>
       <ContainedTextArea

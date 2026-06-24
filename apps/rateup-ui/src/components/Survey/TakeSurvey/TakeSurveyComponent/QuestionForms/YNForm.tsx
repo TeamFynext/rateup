@@ -1,16 +1,14 @@
-"use client";
-
-import { useContext } from "react";
-
 import { Box, Group, isLightColor, useMantineTheme } from "@mantine/core";
 import { animate } from "motion/react";
+import { useContext } from "react";
 
-import { YNResponse } from "@/types/enums.ts";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+import { YNResponse } from "@/types/enums.ts";
 
 import { RateupButtonBlue } from "../../../../Button/RateupButtons.tsx";
+
 import styles from "./YNForm.module.css";
 
 export function YNForm() {
@@ -29,19 +27,13 @@ export function YNForm() {
     updateResponse(value);
     if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
       if (clickedBtn) {
-        await animate(
-          clickedBtn,
-          { opacity: [0, 1, 0, 1] },
-          { duration: 0.75 },
-        );
+        await animate(clickedBtn, { opacity: [0, 1, 0, 1] }, { duration: 0.75 });
         nextFn?.(value);
       }
     }
   };
 
-  const foregroundColor = isLightColor(themePrimaryColor)
-    ? "#000000"
-    : "#FFFFFF";
+  const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
   return (
     <Group>
@@ -55,8 +47,7 @@ export function YNForm() {
           className={styles["yes-no-btn"]}
           onClick={(e) => handleYesOrNOClick(e, YNResponse.No)}
           sx={{
-            color:
-              response === YNResponse.No ? foregroundColor : themePrimaryColor,
+            color: response === YNResponse.No ? foregroundColor : themePrimaryColor,
           }}
         />
       </Box>
@@ -70,8 +61,7 @@ export function YNForm() {
           className={styles["yes-no-btn"]}
           onClick={(e) => handleYesOrNOClick(e, YNResponse.Yes)}
           sx={{
-            color:
-              response === YNResponse.Yes ? foregroundColor : themePrimaryColor,
+            color: response === YNResponse.Yes ? foregroundColor : themePrimaryColor,
           }}
         />
       </Box>

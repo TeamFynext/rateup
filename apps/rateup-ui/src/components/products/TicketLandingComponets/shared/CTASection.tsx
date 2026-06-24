@@ -11,8 +11,8 @@ const CTASection = () => {
           Ready to Power Smarter Ticketing on WhatsApp?
         </h2>
         <p className="pt-5 text-lg md:text-xl opacity-90">
-          Join 500+ businesses using RateUp to streamline customer support and
-          boost satisfaction — all on WhatsApp.
+          Join 500+ businesses using RateUp to streamline customer support and boost satisfaction —
+          all on WhatsApp.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">

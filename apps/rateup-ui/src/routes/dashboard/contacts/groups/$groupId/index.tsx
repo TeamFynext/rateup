@@ -1,29 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-
 import { useDebouncedState } from "@mantine/hooks";
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-  useRouter,
-} from "@tanstack/react-router";
-import type {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-} from "@tanstack/react-table";
+import { createFileRoute, useNavigate, useParams, useRouter } from "@tanstack/react-router";
+import type { ColumnDef, ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { Image } from "@unpic/react";
-import {
-  ArrowLeft,
-  Check,
-  Edit,
-  Folder,
-  Trash2,
-  Upload,
-  Users,
-  X,
-} from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { ArrowLeft, Check, Edit, Folder, Trash2, Upload, Users, X } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -35,10 +15,7 @@ import {
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal.tsx";
 import { ParticipantMenu } from "@/components/Contacts/GroupParticipant.tsx";
-import {
-  CONTACT_SORT,
-  contactColumn,
-} from "@/components/Contacts/utils/utils.tsx";
+import { CONTACT_SORT, contactColumn } from "@/components/Contacts/utils/utils.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -56,13 +33,8 @@ import { Input } from "@/components/ui/input.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { getInitials } from "@/components/ui/utils.ts";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
-import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
-import {
-  deleteUploadedFiles,
-  getFileUrlFromKey,
-  uploadFile,
-} from "@/utils/file-upload/upload.ts";
+import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
 import { DataTableToolbar } from "../../../../../components/dashboard/contacts/groups/$groupId/data-table-toolbar.tsx";
 import { useGroupTableStore } from "../../../../../components/dashboard/contacts/store/group-table-store.ts";
@@ -78,21 +50,18 @@ function ContactGroup() {
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
-  const { t: translations } = useTranslation();
-  const [columnFilters, setColumnFilters] =
-    useDebouncedState<ColumnFiltersState>([], 200);
+
+  const [columnFilters, setColumnFilters] = useDebouncedState<ColumnFiltersState>([], 200);
   const navigate = useNavigate();
   const router = useRouter();
   const params = useParams({
     strict: false,
   });
   const groupId = params?.groupId as string;
-  const { update } = useRouteParams();
+
   const { customFields } = useCustomFieldsContext();
   const { filter, setGroupDetails } = useGroupTableStore();
-  const createNewContactsFromCSV = useAddNewContactFromCSVMutation(
-    groupId?.toString(),
-  );
+  const createNewContactsFromCSV = useAddNewContactFromCSVMutation(groupId?.toString());
   const [groupName, setGroupName] = useState("");
   const [isEditingName, setIsEditingName] = useState(false);
   const {
@@ -124,10 +93,7 @@ function ContactGroup() {
       enableColumnFilter: false,
       id: "action",
       cell: (info) => (
-        <ParticipantMenu
-          contactId={info.row.original.id}
-          groupId={groupDetails?.id}
-        />
+        <ParticipantMenu contactId={info.row.original.id} groupId={groupDetails?.id} />
       ),
       meta: { title: "Action" },
     },
@@ -135,9 +101,7 @@ function ContactGroup() {
   const loadingState = isLoading || isRefetching;
   const [showEditIconDialog, setShowEditIconDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const editContactGroupMutation = useEditContactGroupMutation(
-    groupDetails?.id,
-  );
+  const editContactGroupMutation = useEditContactGroupMutation(groupDetails?.id);
   function handleSaveGroupName() {
     if (!groupName.trim().length || groupName === groupDetails?.name) return;
     editContactGroupMutation.mutate(
@@ -178,15 +142,9 @@ function ContactGroup() {
     () =>
       column.reduce((visibility, key) => {
         if (
-          ![
-            "select",
-            "name",
-            "phone",
-            "ContactLabelMap",
-            "source",
-            "createdAt",
-            "action",
-          ].includes((key as any)?.accessorKey || key?.id)
+          !["select", "name", "phone", "ContactLabelMap", "source", "createdAt", "action"].includes(
+            (key as any)?.accessorKey || key?.id,
+          )
         ) {
           visibility[(key as any)?.accessorKey || key?.id] = false;
         }
@@ -197,9 +155,7 @@ function ContactGroup() {
   useEffect(() => {
     const filterKeys = Object.keys(filter).filter((f) => f !== "searchTerm");
     setSearchTerm(filter.searchTerm);
-    setColumnFilters(
-      filterKeys.map((key) => ({ id: key, value: filter[key] })),
-    );
+    setColumnFilters(filterKeys.map((key) => ({ id: key, value: filter[key] })));
   }, [filter]);
 
   if (groupByIderror) return <ErrorComponent refetch={refetchgroupById} />;
@@ -296,9 +252,7 @@ function ContactGroup() {
                     <p className="text-xs text-muted-foreground">
                       Manage group members and settings
                     </p>
-                    <span className="text-xs text-muted-foreground">
-                      Team:{" "}
-                    </span>
+                    <span className="text-xs text-muted-foreground">Team: </span>
                     <Badge className="mt-1"> {groupDetails?.team?.name}</Badge>
                   </div>
                 )}
@@ -309,9 +263,7 @@ function ContactGroup() {
                   <div className="text-3xl bg-linear-to-r from-rateup-blue to-indigo-600 bg-clip-text text-transparent">
                     {groupDetails?._count?.contacts || 0}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    Total Members
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Total Members</div>
                 </div>
               )}
             </div>
@@ -450,9 +402,7 @@ function ContactGroupIconEditDialog({ opened, setOpened, group }) {
                   height={200}
                 />
               ) : (
-                <span className="text-white text-4xl">
-                  {getInitials(group?.name)}
-                </span>
+                <span className="text-white text-4xl">{getInitials(group?.name)}</span>
               )}
             </div>
           </div>
@@ -490,11 +440,7 @@ function ContactGroupIconEditDialog({ opened, setOpened, group }) {
           </p>
         </div>
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setOpened(false)}
-            className="h-10"
-          >
+          <Button variant="outline" onClick={() => setOpened(false)} className="h-10">
             Close
           </Button>
         </DialogFooter>

@@ -1,40 +1,18 @@
-"use client";
-
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
-import {
-  ActionIcon,
-  Box,
-  Center,
-  Flex,
-  Stack,
-  Tabs,
-  Text,
-} from "@mantine/core";
+import { ActionIcon, Box, Center, Flex, Stack, Tabs, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconLanguage } from "@tabler/icons-react";
 import { isEqual } from "lodash";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { v4 as uuidv4 } from "uuid";
 
-import { PageType, QuestionType, SurveyType } from "@/types/enums.ts";
 import { useQuestionCreateMutation } from "@/backend/surveys/questions/questions.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
-import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
-import {
-  QuestionTypesGroup,
-  uniquePages,
-  WaSurveyQuestionTypes,
-} from "@/utils/constants.ts";
+import { PageType, QuestionType, SurveyType } from "@/types/enums.ts";
+import { QuestionTypesGroup, uniquePages, WaSurveyQuestionTypes } from "@/utils/constants.ts";
 import {
   createBlankQuestion,
   createPage,
@@ -42,7 +20,6 @@ import {
 } from "@/utils/questions.ts";
 
 import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
-import styles from "./EditSurvey.module.css";
 import PageTypeSelection from "./Page/PageTypeSelection.tsx";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor.tsx";
 import LogicEditor from "./Question/LogicEditor.tsx";
@@ -64,9 +41,9 @@ import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext.tsx";
 import UiTextTranslationsModal from "./UiTextTranslationsModal/index.tsx";
 
-const isQuestionType = (
-  type: QuestionType | PageType | undefined,
-): type is QuestionType =>
+import styles from "./EditSurvey.module.css";
+
+const isQuestionType = (type: QuestionType | PageType | undefined): type is QuestionType =>
   Object.values(QuestionType).includes(type as QuestionType);
 
 export enum QuestionTabsEnum {
@@ -98,15 +75,11 @@ export function EditSurvey({
   subscription,
   setFunToRunBeforeSurveyIdPageHeaderTabsChange,
 }: EditSurveyProps) {
-  const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(
-    QuestionTabsEnum.None,
-  );
+  const [activeTab, setActiveTab] = useState<QuestionTabsEnum>(QuestionTabsEnum.None);
   const { surveyId } = useContext(SurveyContext);
-  const { data: survey, dataUpdatedAt } = useSurvey(surveyId);
+  const { data: survey } = useSurvey(surveyId);
   const [selectedQ, setSelectedQ] = useState<Question>(null);
-  const [selectedSurveyThemeTab, setSelectedSurveyThemeTab] = useState(
-    ThemeTabEnum.SURVEY,
-  );
+  const [selectedSurveyThemeTab, setSelectedSurveyThemeTab] = useState(ThemeTabEnum.SURVEY);
   const [surveyThemeContextValue, setSurveyThemeContextValue] = useState(
     survey?.webSurveyTheme?.theme,
   );
@@ -117,9 +90,7 @@ export function EditSurvey({
   // To store state of surveyThemeContextProvider.
   const surveyThemeContextProviderValueRef = useRef(null);
 
-  const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const [isUiTextTranslationsModalOpen, setIsUiTextTranlationsModalOpen] =
-    useState(false);
+  const [isUiTextTranslationsModalOpen, setIsUiTextTranlationsModalOpen] = useState(false);
 
   const handleUiTextTranslationsModalClose = useCallback(() => {
     setIsUiTextTranlationsModalOpen(false);
@@ -134,18 +105,12 @@ export function EditSurvey({
   const [surveyPreviewCompKey, setSurveyPreveiwCompKey] = useState(uuidv4());
 
   // selected surveyThemeId.
-  const [themeSelectorState, setThemeSelectorState] = useState(
-    survey?.webSurveyThemeId,
-  );
+  const [themeSelectorState, setThemeSelectorState] = useState(survey?.webSurveyThemeId);
 
-  const { data: allThemesArr, isPending: isAllThemesFetchPending } =
-    useAllThemes();
+  const { data: allThemesArr, isPending: isAllThemesFetchPending } = useAllThemes();
 
-  const themeObjBeingEdited = allThemesArr?.find(
-    (obj) => obj.id === themeSelectorState,
-  );
-  const isThemeObjBeingEditedDefaultTheme =
-    themeObjBeingEdited?.name === "Default Theme";
+  const themeObjBeingEdited = allThemesArr?.find((obj) => obj.id === themeSelectorState);
+  const isThemeObjBeingEditedDefaultTheme = themeObjBeingEdited?.name === "Default Theme";
 
   const [
     isStylesEditorDrawerOpen,
@@ -160,10 +125,7 @@ export function EditSurvey({
     if (!selectedQ && activeTab === QuestionTabsEnum.SurveyPreview) {
       if (
         themeSelectorState !== survey?.webSurveyThemeId ||
-        !isEqual(
-          surveyThemeContextProviderValueRef.current,
-          survey?.webSurveyTheme?.theme,
-        )
+        !isEqual(surveyThemeContextProviderValueRef.current, survey?.webSurveyTheme?.theme)
       ) {
         return true;
       } else {
@@ -241,17 +203,14 @@ export function EditSurvey({
     } else {
       newQ = createBlankQuestion(type as QuestionType, surveyLanguages);
     }
-    const { id, ...restData } = newQ;
+    const { ...restData } = newQ;
     const saveQ = { ...restData };
     questionCreateMutation.mutateAsync(saveQ).then((r) => {
       const question = r.data;
       if (uniquePages.includes(question.type)) {
-        setSelectedSurveyThemeTab(
-          getSurveyThemeTabValueFromPageType(question.type),
-        );
+        setSelectedSurveyThemeTab(getSurveyThemeTabValueFromPageType(question.type));
         setSurveyThemeContextValue(survey?.webSurveyPagesTheme);
-        surveyThemeContextProviderValueRef.current =
-          survey?.webSurveyPagesTheme;
+        surveyThemeContextProviderValueRef.current = survey?.webSurveyPagesTheme;
       }
       setSelectedQ(question);
       setSelectedQ(r.data);
@@ -291,11 +250,7 @@ export function EditSurvey({
     return () => {
       setFunToRunBeforeSurveyIdPageHeaderTabsChange(null);
     };
-  }, [
-    checkForUnsavedChanges,
-    setFunToRunBeforeSurveyIdPageHeaderTabsChange,
-    selectedQ,
-  ]);
+  }, [checkForUnsavedChanges, setFunToRunBeforeSurveyIdPageHeaderTabsChange, selectedQ]);
 
   return (
     <SurveyThemeContextProvider
@@ -372,9 +327,7 @@ export function EditSurvey({
                           surveyLanguages={surveyLanguages}
                           setSelectedLanguage={setSelectedLanguage}
                           key={selectedQ.id}
-                          questionDetailedViewFormRef={
-                            questionDetailedViewFormRef
-                          }
+                          questionDetailedViewFormRef={questionDetailedViewFormRef}
                         />
                       )}
                     </>
@@ -443,9 +396,7 @@ export function EditSurvey({
                 </Tabs.Panel>
                 <Tabs.Panel value={QuestionTabsEnum.None}>
                   <Center style={{ height: "100%" }}>
-                    <Text c="dimmed">
-                      {translations("Select a question to edit")}
-                    </Text>
+                    <Text c="dimmed">{translations("Select a question to edit")}</Text>
                   </Center>
                 </Tabs.Panel>
                 <Tabs.Panel
@@ -466,9 +417,7 @@ export function EditSurvey({
                     <ActionIcon
                       className={styles["ui-text-translations-modal-btn"]}
                       onClick={() => {
-                        setIsUiTextTranlationsModalOpen(
-                          !isUiTextTranslationsModalOpen,
-                        );
+                        setIsUiTextTranlationsModalOpen(!isUiTextTranslationsModalOpen);
                       }}
                     >
                       <IconLanguage size={20} />
@@ -482,21 +431,15 @@ export function EditSurvey({
             <AnimatePresence>
               <motion.div
                 layout
-                className={
-                  styles["edit-survey-theme-style-component-motion-div"]
-                }
+                className={styles["edit-survey-theme-style-component-motion-div"]}
                 initial={{ x: 500 }}
                 animate={{ x: 0 }}
                 exit={{ x: 500 }}
               >
-                <PaperLayout
-                  className={styles["edit-survey-theme-style-component-div"]}
-                >
+                <PaperLayout className={styles["edit-survey-theme-style-component-div"]}>
                   <StylesComponent
                     survey={survey}
-                    isThemeObjBeingEditedDefaultTheme={
-                      isThemeObjBeingEditedDefaultTheme
-                    }
+                    isThemeObjBeingEditedDefaultTheme={isThemeObjBeingEditedDefaultTheme}
                     themeObjBeingEdited={themeObjBeingEdited}
                     onClose={() => {
                       closeStylesEditorDrawer();
@@ -512,10 +455,7 @@ export function EditSurvey({
           )}
         </LayoutGroup>
 
-        <SurveyPreviewModal
-          opened={isSurveyPreviewModalOpen}
-          onClose={closeSurveyPreviewModal}
-        >
+        <SurveyPreviewModal opened={isSurveyPreviewModalOpen} onClose={closeSurveyPreviewModal}>
           <SurveyTheme
             key={"preview" + surveyPreviewCompKey}
             previewId={"survey-theme-prod-preview"}

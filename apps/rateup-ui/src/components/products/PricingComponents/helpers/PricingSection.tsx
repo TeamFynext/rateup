@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
@@ -40,20 +38,11 @@ const PricingSection = ({ color1, color2 }: Colors) => {
       >
         <div className={sharedStyles}>
           <div>
-            <h3
-              style={{ color: color2 }}
-              className="text-2xl font-semibold text-[#00397b] mb-2"
-            >
+            <h3 style={{ color: color2 }} className="text-2xl font-semibold text-[#00397b] mb-2">
               Starter
             </h3>
-            <p
-              style={{ color: color1 }}
-              className="text-5xl font-bold text-[#1c518e]"
-            >
-              ₹0{" "}
-              <span className="text-base font-medium text-gray-500">
-                /month
-              </span>
+            <p style={{ color: color1 }} className="text-5xl font-bold text-[#1c518e]">
+              ₹0 <span className="text-base font-medium text-gray-500">/month</span>
             </p>
             <p className="text-gray-600 mt-3 mb-5 text-sm">
               Great for small teams just getting started.
@@ -85,24 +74,14 @@ const PricingSection = ({ color1, color2 }: Colors) => {
 
         <div className={sharedStyles}>
           <div>
-            <h3
-              style={{ color: color2 }}
-              className="text-2xl font-semibold text-[#00397b] mb-2"
-            >
+            <h3 style={{ color: color2 }} className="text-2xl font-semibold text-[#00397b] mb-2">
               Enterprise
             </h3>
-            <p
-              style={{ color: color1 }}
-              className="text-5xl font-bold text-[#1c518e]"
-            >
+            <p style={{ color: color1 }} className="text-5xl font-bold text-[#1c518e]">
               Custom
             </p>
-            <p className="text-gray-600 mt-3 mb-6 text-sm">
-              Customized Plan & Pricing
-            </p>
-            <div className="text-xl text-center text-gray-700 mt-6 mb-4">
-              Let&apos;s Talk!
-            </div>
+            <p className="text-gray-600 mt-3 mb-6 text-sm">Customized Plan & Pricing</p>
+            <div className="text-xl text-center text-gray-700 mt-6 mb-4">Let&apos;s Talk!</div>
           </div>
           <BookDemoModal>
             <button

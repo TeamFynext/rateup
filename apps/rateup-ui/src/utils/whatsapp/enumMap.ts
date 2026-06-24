@@ -1,9 +1,4 @@
-import {
-  LDResponse2,
-  RatingScale,
-  SmileyResponse2,
-  YNResponse,
-} from "@/types/enums.ts";
+import { LDResponse2, RatingScale, SmileyResponse2, YNResponse } from "@/types/enums.ts";
 
 export const LDResponseMap = { 1: LDResponse2.Like, 2: LDResponse2.Dislike };
 export const YNResponseMap = { 1: YNResponse.Yes, 2: YNResponse.No };

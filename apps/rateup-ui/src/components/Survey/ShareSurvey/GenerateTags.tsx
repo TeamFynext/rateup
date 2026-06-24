@@ -1,9 +1,6 @@
-"use client";
-
-import React from "react";
-
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
 import { IconDatabasePlus } from "@tabler/icons-react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { ContainedTagInput } from "../../input/ContainedInput/ContainedInput.tsx";
@@ -35,8 +32,7 @@ const GenerateTags = ({ tagSelectData, setTagSelectData, disabled }) => {
 export default GenerateTags;
 
 function generateRandomString(length) {
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
   const charactersLength = characters.length;
 

@@ -77,7 +77,6 @@ export type Wop = {
   segColors: string[];
 };
 
-export {};
 declare global {
   interface Window {
     gtag: (...args: any[]) => void;
@@ -703,8 +702,7 @@ declare global {
   type subscriptionActiveField = {
     active: boolean;
   };
-  type subscriptionWithActiveAndCount = subscriptionCountRestriction &
-    subscriptionActiveField;
+  type subscriptionWithActiveAndCount = subscriptionCountRestriction & subscriptionActiveField;
   interface SubscriptionFeatures {
     // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
     [sfpn.Menu]: subscriptionCountRestriction &
@@ -744,8 +742,7 @@ declare global {
         leadAdAutomation: subscriptionWithActiveAndCount;
       };
     };
-    [sfpn.ReputationManagement]: subscriptionActiveField &
-      subscriptionCountRestriction;
+    [sfpn.ReputationManagement]: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.Ticket]: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.AI]: subscriptionActiveField & {
       count: {
@@ -1386,14 +1383,7 @@ export type WaSendMessageBody = {
     caption?: string;
   };
   interactive?: {
-    type:
-      | "button"
-      | "list"
-      | "cta_url"
-      | "flow"
-      | "catalog_message"
-      | "product"
-      | "product_list";
+    type: "button" | "list" | "cta_url" | "flow" | "catalog_message" | "product" | "product_list";
     action?: WaInteractiveMessageAction;
     body?: {
       text: string; // max 1024 chars
@@ -1605,8 +1595,7 @@ export type IgSendMessageBody = {
     emoji?: string;
   };
 };
-export type IgReceiveMessageBody =
-  InstagramWebhookBody["entry"][0]["messaging"][0];
+export type IgReceiveMessageBody = InstagramWebhookBody["entry"][0]["messaging"][0];
 // instagram
 
 export type WaInboxMessage = {

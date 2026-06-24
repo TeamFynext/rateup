@@ -1,18 +1,12 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-
 import { Group, Text } from "@mantine/core";
 import { IconExclamationCircle, IconPaperclip } from "@tabler/icons-react";
 import { MessageSquare } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
+import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
 import { useUser } from "@/context/UserContext.tsx";
 
 import WaInboxChatDisplayBody from "./chatdisplayBody/index.tsx";
@@ -36,8 +30,7 @@ export default function WaInboxChatDisplay({
   const { updateContactById } = useContactsStore();
   const { user } = useUser();
   const isAssignedToMe = useMemo(
-    () =>
-      contact && !!contact.assignedUsers?.find((c) => c.id === user?.userId),
+    () => contact && !!contact.assignedUsers?.find((c) => c.id === user?.userId),
     [contact, user],
   );
 
@@ -101,14 +94,7 @@ export default function WaInboxChatDisplay({
     footerContent = <WaInboxChatDisplayFooter contact={contact} />;
   } else {
     footerContent = (
-      <Group
-        bg={"black"}
-        justify="center"
-        c={"white"}
-        color="white"
-        gap={2}
-        py={2}
-      >
+      <Group bg={"black"} justify="center" c={"white"} color="white" gap={2} py={2}>
         <IconExclamationCircle size={"1rem"} />
         <Text size="xs">This chat is not assigned to you</Text>
       </Group>
@@ -168,9 +154,7 @@ export default function WaInboxChatDisplay({
         <div className="flex-1 flex items-center justify-center bg-muted/20 h-full">
           <div className="text-center">
             <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="mb-2">
-              {translations("Select a chat to see messages")}
-            </h3>
+            <h3 className="mb-2">{translations("Select a chat to see messages")}</h3>
           </div>
         </div>
       ) : (

@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { useRouterState, useSearch } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { fbPageview } from "./fbpixel.ts";
 

@@ -44,9 +44,8 @@ export const useSyncCatalogProducts = (catalogId) => {
 export const useDeletCatalogProducts = (catalogId) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
-      productIds: { id: string; hotel_reatiler_id?: string }[];
-    }) => deleteCatalogProducts(catalogId, data),
+    mutationFn: (data: { productIds: { id: string; hotel_reatiler_id?: string }[] }) =>
+      deleteCatalogProducts(catalogId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
@@ -63,10 +62,7 @@ export const useUpdateCatalogProducts = (catalogId) => {
   });
 };
 
-export const useShopifyAvailableProducts = (
-  catalogId: string,
-  enabled: boolean,
-) => {
+export const useShopifyAvailableProducts = (catalogId: string, enabled: boolean) => {
   return useQuery({
     queryFn: () => getShopifyAvailableProducts(catalogId),
     queryKey: ["shopify_available_products", catalogId],

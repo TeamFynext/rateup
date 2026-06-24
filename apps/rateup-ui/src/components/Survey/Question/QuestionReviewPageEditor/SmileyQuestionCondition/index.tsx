@@ -1,9 +1,7 @@
-"use client";
-
 import { Button, Group, Text, useMantineTheme } from "@mantine/core";
 
-import { SmileyResponse } from "@/types/enums.ts";
 import { mapSmileyIcon } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
+import { SmileyResponse } from "@/types/enums.ts";
 
 function SmileyQuestionCondition({ currentSelectedEmojis, setState }) {
   const { primaryColor } = useMantineTheme();
@@ -22,9 +20,7 @@ function SmileyQuestionCondition({ currentSelectedEmojis, setState }) {
         {Object.values(SmileyResponse).map((value) => (
           <Button
             key={value}
-            variant={
-              currentSelectedEmojis?.includes(value) ? "light" : "default"
-            }
+            variant={currentSelectedEmojis?.includes(value) ? "light" : "default"}
             gradient={{
               from: "#62CBE6",
               to: "#3F5BA9",

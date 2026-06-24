@@ -1,15 +1,7 @@
-"use client";
-
-import React, { useEffect, useRef, useState } from "react";
-
 import { IconArrowDown } from "@tabler/icons-react";
-import {
-  ClockIcon,
-  EyeOffIcon,
-  ScrollTextIcon,
-  TrendingDownIcon,
-} from "lucide-react";
+import { ClockIcon, EyeOffIcon, ScrollTextIcon, TrendingDownIcon } from "lucide-react";
 import { motion, useInView } from "motion/react";
+import React, { useEffect, useRef, useState } from "react";
 
 function QrWhyIsStillStuck() {
   const problems = [
@@ -21,14 +13,12 @@ function QrWhyIsStillStuck() {
     {
       icon: <ClockIcon className="text-gray-700 w-10 h-10" />,
       title: "Time-Consuming",
-      description:
-        "It's hard to compile, read, and find patterns in handwritten notes.",
+      description: "It's hard to compile, read, and find patterns in handwritten notes.",
     },
     {
       icon: <EyeOffIcon className="text-gray-700 w-10 h-10" />,
       title: "No Visibility",
-      description:
-        "No way to track or escalate serious issues, especially when you're not there.",
+      description: "No way to track or escalate serious issues, especially when you're not there.",
     },
     {
       icon: <ScrollTextIcon className="text-gray-700 w-10 h-10" />,
@@ -104,9 +94,7 @@ function QrWhyIsStillStuck() {
                 {problem.icon}
               </div>
               <div className="flex flex-col text-left">
-                <p className="text-base font-semibold text-gray-900 mb-1">
-                  {problem.title}
-                </p>
+                <p className="text-base font-semibold text-gray-900 mb-1">{problem.title}</p>
                 <p className="text-sm text-gray-500">{problem.description}</p>
               </div>
             </motion.div>

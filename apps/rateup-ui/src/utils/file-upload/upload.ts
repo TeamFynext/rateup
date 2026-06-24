@@ -3,11 +3,7 @@ import { toast } from "sonner";
 
 import { fallbackImage } from "../constants.ts";
 
-export const uploadFile = async (
-  file,
-  withThumbnails = false,
-  data = { allowAll: false },
-) => {
+export const uploadFile = async (file, withThumbnails = false, data = { allowAll: false }) => {
   const formData = new FormData();
   formData.append("metadata", JSON.stringify(data));
   formData.append("size", file?.size?.toString());
@@ -60,16 +56,10 @@ export const deleteUploadedFiles = async (data) => {
     return error?.data;
   }
 };
-export const getFileUrlFromKey = (
-  key: string,
-  s3Upload = true,
-  unsplashImage = false,
-) => {
+export const getFileUrlFromKey = (key: string, s3Upload = true, unsplashImage = false) => {
   if (!key) return;
   if (unsplashImage)
-    return key?.startsWith("https")
-      ? key
-      : `${import.meta.env.VITE_UNSPLASH_URL}${key}`;
+    return key?.startsWith("https") ? key : `${import.meta.env.VITE_UNSPLASH_URL}${key}`;
 
   const imgUrl = s3Upload
     ? `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${key}`
@@ -81,10 +71,7 @@ const joinUrl = (base: string, path: string) =>
 
 type AssetProvider = "s3" | "web" | "unsplash";
 
-export const resolveAssetUrl = (
-  key?: string,
-  provider: AssetProvider = "s3",
-): string => {
+export const resolveAssetUrl = (key?: string, provider: AssetProvider = "s3"): string => {
   if (!key) return "";
 
   if (key.startsWith("http")) return key;
@@ -113,17 +100,11 @@ export const dataURItoBlob = (dataURI) => {
   return new Blob([ab], { type: mimeString });
 };
 
-export const getImageValue = (
-  image,
-  fallback = false,
-  unsplashImage = false,
-) => {
+export const getImageValue = (image, fallback = false, unsplashImage = false) => {
   if (typeof image === "object") {
     return URL.createObjectURL(image);
   } else if (unsplashImage) {
-    return image?.startsWith("http")
-      ? image
-      : `${import.meta.env.VITE_UNSPLASH_URL}${image}`;
+    return image?.startsWith("http") ? image : `${import.meta.env.VITE_UNSPLASH_URL}${image}`;
   } else if (fallback || (image && image.startsWith("blob:"))) {
     return image;
   } else if (image) {
@@ -140,7 +121,6 @@ const getFileNameFromFile = (data: File | string, label: string) => {
 };
 export const getLabel = (data: File | string, label: string) => {
   if (data instanceof File) return `${data?.name}`;
-  else if (data && typeof data === "string" && data.length > 0)
-    return `Update ${label}`;
+  else if (data && typeof data === "string" && data.length > 0) return `Update ${label}`;
   else return `Select a ${label}`;
 };

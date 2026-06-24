@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useMemo, useRef, useState } from "react";
-
 import {
   ActionIcon,
   Card,
@@ -32,6 +28,7 @@ import {
   IconWorld,
   IconX,
 } from "@tabler/icons-react";
+import React, { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { z } from "zod/v4";
@@ -45,10 +42,7 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
-import {
-  WHATSAPP_BUTTON_TYPE,
-  WHATSAPP_TEMPLATE_BROADCAST_TYPE,
-} from "@/utils/constants.ts";
+import { WHATSAPP_BUTTON_TYPE, WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 import { parseStringWithVariables } from "@/utils/whatsapp/templates.tsx";
 
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector.tsx";
@@ -209,9 +203,7 @@ const CardCarousel = ({
         <MenuDropdown>
           <Tooltip
             label={
-              form.values.productCarousel?.length
-                ? "Remove prodcut card to add media card"
-                : ""
+              form.values.productCarousel?.length ? "Remove prodcut card to add media card" : ""
             }
             disabled={!form.values.productCarousel?.length}
           >
@@ -226,9 +218,7 @@ const CardCarousel = ({
           <Tooltip
             disabled={!form.values.mediaCarousel?.length}
             label={
-              form.values.mediaCarousel.length > 0
-                ? "Remove media card to add product card"
-                : ""
+              form.values.mediaCarousel.length > 0 ? "Remove media card to add product card" : ""
             }
           >
             <MenuItem
@@ -252,10 +242,7 @@ const CardCarousel = ({
               <CardSection withBorder p={4}>
                 <Group justify="space-between">
                   <Text>Card {index + 1}</Text>
-                  <ActionIcon
-                    variant="subtle"
-                    onClick={() => deleteMediaCard(index)}
-                  >
+                  <ActionIcon variant="subtle" onClick={() => deleteMediaCard(index)}>
                     <IconTrash size={16} color="red" />
                   </ActionIcon>
                 </Group>
@@ -312,9 +299,7 @@ const CardCarousel = ({
                   <ContainedTextField
                     key={data}
                     placeholder={`${translations("Enter the content for")} {{${data}}}`}
-                    {...form.getInputProps(
-                      `mediaCarousel.${index}.example.${_index}`,
-                    )}
+                    {...form.getInputProps(`mediaCarousel.${index}.example.${_index}`)}
                   />
                 ))}
                 <Group>
@@ -357,9 +342,7 @@ const CardCarousel = ({
                     />
                     <ContainedTextField
                       label={"Button Text"}
-                      {...form.getInputProps(
-                        `mediaCarousel.${index}.buttons.${btnIndex}.text`,
-                      )}
+                      {...form.getInputProps(`mediaCarousel.${index}.buttons.${btnIndex}.text`)}
                     />
                     {btn.type === WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER ? (
                       <PhoneInputWithCountry
@@ -368,8 +351,7 @@ const CardCarousel = ({
                           `mediaCarousel.${index}.buttons.${btnIndex}.phone_number`,
                         )}
                       />
-                    ) : btn.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE &&
-                      btn.example ? (
+                    ) : btn.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE && btn.example ? (
                       <WebsurveySelector
                         onlyPublished
                         searchable
@@ -386,19 +368,14 @@ const CardCarousel = ({
                     ) : btn.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE ? (
                       <ContainedTextField
                         label={"Url"}
-                        {...form.getInputProps(
-                          `mediaCarousel.${index}.buttons.${btnIndex}.url`,
-                        )}
+                        {...form.getInputProps(`mediaCarousel.${index}.buttons.${btnIndex}.url`)}
                       />
                     ) : null}
                     <ActionIcon
                       variant="subtle"
                       mt={24}
                       onClick={() =>
-                        form.removeListItem(
-                          `mediaCarousel.${index}.buttons`,
-                          btnIndex,
-                        )
+                        form.removeListItem(`mediaCarousel.${index}.buttons`, btnIndex)
                       }
                     >
                       <IconX size={17} />
@@ -416,12 +393,11 @@ const CardCarousel = ({
             label={"Select catalog linked account"}
             {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
           />
-          {form.values.defaultValues.whatsappSettingsPhoneId.length &&
-            !catalog && (
-              <Text size="xs" c="red">
-                No catalogs are linked to selected account
-              </Text>
-            )}
+          {form.values.defaultValues.whatsappSettingsPhoneId.length && !catalog && (
+            <Text size="xs" c="red">
+              No catalogs are linked to selected account
+            </Text>
+          )}
           <Group fz={14} gap={"xs"} wrap="nowrap" mb={"xs"} mt={"lg"}>
             <IconBulb size={16} />
             Use the same structure for all cards
@@ -431,10 +407,7 @@ const CardCarousel = ({
               <CardSection withBorder p={4}>
                 <Group justify="space-between">
                   <Text>Card {index + 1}</Text>
-                  <ActionIcon
-                    variant="subtle"
-                    onClick={() => deleteProductCard(index)}
-                  >
+                  <ActionIcon variant="subtle" onClick={() => deleteProductCard(index)}>
                     <IconTrash size={16} color="red" />
                   </ActionIcon>
                 </Group>
@@ -442,22 +415,17 @@ const CardCarousel = ({
               <Group p={"xs"}>
                 <ContainedSelection
                   data={productCarouselButtons}
-                  {...form.getInputProps(
-                    `productCarousel.${index}.button.type`,
-                  )}
+                  {...form.getInputProps(`productCarousel.${index}.button.type`)}
                   label={
                     <Text fz={14} fw={500}>
                       {translations("Type of action")}
                     </Text>
                   }
                   placeholder="Select a action"
-                  onChange={(value, option) => {
+                  onChange={(value, _option) => {
                     const spmBtn = value === WHATSAPP_BUTTON_TYPE.SPM;
                     form.setFieldValue(`productCarousel.${index}.button`, {
-                      type:
-                        value === WHATSAPP_BUTTON_TYPE.WEBSURVEY
-                          ? "URL"
-                          : value,
+                      type: value === WHATSAPP_BUTTON_TYPE.WEBSURVEY ? "URL" : value,
                       text: spmBtn ? "View" : "",
                       ...(!spmBtn
                         ? {
@@ -473,9 +441,7 @@ const CardCarousel = ({
                   }}
                 />
                 <ContainedTextField
-                  {...form.getInputProps(
-                    `productCarousel.${index}.button.text`,
-                  )}
+                  {...form.getInputProps(`productCarousel.${index}.button.text`)}
                   readOnly={card.button.type === WHATSAPP_BUTTON_TYPE.SPM}
                   label={
                     <Text fz={14} fw={500}>
@@ -485,13 +451,9 @@ const CardCarousel = ({
                 />
                 {!card.button.example && (
                   <ContainedTextField
-                    {...form.getInputProps(
-                      `productCarousel.${index}.button.url`,
-                    )}
+                    {...form.getInputProps(`productCarousel.${index}.button.url`)}
                     display={
-                      card.button.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE
-                        ? "block"
-                        : "none"
+                      card.button.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE ? "block" : "none"
                     }
                     label={
                       <Text fz={14} fw={500}>
@@ -518,9 +480,7 @@ const CardCarousel = ({
                 )}
                 <ContainedSelection
                   data={productRetailerIds}
-                  {...form.getInputProps(
-                    `productCarousel.${index}.product_retailer_id`,
-                  )}
+                  {...form.getInputProps(`productCarousel.${index}.product_retailer_id`)}
                   label={
                     <Text fz={14} fw={500}>
                       Product Item
@@ -570,9 +530,7 @@ const CarouselButtonMenu = ({ btnLength, handleButtonSelect }) => {
           <Menu.Item
             disabled={btnLength === 2}
             leftSection={<IconLink size={16} />}
-            onClick={() =>
-              handleButtonSelect(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)
-            }
+            onClick={() => handleButtonSelect(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)}
           >
             Visit website
           </Menu.Item>
@@ -596,9 +554,7 @@ const CarouselButtonMenu = ({ btnLength, handleButtonSelect }) => {
           <Menu.Item
             disabled={btnLength === 2}
             leftSection={<IconPhone size={16} />}
-            onClick={() =>
-              handleButtonSelect(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER)
-            }
+            onClick={() => handleButtonSelect(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER)}
           >
             Call phone number
           </Menu.Item>
@@ -636,20 +592,8 @@ export const ProductCardCarouselPreview = ({
   return (
     <>
       {productCardData.map((card, index) => (
-        <Stack
-          gap={0}
-          style={{ borderRadius: "10px" }}
-          key={index}
-          p={1}
-          bg={"white"}
-          w={"180px"}
-        >
-          <Image
-            src={card.image || null}
-            h={100}
-            w={"100%"}
-            alt="image of the product"
-          />
+        <Stack gap={0} style={{ borderRadius: "10px" }} key={index} p={1} bg={"white"} w={"180px"}>
+          <Image src={card.image || null} h={100} w={"100%"} alt="image of the product" />
           <Stack gap={1} bg={"var(--light-grey-color)"} p={"xs"}>
             <Text fw={600} truncate>
               {card.title}

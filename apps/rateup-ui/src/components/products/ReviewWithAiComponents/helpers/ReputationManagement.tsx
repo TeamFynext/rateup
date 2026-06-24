@@ -1,10 +1,7 @@
-"use client";
-
-import React from "react";
-
 import { Image } from "@unpic/react";
 import { TicketCheck } from "lucide-react";
 import { motion } from "motion/react";
+import React from "react";
 
 import { imagesPath } from "@/utils/constants.ts";
 
@@ -32,11 +29,8 @@ export const ReputationManagement = () => {
             </h3>
             <p className="pt-4 text-lg text-gray-700 leading-relaxed max-w-xl">
               Build trust, grow visibility, and respond faster with our{" "}
-              <span className="font-semibold text-[#009987]">
-                AI-powered reputation analysis
-              </span>
-              . Understand what your customers really think—across every
-              platform.
+              <span className="font-semibold text-[#009987]">AI-powered reputation analysis</span>.
+              Understand what your customers really think—across every platform.
             </p>
 
             {/* Features List */}
@@ -53,9 +47,7 @@ export const ReputationManagement = () => {
                   >
                     <TicketCheck color="#006156" />
                     <div>
-                      <p className="font-semibold text-[#009987] text-lg">
-                        {item.title}
-                      </p>
+                      <p className="font-semibold text-[#009987] text-lg">{item.title}</p>
                       <p className="text-gray-700">{item.desc}</p>
                     </div>
                   </motion.li>

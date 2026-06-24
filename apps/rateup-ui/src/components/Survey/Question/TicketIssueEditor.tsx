@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useContext, useEffect, useMemo, useState } from "react";
-
 import {
   Button,
   Group,
@@ -15,24 +11,18 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  QuestionType as Q,
-  QuestionType,
-  SmileyResponse,
-} from "@/types/enums.ts";
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { QuestionType as Q, QuestionType, SmileyResponse } from "@/types/enums.ts";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
 
@@ -43,12 +33,7 @@ interface IProps {
   surveyId?: string;
 }
 
-const TicketIssueEditor = ({
-  selectedQ,
-  setSelectedQ,
-  setActiveTab,
-  surveyId,
-}: IProps) => {
+const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: IProps) => {
   const params = useParams({
     strict: false,
   });
@@ -57,9 +42,7 @@ const TicketIssueEditor = ({
     surveyId,
   });
   const { data: options, isPending } = useBoardsQueries();
-  const [selectedBoardId, setSelectedBoardId] = useState(
-    selectedQ?.ticketIssue?.selectedBoardId,
-  );
+  const [selectedBoardId, setSelectedBoardId] = useState(selectedQ?.ticketIssue?.selectedBoardId);
 
   // Transform boards for Select component
   const boards = useMemo(
@@ -69,9 +52,7 @@ const TicketIssueEditor = ({
 
   // Get columns for selected board
   const columns = useMemo(() => {
-    const selectedBoard = options?.find(
-      (board) => board.id === selectedBoardId,
-    );
+    const selectedBoard = options?.find((board) => board.id === selectedBoardId);
     return selectedBoard
       ? selectedBoard.ticketColumns.map((col) => ({
           value: col.id,
@@ -80,26 +61,16 @@ const TicketIssueEditor = ({
       : [];
   }, [options, selectedBoardId]);
 
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
+  const { selectedLanguage } = useContext(SelectedLanguageContext);
 
-  const [enableTicketIssue, setEnableTicketIssue] = useState(
-    !!selectedQ?.ticketIssue,
-  );
+  const [enableTicketIssue, setEnableTicketIssue] = useState(!!selectedQ?.ticketIssue);
   const [submissionTicket, setSubmissionTicket] = useState(
     !!selectedQ?.ticketIssue?.submissionTicket,
   );
   const { t: translations } = useTranslation();
-  const [minRating, setMinRating] = useState(
-    selectedQ?.ticketIssue?.minRating || 3,
-  );
-  const [minOpinion, setMinOpinion] = useState(
-    selectedQ?.ticketIssue?.minOpinion || 6,
-  );
-  const [selectedOptions, setSelectedOptions] = useState(
-    selectedQ?.ticketIssue?.reqOptions || [],
-  );
+  const [minRating, setMinRating] = useState(selectedQ?.ticketIssue?.minRating || 3);
+  const [minOpinion, setMinOpinion] = useState(selectedQ?.ticketIssue?.minOpinion || 6);
+  const [selectedOptions, setSelectedOptions] = useState(selectedQ?.ticketIssue?.reqOptions || []);
 
   const updateTicketIssue = (ticketIssue: {
     minRating?: number;
@@ -117,10 +88,7 @@ const TicketIssueEditor = ({
   };
 
   useEffect(() => {
-    if (
-      selectedQ?.hasOwnProperty("ticketIssue") &&
-      selectedQ?.ticketIssue !== null
-    ) {
+    if (selectedQ?.hasOwnProperty("ticketIssue") && selectedQ?.ticketIssue !== null) {
       setEnableTicketIssue(true);
       switch (selectedQ?.type) {
         case Q.Rating:
@@ -167,13 +135,7 @@ const TicketIssueEditor = ({
       }
     }
     updateTicketIssue(ticketIssue);
-  }, [
-    enableTicketIssue,
-    minRating,
-    minOpinion,
-    selectedOptions,
-    submissionTicket,
-  ]);
+  }, [enableTicketIssue, minRating, minOpinion, selectedOptions, submissionTicket]);
 
   const handleSwitch = (event: any) => {
     const isChecked = event.currentTarget.checked;
@@ -207,12 +169,9 @@ const TicketIssueEditor = ({
 
   const handleError = (error) => {
     console.error("Failed to update", error);
-    toast.error(
-      ` ${translations("Failed to update.. try again. Error:")} ${error.message}`,
-      {
-        id: "load-data",
-      },
-    );
+    toast.error(` ${translations("Failed to update.. try again. Error:")} ${error.message}`, {
+      id: "load-data",
+    });
   };
 
   const finishQuestionOptionsUpdate = () => {
@@ -222,18 +181,15 @@ const TicketIssueEditor = ({
         data: { ticketIssue: selectedQ?.ticketIssue },
       },
       {
-        onError: (error) => {
+        onError: (_error) => {
           toast.success(translations("Error updating Ticket issue settings"), {
             id: "load-data",
           });
         },
         onSuccess: () => {
-          toast.success(
-            translations("Updated Ticket issue settings Successfully"),
-            {
-              id: "load-data",
-            },
-          );
+          toast.success(translations("Updated Ticket issue settings Successfully"), {
+            id: "load-data",
+          });
         },
       },
     );
@@ -251,9 +207,7 @@ const TicketIssueEditor = ({
         <>
           <Switch
             label={translations("Enable Auto-Ticket Creation")}
-            description={translations(
-              "Setup automated ticket creation for negative responses.",
-            )}
+            description={translations("Setup automated ticket creation for negative responses.")}
             labelPosition="left"
             checked={enableTicketIssue}
             onChange={(event) => handleSwitch(event)}
@@ -287,18 +241,12 @@ const TicketIssueEditor = ({
                       case Q.Smiley:
                         return (
                           <SimpleGrid cols={3} spacing={30}>
-                            <Text
-                              fw={500}
-                              c={submissionTicket ? "dimmed" : "black"}
-                            >
+                            <Text fw={500} c={submissionTicket ? "dimmed" : "black"}>
                               {translations(
                                 "Select the emojis for which Ticket creation to be enabled:",
                               )}
                             </Text>
-                            <Text
-                              fw={500}
-                              c={submissionTicket ? "dimmed" : "black"}
-                            >
+                            <Text fw={500} c={submissionTicket ? "dimmed" : "black"}>
                               {" "}
                               :{" "}
                             </Text>
@@ -307,11 +255,7 @@ const TicketIssueEditor = ({
                                 <Button
                                   key={value}
                                   title={value}
-                                  variant={
-                                    selectedOptions.includes(value)
-                                      ? "light"
-                                      : "default"
-                                  }
+                                  variant={selectedOptions.includes(value) ? "light" : "default"}
                                   gradient={{ from: "#62CBE6", to: "#3F5BA9" }}
                                   onClick={() => updateSmileyResponse(value)}
                                   style={{
@@ -322,9 +266,7 @@ const TicketIssueEditor = ({
                                 >
                                   {mapSmileyIcon(
                                     value,
-                                    submissionTicket
-                                      ? "var(--gift-grey-2)"
-                                      : primaryColor,
+                                    submissionTicket ? "var(--gift-grey-2)" : primaryColor,
                                   )}
                                 </Button>
                               ))}
@@ -334,18 +276,10 @@ const TicketIssueEditor = ({
                       case Q.Rating:
                         return (
                           <SimpleGrid cols={3} spacing={30}>
-                            <Text
-                              fw={500}
-                              c={submissionTicket ? "dimmed" : "black"}
-                            >
-                              {translations(
-                                "Select rating until which Ticket should be created:",
-                              )}
+                            <Text fw={500} c={submissionTicket ? "dimmed" : "black"}>
+                              {translations("Select rating until which Ticket should be created:")}
                             </Text>
-                            <Text
-                              fw={500}
-                              c={submissionTicket ? "dimmed" : "black"}
-                            >
+                            <Text fw={500} c={submissionTicket ? "dimmed" : "black"}>
                               {" "}
                               :{" "}
                             </Text>
@@ -354,11 +288,7 @@ const TicketIssueEditor = ({
                                 value={minRating}
                                 onChange={setMinRating}
                                 size="xl"
-                                color={
-                                  submissionTicket
-                                    ? "var(--gift-grey-2)"
-                                    : "yellow"
-                                }
+                                color={submissionTicket ? "var(--gift-grey-2)" : "yellow"}
                                 readOnly={submissionTicket}
                               />
                               <Text c={submissionTicket ? "dimmed" : "black"}>
@@ -371,19 +301,13 @@ const TicketIssueEditor = ({
                       case Q.Opinion:
                         return (
                           <SimpleGrid cols={3} spacing={30}>
-                            <Text
-                              fw={500}
-                              c={submissionTicket ? "dimmed" : "black"}
-                            >
+                            <Text fw={500} c={submissionTicket ? "dimmed" : "black"}>
                               {" "}
                               {translations(
                                 "Select scale until which Ticket should be created:",
                               )}{" "}
                             </Text>
-                            <Text
-                              fw={500}
-                              c={submissionTicket ? "dimmed" : "black"}
-                            >
+                            <Text fw={500} c={submissionTicket ? "dimmed" : "black"}>
                               {" "}
                               :{" "}
                             </Text>
@@ -398,14 +322,8 @@ const TicketIssueEditor = ({
                                         radius="xl"
                                         size="xs"
                                         onClick={() => setMinOpinion(i)}
-                                        color={
-                                          minOpinion === i ? "blue" : "blue.9"
-                                        }
-                                        variant={
-                                          minOpinion === i
-                                            ? "gradient"
-                                            : "default"
-                                        }
+                                        color={minOpinion === i ? "blue" : "blue.9"}
+                                        variant={minOpinion === i ? "gradient" : "default"}
                                         gradient={{
                                           from: "#62CBE6",
                                           to: "#3F5BA9",
@@ -421,8 +339,7 @@ const TicketIssueEditor = ({
                               </Group>
                               <Text pt="sm" fz="sm" c="dimmed">
                                 {" "}
-                                {translations("For")} {minOpinion}{" "}
-                                {translations("and below.")}
+                                {translations("For")} {minOpinion} {translations("and below.")}
                               </Text>
                             </Stack>
                           </SimpleGrid>
@@ -434,30 +351,19 @@ const TicketIssueEditor = ({
                       case QuestionType.MSQ:
                         return (
                           <SimpleGrid cols={3} spacing={30}>
-                            <Text
-                              fw={500}
-                              c={submissionTicket ? "dimmed" : "black"}
-                            >
-                              {translations(
-                                "Select choices for which Ticket should be created",
-                              )}
-                              :
+                            <Text fw={500} c={submissionTicket ? "dimmed" : "black"}>
+                              {translations("Select choices for which Ticket should be created")}:
                             </Text>
-                            <Text
-                              fw={500}
-                              c={submissionTicket ? "dimmed" : "black"}
-                            >
+                            <Text fw={500} c={submissionTicket ? "dimmed" : "black"}>
                               {" "}
                               :{" "}
                             </Text>
                             <Stack>
                               <ContainedMultiSelect
-                                data={selectedQ.choices?.[selectedLanguage].map(
-                                  (c, index) => ({
-                                    value: index.toString(),
-                                    label: c.value as string,
-                                  }),
-                                )}
+                                data={selectedQ.choices?.[selectedLanguage].map((c, index) => ({
+                                  value: index.toString(),
+                                  label: c.value as string,
+                                }))}
                                 value={selectedOptions}
                                 onChange={setSelectedOptions}
                                 placeholder="select"

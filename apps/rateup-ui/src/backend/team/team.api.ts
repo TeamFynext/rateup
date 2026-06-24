@@ -31,11 +31,7 @@ export const createTeam = (data: ICreateTeam) =>
     data: data,
   });
 
-export const editTeam = (
-  teamId: string,
-  data: IEditTeam,
-  onlyTag?: boolean,
-) => {
+export const editTeam = (teamId: string, data: IEditTeam, onlyTag?: boolean) => {
   const query = onlyTag ? "?onlytag=true" : "";
   return axiosClient({
     url: `/team/edit/${teamId}${query}`,
@@ -139,9 +135,7 @@ export interface TeamFeaturesResponse {
   features: TeamFeatureItem[];
 }
 
-export async function getTeamFeatures(
-  teamId: string,
-): Promise<TeamFeaturesResponse> {
+export async function getTeamFeatures(teamId: string): Promise<TeamFeaturesResponse> {
   const res = await axiosClient.get(`/team/${teamId}/features`);
   return res.data;
 }

@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
@@ -14,9 +12,7 @@ function QuestionDetailedViewBadge({ question }) {
       style={{ overflow: "visible" }}
       color={getTypeLabel(question.type) ? "var(--tertiary-color)" : "red"}
     >
-      {getTypeLabel(question.type)
-        ? getTypeLabel(question.type)
-        : translations("Not Available")}
+      {getTypeLabel(question.type) ? getTypeLabel(question.type) : translations("Not Available")}
     </Badge>
   );
 }

@@ -1,15 +1,11 @@
-"use client";
-
-import { useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Building2, Calendar, CreditCard, Package, Star } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
 import {
   useAllSubscriptions,
@@ -19,10 +15,7 @@ import { FeatureBadge } from "@/components/adminPanel/Subscription/FeatureBadge.
 import { SubscriptionEditorModal } from "@/components/adminPanel/Subscription/SubscriptionEditorModal.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import {
   Card,
@@ -39,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 
 import { DataTableToolbar } from "../../../components/admin/subscriptions/data-table-toolbar.tsx";
 
@@ -73,17 +67,14 @@ function SubscriptionPage() {
     orgId: string;
     basePlanId: string;
   } | null>(null);
-  const [openedDialog, { open: openDialog, close: closeDialog }] =
-    useDisclosure(false);
+  const [openedDialog, { open: openDialog, close: closeDialog }] = useDisclosure(false);
 
   const columns: ColumnDef<SubscriptionTableData>[] = [
     {
       accessorKey: "orgId",
       header: "Org ID",
       cell: ({ row }) => (
-        <div className="font-mono text-xs text-muted-foreground">
-          {row.getValue("orgId")}
-        </div>
+        <div className="font-mono text-xs text-muted-foreground">{row.getValue("orgId")}</div>
       ),
       meta: { title: "Org ID" },
     },
@@ -146,10 +137,7 @@ function SubscriptionPage() {
 
         return (
           <>
-            <div
-              className="flex flex-wrap gap-1 max-w-[300px] cursor-pointer"
-              onClick={open}
-            >
+            <div className="flex flex-wrap gap-1 max-w-[300px] cursor-pointer" onClick={open}>
               {features &&
                 Object.keys(features)
                   .filter((feature) => features[feature].active)
@@ -158,23 +146,15 @@ function SubscriptionPage() {
                     <FeatureBadge key={feature} featurePathName={feature} />
                   ))}
               {features &&
-                Object.keys(features).filter(
-                  (feature) => features[feature].active,
-                ).length > 3 && (
+                Object.keys(features).filter((feature) => features[feature].active).length > 3 && (
                   <Badge variant="secondary" className="text-xs">
                     +
-                    {Object.keys(features).filter(
-                      (feature) => features[feature].active,
-                    ).length - 3}{" "}
+                    {Object.keys(features).filter((feature) => features[feature].active).length - 3}{" "}
                     more
                   </Badge>
                 )}
             </div>
-            <SubscriptionEditorModal
-              opened={opened}
-              onClose={close}
-              subscription={subscription}
-            />
+            <SubscriptionEditorModal opened={opened} onClose={close} subscription={subscription} />
           </>
         );
       },
@@ -214,9 +194,7 @@ function SubscriptionPage() {
         return (
           <div className="flex items-center gap-2">
             <CreditCard className="h-4 w-4 text-muted-foreground" />
-            <Badge variant={isExpired ? "destructive" : "secondary"}>
-              {expiresAt as string}
-            </Badge>
+            <Badge variant={isExpired ? "destructive" : "secondary"}>{expiresAt as string}</Badge>
           </div>
         );
       },
@@ -242,9 +220,7 @@ function SubscriptionPage() {
         <Card className="w-96">
           <CardHeader>
             <CardTitle className="text-destructive">Error</CardTitle>
-            <CardDescription>
-              An error occurred while loading subscriptions.
-            </CardDescription>
+            <CardDescription>An error occurred while loading subscriptions.</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -271,9 +247,7 @@ function SubscriptionPage() {
         planName: subscription?.basePlan?.name || "Unknown",
         features: subscription,
         createdAt: dayjs(subscription.createdAt).format("YYYY/MM/DD"),
-        renewedAt: subscription.renewedAt
-          ? dayjs(subscription.renewedAt).format("YYYY/MM/DD")
-          : "",
+        renewedAt: subscription.renewedAt ? dayjs(subscription.renewedAt).format("YYYY/MM/DD") : "",
         expiresAt: expiresAt.format("YYYY/MM/DD"),
         isExpired,
       };
@@ -285,8 +259,7 @@ function SubscriptionPage() {
   const expiredSubscriptions = tableData.filter((sub) => sub.isExpired).length;
   const renewedThisMonth =
     subscriptions?.filter(
-      (sub) =>
-        sub.renewedAt && dayjs(sub.renewedAt).isAfter(dayjs().startOf("month")),
+      (sub) => sub.renewedAt && dayjs(sub.renewedAt).isAfter(dayjs().startOf("month")),
     ).length || 0;
 
   return (
@@ -321,9 +294,7 @@ function SubscriptionPage() {
               <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">
                 {totalSubscriptions}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                All subscriptions
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">All subscriptions</p>
             </CardContent>
           </Card>
 
@@ -341,9 +312,7 @@ function SubscriptionPage() {
               <div className="text-3xl font-bold text-green-700 dark:text-green-400">
                 {activeSubscriptions}
               </div>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                Currently active
-              </p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">Currently active</p>
             </CardContent>
           </Card>
 
@@ -363,9 +332,7 @@ function SubscriptionPage() {
               <div className="text-3xl font-bold text-red-700 dark:text-red-400">
                 {expiredSubscriptions}
               </div>
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                Need renewal
-              </p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">Need renewal</p>
             </CardContent>
           </Card>
 
@@ -383,25 +350,17 @@ function SubscriptionPage() {
               <div className="text-3xl font-bold text-purple-700 dark:text-purple-400">
                 {renewedThisMonth}
               </div>
-              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                Recent renewals
-              </p>
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">Recent renewals</p>
             </CardContent>
           </Card>
         </div>
       </div>
-      <h2 className="text-xl font-semibold tracking-tight">
-        Subscription Management
-      </h2>
+      <h2 className="text-xl font-semibold tracking-tight">Subscription Management</h2>
       <p className="text-sm text-muted-foreground">
         Manage and view all subscriptions in your system
       </p>
       <div>
-        <DataTable
-          columns={columns}
-          data={tableData}
-          DataTableToolbar={DataTableToolbar}
-        />
+        <DataTable columns={columns} data={tableData} DataTableToolbar={DataTableToolbar} />
       </div>
       <ConfirmationModal
         opened={openedDialog}

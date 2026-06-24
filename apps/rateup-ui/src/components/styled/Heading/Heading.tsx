@@ -15,12 +15,7 @@ const titleStyle: MantineStyleProp = {
   overflow: "hidden",
   textOverflow: "ellipsis",
 };
-export default function Heading({
-  label,
-  subtitle,
-  title,
-  titleprops,
-}: HeadingPropsInterface) {
+export default function Heading({ label, subtitle, title, titleprops }: HeadingPropsInterface) {
   return (
     <Stack gap={5} p={0}>
       {title && (

@@ -1,7 +1,4 @@
-import type {
-  CampaignParticipantStatus,
-  CampaignStatus,
-} from "@/types/enums.ts";
+import type { CampaignParticipantStatus, CampaignStatus } from "@/types/enums.ts";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import { axiosClient } from "../apiClient";
@@ -57,17 +54,13 @@ export const sendCampaign = async (
 
 // this get req is primarily used in flows result page
 export const getCampaignFilterForFlows = async (surveyId: string) => {
-  return (await axiosClient.get(`/campaign/flow/filter?surveyId=${surveyId}`))
-    .data as {
+  return (await axiosClient.get(`/campaign/flow/filter?surveyId=${surveyId}`)).data as {
     id: string;
     name: string;
   }[];
 };
 
-export const campaignResponseDownloadById = async ({
-  campaignId,
-  selectedDripStage,
-}) => {
+export const campaignResponseDownloadById = async ({ campaignId, selectedDripStage }) => {
   const response = await axiosClient.post(
     selectedDripStage && selectedDripStage !== "all"
       ? `/campaign/${campaignId}/download?selectedDripStage=${selectedDripStage}`

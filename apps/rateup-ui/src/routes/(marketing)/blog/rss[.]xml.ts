@@ -7,8 +7,7 @@ export const Route = createFileRoute("/(marketing)/blog/rss.xml")({
     handlers: {
       GET: async () => {
         try {
-          const baseUrl =
-            import.meta.env.VITE_FRONTEND_URL || "https://rateup.app";
+          const baseUrl = import.meta.env.VITE_FRONTEND_URL || "https://rateup.app";
 
           const posts = await getPosts();
 
@@ -24,11 +23,10 @@ export const Route = createFileRoute("/(marketing)/blog/rss.xml")({
           return new Response(xml, {
             headers: {
               "Content-Type": "application/rss+xml; charset=utf-8",
-              "Cache-Control":
-                "public, s-maxage=3600, stale-while-revalidate=86400",
+              "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
             },
           });
-        } catch (error) {
+        } catch {
           return new Response("Internal Server Error", {
             status: 500,
             headers: { "Content-Type": "application/xml" },

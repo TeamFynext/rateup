@@ -9,6 +9,7 @@ import {
 } from "@tabler/icons-react";
 
 import { RateupStar } from "@/components/integrations/logos";
+
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 export default function HomePageFooter() {
@@ -26,9 +27,8 @@ export default function HomePageFooter() {
             </a>
 
             <p>
-              Reimagine customer engagement — unified, automated and
-              intelligent. One platform for WhatsApp loyalty, omnichannel inbox
-              and post-purchase automation.
+              Reimagine customer engagement — unified, automated and intelligent. One platform for
+              WhatsApp loyalty, omnichannel inbox and post-purchase automation.
             </p>
 
             <div className={styles["foot-socials"]} style={{ marginTop: 20 }}>
@@ -131,9 +131,7 @@ export default function HomePageFooter() {
         <div className={styles["foot-bottom"]}>
           <div>© 2026 RateUp · www.rateup.app</div>
 
-          <div>
-            Reimagine Customer Engagement — Unified. Automated. Intelligent.
-          </div>
+          <div>Reimagine Customer Engagement — Unified. Automated. Intelligent.</div>
         </div>
       </div>
     </footer>

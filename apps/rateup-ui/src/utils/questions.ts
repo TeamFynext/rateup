@@ -1,16 +1,7 @@
-import {
-  PageDescription,
-  PageTitle,
-  PageType,
-  QuestionType,
-  SurveyType,
-} from "@/types/enums.ts";
+import { PageDescription, PageTitle, PageType, QuestionType, SurveyType } from "@/types/enums.ts";
 
 import { getContent } from ".";
-import {
-  ChoiceTypeQuestions,
-  defaultTitleSubtitleStartBtnTextsObj,
-} from "./constants.ts";
+import { ChoiceTypeQuestions, defaultTitleSubtitleStartBtnTextsObj } from "./constants.ts";
 
 interface Reorderable {
   type?: string;
@@ -42,9 +33,7 @@ export function reOrderPages<T extends Reorderable>(pages: Array<T>) {
 
   const pagesTypeStrsArr = ["Welcome", "Language", "ThankYou", "GoogleReview"];
   // PagesObjs means objects with type key value as Welcome, Language, ThankYou.
-  const arrWithoutPagesObjs = pages.filter(
-    (obj) => !pagesTypeStrsArr.includes(obj.type),
-  );
+  const arrWithoutPagesObjs = pages.filter((obj) => !pagesTypeStrsArr.includes(obj.type));
   if (welcomeItem) newArray.push({ ...welcomeItem });
   if (languageItem) newArray.push({ ...languageItem });
   for (const pageObj of arrWithoutPagesObjs) {
@@ -77,18 +66,15 @@ export function createPage(
   let defaultTitleSubtitleStartBtnTexts = {};
   switch (type) {
     case PageType.Welcome: {
-      defaultTitleSubtitleStartBtnTexts =
-        defaultTitleSubtitleStartBtnTextsObj["welcomePage"];
+      defaultTitleSubtitleStartBtnTexts = defaultTitleSubtitleStartBtnTextsObj["welcomePage"];
       break;
     }
     case PageType.Language: {
-      defaultTitleSubtitleStartBtnTexts =
-        defaultTitleSubtitleStartBtnTextsObj["languagePage"];
+      defaultTitleSubtitleStartBtnTexts = defaultTitleSubtitleStartBtnTextsObj["languagePage"];
       break;
     }
     case PageType.ThankYou: {
-      defaultTitleSubtitleStartBtnTexts =
-        defaultTitleSubtitleStartBtnTextsObj["thankyouPage"];
+      defaultTitleSubtitleStartBtnTexts = defaultTitleSubtitleStartBtnTextsObj["thankyouPage"];
       break;
     }
   }
@@ -150,10 +136,7 @@ export function validateAllLanguagesArePopulated(
       });
     } else {
       languages.forEach((language: string) => {
-        if (
-          !question[key][language] ||
-          !getContent(question[key][language]).trim().length
-        ) {
+        if (!question[key][language] || !getContent(question[key][language]).trim().length) {
           if (!missingLangs.includes(language)) missingLangs.push(language);
         }
       });
@@ -181,10 +164,7 @@ export const getInitialQuestionValues = (
     id: question?.id ?? undefined,
     title: { ...emptyText, ...question?.title },
     description: { ...emptyText, ...question?.description },
-    label:
-      type === SurveyType.WaFlow
-        ? { ...emptyText, ...question?.label }
-        : undefined,
+    label: type === SurveyType.WaFlow ? { ...emptyText, ...question?.label } : undefined,
     required,
     enableNpsAnalytics: question?.enableNpsAnalytics,
     type: question?.type,
@@ -193,8 +173,7 @@ export const getInitialQuestionValues = (
     tnc: question?.tnc,
     optinScreenId: question?.optinScreenId,
     wop: question?.wop,
-    sections:
-      type === SurveyType.WhatsApp ? question?.sections || {} : undefined,
+    sections: type === SurveyType.WhatsApp ? question?.sections || {} : undefined,
     onSelectAction: question?.onSelectAction,
     waAppName: question?.waAppName,
     extraConfig: question?.extraConfig,
@@ -211,19 +190,14 @@ export function getChoiceIndex(choice: string | Choice, choices: Choice[]) {
 /**
  * Returns array of languages that do not have the same number of choices as the first language
  */
-function validateChoices(
-  question: Question,
-  languages: Array<string>,
-): Array<string> {
+function validateChoices(question: Question, languages: Array<string>): Array<string> {
   if (!ChoiceTypeQuestions.includes(question.type as QuestionType)) {
     return [];
   } else if (languages.length === 1) {
     return [];
   } else {
     const choiceLength = question.choices?.[languages[0]]?.length;
-    return languages.filter(
-      (lang) => question.choices?.[lang]?.length !== choiceLength,
-    );
+    return languages.filter((lang) => question.choices?.[lang]?.length !== choiceLength);
   }
 }
 

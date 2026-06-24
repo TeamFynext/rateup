@@ -1,8 +1,5 @@
-"use client";
-
-import React, { useRef } from "react";
-
 import { schemaResolver, useForm } from "@mantine/form";
+import React, { useRef } from "react";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -32,8 +29,7 @@ const ImageInput = (props) => {
   const handleFileChange = async (file: File) => {
     try {
       if (!file) return;
-      if (file.size > 300000)
-        return choiceForm.setFieldError("image", "max image size is 300KB");
+      if (file.size > 300000) return choiceForm.setFieldError("image", "max image size is 300KB");
       choiceForm.clearFieldError("image");
       const base64String = await FileConverter.fileToBase64(file);
       choiceForm.setFieldValue("image", base64String);

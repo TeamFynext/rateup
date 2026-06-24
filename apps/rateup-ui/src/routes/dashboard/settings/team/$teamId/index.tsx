@@ -1,12 +1,6 @@
-import { useState } from "react";
-
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-  useRouter,
-} from "@tanstack/react-router";
+import { createFileRoute, useParams, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, Users } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetTeamById } from "@/backend/team/team.query";
@@ -19,12 +13,7 @@ import {
 } from "@/components/settings/team.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { UserRole } from "@/utils/enums/index.ts";
 
@@ -51,12 +40,7 @@ function TeamManagement() {
       <Card>
         <CardContent>
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => history.back()}
-              className="shrink-0"
-            >
+            <Button variant="outline" size="sm" onClick={() => history.back()} className="shrink-0">
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t("Back to Settings")}
             </Button>
@@ -72,9 +56,7 @@ function TeamManagement() {
               </div>
 
               <div className="min-w-0">
-                <h1 className="text-lg font-semibold leading-tight truncate">
-                  {teamsData?.name}
-                </h1>
+                <h1 className="text-lg font-semibold leading-tight truncate">{teamsData?.name}</h1>
                 <p className="text-xs text-muted-foreground">
                   {teamsData?.members?.length || 0} {t("members")}
                 </p>
@@ -90,9 +72,7 @@ function TeamManagement() {
           <TabsList>
             <TabsTrigger value="members">{t("Members")}</TabsTrigger>
             {isSuperAdmin && (
-              <TabsTrigger value="feature-access">
-                {t("Feature Access")}
-              </TabsTrigger>
+              <TabsTrigger value="feature-access">{t("Feature Access")}</TabsTrigger>
             )}
             <TabsTrigger value="settings">{t("Settings")}</TabsTrigger>
           </TabsList>

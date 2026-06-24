@@ -1,8 +1,5 @@
-"use client";
-
-import { createContext, useContext, useEffect } from "react";
-
 import { useIsFirstRender } from "@mantine/hooks";
+import { createContext, useContext, useEffect } from "react";
 import { useImmerReducer } from "use-immer";
 
 import { ThemeTabEnum } from "./SurveyTheme.enums";
@@ -86,9 +83,7 @@ function SurveyThemeContextProvider({
             <OpenEditorsContext.Provider value={state.openEditors}>
               <SetOpenEditorsContext.Provider value={setOpenEditors}>
                 <SelectedPreviewContext.Provider value={state.selectedPreview}>
-                  <SetSelectedPreviewContext.Provider
-                    value={setSelectedPreview}
-                  >
+                  <SetSelectedPreviewContext.Provider value={setSelectedPreview}>
                     {children}
                   </SetSelectedPreviewContext.Provider>
                 </SelectedPreviewContext.Provider>

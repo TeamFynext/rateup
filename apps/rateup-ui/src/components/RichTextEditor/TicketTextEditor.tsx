@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
 import Image from "@tiptap/extension-image";
@@ -14,12 +12,7 @@ import InsertEmoji from "./InsertEmoji/index.tsx";
 import InsertImage from "./InsertImage/index.tsx";
 import { Video } from "./InsertVideo/CustomVideo.tsx";
 
-export default function TicketTextEditor({
-  content,
-  onUpdate,
-  placeholder = "",
-  saveBtn = false,
-}) {
+export default function TicketTextEditor({ content, onUpdate, placeholder = "", saveBtn = false }) {
   // const [focus, setFocus] = useState(false);
   const editor = useEditor({
     extensions: [

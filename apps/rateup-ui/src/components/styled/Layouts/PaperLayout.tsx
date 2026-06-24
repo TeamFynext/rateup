@@ -1,12 +1,9 @@
-"use client";
-
-import type { JSX } from "react";
-
 import type { PaperProps } from "@mantine/core";
 import { Paper } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import clsx from "clsx";
 import { motion } from "motion/react";
+import type { JSX } from "react";
 
 import styles from "./PaperLayout.module.css";
 
@@ -34,9 +31,7 @@ export default function PaperLayout({
     [styles["hover-active"]]: hoveractive,
   });
 
-  const animateLayout = layoutAnimation
-    ? { component: motion.div, layout: true }
-    : {};
+  const animateLayout = layoutAnimation ? { component: motion.div, layout: true } : {};
   return (
     <Paper
       className={paperLayoutDivClassName}

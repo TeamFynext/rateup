@@ -1,9 +1,6 @@
-"use client";
-
-import React from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandMeta, IconPlus, IconRefresh } from "@tabler/icons-react";
+import React from "react";
 import { toast } from "sonner";
 
 import {
@@ -53,12 +50,9 @@ const CatalogProducts = ({ catalogData }) => {
     });
     syncFromShopifyMut.mutate(undefined, {
       onSuccess: (data) => {
-        toast.success(
-          `Sync complete — ${data.updated} updated, ${data.unchanged} unchanged`,
-          {
-            id: "sync-catalog-products-shopify",
-          },
-        );
+        toast.success(`Sync complete — ${data.updated} updated, ${data.unchanged} unchanged`, {
+          id: "sync-catalog-products-shopify",
+        });
       },
       onError: (error) => {
         toast.error(error?.message || "Shopify sync failed", {
@@ -108,14 +102,8 @@ const CatalogProducts = ({ catalogData }) => {
           </DropdownMenu>
         </div>
       </div>
-      {catalogData?.vertical === "commerce" && (
-        <ProductItems catalogId={catalogData?.catalogId} />
-      )}
-      <AddCatalogProductModal
-        catalogData={catalogData}
-        opened={addOpened}
-        close={closeAdd}
-      />
+      {catalogData?.vertical === "commerce" && <ProductItems catalogId={catalogData?.catalogId} />}
+      <AddCatalogProductModal catalogData={catalogData} opened={addOpened} close={closeAdd} />
     </div>
   );
 };

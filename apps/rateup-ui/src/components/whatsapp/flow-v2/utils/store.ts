@@ -72,10 +72,7 @@ interface StoreState {
   addScreenWithTitle: (title: string) => void;
   deleteScreen: (screenId: string) => void;
   reorderScreens: (sourceIndex: number, destinationIndex: number) => void;
-  updateComponentInScreen: (
-    id: string,
-    updatedComponent: Partial<FormElement>,
-  ) => void;
+  updateComponentInScreen: (id: string, updatedComponent: Partial<FormElement>) => void;
   getScreen: (screenId: string) => Screen | undefined;
   getComponent: (componentName: string) => FormElement | undefined;
   setCurrentScreenId: (screenId: string) => void;
@@ -85,10 +82,7 @@ interface StoreState {
   getCurrentScreen: () => Screen | undefined;
   getCurrentElement: () => FormElement | undefined;
   updateScreen: (screenId: string, updatedScreen: Partial<Screen>) => void;
-  updateComponentsInScreen: (
-    screenId: string,
-    updatedComponents: FormElement[],
-  ) => void;
+  updateComponentsInScreen: (screenId: string, updatedComponents: FormElement[]) => void;
   addComponentToScreen: (component: FormElement) => void;
   deleteComponentFromScreen: (feId: string) => void;
   ticketIssued: any[];
@@ -121,12 +115,10 @@ const useFlowStoreV3 = create<StoreState>()(
                 ? typeMapping[child.type as string]
                 : child.type;
 
-            const isNonInteractive =
-              NO_NAME_TYPES.has(mappedType) || NO_NAME_TYPES.has(child.type);
+            const isNonInteractive = NO_NAME_TYPES.has(mappedType) || NO_NAME_TYPES.has(child.type);
 
             const isNoVisible =
-              NO_VISIBLE_TYPES.has(mappedType) ||
-              NO_VISIBLE_TYPES.has(child.type);
+              NO_VISIBLE_TYPES.has(mappedType) || NO_VISIBLE_TYPES.has(child.type);
 
             // Auto-generate name if required and missing
             const name =
@@ -188,9 +180,7 @@ const useFlowStoreV3 = create<StoreState>()(
         state.screens.forEach((s, index) => {
           s.terminal = index === state.screens.length - 1;
           if (index === screenIndex - 1) {
-            const footer = s.layout.children.find(
-              (child) => child.type === "Footer",
-            );
+            const footer = s.layout.children.find((child) => child.type === "Footer");
             if (footer) {
               footer["on-click-action"] = {
                 name: "navigate",
@@ -229,9 +219,7 @@ const useFlowStoreV3 = create<StoreState>()(
       }),
     getCurrentScreen: () => {
       const state = get();
-      return state.screens.find(
-        (screen) => screen.id === state.currentScreenId,
-      );
+      return state.screens.find((screen) => screen.id === state.currentScreenId);
     },
     getCurrentElement: () => {
       const state = get();
@@ -245,9 +233,7 @@ const useFlowStoreV3 = create<StoreState>()(
         state.screens.splice(destinationIndex, 0, removed);
         state.screens.forEach((s, index) => {
           s.terminal = index === state.screens.length - 1;
-          const footer = s.layout.children.find(
-            (child) => child.type === "Footer",
-          );
+          const footer = s.layout.children.find((child) => child.type === "Footer");
           if (footer) {
             if (index < state.screens.length - 1) {
               footer["on-click-action"] = {
@@ -263,20 +249,14 @@ const useFlowStoreV3 = create<StoreState>()(
       }),
     deleteScreen: (screenId) =>
       set((state) => {
-        const screenIndex = state.screens.findIndex(
-          (screen) => screen.id === screenId,
-        );
-        state.screens = state.screens.filter(
-          (screen) => screen.id !== screenId,
-        );
+        const screenIndex = state.screens.findIndex((screen) => screen.id === screenId);
+        state.screens = state.screens.filter((screen) => screen.id !== screenId);
         state.currentElementType = null;
 
         if (screenIndex > 0 && screenIndex < state.screens.length) {
           const previousScreen = state.screens[screenIndex - 1];
           const nextScreen = state.screens[screenIndex];
-          const footer = previousScreen.layout.children.find(
-            (child) => child.type === "Footer",
-          );
+          const footer = previousScreen.layout.children.find((child) => child.type === "Footer");
           if (footer) {
             footer["on-click-action"] = {
               name: "navigate",
@@ -289,9 +269,7 @@ const useFlowStoreV3 = create<StoreState>()(
           }
         } else if (screenIndex > 0 && screenIndex === state.screens.length) {
           const previousScreen = state.screens[screenIndex - 1];
-          const footer = previousScreen.layout.children.find(
-            (child) => child.type === "Footer",
-          );
+          const footer = previousScreen.layout.children.find((child) => child.type === "Footer");
           if (footer) {
             footer["on-click-action"] = {
               name: "complete",
@@ -337,9 +315,7 @@ const useFlowStoreV3 = create<StoreState>()(
     addComponentToScreen: (component) =>
       set((state) => {
         const { currentScreenId } = state;
-        const screen = state.screens.find(
-          (screen) => screen.id === currentScreenId,
-        );
+        const screen = state.screens.find((screen) => screen.id === currentScreenId);
         if (screen) {
           // Insert before footer
           const footerIndex = screen.layout.children.findIndex(
@@ -358,13 +334,9 @@ const useFlowStoreV3 = create<StoreState>()(
     deleteComponentFromScreen: (id) =>
       set((state) => {
         const { currentScreenId } = state;
-        const screen = state.screens.find(
-          (screen) => screen.id === currentScreenId,
-        );
+        const screen = state.screens.find((screen) => screen.id === currentScreenId);
         if (screen) {
-          screen.layout.children = screen.layout.children.filter(
-            (el) => el.id !== id,
-          );
+          screen.layout.children = screen.layout.children.filter((el) => el.id !== id);
           if (state.currentElementId === id) {
             state.currentElementId = null;
             state.currentElementType = null;
@@ -375,9 +347,7 @@ const useFlowStoreV3 = create<StoreState>()(
     updateComponentInScreen: (id, updatedComponent) =>
       set((state) => {
         const { currentScreenId } = state;
-        const screen = state.screens.find(
-          (screen) => screen.id === currentScreenId,
-        );
+        const screen = state.screens.find((screen) => screen.id === currentScreenId);
         if (screen) {
           const component = screen.layout.children?.find((el) => el.id === id);
           if (component) {
@@ -392,9 +362,7 @@ const useFlowStoreV3 = create<StoreState>()(
     getComponent: (componentName) => {
       const screen = get().getCurrentScreen();
       if (screen) {
-        return screen.layout.children.find(
-          (component) => component.id === componentName,
-        );
+        return screen.layout.children.find((component) => component.id === componentName);
       }
       return undefined;
     },

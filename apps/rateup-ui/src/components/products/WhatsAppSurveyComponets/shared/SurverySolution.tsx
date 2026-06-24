@@ -14,10 +14,10 @@ export default function SurveySection() {
             RateUp + WhatsApp: The Feedback Solution That Actually Works
           </h1>
           <p className="text-gray-500 text-base sm:text-lg pb-8 sm:pb-12">
-            Boost your feedback response rate by up to 35%! RateUp leverages
-            WhatsApp Flows – native, interactive forms within the world's most
-            popular messaging app (+2 Billion users). Engage customers easily,
-            tailor questions, and finally get the insights you need.
+            Boost your feedback response rate by up to 35%! RateUp leverages WhatsApp Flows –
+            native, interactive forms within the world's most popular messaging app (+2 Billion
+            users). Engage customers easily, tailor questions, and finally get the insights you
+            need.
           </p>
 
           <div className="space-y-6 sm:space-y-8">

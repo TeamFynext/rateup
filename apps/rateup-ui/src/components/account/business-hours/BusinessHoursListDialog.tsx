@@ -1,8 +1,5 @@
-"use client";
-
-import React, { useState } from "react";
-
 import { Edit, Plus, Trash2 } from "lucide-react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { IBusinessHour } from "@/backend/org/business-hours/business-hours.api";
@@ -100,19 +97,14 @@ export function BusinessHoursListDialog({
                   className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
                 >
                   <div className="flex items-center justify-between">
-                    <div
-                      className="flex-1 cursor-pointer"
-                      onClick={() => onEdit(bh.id)}
-                    >
+                    <div className="flex-1 cursor-pointer" onClick={() => onEdit(bh.id)}>
                       <h4 className="font-medium">{bh.name}</h4>
                       <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
                         <span>⏰ {bh.timezone}</span>
                         {/* <span>📱 {bh.channels?.join(", ") || "No channels"}</span> */}
                       </div>
                       {bh.description && (
-                        <p className="text-sm text-gray-600 mt-1">
-                          {bh.description}
-                        </p>
+                        <p className="text-sm text-gray-600 mt-1">{bh.description}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
@@ -153,15 +145,12 @@ export function BusinessHoursListDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>{t("Delete Business Hours")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("Are you sure you want to delete")}{" "}
-              <strong>"{itemToDelete?.name}"</strong>?{" "}
+              {t("Are you sure you want to delete")} <strong>"{itemToDelete?.name}"</strong>?{" "}
               {t("This action cannot be undone")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelDelete}>
-              {t("Cancel")}
-            </AlertDialogCancel>
+            <AlertDialogCancel onClick={handleCancelDelete}>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-red-600 hover:bg-red-700 text-white"

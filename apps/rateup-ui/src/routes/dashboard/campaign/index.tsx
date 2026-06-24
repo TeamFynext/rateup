@@ -1,16 +1,9 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Filter, MessageSquare, RotateCcw, Send } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { CampaignType } from "@/types/enums.ts";
-import {
-  useCampaignById,
-  useCampaignData,
-} from "@/backend/campaign/campaign.query";
+import { useCampaignById, useCampaignData } from "@/backend/campaign/campaign.query";
 import UnauthorizedPage from "@/components/404/UnAuthorizedError.tsx";
 import CampaignCardList from "@/components/Campaign/CampaignListCard.tsx";
 import CreateCampaignModal from "@/components/Campaign/CreateCampaignModal.tsx";
@@ -20,11 +13,7 @@ import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import {
   Select,
   SelectContent,
@@ -33,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { CampaignType } from "@/types/enums.ts";
 
 export const Route = createFileRoute("/dashboard/campaign/")({
   component: CampaignsPage,
@@ -42,25 +32,20 @@ function CampaignsPage() {
   const { t } = useTranslation("campaign.list");
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<CampaignType>(
-    CampaignType.WHATSAPP,
-  );
+  const [activeTab, setActiveTab] = useState<CampaignType>(CampaignType.WHATSAPP);
   const [search, setSearch] = useState("");
   const [sortOption, setSortOption] = useState("latest");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
-    null,
-  );
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
 
   const campaignByIdQuery = useCampaignById(selectedCampaignId);
   const whatsappQuery = useCampaignData(CampaignType.WHATSAPP);
   const dripQuery = useCampaignData(CampaignType.DRIP);
 
-  const activeQuery =
-    activeTab === CampaignType.WHATSAPP ? whatsappQuery : dripQuery;
+  const activeQuery = activeTab === CampaignType.WHATSAPP ? whatsappQuery : dripQuery;
 
   const { data, isPending, isError, error, refetch } = activeQuery;
 
@@ -75,9 +60,7 @@ function CampaignsPage() {
     const filtered = campaigns
       .filter((c) => selectedTeam === "all" || c.teamId === selectedTeam)
       .filter((c) => selectedStatus === "all" || c.status === selectedStatus)
-      .filter((c) =>
-        c.name?.toLowerCase().includes(debouncedSearch.toLowerCase()),
-      );
+      .filter((c) => c.name?.toLowerCase().includes(debouncedSearch.toLowerCase()));
 
     return sortData(filtered, sortOption);
   }, [campaigns, debouncedSearch, selectedStatus, selectedTeam, sortOption]);
@@ -120,11 +103,7 @@ function CampaignsPage() {
         <div className="space-y-4">
           <div>
             <label className="text-xs">{t("Team")}</label>
-            <TeamSelector
-              value={selectedTeam}
-              onChange={setSelectedTeam}
-              enableAll
-            />
+            <TeamSelector value={selectedTeam} onChange={setSelectedTeam} enableAll />
           </div>
 
           <div>
@@ -145,20 +124,11 @@ function CampaignsPage() {
           </div>
 
           <div className="flex gap-2 border-t pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={resetFilters}
-            >
+            <Button variant="outline" size="sm" className="flex-1" onClick={resetFilters}>
               <RotateCcw className="mr-2 h-3 w-3" />
               {t("Reset")}
             </Button>
-            <Button
-              size="sm"
-              className="flex-1"
-              onClick={() => setShowFilters(false)}
-            >
+            <Button size="sm" className="flex-1" onClick={() => setShowFilters(false)}>
               {t("Apply")}
             </Button>
           </div>
@@ -168,17 +138,12 @@ function CampaignsPage() {
   );
 
   const leftControls = (
-    <Tabs
-      value={activeTab}
-      onValueChange={(value) => setActiveTab(value as CampaignType)}
-    >
+    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CampaignType)}>
       <TabsList>
         <TabsTrigger value={CampaignType.WHATSAPP}>
           <MessageSquare className="mr-2 h-4 w-4" />
           {t("Broadcast")}
-          <Badge className="ml-2">
-            {whatsappQuery.data?.data?.length ?? 0}
-          </Badge>
+          <Badge className="ml-2">{whatsappQuery.data?.data?.length ?? 0}</Badge>
         </TabsTrigger>
 
         <TabsTrigger value={CampaignType.DRIP}>
@@ -220,12 +185,7 @@ function CampaignsPage() {
           onView={handleViewDetails}
         />
       </ListPageLayout>
-      {isCreateOpen && (
-        <CreateCampaignModal
-          close={closeCreateCampaign}
-          campaignType={activeTab}
-        />
-      )}
+      {isCreateOpen && <CreateCampaignModal close={closeCreateCampaign} campaignType={activeTab} />}
       {selectedCampaignId && campaignByIdQuery?.data && (
         <CreateCampaignModal
           isEdit

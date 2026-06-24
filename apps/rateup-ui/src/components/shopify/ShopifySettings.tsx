@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import {
   IconAlertTriangle,
   IconChevronDown,
@@ -10,11 +6,10 @@ import {
   IconTrash,
   IconWebhook,
 } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { IntegratedApps, ShopifyEvents } from "@/types/enums.ts";
-import type { ShopifyIntegration } from "@/types/global";
 import {
   useDeleteIntegrationMutation,
   useUpdateIntegrationMutation,
@@ -44,16 +39,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
+import { IntegratedApps, ShopifyEvents } from "@/types/enums.ts";
+import type { ShopifyIntegration } from "@/types/global";
 import { shopifyEventData } from "@/utils/constants.ts";
 
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput.tsx";
 import ConfirmationModal from "../Modal/ConfirmationModal.tsx";
 
-const ShopifySettings = ({
-  shopifyInfo,
-}: {
-  shopifyInfo: ShopifyIntegration;
-}) => {
+const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) => {
   const [openedConfirm, setOpenedConfirm] = useState(false);
   const [showEvents, setShowEvents] = useState(false);
   const [deleteCase, setDeleteCase] = useState(null);
@@ -65,9 +58,7 @@ const ShopifySettings = ({
   const registerWebhookByTopicMt = useRegisterWebhookByTopic();
   const deleteWebhookbyTopicMt = useDeleteWebhookByTopic();
   const deleteIntgration = useDeleteIntegrationMutation(IntegratedApps.shopify);
-  const updateIntegration = useUpdateIntegrationMutation(
-    IntegratedApps.shopify,
-  );
+  const updateIntegration = useUpdateIntegrationMutation(IntegratedApps.shopify);
   const { t: translations } = useTranslation();
   const { data: webhooks } = useGetRegisteredWebhooks(showEvents);
   const session = shopifyInfo.credential.session;
@@ -146,12 +137,9 @@ const ShopifySettings = ({
       registerWebhookByTopicMt.mutate({ topic: event.value });
     } else {
       setDeleteCase(
-        getLabelsforConfirmModal(
-          "ShopifyWebhookTopic",
-          handleDeleteWebhookByTopic,
-          [event.value],
-          { event: event.label },
-        ),
+        getLabelsforConfirmModal("ShopifyWebhookTopic", handleDeleteWebhookByTopic, [event.value], {
+          event: event.label,
+        }),
       );
       setOpenedConfirm(true);
     }
@@ -173,9 +161,7 @@ const ShopifySettings = ({
             <IconPlugConnected className="size-4 text-muted-foreground" />
             <CardTitle>{translations("Connected Store")}</CardTitle>
           </div>
-          <CardDescription>
-            {translations("Your active Shopify store connection")}
-          </CardDescription>
+          <CardDescription>{translations("Your active Shopify store connection")}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <ContainedTextField value={session?.shop} disabled />
@@ -185,9 +171,7 @@ const ShopifySettings = ({
               variant="destructive"
               size="sm"
               onClick={() => {
-                setDeleteCase(
-                  getLabelsforConfirmModal("session", handleDeleteSession),
-                );
+                setDeleteCase(getLabelsforConfirmModal("session", handleDeleteSession));
                 setOpenedConfirm(true);
               }}
             >
@@ -234,10 +218,7 @@ const ShopifySettings = ({
           <div className="flex items-center gap-3">
             <Switch
               id="webhook-master"
-              disabled={
-                registerWebhooksmutate.isPending ||
-                deleteAllWebhooksmt.isPending
-              }
+              disabled={registerWebhooksmutate.isPending || deleteAllWebhooksmt.isPending}
               checked={isWebhookEnabled}
               onCheckedChange={(checked) => handleWebhookRegistration(checked)}
             />
@@ -270,9 +251,7 @@ const ShopifySettings = ({
                       <Switch
                         id={`webhook-${event.value}`}
                         checked={webhooks?.includes(event.value)}
-                        onCheckedChange={(checked) =>
-                          handleChangeWebhookByTopic(event, checked)
-                        }
+                        onCheckedChange={(checked) => handleChangeWebhookByTopic(event, checked)}
                       />
                     </div>
                   ),
@@ -286,9 +265,7 @@ const ShopifySettings = ({
       {/* Danger Zone */}
       <Alert variant="destructive" className="border-destructive/50">
         <IconAlertTriangle className="size-4" />
-        <AlertTitle className="font-semibold">
-          {translations("Danger Zone")}
-        </AlertTitle>
+        <AlertTitle className="font-semibold">{translations("Danger Zone")}</AlertTitle>
         <AlertDescription>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Button
@@ -297,10 +274,7 @@ const ShopifySettings = ({
               disabled={updateIntegration.isPending}
               onClick={() => {
                 setDeleteCase(
-                  getLabelsforConfirmModal(
-                    "ShopifySurveyAll",
-                    handleDeleteAllShopifySurveys,
-                  ),
+                  getLabelsforConfirmModal("ShopifySurveyAll", handleDeleteAllShopifySurveys),
                 );
                 setOpenedConfirm(true);
               }}
@@ -313,12 +287,7 @@ const ShopifySettings = ({
               size="sm"
               disabled={updateIntegration.isPending}
               onClick={() => {
-                setDeleteCase(
-                  getLabelsforConfirmModal(
-                    "Schedules",
-                    handleDeleteAllSchedules,
-                  ),
-                );
+                setDeleteCase(getLabelsforConfirmModal("Schedules", handleDeleteAllSchedules));
                 setOpenedConfirm(true);
               }}
             >
@@ -348,12 +317,7 @@ const ShopifySettings = ({
   );
 };
 
-function getLabelsforConfirmModal(
-  deletionCase,
-  confirmFunc,
-  confirmFuncArgs?,
-  data?,
-) {
+function getLabelsforConfirmModal(deletionCase, confirmFunc, confirmFuncArgs?, data?) {
   switch (deletionCase) {
     case "webhooks":
       return {
@@ -366,8 +330,7 @@ function getLabelsforConfirmModal(
     case "session":
       return {
         headerTitle: "Delete Connection with Shopify",
-        headerLabel:
-          "Are you sure to delete your shopify store connection with RateUp?",
+        headerLabel: "Are you sure to delete your shopify store connection with RateUp?",
         deleteQuotion: "All survey schedules and webhooks will be deleted",
         confirmFunction: confirmFunc,
       };

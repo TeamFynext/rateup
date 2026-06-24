@@ -22,9 +22,7 @@ const getMimeTypeFromPath = (path?: string) => {
   return MIME_TYPES_FOR_IMAGE[extension] ?? "image/png";
 };
 
-export const Route = createFileRoute(
-  "/(public-facing)/public/survey/$surveyId/",
-)({
+export const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/")({
   loader: ({ params }) => getPublicSurvey(params.surveyId),
   component: WsPublic,
   head: ({ params, loaderData }) => {
@@ -70,11 +68,5 @@ export const Route = createFileRoute(
 function WsPublic() {
   const surveyData = Route.useLoaderData();
 
-  return (
-    <PublicSurvey
-      survey={surveyData}
-      error_occured={false}
-      fromShortUrl={false}
-    />
-  );
+  return <PublicSurvey survey={surveyData} error_occured={false} fromShortUrl={false} />;
 }

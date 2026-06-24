@@ -15,10 +15,7 @@ export enum LoyaltyTemplateTypes {
   PointsExpired = "PointsExpired",
 }
 
-export function getLoyaltyTemplateLabel(
-  type: LoyaltyTemplateTypes,
-  translations: any,
-) {
+export function getLoyaltyTemplateLabel(type: LoyaltyTemplateTypes, translations: any) {
   switch (type) {
     case LoyaltyTemplateTypes.PointsIssued:
       return {
@@ -59,17 +56,13 @@ export function getLoyaltyTemplateLabel(
     case LoyaltyTemplateTypes.InactivityReminder:
       return {
         label: translations("Inactivity Reminder"),
-        templateLabel: translations(
-          "WhatsApp Template for Inactivity Reminder",
-        ),
+        templateLabel: translations("WhatsApp Template for Inactivity Reminder"),
         templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")}, {{2}} - ${translations("Points Balance")}`,
       };
     case LoyaltyTemplateTypes.PointsExpiryAlert:
       return {
         label: translations("Points Expiry Alert"),
-        templateLabel: translations(
-          "WhatsApp Template for Points Expiry Alert",
-        ),
+        templateLabel: translations("WhatsApp Template for Points Expiry Alert"),
         templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")}, {{2}} - ${translations("Points Balance")}, {{3}} - ${translations("Expiry Date")}`,
       };
     case LoyaltyTemplateTypes.PointsExpired:

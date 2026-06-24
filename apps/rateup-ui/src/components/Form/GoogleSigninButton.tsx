@@ -1,5 +1,3 @@
-"use client";
-
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-react/recipe/thirdparty";
@@ -46,11 +44,7 @@ function GoogleSignInButton({ buttonText, className }) {
   }
 
   return (
-    <Button
-      variant="outline"
-      onClick={googleSignInClicked}
-      className={`h-10 ${className}`}
-    >
+    <Button variant="outline" onClick={googleSignInClicked} className={`h-10 ${className}`}>
       <GoogleIcon />
       <span className="font-semibold text-xs">{buttonText}</span>
     </Button>

@@ -1,5 +1,5 @@
-import { Box } from "@mantine/core";
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
+import { Box } from "@mantine/core";
 
 function Reorder({ onDragEnd, className = "", children, itemsArr }) {
   const handleDragEnd = (result) => {
@@ -17,7 +17,7 @@ function Reorder({ onDragEnd, className = "", children, itemsArr }) {
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <Droppable droppableId="droppable">
-        {(provided, snapshot) => (
+        {(provided, _snapshot) => (
           <Box
             className={className}
             {...provided.droppableProps}

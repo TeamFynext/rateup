@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
@@ -25,12 +21,9 @@ import {
   Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useMemo, useState } from "react";
 
-import { SubscriptionFeaturePathName } from "@/types/enums.ts";
-import {
-  useChecklist,
-  useUpdateOrgDetailsMutation,
-} from "@/backend/org/org.query";
+import { useChecklist, useUpdateOrgDetailsMutation } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { getVerificationStatus } from "@/backend/whatsapp/settings/waSettings.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
@@ -42,6 +35,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible.tsx";
+import { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { rateupLogoHorizontalWhiteTransparent } from "@/utils/constants";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
@@ -276,9 +270,7 @@ function RateUpOnboarding() {
             variant="outline"
             size="sm"
             className="text-xs h-8 gap-1.5 border-gray-200"
-            onClick={() =>
-              window.open("https://www.youtube.com/@TeamRateup", "_blank")
-            }
+            onClick={() => window.open("https://www.youtube.com/@TeamRateup", "_blank")}
           >
             <Video size={12} /> Watch intro
           </Button>
@@ -298,9 +290,7 @@ function RateUpOnboarding() {
             className="text-xs h-8 gap-1.5 border-gray-200"
             onClick={() => {
               const phone = import.meta.env.VITE_SUPPORT_WHATSAPP;
-              const message = encodeURIComponent(
-                "Hi, I need help with support",
-              );
+              const message = encodeURIComponent("Hi, I need help with support");
 
               window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
             }}
@@ -344,9 +334,8 @@ function RateUpOnboarding() {
               </div>
 
               <p className="text-xs sm:text-[13.5px] text-white/70 leading-[1.65] max-w-120 m-0">
-                Welcome to RateUp — connect your WhatsApp, Invite Team members,
-                build automations, configure your loyalty program, and launch
-                your first campaign.
+                Welcome to RateUp — connect your WhatsApp, Invite Team members, build automations,
+                configure your loyalty program, and launch your first campaign.
               </p>
             </div>
 
@@ -363,9 +352,7 @@ function RateUpOnboarding() {
                   <p className="text-xl sm:text-[22px] font-extrabold text-white leading-none">
                     {val}
                   </p>
-                  <p className="text-[10px] sm:text-[11px] text-white/60 mt-1">
-                    {label}
-                  </p>
+                  <p className="text-[10px] sm:text-[11px] text-white/60 mt-1">{label}</p>
                 </div>
               ))}
             </div>
@@ -374,9 +361,7 @@ function RateUpOnboarding() {
           {/* Progress */}
           <div className="mt-6 relative">
             <div className="flex justify-between mb-2">
-              <span className="text-xs text-white/60">
-                Overall setup progress
-              </span>
+              <span className="text-xs text-white/60">Overall setup progress</span>
               <span className="text-xs font-bold text-white">
                 {doneTasks} of {totalTasks} tasks complete
               </span>
@@ -514,11 +499,7 @@ function CollapsibleCard({
                   : partial
                     ? "2px solid rgb(24,115,232)"
                     : "2px solid #e5e7eb",
-                background: allDone
-                  ? "#10b981"
-                  : partial
-                    ? "rgba(24,115,232,0.1)"
-                    : "transparent",
+                background: allDone ? "#10b981" : partial ? "rgba(24,115,232,0.1)" : "transparent",
               }}
             >
               {allDone && <CheckCircle2 size={14} color="white" />}
@@ -535,9 +516,7 @@ function CollapsibleCard({
               {doneCount} / {total}
             </span>
 
-            <ChevronDown
-              className={`transition-transform ${open ? "rotate-180" : ""}`}
-            />
+            <ChevronDown className={`transition-transform ${open ? "rotate-180" : ""}`} />
           </div>
         </CollapsibleTrigger>
       </Card>
@@ -592,10 +571,7 @@ function CollapsibleCard({
 
                                 {verificationStatus === "pending" && (
                                   <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">
-                                    <Loader2
-                                      size={12}
-                                      className="animate-spin"
-                                    />
+                                    <Loader2 size={12} className="animate-spin" />
                                     Under review
                                   </span>
                                 )}
@@ -615,10 +591,7 @@ function CollapsibleCard({
 
                                 {isCheckingVerification && (
                                   <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                                    <Loader2
-                                      size={12}
-                                      className="animate-spin"
-                                    />
+                                    <Loader2 size={12} className="animate-spin" />
                                     Checking...
                                   </span>
                                 )}
@@ -629,9 +602,7 @@ function CollapsibleCard({
                           {/* Action */}
                           <div className="w-full sm:w-35 flex flex-col items-center">
                             {done ? (
-                              <span className="text-xs text-green-600 font-semibold">
-                                ✓ Done
-                              </span>
+                              <span className="text-xs text-green-600 font-semibold">✓ Done</span>
                             ) : (
                               <Button
                                 size="sm"

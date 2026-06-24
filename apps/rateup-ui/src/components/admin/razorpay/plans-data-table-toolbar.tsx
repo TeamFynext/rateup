@@ -1,5 +1,3 @@
-"use client";
-
 import type { Table } from "@tanstack/react-table";
 import { RefreshCw, X } from "lucide-react";
 
@@ -12,9 +10,7 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
 
-export function PlansDataTableToolbar<TData>({
-  table,
-}: Readonly<DataTableToolbarProps<TData>>) {
+export function PlansDataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
   const syncPlans = usePlanSyncMutation();
   const isFiltered = table.getState().columnFilters.length > 0;
 
@@ -31,11 +27,7 @@ export function PlansDataTableToolbar<TData>({
           className="h-8 w-[150px] lg:w-[250px]"
         />
         {isFiltered && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => table.resetColumnFilters()}
-          >
+          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
             Reset
             <X />
           </Button>
@@ -48,9 +40,7 @@ export function PlansDataTableToolbar<TData>({
           onClick={() => syncPlans.mutate()}
           disabled={syncPlans.isPending}
         >
-          <RefreshCw
-            className={`h-4 w-4 mr-2 ${syncPlans.isPending ? "animate-spin" : ""}`}
-          />
+          <RefreshCw className={`h-4 w-4 mr-2 ${syncPlans.isPending ? "animate-spin" : ""}`} />
           Sync Plans
         </Button>
         <DataTableViewOptions table={table} />

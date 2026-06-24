@@ -1,7 +1,4 @@
-"use client";
-
-import { useEffect, useState, type CSSProperties } from "react";
-
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   IconChevronDown,
   IconChevronUp,
@@ -9,16 +6,16 @@ import {
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
-import { QuestionType2 } from "@/types/enums.ts";
-import { cn } from "@/lib/utils.ts";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import { cn } from "@/lib/utils.ts";
+import { QuestionType2 } from "@/types/enums.ts";
 import { reorder } from "@/utils/questions.ts";
 
 import useFlowStore, { EditorType } from "../utils/store.ts";
@@ -40,7 +37,6 @@ function ElementsList() {
     updateComponentsInScreen,
     deleteComponentFromScreen,
     detailActiveEditor,
-    setDetailActiveEditor,
   } = useFlowStore();
 
   const screen = getCurrentScreen();
@@ -71,18 +67,12 @@ function ElementsList() {
     if (!result.destination) return;
 
     const items = screen.layout.children;
-    const reorderedItems = reorder(
-      items,
-      result.source.index,
-      result.destination.index,
-    );
+    const reorderedItems = reorder(items, result.source.index, result.destination.index);
 
     updateComponentsInScreen(currentScreenId, reorderedItems);
   };
 
-  const elements = screen.layout.children.filter(
-    (el) => el.type !== QuestionType2.Footer,
-  );
+  const elements = screen.layout.children.filter((el) => el.type !== QuestionType2.Footer);
 
   // Render different editors based on active editor type
   if (detailActiveEditor === EditorType.LogicEditor) {
@@ -135,9 +125,7 @@ function ElementsList() {
                   index={index}
                   isExpanded={expandedElementId === element.id}
                   onToggle={() =>
-                    setExpandedElementId(
-                      expandedElementId === element.id ? null : element.id,
-                    )
+                    setExpandedElementId(expandedElementId === element.id ? null : element.id)
                   }
                   onDelete={() => deleteComponentFromScreen(element.id)}
                 />
@@ -154,10 +142,7 @@ function ElementsList() {
           <IconPlus size={16} />
         </Button>
       </div>
-      <AddElementModal
-        opened={addModalOpened}
-        close={() => setAddModalOpened(false)}
-      />
+      <AddElementModal opened={addModalOpened} close={() => setAddModalOpened(false)} />
     </div>
   );
 }
@@ -170,13 +155,7 @@ interface ElementCardProps {
   onDelete: () => void;
 }
 
-function ElementCard({
-  element,
-  index,
-  isExpanded,
-  onToggle,
-  onDelete,
-}: ElementCardProps) {
+function ElementCard({ element, index, isExpanded, onToggle, onDelete }: ElementCardProps) {
   const { t: translations } = useTranslation();
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
 
@@ -206,8 +185,7 @@ function ElementCard({
             className={cn(
               "bg-card border border-border rounded-lg transition-all duration-200 overflow-hidden",
               "hover:border-primary/60 hover:shadow-md",
-              isExpanded &&
-                "border-primary shadow-[0_4px_12px_rgba(37,99,235,0.15)]",
+              isExpanded && "border-primary shadow-[0_4px_12px_rgba(37,99,235,0.15)]",
               snapshot.isDragging && "opacity-80 shadow-lg",
             )}
           >
@@ -228,13 +206,9 @@ function ElementCard({
               <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                 <p className="font-medium text-sm truncate flex flex-wrap">
                   {getElementLabel()}
-                  {element.required && (
-                    <span className="text-red-500 ml-1">*</span>
-                  )}
+                  {element.required && <span className="text-red-500 ml-1">*</span>}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {element.metaType || element.type}
-                </p>
+                <p className="text-xs text-muted-foreground">{element.metaType || element.type}</p>
               </div>
               <div className="flex gap-1">
                 <Button
@@ -249,11 +223,7 @@ function ElementCard({
                   <IconTrash size={14} className="text-destructive" />
                 </Button>
                 <Button size="icon" variant="ghost" className="h-8 w-8">
-                  {isExpanded ? (
-                    <IconChevronUp size={16} />
-                  ) : (
-                    <IconChevronDown size={16} />
-                  )}
+                  {isExpanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
                 </Button>
               </div>
             </div>
@@ -271,9 +241,7 @@ function ElementCard({
         forDeleteFunctionality
         opened={deleteModalOpened}
         onClose={() => setDeleteModalOpened(false)}
-        headerLabel={translations(
-          "Are you sure you want to delete this element?",
-        )}
+        headerLabel={translations("Are you sure you want to delete this element?")}
         headerTitle={translations("Delete Element?")}
         confirmLabel={translations("Delete")}
         onConfirm={handleDelete}

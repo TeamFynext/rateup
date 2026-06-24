@@ -1,5 +1,3 @@
-"use client";
-
 import { Box, Button, Center } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 import classNames from "classnames/bind";
@@ -8,8 +6,9 @@ import { useTranslation } from "react-i18next";
 import { useNavControlContext } from "@/context/NavControlContext.ts";
 
 import PreviewDeviceButtons from "./components/PreviewDeviceButtons.tsx";
-import styles from "./SurveyTheme.module.css";
 import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout.tsx";
+
+import styles from "./SurveyTheme.module.css";
 
 const cx = classNames.bind(styles);
 
@@ -24,7 +23,7 @@ function SurveyTheme({
 
   const { t: translations } = useTranslation();
 
-  const { navOpened, setNavOpened } = useNavControlContext();
+  const { setNavOpened } = useNavControlContext();
 
   if (!surveyTheme)
     return (
@@ -38,9 +37,7 @@ function SurveyTheme({
       <Box
         className={`${cx("selected-page-tab-panels-and-styles-div-container")} selected-page-tab-panels-and-styles-div-container`}
       >
-        <Box
-          className={`${cx("theme-preview-container")} theme-preview-container`}
-        >
+        <Box className={`${cx("theme-preview-container")} theme-preview-container`}>
           <PreviewDeviceButtons />
 
           {!isSurveyThemePreview && (

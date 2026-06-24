@@ -1,14 +1,7 @@
-"use client";
-
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 
 interface DangerZoneProps {
   onReset: () => void;
@@ -28,19 +21,13 @@ export function DangerZone({
   return (
     <Card className="border-2 border-red-200 shadow-sm bg-red-50/30">
       <CardHeader>
-        <CardTitle className="text-base text-red-700">
-          {t("Danger Zone")}
-        </CardTitle>
+        <CardTitle className="text-base text-red-700">{t("Danger Zone")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="flex items-center justify-between p-2.5 border-2 border-red-200 rounded-lg bg-white">
           <div>
-            <p className="text-sm font-medium text-red-700">
-              {t("Reset Points")}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {t("Set all to zero")}
-            </p>
+            <p className="text-sm font-medium text-red-700">{t("Reset Points")}</p>
+            <p className="text-xs text-muted-foreground">{t("Set all to zero")}</p>
           </div>
           <Button
             variant="outline"
@@ -56,12 +43,8 @@ export function DangerZone({
         {showDelete && (
           <div className="flex items-center justify-between p-2.5 border-2 border-red-200 rounded-lg bg-white">
             <div>
-              <p className="text-sm font-medium text-red-700">
-                {t("Delete Program")}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t("Remove all data")}
-              </p>
+              <p className="text-sm font-medium text-red-700">{t("Delete Program")}</p>
+              <p className="text-xs text-muted-foreground">{t("Remove all data")}</p>
             </div>
             <Button
               variant="outline"

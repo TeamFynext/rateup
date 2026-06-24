@@ -1,15 +1,10 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Box } from "@mantine/core";
+import { useCallback } from "react";
 
 import LocalOrUnsplashImagePicker from "../../../../../../../LocalOrUnsplashImagePicker/index.tsx";
 import CustomColorPicker from "../../../../../../../Survey/ShareSurvey/components/CustomColorPicker/index.tsx";
-import {
-  useThemeDispatch,
-  useThemeObj,
-} from "../../../../ThemeContext/ThemeContext.tsx";
+import { useThemeDispatch, useThemeObj } from "../../../../ThemeContext/ThemeContext.tsx";
+
 import styles from "./BackgroundEditor.module.css";
 
 function BackgroundEditor() {
@@ -47,10 +42,7 @@ function BackgroundEditor() {
     <Box className={styles["background-editor-div"]}>
       <Box className={`style-section-div`}>
         <h2>Background Color</h2>
-        <CustomColorPicker
-          value={backgroundColor}
-          onChange={handleBackgroundColorChange}
-        />
+        <CustomColorPicker value={backgroundColor} onChange={handleBackgroundColorChange} />
       </Box>
 
       <Box className={`style-section-div`}>

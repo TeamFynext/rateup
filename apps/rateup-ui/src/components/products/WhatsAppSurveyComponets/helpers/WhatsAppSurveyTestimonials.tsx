@@ -41,9 +41,7 @@ export default function WhatsAppSurveyTestimonials() {
                   <p className="text-sm text-gray-500">{t.business}</p>
                 </div>
               </div>
-              <blockquote className="italic text-gray-700 leading-relaxed">
-                “{t.quote}”
-              </blockquote>
+              <blockquote className="italic text-gray-700 leading-relaxed">“{t.quote}”</blockquote>
             </div>
           ))}
         </div>

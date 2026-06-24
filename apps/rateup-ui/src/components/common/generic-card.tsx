@@ -1,10 +1,7 @@
-"use client";
-
-import type { ReactNode } from "react";
-
 import { cx } from "class-variance-authority";
 import { Calendar } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import type { ReactNode } from "react";
 
 import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText/index.tsx";
 import {
@@ -36,8 +33,7 @@ export function GenericCardGrid<T>({
     <motion.div
       layout
       className={
-        className ??
-        "grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5"
+        className ?? "grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5"
       }
     >
       <AnimatePresence initial={false}>
@@ -113,10 +109,7 @@ export function GenericActionCard({
 
   return (
     <Card
-      className={cx(
-        className,
-        "cursor-pointer hover:ring-1 hover:ring-primary gap-3.5",
-      )}
+      className={cx(className, "cursor-pointer hover:ring-1 hover:ring-primary gap-3.5")}
       onClick={onClick}
     >
       <CardHeader className="flex justify-between">
@@ -124,9 +117,7 @@ export function GenericActionCard({
           <CardTitle title={titleTooltip} className="truncate">
             {title}
           </CardTitle>
-          {subtitle ? (
-            <CardDescription className="truncate">{subtitle}</CardDescription>
-          ) : null}
+          {subtitle ? <CardDescription className="truncate">{subtitle}</CardDescription> : null}
         </div>
         <div className="flex items-center gap-2">
           {showSwitch && (

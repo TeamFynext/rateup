@@ -1,14 +1,7 @@
 import { Skeleton } from "@mantine/core";
 import { Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import {
-  CartesianGrid,
-  LabelList,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { CartesianGrid, LabelList, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import { useGetAverageConversationResponseTimeGraphData } from "@/backend/conversation/conversation.query";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -20,20 +13,15 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 import type { ChartConfig } from "@/components/ui/chart.tsx";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart.tsx";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart.tsx";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
 
 const ConversationResponseTimePatternGraph = ({ dateRange }) => {
   const { t } = useTranslation();
-  const { data = [], isLoading } =
-    useGetAverageConversationResponseTimeGraphData({
-      dateKey: dateRange.key,
-      dateRange: dateRange.range,
-    });
+  const { data = [], isLoading } = useGetAverageConversationResponseTimeGraphData({
+    dateKey: dateRange.key,
+    dateRange: dateRange.range,
+  });
   const chartConfig = {
     averageResponseTime: {
       label: "Average Response Time",
@@ -61,10 +49,7 @@ const ConversationResponseTimePatternGraph = ({ dateRange }) => {
             <Clock className="w-5 h-5 text-primary mr-1" />
             {t("Response Time Pattern")}
           </CardTitle>
-          <Badge
-            variant="outline"
-            className="bg-orange-50 text-orange-700 border-orange-200"
-          >
+          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
             {t("Today")}
           </Badge>
         </div>
@@ -75,12 +60,8 @@ const ConversationResponseTimePatternGraph = ({ dateRange }) => {
       <CardContent>
         {!chartData.length ? (
           <div className="grid place-content-center py-12 h-full">
-            <h3 className="text-lg font-medium text-gray-900">
-              {t("No data found for analysis")}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {t("No responded conversation found")}
-            </p>
+            <h3 className="text-lg font-medium text-gray-900">{t("No data found for analysis")}</h3>
+            <p className="text-gray-600 mb-4">{t("No responded conversation found")}</p>
           </div>
         ) : (
           <ChartContainer config={chartConfig} className="h-60 w-full">
@@ -119,12 +100,7 @@ const ConversationResponseTimePatternGraph = ({ dateRange }) => {
                   r: 6,
                 }}
               >
-                <LabelList
-                  position="top"
-                  offset={12}
-                  className="fill-foreground"
-                  fontSize={12}
-                />
+                <LabelList position="top" offset={12} className="fill-foreground" fontSize={12} />
               </Line>
             </LineChart>
           </ChartContainer>

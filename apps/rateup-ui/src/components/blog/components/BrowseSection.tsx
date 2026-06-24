@@ -2,13 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 import type { Author, Tag } from "@/lib/posts.ts";
 
-export function BrowseSection({
-  tags,
-  authors,
-}: {
-  tags: Tag[];
-  authors: Author[];
-}) {
+export function BrowseSection({ tags, authors }: { tags: Tag[]; authors: Author[] }) {
   return (
     <section className="mt-7">
       <div className="flex items-center justify-between mb-4">

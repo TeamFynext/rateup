@@ -1,8 +1,3 @@
-"use client";
-
-import type { ReactNode } from "react";
-import { useContext, useEffect, useRef, useState } from "react";
-
 import {
   ActionIcon,
   Box,
@@ -15,6 +10,8 @@ import {
   Text,
 } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
+import type { ReactNode } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
@@ -32,9 +29,7 @@ function getFileName(url: string | File, isNewFile: boolean): ReactNode {
 export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(
-    isPreview ? null : response || null,
-  );
+  const [previewUrl, setPreviewUrl] = useState<string | null>(isPreview ? null : response || null);
   const [isUploading, setIsUploading] = useState(false);
 
   const resetRef = useRef<() => void>(null);
@@ -108,16 +103,8 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
       >
         <Stack align="center">
           {(file || response?.length > 0) && (
-            <Group
-              justify="flex-end"
-              style={{ position: "absolute", right: 0, top: 0 }}
-            >
-              <ActionIcon
-                onClick={removeImg}
-                variant="filled"
-                color="gray"
-                radius="lg"
-              >
+            <Group justify="flex-end" style={{ position: "absolute", right: 0, top: 0 }}>
+              <ActionIcon onClick={removeImg} variant="filled" color="gray" radius="lg">
                 <IconX style={{ width: "70%", height: "70%" }} stroke={1.5} />
               </ActionIcon>
             </Group>
@@ -139,10 +126,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
             {isImageSelected && (
               <Image
                 fit="contain"
-                src={
-                  previewUrl ||
-                  `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${response}`
-                }
+                src={previewUrl || `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${response}`}
                 alt="Preview"
                 style={{ width: "100%", height: "100%" }}
               />
@@ -150,11 +134,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
           </Box>
 
           {isImageSelected && (
-            <Text
-              size="sm"
-              style={{ textAlign: "center" }}
-              c={pickedFileTextColor}
-            >
+            <Text size="sm" style={{ textAlign: "center" }} c={pickedFileTextColor}>
               {translations("Picked file:")}
               {file?.name || getFileName(response, isPreview || false)}
             </Text>

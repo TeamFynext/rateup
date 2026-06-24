@@ -1,16 +1,14 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 import { IconDownload } from "@tabler/icons-react";
 import { toPng } from "html-to-image";
 import { Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button.tsx";
 
 import CustomQRCode from "../components/CustomQrCode/CustomQrCode.tsx";
+
 import styles from "./Preview.module.css";
 
 function Preview({
@@ -30,8 +28,7 @@ function Preview({
     isLogoEnabled = true,
   } = logoTabPanelState;
 
-  const [isLogoDownloadProcessing, setIsLogoDownloadProcessing] =
-    useState(false);
+  const [isLogoDownloadProcessing, setIsLogoDownloadProcessing] = useState(false);
 
   const previewContainerRef = useRef(undefined);
   const { t: translations } = useTranslation();
@@ -90,9 +87,7 @@ function Preview({
           <Sparkles className="text-primary h-4 w-4" />
           <h2 className="font-bold text-sm">{translations("Live Preview")}</h2>
         </div>
-        <span className="text-[11px] opacity-85">
-          {translations("Updates in real-time")}
-        </span>
+        <span className="text-[11px] opacity-85">{translations("Updates in real-time")}</span>
       </div>
       <div
         className={styles["preview-container"]}

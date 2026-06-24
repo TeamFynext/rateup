@@ -1,23 +1,15 @@
-import { useEffect, useState } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { z } from "zod";
 
 import { createLoyaltyEarningRule } from "@/backend/loyalty/earningRules.api";
-import {
-  LoyaltyEventType,
-  updateEventTrigger,
-} from "@/backend/loyalty/eventTriggers.api";
+import { LoyaltyEventType, updateEventTrigger } from "@/backend/loyalty/eventTriggers.api";
 import {
   useCreateEventTriggerMutation,
   useEventTriggers,
@@ -62,12 +54,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Form } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { docsPath } from "@/utils/constants.ts";
 import { UserRole } from "@/utils/enums/index.ts";
@@ -88,9 +75,7 @@ function LoyaltySettingsPage() {
   const { data: program, isLoading: isProgramLoading } = useLoyaltyProgram();
   const { data: eventTriggers } = useEventTriggers(program?.id || "");
 
-  const updateProgramMutation = useUpdateLoyaltyProgramMutation(
-    program?.id || "",
-  );
+  const updateProgramMutation = useUpdateLoyaltyProgramMutation(program?.id || "");
   const createProgramMutation = useCreateLoyaltyProgramMutation();
   const resetPointsMutation = useResetLoyaltyProgramPointsMutation();
   const deleteProgramMutation = useDeleteLoyaltyProgramMutation(() => {
@@ -110,14 +95,12 @@ function LoyaltySettingsPage() {
   // States for modified buttons
   const [pointsReminderModified, setPointsReminderModified] = useState(false);
   const [tierUpgradedModified, setTierUpgradedModified] = useState(false);
-  const [birthdayReminderModified, setBirthdayReminderModified] =
-    useState(false);
+  const [birthdayReminderModified, setBirthdayReminderModified] = useState(false);
   const [pointsIssuedModified, setPointsIssuedModified] = useState(false);
   const [pointsAdjustedModified, setPointsAdjustedModified] = useState(false);
   const [rewardIssuedModified, setRewardIssuedModified] = useState(false);
   const [rewardRedeemedModified, setRewardRedeemedModified] = useState(false);
-  const [pointsExpiryAlertModified, setPointsExpiryAlertModified] =
-    useState(false);
+  const [pointsExpiryAlertModified, setPointsExpiryAlertModified] = useState(false);
   const [pointsExpiredModified, setPointsExpiredModified] = useState(false);
 
   // Form
@@ -179,9 +162,7 @@ function LoyaltySettingsPage() {
   });
 
   // Notifications Form
-  const notificationsForm = useForm<
-    z.infer<typeof NotificationsSettingsSchema>
-  >({
+  const notificationsForm = useForm<z.infer<typeof NotificationsSettingsSchema>>({
     resolver: zodResolver(NotificationsSettingsSchema),
     defaultValues: {
       programActive: true,
@@ -216,8 +197,7 @@ function LoyaltySettingsPage() {
         moneyCurrency: program.currencyCode || "INR",
         defaultCountryCode: program.defaultCountryCode || "IN",
         whatsappSettingsId: program.whatsappSettingsId,
-        referralMessageTemplate:
-          program.referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEMPLATE,
+        referralMessageTemplate: program.referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEMPLATE,
       });
 
       notificationsForm.reset({
@@ -252,40 +232,22 @@ function LoyaltySettingsPage() {
         case LoyaltyEventType.REWARD_ISSUED:
         case LoyaltyEventType.REWARD_REDEEMED:
         case LoyaltyEventType.TIER_UPGRADED:
-          eventTriggersForm.setValue(
-            `${eventType}.enabled` as any,
-            trigger.enabled,
-          );
+          eventTriggersForm.setValue(`${eventType}.enabled` as any, trigger.enabled);
           if (trigger.waTemplateId) {
-            eventTriggersForm.setValue(
-              `${eventType}.waTemplateId` as any,
-              trigger.waTemplateId,
-            );
+            eventTriggersForm.setValue(`${eventType}.waTemplateId` as any, trigger.waTemplateId);
           }
           break;
         case LoyaltyEventType.BIRTHDAY:
-          eventTriggersForm.setValue(
-            `${eventType}.enabled` as any,
-            trigger.enabled,
-          );
+          eventTriggersForm.setValue(`${eventType}.enabled` as any, trigger.enabled);
           if (trigger.waTemplateId) {
-            eventTriggersForm.setValue(
-              `${eventType}.waTemplateId` as any,
-              trigger.waTemplateId,
-            );
+            eventTriggersForm.setValue(`${eventType}.waTemplateId` as any, trigger.waTemplateId);
           }
           if (trigger.rewardId) {
-            eventTriggersForm.setValue(
-              `${eventType}.rewardId` as any,
-              trigger.rewardId,
-            );
+            eventTriggersForm.setValue(`${eventType}.rewardId` as any, trigger.rewardId);
           }
           break;
         case LoyaltyEventType.INACTIVITY_REMINDER:
-          eventTriggersForm.setValue(
-            `${eventType}.enabled` as any,
-            trigger.enabled,
-          );
+          eventTriggersForm.setValue(`${eventType}.enabled` as any, trigger.enabled);
           if (trigger.triggerDays) {
             eventTriggersForm.setValue(
               `${eventType}.triggerDays` as any,
@@ -293,23 +255,14 @@ function LoyaltySettingsPage() {
             );
           }
           if (trigger.waTemplateId) {
-            eventTriggersForm.setValue(
-              `${eventType}.waTemplateId` as any,
-              trigger.waTemplateId,
-            );
+            eventTriggersForm.setValue(`${eventType}.waTemplateId` as any, trigger.waTemplateId);
           }
           break;
         case LoyaltyEventType.POINTS_EXPIRY_ALERT:
         case LoyaltyEventType.POINTS_EXPIRED:
-          eventTriggersForm.setValue(
-            `${eventType}.enabled` as any,
-            trigger.enabled,
-          );
+          eventTriggersForm.setValue(`${eventType}.enabled` as any, trigger.enabled);
           if (trigger.waTemplateId) {
-            eventTriggersForm.setValue(
-              `${eventType}.waTemplateId` as any,
-              trigger.waTemplateId,
-            );
+            eventTriggersForm.setValue(`${eventType}.waTemplateId` as any, trigger.waTemplateId);
           }
           break;
       }
@@ -319,9 +272,7 @@ function LoyaltySettingsPage() {
   }, [eventTriggers, eventTriggersForm]);
 
   // Save Handlers
-  const onSaveBasicSettings = async (
-    data: z.infer<typeof BasicSettingsSchema>,
-  ) => {
+  const onSaveBasicSettings = async (data: z.infer<typeof BasicSettingsSchema>) => {
     const payload = {
       name: data.programName,
       currencyName: data.pointsCurrency,
@@ -437,9 +388,7 @@ function LoyaltySettingsPage() {
       eventType,
       enabled: values.enabled,
       waTemplateId: values.waTemplateId,
-      triggerDays: values.triggerDays
-        ? Number.parseInt(values.triggerDays)
-        : undefined,
+      triggerDays: values.triggerDays ? Number.parseInt(values.triggerDays) : undefined,
       rewardId: values.rewardId,
     };
 
@@ -466,16 +415,11 @@ function LoyaltySettingsPage() {
     }
   };
 
-  const handleToggleEventTrigger = async (
-    eventType: LoyaltyEventType,
-    enabled: boolean,
-  ) => {
+  const handleToggleEventTrigger = async (eventType: LoyaltyEventType, enabled: boolean) => {
     eventTriggersForm.setValue(`${eventType}.enabled` as any, enabled);
     const success = await handleSaveEventTrigger(eventType);
     if (success) {
-      toast.success(
-        enabled ? t("Notification enabled") : t("Notification disabled"),
-      );
+      toast.success(enabled ? t("Notification enabled") : t("Notification disabled"));
     } else {
       // Revert if failed
       eventTriggersForm.setValue(`${eventType}.enabled` as any, !enabled);
@@ -731,9 +675,7 @@ function LoyaltySettingsPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-red-600">
-              {t("Delete Loyalty Program")}
-            </DialogTitle>
+            <DialogTitle className="text-red-600">{t("Delete Loyalty Program")}</DialogTitle>
             <DialogDescription>
               {t(
                 "This action is permanent and cannot be undone. All program data will be removed.",
@@ -743,9 +685,7 @@ function LoyaltySettingsPage() {
           <div className="space-y-3 py-2">
             <p className="text-sm text-muted-foreground">
               {t("Type")}{" "}
-              <span className="font-semibold text-foreground">
-                &quot;{program?.name}&quot;
-              </span>{" "}
+              <span className="font-semibold text-foreground">&quot;{program?.name}&quot;</span>{" "}
               {t("to confirm deletion")}
             </p>
             <Input
@@ -772,10 +712,7 @@ function LoyaltySettingsPage() {
             </Button>
             <Button
               variant="destructive"
-              disabled={
-                deleteConfirmText !== program?.name ||
-                deleteProgramMutation.isPending
-              }
+              disabled={deleteConfirmText !== program?.name || deleteProgramMutation.isPending}
               onClick={handleDeleteProgram}
             >
               {deleteProgramMutation.isPending ? (

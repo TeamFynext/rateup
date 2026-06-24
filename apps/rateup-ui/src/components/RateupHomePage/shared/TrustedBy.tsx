@@ -1,9 +1,9 @@
+import { Image } from "@unpic/react";
 import { useEffect, useRef } from "react";
 
-import { Image } from "@unpic/react";
+import { imagesPath } from "@/utils/constants";
 
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
-import { imagesPath } from "@/utils/constants";
 
 const logo1 = `${imagesPath}/homepage/CLIENTS/1.png`;
 const logo2 = `${imagesPath}/homepage/CLIENTS/2.png`;
@@ -61,9 +61,7 @@ function Metric({ count, suffix, label, warm }: MetricProps) {
           const p = Math.min((now - start) / dur, 1);
           const eased = 1 - Math.pow(1 - p, 3);
           el.textContent =
-            (count % 1 === 0
-              ? Math.round(count * eased)
-              : (count * eased).toFixed(1)) + suffix;
+            (count % 1 === 0 ? Math.round(count * eased) : (count * eased).toFixed(1)) + suffix;
           if (p < 1) requestAnimationFrame(tick);
           else el.textContent = count + suffix;
         };
@@ -111,9 +109,8 @@ export default function TrustedBy() {
         </div>
 
         <div className={`${styles.line} ${styles.reveal}`} data-d="1">
-          Trusted By <span className={styles["grad-cyan"]}>100+</span> Ecommerce
-          Brands Across <span className={styles["grad-cyan"]}>30+</span>{" "}
-          Countries
+          Trusted By <span className={styles["grad-cyan"]}>100+</span> Ecommerce Brands Across{" "}
+          <span className={styles["grad-cyan"]}>30+</span> Countries
         </div>
 
         <div className={`${styles.logobar} ${styles.reveal}`} data-d="1">

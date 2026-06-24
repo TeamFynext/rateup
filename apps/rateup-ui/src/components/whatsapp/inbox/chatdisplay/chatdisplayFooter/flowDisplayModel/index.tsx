@@ -1,23 +1,18 @@
-"use client";
-
-import { useState } from "react";
-
 import { Badge, Group, Loader, Radio, Stack, Title } from "@mantine/core";
 import { IconSend } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { WaFlowStatus } from "@/types/enums.ts";
-import {
-  useSendFlowToUser,
-  useWaFlowsFromDb,
-} from "@/backend/whatsapp/flow/flow.query";
+import { useSendFlowToUser, useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
+import { WaFlowStatus } from "@/types/enums.ts";
 
 import { RateupButtonPrimary } from "../../../../../Button/RateupButtons.tsx";
 import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout.tsx";
 import NothingFound from "../../../../../NothingFound/NothingFound.tsx";
 import { usePhoneIdStore } from "../../../chatselect/accountSelectorStore.ts";
 import WaInboxFlowSelectCard from "./flowSelectCard/index.tsx";
+
 import classes from "./styles.module.css";
 
 interface Props {
@@ -54,9 +49,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
       },
     );
   }
-  const acceptedFlows = data?.filter(
-    (flow) => flow?.status === WaFlowStatus.PUBLISHED,
-  );
+  const acceptedFlows = data?.filter((flow) => flow?.status === WaFlowStatus.PUBLISHED);
   return (
     <SimpleModalLayout
       {...{
@@ -80,10 +73,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
             <Title order={4} fw={400} size={"sm"}>
               Select a Flow
             </Title>
-            <Radio.Group
-              value={selectedDbFlowId}
-              onChange={(value) => setSelectedDbFlowId(value)}
-            >
+            <Radio.Group value={selectedDbFlowId} onChange={(value) => setSelectedDbFlowId(value)}>
               {acceptedFlows?.map((flow) => (
                 <WaInboxFlowSelectCard {...flow} />
               ))}
@@ -101,9 +91,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
         </>
       ) : (
         <NothingFound
-          text={translations(
-            "No flows found, If you already have a flow, check if its PUBLISHED",
-          )}
+          text={translations("No flows found, If you already have a flow, check if its PUBLISHED")}
         />
       )}
     </SimpleModalLayout>

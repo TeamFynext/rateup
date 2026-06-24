@@ -1,5 +1,4 @@
 // In Next.js, this file would be called: app/providers.tsx
-"use client";
 
 // Since QueryClientProvider relies on useContext under the hood, we have to put 'use client' on top
 import { ModalsProvider } from "@mantine/modals";
@@ -27,16 +26,13 @@ function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        placeholderData: (previousData, previousQuery) => previousData, // This will apply to all queries
+        placeholderData: (previousData, _previousQuery) => previousData, // This will apply to all queries
         staleTime: 60 * 1000,
         gcTime: 600 * 1000,
         retry: (failureCount, error: any) => {
           // Don't retry for certain error responses
           const serverError = error?.response?.data;
-          if (
-            error?.response?.status === 401 ||
-            serverError?.message === "Not authorized"
-          ) {
+          if (error?.response?.status === 401 || serverError?.message === "Not authorized") {
             return false;
           }
           return failureCount <= 2;
@@ -48,10 +44,7 @@ function makeQueryClient() {
         // Check if error is an instance of an Axios error
         if (!axios.isAxiosError(error)) return;
         const serverError = (error as any)?.response?.data;
-        if (
-          error?.response?.status === 401 &&
-          serverError?.message === "Not authorized"
-        ) {
+        if (error?.response?.status === 401 && serverError?.message === "Not authorized") {
           await Session.attemptRefreshingSession();
         }
       },

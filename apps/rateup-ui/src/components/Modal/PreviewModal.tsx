@@ -30,10 +30,7 @@ export default function PreviewModal({
     >
       <Modal.Body>
         <Stack>
-          <Image
-            radius={"lg"}
-            src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${imgObject}`}
-          />
+          <Image radius={"lg"} src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${imgObject}`} />
           <RateupButtonBlue title={"Close"} onClick={onClose} />
         </Stack>
       </Modal.Body>

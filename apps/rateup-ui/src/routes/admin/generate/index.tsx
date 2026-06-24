@@ -1,9 +1,6 @@
-"use client";
-
-import { useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
 import { Database, MessageCircle, Zap } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -62,9 +59,7 @@ function GenerateData() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
             <Database className="h-5 w-5 text-primary" />
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Generate Test Data
-            </h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Generate Test Data</h1>
           </div>
           {isProduction && (
             <Badge variant="destructive" className="text-xs">
@@ -90,9 +85,7 @@ function GenerateData() {
                 <CardTitle className="text-lg">
                   {translations("Generate Survey Response")}
                 </CardTitle>
-                <CardDescription>
-                  Create test survey responses for development
-                </CardDescription>
+                <CardDescription>Create test survey responses for development</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -166,12 +159,8 @@ function GenerateData() {
                 <MessageCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <CardTitle className="text-lg">
-                  {translations("Generate WhatsApp Chat")}
-                </CardTitle>
-                <CardDescription>
-                  Create test WhatsApp conversations for testing
-                </CardDescription>
+                <CardTitle className="text-lg">{translations("Generate WhatsApp Chat")}</CardTitle>
+                <CardDescription>Create test WhatsApp conversations for testing</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -192,18 +181,13 @@ function GenerateData() {
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="messagesPerContact"
-                className="text-sm font-medium"
-              >
+              <Label htmlFor="messagesPerContact" className="text-sm font-medium">
                 {translations("How many messages per contact")}
               </Label>
               <Input
                 id="messagesPerContact"
                 type="number"
-                placeholder={translations(
-                  "Enter number of messages per contact",
-                )}
+                placeholder={translations("Enter number of messages per contact")}
                 value={messagesPerContact}
                 min={1}
                 onChange={(e) => setMessagesPerContact(Number(e.target.value))}
@@ -233,8 +217,8 @@ function GenerateData() {
             {isProduction && (
               <div className="p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
                 <div className="text-xs text-red-800 dark:text-red-200">
-                  <strong>Note:</strong> This feature is disabled in production
-                  environment for security reasons.
+                  <strong>Note:</strong> This feature is disabled in production environment for
+                  security reasons.
                 </div>
               </div>
             )}
@@ -247,8 +231,7 @@ function GenerateData() {
                 <strong>Messages per Contact:</strong> {messagesPerContact}
               </div>
               <div className="text-xs text-green-800 dark:text-green-200 mt-1">
-                <strong>Total Messages:</strong>{" "}
-                {numberOfContacts * messagesPerContact}
+                <strong>Total Messages:</strong> {numberOfContacts * messagesPerContact}
               </div>
             </div>
           </CardContent>

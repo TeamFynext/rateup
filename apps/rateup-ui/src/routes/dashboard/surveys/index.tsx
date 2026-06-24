@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { useSurveys } from "@/backend/surveys/surveys.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";

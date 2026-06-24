@@ -10,10 +10,7 @@ export async function createCatalogProductBatch(catalogId, data) {
   return axiosClient.post(`${baseUrl}/${catalogId}`, data);
 }
 
-export async function syncCatalogProducts(
-  catalogId,
-  data: { limit?: number; next?: string },
-) {
+export async function syncCatalogProducts(catalogId, data: { limit?: number; next?: string }) {
   return (await axiosClient.post(`${baseUrl}/sync/${catalogId}`, data)).data;
 }
 
@@ -30,17 +27,14 @@ export async function updateCatalogProducts(catalogId, data) {
 }
 
 export async function getShopifyAvailableProducts(catalogId: string) {
-  return (await axiosClient.get(`${baseUrl}/shopify-available/${catalogId}`))
-    .data as any[];
+  return (await axiosClient.get(`${baseUrl}/shopify-available/${catalogId}`)).data as any[];
 }
 
 export async function importShopifyProducts(
   catalogId: string,
   items: any[],
 ): Promise<{ imported: number }> {
-  return (
-    await axiosClient.post(`${baseUrl}/import-shopify/${catalogId}`, { items })
-  ).data;
+  return (await axiosClient.post(`${baseUrl}/import-shopify/${catalogId}`, { items })).data;
 }
 
 export async function createShopifyProduct(
@@ -54,14 +48,11 @@ export async function createShopifyProduct(
     imageUrl?: string;
   },
 ) {
-  return (
-    await axiosClient.post(`${baseUrl}/shopify-create/${catalogId}`, data)
-  ).data;
+  return (await axiosClient.post(`${baseUrl}/shopify-create/${catalogId}`, data)).data;
 }
 
 export async function syncShopifyProductsWithCatalog(
   catalogId: string,
 ): Promise<{ updated: number; unchanged: number; notFound: number }> {
-  return (await axiosClient.post(`${baseUrl}/shopify-sync/${catalogId}`, {}))
-    .data;
+  return (await axiosClient.post(`${baseUrl}/shopify-sync/${catalogId}`, {})).data;
 }

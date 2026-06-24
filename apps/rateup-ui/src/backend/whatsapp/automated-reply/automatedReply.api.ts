@@ -35,10 +35,7 @@ export async function getWaAutomatedRepliesById(waAutomatedReplyId: string) {
   return transformAutomation(res.data as WaAutomatedReply);
 }
 
-export async function updateWaAutomatedReply(
-  waAutomatedReplyId: string,
-  data: any,
-) {
+export async function updateWaAutomatedReply(waAutomatedReplyId: string, data: any) {
   const res = await axiosClient.put(`${base}/${waAutomatedReplyId}`, data);
   return transformAutomation(res.data as WaAutomatedReply);
 }

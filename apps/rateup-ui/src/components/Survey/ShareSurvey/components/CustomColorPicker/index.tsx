@@ -1,10 +1,7 @@
-"use client";
-
-import { useCallback, useState } from "react";
-
 import { Button, ColorPicker, Flex, Popover } from "@mantine/core";
 import { useEyeDropper } from "@mantine/hooks";
 import { IconColorPicker } from "@tabler/icons-react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import styles from "./CustomColorPicker.module.css";
@@ -35,7 +32,7 @@ function CustomColorPicker({
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const { supported: isEyeDroppersupported, open } = useEyeDropper();
   const handleBlur = useCallback(
-    (e) => {
+    (_e) => {
       setIsColorPickerOpen(false);
       if (!value?.length) {
         handleInputChange("#000000");
@@ -66,7 +63,7 @@ function CustomColorPicker({
     try {
       const { sRGBHex } = await open();
       handleInputChange(sRGBHex);
-    } catch (e) {}
+    } catch {}
   };
   const { t: translations } = useTranslation();
   return (

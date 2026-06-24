@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useMemo, useRef, useState } from "react";
-
 import {
   ActionIcon,
   Badge,
@@ -32,12 +28,12 @@ import {
 } from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { useImmer } from "use-immer";
 
-import { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { useAllChatbots } from "@/backend/chatbot/chatbot.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
@@ -57,7 +53,6 @@ import {
   useSyncFbPages,
   useSyncLeadgenFormQuestions,
   useSyncMetaLeadgenForms,
-  useUpdateWaSettingsMutation,
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
@@ -77,11 +72,8 @@ import { FileConverter } from "@/components/whatsapp/flow-v2/input/DataSource.ts
 import WaTemplateFormElements, {
   NoParams,
 } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/templateDisplayModal/templatePreview/formElements/index.tsx";
-import {
-  deleteUploadedFiles,
-  getFileUrlFromKey,
-  uploadFile,
-} from "@/utils/file-upload/upload.ts";
+import { SubscriptionFeaturePathName } from "@/types/enums.ts";
+import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import type {
@@ -94,6 +86,7 @@ import type {
   WhatsappProductSet,
 } from "../types/node-types.ts";
 import { validateNodeData } from "../types/node-types.ts";
+
 import styles from "./node-editor.module.css";
 
 // Node editor props
@@ -103,11 +96,7 @@ interface NodeEditorProps {
   onClose: () => void;
 }
 
-export default function NodeEditor({
-  node,
-  onChange,
-  onClose,
-}: Readonly<NodeEditorProps>) {
+export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEditorProps>) {
   const { data: templates, isLoading } = useWaTemplates();
   const { data: flows, isPending } = useWaFlowsFromDb();
   const { data: subscription } = useSubscription();
@@ -118,31 +107,22 @@ export default function NodeEditor({
     ],
     [subscription],
   );
-  const { data: boardData, isLoading: isBoardsPending } =
-    useBoardsQueries(hasTicketFeature);
-  const { data: teamMembers, isPending: isLoadingTeamMembers } =
-    useTeamsMembersOfOrg();
+  const { data: boardData, isLoading: isBoardsPending } = useBoardsQueries(hasTicketFeature);
+  const { data: teamMembers, isPending: isLoadingTeamMembers } = useTeamsMembersOfOrg();
   const session = useSessionContext() as {
     userId: string;
   };
 
   const [nodeData, setNodeData] = useState<NodeData>(node.data);
   const { data: allChatbots } = useAllChatbots(hasAIFeature);
-  const [selectedChatbotId, setSelectedChatbotId] = useState<string | null>(
-    null,
-  );
-  const handleChatbotSelect = (value: string | null) => {
-    setSelectedChatbotId(value);
-  };
+  const [] = useState<string | null>(null);
+
   // Update local state when node changes
   useEffect(() => {
     setNodeData(node.data);
   }, [node]);
 
-  const handleInputChange = <T extends NodeType>(
-    key: keyof NodeTypeMap[T],
-    value: any,
-  ) => {
+  const handleInputChange = <T extends NodeType>(key: keyof NodeTypeMap[T], value: any) => {
     setNodeData((prevData) => {
       const updatedData = {
         ...prevData,
@@ -167,8 +147,7 @@ export default function NodeEditor({
   // Render different editor based on node type with proper type casting
   const renderEditor = () => {
     const nodeType = node.type;
-    if (isPending || isLoading || isBoardsPending || isLoadingTeamMembers)
-      return <RateupLoader />;
+    if (isPending || isLoading || isBoardsPending || isLoadingTeamMembers) return <RateupLoader />;
 
     switch (nodeType) {
       case "textNode":
@@ -427,9 +406,10 @@ const TextNodeEditor: React.FC<NodeComponentProps<"textNode">> = ({
 };
 
 // ConditionalNode Component
-const ConditionalNodeEditor: React.FC<
-  NodeComponentProps<"conditionalNode">
-> = ({ nodeData, handleInputChange }) => {
+const ConditionalNodeEditor: React.FC<NodeComponentProps<"conditionalNode">> = ({
+  nodeData,
+  handleInputChange,
+}) => {
   const typedData = nodeData;
   return (
     <div className={styles.editorSection}>
@@ -456,11 +436,7 @@ const ConditionalNodeEditor: React.FC<
 // InputNode Component
 const InputNodeEditor: React.FC<
   NodeComponentProps<
-    | "textInputNode"
-    | "numberInputNode"
-    | "emailInputNode"
-    | "phoneInputNode"
-    | "dateInputNode"
+    "textInputNode" | "numberInputNode" | "emailInputNode" | "phoneInputNode" | "dateInputNode"
   >
 > = ({ nodeData, handleInputChange }) => {
   const typedData = nodeData;
@@ -530,12 +506,7 @@ const PauseNodeEditor: React.FC<NodeComponentProps<"pauseNode">> = ({
 // MediaNode Component
 const MediaNodeEditor: React.FC<
   NodeComponentProps<
-    | "documentNode"
-    | "imageNode"
-    | "videoNode"
-    | "audioNode"
-    | "buttonNode"
-    | "ctaUrlNode"
+    "documentNode" | "imageNode" | "videoNode" | "audioNode" | "buttonNode" | "ctaUrlNode"
   > & { nodeType: NodeType; disableCaption?: boolean }
 > = ({ nodeData, handleInputChange, nodeType, disableCaption = false }) => {
   const typedData = nodeData;
@@ -596,12 +567,9 @@ const MediaNodeEditor: React.FC<
     try {
       if (!file) return;
       if (file.size > getFileSizeLimit()) {
-        toast.error(
-          `size warning: Max file size is ${getFileSizeLimitText()}`,
-          {
-            id: "file-size",
-          },
-        );
+        toast.error(`size warning: Max file size is ${getFileSizeLimitText()}`, {
+          id: "file-size",
+        });
         return setMediaError(`size warning: Max ${getFileSizeLimitText()}`);
       }
       setMediaError("");
@@ -609,13 +577,9 @@ const MediaNodeEditor: React.FC<
       setMedia(base64String);
       setFile(file);
     } catch (error) {
-      toast.error(
-        translations("Error converting file to Base64:") +
-          JSON.stringify(error),
-        {
-          id: "file-converting",
-        },
-      );
+      toast.error(translations("Error converting file to Base64:") + JSON.stringify(error), {
+        id: "file-converting",
+      });
     }
   };
 
@@ -633,8 +597,7 @@ const MediaNodeEditor: React.FC<
       toast.error(
         typeof error === "string"
           ? error
-          : translations("Error uploading file to server:") +
-              JSON.stringify(error),
+          : translations("Error uploading file to server:") + JSON.stringify(error),
         {
           id: "upload-file",
         },
@@ -673,22 +636,14 @@ const MediaNodeEditor: React.FC<
         />
       )}
       <Group justify="center" mt={"xs"}>
-        <FileButton
-          resetRef={resetRef}
-          onChange={handleFileChange}
-          accept={getAcceptType()}
-        >
+        <FileButton resetRef={resetRef} onChange={handleFileChange} accept={getAcceptType()}>
           {(props) => (
             <Button {...props} size="xs">
               Select File
             </Button>
           )}
         </FileButton>
-        <ActionIcon
-          variant="light"
-          disabled={!file}
-          onClick={() => clearFile()}
-        >
+        <ActionIcon variant="light" disabled={!file} onClick={() => clearFile()}>
           <IconRestore />
         </ActionIcon>
         {typedData?.link && (
@@ -708,11 +663,7 @@ const MediaNodeEditor: React.FC<
           <Text size="sm" ta="center" mt="sm">
             Picked file: {file.name}
           </Text>
-          <Button
-            onClick={uploadFileData}
-            disabled={loading}
-            leftSection={<IconDeviceFloppy />}
-          >
+          <Button onClick={uploadFileData} disabled={loading} leftSection={<IconDeviceFloppy />}>
             {loading ? "Uploading..." : "Upload"}
           </Button>
         </Stack>
@@ -732,12 +683,10 @@ const MediaNodeEditor: React.FC<
           label={"FileName (optional)"}
           value={(typedData as NodeTypeMap["documentNode"]).filename || ""}
           onChange={(e) =>
-            (
-              handleInputChange as unknown as (
-                key: "filename",
-                value: string,
-              ) => void
-            )("filename", e.target.value)
+            (handleInputChange as unknown as (key: "filename", value: string) => void)(
+              "filename",
+              e.target.value,
+            )
           }
           maxLength={1024}
           placeholder="Enter FileName..."
@@ -753,7 +702,6 @@ const StartNodeEditor: React.FC<NodeComponentProps<"startNode">> = ({
   nodeData,
   handleInputChange,
 }) => {
-  const typedData = nodeData;
   return (
     <div className={styles.editorSection}>
       <ContainedTextField label="Start Message" disabled />
@@ -766,7 +714,6 @@ const EndNodeEditor: React.FC<NodeComponentProps<"endNode">> = ({
   nodeData,
   handleInputChange,
 }) => {
-  const typedData = nodeData;
   return (
     <div className={styles.editorSection}>
       {/* <ContainedTextField
@@ -805,10 +752,7 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
 
   const addNewButton = () => {
     if (typedData.buttons?.length >= 3) return;
-    const newButtons = [
-      ...(typedData.buttons || []),
-      { id: `button-${Date.now()}`, title: "" },
-    ];
+    const newButtons = [...(typedData.buttons || []), { id: `button-${Date.now()}`, title: "" }];
     handleInputChange("buttons", newButtons);
 
     // Focus will be set after render via useEffect
@@ -991,8 +935,8 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
         Sections
       </Text>
       <Text size="xs" c="dimmed">
-        Interactive list messages support up to 10 sections, with up to 10 rows
-        across all sections combined
+        Interactive list messages support up to 10 sections, with up to 10 rows across all sections
+        combined
       </Text>
 
       {(typedData.sections || []).map((section: any, sectionIndex: number) => (
@@ -1117,10 +1061,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
         variant="outline"
         disabled={typedData.sections?.length >= 10}
         onClick={() => {
-          const newSections = [
-            ...(typedData.sections || []),
-            { title: "", rows: [] },
-          ];
+          const newSections = [...(typedData.sections || []), { title: "", rows: [] }];
           handleInputChange("sections", newSections);
         }}
         mt="md"
@@ -1235,41 +1176,35 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
 };
 
 // TemplateNode Component
-const TemplateNodeEditor: React.FC<
-  NodeComponentProps<"templateNode"> & { templates: any }
-> = ({ nodeData, handleInputChange, templates }) => {
+const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templates: any }> = ({
+  nodeData,
+  handleInputChange,
+  templates,
+}) => {
   const typedData = nodeData;
-  const [parameterData, setParameterData] = useImmer<any>(
-    typedData?.parameters || [],
-  );
+  const [parameterData, setParameterData] = useImmer<any>(typedData?.parameters || []);
   const templateData =
     templates?.map((t) => ({
       label: t.data?.name,
       value: t.id,
-      flowId: t.data?.components?.find((c) => c.type === "BUTTONS")
-        ?.buttons?.[0]?.["flow_id"],
+      flowId: t.data?.components?.find((c) => c.type === "BUTTONS")?.buttons?.[0]?.["flow_id"],
     })) || [];
-  const selectedTemplate = templates?.find(
-    (t) => t.id === typedData?.template?.id,
-  );
+  const selectedTemplate = templates?.find((t) => t.id === typedData?.template?.id);
   const params = useParams({
     strict: false,
   });
 
   const flowbotId = params.flowbotId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
-  const { data, isPending, refetch } = useWaAutomatedReplyById(flowbotId);
+  const { data, isPending } = useWaAutomatedReplyById(flowbotId);
   const waSetting =
     waSettings &&
-    (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ??
-      waSettings[0]);
+    (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ?? waSettings[0]);
   const waSettingsId = data && waSetting ? waSetting.id : null;
   const { data: metaAssets, isLoading } = useMetaAssets(waSettingsId);
   const leadgenData = useMemo(() => {
     if (waSettingsId && metaAssets) {
-      const leadgenNode = data?.matchData?.json?.nodes.find(
-        (node) => node.type === "leadgenNode",
-      );
+      const leadgenNode = data?.matchData?.json?.nodes.find((node) => node.type === "leadgenNode");
       if (leadgenNode?.data?.leadgenFormId?.length) {
         const leadgenForm = metaAssets?.leadgenForms.find(
           (form) => form.id === leadgenNode?.data?.leadgenFormId,
@@ -1305,8 +1240,7 @@ const TemplateNodeEditor: React.FC<
         }}
         flex={1}
       />
-      {templateData?.find((t) => t.value === typedData?.template?.id)
-        ?.flowId && (
+      {templateData?.find((t) => t.value === typedData?.template?.id)?.flowId && (
         <TeamSelector
           value={typedData.teamId}
           onChange={(id) => {
@@ -1377,8 +1311,7 @@ const LocationNodeEditor: React.FC<NodeComponentProps<"locationNode">> = ({
       />
 
       <Text size="xs" c="dimmed" mt="sm">
-        Note: Both latitude and longitude are required for a valid location
-        message
+        Note: Both latitude and longitude are required for a valid location message
       </Text>
     </Stack>
   );
@@ -1442,11 +1375,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
         <Text fw={500} mt="xs">
           Contacts ({typedData.contacts?.length || 0}/257)
         </Text>
-        <Button
-          size="xs"
-          disabled={typedData.contacts?.length >= 257}
-          onClick={addNewContact}
-        >
+        <Button size="xs" disabled={typedData.contacts?.length >= 257} onClick={addNewContact}>
           <IconPlus size={16} /> Add Contact
         </Button>
       </Group>
@@ -1495,11 +1424,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           placeholder="Enter full name"
           value={activeContact?.name?.formatted_name || ""}
           onChange={(e) => {
-            updateContactField(
-              activeContactIndex,
-              ["name", "formatted_name"],
-              e.target.value,
-            );
+            updateContactField(activeContactIndex, ["name", "formatted_name"], e.target.value);
           }}
           description="Required - Full name as it should appear"
         />
@@ -1510,11 +1435,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           required
           value={activeContact?.name?.first_name || ""}
           onChange={(e) => {
-            updateContactField(
-              activeContactIndex,
-              ["name", "first_name"],
-              e.target.value,
-            );
+            updateContactField(activeContactIndex, ["name", "first_name"], e.target.value);
           }}
         />
         <ContainedTextField
@@ -1522,11 +1443,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           placeholder="Last name"
           value={activeContact?.name?.last_name || ""}
           onChange={(e) => {
-            updateContactField(
-              activeContactIndex,
-              ["name", "last_name"],
-              e.target.value,
-            );
+            updateContactField(activeContactIndex, ["name", "last_name"], e.target.value);
           }}
         />
 
@@ -1535,11 +1452,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           placeholder="Middle name"
           value={activeContact?.name?.middle_name || ""}
           onChange={(e) => {
-            updateContactField(
-              activeContactIndex,
-              ["name", "middle_name"],
-              e.target.value,
-            );
+            updateContactField(activeContactIndex, ["name", "middle_name"], e.target.value);
           }}
         />
         <ContainedTextField
@@ -1547,11 +1460,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           placeholder="e.g., Dr., Mr."
           value={activeContact?.name?.prefix || ""}
           onChange={(e) => {
-            updateContactField(
-              activeContactIndex,
-              ["name", "prefix"],
-              e.target.value,
-            );
+            updateContactField(activeContactIndex, ["name", "prefix"], e.target.value);
           }}
         />
         <ContainedTextField
@@ -1559,11 +1468,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           placeholder="e.g., Jr., Ph.D."
           value={activeContact?.name?.suffix || ""}
           onChange={(e) => {
-            updateContactField(
-              activeContactIndex,
-              ["name", "suffix"],
-              e.target.value,
-            );
+            updateContactField(activeContactIndex, ["name", "suffix"], e.target.value);
           }}
         />
       </Stack>
@@ -1582,11 +1487,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           placeholder="Company or organization name"
           value={activeContact?.org?.company || ""}
           onChange={(e) => {
-            updateContactField(
-              activeContactIndex,
-              ["org", "company"],
-              e.target.value,
-            );
+            updateContactField(activeContactIndex, ["org", "company"], e.target.value);
           }}
         />
 
@@ -1595,11 +1496,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           placeholder="Department name"
           value={activeContact?.org?.department || ""}
           onChange={(e) => {
-            updateContactField(
-              activeContactIndex,
-              ["org", "department"],
-              e.target.value,
-            );
+            updateContactField(activeContactIndex, ["org", "department"], e.target.value);
           }}
         />
         <ContainedTextField
@@ -1607,11 +1504,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           placeholder="Job title"
           value={activeContact?.org?.title || ""}
           onChange={(e) => {
-            updateContactField(
-              activeContactIndex,
-              ["org", "title"],
-              e.target.value,
-            );
+            updateContactField(activeContactIndex, ["org", "title"], e.target.value);
           }}
         />
       </Stack>
@@ -1620,15 +1513,9 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
       <ContainedDatePickerInput
         label="Birthday"
         placeholder="YYYY-MM-DD"
-        value={
-          activeContact?.birthday ? new Date(activeContact.birthday) : undefined
-        }
+        value={activeContact?.birthday ? new Date(activeContact.birthday) : undefined}
         onChange={(e) =>
-          updateContactField(
-            activeContactIndex,
-            ["birthday"],
-            dayjs(e).format("YYYY-MM-DD"),
-          )
+          updateContactField(activeContactIndex, ["birthday"], dayjs(e).format("YYYY-MM-DD"))
         }
       />
 
@@ -1646,10 +1533,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
             size="xs"
             variant="subtle"
             onClick={() => {
-              const phones = [
-                ...(activeContact?.phones || []),
-                { phone: "", type: "CELL" },
-              ];
+              const phones = [...(activeContact?.phones || []), { phone: "", type: "CELL" }];
               updateContactField(activeContactIndex, ["phones"], phones);
             }}
           >
@@ -1732,10 +1616,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
             size="xs"
             variant="subtle"
             onClick={() => {
-              const emails = [
-                ...(activeContact?.emails || []),
-                { email: "", type: "WORK" },
-              ];
+              const emails = [...(activeContact?.emails || []), { email: "", type: "WORK" }];
               updateContactField(activeContactIndex, ["emails"], emails);
             }}
           >
@@ -1832,11 +1713,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                 onClick={() => {
                   const addresses = [...(activeContact?.addresses || [])];
                   addresses.splice(index, 1);
-                  updateContactField(
-                    activeContactIndex,
-                    ["addresses"],
-                    addresses,
-                  );
+                  updateContactField(activeContactIndex, ["addresses"], addresses);
                 }}
               >
                 <IconX size={16} />
@@ -1853,11 +1730,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                   ...addresses[index],
                   street: e.target.value,
                 };
-                updateContactField(
-                  activeContactIndex,
-                  ["addresses"],
-                  addresses,
-                );
+                updateContactField(activeContactIndex, ["addresses"], addresses);
               }}
             />
 
@@ -1872,11 +1745,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                     ...addresses[index],
                     city: e.target.value,
                   };
-                  updateContactField(
-                    activeContactIndex,
-                    ["addresses"],
-                    addresses,
-                  );
+                  updateContactField(activeContactIndex, ["addresses"], addresses);
                 }}
               />
               <ContainedTextField
@@ -1889,11 +1758,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                     ...addresses[index],
                     state: e.target.value,
                   };
-                  updateContactField(
-                    activeContactIndex,
-                    ["addresses"],
-                    addresses,
-                  );
+                  updateContactField(activeContactIndex, ["addresses"], addresses);
                 }}
               />
             </Group>
@@ -1909,11 +1774,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                     ...addresses[index],
                     zip: e.target.value,
                   };
-                  updateContactField(
-                    activeContactIndex,
-                    ["addresses"],
-                    addresses,
-                  );
+                  updateContactField(activeContactIndex, ["addresses"], addresses);
                 }}
               />
               <ContainedTextField
@@ -1926,11 +1787,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                     ...addresses[index],
                     country: e.target.value,
                   };
-                  updateContactField(
-                    activeContactIndex,
-                    ["addresses"],
-                    addresses,
-                  );
+                  updateContactField(activeContactIndex, ["addresses"], addresses);
                 }}
               />
               <ContainedTextField
@@ -1944,11 +1801,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                     ...addresses[index],
                     country_code: e.target.value.toUpperCase(),
                   };
-                  updateContactField(
-                    activeContactIndex,
-                    ["addresses"],
-                    addresses,
-                  );
+                  updateContactField(activeContactIndex, ["addresses"], addresses);
                 }}
                 description="ISO two-letter code"
               />
@@ -1965,11 +1818,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
               onChange={(value: "WORK" | "HOME" | "OTHER") => {
                 const addresses = [...(activeContact?.addresses || [])];
                 addresses[index] = { ...addresses[index], type: value };
-                updateContactField(
-                  activeContactIndex,
-                  ["addresses"],
-                  addresses,
-                );
+                updateContactField(activeContactIndex, ["addresses"], addresses);
               }}
               style={{ maxWidth: 200 }}
             />
@@ -1991,10 +1840,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
             size="xs"
             variant="subtle"
             onClick={() => {
-              const urls = [
-                ...(activeContact?.urls || []),
-                { url: "", type: "WORK" },
-              ];
+              const urls = [...(activeContact?.urls || []), { url: "", type: "WORK" }];
               updateContactField(activeContactIndex, ["urls"], urls);
             }}
           >
@@ -2050,9 +1896,11 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
 };
 
 // TicketNode Component
-const TicketNodeEditor: React.FC<
-  NodeComponentProps<"ticketNode"> & { options: any }
-> = ({ nodeData, handleInputChange, options }) => {
+const TicketNodeEditor: React.FC<NodeComponentProps<"ticketNode"> & { options: any }> = ({
+  nodeData,
+  handleInputChange,
+  options,
+}) => {
   const typedData = nodeData;
   const [selectedBoard, setSelectedBoard] = useState({
     selectedBoardId: typedData.ticket?.selectedBoardId,
@@ -2067,9 +1915,7 @@ const TicketNodeEditor: React.FC<
 
   // Get columns for selected board
   const columns = useMemo(() => {
-    const board = options?.find(
-      (board) => board.id === selectedBoard?.selectedBoardId,
-    );
+    const board = options?.find((board) => board.id === selectedBoard?.selectedBoardId);
     return board
       ? board.ticketColumns.map((col) => ({
           value: col.id,
@@ -2113,9 +1959,11 @@ const TicketNodeEditor: React.FC<
 };
 
 // TicketNode Component
-const AssignNodeEditor: React.FC<
-  NodeComponentProps<"assignNode"> & { options: any }
-> = ({ nodeData, handleInputChange, options }) => {
+const AssignNodeEditor: React.FC<NodeComponentProps<"assignNode"> & { options: any }> = ({
+  nodeData,
+  handleInputChange,
+  options,
+}) => {
   const typedData = nodeData;
 
   const form = useForm({
@@ -2136,9 +1984,8 @@ const AssignNodeEditor: React.FC<
       const validationRes = await form.validate();
       if (validationRes.hasErrors) return;
       const teamName =
-        options?.data
-          ?.flatMap((user) => user.teams)
-          ?.find((team) => team.team_id === values.teamId)?.team_name ?? "";
+        options?.data?.flatMap((user) => user.teams)?.find((team) => team.team_id === values.teamId)
+          ?.team_name ?? "";
       handleInputChange("assign", {
         ...typedData?.assign,
         teamId: values.teamId,
@@ -2154,26 +2001,18 @@ const AssignNodeEditor: React.FC<
   const members = useMemo(
     () =>
       options?.data
-        ?.filter((user) =>
-          user.teams.some((t) => t.team_id === form.values.teamId),
-        )
+        ?.filter((user) => user.teams.some((t) => t.team_id === form.values.teamId))
         .map((user) => ({ value: user.id, label: user.name })),
     [options, form.values.teamId],
   );
 
   useEffect(() => {
     form.setFieldValue("teamId", typedData.assign?.teamId);
-    form.setFieldValue(
-      "assignedUserIds",
-      typedData.assign?.assignedUserIds ?? [],
-    );
+    form.setFieldValue("assignedUserIds", typedData.assign?.assignedUserIds ?? []);
     form.setFieldValue("choice", typedData.assign?.choice || "manual");
     form.setFieldValue("teamName", typedData.assign?.teamName || "");
     form.setFieldValue("roundRobin", typedData.assign?.roundRobin ?? false);
-    form.setFieldValue(
-      "assignIfOnline",
-      typedData.assign?.assignIfOnline ?? true,
-    );
+    form.setFieldValue("assignIfOnline", typedData.assign?.assignIfOnline ?? true);
   }, [typedData.assign]);
 
   return (
@@ -2214,10 +2053,7 @@ const AssignNodeEditor: React.FC<
             <Text size="xs">Assign the chat</Text>
           </Group>
           <Stack>
-            <TeamSelector
-              label="Select Team"
-              {...form.getInputProps("teamId")}
-            />
+            <TeamSelector label="Select Team" {...form.getInputProps("teamId")} />
             <RadioGroup {...form.getInputProps("choice")}>
               <Group>
                 <Radio value={"all"} label={"All Members"} />
@@ -2245,9 +2081,11 @@ const AssignNodeEditor: React.FC<
   );
 };
 // FlowNode Component
-const FlowNodeEditor: React.FC<
-  NodeComponentProps<"flowNode"> & { flows: any }
-> = ({ nodeData, handleInputChange, flows }) => {
+const FlowNodeEditor: React.FC<NodeComponentProps<"flowNode"> & { flows: any }> = ({
+  nodeData,
+  handleInputChange,
+  flows,
+}) => {
   const typedData = nodeData;
   return (
     <Stack>
@@ -2283,9 +2121,11 @@ const FlowNodeEditor: React.FC<
   );
 };
 
-const AibotNodeEditor: React.FC<
-  NodeComponentProps<"aibotNode"> & { allChatbots: any }
-> = ({ nodeData, handleInputChange, allChatbots }) => {
+const AibotNodeEditor: React.FC<NodeComponentProps<"aibotNode"> & { allChatbots: any }> = ({
+  nodeData,
+  handleInputChange,
+  allChatbots,
+}) => {
   const typedData = nodeData;
   return (
     <Stack>
@@ -2335,70 +2175,57 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   const navigate = useNavigate();
   const flowbotId = params.flowbotId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
-  const { data, isPending, refetch } = useWaAutomatedReplyById(flowbotId);
+  const { data, isPending } = useWaAutomatedReplyById(flowbotId);
   const waSetting =
     waSettings &&
-    (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ??
-      waSettings[0]);
+    (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ?? waSettings[0]);
   const waSettingsId = data && waSetting ? waSetting.id : null;
   const { data: metaAssets, isLoading } = useMetaAssets(waSettingsId);
   const subscribeFieldMut = useSubscribeFieldToPage(waSettingsId);
   const syncfbpageMut = useSyncFbPages(waSettingsId);
   const syncAdAccMut = useSyncAdaccounts(waSettingsId);
-  const syncAdsMut = useSyncAdsByadAccounts(
-    typedData?.adAccountId,
-    waSettingsId,
-  );
-  const syncformQuestionsMut = useSyncLeadgenFormQuestions(
-    typedData?.leadgenFormId,
-    waSettingsId,
-  );
+  const syncAdsMut = useSyncAdsByadAccounts(typedData?.adAccountId, waSettingsId);
+  const syncformQuestionsMut = useSyncLeadgenFormQuestions(typedData?.leadgenFormId, waSettingsId);
   const syncLeadgenFormsMut = useSyncMetaLeadgenForms(waSettingsId);
-  const updateWaSettings = useUpdateWaSettingsMutation(waSettingsId);
-  const { pages, adAccounts, leadgenForms, ads, formQuestions } =
-    useMemo(() => {
-      let pages = [],
-        adAccounts = [],
-        leadgenForms = [],
-        ads = [],
-        formQuestions = [];
-      if (metaAssets) {
-        pages = metaAssets.pages.map((page) => ({
-          label: page.name,
-          value: page.id,
-        }));
-        adAccounts = metaAssets.adAccounts.map((adAccount) => ({
-          label: adAccount.name,
-          value: adAccount.id,
-        }));
-        leadgenForms = typedData.fbPageId
-          ? metaAssets.leadgenForms
-              .filter((f) => f.pageId === typedData.fbPageId)
-              .map((form) => ({
-                label: form.name,
-                value: form.id,
-              }))
-          : [];
-        ads = typedData.adAccountId
-          ? metaAssets.adAccounts
-              .find((adacc) => adacc.id === typedData.adAccountId)
-              ?.ads?.map((ad) => ({
-                label: ad?.name,
-                value: ad?.id,
-              }))
-          : [];
-        formQuestions =
-          metaAssets.leadgenForms
-            .find((form) => form.id === typedData?.leadgenFormId)
-            ?.questions?.map((question) => question?.key) ?? [];
-      }
-      return { pages, adAccounts, leadgenForms, ads, formQuestions };
-    }, [
-      metaAssets,
-      typedData.fbPageId,
-      typedData?.adAccountId,
-      typedData?.leadgenFormId,
-    ]);
+
+  const { pages, adAccounts, leadgenForms, ads, formQuestions } = useMemo(() => {
+    let pages = [],
+      adAccounts = [],
+      leadgenForms = [],
+      ads = [],
+      formQuestions = [];
+    if (metaAssets) {
+      pages = metaAssets.pages.map((page) => ({
+        label: page.name,
+        value: page.id,
+      }));
+      adAccounts = metaAssets.adAccounts.map((adAccount) => ({
+        label: adAccount.name,
+        value: adAccount.id,
+      }));
+      leadgenForms = typedData.fbPageId
+        ? metaAssets.leadgenForms
+            .filter((f) => f.pageId === typedData.fbPageId)
+            .map((form) => ({
+              label: form.name,
+              value: form.id,
+            }))
+        : [];
+      ads = typedData.adAccountId
+        ? metaAssets.adAccounts
+            .find((adacc) => adacc.id === typedData.adAccountId)
+            ?.ads?.map((ad) => ({
+              label: ad?.name,
+              value: ad?.id,
+            }))
+        : [];
+      formQuestions =
+        metaAssets.leadgenForms
+          .find((form) => form.id === typedData?.leadgenFormId)
+          ?.questions?.map((question) => question?.key) ?? [];
+    }
+    return { pages, adAccounts, leadgenForms, ads, formQuestions };
+  }, [metaAssets, typedData.fbPageId, typedData?.adAccountId, typedData?.leadgenFormId]);
 
   function subscribeTolead() {
     if (!typedData?.fbPageId) {
@@ -2452,9 +2279,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   }
   const pageAccessTokenByUser = useMemo(() => {
     if (metaAssets && typedData?.fbPageId) {
-      const page = metaAssets.pages?.find(
-        (page) => page.id === typedData?.fbPageId,
-      );
+      const page = metaAssets.pages?.find((page) => page.id === typedData?.fbPageId);
       return page.pageAccessTokenByUser;
     }
     return null;
@@ -2596,9 +2421,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           </ActionIcon>
         </Tooltip>
       </Group>
-      {typedData?.fbPageId?.length &&
-      !pageAccessTokenByUser &&
-      typedData?.phoneField?.length ? (
+      {typedData?.fbPageId?.length && !pageAccessTokenByUser && typedData?.phoneField?.length ? (
         <RateupButtonBlue
           leftIcon={<IconBrandFacebookFilled size={"1.5rem"} />}
           title="Allow lead access"
@@ -2632,33 +2455,24 @@ export enum CatalogMessages {
   ProductSet = "Product-Set",
 }
 
-const CatalogNodeEditor = ({
-  nodeData,
-  handleInputChange,
-}: NodeComponentProps<"catalogNode">) => {
+const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"catalogNode">) => {
   const typedData = nodeData as CatalogNodeData;
   const params = useParams({
     strict: false,
   });
   const flowbotId = params.flowbotId as string;
-  const {
-    data: automation,
-    isPending,
-    refetch,
-  } = useWaAutomatedReplyById(flowbotId);
+  const { data: automation, isPending } = useWaAutomatedReplyById(flowbotId);
   const { data, isLoading } = useConnectedWaCatalog(
     typedData.whatsappSettingsPhoneId || automation?.whatsappSettingsPhoneId,
   );
 
   const syncProductSetsMut = useSyncProductSets();
-  const { data: productSets, isLoading: isLoadingProductSets } =
-    useProductSetsByCatalog(typedData.catalogId);
+  const { data: productSets, isLoading: isLoadingProductSets } = useProductSetsByCatalog(
+    typedData.catalogId,
+  );
 
   useEffect(() => {
-    if (
-      data &&
-      (!typedData.catalogId || typedData.catalogId !== data.catalogId)
-    ) {
+    if (data && (!typedData.catalogId || typedData.catalogId !== data.catalogId)) {
       handleInputChange("catalogId", data.catalogId);
     }
   }, [data]);
@@ -2697,9 +2511,7 @@ const CatalogNodeEditor = ({
     }
 
     // Filter products to only show those in the selected product set
-    return products.filter((p) =>
-      selectedProductSet.productIds.includes(p.value),
-    );
+    return products.filter((p) => selectedProductSet.productIds.includes(p.value));
   }, [products, typedData.useProductSet, typedData.productSetId, productSets]);
 
   if (isLoading || isPending || isLoadingProductSets) return <RateupLoader />;
@@ -2740,10 +2552,7 @@ const CatalogNodeEditor = ({
           rightSectionPointerEvents="all"
           rightSection={
             <ActionIcon
-              onClick={() =>
-                typedData.catalogId &&
-                syncProductSetsMut.mutate(typedData.catalogId)
-              }
+              onClick={() => typedData.catalogId && syncProductSetsMut.mutate(typedData.catalogId)}
               variant="subtle"
               color="blue"
               loading={syncProductSetsMut.isPending}
@@ -2837,9 +2646,8 @@ const CatalogNodeEditor = ({
               }
             />
             <Text size="xs" c="dimmed">
-              Catalog Multi product message support up to 10 sections, with a
-              minimum of 1 product per section and a maximum of 30 products
-              across all sections.
+              Catalog Multi product message support up to 10 sections, with a minimum of 1 product
+              per section and a maximum of 30 products across all sections.
             </Text>
             <ContainedMultiSelect
               label={"Products"}
@@ -2863,10 +2671,7 @@ const CatalogNodeEditor = ({
           variant="outline"
           disabled={typedData.sections?.length >= 10}
           onClick={() => {
-            const newSections = [
-              ...(typedData.sections || []),
-              { title: "", rows: [] },
-            ];
+            const newSections = [...(typedData.sections || []), { title: "", rows: [] }];
             handleInputChange("sections", newSections);
           }}
           mt="md"
@@ -2894,11 +2699,7 @@ const InstagramGenericTemplateNodeEditor: React.FC<
       </Text>
 
       {(typedData.elements || []).map((element, index: number) => (
-        <Stack
-          key={index}
-          p="sm"
-          style={{ border: "1px solid #eee", borderRadius: "8px" }}
-        >
+        <Stack key={index} p="sm" style={{ border: "1px solid #eee", borderRadius: "8px" }}>
           <Group justify="space-between">
             <Text size="sm" fw={500}>
               Card {index + 1}
@@ -2971,9 +2772,7 @@ const InstagramGenericTemplateNodeEditor: React.FC<
                 value={button.type}
                 onChange={(value) => {
                   const newElements = [...(typedData.elements || [])];
-                  newElements[index].buttons[btnIndex].type = value as
-                    | "web_url"
-                    | "postback";
+                  newElements[index].buttons[btnIndex].type = value as "web_url" | "postback";
                   handleInputChange("elements", newElements);
                 }}
                 data={[
@@ -3044,10 +2843,7 @@ const InstagramGenericTemplateNodeEditor: React.FC<
         variant="outline"
         disabled={typedData.elements?.length >= 10}
         onClick={() => {
-          const newElements = [
-            ...(typedData.elements || []),
-            { title: "", buttons: [] },
-          ];
+          const newElements = [...(typedData.elements || []), { title: "", buttons: [] }];
           handleInputChange("elements", newElements);
         }}
       >
@@ -3058,9 +2854,10 @@ const InstagramGenericTemplateNodeEditor: React.FC<
 };
 
 // Instagram Quick Reply Node Editor
-const InstagramQuickReplyNodeEditor: React.FC<
-  NodeComponentProps<"instagramQuickReplyNode">
-> = ({ nodeData, handleInputChange }) => {
+const InstagramQuickReplyNodeEditor: React.FC<NodeComponentProps<"instagramQuickReplyNode">> = ({
+  nodeData,
+  handleInputChange,
+}) => {
   const typedData = nodeData;
 
   return (
@@ -3145,9 +2942,10 @@ const InstagramQuickReplyNodeEditor: React.FC<
 };
 
 // Instagram Story Reply Node Editor
-const InstagramStoryReplyNodeEditor: React.FC<
-  NodeComponentProps<"instagramStoryReplyNode">
-> = ({ nodeData, handleInputChange }) => {
+const InstagramStoryReplyNodeEditor: React.FC<NodeComponentProps<"instagramStoryReplyNode">> = ({
+  nodeData,
+  handleInputChange,
+}) => {
   const typedData = nodeData;
 
   return (
@@ -3156,9 +2954,7 @@ const InstagramStoryReplyNodeEditor: React.FC<
         label="Story Mention"
         description="Enable if this is a response to a story mention"
         checked={typedData.story_mention || false}
-        onChange={(e) =>
-          handleInputChange("story_mention", e.currentTarget.checked)
-        }
+        onChange={(e) => handleInputChange("story_mention", e.currentTarget.checked)}
       />
 
       <ContainedTextField
@@ -3170,8 +2966,7 @@ const InstagramStoryReplyNodeEditor: React.FC<
       />
 
       <Text size="xs" c="dimmed">
-        This node will send a message in response to Instagram story replies or
-        mentions
+        This node will send a message in response to Instagram story replies or mentions
       </Text>
     </Stack>
   );
@@ -3213,8 +3008,8 @@ const InstagramProductTemplateNodeEditor: React.FC<
         Products
       </Text>
       <Text size="xs" c="dimmed">
-        Select up to 10 products from your catalog. A single product sends a
-        product message; multiple products send a carousel.
+        Select up to 10 products from your catalog. A single product sends a product message;
+        multiple products send a carousel.
       </Text>
 
       <ContainedMultiSelect
@@ -3234,9 +3029,10 @@ const InstagramProductTemplateNodeEditor: React.FC<
 };
 
 // Instagram Ice Breaker Node Editor
-const InstagramIceBreakerNodeEditor: React.FC<
-  NodeComponentProps<"instagramIceBreakerNode">
-> = ({ nodeData, handleInputChange }) => {
+const InstagramIceBreakerNodeEditor: React.FC<NodeComponentProps<"instagramIceBreakerNode">> = ({
+  nodeData,
+  handleInputChange,
+}) => {
   const typedData = nodeData;
 
   return (
@@ -3245,8 +3041,8 @@ const InstagramIceBreakerNodeEditor: React.FC<
         Ice Breakers
       </Text>
       <Text size="xs" c="dimmed">
-        Add conversation starters that appear in the Instagram chat. Users can
-        tap these to start a conversation.
+        Add conversation starters that appear in the Instagram chat. Users can tap these to start a
+        conversation.
       </Text>
 
       {(typedData.iceBreakers || []).map((iceBreaker, index: number) => (
@@ -3298,10 +3094,7 @@ const InstagramIceBreakerNodeEditor: React.FC<
         variant="outline"
         leftSection={<IconPlus size={16} />}
         onClick={() => {
-          const newIceBreakers = [
-            ...(typedData.iceBreakers || []),
-            { question: "", payload: "" },
-          ];
+          const newIceBreakers = [...(typedData.iceBreakers || []), { question: "", payload: "" }];
           handleInputChange("iceBreakers", newIceBreakers);
         }}
       >
@@ -3309,8 +3102,8 @@ const InstagramIceBreakerNodeEditor: React.FC<
       </Button>
 
       <Text size="xs" c="dimmed" mt="xs">
-        Note: Ice breakers are displayed to users when they first open a
-        conversation with your Instagram account.
+        Note: Ice breakers are displayed to users when they first open a conversation with your
+        Instagram account.
       </Text>
     </Stack>
   );

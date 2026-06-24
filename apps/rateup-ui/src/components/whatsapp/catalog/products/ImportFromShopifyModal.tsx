@@ -1,8 +1,5 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import { Loader2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -11,12 +8,7 @@ import {
 } from "@/backend/whatsapp/catalog/products/products.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 
 interface ImportFromShopifyModalProps {
@@ -32,11 +24,7 @@ export function ImportFromShopifyModal({
 }: ImportFromShopifyModalProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const {
-    data: products,
-    isPending,
-    isError,
-  } = useShopifyAvailableProducts(catalogId, opened);
+  const { data: products, isPending, isError } = useShopifyAvailableProducts(catalogId, opened);
 
   const importMut = useImportShopifyProducts(catalogId);
 
@@ -46,8 +34,7 @@ export function ImportFromShopifyModal({
   }, [opened]);
 
   const allIds = (products ?? []).map((p) => p.retailer_id);
-  const allSelected =
-    allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
+  const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
   const someSelected = selectedIds.size > 0 && !allSelected;
 
   function toggleAll() {
@@ -68,9 +55,7 @@ export function ImportFromShopifyModal({
   }
 
   function handleImport() {
-    const selectedItems = (products ?? []).filter((p) =>
-      selectedIds.has(p.retailer_id),
-    );
+    const selectedItems = (products ?? []).filter((p) => selectedIds.has(p.retailer_id));
     toast.loading(
       `Importing ${selectedItems.length} product${selectedItems.length !== 1 ? "s" : ""}...`,
       {
@@ -122,19 +107,13 @@ export function ImportFromShopifyModal({
                 <Checkbox
                   checked={allSelected}
                   data-state={
-                    someSelected
-                      ? "indeterminate"
-                      : allSelected
-                        ? "checked"
-                        : "unchecked"
+                    someSelected ? "indeterminate" : allSelected ? "checked" : "unchecked"
                   }
                   onCheckedChange={toggleAll}
                 />
                 Select all ({allIds.length})
               </label>
-              <span className="text-sm text-muted-foreground">
-                {selectedIds.size} selected
-              </span>
+              <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>
             </div>
 
             {/* Product list */}
@@ -166,9 +145,7 @@ export function ImportFromShopifyModal({
                       <p className="truncate text-sm font-medium">{p.title}</p>
                       <p className="text-xs text-muted-foreground">
                         {p.sale_price} {p.currencyCode} ·{" "}
-                        {p.availability === "in stock"
-                          ? "In stock"
-                          : "Out of stock"}
+                        {p.availability === "in stock" ? "In stock" : "Out of stock"}
                       </p>
                     </div>
                   </div>

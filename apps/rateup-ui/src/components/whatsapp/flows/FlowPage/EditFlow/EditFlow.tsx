@@ -1,12 +1,12 @@
-"use client";
-
-import { useContext, useState } from "react";
-
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconEye, IconEyeClosed } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
+import { useContext, useState } from "react";
 import { toast } from "sonner";
 
+import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
+import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import {
   QuestionType,
   SurveyType,
@@ -15,10 +15,6 @@ import {
   WaFlowFormNonInputElementType,
   WaFlowStatus,
 } from "@/types/enums.ts";
-import type { WaFlowJson } from "@/types/global";
-import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
-import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
-import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { FlowQuestionTypes } from "@/utils/constants.ts";
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
 import { createBlankQuestion } from "@/utils/questions.ts";
@@ -85,10 +81,7 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
     } = getFlowElementJsonFromQuestion(newQ);
     updateMap(() => ({ ...map, ...qMap }));
     updateFlowJson((draft) => {
-      const screenToBeEdited = getScreenObjById(
-        draft.screens,
-        selectedScreenId,
-      );
+      const screenToBeEdited = getScreenObjById(draft.screens, selectedScreenId);
       screenToBeEdited.layout.children
         .find((se) => se.type === "Form")
         .children.push(questionElement);
@@ -99,10 +92,7 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
   }
 
   const handleTypeSelection = (type: QuestionType | WaFlowFormElementType) => {
-    const screenToBeEdited = getScreenObjById(
-      flowJson.screens,
-      selectedScreenId,
-    );
+    const screenToBeEdited = getScreenObjById(flowJson.screens, selectedScreenId);
     const formElementChildren = screenToBeEdited.layout.children.find(
       (se) => se.type === "Form",
     ).children;
@@ -110,30 +100,24 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
       return toast.error("Only 50 components in a screen", {
         id: "error-max-screen-elements",
       });
-    const qsType = [
-      WaFlowFormElementType.nonInputText,
-      WaFlowFormElementType.image,
-    ].includes(type as WaFlowFormElementType)
+    const qsType = [WaFlowFormElementType.nonInputText, WaFlowFormElementType.image].includes(
+      type as WaFlowFormElementType,
+    )
       ? type
       : questionTypeToFlowFormElementType(type as QuestionType);
     if (
-      [QuestionType.DocumentPicker, QuestionType.PhotoPicker].includes(
-        type as QuestionType,
-      ) &&
+      [QuestionType.DocumentPicker, QuestionType.PhotoPicker].includes(type as QuestionType) &&
       formElementChildren.find((c) => c.type === qsType)
     ) {
       return toast.error(`Only one ${type} allowed per screen`, {
         id: "error-max-screen-elements",
       });
     } else if (
-      [QuestionType.DocumentPicker, QuestionType.PhotoPicker].includes(
-        type as QuestionType,
-      ) &&
+      [QuestionType.DocumentPicker, QuestionType.PhotoPicker].includes(type as QuestionType) &&
       formElementChildren.some((child) =>
-        [
-          WaFlowFormElementType.photoPicker,
-          WaFlowFormElementType.documentPicker,
-        ].includes(child.type),
+        [WaFlowFormElementType.photoPicker, WaFlowFormElementType.documentPicker].includes(
+          child.type,
+        ),
       )
     ) {
       return toast.error(
@@ -144,11 +128,7 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
       );
     }
     if (Object.values(QuestionType).includes(type as QuestionType)) {
-      const newQ = createBlankQuestion(
-        type as QuestionType,
-        [selectedLanguage],
-        SurveyType.WaFlow,
-      );
+      const newQ = createBlankQuestion(type as QuestionType, [selectedLanguage], SurveyType.WaFlow);
       setBlankQuestion(newQ);
       setActiveEditor(EditFlowRightPanel.ElementEditor);
     } else {
@@ -158,13 +138,8 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
         id: getUniqueRandomAlphaId(6, getAllIdsFromFlowJson(flowJson)),
       };
       updateFlowJson((draft) => {
-        const screenToBeEdited = getScreenObjById(
-          draft.screens,
-          selectedScreenId,
-        );
-        screenToBeEdited.layout.children
-          .find((se) => se.type === "Form")
-          .children.push(newElement);
+        const screenToBeEdited = getScreenObjById(draft.screens, selectedScreenId);
+        screenToBeEdited.layout.children.find((se) => se.type === "Form").children.push(newElement);
         updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
       });
       setSelectedFormElementId(newElement.id);
@@ -177,10 +152,7 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
   if (blankQuestion) {
     selectedQuestion = blankQuestion;
   } else if (selectedFormElementId) {
-    const selectedFormElement = getFlowFormElementById(
-      selectedFormElementId,
-      flowJson,
-    );
+    const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
     selectedQuestion = getQuestionFromFlowFormElementName(
       selectedFormElement.name,
       survey.questions,
@@ -188,9 +160,7 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
     );
     if (
       !selectedQuestion &&
-      Object.values(WaFlowFormNonInputElementType).includes(
-        selectedFormElement?.type as any,
-      )
+      Object.values(WaFlowFormNonInputElementType).includes(selectedFormElement?.type as any)
     ) {
       selectedNonQuestion = selectedFormElement;
     }
@@ -220,12 +190,8 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
       // deleting element from flowJson
       updateFlowJson((draft) => {
         const screenToBeEdited = getScreenObjById(draft.screens, screenId);
-        const formElements = screenToBeEdited.layout.children.find(
-          (se) => se.type === "Form",
-        );
-        const elementIndex = formElements.children.findIndex(
-          (c) => c.name === fe.name,
-        );
+        const formElements = screenToBeEdited.layout.children.find((se) => se.type === "Form");
+        const elementIndex = formElements.children.findIndex((c) => c.name === fe.name);
         formElements.children.splice(elementIndex, 1);
         updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
       });
@@ -236,17 +202,11 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
 
       // TODO: delete question from survey
       deleteQuestionMutation.mutate(questionId);
-    } else if (
-      Object.values(WaFlowFormNonInputElementType).includes(fe.type as any)
-    ) {
+    } else if (Object.values(WaFlowFormNonInputElementType).includes(fe.type as any)) {
       updateFlowJson((draft) => {
         const screenToBeEdited = getScreenObjById(draft.screens, screenId);
-        const formElements = screenToBeEdited.layout.children.find(
-          (se) => se.type === "Form",
-        );
-        const elementIndex = formElements.children.findIndex(
-          (c) => c.id === fe.id,
-        );
+        const formElements = screenToBeEdited.layout.children.find((se) => se.type === "Form");
+        const elementIndex = formElements.children.findIndex((c) => c.id === fe.id);
         formElements.children.splice(elementIndex, 1);
         updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
       });
@@ -286,9 +246,7 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
             handleTypeSelection={handleTypeSelection}
           />
         )}
-        {activeEditor === EditFlowRightPanel.ElementEditor &&
-        selectedQuestion &&
-        survey.id ? (
+        {activeEditor === EditFlowRightPanel.ElementEditor && selectedQuestion && survey.id ? (
           <FlowQuestionDetailedView
             key={selectedQuestion.id}
             question={selectedQuestion}
@@ -298,9 +256,7 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
             onCreated={handleNewQuestionCreated}
           />
         ) : (
-          selectedNonQuestion && (
-            <FlowNonQuestionDetailedView key={selectedFormElementId} />
-          )
+          selectedNonQuestion && <FlowNonQuestionDetailedView key={selectedFormElementId} />
         )}
       </div>
       {/* Right sidebar containing preview */}

@@ -1,7 +1,3 @@
-"use client";
-
-import { Activity, useEffect, useState } from "react";
-
 import {
   Blockquote,
   Box,
@@ -17,35 +13,27 @@ import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
 import { User } from "lucide-react";
+import { Activity, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
-import { ContactGroupType } from "@/types/enums.ts";
 import {
   useCreateContactMutation,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import { ContactGroupType } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { importMethod } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../Button/RateupButtons.tsx";
 import { ContainedFileInput } from "../input/ContainedInput/ContainedInput.tsx";
 import { Card } from "../ui/card.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 import ContactForm from "./ContactForm.tsx";
 
@@ -108,9 +96,7 @@ const CreateContactModal = ({
       customFields: {
         "*": (value, values, path) => {
           const fieldId = path.split(".")[1];
-          const customField = customFields.find(
-            (field) => field.slug === fieldId,
-          );
+          const customField = customFields.find((field) => field.slug === fieldId);
 
           if (!customField) return null;
 
@@ -162,15 +148,11 @@ const CreateContactModal = ({
     } else {
       const contactData = {
         ...form.getValues(),
-        dob: form.getValues()?.dob
-          ? new Date(form.getValues().dob).toISOString()
-          : null,
+        dob: form.getValues()?.dob ? new Date(form.getValues().dob).toISOString() : null,
         external_id: form.getValues()?.external_id || undefined,
         phone: form.getValues()?.phone?.replace(/^\+/, "") || "",
         source:
-          type === ContactGroupType.LOYALTY
-            ? ContactGroupType.LOYALTY
-            : form.getValues().source,
+          type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : form.getValues().source,
         lastReceivedMessageTimeStamp: undefined,
       };
       if (initialValues) {
@@ -229,10 +211,7 @@ const CreateContactModal = ({
       form.setValues(initialValues);
       form.setFieldValue("phone", "+" + initialValues.phone);
     }
-    form.setFieldValue(
-      "contactType",
-      customFields?.map((field) => field.slug) || [],
-    );
+    form.setFieldValue("contactType", customFields?.map((field) => field.slug) || []);
   }, [initialValues]);
 
   return (
@@ -252,14 +231,8 @@ const CreateContactModal = ({
                 {...form.getInputProps("source")}
               >
                 <Group>
-                  <Radio
-                    value={importMethod.MANUAL}
-                    label={translations("Manual")}
-                  />
-                  <Radio
-                    value={importMethod.CSV}
-                    label={translations("Import CSV/XLSX")}
-                  />
+                  <Radio value={importMethod.MANUAL} label={translations("Manual")} />
+                  <Radio value={importMethod.CSV} label={translations("Import CSV/XLSX")} />
                 </Group>
               </Radio.Group>
             )}
@@ -286,18 +259,10 @@ const CreateContactModal = ({
           </Group>
           {(form.getValues().source == importMethod.MANUAL ||
             form.getValues().source != importMethod.CSV ||
-            initialValues) && (
-            <ContactForm form={form} customFields={customFields} type={type} />
-          )}
+            initialValues) && <ContactForm form={form} customFields={customFields} type={type} />}
           {form.getValues().source == importMethod.CSV && !initialValues && (
             <Stack>
-              <Blockquote
-                color="blue"
-                icon={<IconInfoCircle />}
-                p={"sm"}
-                iconSize={40}
-                mx={"lg"}
-              >
+              <Blockquote color="blue" icon={<IconInfoCircle />} p={"sm"} iconSize={40} mx={"lg"}>
                 {translations(
                   "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone",
                 )}
@@ -320,9 +285,7 @@ const CreateContactModal = ({
               <ContainedFileInput
                 mx={"lg"}
                 label=""
-                placeholder={translations(
-                  "Upload a csv file (.csv) or excel file (.xlsx)",
-                )}
+                placeholder={translations("Upload a csv file (.csv) or excel file (.xlsx)")}
                 accept=".csv,.xlsx"
                 multiple={false}
                 onChange={setCsvfile}
@@ -350,11 +313,7 @@ const CreateContactModal = ({
               type="button"
               loading={isCreating}
               onClick={handleSubmit}
-              disabled={
-                form.getValues().source == importMethod.CSV &&
-                !initialValues &&
-                !csvfile
-              }
+              disabled={form.getValues().source == importMethod.CSV && !initialValues && !csvfile}
             />
           </Group>
         </Stack>
@@ -398,13 +357,9 @@ export const UserSelector = ({
     name: u.name,
     status: u.status,
   }));
-  if (allowAll)
-    userData.unshift({ id: "all", name: "All Staff", status: "online" });
+  if (allowAll) userData.unshift({ id: "all", name: "All Staff", status: "online" });
   function onValueChange(value) {
-    onChange(
-      value === "all" ? users.data.map((u) => u.id) : value,
-      value === "all",
-    );
+    onChange(value === "all" ? users.data.map((u) => u.id) : value, value === "all");
   }
   return (
     <Select value={value} onValueChange={onValueChange}>

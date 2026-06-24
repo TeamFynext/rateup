@@ -1,9 +1,6 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -78,9 +75,7 @@ function TimeSlotRow({
       <div className="flex items-center gap-3">
         <Select
           value={slot.openTime}
-          onValueChange={(val) =>
-            handleTimeSlotChange(day, slotIndex, "openTime", val)
-          }
+          onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "openTime", val)}
         >
           <SelectTrigger className="w-24">
             <SelectValue />
@@ -98,9 +93,7 @@ function TimeSlotRow({
 
         <Select
           value={slot.closeTime}
-          onValueChange={(val) =>
-            handleTimeSlotChange(day, slotIndex, "closeTime", val)
-          }
+          onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "closeTime", val)}
         >
           <SelectTrigger className="w-24">
             <SelectValue />
@@ -201,10 +194,7 @@ export function BusinessHoursEditorDialog({
         ...schedule,
         [day]: {
           ...daySchedule,
-          timeSlots: [
-            ...daySchedule.timeSlots,
-            { openTime: "09:00", closeTime: "17:30" },
-          ],
+          timeSlots: [...daySchedule.timeSlots, { openTime: "09:00", closeTime: "17:30" }],
         },
       },
       { shouldValidate: true },
@@ -231,13 +221,9 @@ export function BusinessHoursEditorDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-200 max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {editing ? t("Edit Business Hours") : t("Add Business Hours")}
-          </DialogTitle>
+          <DialogTitle>{editing ? t("Edit Business Hours") : t("Add Business Hours")}</DialogTitle>
           <DialogDescription>
-            {t(
-              "Configure your business hours with timezone and channel settings",
-            )}
+            {t("Configure your business hours with timezone and channel settings")}
           </DialogDescription>
         </DialogHeader>
 
@@ -250,16 +236,11 @@ export function BusinessHoursEditorDialog({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>{t("Name")} *</FieldLabel>
-                  <Input
-                    {...field}
-                    placeholder={t("e.g. Regular Business Hours")}
-                  />
+                  <Input {...field} placeholder={t("e.g. Regular Business Hours")} />
                   <FieldDescription>
                     {t("Give the business hours a recognizable name.")}
                   </FieldDescription>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
@@ -270,16 +251,11 @@ export function BusinessHoursEditorDialog({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>{t("Timezone")} *</FieldLabel>
-                  <TimeZoneSelector
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
+                  <TimeZoneSelector value={field.value} onChange={field.onChange} />
                   <FieldDescription>
                     {t("Select the timezone for your business hours.")}
                   </FieldDescription>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
@@ -317,13 +293,9 @@ export function BusinessHoursEditorDialog({
                     {...field}
                     rows={2}
                     className="resize-none"
-                    placeholder={t(
-                      "Add a clear description of the business hours.",
-                    )}
+                    placeholder={t("Add a clear description of the business hours.")}
                   />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
@@ -385,50 +357,35 @@ export function BusinessHoursEditorDialog({
                           </div>
                           {daySchedule.isOpen && (
                             <div className="ml-28 space-y-2">
-                              {daySchedule.timeSlots.map(
-                                (slot: any, slotIndex: number) => (
-                                  <TimeSlotRow
-                                    key={
-                                      slotIndex +
-                                      slot?.openTime +
-                                      slot?.closeTime
-                                    }
-                                    slot={slot}
-                                    slotIndex={slotIndex}
-                                    day={day}
-                                    daySchedule={daySchedule}
-                                    slotError={dayErrors?.[slotIndex]}
-                                    handleTimeSlotChange={handleTimeSlotChange}
-                                    removeTimeSlot={removeTimeSlot}
-                                  />
-                                ),
-                              )}
+                              {daySchedule.timeSlots.map((slot: any, slotIndex: number) => (
+                                <TimeSlotRow
+                                  key={slotIndex + slot?.openTime + slot?.closeTime}
+                                  slot={slot}
+                                  slotIndex={slotIndex}
+                                  day={day}
+                                  daySchedule={daySchedule}
+                                  slotError={dayErrors?.[slotIndex]}
+                                  handleTimeSlotChange={handleTimeSlotChange}
+                                  removeTimeSlot={removeTimeSlot}
+                                />
+                              ))}
                             </div>
                           )}
                         </div>
                       );
                     })}
                   </div>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
           </FieldGroup>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {t("Cancel")}
             </Button>
-            <Button
-              type="submit"
-              className="bg-linear-to-r from-rateup-blue to-rateup-blue"
-            >
+            <Button type="submit" className="bg-linear-to-r from-rateup-blue to-rateup-blue">
               {editing ? t("Update Hours") : t("Save Hours")}
             </Button>
           </DialogFooter>

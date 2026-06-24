@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import {
   IconBrandInstagram,
   IconBrandWhatsapp,
@@ -11,28 +7,20 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { WaAutomatedReply } from "@/types/global";
 import {
   useCloneWaAutomatedReplyMutation,
   useDeleteWaAutomatedReplyMutation,
   useUpdateWaAutomatedReplyMutation,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useDeleteInstagramAutomationMutation } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
-import {
-  GenericActionCard,
-  GenericCardGrid,
-} from "@/components/common/generic-card.tsx";
+import { GenericActionCard, GenericCardGrid } from "@/components/common/generic-card.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import type { WaAutomatedReply } from "@/types/global";
 
 interface WaAutomationCardsProps {
   data: WaAutomatedReply[];
@@ -56,10 +45,7 @@ export function WaAutomationCards({
       items={data}
       getKey={(automation) => automation.id}
       renderItem={(automation) => (
-        <AutomationCard
-          automation={automation}
-          detailsBasePath={detailsBasePath}
-        />
+        <AutomationCard automation={automation} detailsBasePath={detailsBasePath} />
       )}
     />
   );
@@ -69,10 +55,7 @@ interface WaAutomationCardProps {
   automation: WaAutomatedReply;
   detailsBasePath: string;
 }
-function AutomationCard({
-  automation,
-  detailsBasePath,
-}: Readonly<WaAutomationCardProps>) {
+function AutomationCard({ automation, detailsBasePath }: Readonly<WaAutomationCardProps>) {
   const navigate = useNavigate();
 
   const matchData = automation.matchData?.json;
@@ -141,11 +124,7 @@ type AutomationActionsProps = {
   readonly platform?: string;
 };
 
-function AutomationActions({
-  automationId,
-  automationName,
-  platform,
-}: AutomationActionsProps) {
+function AutomationActions({ automationId, automationName, platform }: AutomationActionsProps) {
   const [deleteDialogOpened, setDeleteDialogOpened] = useState(false);
   const [cloneDialogOpened, setCloneDialogOpened] = useState(false);
   const [cloneName, setCloneName] = useState("");
@@ -157,8 +136,7 @@ function AutomationActions({
   const { t: translations } = useTranslation();
 
   const isInstagram = platform === "instagram";
-  const isClonePending =
-    cloneWaMutation.isPending || updateWaMutation.isPending;
+  const isClonePending = cloneWaMutation.isPending || updateWaMutation.isPending;
 
   function handleOpenCloneDialog() {
     if (isClonePending) return;
@@ -232,9 +210,7 @@ function AutomationActions({
               }}
             >
               <IconCopy className="mr-2 size-3.5" />
-              {isClonePending
-                ? translations("Cloning...")
-                : translations("Clone")}
+              {isClonePending ? translations("Cloning...") : translations("Clone")}
             </DropdownMenuItem>
           )}
 
@@ -255,9 +231,7 @@ function AutomationActions({
         forDeleteFunctionality
         opened={deleteDialogOpened}
         onClose={() => setDeleteDialogOpened(false)}
-        headerLabel={translations(
-          "Are you sure you want to delete this Automated Reply?",
-        )}
+        headerLabel={translations("Are you sure you want to delete this Automated Reply?")}
         headerTitle={translations("Delete Automated Reply")}
         confirmLabel={translations("Delete")}
         onConfirm={handleDelete}
@@ -282,13 +256,8 @@ function AutomationActions({
               >
                 {translations("Cancel")}
               </Button>
-              <Button
-                onClick={handleClone}
-                disabled={isClonePending || !cloneName.trim()}
-              >
-                {isClonePending
-                  ? translations("Cloning...")
-                  : translations("Clone")}
+              <Button onClick={handleClone} disabled={isClonePending || !cloneName.trim()}>
+                {isClonePending ? translations("Cloning...") : translations("Clone")}
               </Button>
             </div>
           </div>

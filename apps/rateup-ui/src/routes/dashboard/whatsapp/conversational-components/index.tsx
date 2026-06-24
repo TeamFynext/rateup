@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
-
 import { Skeleton } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -26,9 +25,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 
-export const Route = createFileRoute(
-  "/dashboard/whatsapp/conversational-components/",
-)({
+export const Route = createFileRoute("/dashboard/whatsapp/conversational-components/")({
   component: ConversationalComponents,
 });
 
@@ -53,21 +50,11 @@ function ConversationalComponents() {
     <>
       <div className="mb-4 flex items-end gap-2 justify-between">
         <div className="max-w-xs flex-1">
-          <AccountSelector
-            value={selectedPhoneId}
-            onChange={setSelectedPhoneId}
-          />
+          <AccountSelector value={selectedPhoneId} onChange={setSelectedPhoneId} />
         </div>
         {selectedPhoneId && (
-          <Button
-            variant="default"
-            onClick={handleSync}
-            disabled={syncMutation.isPending}
-          >
-            <IconRefresh
-              className={syncMutation.isPending ? "animate-spin" : ""}
-              size={18}
-            />
+          <Button variant="default" onClick={handleSync} disabled={syncMutation.isPending}>
+            <IconRefresh className={syncMutation.isPending ? "animate-spin" : ""} size={18} />
             {syncMutation.isPending ? t("Syncing...") : t("Sync from WhatsApp")}
           </Button>
         )}
@@ -84,12 +71,9 @@ function DisplayConversationalSettings({
 }>) {
   const { t } = useTranslation();
   const [prompts, setPrompts] = useState<string[]>([]);
-  const [commands, setCommands] = useState<ConversationalAutomationCommand[]>(
-    [],
-  );
+  const [commands, setCommands] = useState<ConversationalAutomationCommand[]>([]);
 
-  const { data: automation, isPending } =
-    useConversationalAutomation(selectedPhoneId);
+  const { data: automation, isPending } = useConversationalAutomation(selectedPhoneId);
 
   const updateMutation = useUpdateConversationalAutomation();
 
@@ -171,9 +155,7 @@ function DisplayConversationalSettings({
   if (!selectedPhoneId) {
     return (
       <p className="text-muted-foreground">
-        {t(
-          "Please select a phone account to configure conversational settings.",
-        )}
+        {t("Please select a phone account to configure conversational settings.")}
       </p>
     );
   }
@@ -198,14 +180,8 @@ function DisplayConversationalSettings({
                 placeholder="e.g. Plan a trip"
                 maxLength={80}
               />
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {prompt.length}/80
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleRemovePrompt(index)}
-              >
+              <span className="shrink-0 text-xs text-muted-foreground">{prompt.length}/80</span>
+              <Button variant="ghost" size="icon" onClick={() => handleRemovePrompt(index)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -236,9 +212,7 @@ function DisplayConversationalSettings({
                   <Label className="text-xs">Command</Label>
                   <Input
                     value={command.command_name}
-                    onChange={(e) =>
-                      handleCommandChange(index, "command_name", e.target.value)
-                    }
+                    onChange={(e) => handleCommandChange(index, "command_name", e.target.value)}
                     placeholder="e.g. help"
                     maxLength={32}
                   />
@@ -251,11 +225,7 @@ function DisplayConversationalSettings({
                   <Input
                     value={command.command_description}
                     onChange={(e) =>
-                      handleCommandChange(
-                        index,
-                        "command_description",
-                        e.target.value,
-                      )
+                      handleCommandChange(index, "command_description", e.target.value)
                     }
                     placeholder="e.g. Get help with our services"
                     maxLength={256}

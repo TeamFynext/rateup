@@ -4,11 +4,7 @@ type LogoProps = Readonly<{ className?: string }>;
 
 export function ShopifyLogo({ className }: LogoProps) {
   return (
-    <img
-      src="/images/shopifyicon.png"
-      alt="Shopify"
-      className={cn("object-contain", className)}
-    />
+    <img src="/images/shopifyicon.png" alt="Shopify" className={cn("object-contain", className)} />
   );
 }
 
@@ -23,13 +19,7 @@ export function GoogleSheetsLogo({ className }: LogoProps) {
 }
 
 export function AmeliaLogo({ className }: LogoProps) {
-  return (
-    <img
-      src="/images/amelia.png"
-      alt="Amelia"
-      className={cn("object-contain", className)}
-    />
-  );
+  return <img src="/images/amelia.png" alt="Amelia" className={cn("object-contain", className)} />;
 }
 
 export function WhatsAppPaymentLogo({ className }: LogoProps) {
@@ -44,32 +34,16 @@ export function WhatsAppPaymentLogo({ className }: LogoProps) {
 
 export function PetpoojaLogo({ className }: LogoProps) {
   return (
-    <img
-      src="/images/petpooja.png"
-      alt="Petpooja"
-      className={cn("object-contain", className)}
-    />
+    <img src="/images/petpooja.png" alt="Petpooja" className={cn("object-contain", className)} />
   );
 }
 
 export function ZapierLogo({ className }: LogoProps) {
-  return (
-    <img
-      src="/images/zapier.png"
-      alt="Zapier"
-      className={cn("object-contain", className)}
-    />
-  );
+  return <img src="/images/zapier.png" alt="Zapier" className={cn("object-contain", className)} />;
 }
 
 export function ZohoLogo({ className }: LogoProps) {
-  return (
-    <img
-      src="/images/zoho.jpg"
-      alt="Zoho"
-      className={cn("object-contain", className)}
-    />
-  );
+  return <img src="/images/zoho.jpg" alt="Zoho" className={cn("object-contain", className)} />;
 }
 
 export function RateupStar({ className }: LogoProps) {
@@ -84,18 +58,10 @@ export function RateupStar({ className }: LogoProps) {
 }
 
 export function BiginLogo({ className }: LogoProps) {
-  return (
-    <img
-      src="/images/bigin.png"
-      alt="Bigin"
-      className={cn("object-contain", className)}
-    />
-  );
+  return <img src="/images/bigin.png" alt="Bigin" className={cn("object-contain", className)} />;
 }
 
-export function ZohoCombinedLogo({
-  className,
-}: Readonly<{ className?: string }>) {
+export function ZohoCombinedLogo({ className }: Readonly<{ className?: string }>) {
   return (
     <div className={cn("relative h-16 w-20", className)}>
       <div className="absolute left-0 top-1 z-10 flex h-12 w-12 items-center justify-center rounded-2xl border bg-background shadow-sm">

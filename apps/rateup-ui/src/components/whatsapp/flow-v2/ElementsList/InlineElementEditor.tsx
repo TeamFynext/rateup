@@ -1,15 +1,11 @@
-"use client";
-
-import { useCallback, useEffect, useMemo, useState } from "react";
-
-import { IconDeviceFloppy } from "@tabler/icons-react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconDeviceFloppy } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import dayjs from "dayjs";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { QuestionType2 } from "@/types/enums.ts";
 import {
   ContainedDatePickerInput,
   ContainedMultiSelect,
@@ -23,6 +19,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import { QuestionType2 } from "@/types/enums.ts";
 import { WaNPSQuestions2 } from "@/utils/constants.ts";
 import { logicSupportedTypes3 } from "@/utils/data.ts";
 
@@ -62,9 +59,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
 
   const elementTypeString = (element.metaType || element.type) as string;
 
-  const elementType = Object.values(QuestionType2).includes(
-    elementTypeString as QuestionType2,
-  )
+  const elementType = Object.values(QuestionType2).includes(elementTypeString as QuestionType2)
     ? (elementTypeString as QuestionType2)
     : QuestionType2[elementTypeString as keyof typeof QuestionType2];
 
@@ -94,23 +89,19 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
 
       // Merge with default values from initialValues if fields are missing in element
       Object.keys(initialValues).forEach((key) => {
-        if (
-          updatedValues[key] === undefined &&
-          initialValues[key]?.value !== undefined
-        ) {
+        if (updatedValues[key] === undefined && initialValues[key]?.value !== undefined) {
           updatedValues[key] = initialValues[key].value;
         }
       });
 
       // Convert date strings to Date objects for date picker
       ["min-date", "max-date"].forEach((key) => {
-        if (updatedValues[key])
-          updatedValues[key] = dayjs(updatedValues[key]).toDate();
+        if (updatedValues[key]) updatedValues[key] = dayjs(updatedValues[key]).toDate();
       });
       if (updatedValues["unavailable-dates"]) {
-        updatedValues["unavailable-dates"] = updatedValues[
-          "unavailable-dates"
-        ].map((date: any) => dayjs(date).toDate());
+        updatedValues["unavailable-dates"] = updatedValues["unavailable-dates"].map((date: any) =>
+          dayjs(date).toDate(),
+        );
       }
       reset(updatedValues);
     }
@@ -125,12 +116,10 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
         if (updatedValues.metaType === QuestionType2.DatePicker) {
           const formatDate = (date: any) => dayjs(date).format("YYYY-MM-DD");
           ["min-date", "max-date"].forEach((key) => {
-            if (updatedValues[key])
-              updatedValues[key] = formatDate(updatedValues[key]);
+            if (updatedValues[key]) updatedValues[key] = formatDate(updatedValues[key]);
           });
           if (Array.isArray(updatedValues["unavailable-dates"])) {
-            updatedValues["unavailable-dates"] =
-              updatedValues["unavailable-dates"].map(formatDate);
+            updatedValues["unavailable-dates"] = updatedValues["unavailable-dates"].map(formatDate);
           }
         }
 
@@ -173,8 +162,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
       <div
         key={field}
         className={
-          field === "data-source" ||
-          ["richText", "imageCarousel"].includes(fieldType)
+          field === "data-source" || ["richText", "imageCarousel"].includes(fieldType)
             ? "col-span-12"
             : "col-span-6"
         }
@@ -184,10 +172,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
           control={form.control}
           render={({ field: { onChange, value }, fieldState: { error } }) => (
             <FieldComponent
-              label={
-                field.charAt(0).toUpperCase() +
-                field.slice(1).replace(/([A-Z])/g, " $1")
-              }
+              label={field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, " $1")}
               placeholder={`Enter ${field}`}
               {...extra}
               value={value}
@@ -221,9 +206,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                   );
                 },
                 metaType: elementType,
-                maxChoice:
-                  getChoiceCount(QuestionType2?.[allValues.metaType as string])
-                    ?.max ?? 20,
+                maxChoice: getChoiceCount(QuestionType2?.[allValues.metaType as string])?.max ?? 20,
               })}
               {...(field === "init-value" && {
                 dataSource: allValues?.["data-source"],
@@ -255,9 +238,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
         <p className="text-xs text-muted-foreground">
           Element type: {elementType || element.type || "Unknown"}
         </p>
-        <p className="text-xs text-muted-foreground">
-          Meta type: {element.metaType}
-        </p>
+        <p className="text-xs text-muted-foreground">Meta type: {element.metaType}</p>
       </div>
     );
   }
@@ -297,10 +278,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                       />
                     )}
                   />
-                  <Label
-                    htmlFor="visible"
-                    className="text-sm font-semibold cursor-pointer"
-                  >
+                  <Label htmlFor="visible" className="text-sm font-semibold cursor-pointer">
                     {translations("Visible")}
                   </Label>
                 </div>
@@ -314,14 +292,9 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                     id="required"
                     checked={requiredValue}
                     disabled={!visibleValue}
-                    onCheckedChange={(checked) =>
-                      setValue("required", checked as boolean)
-                    }
+                    onCheckedChange={(checked) => setValue("required", checked as boolean)}
                   />
-                  <Label
-                    htmlFor="required"
-                    className="text-sm font-semibold cursor-pointer"
-                  >
+                  <Label htmlFor="required" className="text-sm font-semibold cursor-pointer">
                     {translations("Required")}
                   </Label>
                 </div>

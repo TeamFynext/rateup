@@ -1,23 +1,11 @@
-"use client";
-
-import { useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import {
-  Calendar,
-  Clock,
-  CreditCard,
-  DollarSign,
-  Package,
-  Trash2,
-  Type,
-} from "lucide-react";
+import { Calendar, Clock, CreditCard, DollarSign, Package, Trash2, Type } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { PaymentPlanStatus } from "@/types/enums.ts";
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
 import {
   useDeleteStripeProduct,
@@ -26,24 +14,12 @@ import {
 } from "@/backend/payment/stripe/stripe.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select.tsx";
+import { PaymentPlanStatus } from "@/types/enums.ts";
 
 import { ProductsDataTableToolbar } from "./products-data-table-toolbar.tsx";
 
@@ -68,26 +44,19 @@ const StripeProducts = () => {
   const updateProductMutate = useUpdateStripeProduct();
   const deleteStripeProduct = useDeleteStripeProduct();
   const { data: rateupPlans } = useRateupPaymentsPlans();
-  const [
-    openedDeleteModal,
-    { open: openDeleteModal, close: closeDeleteModal },
-  ] = useDisclosure(false);
+  const [openedDeleteModal, { open: openDeleteModal, close: closeDeleteModal }] =
+    useDisclosure(false);
   const [productId, setProductId] = useState("");
   const { t: translations } = useTranslation();
 
   const handleDeleteProduct = () => {
-    const product =
-      products && products?.find((prod) => prod.productId == productId);
+    const product = products && products?.find((prod) => prod.productId == productId);
     const productInRateupPlan =
-      rateupPlans &&
-      rateupPlans?.find((plan) => plan?.stripeId === product?.id);
+      rateupPlans && rateupPlans?.find((plan) => plan?.stripeId === product?.id);
     if (productInRateupPlan) {
-      toast.error(
-        translations("Unable to delete. Product is in use in rateup plan"),
-        {
-          id: "stripe",
-        },
-      );
+      toast.error(translations("Unable to delete. Product is in use in rateup plan"), {
+        id: "stripe",
+      });
       return;
     }
     deleteStripeProduct.mutate(productId);
@@ -160,9 +129,7 @@ const StripeProducts = () => {
     {
       accessorKey: "interval",
       header: "Interval",
-      cell: ({ row }) => (
-        <Badge variant="secondary">{row.getValue("interval")}</Badge>
-      ),
+      cell: ({ row }) => <Badge variant="secondary">{row.getValue("interval")}</Badge>,
       meta: { title: "Interval" },
     },
     {
@@ -237,9 +204,7 @@ const StripeProducts = () => {
               <SelectItem value={PaymentPlanStatus.NULL}>NULL</SelectItem>
               <SelectItem value={PaymentPlanStatus.LIVE}>LIVE</SelectItem>
               <SelectItem value={PaymentPlanStatus.ACTIVE}>ACTIVE</SelectItem>
-              <SelectItem value={PaymentPlanStatus.INACTIVE}>
-                INACTIVE
-              </SelectItem>
+              <SelectItem value={PaymentPlanStatus.INACTIVE}>INACTIVE</SelectItem>
             </SelectContent>
           </Select>
         );
@@ -293,9 +258,7 @@ const StripeProducts = () => {
         type: product.type,
         liveMode: product.liveMode,
         active: product.active,
-        canDelete: ![PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(
-          product.status,
-        ),
+        canDelete: ![PaymentPlanStatus.ACTIVE, PaymentPlanStatus.LIVE].includes(product.status),
       }))
     : [];
 
@@ -341,9 +304,7 @@ const StripeProducts = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {activeProducts}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{activeProducts}</div>
           </CardContent>
         </Card>
 
@@ -354,9 +315,7 @@ const StripeProducts = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {liveProducts}
-            </div>
+            <div className="text-2xl font-bold text-blue-600">{liveProducts}</div>
           </CardContent>
         </Card>
 
@@ -367,17 +326,11 @@ const StripeProducts = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {inactiveProducts}
-            </div>
+            <div className="text-2xl font-bold text-red-600">{inactiveProducts}</div>
           </CardContent>
         </Card>
       </div>
-      <DataTable
-        columns={columns}
-        data={tableData}
-        DataTableToolbar={ProductsDataTableToolbar}
-      />
+      <DataTable columns={columns} data={tableData} DataTableToolbar={ProductsDataTableToolbar} />
       <ConfirmationModal
         opened={openedDeleteModal}
         onClose={closeDeleteModal}
@@ -385,17 +338,12 @@ const StripeProducts = () => {
         confirmLabel={translations("Delete")}
         headerTitle={translations("Delete Stripe Product")}
         onConfirm={() => {
-          toast.loading(
-            translations("Hold on..Stripe Product is getting deleted"),
-            {
-              id: "stripe",
-            },
-          );
+          toast.loading(translations("Hold on..Stripe Product is getting deleted"), {
+            id: "stripe",
+          });
           handleDeleteProduct();
         }}
-        headerLabel={translations(
-          "Are you sure to delete this stripe product?",
-        )}
+        headerLabel={translations("Are you sure to delete this stripe product?")}
         closeLabel={translations("cancel")}
       />
     </div>

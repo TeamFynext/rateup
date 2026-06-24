@@ -1,14 +1,13 @@
 import { TeamFeature } from "@/types/enums.ts";
 
-const DASHBOARD_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> =
-  [
-    { feature: TeamFeature.Inbox, to: "/dashboard/inbox?tab=New" },
-    { feature: TeamFeature.Analytics, to: "/dashboard/analytics" },
-    { feature: TeamFeature.Contacts, to: "/dashboard/contacts" },
-    { feature: TeamFeature.Campaigns, to: "/dashboard/campaign" },
-    { feature: TeamFeature.Loyalty, to: "/dashboard/loyalty/dashboard" },
-    { feature: TeamFeature.Tickets, to: "/dashboard/tickets" },
-  ];
+const DASHBOARD_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> = [
+  { feature: TeamFeature.Inbox, to: "/dashboard/inbox?tab=New" },
+  { feature: TeamFeature.Analytics, to: "/dashboard/analytics" },
+  { feature: TeamFeature.Contacts, to: "/dashboard/contacts" },
+  { feature: TeamFeature.Campaigns, to: "/dashboard/campaign" },
+  { feature: TeamFeature.Loyalty, to: "/dashboard/loyalty/dashboard" },
+  { feature: TeamFeature.Tickets, to: "/dashboard/tickets" },
+];
 
 const WHATSAPP_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> = [
   { feature: TeamFeature.Flows, to: "/dashboard/whatsapp/flows" },
@@ -39,9 +38,7 @@ const PROTECTED_ROUTE_FEATURE_MAP: Array<[string, TeamFeature]> = [
 
 export const DASHBOARD_NO_PERMISSION_FALLBACK = "/dashboard/settings";
 
-export function getDashboardLandingTarget(
-  allowedFeatures: ReadonlySet<string>,
-): string {
+export function getDashboardLandingTarget(allowedFeatures: ReadonlySet<string>): string {
   for (const item of DASHBOARD_LANDING_PRIORITY) {
     if (allowedFeatures.has(item.feature)) {
       return item.to;
@@ -50,9 +47,7 @@ export function getDashboardLandingTarget(
   return DASHBOARD_NO_PERMISSION_FALLBACK;
 }
 
-export function getWhatsappLandingTarget(
-  allowedFeatures: ReadonlySet<string>,
-): string {
+export function getWhatsappLandingTarget(allowedFeatures: ReadonlySet<string>): string {
   for (const item of WHATSAPP_LANDING_PRIORITY) {
     if (allowedFeatures.has(item.feature)) {
       return item.to;
@@ -62,10 +57,6 @@ export function getWhatsappLandingTarget(
   return getDashboardLandingTarget(allowedFeatures);
 }
 
-export function getRequiredFeatureForDashboardPath(
-  pathname: string,
-): TeamFeature | undefined {
-  return PROTECTED_ROUTE_FEATURE_MAP.find(([prefix]) =>
-    pathname.startsWith(prefix),
-  )?.[1];
+export function getRequiredFeatureForDashboardPath(pathname: string): TeamFeature | undefined {
+  return PROTECTED_ROUTE_FEATURE_MAP.find(([prefix]) => pathname.startsWith(prefix))?.[1];
 }

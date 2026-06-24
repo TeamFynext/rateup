@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import {
   ActionIcon,
   Anchor,
@@ -13,16 +9,17 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { ChatBotDataSourceType } from "@/types/enums.ts";
 import type { ChatbotResourses } from "@/backend/chatbot/chatbot.api";
 import {
   useDeleteChatborResource,
   useDeleteManyChatborResource,
   useGetChatbotResources,
 } from "@/backend/chatbot/chatbot.query";
+import { ChatBotDataSourceType } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import { RateupButtonBlue } from "../Button/RateupButtons.tsx";
@@ -31,14 +28,9 @@ import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
 import UploadChatbotSource from "./UploadChatbotSource.tsx";
 
 const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
-  const { data: chatbotResourses } = useGetChatbotResources(
-    enableApi,
-    selectedChatbotId,
-  );
+  const { data: chatbotResourses } = useGetChatbotResources(enableApi, selectedChatbotId);
   const { t: translations } = useTranslation();
-  const [selectedSources, setSelectedSources] = useState<ChatbotResourses[]>(
-    [],
-  );
+  const [selectedSources, setSelectedSources] = useState<ChatbotResourses[]>([]);
   const [opened, { open, close }] = useDisclosure(false);
   const deleteSourceMutation = useDeleteChatborResource();
   const deleteManySourceMutation = useDeleteManyChatborResource();
@@ -72,16 +64,12 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
       <Table.Td>
         <Checkbox
           aria-label={translations("Select row")}
-          checked={selectedSources.some(
-            (src) => src.contentSource == source.contentSource,
-          )}
+          checked={selectedSources.some((src) => src.contentSource == source.contentSource)}
           onChange={(event) =>
             setSelectedSources(
               event.currentTarget.checked
                 ? [...selectedSources, source]
-                : selectedSources.filter(
-                    (s) => s.contentSource !== source.contentSource,
-                  ),
+                : selectedSources.filter((s) => s.contentSource !== source.contentSource),
             )
           }
         />
@@ -142,11 +130,7 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
           <NothingFound text={translations("No Resources uploaded")} />
         )}
       </PaperLayout>
-      <UploadChatbotSource
-        selectedChatbotId={selectedChatbotId}
-        opened={opened}
-        close={close}
-      />
+      <UploadChatbotSource selectedChatbotId={selectedChatbotId} opened={opened} close={close} />
     </Stack>
   );
 };

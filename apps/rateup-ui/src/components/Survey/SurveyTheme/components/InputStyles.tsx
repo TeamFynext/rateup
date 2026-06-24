@@ -1,8 +1,5 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Box, Group, Stack } from "@mantine/core";
+import { useCallback } from "react";
 
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker/index.tsx";
 import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
@@ -11,6 +8,7 @@ import {
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../SurveyThemeContext.tsx";
+
 import styles from "./stylescomponent/StylesComponent.module.css";
 
 function InputStyles() {
@@ -28,9 +26,7 @@ function InputStyles() {
   }, []);
 
   return (
-    <Stack
-      className={`${styles["style-inputs-container"]} style-inputs-container`}
-    >
+    <Stack className={`${styles["style-inputs-container"]} style-inputs-container`}>
       <Group justify="space-between" w={"100%"}>
         <Box className={"custom-color-picker-and-heading-container"} w={"100%"}>
           <h2>Color</h2>

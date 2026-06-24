@@ -1,21 +1,13 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { ActionIcon, Box, Button, Group } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import mmCommonStyles from "../Modal/ModalManagerModals/mmCommonStyles.module.css";
 import styles from "./LocalOrUnsplashImagePicker.module.css";
 
-function LocalOrUnsplashImagePicker({
-  value,
-  label,
-  forDevice,
-  onImageSelected,
-}) {
+function LocalOrUnsplashImagePicker({ value, label, forDevice, onImageSelected }) {
   const { t: translations } = useTranslation();
   const handleUploadBtnClick = useCallback(() => {
     modals.openContextModal({
@@ -36,9 +28,7 @@ function LocalOrUnsplashImagePicker({
     <Box
       className={`${styles["local-or-unsplash-image-picker-div"]} local-or-unsplash-image-picker-div`}
     >
-      <p
-        className={`${styles["label-p"]} local-or-unsplash-image-picker-label`}
-      >
+      <p className={`${styles["label-p"]} local-or-unsplash-image-picker-label`}>
         <span>{`${label}`}</span>
         <span>{` :`}</span>
       </p>

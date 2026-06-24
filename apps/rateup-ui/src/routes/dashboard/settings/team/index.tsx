@@ -1,28 +1,13 @@
-import { useEffect, useState } from "react";
-
 import { useForm } from "@mantine/form";
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ChevronRight, Plus, RefreshCcw, User, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  SubscriptionFeaturePathName as sfpn,
-  TeamFeature,
-} from "@/types/enums.ts";
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import {
-  useCreateTeamMutation,
-  useTeamsByUser,
-} from "@/backend/team/team.query";
-import {
-  GenericActionCard,
-  GenericCardGrid,
-} from "@/components/common/generic-card.tsx";
+import { useCreateTeamMutation, useTeamsByUser } from "@/backend/team/team.query";
+import { GenericActionCard, GenericCardGrid } from "@/components/common/generic-card.tsx";
 import { colorArray } from "@/components/settings/team.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -37,6 +22,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { SubscriptionFeaturePathName as sfpn, TeamFeature } from "@/types/enums.ts";
 import { formatDate } from "@/utils/dateTime.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
@@ -125,19 +111,12 @@ function Team() {
   const { data: subscription } = useSubscription();
   const [isCreating, setIsCreating] = useState(false);
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
-  const [selectedFeatures, setSelectedFeatures] = useState<Set<TeamFeature>>(
-    new Set(),
-  );
+  const [selectedFeatures, setSelectedFeatures] = useState<Set<TeamFeature>>(new Set());
   // Only show features that are active in this org's subscription
-  const availableFeatures = FEATURES_WITH_SUBSCRIPTION.filter(
-    ({ requiredSubscriptions }) => {
-      if (!requiredSubscriptions || requiredSubscriptions.length === 0)
-        return true;
-      return requiredSubscriptions.every((sfp) =>
-        hasFeature(subscription, sfp),
-      );
-    },
-  );
+  const availableFeatures = FEATURES_WITH_SUBSCRIPTION.filter(({ requiredSubscriptions }) => {
+    if (!requiredSubscriptions || requiredSubscriptions.length === 0) return true;
+    return requiredSubscriptions.every((sfp) => hasFeature(subscription, sfp));
+  });
 
   const toggleFeature = (feature: TeamFeature) => {
     setSelectedFeatures((prev) => {
@@ -205,9 +184,7 @@ function Team() {
         }
 
         if (!/^[A-Za-z0-9-]+$/.test(value)) {
-          return translations(
-            "Team Code can contain only alphabets, numbers, and hyphens",
-          );
+          return translations("Team Code can contain only alphabets, numbers, and hyphens");
         }
 
         return null;
@@ -303,9 +280,7 @@ function Team() {
                 </div>
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-medium text-sm truncate">
-                      {team.name}
-                    </span>
+                    <span className="font-medium text-sm truncate">{team.name}</span>
                     <span className="text-[11px] font-medium border rounded-full px-1.5 py-0.5 text-muted-foreground bg-muted">
                       {team.code}
                     </span>
@@ -341,16 +316,12 @@ function Team() {
                   </div>
                   <span className="text-xs text-muted-foreground ml-2">
                     {team._count.members}{" "}
-                    {team._count.members === 1
-                      ? translations("member")
-                      : translations("members")}
+                    {team._count.members === 1 ? translations("member") : translations("members")}
                   </span>
                 </div>
               </div>
             }
-            footerRight={
-              <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
-            }
+            footerRight={<ChevronRight className="w-4 h-4 text-muted-foreground/40" />}
           />
         )}
       />
@@ -384,9 +355,7 @@ function Team() {
                   {...createTeamForm.getInputProps("name")}
                 />
                 {createTeamForm.errors.name && (
-                  <p className="text-xs text-red-500">
-                    {createTeamForm.errors.name}
-                  </p>
+                  <p className="text-xs text-red-500">{createTeamForm.errors.name}</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -398,9 +367,7 @@ function Team() {
                   {...createTeamForm.getInputProps("code")}
                 />
                 {createTeamForm.errors.code && (
-                  <p className="text-xs text-red-500">
-                    {createTeamForm.errors.code}
-                  </p>
+                  <p className="text-xs text-red-500">{createTeamForm.errors.code}</p>
                 )}
               </div>
 
@@ -408,23 +375,18 @@ function Team() {
                 <Label>{translations("Team Color")}</Label>
                 <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                   {colorArray.map((color, index) => {
-                    const isSelected =
-                      createTeamForm.values.color === color.from;
+                    const isSelected = createTeamForm.values.color === color.from;
                     return (
                       <button
                         key={index}
                         type="button"
                         className={`w-full aspect-square rounded-lg border-2 ${
-                          isSelected
-                            ? "border-black scale-105"
-                            : "border-transparent"
+                          isSelected ? "border-black scale-105" : "border-transparent"
                         } transition-all hover:scale-105`}
                         style={{
                           background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
                         }}
-                        onClick={() =>
-                          createTeamForm.setFieldValue("color", color.from)
-                        }
+                        onClick={() => createTeamForm.setFieldValue("color", color.from)}
                       />
                     );
                   })}
@@ -440,9 +402,7 @@ function Team() {
                     onClick={toggleAll}
                     className="text-xs text-primary hover:underline"
                   >
-                    {allEnabled
-                      ? translations("Disable All")
-                      : translations("Enable All")}
+                    {allEnabled ? translations("Disable All") : translations("Enable All")}
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
@@ -475,9 +435,7 @@ function Team() {
                   handleSubmit(values);
                 }}
               >
-                {isCreating
-                  ? translations("Creating")
-                  : translations("Create Team")}
+                {isCreating ? translations("Creating") : translations("Create Team")}
               </Button>
             </DialogFooter>
           </DialogContent>

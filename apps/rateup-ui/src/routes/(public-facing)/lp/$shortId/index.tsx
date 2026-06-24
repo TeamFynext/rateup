@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { getPublicLandingPageWithShortId } from "@/backend/landingPage/landingPage.api";
 import LandingPageC from "@/components/(public-facing)/lp/$shortId/landingPage.tsx";
+
 import styles from "@/components/(public-facing)/lp/$shortId/lp.module.css";
 
 export const Route = createFileRoute("/(public-facing)/lp/$shortId/")({
@@ -32,7 +33,5 @@ function PublicLandingPageComp() {
   }
 
   const { shortUrlId } = landingPageObj;
-  return (
-    <LandingPageC landingPageObj={landingPageObj} shortUrlId={shortUrlId} />
-  );
+  return <LandingPageC landingPageObj={landingPageObj} shortUrlId={shortUrlId} />;
 }

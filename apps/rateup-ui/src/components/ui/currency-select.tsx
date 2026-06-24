@@ -1,9 +1,7 @@
-import React from "react";
-
 // data
 import { currencies as AllCurrencies } from "country-data-list";
+import React from "react";
 
-import { cn } from "@/lib/utils.ts";
 // shadcn
 import {
   Select,
@@ -13,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { cn } from "@/lib/utils.ts";
 
 // types
 interface Currency {
@@ -68,8 +67,7 @@ const CurrencySelect = React.forwardRef<HTMLButtonElement, CurrencySelectProps>(
     },
     ref,
   ) => {
-    const [selectedCurrency, setSelectedCurrency] =
-      React.useState<Currency | null>(null);
+    const [selectedCurrency, setSelectedCurrency] = React.useState<Currency | null>(null);
 
     const uniqueCurrencies = React.useMemo<Currency[]>(() => {
       const currencyMap = new Map<string, Currency>();
@@ -113,15 +111,11 @@ const CurrencySelect = React.forwardRef<HTMLButtonElement, CurrencySelectProps>(
       });
 
       // Convert the map to an array and sort by currency name
-      return Array.from(currencyMap.values()).sort((a, b) =>
-        a.name.localeCompare(b.name),
-      );
+      return Array.from(currencyMap.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [currencies]);
 
     const handleValueChange = (newValue: string) => {
-      const fullCurrencyData = uniqueCurrencies.find(
-        (curr) => curr.code === newValue,
-      );
+      const fullCurrencyData = uniqueCurrencies.find((curr) => curr.code === newValue);
       if (fullCurrencyData) {
         setSelectedCurrency(fullCurrencyData);
         if (onValueChange) {

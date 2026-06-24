@@ -8,9 +8,8 @@ const ReviewCta = () => {
           Ready to Boost Your Online Reputation?
         </h2>
         <p className="pt-5 text-lg md:text-xl opacity-90">
-          Join hundreds of businesses improving their Google reviews and
-          customer loyalty with RateUp. Start your free trial today – no credit
-          card required.
+          Join hundreds of businesses improving their Google reviews and customer loyalty with
+          RateUp. Start your free trial today – no credit card required.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">

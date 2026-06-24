@@ -11,9 +11,7 @@ export const Route = createFileRoute("/(public-facing)/ws/$shortId/")({
     const request = (context as { request?: Request } | undefined)?.request;
 
     const ip =
-      request?.headers.get("x-forwarded-for") ||
-      request?.headers.get("x-real-ip") ||
-      undefined;
+      request?.headers.get("x-forwarded-for") || request?.headers.get("x-real-ip") || undefined;
 
     try {
       const surveyData = await getPublicSurvey(params.shortId, ip);
@@ -38,7 +36,5 @@ function Ws() {
     return <ResponseSubmitted />;
   }
 
-  return (
-    <PublicSurvey survey={surveyData} error_occured={false} fromShortUrl />
-  );
+  return <PublicSurvey survey={surveyData} error_occured={false} fromShortUrl />;
 }

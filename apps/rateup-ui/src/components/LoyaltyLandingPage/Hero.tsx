@@ -1,8 +1,8 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
-import { useNavigate } from "@tanstack/react-router";
-
 import { BookDemoModal } from "../RateupHomePage/helper/BookDemoModal";
+
 import styles from "./loyalty.landing.module.css";
 
 const chevronSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform:scaleX(-1)"><polyline points="9 6 15 12 9 18"/></svg>`;
@@ -38,9 +38,7 @@ export default function Hero() {
       d.className = `${styles.msg} ${styles[side as keyof typeof styles]}`;
       d.innerHTML =
         html +
-        (time
-          ? `<span class="${styles.t}">${time}${side === "out" ? " ✓✓" : ""}</span>`
-          : "");
+        (time ? `<span class="${styles.t}">${time}${side === "out" ? " ✓✓" : ""}</span>` : "");
       waBody!.appendChild(d);
       requestAnimationFrame(() => d.classList.add(styles.show));
       waBody!.scrollTop = waBody!.scrollHeight;
@@ -119,11 +117,7 @@ export default function Hero() {
         if (!mountedRef.current) break;
         await typingThen(1000);
         if (!mountedRef.current) break;
-        mkMsg(
-          "in",
-          `You just earned <span class="${styles.pts}">+120 points</span> 💛`,
-          T,
-        );
+        mkMsg("in", `You just earned <span class="${styles.pts}">+120 points</span> 💛`, T);
         await sleep(650);
         if (!mountedRef.current) break;
         const card = mkCard();
@@ -141,18 +135,12 @@ export default function Hero() {
         if (!mountedRef.current) break;
         await typingThen(1000);
         if (!mountedRef.current) break;
-        mkMsg(
-          "in",
-          "Done! Code <b>YUM50</b> applied — 50% off your next order 🎁",
-          T,
-        );
+        mkMsg("in", "Done! Code <b>YUM50</b> applied — 50% off your next order 🎁", T);
         await sleep(3600);
         if (!mountedRef.current) break;
         // fade out
         waBody!
-          .querySelectorAll(
-            `.${styles.msg}, .${styles["msg-card"]}, .${styles["wa-replies"]}`,
-          )
+          .querySelectorAll(`.${styles.msg}, .${styles["msg-card"]}, .${styles["wa-replies"]}`)
           .forEach((n) => {
             const el = n as HTMLElement;
             el.style.transition = "opacity .5s ease";
@@ -194,10 +182,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section
-      className={`${styles.hero} ${styles["on-dark"]}`}
-      data-screen-label="Hero"
-    >
+    <section className={`${styles.hero} ${styles["on-dark"]}`} data-screen-label="Hero">
       <div className={styles.beam}></div>
       <div className={styles.wrap}>
         <div className={styles["hero-grid"]}>
@@ -218,8 +203,8 @@ export default function Hero() {
               <span className={styles.accent}>fully automated on WhatsApp</span>
             </h1>
             <p className={styles.sub}>
-              Reward customers, boost retention, and drive repeat purchases
-              through the messaging app they already use daily.
+              Reward customers, boost retention, and drive repeat purchases through the messaging
+              app they already use daily.
             </p>
             <div className={styles["hero-cta"]}>
               <button
@@ -290,14 +275,11 @@ export default function Hero() {
               </div>
               <div className={styles.rtxt}>
                 <p>
-                  Hi Neha 😊 You just earned <b>120 loyalty points</b> from your
-                  recent purchase.
+                  Hi Neha 😊 You just earned <b>120 loyalty points</b> from your recent purchase.
                   <br />
-                  <br />
-                  💰 Total Balance: <b>540 Points</b>
+                  <br />💰 Total Balance: <b>540 Points</b>
                   <br />⭐ Your Tier: <b>Silver Member</b>
-                  <br />
-                  🎁 Reward Unlocked: <b>50% Off</b>
+                  <br />🎁 Reward Unlocked: <b>50% Off</b>
                 </p>
               </div>
               <div className={styles.qrep}>↩︎ Check Your Rewards</div>

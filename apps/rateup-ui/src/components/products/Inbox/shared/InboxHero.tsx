@@ -1,10 +1,7 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -60,9 +57,9 @@ const InboxHero = () => {
           </h1>
 
           <p className="pt-6 text-md sm:text-xl text-[#374151] max-w-2xl">
-            RateUp is your all-in-one platform to listen, understand, and act on
-            employee feedback through WhatsApp. Drive real change and build a
-            culture of trust across all your teams and locations.
+            RateUp is your all-in-one platform to listen, understand, and act on employee feedback
+            through WhatsApp. Drive real change and build a culture of trust across all your teams
+            and locations.
           </p>
 
           <div className="mt-10 flex flex-row gap-4">

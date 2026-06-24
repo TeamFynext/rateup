@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-
 import {
   IconFolderOpen,
   IconPlus,
@@ -10,14 +6,10 @@ import {
   IconUsers,
   IconX,
 } from "@tabler/icons-react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  CampaignParticipantAddStatus,
-  CampaignParticipantSource,
-  ContactGroupType,
-} from "@/types/enums.ts";
 import { useCampaignData } from "@/backend/campaign/campaign.query";
 import { useAddCampaignParticipants } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
 import { useContactGroupsByTeamId } from "@/backend/campaign/contactGroup/contactGroup.query";
@@ -46,6 +38,11 @@ import {
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  CampaignParticipantAddStatus,
+  CampaignParticipantSource,
+  ContactGroupType,
+} from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
 import StatePagination from "./CampaignContactPagination.tsx";
@@ -56,11 +53,7 @@ interface AddParticipantModalProps {
   campaignType: string;
 }
 
-const AddParticipantModal = ({
-  close,
-  campaign,
-  campaignType,
-}: AddParticipantModalProps) => {
+const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantModalProps) => {
   const { t } = useTranslation("campaign.addParticipants");
   const [selectedTab, setSelectedTab] = useState<CampaignParticipantSource>(
     CampaignParticipantSource.INDIVIDUAL,
@@ -80,16 +73,13 @@ const AddParticipantModal = ({
   });
 
   const { data, isPending } = useContacts(pagination, debouncedSearch);
-  const { data: contactGroup, isLoading: groupIsLoading } =
-    useContactGroupsByTeamId(campaign?.teamId);
-  const { data: campaignData, isPending: isAllCampaignLoading } =
-    useCampaignData(campaignType);
-  const addCampaignParticipants = useAddCampaignParticipants(
-    campaign?.id,
-    () => {
-      close();
-    },
+  const { data: contactGroup, isLoading: groupIsLoading } = useContactGroupsByTeamId(
+    campaign?.teamId,
   );
+  const { data: campaignData, isPending: isAllCampaignLoading } = useCampaignData(campaignType);
+  const addCampaignParticipants = useAddCampaignParticipants(campaign?.id, () => {
+    close();
+  });
 
   // Debounce search
   useEffect(() => {
@@ -109,19 +99,13 @@ const AddParticipantModal = ({
   const contacts = data?.users;
   const isSelectedAll = useMemo(() => {
     if (selectedTab === CampaignParticipantSource.INDIVIDUAL) {
-      return (
-        contacts?.length > 0 && selectedContacts.length === contacts.length
-      );
+      return contacts?.length > 0 && selectedContacts.length === contacts.length;
     }
 
     if (selectedTab === CampaignParticipantSource.GROUP) {
-      const selectableGroups =
-        contactGroup?.data?.filter((g) => g?._count?.contacts) || [];
+      const selectableGroups = contactGroup?.data?.filter((g) => g?._count?.contacts) || [];
 
-      return (
-        selectableGroups.length > 0 &&
-        selectedGroups.length === selectableGroups.length
-      );
+      return selectableGroups.length > 0 && selectedGroups.length === selectableGroups.length;
     }
 
     if (selectedTab === CampaignParticipantSource.CAMPAIGN) {
@@ -129,8 +113,7 @@ const AddParticipantModal = ({
         campaignData?.data?.filter((c) => c?.campaignParticipantsCount) || [];
 
       return (
-        selectableCampaigns.length > 0 &&
-        selectedCampaigns.length === selectableCampaigns.length
+        selectableCampaigns.length > 0 && selectedCampaigns.length === selectableCampaigns.length
       );
     }
 
@@ -180,14 +163,11 @@ const AddParticipantModal = ({
   };
   const selectableContacts =
     contacts?.filter(
-      (c) =>
-        c.phone &&
-        !c?.campaignParticipants?.some((cp) => cp?.campaignId === campaign?.id),
+      (c) => c.phone && !c?.campaignParticipants?.some((cp) => cp?.campaignId === campaign?.id),
     ) || [];
 
   const disableSelectAllIndividual =
-    selectedTab === CampaignParticipantSource.INDIVIDUAL &&
-    selectableContacts.length === 0;
+    selectedTab === CampaignParticipantSource.INDIVIDUAL && selectableContacts.length === 0;
 
   function handleSelectAll(checked: boolean) {
     switch (selectedTab) {
@@ -198,8 +178,7 @@ const AddParticipantModal = ({
 
       case CampaignParticipantSource.GROUP: {
         const selectableGroups =
-          contactGroup?.data?.filter((g) => (g?._count?.contacts ?? 0) > 0) ??
-          [];
+          contactGroup?.data?.filter((g) => (g?._count?.contacts ?? 0) > 0) ?? [];
 
         setSelectedGroups(checked ? selectableGroups : []);
         break;
@@ -207,9 +186,7 @@ const AddParticipantModal = ({
 
       case CampaignParticipantSource.CAMPAIGN: {
         const selectableCampaigns =
-          campaignData?.data?.filter(
-            (c) => (c?.campaignParticipantsCount ?? 0) > 0,
-          ) ?? [];
+          campaignData?.data?.filter((c) => (c?.campaignParticipantsCount ?? 0) > 0) ?? [];
 
         setSelectedCampaigns(checked ? selectableCampaigns : []);
         break;
@@ -222,23 +199,14 @@ const AddParticipantModal = ({
 
   const filteredContacts = contacts?.filter((c) => c.phone != null);
   const filteredGroups = searchText
-    ? contactGroup?.data.filter((g) =>
-        g.name.toLowerCase().includes(searchText.toLowerCase()),
-      )
+    ? contactGroup?.data.filter((g) => g.name.toLowerCase().includes(searchText.toLowerCase()))
     : contactGroup?.data;
   const filteredCampaigns = searchText
-    ? campaignData?.data.filter((g) =>
-        g.name.toLowerCase().includes(searchText.toLowerCase()),
-      )
+    ? campaignData?.data.filter((g) => g.name.toLowerCase().includes(searchText.toLowerCase()))
     : campaignData?.data;
-  const totalPageCount = Math.ceil(
-    (data?.totalCount ?? 0) / pagination.pageSize,
-  );
 
   const getSelectedCount = () => {
-    return (
-      selectedContacts.length + selectedGroups.length + selectedCampaigns.length
-    );
+    return selectedContacts.length + selectedGroups.length + selectedCampaigns.length;
   };
 
   return (
@@ -279,9 +247,7 @@ const AddParticipantModal = ({
 
             <Tabs
               value={selectedTab}
-              onValueChange={(v) =>
-                setSelectedTab(v as CampaignParticipantSource)
-              }
+              onValueChange={(v) => setSelectedTab(v as CampaignParticipantSource)}
             >
               <TabsList className="grid w-full grid-cols-3 h-10">
                 <TabsTrigger
@@ -291,17 +257,11 @@ const AddParticipantModal = ({
                   <IconUsers className="h-4 w-4" />
                   <span className="hidden sm:inline">{t("Individual")}</span>
                 </TabsTrigger>
-                <TabsTrigger
-                  value={CampaignParticipantSource.GROUP}
-                  className="gap-2"
-                >
+                <TabsTrigger value={CampaignParticipantSource.GROUP} className="gap-2">
                   <IconFolderOpen className="h-4 w-4" />
                   <span className="hidden sm:inline">{t("Group")}</span>
                 </TabsTrigger>
-                <TabsTrigger
-                  value={CampaignParticipantSource.CAMPAIGN}
-                  className="gap-2"
-                >
+                <TabsTrigger value={CampaignParticipantSource.CAMPAIGN} className="gap-2">
                   <IconSend className="h-4 w-4" />
                   <span className="hidden sm:inline">{t("Campaign")}</span>
                 </TabsTrigger>
@@ -329,10 +289,7 @@ const AddParticipantModal = ({
                       }}
                     />
 
-                    <Label
-                      htmlFor="select-all"
-                      className="text-sm font-normal cursor-pointer"
-                    >
+                    <Label htmlFor="select-all" className="text-sm font-normal cursor-pointer">
                       {t("Select All")}
                     </Label>
                   </div>
@@ -349,8 +306,7 @@ const AddParticipantModal = ({
                     {selectedTab === CampaignParticipantSource.CAMPAIGN && (
                       <div className="mb-4">
                         <Label className="text-xs mb-2">
-                          {t("Message Status")}{" "}
-                          <span className="text-red-500">*</span>
+                          {t("Message Status")} <span className="text-red-500">*</span>
                         </Label>
 
                         <Select
@@ -361,13 +317,11 @@ const AddParticipantModal = ({
                             <SelectValue placeholder={t("Pick status")} />
                           </SelectTrigger>
                           <SelectContent>
-                            {Object.values(CampaignParticipantAddStatus).map(
-                              (status) => (
-                                <SelectItem key={status} value={status}>
-                                  {status}
-                                </SelectItem>
-                              ),
-                            )}
+                            {Object.values(CampaignParticipantAddStatus).map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -375,15 +329,13 @@ const AddParticipantModal = ({
 
                     <ScrollArea className="flex-1 overflow-hidden">
                       <div className="space-y-2 pr-4">
-                        {selectedTab ===
-                          CampaignParticipantSource.INDIVIDUAL && (
+                        {selectedTab === CampaignParticipantSource.INDIVIDUAL && (
                           <>
                             {filteredContacts?.length > 0 ? (
                               filteredContacts.map((contact) => {
-                                const isAlreadySelected =
-                                  contact?.campaignParticipants?.some(
-                                    (c) => c?.campaignId === campaign?.id,
-                                  );
+                                const isAlreadySelected = contact?.campaignParticipants?.some(
+                                  (c) => c?.campaignId === campaign?.id,
+                                );
                                 return (
                                   <Individual
                                     key={contact?.id}
@@ -463,10 +415,7 @@ const AddParticipantModal = ({
               <CardContent className="p-3 flex-1 overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-medium">{t("Selected")}</h3>
-                  <Badge
-                    variant="secondary"
-                    className="text-primary bg-primary/10"
-                  >
+                  <Badge variant="secondary" className="text-primary bg-primary/10">
                     {t("{count} items", { count: String(getSelectedCount()) })}
                   </Badge>
                 </div>
@@ -478,9 +427,7 @@ const AddParticipantModal = ({
                     <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center mb-3">
                       <IconUsers className="w-8 h-8 text-slate-400" />
                     </div>
-                    <p className="text-sm text-slate-500">
-                      {t("No items selected")}
-                    </p>
+                    <p className="text-sm text-slate-500">{t("No items selected")}</p>
                     <p className="text-xs text-slate-400 mt-1">
                       {t("Select contacts, groups, or campaigns to add")}
                     </p>
@@ -489,10 +436,9 @@ const AddParticipantModal = ({
                   <ScrollArea className="flex-1 overflow-hidden">
                     <div className="space-y-2 pr-4">
                       {selectedContacts?.map((customer) => {
-                        const isAlreadySelected =
-                          customer.campaignParticipants?.some(
-                            (c) => c?.campaignId === campaign?.id,
-                          );
+                        const isAlreadySelected = customer.campaignParticipants?.some(
+                          (c) => c?.campaignId === campaign?.id,
+                        );
                         return (
                           <Individual
                             key={customer?.id}
@@ -582,9 +528,7 @@ const Individual = ({
  transition-all"
     >
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-sm truncate max-w-42.5">
-          {customer?.name}
-        </h4>
+        <h4 className="font-medium text-sm truncate max-w-42.5">{customer?.name}</h4>
         <p className="text-xs text-slate-500 font-mono">{customer?.phone}</p>
       </div>
       {isSelected ? (
@@ -592,9 +536,7 @@ const Individual = ({
           variant="outline"
           size="sm"
           onClick={() => {
-            setSelectedContacts(
-              selectedContacts.filter((c) => c?.id !== customer?.id),
-            );
+            setSelectedContacts(selectedContacts.filter((c) => c?.id !== customer?.id));
           }}
           className="ml-2 shrink-0"
         >
@@ -642,21 +584,15 @@ const CustomerGroup = ({
  transition-all"
     >
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-sm truncate max-w-42.5">
-          {group?.name}
-        </h4>
-        <p className="text-xs text-slate-500">
-          {t("{count} members", { count: memberCount })}
-        </p>
+        <h4 className="font-medium text-sm truncate max-w-42.5">{group?.name}</h4>
+        <p className="text-xs text-slate-500">{t("{count} members", { count: memberCount })}</p>
       </div>
       {isSelected ? (
         <Button
           variant="outline"
           size="sm"
           onClick={() => {
-            setSelectedGroups(
-              selectedGroups.filter((c) => c?.id !== group?.id),
-            );
+            setSelectedGroups(selectedGroups.filter((c) => c?.id !== group?.id));
           }}
           className="ml-2 shrink-0"
         >
@@ -698,9 +634,7 @@ const CustomerCampaign = ({
  transition-all"
     >
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-sm truncate max-w-42.5">
-          {campaign?.name}
-        </h4>
+        <h4 className="font-medium text-sm truncate max-w-42.5">{campaign?.name}</h4>
         <p className="text-xs text-slate-500">
           {t("{count} participants", {
             count: campaign?.campaignParticipantsCount || 0,
@@ -712,9 +646,7 @@ const CustomerCampaign = ({
           variant="outline"
           size="sm"
           onClick={() => {
-            setSelectedCampaigns(
-              selectedCampaigns.filter((c) => c?.id !== campaign?.id),
-            );
+            setSelectedCampaigns(selectedCampaigns.filter((c) => c?.id !== campaign?.id));
           }}
           className="ml-2 shrink-0"
         >

@@ -12,8 +12,8 @@ const WhatsAppSolutionContainer = () => {
             WhatsApp Solution for Lead Generation and Customer Support
           </h2>
           <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-            Convert conversations into tickets and leads to drive growth and
-            enhance customer experience
+            Convert conversations into tickets and leads to drive growth and enhance customer
+            experience
           </p>
           <div className="mt-6 h-1 w-24 bg-whatsapp mx-auto"></div>
         </div>

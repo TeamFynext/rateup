@@ -32,10 +32,7 @@ const useLoyaltyTierById = (tierId: string) =>
 /**
  * Hook to create a new loyalty tier
  */
-const useCreateLoyaltyTierMutation = (
-  onSuccess?: () => void,
-  onError?: () => void,
-) => {
+const useCreateLoyaltyTierMutation = (onSuccess?: () => void, onError?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -63,8 +60,7 @@ const useUpdateLoyaltyTierMutation = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (tierData: LoyaltyTierUpdateInput) =>
-      updateLoyaltyTier(tierId, tierData),
+    mutationFn: (tierData: LoyaltyTierUpdateInput) => updateLoyaltyTier(tierId, tierData),
     onSuccess: () => {
       toast.success("Loyalty tier updated successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
@@ -81,10 +77,7 @@ const useUpdateLoyaltyTierMutation = (
 /**
  * Hook to delete a loyalty tier
  */
-const useDeleteLoyaltyTierMutation = (
-  onSuccess?: () => void,
-  onError?: () => void,
-) => {
+const useDeleteLoyaltyTierMutation = (onSuccess?: () => void, onError?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({

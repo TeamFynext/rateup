@@ -2,12 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  createReferral,
-  deleteReferral,
-  getAllReferrals,
-  trackVisit,
-} from "./referrals.api";
+import { createReferral, deleteReferral, getAllReferrals, trackVisit } from "./referrals.api";
 
 export function useCreateReferralMutation({
   onSuccess,
@@ -19,8 +14,7 @@ export function useCreateReferralMutation({
   const { t: translations } = useTranslation();
 
   return useMutation({
-    mutationFn: ({ name, email }: { name: string; email: string }) =>
-      createReferral(name, email),
+    mutationFn: ({ name, email }: { name: string; email: string }) => createReferral(name, email),
     onSuccess: (data) => {
       toast.success(translations("Referral code created successfully!"));
       if (onSuccess) onSuccess(data);
@@ -28,9 +22,7 @@ export function useCreateReferralMutation({
     onError: (error: any) => {
       console.error("Error creating referral:", error);
       const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to create referral code";
+        error?.response?.data?.message || error?.message || "Failed to create referral code";
       toast.error(translations(msg));
       if (onError) onError(error);
     },
@@ -56,10 +48,7 @@ export function useDeleteReferralMutation({
     },
     onError: (error: any) => {
       console.error("Error deleting referral:", error);
-      const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to delete referral";
+      const msg = error?.response?.data?.message || error?.message || "Failed to delete referral";
       toast.error(translations(msg));
       if (onError) onError(error);
     },

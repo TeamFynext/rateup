@@ -1,8 +1,3 @@
-"use client";
-
-// Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
-import { Fragment, useContext, useEffect, useState } from "react";
-
 import {
   ActionIcon,
   Box,
@@ -20,10 +15,18 @@ import {
 } from "@mantine/core";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
+// Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
+import { Fragment, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Updater } from "use-immer";
 import { useImmer } from "use-immer";
 
+import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import {
+  ContainedSelection,
+  ContainedTextField,
+} from "@/components/input/ContainedInput/ContainedInput.tsx";
+import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import {
   LogicAction,
@@ -37,15 +40,6 @@ import type {
   FlowLogicJump,
   FlowLogicJumpComponentLevel,
 } from "@/types/global";
-import {
-  useUpdateFlowMutation,
-  useWaFlowFromDb,
-} from "@/backend/whatsapp/flow/flow.query";
-import {
-  ContainedSelection,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
-import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { logicSupportedTypes } from "@/utils/data.ts";
 import { getConditions, getResponses } from "@/utils/survey/logic/logic.utils";
 import { getQuestionLabel } from "@/utils/survey/question/question.utils";
@@ -55,10 +49,7 @@ import {
   getScreenObjById,
 } from "@/utils/whatsapp/flow.utils";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../../../../Button/RateupButtons.tsx";
 import { EditFlowContext } from "./EditFlowContext.ts";
 
 interface LogicEditorProps {
@@ -71,8 +62,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
     Array<FlowLogicJumpComponentLevel>
   >([]);
 
-  const { selectedScreenId, flowJson, updateFlowJson, survey, map } =
-    useContext(EditFlowContext);
+  const { selectedScreenId, flowJson } = useContext(EditFlowContext);
 
   const screen = getScreenObjById(flowJson.screens, selectedScreenId);
 
@@ -117,11 +107,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   const { data: dbFlow, isLoading, isError } = useWaFlowFromDb(dbFlowId);
   const { t: translations } = useTranslation();
   useEffect(() => {
-    if (
-      dbFlow &&
-      logicJumps.length === 0 &&
-      componentLeventLogicJumps.length === 0
-    ) {
+    if (dbFlow && logicJumps.length === 0 && componentLeventLogicJumps.length === 0) {
       const stringActions = [];
       const objectActions = [];
 
@@ -155,9 +141,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
       dbFlowId,
       data: {
         logicJumps: Object.fromEntries(
-          Object.entries(updatedLogicJumps).filter(
-            ([_, v]: [string, any[]]) => v.length > 0,
-          ),
+          Object.entries(updatedLogicJumps).filter(([_, v]: [string, any[]]) => v.length > 0),
         ) as any,
       },
     });
@@ -286,18 +270,14 @@ function AtomicConditionBlock({
     map,
   );
 
-  const [selectedCondition, setSelectedCondition] = useState(
-    condition.condition,
-  );
+  const [selectedCondition, setSelectedCondition] = useState(condition.condition);
   const selectedScreen = getScreenObjById(flowJson.screens, selectedScreenId);
   const questionsInScreen = getQuestionsFromScreen(selectedScreen, survey, map);
   const logicSupportedQuestionsInScreen = questionsInScreen.filter((q) =>
     logicSupportedTypes.includes(q.type as QuestionType),
   );
   const { t: translations } = useTranslation();
-  const [selectedQId, setSelectedQId] = useState(
-    condition?.questionId || editingQuestion?.id,
-  );
+  const [selectedQId, setSelectedQId] = useState(condition?.questionId || editingQuestion?.id);
   const selectedQ = questionsInScreen.find((q) => q.id === selectedQId);
   if (!selectedQ) return;
 
@@ -340,9 +320,10 @@ function AtomicConditionBlock({
         <Select
           data={
             isComponentLevel
-              ? Object.entries(LogicConditionComponentLevel).map(
-                  ([key, value]) => ({ label: key, value }),
-                )
+              ? Object.entries(LogicConditionComponentLevel).map(([key, value]) => ({
+                  label: key,
+                  value,
+                }))
               : getConditions(selectedQ.type as QuestionType)
           }
           value={selectedCondition}
@@ -406,23 +387,14 @@ function ConditionsActionMapBlock({
   index,
   isComponentLevel = false,
 }: ConditionsActionMapBlockProps) {
-  const { selectedScreenId, flowJson, survey, map } =
-    useContext(EditFlowContext);
-  const currentIndex = flowJson.screens.findIndex(
-    (s) => s.id === selectedScreenId,
-  );
-  const [selectedAction, setSelectedAction] = useState(
-    logic.action || LogicAction.NextQ,
-  );
+  const { selectedScreenId, flowJson, survey, map } = useContext(EditFlowContext);
+  const currentIndex = flowJson.screens.findIndex((s) => s.id === selectedScreenId);
+  const [selectedAction, setSelectedAction] = useState(logic.action || LogicAction.NextQ);
   const [selectedActionSuccess, setSelectedActionSuccess] = useState(
-    typeof logic.action === "object"
-      ? logic.action.success
-      : logic.action || LogicAction.NextQ,
+    typeof logic.action === "object" ? logic.action.success : logic.action || LogicAction.NextQ,
   );
   const [selectedActionFail, setSelectedActionFail] = useState(
-    typeof logic.action === "object"
-      ? logic.action.fail
-      : logic.action || LogicAction.NextQ,
+    typeof logic.action === "object" ? logic.action.fail : logic.action || LogicAction.NextQ,
   );
   // Only allow jumping to screens after the current one
   const nextScreens = flowJson.screens.slice(currentIndex + 1);
@@ -435,11 +407,7 @@ function ConditionsActionMapBlock({
     })),
   ];
 
-  const elem = getQuestionsFromScreen(
-    flowJson?.screens?.[currentIndex],
-    survey,
-    map,
-  );
+  const elem = getQuestionsFromScreen(flowJson?.screens?.[currentIndex], survey, map);
   const nonInputElem = flowJson?.screens?.[currentIndex]?.layout?.children
     ?.find((se) => se.type === "Form")
     ?.children?.filter((c) =>
@@ -477,12 +445,7 @@ function ConditionsActionMapBlock({
         ? { success: selectedActionSuccess, fail: selectedActionFail }
         : selectedAction;
     });
-  }, [
-    selectedAction,
-    selectedActionSuccess,
-    selectedActionFail,
-    isComponentLevel,
-  ]);
+  }, [selectedAction, selectedActionSuccess, selectedActionFail, isComponentLevel]);
 
   return (
     <Flex

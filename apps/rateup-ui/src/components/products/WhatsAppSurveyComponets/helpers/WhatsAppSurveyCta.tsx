@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 
@@ -24,9 +22,8 @@ const WhatsAppSurveyCta = () => {
             </h2>
 
             <p className="text-lg py-3 text-[#013553] leading-relaxed">
-              Stop missing out on valuable feedback. Start turning customer
-              insights into measurable growth with RateUp's WhatsApp Surveys.
-              Book your free, personalized demo today!
+              Stop missing out on valuable feedback. Start turning customer insights into measurable
+              growth with RateUp's WhatsApp Surveys. Book your free, personalized demo today!
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">

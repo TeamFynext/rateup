@@ -20,19 +20,15 @@ function findPreviousMonday(date: Date): Date {
 export const formatedTime = (category) => {
   const currentTime = dayjs().format("HH:mm");
   const formattedStartTime = dayjs(category?.startTime).format("HH:mm");
-  const formattedStartTimeWithAmPm = dayjs(category?.startTime).format(
-    "hh:mm A",
-  );
+  const formattedStartTimeWithAmPm = dayjs(category?.startTime).format("hh:mm A");
   const formattedEndTime = dayjs(category?.endTime).format("HH:mm");
   const formattedEndTimeWithAmPm = dayjs(category?.endTime).format("hh:mm A");
   let withinTimeRange;
   formattedStartTime <= currentTime && formattedEndTime >= currentTime;
   if (formattedStartTime > formattedEndTime) {
-    withinTimeRange =
-      formattedStartTime <= currentTime || formattedEndTime >= currentTime;
+    withinTimeRange = formattedStartTime <= currentTime || formattedEndTime >= currentTime;
   } else {
-    withinTimeRange =
-      formattedStartTime <= currentTime && formattedEndTime >= currentTime;
+    withinTimeRange = formattedStartTime <= currentTime && formattedEndTime >= currentTime;
   }
   const categoryDisabled = category?.scheduleEnabled && !withinTimeRange;
   return {
@@ -77,8 +73,7 @@ export const isCategoryActive = (item) => {
   }
   const startTime = dayjs(item.startTime).format("HH:mm");
   const endTime = dayjs(item.endTime).format("HH:mm");
-  if (startTime > endTime)
-    return currentTime >= startTime || currentTime <= endTime;
+  if (startTime > endTime) return currentTime >= startTime || currentTime <= endTime;
   else return startTime <= currentTime && endTime >= currentTime;
 };
 

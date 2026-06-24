@@ -1,19 +1,8 @@
-"use client";
-
-import { useState } from "react";
-
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  AlertTriangle,
-  Eye,
-  EyeOff,
-  Loader2,
-  Lock,
-  Trash2,
-  X,
-} from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, Loader2, Lock, Trash2, X } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -51,7 +40,7 @@ function Security() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleting] = useState(false);
   const updateActiveStatus = useUpdateActiveStatusMutation();
   const [isUserDeleteDialogOpen, setIsUserDeleteDialogOpen] = useState(false);
   const [userConfirmText, setUserConfirmText] = useState("");
@@ -70,14 +59,12 @@ function Security() {
       confirmPassword: "",
     },
     validate: {
-      existingPassword: isNotEmpty(
-        translations("Enter your existing password"),
-      ),
+      existingPassword: isNotEmpty(translations("Enter your existing password")),
       newPassword: (value) => {
         if (!value) return translations("Enter your new password");
 
         const passwordRegex =
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 
         if (!passwordRegex.test(value)) {
           return translations(
@@ -88,8 +75,7 @@ function Security() {
       },
       confirmPassword: (value, values) => {
         if (!value) return translations("Please confirm your new password");
-        if (value !== values.newPassword)
-          return translations("Passwords do not match");
+        if (value !== values.newPassword) return translations("Passwords do not match");
         return null;
       },
     },
@@ -125,7 +111,7 @@ function Security() {
 
   const orgDeleteMutation = useMutation({
     mutationFn: ({ id }: { id: string }) => deleteOrg(id),
-    onSuccess: (msg) => {
+    onSuccess: (_msg) => {
       toast.success(translations("Organization Deleted Successfully!"), {
         id: "delete-data",
       });
@@ -173,9 +159,7 @@ function Security() {
       <div>
         <h2 className="text-2xl mb-1">{translations("Security Settings")}</h2>
         <p className="text-sm text-muted-foreground">
-          {translations(
-            "Manage your password, authentication, and security preferences",
-          )}
+          {translations("Manage your password, authentication, and security preferences")}
         </p>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -184,16 +168,10 @@ function Security() {
             {translations("Change Password")}
           </h3>
 
-          <form
-            onSubmit={passwordForm.onSubmit(onPasswordSubmit)}
-            className="space-y-4"
-          >
+          <form onSubmit={passwordForm.onSubmit(onPasswordSubmit)} className="space-y-4">
             {/* Current Password */}
             <div className="space-y-1 relative">
-              <Label
-                htmlFor="currentPassword"
-                className="text-sm text-gray-700"
-              >
+              <Label htmlFor="currentPassword" className="text-sm text-gray-700">
                 {translations("Current Password")}
               </Label>
               <div className="relative">
@@ -210,11 +188,7 @@ function Security() {
                   className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
                   aria-label={showCurrent ? "Hide password" : "Show password"}
                 >
-                  {showCurrent ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
+                  {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -238,21 +212,14 @@ function Security() {
                   className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
                   aria-label={showNew ? "Hide password" : "Show password"}
                 >
-                  {showNew ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
+                  {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
             {/* Confirm Password */}
             <div className="space-y-1 relative">
-              <Label
-                htmlFor="confirmPassword"
-                className="text-sm text-gray-700"
-              >
+              <Label htmlFor="confirmPassword" className="text-sm text-gray-700">
                 {translations("Confirm New Password")}
               </Label>
               <div className="relative">
@@ -269,25 +236,17 @@ function Security() {
                   className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
                   aria-label={showConfirm ? "Hide password" : "Show password"}
                 >
-                  {showConfirm ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
+                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
             <div>
               {passwordForm.errors.newPassword && (
-                <p className="text-xs text-red-500">
-                  {passwordForm.errors.newPassword}
-                </p>
+                <p className="text-xs text-red-500">{passwordForm.errors.newPassword}</p>
               )}
               {passwordForm.errors.confirmPassword && (
-                <p className="text-xs text-red-500">
-                  {passwordForm.errors.confirmPassword}
-                </p>
+                <p className="text-xs text-red-500">{passwordForm.errors.confirmPassword}</p>
               )}
             </div>
 
@@ -304,9 +263,7 @@ function Security() {
             {/* Submit Button */}
             <Button className="w-full bg-primary" disabled={isLoading}>
               <Lock className="w-4 h-4 mr-2" />
-              {isLoading
-                ? translations("Updating")
-                : translations("Update Password")}
+              {isLoading ? translations("Updating") : translations("Update Password")}
             </Button>
           </form>
         </Card>
@@ -319,15 +276,11 @@ function Security() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Trash2 className="w-4 h-4 text-red-600" />
-                    <Label className="text-red-700">
-                      {translations("Delete Organization")}
-                    </Label>
+                    <Label className="text-red-700">{translations("Delete Organization")}</Label>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {translations(
-                      "Permanently delete your organization and all associated data",
-                    )}
-                    .{translations("This action cannot be undone")}.
+                    {translations("Permanently delete your organization and all associated data")}.
+                    {translations("This action cannot be undone")}.
                   </p>
                 </div>
                 <Button
@@ -344,9 +297,7 @@ function Security() {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <Trash2 className="w-4 h-4 text-red-600" />
-                  <Label className="text-red-700">
-                    {translations("Delete Account")}
-                  </Label>
+                  <Label className="text-red-700">{translations("Delete Account")}</Label>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {translations("Permanently delete your user account")}.{" "}
@@ -389,23 +340,16 @@ function Security() {
             <div className="space-y-4 py-4">
               <Alert variant="destructive" className="border-red-200 bg-red-50">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>
-                  {translations("Warning: High Risk Action")}
-                </AlertTitle>
+                <AlertTitle>{translations("Warning: High Risk Action")}</AlertTitle>
                 <AlertDescription className="text-sm">
-                  {translations(
-                    "Deleting your organization will permanently remove",
-                  )}
-                  :
+                  {translations("Deleting your organization will permanently remove")}:
                 </AlertDescription>
               </Alert>
 
               <div className="pl-4 space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-start gap-2">
                   <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                  <span>
-                    {translations("All team members and their access")}
-                  </span>
+                  <span>{translations("All team members and their access")}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
@@ -424,10 +368,7 @@ function Security() {
               <Separator />
 
               <div className="space-y-3">
-                <Label
-                  htmlFor="confirm-delete"
-                  className="text-sm font-semibold"
-                >
+                <Label htmlFor="confirm-delete" className="text-sm font-semibold">
                   Type{" "}
                   <code className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-mono">
                     DELETE ORGANIZATION
@@ -460,14 +401,9 @@ function Security() {
               <Button
                 variant="destructive"
                 onClick={async () => {
-                  toast.loading(
-                    translations(
-                      "Hold on, your organization is getting deleted...",
-                    ),
-                    {
-                      id: "delete-data",
-                    },
-                  );
+                  toast.loading(translations("Hold on, your organization is getting deleted..."), {
+                    id: "delete-data",
+                  });
                   await orgDeleteMutation.mutateAsync({ id: user?.orgId });
                 }}
                 disabled={!isConfirmValid || isDeleting}
@@ -489,10 +425,7 @@ function Security() {
           </DialogContent>
         </Dialog>
       )}
-      <Dialog
-        open={isUserDeleteDialogOpen}
-        onOpenChange={setIsUserDeleteDialogOpen}
-      >
+      <Dialog open={isUserDeleteDialogOpen} onOpenChange={setIsUserDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
@@ -513,9 +446,7 @@ function Security() {
           <div className="space-y-4 py-4">
             <Alert variant="destructive" className="border-red-200 bg-red-50">
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>
-                {translations("Warning: High Risk Action")}
-              </AlertTitle>
+              <AlertTitle>{translations("Warning: High Risk Action")}</AlertTitle>
               <AlertDescription>
                 {translations("This will permanently delete your account")}
               </AlertDescription>

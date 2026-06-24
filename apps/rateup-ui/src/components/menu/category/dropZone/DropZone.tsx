@@ -1,5 +1,3 @@
-"use client";
-
 import { Group, rem, Stack, Text } from "@mantine/core";
 import type { DropzoneProps } from "@mantine/dropzone";
 import { Dropzone, MIME_TYPES } from "@mantine/dropzone";
@@ -17,19 +15,12 @@ export function DropZoneArea(props: Readonly<ExtendedDropzoneProps>) {
   return (
     <Dropzone
       onDrop={(files) => setCsvFile(files[0])}
-      onReject={() =>
-        toast.error(translations("file format must be csv and select one file"))
-      }
+      onReject={() => toast.error(translations("file format must be csv and select one file"))}
       accept={[MIME_TYPES.csv, MIME_TYPES.xls]}
       multiple={false}
       {...otherProps}
     >
-      <Group
-        justify="center"
-        gap={0}
-        mih={150}
-        style={{ pointerEvents: "none" }}
-      >
+      <Group justify="center" gap={0} mih={150} style={{ pointerEvents: "none" }}>
         <Dropzone.Accept>
           <IconUpload
             style={{

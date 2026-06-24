@@ -1,5 +1,3 @@
-"use client";
-
 import {
   IconAlignBoxLeftMiddleFilled,
   IconCalendarTime,
@@ -22,13 +20,6 @@ import {
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  LDResponse2,
-  QuestionType2,
-  RatingScale,
-  SmileyResponse2,
-  YNResponse,
-} from "@/types/enums.ts";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -38,10 +29,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import {
+  LDResponse2,
+  QuestionType2,
+  RatingScale,
+  SmileyResponse2,
+  YNResponse,
+} from "@/types/enums.ts";
 import { FlowQuestionTypes2 } from "@/utils/constants.ts";
 
 import useFlowStoreV3 from "../utils/store.ts";
 import { NO_NAME_TYPES, NO_VISIBLE_TYPES } from "../utils/typeConstants.ts";
+
 import styles from "./AddElementModal.module.css";
 
 // Icon mapping for question types
@@ -78,8 +77,7 @@ interface AddElementModalProps {
 // Modal for adding new elements to the flow
 function AddElementModal({ opened, close }: AddElementModalProps) {
   const { t: translations } = useTranslation();
-  const { getCurrentScreen, getScreens, addComponentToScreen } =
-    useFlowStoreV3();
+  const { getCurrentScreen, getScreens, addComponentToScreen } = useFlowStoreV3();
 
   const getLabel = (type: QuestionType2) => {
     switch (type) {
@@ -101,13 +99,11 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
 
     switch (type) {
       case QuestionType2.Rating:
-        return Object.entries(RatingScale).map(
-          ([description, title], index) => ({
-            id: (index + 1).toString(),
-            title,
-            description,
-          }),
-        );
+        return Object.entries(RatingScale).map(([description, title], index) => ({
+          id: (index + 1).toString(),
+          title,
+          description,
+        }));
       case QuestionType2.Smiley:
         return mapEnumToDataSource(SmileyResponse2);
       case QuestionType2.LD:
@@ -142,9 +138,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
     }
 
     if (
-      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(
-        type,
-      ) &&
+      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(type) &&
       formElementChildren.find((c) => c.type === type)
     ) {
       toast.error(`Only one ${type} allowed per screen`, {
@@ -154,12 +148,8 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
     }
 
     if (
-      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(
-        type,
-      ) &&
-      formElementChildren.some((child) =>
-        ["DocumentPicker", "PhotoPicker"].includes(child.type),
-      )
+      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(type) &&
+      formElementChildren.some((child) => ["DocumentPicker", "PhotoPicker"].includes(child.type))
     ) {
       toast.error(
         translations(
@@ -174,17 +164,11 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
 
     if (
       type === QuestionType2.ImageCarousel &&
-      formElementChildren.filter((c) => c.type === ("ImageCarousel" as any))
-        .length >= 2
+      formElementChildren.filter((c) => c.type === ("ImageCarousel" as any)).length >= 2
     ) {
-      toast.error(
-        translations(
-          "Maximum of 2 ImageCarousel components allowed per screen",
-        ),
-        {
-          id: "error-max-screen-elements",
-        },
-      );
+      toast.error(translations("Maximum of 2 ImageCarousel components allowed per screen"), {
+        id: "error-max-screen-elements",
+      });
       return;
     }
 
@@ -194,12 +178,9 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
         .flatMap((screen) => screen.layout.children)
         .filter((child) => child.type === ("ImageCarousel" as any)).length >= 3
     ) {
-      toast.error(
-        translations("Maximum of 3 ImageCarousel components allowed per flow"),
-        {
-          id: "error-max-screen-elements",
-        },
-      );
+      toast.error(translations("Maximum of 3 ImageCarousel components allowed per flow"), {
+        id: "error-max-screen-elements",
+      });
       return;
     }
 
@@ -280,9 +261,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
           <div className="space-y-6">
             {FlowQuestionTypes2.map((group, index) => (
               <div key={index}>
-                <h5 className="text-sm font-medium text-muted-foreground mb-3">
-                  {group.title}
-                </h5>
+                <h5 className="text-sm font-medium text-muted-foreground mb-3">{group.title}</h5>
                 <div className="grid grid-cols-3 gap-3">
                   {group.questionTypes.map((type) => {
                     const Icon = questionIcons[type];
@@ -297,9 +276,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
                         onClick={() => handleTypeSelection(type)}
                       >
                         {Icon && <Icon size={20} />}
-                        <span className="text-sm font-medium">
-                          {getLabel(type)}
-                        </span>
+                        <span className="text-sm font-medium">{getLabel(type)}</span>
                       </Button>
                     );
                   })}

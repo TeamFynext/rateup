@@ -1,14 +1,7 @@
-import React, { useMemo } from "react";
-
 import { PlusIcon, Trash2Icon } from "lucide-react";
-import {
-  Controller,
-  useFieldArray,
-  useFormContext,
-  useWatch,
-} from "react-hook-form";
+import React, { useMemo } from "react";
+import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
-import { WaMessageAssignStatus } from "@/types/enums.ts";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
@@ -29,18 +22,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 import type { ActionType, CreateRuleInput, Platform } from "./schema.ts";
-import { ACTION_TYPES, getActionTypesForPlatform } from "./schema.ts";
+import { getActionTypesForPlatform } from "./schema.ts";
 
 // ActionValueInput now always uses shadcn Field and FieldError, and expects valueField and fieldState from Controller
-const ActionValueInput = ({
-  index,
-  valueField,
-}: {
-  index: number;
-  valueField: any;
-}) => {
+const ActionValueInput = ({ index, valueField }: { index: number; valueField: any }) => {
   const { control } = useFormContext<CreateRuleInput>();
   const { data: waData } = useAllWaAutomatedReplies();
   const { data: igData } = useAllInstagramAutomations();
@@ -50,21 +38,18 @@ const ActionValueInput = ({
   const { data: teamsData } = useTeamsByUser();
   const { data: flowsData } = useWaFlowsFromDb();
   const { data: surveysSummary } = useAllSurveysSummary();
-  const { data: templatesData, isLoading: isTemplatesLoading } =
-    useWaTemplates();
+  const { data: templatesData, isLoading: isTemplatesLoading } = useWaTemplates();
 
   const platform = useWatch({ control, name: "platform" }) as Platform;
 
   const filteredAutomations = useMemo(() => {
     if (platform === "INSTAGRAM" || platform === "FACEBOOK") {
       return [...(igData || [])].sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     }
     return [...(waData || [])].sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }, [waData, igData, platform]);
 
@@ -117,10 +102,7 @@ const ActionValueInput = ({
   }
   if (actionType === "ATTACH_LABEL") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
+      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select label" />
         </SelectTrigger>
@@ -136,10 +118,7 @@ const ActionValueInput = ({
   }
   if (actionType === "ASSIGN_USER") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
+      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select user" />
         </SelectTrigger>
@@ -155,10 +134,7 @@ const ActionValueInput = ({
   }
   if (actionType === "ASSIGN_TEAM") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
+      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select team" />
         </SelectTrigger>
@@ -174,10 +150,7 @@ const ActionValueInput = ({
   }
   if (actionType === "SEND_FLOW") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
+      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select flow" />
         </SelectTrigger>
@@ -193,10 +166,7 @@ const ActionValueInput = ({
   }
   if (actionType === "TRIGGER_CHATBOT") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
+      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select automation" />
         </SelectTrigger>
@@ -212,10 +182,7 @@ const ActionValueInput = ({
   }
   if (actionType === "SEND_WEB_SURVEY") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
+      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select web survey" />
         </SelectTrigger>
@@ -246,9 +213,7 @@ const ActionValueInput = ({
         >
           <SelectTrigger className="w-full bg-background">
             <SelectValue
-              placeholder={
-                isTemplatesLoading ? "Loading templates..." : "Select template"
-              }
+              placeholder={isTemplatesLoading ? "Loading templates..." : "Select template"}
             />
           </SelectTrigger>
           <SelectContent>
@@ -295,10 +260,7 @@ const ActionValueInput = ({
   }
   if (actionType === "ASSIGN_LIFECYCLE") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
+      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select lifecycle" />
         </SelectTrigger>
@@ -320,10 +282,7 @@ const ActionValueInput = ({
       { value: WaMessageAssignStatus.UNRESOLVED, label: "Unresolved" },
     ];
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
+      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select close status" />
         </SelectTrigger>
@@ -338,9 +297,7 @@ const ActionValueInput = ({
     );
   }
   // Default fallback
-  return (
-    <Input placeholder="Value" {...valueField} value={valueField.value || ""} />
-  );
+  return <Input placeholder="Value" {...valueField} value={valueField.value || ""} />;
 };
 const ExternalApiExample = () => {
   const { control } = useFormContext<CreateRuleInput>();
@@ -413,10 +370,7 @@ const ActionList: React.FC = () => {
                   defaultValue={field.value}
                   value={field.value}
                 >
-                  <SelectTrigger
-                    className="w-full"
-                    aria-invalid={fieldState.invalid}
-                  >
+                  <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
                     <SelectValue placeholder="Action Type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -427,9 +381,7 @@ const ActionList: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}
           />
@@ -440,9 +392,7 @@ const ActionList: React.FC = () => {
             render={({ field: valueField, fieldState }) => (
               <Field className="flex-1" data-invalid={fieldState.invalid}>
                 <ActionValueInput index={index} valueField={valueField} />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}
           />
@@ -470,9 +420,7 @@ const ActionList: React.FC = () => {
       </Button>
 
       {errors.actions?.root?.message && (
-        <p className="text-sm font-medium text-destructive mt-2">
-          {errors.actions?.root?.message}
-        </p>
+        <p className="text-sm font-medium text-destructive mt-2">{errors.actions?.root?.message}</p>
       )}
     </div>
   );

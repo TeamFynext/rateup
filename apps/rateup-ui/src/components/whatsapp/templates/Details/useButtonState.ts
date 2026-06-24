@@ -13,10 +13,7 @@ interface ButtonState {
   combinedLength: number;
 }
 
-export const useButtonState = ({
-  url = "",
-  example,
-}: ButtonStateParams): ButtonState => {
+export const useButtonState = ({ url = "", example }: ButtonStateParams): ButtonState => {
   return useMemo(() => {
     const isWebSurvey = Array.isArray(example)
       ? example.length > 0 && example[0]?.startsWith(":")

@@ -1,6 +1,5 @@
-import React from "react";
-
 import dayjs from "dayjs";
+import React from "react";
 
 export const checkExpiry = (expiresAt: Date) => {
   const expirationDate = dayjs(expiresAt);

@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import { Check, Copy } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -26,11 +23,7 @@ function LinkWithCopyBtn({ link, label }: Readonly<LinkWithCopyBtnProps>) {
 
   return (
     <div className="flex flex-col">
-      {label && (
-        <Label className="text-sm font-medium text-muted-foreground mb-1">
-          {label}
-        </Label>
-      )}
+      {label && <Label className="text-sm font-medium text-muted-foreground mb-1">{label}</Label>}
       <div className="flex gap-2">
         <Input value={link} readOnly className="flex-1" />
         <Button
@@ -38,15 +31,9 @@ function LinkWithCopyBtn({ link, label }: Readonly<LinkWithCopyBtnProps>) {
           variant={copied ? "outline" : "default"}
           onClick={handleCopy}
           size="icon"
-          aria-label={
-            copied ? translations("Copied url") : translations("Copy url")
-          }
+          aria-label={copied ? translations("Copied url") : translations("Copy url")}
         >
-          {copied ? (
-            <Check className="w-4 h-4" />
-          ) : (
-            <Copy className="w-4 h-4" />
-          )}
+          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
         </Button>
       </div>
     </div>

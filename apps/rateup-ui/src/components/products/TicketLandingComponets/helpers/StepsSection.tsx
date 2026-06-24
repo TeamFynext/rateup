@@ -11,16 +11,10 @@ const StepsSection = () => {
             <step.icon className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-[#1c518e]">
-              {step.title}
-            </h3>
+            <h3 className="text-lg font-semibold text-[#1c518e]">{step.title}</h3>
             <p className="mt-1 text-gray-600">{step.description}</p>
             <div
-              className={
-                index < steps.length - 1
-                  ? "h-8 w-0.5 bg-gray-200 ml-6 mt-4"
-                  : ""
-              }
+              className={index < steps.length - 1 ? "h-8 w-0.5 bg-gray-200 ml-6 mt-4" : ""}
             ></div>
           </div>
         </div>

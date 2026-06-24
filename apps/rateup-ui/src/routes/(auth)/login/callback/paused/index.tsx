@@ -1,13 +1,7 @@
-"use client";
-
 import { Anchor, Center, Image, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconLogout } from "@tabler/icons-react";
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 
 import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
@@ -57,9 +51,7 @@ function getPausedText(pausedby) {
     case "org":
       return (
         <Stack align="center">
-          <Text c={"dimmed"}>
-            Kindly contact your organization Super Admin for details.
-          </Text>
+          <Text c={"dimmed"}>Kindly contact your organization Super Admin for details.</Text>
         </Stack>
       );
     case "rateup":

@@ -12,9 +12,7 @@ function VizInbox() {
           key={i}
           className="flex items-center gap-2 px-3 py-2.5 rounded-[10px]"
           style={{
-            background: active
-              ? "rgba(47,163,255,0.10)"
-              : "rgba(255,255,255,0.045)",
+            background: active ? "rgba(47,163,255,0.10)" : "rgba(255,255,255,0.045)",
             border: `1px solid ${active ? "rgba(47,163,255,0.28)" : "rgba(255,255,255,0.09)"}`,
           }}
         >
@@ -172,9 +170,7 @@ function VizAuto() {
             >
               Trigger
             </span>
-            <span className="text-[11.5px] font-bold text-white">
-              {trigger}
-            </span>
+            <span className="text-[11.5px] font-bold text-white">{trigger}</span>
           </div>
           <div className="flex justify-center text-white/35 mb-1.5">
             <svg
@@ -242,9 +238,7 @@ function VizMobile() {
                     key={j}
                     className={`h-[18px] rounded-md ${extra}`}
                     style={{
-                      background: isOut
-                        ? "rgba(61,139,238,0.32)"
-                        : "rgba(255,255,255,0.09)",
+                      background: isOut ? "rgba(61,139,238,0.32)" : "rgba(255,255,255,0.09)",
                       alignSelf: isOut ? "flex-end" : "flex-start",
                       width: extra ? undefined : "100%",
                     }}
@@ -340,10 +334,7 @@ function VizLifecycle() {
               style={{ background: col.hdrBg, color: col.hdrColor }}
             >
               {col.label}
-              <span
-                className="text-[11px] font-black"
-                style={{ fontFamily: "Nunito,sans-serif" }}
-              >
+              <span className="text-[11px] font-black" style={{ fontFamily: "Nunito,sans-serif" }}>
                 {col.count}
               </span>
             </div>
@@ -356,12 +347,8 @@ function VizLifecycle() {
                   border: "1px solid rgba(255,255,255,0.09)",
                 }}
               >
-                <span className="block font-semibold text-white text-[9px] truncate">
-                  {n}
-                </span>
-                <span className="block text-[8px] text-white/35 mt-0.5 truncate">
-                  {s}
-                </span>
+                <span className="block font-semibold text-white text-[9px] truncate">{n}</span>
+                <span className="block text-[8px] text-white/35 mt-0.5 truncate">{s}</span>
               </div>
             ))}
           </div>
@@ -429,12 +416,8 @@ function VizLabels() {
             {av}
           </div>
           <div className="flex-1 min-w-0">
-            <span className="block text-[9.5px] font-semibold text-white truncate">
-              {name}
-            </span>
-            <span className="block text-[8.5px] text-white/35 truncate">
-              {prev}
-            </span>
+            <span className="block text-[9.5px] font-semibold text-white truncate">{name}</span>
+            <span className="block text-[8.5px] text-white/35 truncate">{prev}</span>
           </div>
           <div className="flex gap-1 flex-shrink-0">
             {tags.map(({ l, bg, c }) => (
@@ -473,12 +456,7 @@ const features = [
     ),
     title: "All Your Channels. Zero Switching.",
     body: "Every incoming message — WhatsApp, Instagram, Messenger — lands in one place. Your team sees the full customer history, across every platform, in one thread.",
-    tags: [
-      "WhatsApp Business",
-      "Instagram Direct",
-      "Messenger",
-      "More coming soon",
-    ],
+    tags: ["WhatsApp Business", "Instagram Direct", "Messenger", "More coming soon"],
   },
   {
     viz: <VizTeams />,
@@ -501,11 +479,7 @@ const features = [
     ),
     title: "The Right People, The Right Conversations.",
     body: "Create teams by department — support, sales, logistics, returns. Set role-based permissions so every staff member sees exactly what they need to.",
-    tags: [
-      "Admin, Manager, Agent roles",
-      "Team assignment",
-      "Custom permissions",
-    ],
+    tags: ["Admin, Manager, Agent roles", "Team assignment", "Custom permissions"],
   },
   {
     viz: <VizAuto />,
@@ -526,12 +500,7 @@ const features = [
     ),
     title: "Let the Routine Work Run Itself.",
     body: "Set up smart automation rules that trigger based on keywords, channels, tags, or status. Route messages, send first responses, and escalate urgent issues — automatically.",
-    tags: [
-      "Keyword routing",
-      "Auto-replies",
-      "Escalation rules",
-      "Tag & assign",
-    ],
+    tags: ["Keyword routing", "Auto-replies", "Escalation rules", "Tag & assign"],
   },
   {
     viz: <VizMobile />,
@@ -553,12 +522,7 @@ const features = [
     ),
     title: "Your Inbox, In Your Pocket.",
     body: "Stay connected wherever you are. The RateUp Inbox mobile app gives your team full access to conversations, assignments, and notifications.",
-    tags: [
-      "Android app",
-      "iOS app",
-      "Push notifications",
-      "Assign & resolve on the go",
-    ],
+    tags: ["Android app", "iOS app", "Push notifications", "Assign & resolve on the go"],
   },
   {
     viz: <VizLifecycle />,
@@ -601,12 +565,7 @@ const features = [
     ),
     title: "Organize Conversations with Labels.",
     body: "Tag conversations with custom labels like Urgent, VIP, Returns, or Sales. Filter your inbox instantly so the right conversations always rise to the top.",
-    tags: [
-      "Custom labels",
-      "Color-coded tags",
-      "Instant filtering",
-      "Team visibility",
-    ],
+    tags: ["Custom labels", "Color-coded tags", "Instant filtering", "Team visibility"],
   },
 ];
 
@@ -682,9 +641,7 @@ export default function Features() {
                     {title}
                   </h6>
                 </div>
-                <p className="text-[14px] leading-[1.6] text-white/50 m-0">
-                  {body}
-                </p>
+                <p className="text-[14px] leading-[1.6] text-white/50 m-0">{body}</p>
                 <div className="flex flex-wrap gap-1.5 mt-4">
                   {tags.map((t) => (
                     <span

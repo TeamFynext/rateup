@@ -19,8 +19,7 @@ export const Route = createFileRoute("/sitemap_index.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const baseUrl =
-          import.meta.env.VITE_FRONTEND_URL || "https://rateup.app";
+        const baseUrl = import.meta.env.VITE_FRONTEND_URL || "https://rateup.app";
 
         const sitemaps = [
           `${baseUrl}/sitemap.xml`,

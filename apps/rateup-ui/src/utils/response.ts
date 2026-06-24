@@ -1,5 +1,3 @@
-import { useContext } from "react";
-
 import {
   IconMoodAngry,
   IconMoodCrazyHappy,
@@ -8,7 +6,9 @@ import {
   IconMoodSad,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useContext } from "react";
 
+import type { TeamWiseResponses } from "@/backend/surveys/response/response.api";
 import {
   LDResponse,
   LDResponse2,
@@ -19,7 +19,6 @@ import {
   WaQuestions,
   YNResponse,
 } from "@/types/enums.ts";
-import type { TeamWiseResponses } from "@/backend/surveys/response/response.api";
 
 import SelectedLanguageContext from "../context/SelectedLanguage.ts";
 import { isToday } from "./dateTime.ts";
@@ -76,31 +75,22 @@ function formatEmailOtpResponse(response) {
 }
 function formatMultiTextInput(q, response) {
   if (typeof response === "string") return response;
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
+  const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
   const fields = q?.features?.[selectedLanguage || defaultLanguage]?.fields;
   if (fields) {
-    return fields?.map(
-      (f) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`,
-    );
+    return fields?.map((f) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`);
   }
 }
 
 function formatMCQGridResponse(question, response) {
   if (!response) return;
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
-  const gridQuestions =
-    question?.features?.[selectedLanguage || defaultLanguage]?.questions;
+  const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
+  const gridQuestions = question?.features?.[selectedLanguage || defaultLanguage]?.questions;
   return gridQuestions?.map((q) => `${q}: ${response?.[q]?.value ?? "NA"}`);
 }
 
 function formatChoiceTypeQuestions(q, response) {
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
+  const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
   let formattedValue = "";
   if (response) {
     if ([QuestionType.DDMS, QuestionType.MSQ].includes(q?.type)) {
@@ -163,17 +153,10 @@ function filterResponses(
           (item) => item?.questionId === filter?.question_id,
         );
         if (question) {
-          if (
-            question.type === QuestionType.Opinion ||
-            question.type === QuestionType.Rating
-          ) {
-            return filter?.responses.includes(
-              question?.response[question?.type]?.toString(),
-            );
+          if (question.type === QuestionType.Opinion || question.type === QuestionType.Rating) {
+            return filter?.responses.includes(question?.response[question?.type]?.toString());
           }
-          return filter?.responses?.includes(
-            question?.response[question?.type],
-          );
+          return filter?.responses?.includes(question?.response[question?.type]);
         } else {
           return false;
         }
@@ -242,9 +225,7 @@ export function getResponseObjectByQuestionType(questionType: QuestionType) {
   }
 }
 
-export function getResponseArrayByQuestionType(
-  questionType: QuestionType | WaQuestions,
-): Array<{
+export function getResponseArrayByQuestionType(questionType: QuestionType | WaQuestions): Array<{
   value: string | number;
   color: string;
   Icon?: any;
@@ -325,9 +306,7 @@ export function getResponseArrayByQuestionType(
     }
   }
 }
-export function getResponseArrayByQuestionTypeV2(
-  questionType: WaQuestions,
-): Array<{
+export function getResponseArrayByQuestionTypeV2(questionType: WaQuestions): Array<{
   value: string | number;
   color: string;
   Icon?: any;
@@ -398,31 +377,21 @@ export function getResponseArrayByQuestionTypeV2(
     }
   }
 }
-function getfilteredResponseUsingLanguage(
-  responses: SurveyResponse[],
-  language: string,
-) {
+function getfilteredResponseUsingLanguage(responses: SurveyResponse[], language: string) {
   let filteredResponsesByLanguage = responses;
   let noofResponses = responses?.length;
   if (language) {
-    filteredResponsesByLanguage = responses?.filter(
-      (response) => response.language === language,
-    );
+    filteredResponsesByLanguage = responses?.filter((response) => response.language === language);
     noofResponses = filteredResponsesByLanguage?.length;
   }
   return { filteredResponsesByLanguage, noofResponses };
 }
 
-function getFilteredResponseUsingTags(
-  responses: SurveyResponse[],
-  selectedTags: string[],
-) {
+function getFilteredResponseUsingTags(responses: SurveyResponse[], selectedTags: string[]) {
   let filteredResponsesByTags = responses;
   let noofResponses = responses?.length;
   if (selectedTags?.length > 0) {
-    filteredResponsesByTags = responses?.filter((response) =>
-      selectedTags.includes(response.tag),
-    );
+    filteredResponsesByTags = responses?.filter((response) => selectedTags.includes(response.tag));
     noofResponses = filteredResponsesByTags?.length;
   }
   filteredResponsesByTags?.sort((a, b) => {
@@ -440,10 +409,7 @@ export async function decryptResultResponse(
   passkey: string,
 ) {
   const decryptedResponses = responses;
-  const { privateKey } = await decryptPrivateKey(
-    nonceWithEncryptedPrivateKey,
-    passkey,
-  );
+  const { privateKey } = await decryptPrivateKey(nonceWithEncryptedPrivateKey, passkey);
   for (let i = 0; i < responses.length; i++) {
     for (let j = 0; j < responses[i].responses.length; j++) {
       const response = responses[i].responses[j];

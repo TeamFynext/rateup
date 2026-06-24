@@ -18,14 +18,7 @@ function Ring({
   return (
     <div className="relative w-10 h-10 mx-auto">
       <svg width="40" height="40" viewBox="0 0 40 40" className="-rotate-90">
-        <circle
-          cx="20"
-          cy="20"
-          r="15"
-          fill="none"
-          stroke="#EAECF8"
-          strokeWidth="4.5"
-        />
+        <circle cx="20" cy="20" r="15" fill="none" stroke="#EAECF8" strokeWidth="4.5" />
         <circle
           cx="20"
           cy="20"
@@ -80,13 +73,7 @@ export default function StickySidebar() {
         <div className="relative w-full h-[300px] overflow-hidden bg-[linear-gradient(168deg,#061140_0%,#0C2383_55%,#1A52E8_100%)]">
           {/* Stats grid — behind photo (z-index 1) */}
           <div className="absolute top-4 right-2.5 grid grid-cols-2 gap-1.5 z-[1]">
-            <StatCard
-              label="SENT"
-              stroke="#6C7FFF"
-              offset={18.84}
-              value="80%"
-              color="#4A5BDE"
-            />
+            <StatCard label="SENT" stroke="#6C7FFF" offset={18.84} value="80%" color="#4A5BDE" />
             <StatCard
               label="DELIVERED"
               stroke="#A78BFA"
@@ -94,20 +81,8 @@ export default function StickySidebar() {
               value="60%"
               color="#7C3AED"
             />
-            <StatCard
-              label="READ"
-              stroke="#38BDF8"
-              offset={56.52}
-              value="40%"
-              color="#0369A1"
-            />
-            <StatCard
-              label="REPLIED"
-              stroke="#34D399"
-              offset={75.36}
-              value="20%"
-              color="#047857"
-            />
+            <StatCard label="READ" stroke="#38BDF8" offset={56.52} value="40%" color="#0369A1" />
+            <StatCard label="REPLIED" stroke="#34D399" offset={75.36} value="20%" color="#047857" />
           </div>
 
           {/* WhatsApp badge — behind photo (z-index 1) */}
@@ -181,9 +156,7 @@ export default function StickySidebar() {
         <div className="flex items-center justify-center mt-[13px] mb-[18px] gap-0">
           {["No credit card", "No expiry", "100+ clients"].map((text, i) => (
             <span key={text} className="flex items-center">
-              <span className="text-[10px] text-white/48 font-sans">
-                {text}
-              </span>
+              <span className="text-[10px] text-white/48 font-sans">{text}</span>
               {i < 2 && (
                 <span className="w-[3px] h-[3px] rounded-full bg-white/22 mx-1.5 inline-block" />
               )}

@@ -1,5 +1,3 @@
-"use client";
-
 import { ActionIcon, Box, Checkbox, Collapse, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
@@ -15,29 +13,17 @@ interface FeatureCardProps {
   subscriptionForm: any;
 }
 
-export function FeatureCard({
-  featurePathName,
-  subscriptionForm,
-}: FeatureCardProps) {
+export function FeatureCard({ featurePathName, subscriptionForm }: FeatureCardProps) {
   function handleChange(checked: boolean) {
     if (checked) {
-      subscriptionForm.setFieldValue(
-        `features.${featurePathName}.active`,
-        true,
-      );
+      subscriptionForm.setFieldValue(`features.${featurePathName}.active`, true);
     } else {
-      subscriptionForm.setFieldValue(
-        `features.${featurePathName}.active`,
-        false,
-      );
+      subscriptionForm.setFieldValue(`features.${featurePathName}.active`, false);
     }
   }
   const [opened, { toggle }] = useDisclosure(false);
 
-  const feature = getNestedProperty(
-    subscriptionForm.values.features,
-    featurePathName,
-  );
+  const feature = getNestedProperty(subscriptionForm.values.features, featurePathName);
 
   return (
     <Box
@@ -94,9 +80,7 @@ export function FeatureCard({
             return (
               <FeatureCard
                 key={featureName}
-                featurePathName={
-                  `${featurePathName}.${featureName}` as SubscriptionFeaturePathName
-                }
+                featurePathName={`${featurePathName}.${featureName}` as SubscriptionFeaturePathName}
                 subscriptionForm={subscriptionForm}
               />
             );

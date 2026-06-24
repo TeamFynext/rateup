@@ -1,20 +1,18 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-
 import { ActionIcon, Box, Button, Modal, Select } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconX } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 
 import { linkTypeOptions } from "../../constants.tsx";
-import styles from "./AddLinkModal.module.css";
 import CustomLinkInputs from "./CustomLinkInputs.tsx";
 import SurveyTypeDropdowns from "./SurveyTypeDropdowns.tsx";
+
+import styles from "./AddLinkModal.module.css";
 
 function AddLinkModal({ title, opened, onClose, links }) {
   const queryClient = useQueryClient();
@@ -25,8 +23,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
   const shortUrlId = params?.shortUrlId as string;
   // SurveyTypeDropdowns states
   const [selectedLinkType, setSelectedLinkType] = useState("web-survey");
-  const [surveyTitleAutoCompleteSearch, setSurveyTitleAutoCompleteSearch] =
-    useState("");
+  const [surveyTitleAutoCompleteSearch, setSurveyTitleAutoCompleteSearch] = useState("");
   const [selectedSurveyTitle, setSelectedSurveyTitle] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
   // Web Survey or Whatsapp Survey Link Display name.
@@ -50,10 +47,10 @@ function AddLinkModal({ title, opened, onClose, links }) {
       },
       linkUrl: (value) => {
         if (value) {
-          let url;
+          let _url;
           try {
-            url = new URL(value);
-          } catch (_) {
+            _url = new URL(value);
+          } catch {
             return "Please enter a valid url";
           }
         } else return "Link url is required.";
@@ -103,13 +100,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
     // @ts-ignore
     setDropdownErrors(newErrState);
     return isValid;
-  }, [
-    selectedLinkType,
-    selectedSurveyTitle,
-    selectedTeam,
-    wsOrWasLinkDisplayName,
-    dropdownErrors,
-  ]);
+  }, [selectedLinkType, selectedSurveyTitle, selectedTeam, wsOrWasLinkDisplayName, dropdownErrors]);
 
   const onAddBtnClick = useCallback(async () => {
     if (selectedLinkType !== "custom-link") {
@@ -153,12 +144,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
         onClose();
       }
     }
-  }, [
-    selectedLinkType,
-    selectedSurveyTitle,
-    selectedTeam,
-    customLinksInputsForm,
-  ]);
+  }, [selectedLinkType, selectedSurveyTitle, selectedTeam, customLinksInputsForm]);
 
   useEffect(() => {
     setSelectedSurveyTitle(null);
@@ -220,9 +206,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
             selectedSurveyTitle={selectedSurveyTitle}
             onSurveyTitleDDChange={setSelectedSurveyTitle}
             surveyTitleAutoCompleteSearch={surveyTitleAutoCompleteSearch}
-            onSurveyTitleAutoCompleteSearchChange={
-              setSurveyTitleAutoCompleteSearch
-            }
+            onSurveyTitleAutoCompleteSearchChange={setSurveyTitleAutoCompleteSearch}
             onLinkDisplayNameChange={setWsOrWasLinkDisplayName}
             linkDisplayName={wsOrWasLinkDisplayName}
             selectedTeam={selectedTeam}

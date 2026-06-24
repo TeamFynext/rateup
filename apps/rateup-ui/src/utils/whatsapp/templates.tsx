@@ -1,9 +1,6 @@
 import { WaTemplateCategory } from "@/types/enums.ts";
 
-import {
-  WHATSAPP_BUTTON_TYPE,
-  WHATSAPP_TEMPLATE_BROADCAST_TYPE,
-} from "../constants.ts";
+import { WHATSAPP_BUTTON_TYPE, WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "../constants.ts";
 
 export function parseStringWithVariables(string: string): string[] {
   const regex = /{{(\d+)}}/g;
@@ -28,9 +25,7 @@ export function parseTemplate(template) {
   parsedTemplate.templateType = template?.templateType;
   parsedTemplate.defaultValues = template?.defaultValues;
   parsedTemplate.whatsappSettingsPhoneId =
-    template?.whatsappSettingsPhoneId ||
-    template?.defaultValues?.whatsappSettingsPhoneId ||
-    "";
+    template?.whatsappSettingsPhoneId || template?.defaultValues?.whatsappSettingsPhoneId || "";
   parsedTemplate.mediaCarousel = [];
   parsedTemplate.productCarousel = [];
   // parsedTemplate.config = template?.config;
@@ -47,16 +42,14 @@ export function parseTemplate(template) {
       } else if (component.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT) {
         parsedTemplate[component.type.toLowerCase()] = component?.text;
       } else {
-        parsedTemplate[component.type.toLowerCase()] =
-          component?.example?.header_handle?.[0];
+        parsedTemplate[component.type.toLowerCase()] = component?.example?.header_handle?.[0];
       }
     } else if ("body" === component.type.toLowerCase()) {
       parsedTemplate[component.type.toLowerCase()] = component.text;
       parsedTemplate["example"] = component.example?.body_text?.[0] ?? [];
     } else if ("footer" === component.type.toLowerCase()) {
       parsedTemplate[component.type.toLowerCase()] = component.text;
-      parsedTemplate.code_expiration_minutes =
-        component?.code_expiration_minutes;
+      parsedTemplate.code_expiration_minutes = component?.code_expiration_minutes;
     } else if (component.type.toLowerCase() === "buttons") {
       if (template?.data?.category !== WaTemplateCategory.AUTHENTICATION) {
         component.buttons.map((data) => {
@@ -87,10 +80,9 @@ export function parseTemplate(template) {
       );
       if (headerComp?.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT) {
         const cards = component.cards.map((card, index) => {
-          const cardDefaultValue =
-            template?.defaultValues?.productCarousel?.find(
-              (p) => p.cardIndex === index,
-            );
+          const cardDefaultValue = template?.defaultValues?.productCarousel?.find(
+            (p) => p.cardIndex === index,
+          );
           const cardCarousel = {
             button: {
               type: "",
@@ -127,10 +119,8 @@ export function parseTemplate(template) {
               cardCarousel[cardComponent.type.toLowerCase()] =
                 cardComponent?.example?.header_handle?.[0];
             } else if ("body" === cardComponent.type.toLowerCase()) {
-              cardCarousel[cardComponent.type.toLowerCase()] =
-                cardComponent.text;
-              cardCarousel["example"] =
-                cardComponent.example?.body_text?.[0] ?? [];
+              cardCarousel[cardComponent.type.toLowerCase()] = cardComponent.text;
+              cardCarousel["example"] = cardComponent.example?.body_text?.[0] ?? [];
             } else if (cardComponent.type.toLowerCase() === "buttons") {
               cardComponent.buttons.map((data) => {
                 if (data?.example && Array.isArray(data.example)) {

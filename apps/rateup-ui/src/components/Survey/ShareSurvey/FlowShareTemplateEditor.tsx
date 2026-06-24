@@ -1,32 +1,17 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import type { TextareaProps, TextInputProps } from "@mantine/core";
-import {
-  Box,
-  Button,
-  FileButton,
-  Group,
-  Stack,
-  Text,
-  Textarea,
-  Title,
-} from "@mantine/core";
+import { Box, Button, FileButton, Group, Stack, Text, Textarea, Title } from "@mantine/core";
 import type { UseFormReturnType } from "@mantine/form";
 import { useForm } from "@mantine/form";
 import { IconCircleCheck, IconRefresh } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { useSurvey } from "@/backend/surveys/surveys.query";
+import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { SaveStatus } from "@/types/enums.ts";
 import type { WaFlowStartMessageConfig } from "@/types/global";
-import { useSurvey } from "@/backend/surveys/surveys.query";
-import {
-  useUpdateFlowMutation,
-  useWaFlowFromDb,
-} from "@/backend/whatsapp/flow/flow.query";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 import { generateWaSurveyIdentifier_byName } from "@/utils/whatsapp/wa_url.tsx";
 
@@ -34,10 +19,8 @@ import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.ts
 import type { LengthTrackerProps } from "../../input/LengthTracker.tsx";
 import { LengthTracker } from "../../input/LengthTracker.tsx";
 import PaperLayout from "../../styled/Layouts/PaperLayout.tsx";
-import {
-  SentMessageContainer,
-  WaResponseMessage,
-} from "../../whatsapp/MessageComponents.tsx";
+import { SentMessageContainer, WaResponseMessage } from "../../whatsapp/MessageComponents.tsx";
+
 import templateStyles from "../../whatsapp/templates/template.module.css";
 import whatsappStyles from "../../whatsapp/whatsapp.module.css";
 
@@ -52,12 +35,7 @@ function isEqual(ob1: object, ob2: object): boolean {
   });
 }
 
-function FlowShareTemplateEditor({
-  form,
-  dbFlowId,
-  updateMutation,
-  initialValues,
-}) {
+function FlowShareTemplateEditor({ form, dbFlowId, updateMutation, initialValues }) {
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const [status, setStatus] = useState(SaveStatus.saved);
 
@@ -144,9 +122,7 @@ function FlowShareTemplateEditor({
             {(props) => {
               return (
                 <Button {...props}>
-                  {imageToUpload
-                    ? translations("Change Image")
-                    : translations("Upload Image")}
+                  {imageToUpload ? translations("Change Image") : translations("Upload Image")}
                 </Button>
               );
             }}
@@ -167,11 +143,7 @@ function FlowShareTemplateEditor({
           {...form.getInputProps("footer")}
           maxValue={60}
         />
-        <TextInputWithLengthTracker
-          label={"CTA"}
-          maxValue={20}
-          {...form.getInputProps("cta")}
-        />
+        <TextInputWithLengthTracker label={"CTA"} maxValue={20} {...form.getInputProps("cta")} />
       </Stack>
     </Stack>
   );
@@ -407,9 +379,7 @@ type TextareaWithLengthTrackerProps = TextareaProps &
     value?: string;
   };
 
-export function TextareaWithLengthTracker(
-  props: TextareaWithLengthTrackerProps,
-) {
+export function TextareaWithLengthTracker(props: TextareaWithLengthTrackerProps) {
   const { maxValue, styles, ...restOfProps } = props;
   const length = props.value?.length || 0;
   const { input, ...restOfStyles } = styles || ({} as any);
@@ -450,9 +420,7 @@ function SaveStatusIndicator({ status }: SaveStatusProps) {
         <IconCircleCheck />
       ) : (
         <IconRefresh
-          className={
-            status === SaveStatus.saving ? templateStyles.rotateInfinitely : ""
-          }
+          className={status === SaveStatus.saving ? templateStyles.rotateInfinitely : ""}
         />
       )}
       <Text>{status}</Text>
@@ -470,13 +438,9 @@ function generateTemplateInitialValues(dbFlow: DbFlow) {
   };
 }
 
-function generateStartMessageInitialValues(
-  dbFlow: DbFlow,
-): WaFlowStartMessageConfig {
+function generateStartMessageInitialValues(dbFlow: DbFlow): WaFlowStartMessageConfig {
   return {
-    prefix:
-      dbFlow.startMessageConfig.prefix ||
-      "Send this message to start survey.\n",
+    prefix: dbFlow.startMessageConfig.prefix || "Send this message to start survey.\n",
     suffix: dbFlow.startMessageConfig.suffix || "",
   };
 }

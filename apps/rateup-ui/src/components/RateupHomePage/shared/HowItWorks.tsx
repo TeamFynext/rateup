@@ -215,14 +215,12 @@ export default function HowItWorks() {
           <h2 className={styles.reveal} data-d="1">
             One Purchase.
             <br />
-            <span className={styles["grad-cyan"]}>
-              An Automated Relationship.
-            </span>
+            <span className={styles["grad-cyan"]}>An Automated Relationship.</span>
           </h2>
 
           <p className={styles.reveal} data-d="2">
-            RateUp triggers a complete customer journey the moment a sale
-            happens — across any business, any channel, any vertical.
+            RateUp triggers a complete customer journey the moment a sale happens — across any
+            business, any channel, any vertical.
           </p>
         </div>
 

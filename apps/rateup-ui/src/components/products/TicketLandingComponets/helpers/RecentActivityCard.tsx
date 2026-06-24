@@ -1,12 +1,7 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 
 const RecentActivityCard = () => {
   return (
@@ -24,15 +19,11 @@ const RecentActivityCard = () => {
           <div className="flex items-center justify-between border-b pb-3">
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-blue-100 text-blue-600">
-                  #23
-                </AvatarFallback>
+                <AvatarFallback className="bg-blue-100 text-blue-600">#23</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm font-medium">Ticket #23 created</p>
-                <p className="text-xs text-gray-500">
-                  From conversation with Noah
-                </p>
+                <p className="text-xs text-gray-500">From conversation with Noah</p>
               </div>
             </div>
             <Badge className="bg-blue-100 text-blue-600">5m ago</Badge>
@@ -40,15 +31,11 @@ const RecentActivityCard = () => {
           <div className="flex items-center justify-between border-b pb-3">
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-emerald-100 text-emerald-600">
-                  #20
-                </AvatarFallback>
+                <AvatarFallback className="bg-emerald-100 text-emerald-600">#20</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm font-medium">Ticket #20 created</p>
-                <p className="text-xs text-gray-500">
-                  From conversation with Zara Laanson
-                </p>
+                <p className="text-xs text-gray-500">From conversation with Zara Laanson</p>
               </div>
             </div>
             <Badge className="bg-emerald-100 text-emerald-600">20m ago</Badge>
@@ -56,9 +43,7 @@ const RecentActivityCard = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-amber-100 text-amber-600">
-                  #17
-                </AvatarFallback>
+                <AvatarFallback className="bg-amber-100 text-amber-600">#17</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm font-medium">Ticket #17 resolved</p>

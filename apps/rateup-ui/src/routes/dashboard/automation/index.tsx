@@ -1,11 +1,7 @@
-"use client";
-
-import { useState } from "react";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, Filter, Grid3x3, List } from "lucide-react";
+import { useState } from "react";
 
-import type { Rule } from "@/types/rule.ts";
 import {
   useDeleteRuleMutation,
   useRules,
@@ -20,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import type { Rule } from "@/types/rule.ts";
 
 import { CardView } from "../../../components/dashboard/automation/components/card-view.tsx";
 
@@ -37,12 +34,8 @@ const AUTOMATION_SORT_OPTIONS = [
 function Home() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<"latest" | "oldest" | "a-z" | "z-a">(
-    "latest",
-  );
-  const [filterActive, setFilterActive] = useState<
-    "all" | "active" | "inactive"
-  >("all");
+  const [sortBy, setSortBy] = useState<"latest" | "oldest" | "a-z" | "z-a">("latest");
+  const [filterActive, setFilterActive] = useState<"all" | "active" | "inactive">("all");
   const { data = [], isLoading, isError, refetch } = useRules();
   const deleteMutation = useDeleteRuleMutation();
   const updateMutation = useUpdateRuleMutation();
@@ -54,14 +47,10 @@ function Home() {
       if (filterActive === "inactive") return !item.isActive;
       return true;
     })
-    .filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
+    .filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => {
       if (sortBy === "oldest") {
-        return (
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       }
       if (sortBy === "a-z") return a.name.localeCompare(b.name);
       if (sortBy === "z-a") return b.name.localeCompare(a.name);
@@ -98,9 +87,7 @@ function Home() {
       onSearchChange={setSearchTerm}
       sortOptions={AUTOMATION_SORT_OPTIONS}
       sortValue={sortBy}
-      onSortChange={(value) =>
-        setSortBy(value as "latest" | "oldest" | "a-z" | "z-a")
-      }
+      onSortChange={(value) => setSortBy(value as "latest" | "oldest" | "a-z" | "z-a")}
       isError={isError}
       onRetry={refetch}
       isEmpty={!isLoading && !isError && filteredData.length === 0}
@@ -110,12 +97,7 @@ function Home() {
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs gap-1"
-                disabled={isLoading}
-              >
+              <Button variant="outline" size="sm" className="text-xs gap-1" disabled={isLoading}>
                 <Filter className="w-3.5 h-3.5" />
                 Filter
                 <ChevronDown className="w-3.5 h-3.5" />

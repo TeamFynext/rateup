@@ -1,15 +1,11 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-
-import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { z } from "zod/v4";
 
-import { MenuButtons } from "@/types/enums.ts";
 import { useUpdateMenuMutation } from "@/backend/menu/menu.query";
 import { useSurveysByTeam } from "@/backend/surveys/surveys.query";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
@@ -26,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { MenuButtons } from "@/types/enums.ts";
 import { deleteUploadedFiles, uploadFile } from "@/utils/file-upload/upload.ts";
 
 import { currencyLabel } from "../util/currencyData.ts";
@@ -73,19 +70,15 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
       logo: editingItem?.logo ?? "",
       unsplashImage: editingItem?.unsplashImage ?? {},
       surveyTeamMapId: editingItem?.surveyTeamMapId ?? "",
-      hideUnavailableCategory:
-        editingItem?.menu?.hideUnavailableCategory?.toString() ?? "false",
+      hideUnavailableCategory: editingItem?.menu?.hideUnavailableCategory?.toString() ?? "false",
       menuButtons: editingItem?.menuButtons ?? [],
     };
   }, [editingItem]);
 
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
-  const [mobileBackgroundImage, setMobileBackgroundImage] =
-    useState<File | null>(null);
+  const [mobileBackgroundImage, setMobileBackgroundImage] = useState<File | null>(null);
   const [logo, setLogo] = useState<File | null>(null);
-  const [imageToDelete, setImageToDelete] = useState<Array<{ Key: string }>>(
-    [],
-  );
+  const [imageToDelete, setImageToDelete] = useState<Array<{ Key: string }>>([]);
   const [updatingLoading, setUpdatingLoading] = useState(false);
 
   const form = useForm<GeneralSettingsFormValues>({
@@ -120,10 +113,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
     () => {},
   );
 
-  const { data: surveys = [], isPending: surveyIsPending } = useSurveysByTeam(
-    teamId,
-    !!teamId,
-  );
+  const { data: surveys = [], isPending: surveyIsPending } = useSurveysByTeam(teamId, !!teamId);
 
   if (surveyIsPending) return <RateupLoader />;
 
@@ -153,9 +143,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
       },
     ] as const;
 
-    const imageArray = imageMappings.flatMap((mapping) =>
-      mapping.file ? [mapping.file] : [],
-    );
+    const imageArray = imageMappings.flatMap((mapping) => (mapping.file ? [mapping.file] : []));
 
     if (imageArray.length === 0) {
       return [] as PromiseRejectedResult[];
@@ -170,18 +158,14 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
 
     const imageResponse = imageArray.map((data) => uploadFile(data));
     if (deleteImageArray.length > 0) {
-      imageResponse.push(
-        deleteUploadedFiles({ fileKeyArray: deleteImageArray }),
-      );
+      imageResponse.push(deleteUploadedFiles({ fileKeyArray: deleteImageArray }));
     }
 
     const response = await Promise.allSettled(imageResponse);
     const uploadErrors = response.filter((r) => r.status === "rejected");
 
     const successes = response
-      .filter(
-        (r): r is PromiseFulfilledResult<string> => r.status === "fulfilled",
-      )
+      .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
       .map((r) => r.value);
 
     if (deleteImageArray.length > 0) {
@@ -192,16 +176,14 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
       .filter((mapping) => Boolean(mapping.file))
       .reverse()
       .forEach((mapping) => {
-        values[mapping.field as keyof GeneralSettingsFormValues] =
-          successes.pop() as never;
+        values[mapping.field as keyof GeneralSettingsFormValues] = successes.pop() as never;
       });
 
     return uploadErrors;
   };
 
   const onSubmit = async (values: GeneralSettingsFormValues) => {
-    values.hideUnavailableCategory =
-      values.hideUnavailableCategory === "true" ? "true" : "false";
+    values.hideUnavailableCategory = values.hideUnavailableCategory === "true" ? "true" : "false";
 
     try {
       setUpdatingLoading(true);
@@ -227,9 +209,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
       }
     } catch (error) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : translations("Failed to update menu settings");
+        error instanceof Error ? error.message : translations("Failed to update menu settings");
       toast.error(errorMessage);
     } finally {
       setUpdatingLoading(false);
@@ -253,13 +233,8 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
   return (
     <Card>
       <CardContent>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-5"
-        >
-          <h2 className="text-lg font-semibold">
-            {translations("General settings")}
-          </h2>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+          <h2 className="text-lg font-semibold">{translations("General settings")}</h2>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Controller
@@ -267,18 +242,14 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="menu-name">
-                    {translations("Menu Name")}
-                  </FieldLabel>
+                  <FieldLabel htmlFor="menu-name">{translations("Menu Name")}</FieldLabel>
                   <Input
                     {...field}
                     id="menu-name"
                     aria-invalid={fieldState.invalid}
                     placeholder={translations("Menu 1")}
                   />
-                  {fieldState.invalid ? (
-                    <FieldError errors={[fieldState.error]} />
-                  ) : null}
+                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>
               )}
             />
@@ -288,9 +259,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="menu-team">
-                    {translations("Team")}
-                  </FieldLabel>
+                  <FieldLabel htmlFor="menu-team">{translations("Team")}</FieldLabel>
                   <TeamSelector
                     value={field.value || ""}
                     onChange={(value) => {
@@ -300,9 +269,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
                     allowDeselect={false}
                     disabled={isPending}
                   />
-                  {fieldState.invalid ? (
-                    <FieldError errors={[fieldState.error]} />
-                  ) : null}
+                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>
               )}
             />
@@ -312,18 +279,14 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="display-name">
-                    {translations("Display Name")}
-                  </FieldLabel>
+                  <FieldLabel htmlFor="display-name">{translations("Display Name")}</FieldLabel>
                   <Input
                     {...field}
                     id="display-name"
                     aria-invalid={fieldState.invalid}
                     placeholder={translations("Hotel Name")}
                   />
-                  {fieldState.invalid ? (
-                    <FieldError errors={[fieldState.error]} />
-                  ) : null}
+                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>
               )}
             />
@@ -333,18 +296,14 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="currency-select">
-                    {translations("Currency")}
-                  </FieldLabel>
+                  <FieldLabel htmlFor="currency-select">{translations("Currency")}</FieldLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger
                       id="currency-select"
                       className="w-full"
                       aria-invalid={fieldState.invalid}
                     >
-                      <SelectValue
-                        placeholder={translations("Select currency")}
-                      />
+                      <SelectValue placeholder={translations("Select currency")} />
                     </SelectTrigger>
                     <SelectContent>
                       {currencyLabel.map((option) => (
@@ -354,9 +313,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
                       ))}
                     </SelectContent>
                   </Select>
-                  {fieldState.invalid ? (
-                    <FieldError errors={[fieldState.error]} />
-                  ) : null}
+                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>
               )}
             />
@@ -367,9 +324,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="survey-select">
-                    {translations(
-                      "Choose a survey to display in the menu page",
-                    )}
+                    {translations("Choose a survey to display in the menu page")}
                   </FieldLabel>
                   <Select
                     value={field.value ?? ""}
@@ -397,9 +352,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
                       ))}
                     </SelectContent>
                   </Select>
-                  {fieldState.invalid ? (
-                    <FieldError errors={[fieldState.error]} />
-                  ) : null}
+                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>
               )}
             />
@@ -409,18 +362,14 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="location-label">
-                    {translations("Location Label")}
-                  </FieldLabel>
+                  <FieldLabel htmlFor="location-label">{translations("Location Label")}</FieldLabel>
                   <Input
                     {...field}
                     id="location-label"
                     aria-invalid={fieldState.invalid}
                     placeholder={translations("Kannur Rd, near CH Over bridge")}
                   />
-                  {fieldState.invalid ? (
-                    <FieldError errors={[fieldState.error]} />
-                  ) : null}
+                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>
               )}
             />
@@ -431,14 +380,9 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="hide-unavailable-category">
-                    {translations(
-                      "Disable category outside its scheduled time",
-                    )}
+                    {translations("Disable category outside its scheduled time")}
                   </FieldLabel>
-                  <Select
-                    value={field.value ?? "false"}
-                    onValueChange={field.onChange}
-                  >
+                  <Select value={field.value ?? "false"} onValueChange={field.onChange}>
                     <SelectTrigger
                       id="hide-unavailable-category"
                       className="w-full"
@@ -451,9 +395,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
                       <SelectItem value="true">Hide</SelectItem>
                     </SelectContent>
                   </Select>
-                  {fieldState.invalid ? (
-                    <FieldError errors={[fieldState.error]} />
-                  ) : null}
+                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>
               )}
             />
@@ -463,9 +405,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="location-url">
-                    {translations("Location URL")}
-                  </FieldLabel>
+                  <FieldLabel htmlFor="location-url">{translations("Location URL")}</FieldLabel>
                   <Input
                     {...field}
                     id="location-url"
@@ -473,9 +413,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
                     aria-invalid={fieldState.invalid}
                     placeholder="https://goo.gl/maps/xyz1234"
                   />
-                  {fieldState.invalid ? (
-                    <FieldError errors={[fieldState.error]} />
-                  ) : null}
+                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>
               )}
             />
@@ -496,50 +434,33 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
               const buttonType = watchedMenuButtons?.[i]?.name;
 
               return (
-                <div
-                  className="grid grid-cols-1 gap-3 md:grid-cols-2"
-                  key={fieldItem.id}
-                >
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2" key={fieldItem.id}>
                   <div className="flex flex-col gap-3 md:flex-row md:items-end">
                     <Controller
                       name={`menuButtons.${i}.name`}
                       control={form.control}
                       render={({ field, fieldState }) => (
-                        <Field
-                          data-invalid={fieldState.invalid}
-                          className="flex-1"
-                        >
+                        <Field data-invalid={fieldState.invalid} className="flex-1">
                           <FieldLabel htmlFor={`menu-button-type-${i}`}>
                             {translations("Menu Button Type")} {i + 1}
                           </FieldLabel>
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          >
+                          <Select value={field.value} onValueChange={field.onChange}>
                             <SelectTrigger
                               id={`menu-button-type-${i}`}
                               className="w-full capitalize"
                               aria-invalid={fieldState.invalid}
                             >
-                              <SelectValue
-                                placeholder={translations("select button type")}
-                              />
+                              <SelectValue placeholder={translations("select button type")} />
                             </SelectTrigger>
                             <SelectContent>
                               {Object.values(MenuButtons).map((option) => (
-                                <SelectItem
-                                  key={option}
-                                  value={option}
-                                  className="capitalize"
-                                >
+                                <SelectItem key={option} value={option} className="capitalize">
                                   {option}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
-                          {fieldState.invalid ? (
-                            <FieldError errors={[fieldState.error]} />
-                          ) : null}
+                          {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                         </Field>
                       )}
                     />
@@ -549,10 +470,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
                         name={`menuButtons.${i}.name`}
                         control={form.control}
                         render={({ field, fieldState }) => (
-                          <Field
-                            data-invalid={fieldState.invalid}
-                            className="flex-1"
-                          >
+                          <Field data-invalid={fieldState.invalid} className="flex-1">
                             <FieldLabel htmlFor={`menu-button-name-${i}`}>
                               {translations("Menu Button Name")} {i + 1}
                             </FieldLabel>
@@ -562,9 +480,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
                               aria-invalid={fieldState.invalid}
                               placeholder={translations("other")}
                             />
-                            {fieldState.invalid ? (
-                              <FieldError errors={[fieldState.error]} />
-                            ) : null}
+                            {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                           </Field>
                         )}
                       />
@@ -591,9 +507,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
                             value={field.value}
                             onChange={(value) => field.onChange(value ?? "")}
                           />
-                          {fieldState.invalid ? (
-                            <FieldError errors={[fieldState.error]} />
-                          ) : null}
+                          {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                         </Field>
                       )}
                     />
@@ -612,9 +526,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
                             aria-invalid={fieldState.invalid}
                             placeholder={i === 0 ? "+919876543210" : "link"}
                           />
-                          {fieldState.invalid ? (
-                            <FieldError errors={[fieldState.error]} />
-                          ) : null}
+                          {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                         </Field>
                       )}
                     />
@@ -624,9 +536,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
             })}
 
             <div className="flex flex-col gap-1">
-              <p className="text-xs text-muted-foreground">
-                {translations("Menu Buttons")}
-              </p>
+              <p className="text-xs text-muted-foreground">{translations("Menu Buttons")}</p>
               <div className="flex items-center gap-2">
                 {fields.length < 3 ? (
                   <Button
@@ -659,11 +569,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
           </div>
 
           <div className="mt-2 flex justify-center">
-            <Button
-              type="submit"
-              disabled={isPending || updatingLoading}
-              className="min-w-36"
-            >
+            <Button type="submit" disabled={isPending || updatingLoading} className="min-w-36">
               {isPending || updatingLoading ? (
                 <div className="size-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
               ) : null}

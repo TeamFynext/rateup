@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext, useContext } from "react";
 
 const IsSurveyThemePreviewContext = createContext(false);

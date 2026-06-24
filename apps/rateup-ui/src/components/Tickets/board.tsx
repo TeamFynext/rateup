@@ -1,13 +1,10 @@
-"use client";
-
-import { useContext, useEffect, useRef, useState } from "react";
-
-import { IconPlus } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
+import { IconPlus } from "@tabler/icons-react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import invariant from "tiny-invariant";
@@ -30,11 +27,7 @@ import { Input } from "@/components/ui/input.tsx";
 
 import { Column } from "./column.tsx";
 import { SettingsContext } from "./settings-context.tsx";
-import type {
-  BoardInfo,
-  Board as BoardType,
-  Column as TColumn,
-} from "./types.ts";
+import type { BoardInfo, Board as BoardType, Column as TColumn } from "./types.ts";
 import {
   isCardData,
   isCardDropTargetData,
@@ -152,9 +145,7 @@ export function Board({
 
             // If in the same column, reorder cards
             if (sourceColumnId === targetColumnId) {
-              const column = data.ticketColumns.find(
-                (col) => col.id === sourceColumnId,
-              );
+              const column = data.ticketColumns.find((col) => col.id === sourceColumnId);
 
               if (column) {
                 const cardIndexInHome = column.ticketCards.findIndex(
@@ -170,9 +161,7 @@ export function Board({
 
                   // Calculate final index based on closest edge
                   const finalIndex =
-                    closestEdge === "bottom"
-                      ? targetCardIndex + 1
-                      : targetCardIndex;
+                    closestEdge === "bottom" ? targetCardIndex + 1 : targetCardIndex;
 
                   // Create a new cards array in the correct order
                   const newCards = Array.from(column.ticketCards);
@@ -216,9 +205,7 @@ export function Board({
 
             if (sourceColumnId === targetColumnId) {
               // Move to the end of the same column
-              const column = data.ticketColumns.find(
-                (col) => col.id === sourceColumnId,
-              );
+              const column = data.ticketColumns.find((col) => col.id === sourceColumnId);
 
               if (column) {
                 const cardIndex = column.ticketCards.findIndex(
@@ -333,15 +320,15 @@ export function Board({
         <div
           ref={scrollableRef}
           className="flex gap-3 pb-4 px-6 overflow-x-auto w-full max-h-[calc(100vh-121px)]"
-          style={{
-            ...(settings.isBoardMoreObvious
+          style={
+            settings.isBoardMoreObvious
               ? {
                   borderRadius: "0.25rem",
                   borderWidth: "2px",
                   borderStyle: "dashed",
                 }
-              : {}),
-          }}
+              : {}
+          }
         >
           {data.ticketColumns.length > 0 &&
             data.ticketColumns.map((column) => {
@@ -362,9 +349,7 @@ export function Board({
                     }
                   }
                   if (assigneeFilter) {
-                    const isAssigned = card.assignees?.some(
-                      (a) => a.assigneeId === assigneeFilter,
-                    );
+                    const isAssigned = card.assignees?.some((a) => a.assigneeId === assigneeFilter);
                     if (!isAssigned) matches = false;
                   }
                   return matches;
@@ -433,9 +418,7 @@ export function Board({
               <AlertDialogHeader>
                 <AlertDialogTitle>{t("Delete List")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  {t(
-                    "Are you sure you want to delete this list? This action cannot be undone.",
-                  )}
+                  {t("Are you sure you want to delete this list? This action cannot be undone.")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

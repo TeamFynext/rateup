@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import {
   Box,
   Checkbox,
@@ -19,21 +15,15 @@ import {
   Title,
 } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useImmer } from "use-immer";
 
-import type { Testimonial, TestimonialStyleType } from "@/types/global";
 import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel.tsx";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel.tsx";
+import type { Testimonial, TestimonialStyleType } from "@/types/global";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../Button/RateupButtons.tsx";
 import {
   ContainedColorInput,
   ContainedNumberInput,
@@ -56,11 +46,7 @@ enum BlockTabEnum {
   RatingBlock = "Rating Block",
 }
 
-const TestimonialEditModal = ({
-  opened,
-  onClose,
-  theme,
-}: TestimonialEditModalProps) => {
+const TestimonialEditModal = ({ opened, onClose, theme }: TestimonialEditModalProps) => {
   const [currentStyle, setCurrentstyle] = useImmer<TestimonialStyleType>(theme);
   const { t: translations } = useTranslation();
   const testimonialSample: Testimonial = {
@@ -239,9 +225,7 @@ const TestimonialEditModal = ({
       },
     );
   };
-  const [activeBlockTab, setActiveBlockTab] = useState<BlockTabEnum>(
-    BlockTabEnum.Background,
-  );
+  const [activeBlockTab, setActiveBlockTab] = useState<BlockTabEnum>(BlockTabEnum.Background);
   useEffect(() => {
     setCurrentstyle(theme);
     setActiveBlockTab(BlockTabEnum.Background);
@@ -298,9 +282,7 @@ const TestimonialEditModal = ({
                       <ContainedSelection
                         data={FontWeights}
                         style={{ maxWidth: "110px" }}
-                        onChange={(value) =>
-                          handleFontWeightChange(value, f.name)
-                        }
+                        onChange={(value) => handleFontWeightChange(value, f.name)}
                         placeholder="font weight"
                         value={f.fontWeight}
                       />
@@ -310,9 +292,7 @@ const TestimonialEditModal = ({
                         defaultValue={18}
                         placeholder="font size"
                         style={{ maxWidth: "70px" }}
-                        onChange={(value) =>
-                          handleFontSizeChange(value, f.name)
-                        }
+                        onChange={(value) => handleFontSizeChange(value, f.name)}
                         value={f.fontSize}
                       />
                     </Group>
@@ -321,10 +301,7 @@ const TestimonialEditModal = ({
               </Stack>
               <Stack w={450}>
                 <Title order={3}>{translations("Change Layout")}</Title>
-                <Radio.Group
-                  value={currentStyle?.layout}
-                  onChange={(value) => handleLayout(value)}
-                >
+                <Radio.Group value={currentStyle?.layout} onChange={(value) => handleLayout(value)}>
                   <Stack gap={"sm"}>
                     <Stack>
                       <Radio
@@ -336,27 +313,15 @@ const TestimonialEditModal = ({
                         <CarouselContent>
                           {Array.from({ length: 3 }).map((_, index) => (
                             <CarouselItem key={index} className="basis-1/4">
-                              <Box
-                                bg={"#E2E5ED"}
-                                h={100}
-                                style={{ borderRadius: "5px" }}
-                              ></Box>
+                              <Box bg={"#E2E5ED"} h={100} style={{ borderRadius: "5px" }}></Box>
                             </CarouselItem>
                           ))}
                         </CarouselContent>
                       </Carousel>
                     </Stack>
                     <Stack>
-                      <Radio
-                        icon={CheckIcon}
-                        value="vertical"
-                        label={translations("Vertical")}
-                      />
-                      <SimpleGrid
-                        cols={4}
-                        spacing={"md"}
-                        verticalSpacing={"sm"}
-                      >
+                      <Radio icon={CheckIcon} value="vertical" label={translations("Vertical")} />
+                      <SimpleGrid cols={4} spacing={"md"} verticalSpacing={"sm"}>
                         {Array.apply(null, { length: 8 }).map((e, index) => (
                           <Box
                             bg={"#E2E5ED"}
@@ -381,19 +346,13 @@ const TestimonialEditModal = ({
                 onClose();
               }}
             />
-            <RateupButtonBlue
-              title={translations("Save")}
-              onClick={handleUpdate}
-            />
+            <RateupButtonBlue title={translations("Save")} onClick={handleUpdate} />
           </Flex>
         </Grid.Col>
 
         <Grid.Col span={4} bg={"#E2E5ED"} p={"xl"}>
           <Stack justify="center" align="center">
-            <TestimonialCard
-              testimonial={testimonialSample}
-              currentStyle={currentStyle}
-            />
+            <TestimonialCard testimonial={testimonialSample} currentStyle={currentStyle} />
             <Stack mt="xl">
               <Checkbox
                 label={translations("Remove Rating")}
@@ -439,8 +398,7 @@ const TestimonialEditModal = ({
                 checked={currentStyle?.profileBlock.profilePic.isRemoved}
                 onChange={(e) => {
                   setCurrentstyle((draft) => {
-                    draft.profileBlock.profilePic.isRemoved =
-                      e.currentTarget.checked;
+                    draft.profileBlock.profilePic.isRemoved = e.currentTarget.checked;
                   });
                 }}
               />

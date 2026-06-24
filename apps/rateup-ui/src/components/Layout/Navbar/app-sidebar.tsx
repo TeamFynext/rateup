@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronRight, ExternalLink, TriangleAlert } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
@@ -14,11 +11,7 @@ import NotificationBellIcon from "@/components/Layout/Notification/index.tsx";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
 import { ModeToggle } from "@/components/theme/ModeToggle.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Collapsible,
@@ -88,14 +81,12 @@ function useChatFilter() {
       } else if (label === "assignedStaff") {
         setFilter({
           ...filter,
-          assignedUserIds:
-            value === "all" ? [] : toggleList(filter.assignedUserIds, value),
+          assignedUserIds: value === "all" ? [] : toggleList(filter.assignedUserIds, value),
         });
       } else if (label === "assignedTeams") {
         setFilter({
           ...filter,
-          assignedTeams:
-            value === "all" ? [] : toggleList(filter.assignedTeams, value),
+          assignedTeams: value === "all" ? [] : toggleList(filter.assignedTeams, value),
         });
       }
     },
@@ -153,10 +144,7 @@ function isValidRoutePath(path: string): boolean {
   return Boolean(path) && path !== "#";
 }
 
-function isQuerySubsetMatch(
-  current: ParsedRoute,
-  target: ParsedRoute,
-): boolean {
+function isQuerySubsetMatch(current: ParsedRoute, target: ParsedRoute): boolean {
   if (!target.hasQuery) return true;
 
   const currentParams = new URLSearchParams(current.queryString);
@@ -170,10 +158,7 @@ function isQuerySubsetMatch(
   return true;
 }
 
-function isPathPrefixActive(
-  currentRoute: string,
-  targetRoute?: string,
-): boolean {
+function isPathPrefixActive(currentRoute: string, targetRoute?: string): boolean {
   const currentPath = parseRoute(currentRoute).path;
   const targetPath = parseRoute(targetRoute).path;
 
@@ -183,10 +168,7 @@ function isPathPrefixActive(
   return currentPath.startsWith(`${targetPath}/`);
 }
 
-function isExactPathActive(
-  currentRoute: string,
-  targetRoute?: string,
-): boolean {
+function isExactPathActive(currentRoute: string, targetRoute?: string): boolean {
   const currentPath = parseRoute(currentRoute).path;
   const targetPath = parseRoute(targetRoute).path;
 
@@ -194,10 +176,7 @@ function isExactPathActive(
   return currentPath === targetPath;
 }
 
-function getRouteMatchScore(
-  currentRoute: string,
-  targetRoute?: string,
-): number {
+function getRouteMatchScore(currentRoute: string, targetRoute?: string): number {
   const current = parseRoute(currentRoute);
   const target = parseRoute(targetRoute);
 
@@ -208,9 +187,7 @@ function getRouteMatchScore(
   }
 
   const samePathQueryMatch =
-    current.path === target.path &&
-    target.hasQuery &&
-    isQuerySubsetMatch(current, target);
+    current.path === target.path && target.hasQuery && isQuerySubsetMatch(current, target);
 
   if (samePathQueryMatch) {
     return 200000 + target.queryString.length;
@@ -257,9 +234,7 @@ function NavItemContent({
     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
   ) : null;
   const activeChevron =
-    !showRotatingChevron && isActive ? (
-      <ChevronRight className="ml-auto" />
-    ) : null;
+    !showRotatingChevron && isActive ? <ChevronRight className="ml-auto" /> : null;
 
   return (
     <>
@@ -286,16 +261,12 @@ function NavItemContent({
                   item.clearFilter();
                 }}
               >
-                <span className="text-[10px]">
-                  {item.clearButtonName ?? "Clear"}
-                </span>
+                <span className="text-[10px]">{item.clearButtonName ?? "Clear"}</span>
               </Button>
             )}
           </div>
           {showDescription && item.description ? (
-            <span className="block truncate text-xs text-muted-foreground">
-              {item.description}
-            </span>
+            <span className="block truncate text-xs text-muted-foreground">{item.description}</span>
           ) : null}
         </div>
         {chevron}
@@ -335,11 +306,7 @@ function NavLink({
           onClick?.();
         }}
       >
-        <NavItemContent
-          item={item}
-          isActive={isActive}
-          showDescription={showDescription}
-        />
+        <NavItemContent item={item} isActive={isActive} showDescription={showDescription} />
       </Link>
     </SidebarMenuButton>
   );
@@ -408,14 +375,7 @@ function NavItem({
 
   if (variant === "settings") {
     const isActive = isPathPrefixActive(fullPathname, item.url);
-    return (
-      <NavLink
-        item={item}
-        isActive={isActive}
-        onRouteGuard={onRouteGuard}
-        showDescription
-      />
-    );
+    return <NavLink item={item} isActive={isActive} onRouteGuard={onRouteGuard} showDescription />;
   }
 
   // variant === "default"
@@ -440,11 +400,7 @@ function NavItem({
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
             <SidebarMenuButton tooltip={item.title}>
-              <NavItemContent
-                item={item}
-                isActive={false}
-                showRotatingChevron
-              />
+              <NavItemContent item={item} isActive={false} showRotatingChevron />
             </SidebarMenuButton>
           </CollapsibleTrigger>
           <CollapsibleContent>
@@ -517,9 +473,7 @@ function NavSection({
             />
           ))}
         </SidebarGroupContent>
-        {!isLast && (
-          <Separator className="mt-1.5 group-data-[collapsible=icon]:hidden" />
-        )}
+        {!isLast && <Separator className="mt-1.5 group-data-[collapsible=icon]:hidden" />}
       </SidebarGroup>
     );
   }
@@ -695,9 +649,7 @@ export default function AppSidebar({
           allowAll
           value={chatFilterStore.filter.assignedUserIds[0] ?? "all"}
           className="w-full group-data-[collapsible=icon]:[&>svg]:hidden group-data-[collapsible=icon]:[&>span]:hidden"
-          onChange={(value, isAll) =>
-            handleFilter("assignedStaff", isAll ? "all" : value)
-          }
+          onChange={(value, isAll) => handleFilter("assignedStaff", isAll ? "all" : value)}
         />
       ),
       teamSelector: (
@@ -710,11 +662,7 @@ export default function AppSidebar({
       ),
     }),
 
-    [
-      chatFilterStore.filter.assignedUserIds,
-      chatFilterStore.filter.assignedTeams,
-      handleFilter,
-    ],
+    [chatFilterStore.filter.assignedUserIds, chatFilterStore.filter.assignedTeams, handleFilter],
   );
 
   const activePanelItemPath = useMemo(
@@ -757,9 +705,7 @@ export default function AppSidebar({
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">
-                      {userData?.data?.orgName}
-                    </span>
+                    <span className="truncate font-medium">{userData?.data?.orgName}</span>
                     <span className="truncate text-xs">Enterprise</span>
                   </div>
                 </div>
@@ -815,10 +761,7 @@ export default function AppSidebar({
 
       {/* Expanded nav panel */}
       {activeItem?.items && activeItem.items.length > 0 && (
-        <Sidebar
-          className="w-60 border-r relative hidden md:flex"
-          collapsible="icon"
-        >
+        <Sidebar className="w-60 border-r relative hidden md:flex" collapsible="icon">
           <SidebarHeader className="gap-3.5 border-b bg-background p-3 group-data-[collapsible=icon]:px-2">
             <div className="flex w-full items-center justify-between group-data-[collapsible=icon]:justify-center">
               <h2 className="flex text-foreground text-lg gap-1 font-bold group-data-[collapsible=icon]:hidden">
@@ -861,10 +804,7 @@ export default function AppSidebar({
                           sidebarComponentMap={sidebarComponentMap}
                         />
                       ) : (
-                        <SidebarGroup
-                          key={item.title ?? item.url}
-                          className="p-0"
-                        >
+                        <SidebarGroup key={item.title ?? item.url} className="p-0">
                           <SidebarGroupContent className="flex flex-col px-2 group-data-[collapsible=icon]:px-0">
                             <SidebarMenu className="gap-1 group-data-[collapsible=icon]:items-center">
                               <NavItem
@@ -888,9 +828,7 @@ export default function AppSidebar({
             <SidebarFooter className="flex-col gap-2 group-data-[collapsible=icon]:hidden">
               <Alert variant="destructive" className="px-3 py-2">
                 <TriangleAlert className="size-4" />
-                <AlertTitle className="text-xs">
-                  Subscription expired
-                </AlertTitle>
+                <AlertTitle className="text-xs">Subscription expired</AlertTitle>
                 <AlertDescription className="text-xs">
                   Please renew from{" "}
                   <Link to="/dashboard/settings/billing" className="flex gap-1">

@@ -65,10 +65,7 @@ export function validateQuestion(question, input, selectedLanguage) {
                 return rule?.errorMessage;
               }
             } else if (rule?.ruleType === "required") {
-              if (
-                !input?.[field?.fieldKey] ||
-                !input?.[field?.fieldKey]?.trim().length
-              ) {
+              if (!input?.[field?.fieldKey] || !input?.[field?.fieldKey]?.trim().length) {
                 return rule?.errorMessage;
               }
             }
@@ -99,9 +96,7 @@ export function validateQuestion(question, input, selectedLanguage) {
         }
       }
       if (question.validationRules.textType) {
-        if (
-          !validateTextType(input, question?.validationRules?.textType?.type)
-        ) {
+        if (!validateTextType(input, question?.validationRules?.textType?.type)) {
           return question?.validationRules?.textType?.errorMessage;
         }
       }

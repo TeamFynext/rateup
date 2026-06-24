@@ -20,9 +20,7 @@ export const deleteLifeCycle = async (lifecycleId: string) => {
 };
 
 export const reorderLifeCycles = async (data) => {
-  return (
-    await axiosClient.put(`${LIFECYCLE_URL}/reorder`, { lifecycles: data })
-  ).data;
+  return (await axiosClient.put(`${LIFECYCLE_URL}/reorder`, { lifecycles: data })).data;
 };
 
 export const getLifecyclesWithContactCount = async () => {

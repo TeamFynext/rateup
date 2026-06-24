@@ -1,5 +1,3 @@
-"use client";
-
 import { motion } from "motion/react";
 
 import {
@@ -13,10 +11,7 @@ import { faqs } from "../WhatsAppSurveyConstants.tsx";
 
 export function WhatsAppSurveyFaq() {
   return (
-    <section
-      id="faq"
-      className="py-24 bg-gradient-to-b from-[#075E54] via-[#075E54] to-[#009987]"
-    >
+    <section id="faq" className="py-24 bg-gradient-to-b from-[#075E54] via-[#075E54] to-[#009987]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

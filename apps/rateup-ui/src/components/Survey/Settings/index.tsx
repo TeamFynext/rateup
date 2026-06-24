@@ -1,9 +1,6 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Box } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
+import { useEffect, useState } from "react";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 
@@ -14,9 +11,10 @@ import KioskFetchLocSkipPreview from "./KioskFetchLocSkipPreview/index.tsx";
 import OtherSettings from "./OtherSettings.tsx";
 import RedirectSettings from "./RedirectSettings/index.tsx";
 import SecuritySettings from "./SecuritySettings/index.tsx";
-import styles from "./SurveySettings.module.css";
 import TicketSettings from "./TicketSettings.tsx";
 import WebhookSettings from "./WebhookSettings.tsx";
+
+import styles from "./SurveySettings.module.css";
 
 const defaultEnabledModules = [
   "name",
@@ -54,10 +52,9 @@ const SurveySettings = ({
   const [kioskMode, setKioskMode] = useState(survey?.kioskMode);
   const [preview, setPreview] = useState(survey?.skipPreview);
   const [location, setLocation] = useState(survey?.getLocation);
-  const [
-    webSurveyAutoTransitionToNextQues,
-    setwebSurveyAutoTransitionToNextQues,
-  ] = useState(survey?.webSurveyAutoTransitionToNextQues);
+  const [webSurveyAutoTransitionToNextQues, setwebSurveyAutoTransitionToNextQues] = useState(
+    survey?.webSurveyAutoTransitionToNextQues,
+  );
   const [hasGoogleReview, setHasGoogleReview] = useState(false);
   const [redirect, setRedirect] = useState(survey?.redirect);
   const [redirectError, setRedirectError] = useState({ url: "", time: "" });
@@ -69,10 +66,7 @@ const SurveySettings = ({
       survey?.questions?.some(
         (item) =>
           item?.googleReview?.length ||
-          !!(
-            item?.reviewPageOptions &&
-            Object.keys(item?.reviewPageOptions).length
-          ),
+          !!(item?.reviewPageOptions && Object.keys(item?.reviewPageOptions).length),
       ),
     );
   }, [survey]);
@@ -81,7 +75,7 @@ const SurveySettings = ({
       if (url === "/") return false;
       new URL(url);
       return false;
-    } catch (err) {
+    } catch {
       return true;
     }
   }
@@ -96,11 +90,7 @@ const SurveySettings = ({
             setSelectedLanguage={setSelectedLanguage}
           />
 
-          <SecuritySettings
-            survey={survey}
-            surveyId={surveyId}
-            enabledModules={enabledModules}
-          />
+          <SecuritySettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
           <WebhookSettings
             responseWebhookEndpoint={survey?.responseWebhookEndpoint}
             editSurvey={editSurvey}
@@ -118,12 +108,8 @@ const SurveySettings = ({
             setLocation={setLocation}
             preview={preview}
             setPreview={setPreview}
-            webSurveyAutoTransitionToNextQues={
-              webSurveyAutoTransitionToNextQues
-            }
-            setwebSurveyAutoTransitionToNextQues={
-              setwebSurveyAutoTransitionToNextQues
-            }
+            webSurveyAutoTransitionToNextQues={webSurveyAutoTransitionToNextQues}
+            setwebSurveyAutoTransitionToNextQues={setwebSurveyAutoTransitionToNextQues}
             survey={survey}
             surveyId={surveyId}
           />
@@ -139,17 +125,9 @@ const SurveySettings = ({
             survey={survey}
           />
           <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />
-          <TicketSettings
-            survey={survey}
-            surveyId={surveyId}
-            enabledModules={enabledModules}
-          />
+          <TicketSettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
           {enabledModules.includes("flow") && (
-            <FlowSettingsUpdate
-              name={flowName}
-              dbFlowId={flowDbId}
-              anonymous={anonymous}
-            />
+            <FlowSettingsUpdate name={flowName} dbFlowId={flowDbId} anonymous={anonymous} />
           )}
         </Box>
       </Box>

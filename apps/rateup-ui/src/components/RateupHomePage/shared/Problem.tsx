@@ -31,12 +31,9 @@ function Pstat({ pct, label, delay }: PstatProps) {
         if (ringRef.current) {
           const C = 175.9;
 
-          ringRef.current.style.transition =
-            "stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)";
+          ringRef.current.style.transition = "stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)";
 
-          ringRef.current.style.strokeDashoffset = String(
-            (C * (1 - pct / 100)).toFixed(1),
-          );
+          ringRef.current.style.strokeDashoffset = String((C * (1 - pct / 100)).toFixed(1));
         }
       },
       { threshold: 0.25 },
@@ -48,11 +45,7 @@ function Pstat({ pct, label, delay }: PstatProps) {
   }, [pct]);
 
   return (
-    <div
-      ref={rootRef}
-      className={`${style.pstat} ${style.reveal}`}
-      data-d={delay}
-    >
+    <div ref={rootRef} className={`${style.pstat} ${style.reveal}`} data-d={delay}>
       <div className={style.ring}>
         <svg width="64" height="64" viewBox="0 0 64 64">
           <circle cx="32" cy="32" r="30" fill="#071A33" />
@@ -134,8 +127,8 @@ export default function Problem() {
           </h2>
 
           <p className={style.reveal} data-d="2">
-            The sale ends. The relationship doesn't begin. Without a system for
-            what happens next, customers disappear — and you never know why.
+            The sale ends. The relationship doesn't begin. Without a system for what happens next,
+            customers disappear — and you never know why.
           </p>
         </div>
 
@@ -159,10 +152,7 @@ export default function Problem() {
 
             <h3>You're Paying Twice For The Same Customer</h3>
 
-            <p>
-              Without follow-ups, first-time buyers leave — and you pay to
-              replace them.
-            </p>
+            <p>Without follow-ups, first-time buyers leave — and you pay to replace them.</p>
           </div>
 
           <div className={`${style.prob} ${style.reveal}`} data-d="1">
@@ -185,10 +175,7 @@ export default function Problem() {
 
             <h3>Unhappy Customers Leave Without A Word</h3>
 
-            <p>
-              Only 1 in 26 unhappy customers speak up. The rest leave — before
-              you notice.
-            </p>
+            <p>Only 1 in 26 unhappy customers speak up. The rest leave — before you notice.</p>
           </div>
 
           <div className={`${style.prob} ${style.reveal}`} data-d="2">
@@ -211,8 +198,8 @@ export default function Problem() {
             <h3>5 Tools That Don't Talk To Each Other</h3>
 
             <p>
-              Your team juggles multiple tools. Data is scattered, experiences
-              break, and revenue leaks.
+              Your team juggles multiple tools. Data is scattered, experiences break, and revenue
+              leaks.
             </p>
           </div>
 
@@ -237,10 +224,7 @@ export default function Problem() {
 
             <h3>No Visibility Into What Customers Feel</h3>
 
-            <p>
-              You have order data, not sentiment data — so decisions rely on
-              guesswork.
-            </p>
+            <p>You have order data, not sentiment data — so decisions rely on guesswork.</p>
           </div>
         </div>
 

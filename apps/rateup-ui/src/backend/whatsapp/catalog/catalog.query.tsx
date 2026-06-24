@@ -118,10 +118,7 @@ export const useConnectedWaCatalog = (whatsappSettingsPhoneId) => {
 
 // ─── Catalog Settings ─────────────────────────────────────────────────
 
-export const useCatalogSettings = (
-  catalogId: string,
-  pollingEnabled = false,
-) => {
+export const useCatalogSettings = (catalogId: string, pollingEnabled = false) => {
   return useQuery({
     queryFn: () => getCatalogSettings(catalogId),
     queryKey: ["catalogSettings", catalogId],

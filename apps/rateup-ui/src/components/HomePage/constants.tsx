@@ -3,9 +3,10 @@ import { Link } from "@tanstack/react-router";
 
 import { rateupLogoStackedTransparent } from "@/utils/constants";
 
+import LinkWithSublinksPopover from "./components/LinkWithSublinksPopover/index.tsx";
+
 import headerStyles from "./components/Header/Header.module.css";
 import navLinkStyles from "./components/Header/MobileNavDrawer/NavLink.module.css";
-import LinkWithSublinksPopover from "./components/LinkWithSublinksPopover/index.tsx";
 
 export const imagesPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images`;
 export const rateupLogoUrl = rateupLogoStackedTransparent;
@@ -30,8 +31,7 @@ const headerNavLinks = [
         link: "/web-survey",
         content: {
           heading: "Web Survey",
-          description:
-            "Effortlessly collect and analyze customer insights with web survey",
+          description: "Effortlessly collect and analyze customer insights with web survey",
         },
         iconLink: `${imagesPath}/homepage/header/desktop-icon.svg`,
       },
@@ -40,8 +40,7 @@ const headerNavLinks = [
         link: "/digital-menu",
         content: {
           heading: "Digital Menu",
-          description:
-            "Experience quick, delicious dining with our digital menus.",
+          description: "Experience quick, delicious dining with our digital menus.",
         },
         iconLink: `${imagesPath}/homepage/header/clipboard.svg`,
       },
@@ -86,60 +85,11 @@ const headerNavLinks = [
   },
 ];
 
-const excludedOurCompanySectionLinks = ["/pricing", "/#platform"];
-const ourCompanySectionLinks = [
-  ...headerNavLinks.filter(
-    (obj) => !excludedOurCompanySectionLinks.includes(obj.href),
-  ),
-];
-const blogLink = ourCompanySectionLinks.splice(2, 1, {
-  href: "/contact-us",
-  linkText: "Contact Us",
-});
-
-const footerNavLinks = {
-  "our-company": {
-    heading: "Our Company",
-    linksArray: [...ourCompanySectionLinks, ...blogLink],
-  },
-  product: {
-    heading: "Pricing",
-    linksArray: [
-      {
-        href: "/pricing",
-        linkText: "Basic Plan",
-      },
-      {
-        href: "/pricing",
-        linkText: "Plus Plan",
-      },
-      {
-        href: "/pricing",
-        linkText: "Premium Plan",
-      },
-    ],
-  },
-  legal: {
-    heading: "Legal",
-    linksArray: [
-      {
-        href: "/privacy-policy",
-        linkText: "Privacy Policy",
-      },
-      {
-        href: "/terms-of-service",
-        linkText: "Terms of Service",
-      },
-    ],
-  },
-};
-
 const getNavLinksArray = (className: string, currentRoutePath: string) => {
   const navLinks = headerNavLinks;
   return navLinks.map(({ href, linkText, hasSublinks, sublinks }) => {
     const isLinkActive =
-      currentRoutePath === href ||
-      sublinks?.find((obj) => obj.link === currentRoutePath);
+      currentRoutePath === href || sublinks?.find((obj) => obj.link === currentRoutePath);
     const linkActiveClassName = isLinkActive ? "link-active" : "";
     const requiredClassName = `${className} ${linkActiveClassName}`;
     return hasSublinks ? (
@@ -160,14 +110,10 @@ const getNavLinksArray = (className: string, currentRoutePath: string) => {
   });
 };
 
-const getMobileNavLinkMenuItems = (
-  className: string = "",
-  currentRoutePath: string,
-) =>
+const getMobileNavLinkMenuItems = (className: string = "", currentRoutePath: string) =>
   headerNavLinks.map(({ href, linkText, hasSublinks, sublinks }) => {
     const isLinkActive =
-      currentRoutePath === href ||
-      sublinks?.find((obj) => obj.link === currentRoutePath);
+      currentRoutePath === href || sublinks?.find((obj) => obj.link === currentRoutePath);
     const linkActiveClassName = isLinkActive ? "link-active" : "";
     const requiredClassName = `${className} ${linkActiveClassName}`;
 
@@ -181,8 +127,7 @@ const getMobileNavLinkMenuItems = (
             classNames={navLinkStyles}
           >
             {sublinks.map(({ id, link, content }) => {
-              const linkActiveClassName =
-                currentRoutePath === link ? "link-active" : "";
+              const linkActiveClassName = currentRoutePath === link ? "link-active" : "";
               return (
                 <NavLink
                   key={id}

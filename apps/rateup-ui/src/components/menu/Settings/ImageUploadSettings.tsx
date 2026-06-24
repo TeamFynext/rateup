@@ -1,9 +1,6 @@
-"use client";
-
+import { IconTrash, IconUpload } from "@tabler/icons-react";
 import type { ChangeEvent } from "react";
 import React, { useRef, useState } from "react";
-
-import { IconTrash, IconUpload } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -12,10 +9,7 @@ import { ImageUploadMethodModal } from "@/components/Modal/ImageUploadMethodModa
 import { UnsplashModal } from "@/components/Modal/UnsplashModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import {
-  MAX_FILE_SIZE_IN_BYTE,
-  MAX_FILE_SIZE_IN_MB,
-} from "@/utils/constants.ts";
+import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "@/utils/constants.ts";
 
 type ImageFieldName = "backgroundImage" | "mobileBackgroundImage" | "logo";
 
@@ -30,9 +24,7 @@ type ImageUploadSettingsProps = {
   setMobileBackgroundImage: React.Dispatch<React.SetStateAction<File | null>>;
   logo: File | null;
   setLogo: React.Dispatch<React.SetStateAction<File | null>>;
-  setImageToDelete: React.Dispatch<
-    React.SetStateAction<Array<{ Key: string }>>
-  >;
+  setImageToDelete: React.Dispatch<React.SetStateAction<Array<{ Key: string }>>>;
 };
 
 const ImageUploadSettings = ({
@@ -50,8 +42,7 @@ const ImageUploadSettings = ({
   const backgroundFileInputRef = useRef<HTMLInputElement>(null);
   const logoFileInputRef = useRef<HTMLInputElement>(null);
   const { t: translations } = useTranslation();
-  const [openedMethodSelectionDialog, setOpenedMethodSelectionDialog] =
-    useState(false);
+  const [openedMethodSelectionDialog, setOpenedMethodSelectionDialog] = useState(false);
   const [selectedUnslashImage, setSelectedUnslashImage] = useState({
     url: "",
     name: "",
@@ -59,10 +50,7 @@ const ImageUploadSettings = ({
   const [openedUnsplashDialog, setOpenedUnsplashDialog] = useState(false);
   const [openedCropDialog, setOpenedCropDialog] = useState(false);
 
-  const handleUnsplashImageSave = (
-    unsplashImage: string,
-    imageName: string,
-  ) => {
+  const handleUnsplashImageSave = (unsplashImage: string, imageName: string) => {
     setSelectedUnslashImage({
       url: unsplashImage,
       name: imageName,
@@ -72,9 +60,7 @@ const ImageUploadSettings = ({
 
   const handleCropImageSave = (cropedImage: File | string) => {
     const imageUrl =
-      typeof cropedImage === "string"
-        ? cropedImage
-        : URL.createObjectURL(cropedImage);
+      typeof cropedImage === "string" ? cropedImage : URL.createObjectURL(cropedImage);
     if (imageType === "backgroundImage") {
       form?.setFieldValue("backgroundImage", imageUrl);
       if (typeof cropedImage === "string") {
@@ -216,9 +202,7 @@ const ImageUploadSettings = ({
           label={translations("Default Banner Image")}
           buttonLabel={translations("Upload Desktop Image")}
           currentValue={
-            mobileBackgroundImage
-              ? mobileBackgroundImage.name
-              : form?.values?.mobileBackgroundImage
+            mobileBackgroundImage ? mobileBackgroundImage.name : form?.values?.mobileBackgroundImage
           }
           isDisabled={!form?.values?.mobileBackgroundImage}
           isNewFile={!!mobileBackgroundImage}
@@ -229,11 +213,7 @@ const ImageUploadSettings = ({
         <RenderImageSetting
           label={translations("Default Banner Image")}
           buttonLabel={translations("Upload Desktop Image")}
-          currentValue={
-            backgroundImage
-              ? backgroundImage.name
-              : form?.values?.backgroundImage
-          }
+          currentValue={backgroundImage ? backgroundImage.name : form?.values?.backgroundImage}
           isDisabled={!form?.values?.backgroundImage}
           isNewFile={!!backgroundImage}
           onUpload={handlePictureBackground}

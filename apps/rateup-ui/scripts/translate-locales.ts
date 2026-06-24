@@ -10,8 +10,7 @@ const TARGETS = [
   { file: "ar.json", lang: "ar" },
 ];
 
-const PLACEHOLDER_REGEX =
-  /(\{\{[^{}]+\}\}|\{[^{}]+\}|%\d*\$?[sd]|:[a-zA-Z_]\w*)/g;
+const PLACEHOLDER_REGEX = /(\{\{[^{}]+\}\}|\{[^{}]+\}|%\d*\$?[sd]|:[a-zA-Z_]\w*)/g;
 const SPLIT_TOKEN = "\n__SPLIT__\n";
 const MAX_BATCH_CHARS = 1200;
 
@@ -68,9 +67,7 @@ async function translateChunk(lines, lang) {
   }
 
   const json = await res.json();
-  const translatedJoined = (json?.[0] || [])
-    .map((part) => part?.[0] || "")
-    .join("");
+  const translatedJoined = (json?.[0] || []).map((part) => part?.[0] || "").join("");
   const split = translatedJoined.split(SPLIT_TOKEN);
 
   if (split.length !== lines.length) {
@@ -82,9 +79,7 @@ async function translateChunk(lines, lang) {
     return fallback;
   }
 
-  return split.map((text, idx) =>
-    restorePlaceholders(text, lines[idx].placeholders),
-  );
+  return split.map((text, idx) => restorePlaceholders(text, lines[idx].placeholders));
 }
 
 async function translateUniqueStrings(uniqueStrings, lang) {
@@ -101,8 +96,7 @@ async function translateUniqueStrings(uniqueStrings, lang) {
 
     while (i < protectedItems.length) {
       const item = protectedItems[i];
-      const nextSize =
-        item.protectedText.length + (chunk.length > 0 ? SPLIT_TOKEN.length : 0);
+      const nextSize = item.protectedText.length + (chunk.length > 0 ? SPLIT_TOKEN.length : 0);
       if (chunk.length > 0 && charCount + nextSize > MAX_BATCH_CHARS) break;
       chunk.push(item);
       charCount += nextSize;
@@ -114,9 +108,7 @@ async function translateUniqueStrings(uniqueStrings, lang) {
       translated.set(chunk[idx].source, value);
     });
 
-    process.stdout.write(
-      `\r${lang}: translated ${translated.size}/${uniqueStrings.length}`,
-    );
+    process.stdout.write(`\r${lang}: translated ${translated.size}/${uniqueStrings.length}`);
   }
 
   process.stdout.write("\n");

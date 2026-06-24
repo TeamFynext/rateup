@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 import {
   ActionIcon,
   Combobox,
@@ -19,35 +15,27 @@ import {
 import { IconArrowLeft, IconCheck } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { motion, useAnimate } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
 
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils.ts";
+
 import styles from "./CustomSelectForMobile.module.css";
 
 const cx = classNames.bind(styles);
 
-function CustomSelectForMobile({
-  value,
-  data,
-  placeholder,
-  onChange,
-  portalProps = {},
-}) {
+function CustomSelectForMobile({ value, data, placeholder, onChange, portalProps = {} }) {
   const mantineTheme = useMantineTheme();
   const themePrimaryColor = mantineTheme.colors.primaryColor
     ? mantineTheme.colors.primaryColor[5]
     : "#1C518E";
 
   const primaryColor =
-    luminance(themePrimaryColor) > 0.8
-      ? `var(--mantine-color-gray-7)`
-      : themePrimaryColor;
+    luminance(themePrimaryColor) > 0.8 ? `var(--mantine-color-gray-7)` : themePrimaryColor;
 
-  const foregroundColor = isLightColor(themePrimaryColor)
-    ? "#000000"
-    : "#FFFFFF";
+  const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
   const surveyThemeData = useSurveyThemeData();
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
@@ -57,8 +45,7 @@ function CustomSelectForMobile({
   );
 
   const [search, setSearch] = useState("");
-  const [isOptionSelectionDivVisible, setIsOptionSelectionDivVisible] =
-    useState(false);
+  const [isOptionSelectionDivVisible, setIsOptionSelectionDivVisible] = useState(false);
   const combobox = useCombobox({
     onDropdownClose: () => {
       setSearch("");
@@ -83,9 +70,7 @@ function CustomSelectForMobile({
         color: foregroundColor,
         borderColor: primaryColor,
       };
-      const styleObj = isSelected
-        ? selectedOptionStyleObj
-        : unSelectedOptionStyleObj;
+      const styleObj = isSelected ? selectedOptionStyleObj : unSelectedOptionStyleObj;
 
       return (
         <Combobox.Option
@@ -172,9 +157,7 @@ function CustomSelectForMobile({
           onClick={() => setIsOptionSelectionDivVisible(true)}
           rightSectionPointerEvents="none"
         >
-          {value || (
-            <Input.Placeholder>{placeholder || "Pick value"}</Input.Placeholder>
-          )}
+          {value || <Input.Placeholder>{placeholder || "Pick value"}</Input.Placeholder>}
         </InputBase>
       </Combobox.EventsTarget>
       {isOptionSelectionDivVisible && (
@@ -200,18 +183,13 @@ function CustomSelectForMobile({
                 placeholder={translations("Type in to search")}
               />
             </Group>
-            <Combobox.Options
-              ref={scope}
-              className={cx("options-container-root")}
-            >
+            <Combobox.Options ref={scope} className={cx("options-container-root")}>
               <ScrollAreaAutosize h={"100%"} scrollbarSize={7} offsetScrollbars>
                 <Stack className={cx("options-container-div")}>
                   {options.length > 0 ? (
                     options
                   ) : (
-                    <Combobox.Empty>
-                      {translations("Nothing found...")}
-                    </Combobox.Empty>
+                    <Combobox.Empty>{translations("Nothing found...")}</Combobox.Empty>
                   )}
                 </Stack>
               </ScrollAreaAutosize>

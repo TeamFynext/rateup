@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ArrowLeft,
   ArrowRight,
@@ -87,11 +85,7 @@ export default function OnboardingStep1({
 
       <div className="grid grid-cols-1 gap-2.5">
         {services.map((service) => (
-          <motion.div
-            key={service.id}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
+          <motion.div key={service.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Card
               className={`p-3 cursor-pointer transition-all duration-300 hover:shadow-md border-2 ${
                 data.services.includes(service.id)
@@ -108,9 +102,7 @@ export default function OnboardingStep1({
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
-                    <span className="text-gray-900 text-sm">
-                      {service.name}
-                    </span>
+                    <span className="text-gray-900 text-sm">{service.name}</span>
                     {service.recommended && (
                       <span className="bg-linear-to-r from-orange-400 to-pink-400 text-white px-2 py-0.5 rounded-full shadow-sm text-sm">
                         Recommended
@@ -118,9 +110,7 @@ export default function OnboardingStep1({
                     )}
                   </div>
                   <p className="text-gray-600 text-sm">{service.description}</p>
-                  <p className="text-blue-600 mt-1 text-sm">
-                    ✓ {service.benefit}
-                  </p>
+                  <p className="text-blue-600 mt-1 text-sm">✓ {service.benefit}</p>
                 </div>
                 {data.services.includes(service.id) && (
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
@@ -147,9 +137,7 @@ export default function OnboardingStep1({
                 Great! You've selected {data.services.length} service
                 {data.services.length !== 1 ? "s" : ""}
               </p>
-              <p className="text-gray-700 mt-0.5 text-sm">
-                We'll configure these for you
-              </p>
+              <p className="text-gray-700 mt-0.5 text-sm">We'll configure these for you</p>
             </div>
           </div>
         </motion.div>

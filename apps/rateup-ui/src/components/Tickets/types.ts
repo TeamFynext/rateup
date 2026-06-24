@@ -206,9 +206,7 @@ export function getCardData({
   };
 }
 
-export function isCardData(
-  value: Record<string | symbol, unknown>,
-): value is CardData {
+export function isCardData(value: Record<string | symbol, unknown>): value is CardData {
   return Boolean(value[cardKey]);
 }
 
@@ -252,18 +250,14 @@ export type ColumnData = {
   ticketColumn: Column;
 };
 
-export function getColumnData({
-  ticketColumn,
-}: Omit<ColumnData, typeof columnKey>): ColumnData {
+export function getColumnData({ ticketColumn }: Omit<ColumnData, typeof columnKey>): ColumnData {
   return {
     [columnKey]: true,
     ticketColumn,
   };
 }
 
-export function isColumnData(
-  value: Record<string | symbol, unknown>,
-): value is ColumnData {
+export function isColumnData(value: Record<string | symbol, unknown>): value is ColumnData {
   return Boolean(value[columnKey]);
 }
 

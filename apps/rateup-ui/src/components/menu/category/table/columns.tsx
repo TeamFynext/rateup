@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import {
   IconCircleCheckFilled,
   IconDots,
@@ -11,6 +7,7 @@ import {
   IconWashDrycleanOff,
 } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -64,13 +61,8 @@ function ActionsCell({
 }) {
   const [dialogOpened, setDialogOpened] = useState(false);
   const { t } = useTranslation();
-  const {
-    deleteItemMutation,
-    setEditingItem,
-    openEdit,
-    toggleSwapOrder,
-    updateMenuItemMutation,
-  } = handlers;
+  const { deleteItemMutation, setEditingItem, openEdit, toggleSwapOrder, updateMenuItemMutation } =
+    handlers;
 
   return (
     <>
@@ -134,10 +126,7 @@ function ActionsCell({
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setDialogOpened(true)}
-          >
+          <DropdownMenuItem variant="destructive" onClick={() => setDialogOpened(true)}>
             <IconTrash />
             {t("Delete")}
           </DropdownMenuItem>
@@ -147,9 +136,7 @@ function ActionsCell({
   );
 }
 
-export function getMenuItemColumns(
-  handlers: MenuItemColumnHandlers,
-): ColumnDef<MenuItem>[] {
+export function getMenuItemColumns(handlers: MenuItemColumnHandlers): ColumnDef<MenuItem>[] {
   return [
     {
       id: "image",
@@ -166,8 +153,7 @@ export function getMenuItemColumns(
                 ? getImageValue(
                     item.images[0],
                     false,
-                    item.unsplashImage?.find((d) => d === item.images[0])
-                      ?.length > 0,
+                    item.unsplashImage?.find((d) => d === item.images[0])?.length > 0,
                   )
                 : fallbackImage
             }
@@ -197,10 +183,7 @@ export function getMenuItemColumns(
         return (
           <div className="flex flex-col gap-1.5">
             {item.price?.variants?.map((v) => (
-              <div
-                key={v.name}
-                className="flex items-center justify-between gap-4"
-              >
+              <div key={v.name} className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground text-sm">{v.name}</span>
                 {v.price && (
                   <span className="font-medium text-sm">
@@ -254,9 +237,7 @@ export function getMenuItemColumns(
     {
       id: "actions",
       header: "",
-      cell: ({ row }) => (
-        <ActionsCell item={row.original} handlers={handlers} />
-      ),
+      cell: ({ row }) => <ActionsCell item={row.original} handlers={handlers} />,
     },
   ];
 }

@@ -1,18 +1,11 @@
-"use client";
-
-import { useRef, useState } from "react";
-
 import Autoplay from "embla-carousel-autoplay";
 import { CircleAlertIcon } from "lucide-react";
+import { useRef, useState } from "react";
 
 import { CreditsCard } from "@/components/Card/CreditsCard.tsx";
 import { CategoryDisplay } from "@/components/menu/category/CategoryDisplay.tsx";
 import { ItemDetailedViewModal } from "@/components/menu/item/ItemDetailedViewModal.tsx";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel.tsx";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel.tsx";
 import {
   Empty,
   EmptyDescription,
@@ -26,15 +19,10 @@ import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import FloatingMenuMain from "./FloatingMenu.tsx";
 
 export default function MenuLandingPage({ fullMenu, menuBanner }) {
-  const [autoplayPlugin] = useState(() =>
-    Autoplay({ delay: 2000, stopOnInteraction: false }),
-  );
+  const [autoplayPlugin] = useState(() => Autoplay({ delay: 2000, stopOnInteraction: false }));
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const registerCategoryRef = (
-    categoryId: string,
-    element: HTMLDivElement | null,
-  ) => {
+  const registerCategoryRef = (categoryId: string, element: HTMLDivElement | null) => {
     categoryRefs.current[categoryId] = element;
   };
 
@@ -50,8 +38,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
     );
 
   const backgroundImageFallback = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/background.jpg`;
-  const hideUnavailableCategory = fullMenu?.menuLanding?.menu
-    ?.hideUnavailableCategory as boolean;
+  const hideUnavailableCategory = fullMenu?.menuLanding?.menu?.hideUnavailableCategory as boolean;
 
   let fullCategory = fullMenu?.categories;
 
@@ -67,9 +54,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
     { successData: [], failedData: [] },
   );
 
-  const filteredData = hideUnavailableCategory
-    ? successData
-    : [...successData, ...failedData];
+  const filteredData = hideUnavailableCategory ? successData : [...successData, ...failedData];
 
   if (hideUnavailableCategory) {
     fullCategory = fullCategory?.filter(isCategoryActive);
@@ -113,8 +98,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                     className="aspect-5/1 w-full object-cover max-md:aspect-3/2"
                     alt="menu banner"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        backgroundImageFallback;
+                      (e.target as HTMLImageElement).src = backgroundImageFallback;
                     }}
                   />
                 </CarouselItem>
@@ -145,9 +129,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                     ? getFileUrlFromKey(
                         encodeURI(fullMenu?.menuLanding?.mobileBackgroundImage),
                         true,
-                        !!fullMenu.menuLanding?.unsplashImage?.[
-                          "mobileBackgroundImage"
-                        ],
+                        !!fullMenu.menuLanding?.unsplashImage?.["mobileBackgroundImage"],
                       )
                     : backgroundImageFallback
                 }
@@ -168,9 +150,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                 setSelectedItem={setSelectedItem}
                 category={c}
                 currency={fullMenu?.menuLanding?.menu?.currency ?? "0"}
-                hideUnavailableCategory={
-                  fullMenu?.menuLanding?.menu?.hideUnavailableCategory
-                }
+                hideUnavailableCategory={fullMenu?.menuLanding?.menu?.hideUnavailableCategory}
                 registerCategoryRef={registerCategoryRef}
               />
             ))

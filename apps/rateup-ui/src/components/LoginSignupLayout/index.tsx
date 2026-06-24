@@ -1,16 +1,9 @@
-"use client";
-
-import {
-  Box,
-  Center,
-  ScrollArea,
-  Stack,
-  useMantineColorScheme,
-} from "@mantine/core";
+import { Box, Center, ScrollArea, Stack, useMantineColorScheme } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
 import { rateupLogoUrl } from "../HomePage/constants.tsx";
+
 import styles from "./login-signup-layout.module.css";
 
 function LoginSignupLayout({ children }) {
@@ -18,12 +11,7 @@ function LoginSignupLayout({ children }) {
 
   return (
     <Center h={"100vh"}>
-      <Stack
-        align="center"
-        w={{ base: "100%", sm: "100%", lg: "70%" }}
-        py={"lg"}
-        gap={50}
-      >
+      <Stack align="center" w={{ base: "100%", sm: "100%", lg: "70%" }} py={"lg"} gap={50}>
         <Link to="/">
           <Image src={rateupLogoUrl} alt="RateUp Logo" width={85} height={85} />
         </Link>

@@ -1,16 +1,4 @@
-"use client";
-
-import {
-  Box,
-  Button,
-  Center,
-  CopyButton,
-  Flex,
-  Grid,
-  Group,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Box, Button, Center, CopyButton, Flex, Grid, Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconCopy } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
@@ -80,11 +68,7 @@ const IFrameModal = ({ close, shareUrl }) => {
               />
             </Grid.Col>
             <Grid.Col span={3}>
-              <ContainedSelection
-                label=" "
-                data={units}
-                {...form.getInputProps("widthUnit")}
-              />
+              <ContainedSelection label=" " data={units} {...form.getInputProps("widthUnit")} />
             </Grid.Col>
             <Grid.Col span={9}>
               <ContainedNumberInput
@@ -97,11 +81,7 @@ const IFrameModal = ({ close, shareUrl }) => {
               />
             </Grid.Col>
             <Grid.Col span={3}>
-              <ContainedSelection
-                label=" "
-                data={units}
-                {...form.getInputProps("heightUnit")}
-              />
+              <ContainedSelection label=" " data={units} {...form.getInputProps("heightUnit")} />
             </Grid.Col>
           </Grid>
         </form>
@@ -110,10 +90,7 @@ const IFrameModal = ({ close, shareUrl }) => {
             {iframe}
             <Flex justify={"flex-end"}>
               <Group gap={"sm"}>
-                <RateupButtonSecondary
-                  title={translations("cancel")}
-                  onClick={close}
-                />
+                <RateupButtonSecondary title={translations("cancel")} onClick={close} />
                 <CopyButton value={iframe}>
                   {({ copied, copy }) => (
                     <Button
@@ -123,9 +100,7 @@ const IFrameModal = ({ close, shareUrl }) => {
                       radius={"lg"}
                       disabled={disabled}
                     >
-                      {copied
-                        ? translations("Copied")
-                        : translations("Copy code")}
+                      {copied ? translations("Copied") : translations("Copy code")}
                     </Button>
                   )}
                 </CopyButton>

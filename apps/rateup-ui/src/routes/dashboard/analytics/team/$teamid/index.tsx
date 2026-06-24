@@ -1,11 +1,5 @@
-import { useRef, useState } from "react";
-
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import {
   ArrowRight,
   Clock,
@@ -15,22 +9,18 @@ import {
   Target,
   Users,
 } from "lucide-react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { MessagePlatform } from "@/types/enums.ts";
 import { useGetTeamDetailedMetrics } from "@/backend/conversation/conversation.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { StaffStatusBadge } from "@/components/whatsapp/inbox/analytics/ConversationStatsAgentPerformance.tsx";
 import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
+import { MessagePlatform } from "@/types/enums.ts";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
 export const Route = createFileRoute("/dashboard/analytics/team/$teamid/")({
@@ -58,9 +48,7 @@ function page() {
   const { data, isLoading } = useGetTeamDetailedMetrics(teamid, {
     days: day,
   });
-  const averageResponsesTime = formatTimeToNearestUnitFromSeconds(
-    data?.averageResponseTime,
-  );
+  const averageResponsesTime = formatTimeToNearestUnitFromSeconds(data?.averageResponseTime);
   const textColor = (value) => {
     if (value > 0) return "text-green-500";
     return "text-red-500";
@@ -94,8 +82,7 @@ function page() {
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center shadow-md"
                   style={{
-                    backgroundColor:
-                      data?.teamColor === "null" ? "blue" : data?.teamColor,
+                    backgroundColor: data?.teamColor === "null" ? "blue" : data?.teamColor,
                   }}
                 >
                   <Users className="w-5 h-5 text-white" />
@@ -103,8 +90,7 @@ function page() {
                 <div>
                   <h3 className="font-semibold">{data?.teamName}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {data?.teamMembers} {t("members")} ·{" "}
-                    {data?.teamMembersOnline} {t("online")}
+                    {data?.teamMembers} {t("members")} · {data?.teamMembersOnline} {t("online")}
                   </p>
                 </div>
               </div>
@@ -153,9 +139,7 @@ function page() {
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Clock className="w-5 h-5 text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  {t("Avg Response Time")}
-                </p>
+                <p className="text-sm text-muted-foreground">{t("Avg Response Time")}</p>
               </div>
               <p className="text-2xl font-semibold">
                 {averageResponsesTime
@@ -165,8 +149,7 @@ function page() {
               <p
                 className={`text-xs mt-1 ${textColor(data?.averageResponseTimeComparedToLastWeek)}`}
               >
-                {Math.floor(data?.averageResponseTimeComparedToLastWeek) ?? 0}%{" "}
-                {t("vs last week")}
+                {Math.floor(data?.averageResponseTimeComparedToLastWeek) ?? 0}% {t("vs last week")}
               </p>
             </CardContent>
           </Card>
@@ -175,14 +158,10 @@ function page() {
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <MessageCircle className="w-5 h-5 text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  {t("Active Chats")}
-                </p>
+                <p className="text-sm text-muted-foreground">{t("Active Chats")}</p>
               </div>
               <p className="text-2xl font-semibold">{data?.activeChats}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {t("Currently handling")}
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">{t("Currently handling")}</p>
             </CardContent>
           </Card>
 
@@ -190,18 +169,13 @@ function page() {
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Target className="w-5 h-5 text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  {t("Resolution Rate")}
-                </p>
+                <p className="text-sm text-muted-foreground">{t("Resolution Rate")}</p>
               </div>
-              <p className="text-2xl font-semibold">
-                {Math.floor(data?.resolutionRate)}%
-              </p>
+              <p className="text-2xl font-semibold">{Math.floor(data?.resolutionRate)}%</p>
               <p
                 className={`text-xs text-green-600 mt-1 ${textColor(data?.resolutionRateComparedToLastWeek)}`}
               >
-                {Math.floor(data?.resolutionRateComparedToLastWeek)}%{" "}
-                {t("vs last week")}
+                {Math.floor(data?.resolutionRateComparedToLastWeek)}% {t("vs last week")}
               </p>
             </CardContent>
           </Card>
@@ -285,17 +259,11 @@ function page() {
                     </div>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          {t("Messages")}
-                        </span>
-                        <span className="font-semibold">
-                          {agent.messagesHandled}
-                        </span>
+                        <span className="text-muted-foreground">{t("Messages")}</span>
+                        <span className="font-semibold">{agent.messagesHandled}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          {t("Response Time")}
-                        </span>
+                        <span className="text-muted-foreground">{t("Response Time")}</span>
                         <span className="font-semibold">
                           {averageResponseTime
                             ? `${averageResponseTime.value} ${averageResponseTime.suffix}`
@@ -303,9 +271,7 @@ function page() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          {t("Active Chats")}
-                        </span>
+                        <span className="text-muted-foreground">{t("Active Chats")}</span>
                         <Badge variant="outline" className="text-primary">
                           {agent.staffActiveChats}
                         </Badge>

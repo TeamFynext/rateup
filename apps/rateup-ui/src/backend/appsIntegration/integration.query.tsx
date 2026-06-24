@@ -36,9 +36,7 @@ const useWaPaymentConfigurations = (whatsappSettingsId?: string) => {
   });
 };
 
-export const useGetWaPaymentConfigurationByNameMutation = (
-  type: IntegratedApps,
-) => {
+export const useGetWaPaymentConfigurationByNameMutation = (type: IntegratedApps) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: getWaPaymentConfigurationByName,
@@ -73,34 +71,24 @@ const useCreateWaPaymentConfigurationMutation = (type: IntegratedApps) => {
     },
   });
 };
-export const useRegenerateWaPaymentConfigurationOauthMutation = (
-  type: IntegratedApps,
-) => {
+export const useRegenerateWaPaymentConfigurationOauthMutation = (type: IntegratedApps) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: regenerateWaPaymentConfigurationOauth,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
-      toast.success(
-        "whatsapp payment configuration oauth link updated successfully",
-        {
-          id: "waPaymentConfigurations-oauth",
-        },
-      );
+      toast.success("whatsapp payment configuration oauth link updated successfully", {
+        id: "waPaymentConfigurations-oauth",
+      });
     },
     onError: (error) => {
-      toast.error(
-        error?.message || `Error creating waPaymentConfigurations oauth link`,
-        {
-          id: "waPaymentConfigurations-oauth",
-        },
-      );
+      toast.error(error?.message || `Error creating waPaymentConfigurations oauth link`, {
+        id: "waPaymentConfigurations-oauth",
+      });
     },
   });
 };
-export const useDeleteWaPaymentConfigurationMutation = (
-  type: IntegratedApps,
-) => {
+export const useDeleteWaPaymentConfigurationMutation = (type: IntegratedApps) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteWaPaymentConfiguration,
@@ -122,8 +110,7 @@ export const useDeleteWaPaymentConfigurationMutation = (
 export const useCreateIntegrationMutation = (type: IntegratedApps) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { credential: any }) =>
-      createIntegration({ name: type, ...data }),
+    mutationFn: (data: { credential: any }) => createIntegration({ name: type, ...data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
       toast.success("Integration created successfully", {
@@ -141,8 +128,7 @@ export const useCreateIntegrationMutation = (type: IntegratedApps) => {
 export const useUpdateIntegrationMutation = (type: IntegratedApps) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: updateIntegrationSchema) =>
-      updateIntegration(type, data),
+    mutationFn: (data: updateIntegrationSchema) => updateIntegration(type, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
       toast.success("Integration updated successfully", {
@@ -185,7 +171,7 @@ export const useGetGoogleSheetAuthorizationUrl = () => {
 export const useCreateAuthToken = () => {
   return useMutation({
     mutationFn: createGoogleSheetAuthToken,
-    onSuccess: (data) => {},
+    onSuccess: (_data) => {},
   });
 };
 

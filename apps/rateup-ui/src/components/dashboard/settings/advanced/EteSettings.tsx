@@ -1,24 +1,9 @@
-"use client";
-
-import { useState } from "react";
-
-import {
-  Badge,
-  Blockquote,
-  Button,
-  Group,
-  Mark,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Badge, Blockquote, Button, Group, Mark, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconInfoTriangleFilled,
-  IconPlus,
-  IconRefresh,
-} from "@tabler/icons-react";
+import { IconInfoTriangleFilled, IconPlus, IconRefresh } from "@tabler/icons-react";
 import { useSearch } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -43,25 +28,22 @@ export default function ETESettings() {
   const highlighted = !!searchParams.highlighted === true;
   const { user } = useUser();
   const orgDetailsUpdate = useUpdateOrgDetailsMutation();
-  const [eteModalOpened, { open: openEteModal, close: closeEteModal }] =
-    useDisclosure(false);
+  const [eteModalOpened, { open: openEteModal, close: closeEteModal }] = useDisclosure(false);
   const [encryptionpassword, setEncryptionPassword] = useState("");
   const triggerEndtoEndEncryptionUpdate = (encryptionpassword: string) => {
     generateKeyPair().then(({ privateKey, publicKey }) => {
       const { keyPassword } = passwordToKey(encryptionpassword);
-      encryptPrivateKey(privateKey, keyPassword).then(
-        ({ nonceWithEncryptedPrivateKey }) => {
-          orgDetailsUpdate.mutate({
-            encryptionKeys: {
-              publicKey: publicKey,
-              privateKey: nonceWithEncryptedPrivateKey,
-            },
-          });
-          sessionStorage.clear();
-          toast.success(translations("End to end encryption enabled"));
-          closeEteModal();
-        },
-      );
+      encryptPrivateKey(privateKey, keyPassword).then(({ nonceWithEncryptedPrivateKey }) => {
+        orgDetailsUpdate.mutate({
+          encryptionKeys: {
+            publicKey: publicKey,
+            privateKey: nonceWithEncryptedPrivateKey,
+          },
+        });
+        sessionStorage.clear();
+        toast.success(translations("End to end encryption enabled"));
+        closeEteModal();
+      });
     });
   };
   // operations for resetting the password
@@ -90,17 +72,12 @@ export default function ETESettings() {
     } else {
       if (values["oldPassword"] === values["newPassword"]) {
         passwordResetForm.setErrors({
-          newPassword: translations(
-            "The new password should be different from the old password",
-          ),
+          newPassword: translations("The new password should be different from the old password"),
         });
         return;
       } else {
         const { keyPassword } = passwordToKey(values["newPassword"]);
-        const { nonceWithEncryptedPrivateKey } = await encryptPrivateKey(
-          privateKey,
-          keyPassword,
-        );
+        const { nonceWithEncryptedPrivateKey } = await encryptPrivateKey(privateKey, keyPassword);
         orgDetailsUpdate.mutate(
           {
             encryptionKeys: {
@@ -129,9 +106,7 @@ export default function ETESettings() {
         title={translations("Enter the password")}
       >
         <Stack>
-          <Text>
-            {translations("Enter the password to enable end to end encryption")}
-          </Text>
+          <Text>{translations("Enter the password to enable end to end encryption")}</Text>
           <Blockquote
             p={"sm"}
             color="yellow"
@@ -166,11 +141,7 @@ export default function ETESettings() {
         onClose={closePasswordResetModal}
         title={translations("Reset Your Password")}
       >
-        <form
-          onSubmit={passwordResetForm.onSubmit((values) =>
-            onPasswordResetSubmit(values),
-          )}
-        >
+        <form onSubmit={passwordResetForm.onSubmit((values) => onPasswordResetSubmit(values))}>
           <Stack>
             <ContainedPasswordInput
               label={translations("Old Password")}
@@ -184,9 +155,7 @@ export default function ETESettings() {
               loading={orgDetailsUpdate.isPending}
               title={translations("Submit")}
               type={"submit"}
-              onClick={() =>
-                triggerEndtoEndEncryptionUpdate(encryptionpassword)
-              }
+              onClick={() => triggerEndtoEndEncryptionUpdate(encryptionpassword)}
             />
           </Stack>
         </form>
@@ -197,11 +166,7 @@ export default function ETESettings() {
           <Text size="lg" fw={500}>
             {translations("End-to-End Encryption")}
           </Text>
-          <Badge
-            color={user?.encryptionKeys ? "green" : "red"}
-            fw={"bold"}
-            variant="light"
-          >
+          <Badge color={user?.encryptionKeys ? "green" : "red"} fw={"bold"} variant="light">
             {user?.encryptionKeys ? "Active" : "Inactive"}
           </Badge>
         </Group>
@@ -209,11 +174,7 @@ export default function ETESettings() {
           {translations("Generate Key Pairs for End To End Encryption Here")}
         </Text>
         <Group>
-          <Button
-            rightSection={<IconPlus />}
-            radius={"xl"}
-            onClick={openEteModal}
-          >
+          <Button rightSection={<IconPlus />} radius={"xl"} onClick={openEteModal}>
             {translations("Generate Key Pair")}
           </Button>
           <Button

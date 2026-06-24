@@ -1,7 +1,6 @@
-import React from "react";
-
 import { ArrowLeft, ArrowRight, Zap } from "lucide-react";
 import { motion } from "motion/react";
+import React from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -48,9 +47,7 @@ function OnboardingStep4({
               <div className="flex items-center space-x-3">
                 <Checkbox
                   checked={data.integrationsSelected.includes(integration.id)}
-                  onCheckedChange={() =>
-                    handleIntegrationToggle(integration.id)
-                  }
+                  onCheckedChange={() => handleIntegrationToggle(integration.id)}
                   className="border-2 border-gray-300"
                 />
                 <div className="flex items-center space-x-1 sm:space-x-2.5">
@@ -94,8 +91,7 @@ function OnboardingStep4({
             <Zap className="w-4 h-4 text-green-600 mx-auto mb-2" />
             <p className="text-green-700">No worries if you skip this step!</p>
             <p className="text-gray-700 mt-1">
-              You can connect these accounts anytime from your dashboard
-              settings
+              You can connect these accounts anytime from your dashboard settings
             </p>
           </div>
         </div>

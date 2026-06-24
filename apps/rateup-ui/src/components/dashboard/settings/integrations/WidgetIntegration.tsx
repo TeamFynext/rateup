@@ -26,11 +26,9 @@ import SupportWidget from "@rateup/support-widget";
             SupportWidget Integration
           </h1>
           <p className="text-base text-muted-foreground mb-6 max-w-2xl text-center">
-            Add a modern, customizable support widget to your app or website in
-            minutes.
+            Add a modern, customizable support widget to your app or website in minutes.
             <br className="hidden md:block" />
-            Follow the steps below to get started and delight your users with
-            instant support.
+            Follow the steps below to get started and delight your users with instant support.
           </p>
           <div className="flex justify-center gap-3 mt-1">
             <span className="inline-block bg-primary text-white px-4 py-1.5 rounded-full font-semibold shadow-lg text-sm">
@@ -61,9 +59,7 @@ import SupportWidget from "@rateup/support-widget";
                 <div className="font-semibold mb-2">
                   Get your <span className="text-primary">orgId</span>
                 </div>
-                <div className="text-muted-foreground">
-                  Copy it from Settings → Integrations.
-                </div>
+                <div className="text-muted-foreground">Copy it from Settings → Integrations.</div>
               </div>
             </li>
             <li className="flex gap-4 items-start">
@@ -78,9 +74,7 @@ import SupportWidget from "@rateup/support-widget";
             <li className="flex gap-4 items-start">
               <span className="text-2xl font-bold text-primary">4</span>
               <div>
-                <div className="font-semibold mb-2">
-                  Import and use the widget
-                </div>
+                <div className="font-semibold mb-2">Import and use the widget</div>
                 <div className="relative mt-4">
                   <TerminalBlock code={codeExample} />
                 </div>

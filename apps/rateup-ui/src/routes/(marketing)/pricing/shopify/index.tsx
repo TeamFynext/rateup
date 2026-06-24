@@ -1,20 +1,16 @@
-import { Suspense, useEffect, useState } from "react";
-
 import { Center, Stack, Text } from "@mantine/core";
 import { IconArrowRight, IconLoader } from "@tabler/icons-react";
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Session from "supertokens-auth-react/recipe/session";
 
 import { useUserOrgOrders } from "@/backend/payment/payment.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
-import style from "@/components/Graph/graph.module.css";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+
+import style from "@/components/Graph/graph.module.css";
 
 export const Route = createFileRoute("/(marketing)/pricing/shopify/")({
   component: Page,
@@ -62,8 +58,7 @@ function ShopifySubscriptionApprovalCallback() {
   }, []);
 
   const { data: orders, isFetching } = useUserOrgOrders(isSessionExist);
-  const { data: subscription, isFetching: subscriptionFetching } =
-    useSubscription(isSessionExist);
+  const { data: subscription, isFetching: subscriptionFetching } = useSubscription(isSessionExist);
 
   const updateRoute = () => {
     localStorage.removeItem("shopify-subscription-callback");
@@ -76,9 +71,7 @@ function ShopifySubscriptionApprovalCallback() {
     ? subscription?.subscriptionRef === charge_id.toString()
     : false;
   const isOrderCreated = orders
-    ? orders.data?.find(
-        (order) => order.subscriptionId === charge_id.toString(),
-      )
+    ? orders.data?.find((order) => order.subscriptionId === charge_id.toString())
     : false;
 
   if (!charge_id || !isSessionExist) return null;
@@ -88,9 +81,7 @@ function ShopifySubscriptionApprovalCallback() {
       <Center h={"100vh"}>
         <Stack justify="center" align="center">
           <IconLoader className={style.rotateInfinitely} display={"block"} />
-          <Text>
-            {translations("Wait..Processing your subscription order")}
-          </Text>
+          <Text>{translations("Wait..Processing your subscription order")}</Text>
         </Stack>
       </Center>
     );
@@ -100,9 +91,7 @@ function ShopifySubscriptionApprovalCallback() {
       <Stack
         justify="center"
         align="center"
-        bg={
-          "light-dark(var(--mantine-color-gray-3), var(--mantine-color-body))"
-        }
+        bg={"light-dark(var(--mantine-color-gray-3), var(--mantine-color-body))"}
         p={"xl"}
       >
         {isSubscribtionUpdated ? (
@@ -111,8 +100,8 @@ function ShopifySubscriptionApprovalCallback() {
               Your Subscription has been activated 🎉
             </Text>
             <Text>
-              Thank you for choosing Rateup Premium subscription. <br /> <br />{" "}
-              You can now enjoy Rateup Premium features
+              Thank you for choosing Rateup Premium subscription. <br /> <br /> You can now enjoy
+              Rateup Premium features
               <br />
               You will be notified by email shortly.
             </Text>
@@ -123,9 +112,8 @@ function ShopifySubscriptionApprovalCallback() {
               Your Subscription Order has placed..!
             </Text>
             <Text>
-              Thank you for choosing Rateup Premium subscription. <br /> <br />{" "}
-              You can enjoy Rateup Premium features once your order fully
-              processed
+              Thank you for choosing Rateup Premium subscription. <br /> <br /> You can enjoy Rateup
+              Premium features once your order fully processed
               <br />
               You will be notified by email shortly.
             </Text>
@@ -135,10 +123,7 @@ function ShopifySubscriptionApprovalCallback() {
             <Text c="green" fw={500}>
               Thank you for choosing Rateup..!
             </Text>
-            <Text>
-              Follow up your account page for order details and subscription
-              status
-            </Text>
+            <Text>Follow up your account page for order details and subscription status</Text>
           </Stack>
         )}
         <RateupButtonBlue

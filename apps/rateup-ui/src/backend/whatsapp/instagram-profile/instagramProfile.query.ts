@@ -69,9 +69,7 @@ export const useSyncInstagramIceBreakersMutation = (waSettingsId?: string) => {
   });
 };
 
-export const useDeleteInstagramIceBreakersMutation = (
-  waSettingsId?: string,
-) => {
+export const useDeleteInstagramIceBreakersMutation = (waSettingsId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
@@ -86,30 +84,23 @@ export const useDeleteInstagramIceBreakersMutation = (
   });
 };
 
-export const useSetInstagramPersistentMenuMutation = (
-  waSettingsId?: string,
-) => {
+export const useSetInstagramPersistentMenuMutation = (waSettingsId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (
-      persistentMenu: Parameters<typeof setInstagramPersistentMenu>[1],
-    ) => setInstagramPersistentMenu(waSettingsId!, persistentMenu),
+    mutationFn: (persistentMenu: Parameters<typeof setInstagramPersistentMenu>[1]) =>
+      setInstagramPersistentMenu(waSettingsId!, persistentMenu),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["instagramProfile", waSettingsId] });
       toast.success("Instagram persistent menu saved to DB");
     },
     onError: (error: any) => {
-      toast.error(
-        error?.message || "Failed to update Instagram persistent menu",
-      );
+      toast.error(error?.message || "Failed to update Instagram persistent menu");
     },
   });
 };
 
-export const useSyncInstagramPersistentMenuMutation = (
-  waSettingsId?: string,
-) => {
+export const useSyncInstagramPersistentMenuMutation = (waSettingsId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
@@ -124,9 +115,7 @@ export const useSyncInstagramPersistentMenuMutation = (
   });
 };
 
-export const useDeleteInstagramPersistentMenuMutation = (
-  waSettingsId?: string,
-) => {
+export const useDeleteInstagramPersistentMenuMutation = (waSettingsId?: string) => {
   const qc = useQueryClient();
 
   return useMutation({
@@ -136,9 +125,7 @@ export const useDeleteInstagramPersistentMenuMutation = (
       toast.success("Instagram persistent menu deleted");
     },
     onError: (error: any) => {
-      toast.error(
-        error?.message || "Failed to delete Instagram persistent menu",
-      );
+      toast.error(error?.message || "Failed to delete Instagram persistent menu");
     },
   });
 };

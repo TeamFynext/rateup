@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import {
   ActionIcon,
   Box,
@@ -18,9 +14,9 @@ import { useDebouncedState } from "@mantine/hooks";
 import { IconRefresh, IconSearch } from "@tabler/icons-react";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { ContactGroupType } from "@/types/enums.ts";
 import {
   useAddExistingContactMutation,
   useAddNewContactMutation,
@@ -28,13 +24,11 @@ import {
 } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import { FilterSelect } from "@/routes/dashboard/contacts/index.tsx";
+import { ContactGroupType } from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { contactAddType } from "@/utils/enums/index.ts";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../Button/RateupButtons.tsx";
 import RateupLoader from "../Loaders/RateupLoader.tsx";
 import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
 import ContactPagination from "./ContactPagination.tsx";
@@ -60,8 +54,7 @@ const AddCustomerModal = ({
   const [isCreating, setIsCreating] = useState(false);
   const [addType, setAddType] = useState(contactAddType.NEW);
   const [customerList, setCustomerList] = useState<string[]>([]);
-  const [columnFilters, setColumnFilters] =
-    useDebouncedState<ColumnFiltersState>([], 200);
+  const [columnFilters, setColumnFilters] = useDebouncedState<ColumnFiltersState>([], 200);
   const addExistingContactsMutation = useAddExistingContactMutation(groupId);
   const createNewContactMutation = useAddNewContactMutation(groupId);
 
@@ -77,14 +70,11 @@ const AddCustomerModal = ({
     columnFilters,
     type,
   );
-  const { isLoading: isLoadingContactgroup, data: contactGroupData } =
-    useContactGroup();
+  const { data: contactGroupData } = useContactGroup();
   const contactData = data?.users;
 
   const allContactIds = contactData?.map((customer) => customer?.id);
-  const remainingContactIds = allContactIds?.filter(
-    (c) => !existingContactIds?.includes(c),
-  );
+  const remainingContactIds = allContactIds?.filter((c) => !existingContactIds?.includes(c));
 
   const handleAddExistingContacts = async () => {
     setIsCreating(true);
@@ -133,16 +123,12 @@ const AddCustomerModal = ({
                 customerList?.includes(contact?.loyaltyCustomer?.id) ||
                 existingContactIds?.includes(contact?.loyaltyCustomer?.id)
               }
-              disabled={existingContactIds?.includes(
-                contact?.loyaltyCustomer?.id,
-              )}
+              disabled={existingContactIds?.includes(contact?.loyaltyCustomer?.id)}
               onChange={(event) =>
                 setCustomerList(
                   event.currentTarget.checked
                     ? [...customerList, contact?.loyaltyCustomer?.id]
-                    : customerList.filter(
-                        (id) => id !== contact?.loyaltyCustomer?.id,
-                      ),
+                    : customerList.filter((id) => id !== contact?.loyaltyCustomer?.id),
                 )
               }
             />
@@ -152,9 +138,7 @@ const AddCustomerModal = ({
           {type === ContactGroupType.LOYALTY && (
             <>
               <Table.Td>{contact?.email}</Table.Td>
-              <Table.Td>
-                {contact?.dob && dayjs(contact?.dob)?.format("DD/MM/YYYY")}
-              </Table.Td>
+              <Table.Td>{contact?.dob && dayjs(contact?.dob)?.format("DD/MM/YYYY")}</Table.Td>
             </>
           )}
         </Table.Tr>
@@ -163,27 +147,20 @@ const AddCustomerModal = ({
       return (
         <Table.Tr
           key={contact?.id}
-          bg={
-            customerList.includes(contact?.id)
-              ? "var(--mantine-color-blue-light)"
-              : undefined
-          }
+          bg={customerList.includes(contact?.id) ? "var(--mantine-color-blue-light)" : undefined}
         >
           <Table.Td>
             <Checkbox
               aria-label={translations("Select row")}
               checked={
-                customerList?.includes(contact?.id) ||
-                existingContactIds?.includes(contact?.id)
+                customerList?.includes(contact?.id) || existingContactIds?.includes(contact?.id)
               }
               disabled={existingContactIds?.includes(contact?.id)}
               onChange={(event) =>
                 setCustomerList(
                   event.currentTarget.checked
                     ? [...customerList, contact?.id]
-                    : customerList.filter(
-                        (id) => id !== contact?.loyaltyCustomer?.id,
-                      ),
+                    : customerList.filter((id) => id !== contact?.loyaltyCustomer?.id),
                 )
               }
             />
@@ -210,10 +187,7 @@ const AddCustomerModal = ({
             styles={customStyle}
           >
             <Group>
-              <Radio
-                value={contactAddType.NEW}
-                label={translations("Add New Contact")}
-              />
+              <Radio value={contactAddType.NEW} label={translations("Add New Contact")} />
               <Radio
                 value={contactAddType.EXISTING}
                 label={translations("Add Existing Contacts")}
@@ -244,13 +218,9 @@ const AddCustomerModal = ({
               <Checkbox
                 aria-label="select all"
                 label={translations("Select All")}
-                checked={remainingContactIds?.every((id) =>
-                  customerList.includes(id),
-                )}
+                checked={remainingContactIds?.every((id) => customerList.includes(id))}
                 onChange={(event) => {
-                  setCustomerList(
-                    event.currentTarget.checked ? remainingContactIds : [],
-                  );
+                  setCustomerList(event.currentTarget.checked ? remainingContactIds : []);
                 }}
                 disabled={contactGroupData.every((customer) =>
                   existingContactIds.includes(customer?.id),
@@ -304,10 +274,7 @@ const AddCustomerModal = ({
               />
             </PaperLayout>
             <Group justify="flex-end">
-              <RateupButtonSecondary
-                title={translations("cancel")}
-                onClick={close}
-              />
+              <RateupButtonSecondary title={translations("cancel")} onClick={close} />
               <RateupButtonBlue
                 title={translations("Add Member")}
                 onClick={handleAddExistingContacts}

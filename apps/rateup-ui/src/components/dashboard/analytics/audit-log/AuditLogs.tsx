@@ -1,8 +1,5 @@
-"use client";
-
-import { useCallback, useMemo, useState } from "react";
-
 import type { PaginationState, SortingState } from "@tanstack/react-table";
+import { useCallback, useMemo, useState } from "react";
 
 import { useUserAuditLogs } from "@/backend/user/user.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
@@ -18,12 +15,8 @@ export function AuditLogs() {
   });
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  const params = useMemo(
-    () => ({ pagination, sorting }),
-    [pagination, sorting],
-  );
-  const { data, isFetched, isLoading, isError, error } =
-    useUserAuditLogs(params);
+  const params = useMemo(() => ({ pagination, sorting }), [pagination, sorting]);
+  const { data, isFetched, isLoading, isError, error } = useUserAuditLogs(params);
 
   const handlePaginationChange = useCallback((updater: any) => {
     setPagination(updater);
@@ -37,9 +30,7 @@ export function AuditLogs() {
     return (
       <ErrorCard
         message={
-          error instanceof Error
-            ? error.message
-            : "An error occurred while loading audit logs."
+          error instanceof Error ? error.message : "An error occurred while loading audit logs."
         }
       />
     );

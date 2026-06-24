@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import {
   Button,
   Divider,
@@ -16,21 +12,17 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { QuestionType as Q, SmileyResponse } from "@/types/enums.ts";
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-import useFlowStore, {
-  EditorType,
-} from "@/components/whatsapp/flow-v2/utils/store.ts";
+import useFlowStore, { EditorType } from "@/components/whatsapp/flow-v2/utils/store.ts";
+import { QuestionType as Q, SmileyResponse } from "@/types/enums.ts";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
 import AddGoogleReviewLinkForTeamModal from "./AddGoogleReviewLinkForTeamModal.tsx";
@@ -58,22 +50,15 @@ const GoogleReviewEditor = ({
 
   const [linkUpdateStatus, setLinkUpdateStatus] = useState(false);
   const { data: survey } = useSurvey(surveyId);
-  const { updateComponentInScreen, currentElementId, setDetailActiveEditor } =
-    useFlowStore();
+  const { updateComponentInScreen, currentElementId, setDetailActiveEditor } = useFlowStore();
 
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
 
-  const [enableGoogleReview, setEnableGoogleReview] = useState(
-    !!selectedQ?.googleReview,
-  );
-  const [minRating, setMinRating] = useState(
-    selectedQ?.googleReview?.minRating || 3,
-  );
-  const [minOpinion, setMinOpinion] = useState(
-    selectedQ?.googleReview?.minOpinion || 6,
-  );
+  const [enableGoogleReview, setEnableGoogleReview] = useState(!!selectedQ?.googleReview);
+  const [minRating, setMinRating] = useState(selectedQ?.googleReview?.minRating || 3);
+  const [minOpinion, setMinOpinion] = useState(selectedQ?.googleReview?.minOpinion || 6);
   const [selectedSmileys, setSelectedSmileys] = useState(
     selectedQ?.googleReview?.reqOptions || ["VeryHappy", "Happy"],
   );
@@ -84,10 +69,7 @@ const GoogleReviewEditor = ({
   const { t: translations } = useTranslation();
   const switchCondition = waFlowSave ? selectedQ?.metaType : selectedQ?.type;
   useEffect(() => {
-    if (
-      selectedQ?.hasOwnProperty("googleReview") &&
-      selectedQ?.googleReview !== null
-    ) {
+    if (selectedQ?.hasOwnProperty("googleReview") && selectedQ?.googleReview !== null) {
       setEnableGoogleReview(true);
       switch (selectedQ?.type) {
         case Q.Rating:
@@ -145,24 +127,17 @@ const GoogleReviewEditor = ({
   };
 
   const { data: teamsRes } = useTeamsByUser();
-  const teamsToDisplay = teamsRes?.data?.filter((t) =>
-    survey?.teams.some((st) => st.id === t.id),
-  );
+  const teamsToDisplay = teamsRes?.data?.filter((t) => survey?.teams.some((st) => st.id === t.id));
 
   const handleSave = async () => {
     if (teamsToDisplay.some((team) => !team.googleLink)) {
-      toast.error(
-        translations("Please enter Google Review links for all teams"),
-      );
+      toast.error(translations("Please enter Google Review links for all teams"));
       return;
     }
     if (!waFlowSave)
-      toast.loading(
-        translations("Hold on, your changes are getting updated.."),
-        {
-          id: "load-data",
-        },
-      );
+      toast.loading(translations("Hold on, your changes are getting updated.."), {
+        id: "load-data",
+      });
 
     try {
       setLinkUpdateStatus(true);
@@ -173,12 +148,9 @@ const GoogleReviewEditor = ({
 
   const handleError = (error) => {
     console.error("Failed to update", error);
-    toast.error(
-      `${translations("Failed to update.. try again. Error:")} ${error.message}`,
-      {
-        id: "load-data",
-      },
-    );
+    toast.error(`${translations("Failed to update.. try again. Error:")} ${error.message}`, {
+      id: "load-data",
+    });
   };
 
   useEffect(() => {
@@ -242,11 +214,7 @@ const GoogleReviewEditor = ({
                                 {Object.values(SmileyResponse).map((value) => (
                                   <Button
                                     key={value}
-                                    variant={
-                                      selectedSmileys.includes(value)
-                                        ? "light"
-                                        : "default"
-                                    }
+                                    variant={selectedSmileys.includes(value) ? "light" : "default"}
                                     gradient={{
                                       from: "#62CBE6",
                                       to: "#3F5BA9",
@@ -267,17 +235,11 @@ const GoogleReviewEditor = ({
                           return (
                             <SimpleGrid cols={3} spacing={30}>
                               <Text fw={500}>
-                                {translations(
-                                  "Select minimum rating for enabling Google Review:",
-                                )}
+                                {translations("Select minimum rating for enabling Google Review:")}
                               </Text>
                               <Text fw={500}> : </Text>
                               <Stack align="center">
-                                <Rating
-                                  value={minRating}
-                                  onChange={setMinRating}
-                                  size="xl"
-                                />
+                                <Rating value={minRating} onChange={setMinRating} size="xl" />
                                 <Text>
                                   {" "}
                                   {minRating} {translations("stars and above.")}
@@ -306,14 +268,8 @@ const GoogleReviewEditor = ({
                                           radius="xl"
                                           size="xs"
                                           onClick={() => setMinOpinion(i)}
-                                          color={
-                                            minOpinion === i ? "blue" : "blue.9"
-                                          }
-                                          variant={
-                                            minOpinion === i
-                                              ? "gradient"
-                                              : "default"
-                                          }
+                                          color={minOpinion === i ? "blue" : "blue.9"}
+                                          variant={minOpinion === i ? "gradient" : "default"}
                                           gradient={{
                                             from: "#62CBE6",
                                             to: "#3F5BA9",

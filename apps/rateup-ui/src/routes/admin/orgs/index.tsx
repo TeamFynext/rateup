@@ -1,27 +1,13 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import {
-  ArrowRight,
-  Building2,
-  Calendar,
-  Mail,
-  Send,
-  UserCheck,
-  Users,
-} from "lucide-react";
+import { ArrowRight, Building2, Calendar, Mail, Send, UserCheck, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { useAllOrgs } from "@/backend/org/org.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -73,9 +59,7 @@ function OrgDisplay() {
       accessorKey: "id",
       header: "ID",
       cell: ({ row }) => (
-        <div className="font-mono text-xs text-muted-foreground">
-          {row.getValue("id")}
-        </div>
+        <div className="font-mono text-xs text-muted-foreground">{row.getValue("id")}</div>
       ),
       meta: { title: "ID" },
     },
@@ -105,11 +89,7 @@ function OrgDisplay() {
       accessorKey: "lastActivity",
       header: createSortableHeader("Last Activity"),
       cell: ({ row }) => {
-        const value = row.getValue("lastActivity") as
-          | string
-          | number
-          | Date
-          | undefined;
+        const value = row.getValue("lastActivity") as string | number | Date | undefined;
 
         if (!value) {
           return <span className="text-muted-foreground">No activity</span>;
@@ -122,9 +102,7 @@ function OrgDisplay() {
             <Calendar
               className={`h-4 w-4 ${isOld ? "text-red-500 font-medium" : "text-muted-foreground"}`}
             />
-            <span
-              className={`text-sm ${isOld ? "text-red-500 font-medium" : ""}`}
-            >
+            <span className={`text-sm ${isOld ? "text-red-500 font-medium" : ""}`}>
               {formatIsoDateStringWithTime(value)}
             </span>
           </div>
@@ -183,11 +161,7 @@ function OrgDisplay() {
         <div className="flex items-center gap-2">
           <Send className="h-4 w-4 text-muted-foreground" />
           <Badge
-            variant={
-              Number(row.getValue("invitations") ?? 0) > 0
-                ? "default"
-                : "secondary"
-            }
+            variant={Number(row.getValue("invitations") ?? 0) > 0 ? "default" : "secondary"}
             className="font-mono"
           >
             {row.getValue("invitations")}
@@ -200,11 +174,7 @@ function OrgDisplay() {
       accessorKey: "deletionMail",
       header: createSortableHeader("Deletion Mail"),
       cell: ({ row }) => {
-        const value = row.getValue("deletionMail") as
-          | string
-          | number
-          | Date
-          | undefined;
+        const value = row.getValue("deletionMail") as string | number | Date | undefined;
 
         if (!value) {
           return <span className="text-muted-foreground">Not sent</span>;
@@ -214,14 +184,8 @@ function OrgDisplay() {
 
         return (
           <div className="flex items-center gap-2">
-            <Mail
-              className={`h-4 w-4 ${
-                isOld ? "text-red-500" : "text-muted-foreground"
-              }`}
-            />
-            <span
-              className={`text-sm ${isOld ? "text-red-500 font-medium" : ""}`}
-            >
+            <Mail className={`h-4 w-4 ${isOld ? "text-red-500" : "text-muted-foreground"}`} />
+            <span className={`text-sm ${isOld ? "text-red-500 font-medium" : ""}`}>
               {formatIsoDateStringWithTime(value)}
             </span>
           </div>
@@ -253,12 +217,9 @@ function OrgDisplay() {
   useEffect(() => {
     if (orgs) {
       const today = orgs.filter((org) => isToday(org.createdAt))?.length || 0;
-      const yesterday =
-        orgs.filter((org) => isYesterday(org.createdAt))?.length || 0;
-      const lastWeek =
-        orgs.filter((org) => isInLastSevenDays(org.createdAt))?.length || 0;
-      const thisMonth =
-        orgs.filter((org) => isThisMonth(org.createdAt))?.length || 0;
+      const yesterday = orgs.filter((org) => isYesterday(org.createdAt))?.length || 0;
+      const lastWeek = orgs.filter((org) => isInLastSevenDays(org.createdAt))?.length || 0;
+      const thisMonth = orgs.filter((org) => isThisMonth(org.createdAt))?.length || 0;
 
       setOrgStats({
         today,
@@ -275,9 +236,7 @@ function OrgDisplay() {
         <Card className="w-96">
           <CardHeader>
             <CardTitle className="text-destructive">Error</CardTitle>
-            <CardDescription>
-              An error occurred while loading organizations.
-            </CardDescription>
+            <CardDescription>An error occurred while loading organizations.</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -307,9 +266,7 @@ function OrgDisplay() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <Building2 className="h-5 w-5 text-primary" />
-              <h1 className="text-2xl font-semibold tracking-tight">
-                Organizations
-              </h1>
+              <h1 className="text-2xl font-semibold tracking-tight">Organizations</h1>
             </div>
             <RefreshButton queryKeys={["org"]} />
           </div>
@@ -331,9 +288,7 @@ function OrgDisplay() {
               <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">
                 {orgs?.length || 0}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Active organizations
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Active organizations</p>
             </CardContent>
           </Card>
 
@@ -351,9 +306,7 @@ function OrgDisplay() {
               <div className="text-3xl font-bold text-green-700 dark:text-green-400">
                 {orgStats.today}
               </div>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                New registrations
-              </p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">New registrations</p>
             </CardContent>
           </Card>
 
@@ -371,9 +324,7 @@ function OrgDisplay() {
               <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">
                 {orgStats.yesterday}
               </div>
-              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                Previous day
-              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Previous day</p>
             </CardContent>
           </Card>
 
@@ -393,9 +344,7 @@ function OrgDisplay() {
               <div className="text-3xl font-bold text-purple-700 dark:text-purple-400">
                 {orgStats.lastWeek}
               </div>
-              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                Weekly growth
-              </p>
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">Weekly growth</p>
             </CardContent>
           </Card>
 
@@ -415,26 +364,18 @@ function OrgDisplay() {
               <div className="text-3xl font-bold text-rose-700 dark:text-rose-400">
                 {orgStats.thisMonth}
               </div>
-              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">
-                Monthly total
-              </p>
+              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">Monthly total</p>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      <h2 className="text-xl font-semibold tracking-tight">
-        Organization Management
-      </h2>
+      <h2 className="text-xl font-semibold tracking-tight">Organization Management</h2>
       <p className="text-sm text-muted-foreground">
         Manage and view all organizations in your system
       </p>
       <div>
-        <DataTable
-          columns={columns}
-          data={tableData}
-          DataTableToolbar={DataTableToolbar}
-        />
+        <DataTable columns={columns} data={tableData} DataTableToolbar={DataTableToolbar} />
       </div>
     </div>
   );

@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Divider,
   Flex,
@@ -21,18 +19,12 @@ import { QuestionType as Q } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";
 
-import {
-  RateupButtonBlackOutline,
-  RateupButtonBlue,
-} from "../../../Button/RateupButtons.tsx";
+import { RateupButtonBlackOutline, RateupButtonBlue } from "../../../Button/RateupButtons.tsx";
 import { SmileyVariantStyle } from "../../Question/QuestionExtraProps/SmileyExtraProps.tsx";
-import modalStyles from "./ModalStyles.module.css";
-import {
-  getCustomSmileyIcon,
-  getNumericValue,
-  mapSmileyIcon,
-} from "./SmileyRating/index.tsx";
+import { getCustomSmileyIcon, getNumericValue, mapSmileyIcon } from "./SmileyRating/index.tsx";
 import { getDefaultSmileySrc } from "./SmileyRating/SmileyRatingStyling.tsx";
+
+import modalStyles from "./ModalStyles.module.css";
 import styles from "./TakeSurvey.module.css";
 
 function ConfirmResponsesModal({
@@ -85,21 +77,14 @@ function ConfirmResponsesModal({
                       {(() => {
                         switch (question.type) {
                           case Q.Rating:
-                            return (
-                              <Rating
-                                value={Object.values(response?.response)[0]}
-                                readOnly
-                              />
-                            );
+                            return <Rating value={Object.values(response?.response)[0]} readOnly />;
                           case Q.Smiley:
-                            const variant =
-                              question?.features?.iconStyle?.variant;
+                            const variant = question?.features?.iconStyle?.variant;
                             if (
                               variant &&
-                              [
-                                SmileyVariantStyle.Custom,
-                                SmileyVariantStyle.Emojis,
-                              ].includes(variant)
+                              [SmileyVariantStyle.Custom, SmileyVariantStyle.Emojis].includes(
+                                variant,
+                              )
                             )
                               return getCustomSmileyIcon(
                                 Object.values(response?.response)[0],
@@ -109,9 +94,7 @@ function ConfirmResponsesModal({
                               return (
                                 <NextImage
                                   src={getDefaultSmileySrc(
-                                    getNumericValue(
-                                      Object.values(response?.response)[0],
-                                    ),
+                                    getNumericValue(Object.values(response?.response)[0]),
                                   )}
                                   alt={"smiley icon"}
                                   width={30}
@@ -126,21 +109,14 @@ function ConfirmResponsesModal({
                             const img = Object.values(response?.response)[0];
                             const imgUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${img}`;
                             return img ? (
-                              <Image
-                                radius="md"
-                                maw={240}
-                                mx="0px"
-                                src={imgUrl}
-                              />
+                              <Image radius="md" maw={240} mx="0px" src={imgUrl} />
                             ) : (
                               <Text pb="sm" c="dark.0" fz="xs">
                                 {translations("... not answered...")}
                               </Text>
                             );
                           case Q.MSQ:
-                            const responses = Object.values(
-                              response?.response,
-                            )[0];
+                            const responses = Object.values(response?.response)[0];
                             if (Array.isArray(responses)) {
                               return responses.map((item, index) => {
                                 return (
@@ -154,9 +130,7 @@ function ConfirmResponsesModal({
                             return <li>{responses}</li>;
 
                           case Q.DDMS:
-                            const responseData = Object.values(
-                              response?.response,
-                            )[0];
+                            const responseData = Object.values(response?.response)[0];
                             if (Array.isArray(responseData)) {
                               return responseData.map((item, index) => {
                                 return <li key={index}>{item?.value}</li>;
@@ -165,9 +139,9 @@ function ConfirmResponsesModal({
                             return <li>{responseData}</li>;
 
                           case Q.Date:
-                            return dayjs(
-                              Object.values(response?.response)[0],
-                            ).format("DD, MMM , YYYY");
+                            return dayjs(Object.values(response?.response)[0]).format(
+                              "DD, MMM , YYYY",
+                            );
 
                           case Q.Testimonial:
                             const data = Object.values(response?.response)[0];
@@ -179,21 +153,15 @@ function ConfirmResponsesModal({
                                 </Group>
                                 {data.jobTitle && (
                                   <Group mt="-10px">
-                                    <Text fw={"400"}>
-                                      {translations("Job Title: ")}
-                                    </Text>
+                                    <Text fw={"400"}>{translations("Job Title: ")}</Text>
                                     <Text fw="300">{data.jobTitle}</Text>
                                   </Group>
                                 )}
                                 <Group mt="-10px">
-                                  <Text fw="400">
-                                    {translations("Testimonial: ")}
-                                  </Text>{" "}
+                                  <Text fw="400">{translations("Testimonial: ")}</Text>{" "}
                                   <Text fw="300">{data.testimonial}</Text>{" "}
                                 </Group>
-                                {data.rating && (
-                                  <Rating value={data.rating} readOnly />
-                                )}
+                                {data.rating && <Rating value={data.rating} readOnly />}
                                 {data.photo && (
                                   <Image
                                     src={getFileUrlFromKey(data?.photo)}
@@ -206,30 +174,22 @@ function ConfirmResponsesModal({
                             );
 
                           case Q.EmailPhone:
-                            const contact = Object.values(
-                              response?.response,
-                            )[0];
+                            const contact = Object.values(response?.response)[0];
                             return (
                               <Stack>
                                 <Group>
-                                  <Text fw="400">
-                                    {translations("Email: ")}
-                                  </Text>{" "}
+                                  <Text fw="400">{translations("Email: ")}</Text>{" "}
                                   <Text fw="300">{contact.email}</Text>{" "}
                                 </Group>
                                 <Group mt="-10px">
-                                  <Text fw="400">
-                                    {translations("Phone: ")}
-                                  </Text>{" "}
+                                  <Text fw="400">{translations("Phone: ")}</Text>{" "}
                                   <Text fw="300">{contact.phone}</Text>{" "}
                                 </Group>
                               </Stack>
                             );
 
                           case Q.MCQ:
-                            const selectedValue = Object.values(
-                              response?.response,
-                            )[0];
+                            const selectedValue = Object.values(response?.response)[0];
                             return (
                               <Text>
                                 {selectedValue?.value ||
@@ -239,20 +199,15 @@ function ConfirmResponsesModal({
 
                           case Q.CustomNPS:
                           case Q.DDSS:
-                            const selectedChoice = Object.values(
-                              response?.response,
-                            )[0];
+                            const selectedChoice = Object.values(response?.response)[0];
                             return <Text>{selectedChoice?.value}</Text>;
                           case Q.PCQ:
-                            const selectedPictureChoice = Object.values(
-                              response?.response,
-                            )?.[0]?.value;
+                            const selectedPictureChoice = Object.values(response?.response)?.[0]
+                              ?.value;
                             return (
                               <Stack gap={0} align="center">
                                 <Image
-                                  src={getFileUrlFromKey(
-                                    selectedPictureChoice?.image,
-                                  )}
+                                  src={getFileUrlFromKey(selectedPictureChoice?.image)}
                                   w={50}
                                   style={{ aspectRatio: 4 / 3 }}
                                 />
@@ -267,69 +222,53 @@ function ConfirmResponsesModal({
                               <Stack>
                                 {res?.name && (
                                   <Group>
-                                    <Text fw="400">
-                                      {translations("Name: ")}
-                                    </Text>
+                                    <Text fw="400">{translations("Name: ")}</Text>
                                     <Text fw="300">{res?.name}</Text>
                                   </Group>
                                 )}
                                 {res?.phone && (
                                   <Group>
-                                    <Text fw="400">
-                                      {translations("Phone: ")}
-                                    </Text>
+                                    <Text fw="400">{translations("Phone: ")}</Text>
                                     <Text fw="300">{res?.phone}</Text>
                                   </Group>
                                 )}
                                 {res?.email && (
                                   <Group>
-                                    <Text fw="400">
-                                      {translations("Email: ")}
-                                    </Text>
+                                    <Text fw="400">{translations("Email: ")}</Text>
                                     <Text fw="300">{res?.email}</Text>
                                   </Group>
                                 )}
                               </Stack>
                             );
                           case Q.MultiTextInput:
-                            const answers = Object.values(
-                              response?.response,
-                            )[0];
+                            const answers = Object.values(response?.response)[0];
                             if (!answers) return null;
                             return (
                               <Stack>
-                                {Object.values(answers).map(
-                                  (ad: any, index: number) => {
-                                    return (
-                                      <Text fw="300" key={index}>
-                                        {ad}
-                                      </Text>
-                                    );
-                                  },
-                                )}
+                                {Object.values(answers).map((ad: any, index: number) => {
+                                  return (
+                                    <Text fw="300" key={index}>
+                                      {ad}
+                                    </Text>
+                                  );
+                                })}
                               </Stack>
                             );
                           case Q.MCQGrid:
-                            const results = Object.values(
-                              response?.response,
-                            )[0];
+                            const results = Object.values(response?.response)[0];
                             return (
                               <Stack>
-                                {Object.entries(results).map(
-                                  ([q, res]: any) => {
-                                    return (
-                                      <Text fw="300" key={q}>
-                                        {q}: {res?.value}
-                                      </Text>
-                                    );
-                                  },
-                                )}
+                                {Object.entries(results).map(([q, res]: any) => {
+                                  return (
+                                    <Text fw="300" key={q}>
+                                      {q}: {res?.value}
+                                    </Text>
+                                  );
+                                })}
                               </Stack>
                             );
                           default:
-                            return JSON.stringify(
-                              Object.values(response?.response)[0],
-                            );
+                            return JSON.stringify(Object.values(response?.response)[0]);
                         }
                       })()}
                     </Text>

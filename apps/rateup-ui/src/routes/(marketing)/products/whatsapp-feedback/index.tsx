@@ -1,20 +1,20 @@
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { createFileRoute } from "@tanstack/react-router";
-
-import { buildPageHead } from "@/lib/metadata.ts";
 import BusinessSection from "@/components/products/whatsapp-feedback/BusinessSection";
 import CTASection from "@/components/products/whatsapp-feedback/CTASection";
 import FAQSection from "@/components/products/whatsapp-feedback/FAQSection";
-import style from "@/components/products/whatsapp-feedback/feedback.module.css";
 import Hero from "@/components/products/whatsapp-feedback/Hero";
 import LogosBand from "@/components/products/whatsapp-feedback/LogosBand";
 import ProblemSection from "@/components/products/whatsapp-feedback/ProblemSection";
 import SolutionSection from "@/components/products/whatsapp-feedback/SolutionSection";
 import StatsBand from "@/components/products/whatsapp-feedback/StatsBand";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
 import { productsMarkdown } from "@/markdown/products";
 import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
+
+import style from "@/components/products/whatsapp-feedback/feedback.module.css";
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 const jsonLd = {
@@ -31,8 +31,7 @@ const jsonLd = {
       applicationCategory: "BusinessApplication",
       applicationSubCategory: "Survey & Feedback Software",
       operatingSystem: "Web, Android, iOS",
-      browserRequirements:
-        "Requires a modern web browser with JavaScript enabled",
+      browserRequirements: "Requires a modern web browser with JavaScript enabled",
       softwareVersion: "2026",
       releaseNotes: "https://rateup.app/products/whatsapp-feedback",
       featureList: [
@@ -80,9 +79,7 @@ const jsonLd = {
   ],
 };
 
-export const Route = createFileRoute(
-  "/(marketing)/products/whatsapp-feedback/",
-)({
+export const Route = createFileRoute("/(marketing)/products/whatsapp-feedback/")({
   server: {
     middleware: [createMarkdownMiddleware(productsMarkdown)],
   },
@@ -111,9 +108,7 @@ function WhatsappFeedback() {
       },
       { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
     );
-    globalThis.document
-      .querySelectorAll(`.${style.reveal}`)
-      .forEach((el) => revObs.observe(el));
+    globalThis.document.querySelectorAll(`.${style.reveal}`).forEach((el) => revObs.observe(el));
     return () => revObs.disconnect();
   }, []);
 

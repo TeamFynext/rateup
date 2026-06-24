@@ -1,5 +1,3 @@
-import React from "react";
-
 import {
   IconBrandWhatsapp,
   IconCategory,
@@ -9,13 +7,9 @@ import {
   IconPhone,
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
+import React from "react";
 
-import { MenuButtons } from "@/types/enums.ts";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
@@ -26,11 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { MenuButtons } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 type DynamicMenuLink = {
@@ -78,13 +69,8 @@ const FloatingMenuMain = ({
           <Tooltip>
             <TooltipTrigger>
               <Avatar className="cursor-pointer">
-                <AvatarImage
-                  src={logo ? getFileUrlFromKey(logo) : undefined}
-                  alt={displayName}
-                />
-                <AvatarFallback className="bg-muted text-xs">
-                  {initials}
-                </AvatarFallback>
+                <AvatarImage src={logo ? getFileUrlFromKey(logo) : undefined} alt={displayName} />
+                <AvatarFallback className="bg-muted text-xs">{initials}</AvatarFallback>
               </Avatar>
             </TooltipTrigger>
             <TooltipContent>{displayName ?? "Brand"}</TooltipContent>
@@ -99,9 +85,7 @@ const FloatingMenuMain = ({
                   className="flex h-auto flex-col gap-1 rounded-xl px-3 py-2 text-foreground"
                 >
                   <IconCategory data-icon="inline-start" />
-                  <span className="text-[10px] leading-none capitalize">
-                    Category
-                  </span>
+                  <span className="text-[10px] leading-none capitalize">Category</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent sideOffset={15} align="center">
@@ -132,9 +116,7 @@ const FloatingMenuMain = ({
             >
               <Link to={getMenuBtnLink(data)} target="_blank" rel="noreferrer">
                 {customButton(data.name)}
-                <span className="text-[10px] leading-none capitalize">
-                  {data.name}
-                </span>
+                <span className="text-[10px] leading-none capitalize">{data.name}</span>
               </Link>
             </Button>
           ))}
@@ -142,11 +124,7 @@ const FloatingMenuMain = ({
           {!!remainingItems?.length && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="More menu actions"
-                >
+                <Button variant="ghost" size="icon" aria-label="More menu actions">
                   <IconChevronUp data-icon="inline-start" />
                 </Button>
               </DropdownMenuTrigger>

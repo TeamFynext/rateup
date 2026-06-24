@@ -1,9 +1,6 @@
-"use client";
-
-import type { ComponentType } from "react";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppWindow, KeyRound, Loader2, Webhook } from "lucide-react";
+import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useIntegrationStatuses } from "@/backend/appsIntegration/integration.query";
@@ -118,8 +115,7 @@ function IntegrationsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: webhook } = useWebhook();
-  const { data: integrationStatuses = [], isLoading: statusesLoading } =
-    useIntegrationStatuses();
+  const { data: integrationStatuses = [], isLoading: statusesLoading } = useIntegrationStatuses();
 
   const getIntegrationStatus = (integrationId: string): IntegrationStatus => {
     if (integrationId === "webhook") {
@@ -170,9 +166,7 @@ function IntegrationsPage() {
               <section key={group.key} className="space-y-3">
                 <div>
                   <h3 className="text-lg font-semibold">{group.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {group.description}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{group.description}</p>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
                   {items.map(([id, config]) => {
@@ -183,8 +177,7 @@ function IntegrationsPage() {
                       badgeVariant = "default";
                     }
 
-                    let badgeClassName =
-                      "bg-gray-200 dark:bg-gray-800 text-foreground";
+                    let badgeClassName = "bg-gray-200 dark:bg-gray-800 text-foreground";
                     if (isInternal) {
                       badgeClassName = "bg-primary/10 text-primary";
                     } else if (status === "connected") {
@@ -230,26 +223,17 @@ function IntegrationsPage() {
                             <div className="w-16 h-16 transition-all group-hover:scale-105">
                               <config.icon className="w-full h-full" />
                             </div>
-                            <Badge
-                              variant={badgeVariant}
-                              className={badgeClassName}
-                            >
+                            <Badge variant={badgeVariant} className={badgeClassName}>
                               {badgeText}
                             </Badge>
                           </div>
                           <CardTitle>{config.name}</CardTitle>
-                          <CardDescription>
-                            {config.description}
-                          </CardDescription>
+                          <CardDescription>{config.description}</CardDescription>
                         </CardHeader>
                         <CardContent className="mt-auto">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">
-                              {t("Last sync")}:
-                            </span>
-                            <span className="text-foreground">
-                              {lastSyncText}
-                            </span>
+                            <span className="text-muted-foreground">{t("Last sync")}:</span>
+                            <span className="text-foreground">{lastSyncText}</span>
                           </div>
                           <Button
                             variant={buttonVariant}

@@ -12,11 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 import type { ChartConfig } from "@/components/ui/chart.tsx";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart.tsx";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatDate } from "@/utils/dateTime.ts";
 
@@ -58,9 +54,7 @@ const ConversationTrendsGraph = ({ dateRange }) => {
             {t("Conversation Trends")}
           </CardTitle>
         </div>
-        <CardDescription className="text-sm">
-          {t("Resolved conversation stats")}
-        </CardDescription>
+        <CardDescription className="text-sm">{t("Resolved conversation stats")}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-60 w-full">
@@ -79,9 +73,7 @@ const ConversationTrendsGraph = ({ dateRange }) => {
             <YAxis />
             <ChartTooltip
               cursor={true}
-              content={
-                <ChartTooltipContent className="text-[16px] gap-3 tracking-tight" />
-              }
+              content={<ChartTooltipContent className="text-[16px] gap-3 tracking-tight" />}
             />
             <defs>
               <linearGradient id="fillResolved" x1="0" y1="0" x2="0" y2="1">

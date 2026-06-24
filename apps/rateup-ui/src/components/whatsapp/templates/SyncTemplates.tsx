@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import {
   Box,
   Checkbox,
@@ -16,11 +12,8 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure, useListState } from "@mantine/hooks";
-import {
-  IconChevronLeft,
-  IconChevronRight,
-  IconRefresh,
-} from "@tabler/icons-react";
+import { IconChevronLeft, IconChevronRight, IconRefresh } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -33,9 +26,10 @@ import { Button } from "@/components/ui/button.tsx";
 
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
 import { WaResponseMessage } from "../MessageComponents.tsx";
+import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
+
 import whatsappStyles from "../whatsapp.module.css";
 import classes from "./template.module.css";
-import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
 
 function SyncTemplatesModal({ opened, onClose, unregisteredTemplates }) {
   const [selectedTemplates, handlers] = useListState([]);
@@ -130,12 +124,8 @@ function ConfigureTemplate({
   isSubmitting,
 }) {
   const body = template.components.find((c) => c.type.toLowerCase() === "body");
-  const header = template.components.find(
-    (c) => c.type.toLowerCase() === "header",
-  );
-  const footer = template.components.find(
-    (c) => c.type.toLowerCase() === "footer",
-  );
+  const header = template.components.find((c) => c.type.toLowerCase() === "header");
+  const footer = template.components.find((c) => c.type.toLowerCase() === "footer");
   const buttons = template.components
     .find((c) => c.type.toLowerCase() === "buttons")
     .buttons.map(({ text }) => text);
@@ -152,11 +142,7 @@ function ConfigureTemplate({
   return (
     <Stack>
       <Progress value={((templateIndex + 1) / totalTemplates) * 100} />
-      <ContainedTextField
-        label={translations("Template Name")}
-        value={template.name}
-        readOnly
-      />
+      <ContainedTextField label={translations("Template Name")} value={template.name} readOnly />
       <InputLabel>{translations("Preview")}</InputLabel>
       <Box
         className={whatsappStyles.chatBg}
@@ -173,11 +159,7 @@ function ConfigureTemplate({
           quickReplyButtons={buttons}
         />
       </Box>
-      <Tooltip
-        label={translations(
-          "Clicking on this acceptButton will start the survey",
-        )}
-      >
+      <Tooltip label={translations("Clicking on this acceptButton will start the survey")}>
         <Select
           label={translations("Choose Accept-Button")}
           value={acceptButton}
@@ -193,11 +175,7 @@ function ConfigureTemplate({
         }}
         pt="xs"
       >
-        <Button
-          variant="outline"
-          disabled={templateIndex === 0}
-          onClick={selectPreviousTemplate}
-        >
+        <Button variant="outline" disabled={templateIndex === 0} onClick={selectPreviousTemplate}>
           <IconChevronLeft size={20} />
           {translations("Previous")}
         </Button>
@@ -234,9 +212,7 @@ function DisplayTemplates({
       }
     } else {
       if (selectedTemplates.includes(id)) {
-        handlers.remove(
-          selectedTemplates.findIndex((templateId) => templateId === id),
-        );
+        handlers.remove(selectedTemplates.findIndex((templateId) => templateId === id));
       }
     }
   }
@@ -273,9 +249,7 @@ function DisplayTemplates({
                 <Checkbox
                   checked={allChecked}
                   indeterminate={selectedTemplates.length > 0 && !allChecked}
-                  onChange={(event) =>
-                    handleMasterSelect(event.currentTarget.checked)
-                  }
+                  onChange={(event) => handleMasterSelect(event.currentTarget.checked)}
                 />
               </Table.Th>
               <Table.Th>{translations("Template")}</Table.Th>
@@ -288,9 +262,7 @@ function DisplayTemplates({
                 <Table.Td>
                   <Checkbox
                     checked={selectedTemplates.includes(template.id)}
-                    onChange={(event) =>
-                      handleSelect(event.currentTarget.checked, template.id)
-                    }
+                    onChange={(event) => handleSelect(event.currentTarget.checked, template.id)}
                   />
                 </Table.Td>
                 <Table.Td>{template.name}</Table.Td>
@@ -339,9 +311,7 @@ function ImportTemplatesButton() {
   return (
     <>
       <Button variant="outline" onClick={open}>
-        <IconRefresh
-          className={isLoading && openModal ? classes.rotateInfinitely : ""}
-        />
+        <IconRefresh className={isLoading && openModal ? classes.rotateInfinitely : ""} />
         {translations("Import")}
       </Button>
       <SyncTemplatesModal
@@ -364,17 +334,13 @@ export function SyncTemplatesButton({
   const { t: translations } = useTranslation();
   function handleSyncClick() {
     syncMutation.mutate(
-      whatsappSettingsPhoneIds?.length
-        ? { whatsappSettingsPhoneIds }
-        : undefined,
+      whatsappSettingsPhoneIds?.length ? { whatsappSettingsPhoneIds } : undefined,
     );
   }
 
   return (
     <Button variant="outline" onClick={handleSyncClick} disabled={disabled}>
-      <IconRefresh
-        className={syncMutation.isPending ? classes.rotateInfinitely : ""}
-      />
+      <IconRefresh className={syncMutation.isPending ? classes.rotateInfinitely : ""} />
       {translations("Sync")}
     </Button>
   );

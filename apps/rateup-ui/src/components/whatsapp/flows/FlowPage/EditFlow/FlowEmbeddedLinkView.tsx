@@ -1,12 +1,9 @@
-"use client";
-
-import { useContext, useState } from "react";
-
 import type { TextareaProps } from "@mantine/core";
 import { Badge, Divider, Group, ScrollArea, Stack } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconDeviceSdCard } from "@tabler/icons-react";
+import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -27,11 +24,8 @@ import { EditFlowContext } from "./EditFlowContext.ts";
 export function FlowEmbeddedLinkDetailedView() {
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
     useContext(EditFlowContext);
-  const selectedFormElement = getFlowFormElementById(
-    selectedFormElementId,
-    flowJson,
-  );
-  const [nonInputTextType, setNonInputTextType] = useState(
+  const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
+  const [nonInputTextType] = useState(
     selectedFormElement.type === WaFlowFormElementType.nonInputText
       ? WaFlowFormElementType.textHeading
       : selectedFormElement.type,
@@ -53,10 +47,6 @@ export function FlowEmbeddedLinkDetailedView() {
       },
     },
   });
-  const textDecoration = [
-    WaFlowFormElementType.textBody,
-    WaFlowFormElementType.textCaption,
-  ].includes(nonInputTextType);
 
   function handleSaveElement() {
     const res = form.validate();
@@ -64,18 +54,11 @@ export function FlowEmbeddedLinkDetailedView() {
       toast.error(translations("Fix errors before saving"));
       return "error";
     } else {
-      const flowForm = getFormObjFromScreenId(
-        flowJson.screens,
-        selectedScreenId,
-      );
-      const index = flowForm.children.findIndex(
-        (fe) => fe === selectedFormElement,
-      );
+      const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
+      const index = flowForm.children.findIndex((fe) => fe === selectedFormElement);
       updateFlowJson((draft) => {
         const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
-        const footer = formEl.children?.find(
-          (data) => data.type === WaFlowFormElementType.footer,
-        );
+        const footer = formEl.children?.find((data) => data.type === WaFlowFormElementType.footer);
 
         formEl.children[index].text = form.values.text;
         formEl.children[index]["on-click-action"] = {
@@ -91,9 +74,7 @@ export function FlowEmbeddedLinkDetailedView() {
       });
     }
   }
-  const currentIndex = flowJson.screens.findIndex(
-    (s) => s.id === selectedScreenId,
-  );
+  const currentIndex = flowJson.screens.findIndex((s) => s.id === selectedScreenId);
   const nextScreens = flowJson.screens.slice(currentIndex + 1);
 
   return (
@@ -164,7 +145,7 @@ function FlowTextElementEditor(
     fontNormal: boolean;
   },
 ) {
-  const { fontNormal, ...otherProp } = props;
+  const { ...otherProp } = props;
   const { t: translations } = useTranslation();
   return (
     <TextareaWithLengthTracker

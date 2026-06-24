@@ -44,40 +44,32 @@ export function parseLogicAction(
           );
         } else {
           userResponseIndices = [
-            getChoiceIndex(
-              userResponse as Choice,
-              question.choices[language],
-            ).toString(),
+            getChoiceIndex(userResponse as Choice, question.choices[language]).toString(),
           ];
         }
         switch (logic.condition) {
           case LogicCondition.IncludesAllOf:
             iterator = "every";
-            comparator = (choiceIndex) =>
-              userResponseIndices.includes(choiceIndex);
+            comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
             break;
 
           case LogicCondition.IncludesAnyOf:
             iterator = "some";
-            comparator = (choiceIndex) =>
-              userResponseIndices.includes(choiceIndex);
+            comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
             break;
 
           case LogicCondition.IncludesNoneOf:
             iterator = "every";
-            comparator = (choiceIndex) =>
-              !userResponseIndices.includes(choiceIndex);
+            comparator = (choiceIndex) => !userResponseIndices.includes(choiceIndex);
             break;
 
           case LogicCondition.Equals:
             iterator = "every";
-            comparator = (choiceIndex) =>
-              userResponseIndices.includes(choiceIndex);
+            comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
             break;
           case LogicCondition.NotEquals:
             iterator = "every";
-            comparator = (choiceIndex) =>
-              !userResponseIndices.includes(choiceIndex);
+            comparator = (choiceIndex) => !userResponseIndices.includes(choiceIndex);
             break;
 
           default:
@@ -156,10 +148,7 @@ export function getResponses(
       case Q.CustomNPS:
         return (
           question.choices[selectedLanguage].map((choice, index) => ({
-            label:
-              typeof choice.value === "object"
-                ? choice.value?.title
-                : choice.value,
+            label: typeof choice.value === "object" ? choice.value?.title : choice.value,
             value: index.toString(),
           })) || []
         );
@@ -180,9 +169,7 @@ export function getResponses(
     return [];
   }
 }
-export function getResponses2(
-  question,
-): Array<string | { label: string; value: string }> {
+export function getResponses2(question): Array<string | { label: string; value: string }> {
   try {
     switch (question.metaType) {
       case WaQuestions.LD:
@@ -217,11 +204,7 @@ export function getResponses2(
 export function getConditions(qType: Q): Array<any> {
   switch (qType) {
     case Q.LD:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.Submitted,
-      ];
+      return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
     case Q.MCQ:
     case Q.DDSS:
       return [
@@ -232,29 +215,13 @@ export function getConditions(qType: Q): Array<any> {
         LogicCondition.Submitted,
       ];
     case Q.YN:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.Submitted,
-      ];
+      return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
     case Q.Opinion:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.Submitted,
-      ];
+      return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
     case Q.Rating:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.Submitted,
-      ];
+      return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
     case Q.Smiley:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.Submitted,
-      ];
+      return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
     case Q.MSQ:
     case Q.DDMS:
       return [
@@ -274,11 +241,7 @@ export function getConditionsv2(qType: WaQuestions): Array<any> {
     case WaQuestions.Opinion:
     case WaQuestions.Rating:
     case WaQuestions.Smiley:
-      return [
-        LogicCondition.Equals,
-        LogicCondition.NotEquals,
-        LogicCondition.Submitted,
-      ];
+      return [LogicCondition.Equals, LogicCondition.NotEquals, LogicCondition.Submitted];
     case WaQuestions.RadioButtonsGroup:
     case WaQuestions.Dropdown:
       return [

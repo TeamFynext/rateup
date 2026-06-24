@@ -1,5 +1,3 @@
-"use client";
-
 import { ModeToggle } from "./theme/ModeToggle.tsx";
 import {
   Breadcrumb,
@@ -17,10 +15,7 @@ const NavHeader = ({ pathname }: { pathname: string }) => {
     <header className="flex h-16 shrink-0 items-center gap-2 justify-between">
       <div className="flex items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1" />
-        <Separator
-          orientation="vertical"
-          className="mr-2 data-[orientation=vertical]:h-4"
-        />
+        <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
         <Breadcrumb>
           <BreadcrumbList>
             {pathname
@@ -30,9 +25,7 @@ const NavHeader = ({ pathname }: { pathname: string }) => {
                 <div key={index} className="flex items-center">
                   <BreadcrumbItem>
                     {index === array.length - 1 ? (
-                      <BreadcrumbPage className="capitalize">
-                        {segment}
-                      </BreadcrumbPage>
+                      <BreadcrumbPage className="capitalize">{segment}</BreadcrumbPage>
                     ) : (
                       <BreadcrumbLink
                         className="capitalize"

@@ -5,8 +5,7 @@ const SUBSCRIPTION_URL = "/payment/subscriptions";
 const PAYMENT_URL = "/payment/";
 const PAYMENT_PUBLIC_URL = "/public/payment/";
 
-export const getAllPaymentPlans = async () =>
-  (await axiosClient.get(`${PLAN_URL}`)).data;
+export const getAllPaymentPlans = async () => (await axiosClient.get(`${PLAN_URL}`)).data;
 
 export const getAllRateupPaymentPlans = async () => {
   try {

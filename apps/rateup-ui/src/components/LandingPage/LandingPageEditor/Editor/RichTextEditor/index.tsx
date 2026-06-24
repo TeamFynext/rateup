@@ -1,5 +1,3 @@
-"use client";
-
 import { Group } from "@mantine/core";
 import { RichTextEditor } from "@mantine/tiptap";
 
@@ -10,6 +8,7 @@ import InsertVideo from "@/components/RichTextEditor/InsertVideo/index.tsx";
 
 import { useTiptapEditorInstance } from "../../LandingPageContext/LandingPageContext.tsx";
 import SaveButton from "../SaveButton/index.tsx";
+
 import styles from "./RichTextEditor.module.css";
 
 function RichTextEditorComp() {
@@ -18,11 +17,7 @@ function RichTextEditorComp() {
   if (editorInstance) {
     return (
       <RichTextEditor editor={editorInstance} className={styles["root-div"]}>
-        <RichTextEditor.Toolbar
-          className={styles["toolbar-div"]}
-          sticky
-          tabIndex={-1}
-        >
+        <RichTextEditor.Toolbar className={styles["toolbar-div"]} sticky tabIndex={-1}>
           <Group gap={"xs"}>
             <RichTextEditor.ControlsGroup>
               <RichTextEditor.ColorPicker

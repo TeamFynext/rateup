@@ -1,5 +1,3 @@
-"use client";
-
 import { BarChart4, MessageSquareText, Settings2 } from "lucide-react";
 import { easeOut, motion } from "motion/react";
 
@@ -59,8 +57,7 @@ const InboxWorks = () => {
           </h2>
           <div className="w-16 h-1 bg-[#1c518e] mx-auto mt-4 rounded-full" />
           <p className="mt-6 text-lg text-gray-600 font-medium">
-            Our streamlined process makes employee engagement effortless and
-            effective.
+            Our streamlined process makes employee engagement effortless and effective.
           </p>
         </div>
 
@@ -85,9 +82,7 @@ const InboxWorks = () => {
                   {card.icon}
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-center text-gray-900 mb-3">
-                {card.label}
-              </h3>
+              <h3 className="text-xl font-semibold text-center text-gray-900 mb-3">{card.label}</h3>
               <p className="text-center text-gray-600 text-sm leading-relaxed">
                 {card.description}
               </p>

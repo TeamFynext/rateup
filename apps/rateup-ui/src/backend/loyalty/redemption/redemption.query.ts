@@ -24,10 +24,7 @@ const useGetRedemptionsByCustomer = (customerId: string) =>
     enabled: !!customerId,
   });
 
-export const useGetTransactions = (
-  filters?: TransactionFilter,
-  enabled = true,
-) =>
+export const useGetTransactions = (filters?: TransactionFilter, enabled = true) =>
   useQuery({
     queryKey: ["loyaltyTransactions", filters],
     queryFn: () => getTransactions(filters),

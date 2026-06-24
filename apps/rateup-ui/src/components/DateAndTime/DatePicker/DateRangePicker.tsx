@@ -1,11 +1,8 @@
-"use client";
-
-import { lazy, Suspense } from "react";
-
 import { ActionIcon, Group, Modal, TextInput, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCalendar, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { lazy, Suspense } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
 
@@ -30,9 +27,7 @@ function DateRangePickerButton({
     <>
       <Group align="center">
         <TextInput
-          value={
-            ranges[0] ? dayjs(ranges[0].startDate).format("DD/MM/YYYY") : ""
-          }
+          value={ranges[0] ? dayjs(ranges[0].startDate).format("DD/MM/YYYY") : ""}
           onClick={open}
           readOnly
           w="120px"
@@ -51,21 +46,12 @@ function DateRangePickerButton({
           leftSection={<IconCalendar size={"1rem"} />}
         />
         <Tooltip label={translations("Clear Date Filter")}>
-          <ActionIcon
-            onClick={() => onChange(undefined)}
-            variant="light"
-            size={"xs"}
-          >
+          <ActionIcon onClick={() => onChange(undefined)} variant="light" size={"xs"}>
             <IconX />
           </ActionIcon>
         </Tooltip>
       </Group>
-      <DateRangePickerModal
-        opened={opened}
-        onChange={onChange}
-        ranges={ranges}
-        close={close}
-      />
+      <DateRangePickerModal opened={opened} onChange={onChange} ranges={ranges} close={close} />
     </>
   );
 }
@@ -73,17 +59,10 @@ function DateRangePickerButton({
 export const DateRangePickerModal = ({ opened, onChange, ranges, close }) => {
   const { t: translations } = useTranslation();
   return (
-    <Modal
-      opened={opened}
-      onClose={close}
-      title={translations("Date range picker")}
-      size={"auto"}
-    >
+    <Modal opened={opened} onClose={close} title={translations("Date range picker")} size={"auto"}>
       <Suspense
         fallback={
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            Loading calendar...
-          </div>
+          <div className="p-8 text-center text-sm text-muted-foreground">Loading calendar...</div>
         }
       >
         <DateRangePicker

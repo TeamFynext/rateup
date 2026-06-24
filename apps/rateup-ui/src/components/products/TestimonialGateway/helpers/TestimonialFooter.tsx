@@ -1,8 +1,4 @@
-import {
-  IconBrandFacebook,
-  IconBrandInstagram,
-  IconBrandLinkedin,
-} from "@tabler/icons-react";
+import { IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 
 const TestimonialFooter = () => {
@@ -13,33 +9,23 @@ const TestimonialFooter = () => {
       <div className="container px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
           <div>
-            <h3 className="font-bold text-2xl pb-4 text-[#00397b]">
-              Testimonique
-            </h3>
+            <h3 className="font-bold text-2xl pb-4 text-[#00397b]">Testimonique</h3>
             <p className="text-muted-foreground">
-              The easiest way to collect, manage, and showcase customer
-              testimonials on your website.
+              The easiest way to collect, manage, and showcase customer testimonials on your
+              website.
             </p>
           </div>
 
           <div>
-            <h4 className="font-semibold text-lg pb-4 text-[#013553]">
-              Product
-            </h4>
+            <h4 className="font-semibold text-lg pb-4 text-[#013553]">Product</h4>
             <ul className="space-y-3">
               <li>
-                <Link
-                  to="#features"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="#features" className="text-[#1c518e] transition-colors">
                   Features
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/pricing"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="/pricing" className="text-[#1c518e] transition-colors">
                   Pricing
                 </Link>
               </li>
@@ -47,32 +33,21 @@ const TestimonialFooter = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold text-lg pb-4 text-[#013553]">
-              Company
-            </h4>
+            <h4 className="font-semibold text-lg pb-4 text-[#013553]">Company</h4>
             <ul className="space-y-3">
               <li>
-                <Link
-                  to="/about-us"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="/about-us" className="text-[#1c518e] transition-colors">
                   About
                 </Link>
               </li>
               <li>
-                <Link
-                  to="https://blog.rateup.app/"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="https://blog.rateup.app/" className="text-[#1c518e] transition-colors">
                   Blog
                 </Link>
               </li>
 
               <li>
-                <Link
-                  to="/contact-us"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="/contact-us" className="text-[#1c518e] transition-colors">
                   Contact
                 </Link>
               </li>
@@ -83,18 +58,12 @@ const TestimonialFooter = () => {
             <h4 className="font-semibold text-lg pb-4 text-[#013553]">Legal</h4>
             <ul className="space-y-3">
               <li>
-                <Link
-                  to="/privacy-policy"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="/privacy-policy" className="text-[#1c518e] transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/terms-of-service"
-                  className="text-[#1c518e] transition-colors"
-                >
+                <Link to="/terms-of-service" className="text-[#1c518e] transition-colors">
                   Terms of Service
                 </Link>
               </li>

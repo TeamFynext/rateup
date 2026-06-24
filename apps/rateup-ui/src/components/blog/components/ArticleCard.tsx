@@ -47,14 +47,11 @@ export function ArticleCard({
         .join("")
     : "RU";
 
-  const formattedDate = new Date(post.published_at).toLocaleDateString(
-    "en-US",
-    {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    },
-  );
+  const formattedDate = new Date(post.published_at).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
     <Link to={`/blog/${post.slug}`} className="no-underline text-inherit group">
@@ -65,11 +62,7 @@ export function ArticleCard({
         {/* Thumbnail */}
         <div className="relative h-[162px] overflow-hidden shrink-0 bg-[#06182F]">
           {post.feature_image ? (
-            <img
-              src={post.feature_image}
-              alt={post.title}
-              className="w-full h-full object-cover"
-            />
+            <img src={post.feature_image} alt={post.title} className="w-full h-full object-cover" />
           ) : (
             <div
               className="absolute inset-0 flex flex-col items-start justify-end p-3.5"
@@ -114,9 +107,7 @@ export function ArticleCard({
 
               {/* Thumb title */}
               <p className="font-nunito font-black text-[13px] text-white leading-tight m-0 max-w-[175px]">
-                {post.title.length > 40
-                  ? post.title.substring(0, 40) + "…"
-                  : post.title}
+                {post.title.length > 40 ? post.title.substring(0, 40) + "…" : post.title}
               </p>
             </div>
           )}
@@ -155,9 +146,7 @@ export function ArticleCard({
               <div className="text-[11px] font-bold text-[#2E302E]">
                 {post.primary_author?.name || "RateUp Team"}
               </div>
-              <div className="text-[10.5px] text-[#8B8E8A]">
-                {formattedDate}
-              </div>
+              <div className="text-[10.5px] text-[#8B8E8A]">{formattedDate}</div>
             </div>
             <div className="w-[26px] h-[26px] rounded-[7px] shrink-0 bg-[#2FA3FF]/8 border border-[#2FA3FF]/15 flex items-center justify-center text-[#4FC3FF] opacity-0 -translate-x-1 transition-[opacity,transform] duration-200 group-hover:opacity-100 group-hover:translate-x-0">
               <svg

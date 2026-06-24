@@ -2,25 +2,15 @@ import {
   BarChart2,
   BarChart3,
   DownloadCloud,
-  HeadphonesIcon,
   Layout,
   Link,
-  Mail,
   MessageSquare,
-  Package,
   Palette,
   Percent,
-  Settings,
   Share2,
-  Shield,
-  ShoppingBag,
   Star,
-  Target,
   Ticket,
-  Trophy,
   UserPlus,
-  Users,
-  UtensilsCrossed,
   Video,
 } from "lucide-react";
 
@@ -39,109 +29,6 @@ const cover6 = `${imagesPath}/qr-landing/Measure Campaign Success.png`;
 const cover8 = `${imagesPath}/qr-landing/Real-Time-Feedback-Collection.jpg`;
 const Sustainable = `${imagesPath}/qr-landing/Sustainable.jpg`;
 
-const Qrfeatures = [
-  {
-    icon: <Package size={52} />,
-    title: "Smart Packaging",
-    description:
-      "Go beyond the label. Provide instant access to manuals, ingredients, origins, tutorials, and promotions. Enhance transparency and reduce print waste.",
-  },
-  {
-    icon: <UserPlus size={52} />,
-    title: "Lead Capture Forms",
-    description:
-      "Convert passive viewers into qualified leads. Embed simple forms within your QR code experience to capture contact details effortlessly.",
-  },
-  {
-    icon: <MessageSquare size={52} />,
-    title: "Omnichannel Feedback",
-    description:
-      "Gather real-time insights via customizable web surveys or convenient WhatsApp surveys, ensuring higher response rates and actionable data.",
-  },
-  {
-    icon: <BarChart3 size={52} />,
-    title: "Powerful Analytics",
-    description:
-      "Track scan counts, locations, devices, times, and campaign performance. Utilize AI-powered sentiment analysis and geographic insights for deeper understanding.",
-  },
-  {
-    icon: <Target size={52} />,
-    title: "Targeted Retargeting",
-    description:
-      "Integrate seamlessly with Google Analytics & Facebook Pixel. Build custom audiences based on scan behavior for hyper-targeted ad campaigns.",
-  },
-  {
-    icon: <Settings size={52} />,
-    title: "Management Suite",
-    description:
-      "Create branded QR codes, build quick landing pages, manage multi-branch operations, and automate negative feedback escalation for timely resolution.",
-  },
-];
-
-const useCases = [
-  {
-    icon: <Trophy size={24} />,
-    title: "Run Contests & Giveaways",
-    description:
-      "Boost engagement by linking QR codes on flyers or packaging to exciting contests, special offers, or exclusive content.",
-  },
-  {
-    icon: <Star size={24} />,
-    title: "Collect Authentic Reviews",
-    description:
-      "Make it easy for customers to leave reviews directly after purchase by scanning a QR code on the product or receipt.",
-  },
-  {
-    icon: <Users size={24} />,
-    title: "Grow Your Social Media",
-    description:
-      "Direct customers to your social media profiles with a simple scan. Increase followers and build your online community effortlessly.",
-  },
-  {
-    icon: <HeadphonesIcon size={24} />,
-    title: "Instant Product Info & Support",
-    description:
-      "Link to user manuals, video tutorials, FAQs, or direct support channels to enhance the post-purchase experience.",
-  },
-  {
-    icon: <Mail size={24} />,
-    title: "Expand Email Marketing Lists",
-    description:
-      "Offer exclusive content or discounts in exchange for email sign-ups via a QR code on marketing materials or at events.",
-  },
-  {
-    icon: <Shield size={24} />,
-    title: "Verify Product Authenticity",
-    description:
-      "Build consumer trust by allowing customers to scan a QR code to verify product authenticity and learn about its origins.",
-  },
-];
-
-const industries = [
-  {
-    icon: <ShoppingBag size={32} />,
-    name: "Retail",
-    description: "Bridge online-offline gaps, drive loyalty, gather feedback.",
-  },
-  {
-    icon: <Package size={32} />,
-    name: "Packaging & CPG",
-    description:
-      "Enhance product experience, ensure transparency, run promotions.",
-  },
-  {
-    icon: <UtensilsCrossed size={32} />,
-    name: "Food & Beverage",
-    description: "Collect taste preferences, share recipes, offer discounts.",
-  },
-  {
-    icon: <Ticket size={32} />,
-    name: "Events & Marketing",
-    description:
-      "Generate leads from flyers, track ad performance, share schedules.",
-  },
-];
-
 export const Qrsteps = [
   {
     number: 1,
@@ -152,8 +39,7 @@ export const Qrsteps = [
   {
     number: 2,
     title: "Define Destination",
-    description:
-      "Link to surveys, landing pages, forms, websites, or social media.",
+    description: "Link to surveys, landing pages, forms, websites, or social media.",
     icon: <Link size={24} />,
   },
   {
@@ -173,8 +59,7 @@ export const Qrsteps = [
 export const qrHowItWorks = [
   {
     title: "Scan the QR Code",
-    description:
-      "Customers scan the QR code printed on your packaging using their smartphones.",
+    description: "Customers scan the QR code printed on your packaging using their smartphones.",
     image: Sustainable,
   },
   {

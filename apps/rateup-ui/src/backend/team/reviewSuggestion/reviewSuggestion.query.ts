@@ -16,11 +16,7 @@ const useReviewSuggestions = (enabled: boolean, teamId: string) =>
     queryKey: ["reviewSuggestion", teamId],
     queryFn: () => getReviewsByTeamId(teamId),
   });
-const usePublicReviewSuggestions = (
-  enabled: boolean,
-  surveyTeamMapId: string,
-  language: string,
-) =>
+const usePublicReviewSuggestions = (enabled: boolean, surveyTeamMapId: string, language: string) =>
   useQuery({
     enabled: !!enabled,
     queryKey: ["reviewSuggestion", surveyTeamMapId],
@@ -81,15 +77,13 @@ export const useDeleteReviewSuggestionMutation = (
   const deleteMutation = useMutation({
     mutationFn: deleteReviewSuggestion,
     onSuccess: () => {
-      suppressNotifications ||
-        toast.success("Review suggestion deleted successfully");
+      suppressNotifications || toast.success("Review suggestion deleted successfully");
       queryClient.invalidateQueries({
         queryKey: ["reviewSuggestion", teamId],
       });
     },
     onError: (error) => {
-      suppressNotifications ||
-        toast.error(error?.message || "Error deleting review suggestion");
+      suppressNotifications || toast.error(error?.message || "Error deleting review suggestion");
     },
   });
   return deleteMutation;

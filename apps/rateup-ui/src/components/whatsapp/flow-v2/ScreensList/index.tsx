@@ -1,19 +1,12 @@
-"use client";
-
-import { useState, type CSSProperties } from "react";
-
-import { IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
+import { useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
-import { cn } from "@/lib/utils.ts";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import { FlowMaxScreens } from "../../whatsappConfig.tsx";
 import useFlowStoreV3 from "../utils/store.ts";
@@ -23,13 +16,8 @@ function ScreensList() {
   const { t: translations } = useTranslation();
   const [createModalOpened, setCreateModalOpened] = useState(false);
 
-  const {
-    screens,
-    currentScreenId,
-    setCurrentScreenId,
-    deleteScreen,
-    reorderScreens,
-  } = useFlowStoreV3();
+  const { screens, currentScreenId, setCurrentScreenId, deleteScreen, reorderScreens } =
+    useFlowStoreV3();
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -52,12 +40,7 @@ function ScreensList() {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              onClick={handleAddScreen}
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-            >
+            <Button onClick={handleAddScreen} variant="ghost" size="icon" className="h-8 w-8">
               <IconPlus size={16} />
             </Button>
           </TooltipTrigger>
@@ -72,11 +55,7 @@ function ScreensList() {
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="screens-list">
           {(provided) => (
-            <div
-              className="space-y-2 mt-4"
-              {...provided.droppableProps}
-              ref={provided.innerRef}
-            >
+            <div className="space-y-2 mt-4" {...provided.droppableProps} ref={provided.innerRef}>
               {screens.map((screen, index) => (
                 <ScreenCard
                   key={screen.id}
@@ -92,10 +71,7 @@ function ScreensList() {
           )}
         </Droppable>
       </DragDropContext>
-      <CreateScreenModal
-        opened={createModalOpened}
-        close={() => setCreateModalOpened(false)}
-      />
+      <CreateScreenModal opened={createModalOpened} close={() => setCreateModalOpened(false)} />
     </div>
   );
 }
@@ -108,13 +84,7 @@ interface ScreenCardProps {
   onDelete: () => void;
 }
 
-function ScreenCard({
-  screen,
-  index,
-  isSelected,
-  onSelect,
-  onDelete,
-}: Readonly<ScreenCardProps>) {
+function ScreenCard({ screen, index, isSelected, onSelect, onDelete }: Readonly<ScreenCardProps>) {
   const { t: translations } = useTranslation();
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
 
@@ -134,8 +104,7 @@ function ScreenCard({
             style={provided.draggableProps.style as CSSProperties}
             className={cn(
               "w-full text-left py-3.5 px-3 rounded-lg border border-border bg-card cursor-pointer transition-all duration-200 hover:border-primary/60 hover:shadow-sm",
-              isSelected &&
-                "bg-primary/5 border-primary ring-2 ring-primary/10",
+              isSelected && "bg-primary/5 border-primary ring-2 ring-primary/10",
               snapshot.isDragging && "shadow-lg opacity-90",
             )}
             onClick={onSelect}
@@ -160,8 +129,7 @@ function ScreenCard({
                   {screen.title || `Screen ${index + 1}`}
                 </p>
                 <p className="text-xs text-muted-foreground leading-4 mt-0.5">
-                  {screen.layout?.children?.filter((c) => c.type !== "Footer")
-                    .length || 0}{" "}
+                  {screen.layout?.children?.filter((c) => c.type !== "Footer").length || 0}{" "}
                   {translations("elements")}
                 </p>
               </div>

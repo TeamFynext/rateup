@@ -1,10 +1,7 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Box, Switch } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useParams } from "@tanstack/react-router";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateLandingPageMutation } from "@/backend/landingPage/landingPage.query";
@@ -16,9 +13,10 @@ import {
   useTiptapEditorInstance,
 } from "../LandingPageContext/LandingPageContext.tsx";
 import NoContentFoundModal from "./NoContentFoundModal.tsx";
-import styles from "./ShareLandingPage.module.css";
 import ShareLandingPage from "./ShareLandingPage.tsx";
 import SocialMediaLinks from "./SocialMediaLinks.tsx";
+
+import styles from "./ShareLandingPage.module.css";
 
 function SharePage() {
   const { isPublished, name, tiptapEditorContent } = useLandingPageObj();
@@ -27,8 +25,7 @@ function SharePage() {
   });
   const shortUrlId = params?.shortUrlId as string;
   const shareUrl = `${import.meta.env.VITE_FRONTEND_URL}/lp/${shortUrlId}`;
-  const { mutateAsync: landingPageUpdateMutateAsync } =
-    useUpdateLandingPageMutation(shortUrlId);
+  const { mutateAsync: landingPageUpdateMutateAsync } = useUpdateLandingPageMutation(shortUrlId);
 
   const editorInstance = useTiptapEditorInstance();
   const { t: translations } = useTranslation();
@@ -45,12 +42,7 @@ function SharePage() {
     } else {
       openNoContentFoundModal();
     }
-  }, [
-    isPublished,
-    tiptapEditorContent,
-    shortUrlId,
-    landingPageUpdateMutateAsync,
-  ]);
+  }, [isPublished, tiptapEditorContent, shortUrlId, landingPageUpdateMutateAsync]);
 
   return (
     <Box className={styles["share-landingPage-root-div"]}>
@@ -79,16 +71,9 @@ function SharePage() {
       </PaperLayout>
       <PaperLayout className={styles["share-qr-card"]}>
         <h2>{translations("Share QR Code")}</h2>
-        <ShareLandingPage
-          url={shareUrl}
-          isPublished={isPublished}
-          title={name}
-        />
+        <ShareLandingPage url={shareUrl} isPublished={isPublished} title={name} />
       </PaperLayout>
-      <NoContentFoundModal
-        opened={isNoContentFoundModalOpen}
-        onClose={closeNoContentFoundModal}
-      />
+      <NoContentFoundModal opened={isNoContentFoundModalOpen} onClose={closeNoContentFoundModal} />
     </Box>
   );
 }

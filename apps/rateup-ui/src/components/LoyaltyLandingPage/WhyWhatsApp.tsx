@@ -13,14 +13,9 @@ export default function WhyWhatsApp() {
       <div className={styles.wrap}>
         <div className={`${styles["sec-head"]} ${styles.reveal}`}>
           <h2>Why WhatsApp Loyalty Works</h2>
-          <p>
-            Meet your customers where they already are—no app downloads required
-          </p>
+          <p>Meet your customers where they already are—no app downloads required</p>
         </div>
-        <div
-          className={`${styles["center-cta"]} ${styles.reveal}`}
-          style={{ marginTop: 34 }}
-        >
+        <div className={`${styles["center-cta"]} ${styles.reveal}`} style={{ marginTop: 34 }}>
           <button
             className={`${styles.btn} ${styles["btn-primary"]}`}
             onClick={() =>
@@ -65,15 +60,9 @@ export default function WhyWhatsApp() {
                 </svg>
               </div>
               <h3>Direct Communication</h3>
-              <p>
-                Reach customers instantly through their preferred messaging
-                platform
-              </p>
+              <p>Reach customers instantly through their preferred messaging platform</p>
             </div>
-            <div
-              className={`${styles["why-item"]} ${styles.reveal}`}
-              data-d="1"
-            >
+            <div className={`${styles["why-item"]} ${styles.reveal}`} data-d="1">
               <div className={styles.ic}>
                 <svg
                   viewBox="0 0 24 24"
@@ -90,14 +79,9 @@ export default function WhyWhatsApp() {
                 </svg>
               </div>
               <h3>Customer Engagement</h3>
-              <p>
-                Drive 3x higher engagement rates compared to email campaigns
-              </p>
+              <p>Drive 3x higher engagement rates compared to email campaigns</p>
             </div>
-            <div
-              className={`${styles["why-item"]} ${styles.reveal}`}
-              data-d="2"
-            >
+            <div className={`${styles["why-item"]} ${styles.reveal}`} data-d="2">
               <div className={styles.ic}>
                 <svg
                   viewBox="0 0 24 24"
@@ -112,39 +96,21 @@ export default function WhyWhatsApp() {
                 </svg>
               </div>
               <h3>Increased Retention</h3>
-              <p>
-                Boost repeat purchases by up to 40% with personalized rewards
-              </p>
+              <p>Boost repeat purchases by up to 40% with personalized rewards</p>
             </div>
           </div>
 
           <div className={`${styles["why-center"]} ${styles.reveal}`}>
             <div className={styles.diagram}>
-              <svg
-                className={styles.wires}
-                viewBox="0 0 320 380"
-                preserveAspectRatio="none"
-              >
+              <svg className={styles.wires} viewBox="0 0 320 380" preserveAspectRatio="none">
                 <path d="M160 96 L160 142" />
                 <path d="M160 212 L160 268" />
                 <path d="M88 124 H40" strokeDasharray="0" />
                 <path d="M232 124 H280" strokeDasharray="0" />
                 <path d="M88 320 H40" strokeDasharray="0" />
                 <path d="M232 320 H280" strokeDasharray="0" />
-                <circle
-                  className={styles.dotA}
-                  cx="160"
-                  cy="96"
-                  r="3.5"
-                  fill="#3D6CD4"
-                />
-                <circle
-                  className={styles.dotB}
-                  cx="160"
-                  cy="212"
-                  r="3.5"
-                  fill="#F8951D"
-                />
+                <circle className={styles.dotA} cx="160" cy="96" r="3.5" fill="#3D6CD4" />
+                <circle className={styles.dotB} cx="160" cy="212" r="3.5" fill="#F8951D" />
               </svg>
               <div className={`${styles.node} ${styles.wa}`}>
                 <div className={styles["wa-tile"]}>
@@ -195,15 +161,9 @@ export default function WhyWhatsApp() {
                 </svg>
               </div>
               <h3>Easy Setup</h3>
-              <p>
-                Launch your loyalty program in minutes without technical
-                complexity
-              </p>
+              <p>Launch your loyalty program in minutes without technical complexity</p>
             </div>
-            <div
-              className={`${styles["why-item"]} ${styles.reveal}`}
-              data-d="1"
-            >
+            <div className={`${styles["why-item"]} ${styles.reveal}`} data-d="1">
               <div className={styles.ic}>
                 <svg
                   viewBox="0 0 24 24"
@@ -223,10 +183,7 @@ export default function WhyWhatsApp() {
               <h3>Reward System</h3>
               <p>Flexible points and rewards that match your business goals</p>
             </div>
-            <div
-              className={`${styles["why-item"]} ${styles.reveal}`}
-              data-d="2"
-            >
+            <div className={`${styles["why-item"]} ${styles.reveal}`} data-d="2">
               <div className={styles.ic}>
                 <svg
                   viewBox="0 0 24 24"
@@ -240,9 +197,7 @@ export default function WhyWhatsApp() {
                 </svg>
               </div>
               <h3>Instant Updates</h3>
-              <p>
-                Send real-time notifications about points, rewards, and offers
-              </p>
+              <p>Send real-time notifications about points, rewards, and offers</p>
             </div>
           </div>
         </div>

@@ -1,18 +1,15 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { Box, Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useRouterState } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { useRateupPaymentsPlanUpdateMutation } from "@/backend/payment/payment.query";
 import { useUpdateSubscriptionMutation } from "@/backend/subscription/subscription.query";
+import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 
 import { FeatureCard } from "./FeatureCard.tsx";
 
@@ -38,10 +35,8 @@ export function SubscriptionEditorModal({
   });
   const rateupPlanEnable = pathname === "/admin/rateup";
   const updateMutation = useUpdateSubscriptionMutation();
-  const rateupPaymentsPlanUpdateMutation =
-    useRateupPaymentsPlanUpdateMutation(onClose);
-  const isRazorPayPlan =
-    !rateupPlanEnable && subscription?.basePlan?.paymentPlanId;
+  const rateupPaymentsPlanUpdateMutation = useRateupPaymentsPlanUpdateMutation(onClose);
+  const isRazorPayPlan = !rateupPlanEnable && subscription?.basePlan?.paymentPlanId;
   function handleSave() {
     if (rateupPlanEnable) {
       toast.loading(translations("Plan is getting updated.."), {
@@ -84,16 +79,13 @@ export function SubscriptionEditorModal({
       centered
       onClick={(e) => e.stopPropagation()}
       title={
-        rateupPlanEnable
-          ? translations("Modify Rateup Plan")
-          : translations("Modify Subscription")
+        rateupPlanEnable ? translations("Modify Rateup Plan") : translations("Modify Subscription")
       }
     >
       <Stack>
         {subscription?.basePlan?.name.includes("FREE") && (
           <Text size="sm" c={"red"}>
-            *Recommended: Change Subscription from FREE Plan to Custom Plan and
-            make the changes
+            *Recommended: Change Subscription from FREE Plan to Custom Plan and make the changes
           </Text>
         )}
         {!rateupPlanEnable && (
@@ -101,23 +93,14 @@ export function SubscriptionEditorModal({
             <DateInput
               label={translations("Expires At")}
               value={dayjs(subscriptionForm.values.expiresAt).toDate()}
-              onChange={(value) =>
-                subscriptionForm.setFieldValue("expiresAt", new Date(value))
-              }
+              onChange={(value) => subscriptionForm.setFieldValue("expiresAt", new Date(value))}
               disabled={!!isRazorPayPlan}
             />
-            {new Date(subscription?.expiresAt) < new Date() &&
-              isRazorPayPlan && (
-                <Text
-                  size="sm"
-                  c={"var(--tertiary-color)"}
-                  fw={"bold"}
-                  m={"xs"}
-                >
-                  Cannot change expiry date of payment plan subscription. Try
-                  changing the plan
-                </Text>
-              )}
+            {new Date(subscription?.expiresAt) < new Date() && isRazorPayPlan && (
+              <Text size="sm" c={"var(--tertiary-color)"} fw={"bold"} m={"xs"}>
+                Cannot change expiry date of payment plan subscription. Try changing the plan
+              </Text>
+            )}
           </>
         )}
         <Box
@@ -136,17 +119,15 @@ export function SubscriptionEditorModal({
             }}
           >
             {subscription?.features &&
-              Object.keys(subscription.features).map(
-                (feature: SubscriptionFeaturePathName) => {
-                  return (
-                    <FeatureCard
-                      key={feature}
-                      featurePathName={feature}
-                      subscriptionForm={subscriptionForm}
-                    />
-                  );
-                },
-              )}
+              Object.keys(subscription.features).map((feature: SubscriptionFeaturePathName) => {
+                return (
+                  <FeatureCard
+                    key={feature}
+                    featurePathName={feature}
+                    subscriptionForm={subscriptionForm}
+                  />
+                );
+              })}
           </Stack>
           {isRazorPayPlan && (
             <Text size="sm" c={"var(--tertiary-color)"} fw={"bold"} m={"xs"}>

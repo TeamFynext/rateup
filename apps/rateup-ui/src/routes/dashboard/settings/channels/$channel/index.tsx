@@ -1,5 +1,3 @@
-"use client";
-
 import { createFileRoute } from "@tanstack/react-router";
 
 import { ChannelDetailsPage } from "@/components/dashboard/settings/channels/ChannelDetailsPage.tsx";

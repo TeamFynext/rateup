@@ -17,14 +17,10 @@ const WhatsAppSurveyFooter = () => {
           <div>
             <h3 className="font-bold text-xl mb-4">RateUp</h3>
             <p className="text-gray-400 mb-4">
-              Unlock the hidden power of customer feedback with WhatsApp
-              Surveys.
+              Unlock the hidden power of customer feedback with WhatsApp Surveys.
             </p>
             <div className="flex space-x-4 mt-3">
-              <Link
-                to="https://x.com/rateup_app"
-                className="text-gray-400 hover:text-white"
-              >
+              <Link to="https://x.com/rateup_app" className="text-gray-400 hover:text-white">
                 <IconBrandX size={20} />
               </Link>
               <Link
@@ -80,10 +76,7 @@ const WhatsAppSurveyFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/contact-us"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link to="/contact-us" className="hover:text-gray-300 transition">
                   Contact Us
                 </Link>
               </li>
@@ -121,10 +114,7 @@ const WhatsAppSurveyFooter = () => {
 
             <ul className="space-y-2 text-sm text-gray-100">
               <li>
-                <Link
-                  to="/privacy-policy"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link to="/privacy-policy" className="hover:text-gray-300 transition">
                   Privacy Policy
                 </Link>
               </li>
@@ -142,16 +132,10 @@ const WhatsAppSurveyFooter = () => {
             &copy; {new Date().getFullYear()} RateUp. All rights reserved.
           </p>
           <div className="flex space-x-6">
-            <Link
-              to="/privacy-policy"
-              className="text-gray-400 hover:text-white text-sm"
-            >
+            <Link to="/privacy-policy" className="text-gray-400 hover:text-white text-sm">
               Privacy Policy
             </Link>
-            <Link
-              to="/terms-of-service"
-              className="text-gray-400 hover:text-white text-sm"
-            >
+            <Link to="/terms-of-service" className="text-gray-400 hover:text-white text-sm">
               Terms of Service
             </Link>
           </div>

@@ -3,6 +3,7 @@ import { Box } from "@mantine/core";
 import type { WaTemplateComponent, WaTemplateFetchBody } from "@/types/global";
 
 import WaInboxTemplateComponents from "./components/index.tsx";
+
 import classes from "./styles.module.css";
 
 interface Props {

@@ -1,23 +1,16 @@
-"use client";
-
 import { Clock, Info, Loader2, Save } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { TemplateType } from "@/types/enums.ts";
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { FormField } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { TemplateType } from "@/types/enums.ts";
 
 import { getLoyaltyTemplateLabel, LoyaltyTemplateTypes } from "./utils.ts";
 
@@ -41,10 +34,7 @@ export function PointsReminderSettings({
   disabled = false,
 }: Readonly<PointsReminderSettingsProps>) {
   const { t } = useTranslation();
-  const templateInfo = getLoyaltyTemplateLabel(
-    LoyaltyTemplateTypes.InactivityReminder,
-    t,
-  );
+  const templateInfo = getLoyaltyTemplateLabel(LoyaltyTemplateTypes.InactivityReminder, t);
 
   return (
     <Card>
@@ -61,9 +51,7 @@ export function PointsReminderSettings({
           render={({ field }) => (
             <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
               <div>
-                <p className="text-sm font-medium">
-                  {t("Enable Points Reminder")}
-                </p>
+                <p className="text-sm font-medium">{t("Enable Points Reminder")}</p>
                 <p className="text-xs text-muted-foreground">
                   {t("Remind customers about their points balance")}
                 </p>
@@ -108,10 +96,9 @@ export function PointsReminderSettings({
                       disabled={disabled}
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t(
-                        "Send reminder after {days} days of no purchase activity",
-                        { days: field.value || "0" },
-                      )}
+                      {t("Send reminder after {days} days of no purchase activity", {
+                        days: field.value || "0",
+                      })}
                     </p>
                   </>
                 )}
@@ -144,25 +131,18 @@ export function PointsReminderSettings({
               <div className="flex items-start gap-2">
                 <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {t("Preview Message")}
-                  </p>
+                  <p className="text-sm font-medium text-foreground">{t("Preview Message")}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     "Hi {"{"}customer_name{"}"}, you have {"{"}
                     points_balance
-                    {"}"} points available! Visit us soon to redeem your
-                    rewards. 🎁"
+                    {"}"} points available! Visit us soon to redeem your rewards. 🎁"
                   </p>
                 </div>
               </div>
             </div>
 
             {isModified && (
-              <Button
-                size="sm"
-                onClick={onSave}
-                disabled={isPending || disabled}
-              >
+              <Button size="sm" onClick={onSave} disabled={isPending || disabled}>
                 {isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (

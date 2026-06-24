@@ -45,11 +45,7 @@ export const updatewebSurveyAutoTransitionToNextQues = (
   });
 };
 
-export const updatePwdSurvey = (
-  updateSurveyPassword,
-  setPasswordProtection,
-  surveyId,
-) => {
+export const updatePwdSurvey = (updateSurveyPassword, setPasswordProtection, surveyId) => {
   setPasswordProtection((prev) => {
     const isProtected = !prev;
     if (!isProtected) {
@@ -75,11 +71,7 @@ export const updateUniqueDevice = (setEnableUniqueDevice, editSurvey) => {
   });
 };
 
-export const updateEndToEndEncryption = (
-  setEndToEndEncryption,
-  publicKey,
-  editSurvey,
-) => {
+export const updateEndToEndEncryption = (setEndToEndEncryption, publicKey, editSurvey) => {
   setEndToEndEncryption((prev) => {
     const newGetEte = !prev;
     const responsetoUpdate = {

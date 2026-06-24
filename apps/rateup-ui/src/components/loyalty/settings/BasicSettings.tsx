@@ -1,5 +1,3 @@
-"use client";
-
 import { Loader2 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -7,12 +5,7 @@ import type { z } from "zod";
 
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { CountryDropdown } from "@/components/ui/country-dropdown.tsx";
 import { CurrencySelect } from "@/components/ui/currency-select.tsx";
 import {
@@ -71,11 +64,7 @@ export function BasicSettings({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs">{t("Program Name")}</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="e.g., VIP Rewards"
-                      className="h-9"
-                      {...field}
-                    />
+                    <Input placeholder="e.g., VIP Rewards" className="h-9" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -87,9 +76,7 @@ export function BasicSettings({
               name="pointsCurrency"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs">
-                    {t("Points Currency")}
-                  </FormLabel>
+                  <FormLabel className="text-xs">{t("Points Currency")}</FormLabel>
                   <FormControl>
                     <Input placeholder="Points" className="h-9" {...field} />
                   </FormControl>
@@ -103,9 +90,7 @@ export function BasicSettings({
               name="moneyCurrency"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs">
-                    {t("Money Currency")}
-                  </FormLabel>
+                  <FormLabel className="text-xs">{t("Money Currency")}</FormLabel>
                   <FormControl>
                     <CurrencySelect
                       name={field.name}
@@ -126,9 +111,7 @@ export function BasicSettings({
               name="defaultCountryCode"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs">
-                    {t("Default Country")}
-                  </FormLabel>
+                  <FormLabel className="text-xs">{t("Default Country")}</FormLabel>
                   <FormControl>
                     <CountryDropdown
                       placeholder={t("Select Country")}
@@ -148,26 +131,16 @@ export function BasicSettings({
               name="whatsappSettingsId"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs">
-                    {t("WhatsApp Account")}
-                  </FormLabel>
+                  <FormLabel className="text-xs">{t("WhatsApp Account")}</FormLabel>
                   <FormControl>
-                    <AccountSelector
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
+                    <AccountSelector value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button
-              size="sm"
-              className="w-full mt-2"
-              type="submit"
-              disabled={isPending}
-            >
+            <Button size="sm" className="w-full mt-2" type="submit" disabled={isPending}>
               {buttonLabel}
             </Button>
           </form>

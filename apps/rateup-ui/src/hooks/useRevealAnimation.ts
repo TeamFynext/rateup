@@ -19,9 +19,7 @@ export function useRevealAnimation() {
       },
     );
 
-    document
-      .querySelectorAll(`.${styles.reveal}`)
-      .forEach((el) => revObs.observe(el));
+    document.querySelectorAll(`.${styles.reveal}`).forEach((el) => revObs.observe(el));
 
     return () => revObs.disconnect();
   }, []);

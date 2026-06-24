@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,22 +10,17 @@ import {
   ShieldCheck,
   Target,
 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import z from "zod/v4";
 
-import { cn } from "@/lib/utils";
 import { usePartnerApplicationMutation } from "@/backend/partnerdata/partnerdata.query";
 import { partnerApplicationSchema } from "@/components/RateupHomePage/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CountryDropdown } from "@/components/ui/country-dropdown";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -40,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 /* ─────────────────────────── types ─────────────────────────── */
 
@@ -295,13 +289,8 @@ function Step2({
     <div className="space-y-5">
       <SectionHeading>Business details</SectionHeading>
       <FormField label="Business type" error={errors.businessType}>
-        <Select
-          value={data.businessType}
-          onValueChange={(v) => set("businessType", v)}
-        >
-          <SelectTrigger
-            className={errors.businessType ? "border-red-500" : ""}
-          >
+        <Select value={data.businessType} onValueChange={(v) => set("businessType", v)}>
+          <SelectTrigger className={errors.businessType ? "border-red-500" : ""}>
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
@@ -323,13 +312,8 @@ function Step2({
       </FormField>
       <FieldGroup className="grid-cols-2">
         <FormField label="Company size" error={errors.companySize}>
-          <Select
-            value={data.companySize}
-            onValueChange={(v) => set("companySize", v)}
-          >
-            <SelectTrigger
-              className={errors.companySize ? "border-red-500" : ""}
-            >
+          <Select value={data.companySize} onValueChange={(v) => set("companySize", v)}>
+            <SelectTrigger className={errors.companySize ? "border-red-500" : ""}>
               <SelectValue placeholder="Select size" />
             </SelectTrigger>
             <SelectContent>
@@ -342,23 +326,16 @@ function Step2({
           </Select>
         </FormField>
         <FormField label="Years in business" error={errors.yearsInBusiness}>
-          <Select
-            value={data.yearsInBusiness}
-            onValueChange={(v) => set("yearsInBusiness", v)}
-          >
-            <SelectTrigger
-              className={errors.yearsInBusiness ? "border-red-500" : ""}
-            >
+          <Select value={data.yearsInBusiness} onValueChange={(v) => set("yearsInBusiness", v)}>
+            <SelectTrigger className={errors.yearsInBusiness ? "border-red-500" : ""}>
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
             <SelectContent>
-              {["Less than 1 year", "1–3 years", "3–5 years", "5+ years"].map(
-                (y) => (
-                  <SelectItem key={y} value={y}>
-                    {y}
-                  </SelectItem>
-                ),
-              )}
+              {["Less than 1 year", "1–3 years", "3–5 years", "5+ years"].map((y) => (
+                <SelectItem key={y} value={y}>
+                  {y}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </FormField>
@@ -381,16 +358,10 @@ function Step3({
   return (
     <div className="space-y-5">
       <SectionHeading>Partnership qualification</SectionHeading>
-      <FormField
-        label="Why do you want to partner with RateUp?"
-        error={errors.whyPartner}
-      >
+      <FormField label="Why do you want to partner with RateUp?" error={errors.whyPartner}>
         <Textarea
           placeholder="Tell us about your goals and how you plan to refer clients..."
-          className={cn(
-            "min-h-[90px] resize-none",
-            errors.whyPartner ? "border-red-500" : "",
-          )}
+          className={cn("min-h-[90px] resize-none", errors.whyPartner ? "border-red-500" : "")}
           value={data.whyPartner}
           onChange={(e) => set("whyPartner", e.target.value)}
         />
@@ -425,17 +396,9 @@ function Step3({
       </FormField>
 
       <FieldGroup className="grid-cols-2">
-        <FormField
-          label="Clients you can refer per month"
-          error={errors.referralVolume}
-        >
-          <Select
-            value={data.referralVolume}
-            onValueChange={(v) => set("referralVolume", v)}
-          >
-            <SelectTrigger
-              className={errors.referralVolume ? "border-red-500" : ""}
-            >
+        <FormField label="Clients you can refer per month" error={errors.referralVolume}>
+          <Select value={data.referralVolume} onValueChange={(v) => set("referralVolume", v)}>
+            <SelectTrigger className={errors.referralVolume ? "border-red-500" : ""}>
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
             <SelectContent>
@@ -448,10 +411,7 @@ function Step3({
           </Select>
         </FormField>
 
-        <FormField
-          label="Do you manage business clients?"
-          error={errors.managesClients}
-        >
+        <FormField label="Do you manage business clients?" error={errors.managesClients}>
           <RadioGroup
             value={data.managesClients}
             onValueChange={(v) => set("managesClients", v)}
@@ -487,12 +447,7 @@ function Step4({
   set: (k: keyof FormData, v: string) => void;
   errors: ValidationErrors;
 }>) {
-  const apiOptions = [
-    "Yes, extensively",
-    "Yes, some experience",
-    "No, but willing to learn",
-    "No",
-  ];
+  const apiOptions = ["Yes, extensively", "Yes, some experience", "No, but willing to learn", "No"];
   const onboardOptions = ["Yes", "No", "With training"];
 
   return (
@@ -560,8 +515,8 @@ function Step4({
       <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 mt-2">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Your information is confidential and will only be used to process your
-          partner application. We'll respond within 3–5 business days.
+          Your information is confidential and will only be used to process your partner
+          application. We'll respond within 3–5 business days.
         </p>
       </div>
     </div>
@@ -575,23 +530,19 @@ function SuccessScreen() {
         <CheckCircle2 className="h-8 w-8 text-primary" />
       </div>
       <div>
-        <h3 className="text-xl font-semibold text-foreground mb-1">
-          Application submitted!
-        </h3>
+        <h3 className="text-xl font-semibold text-foreground mb-1">Application submitted!</h3>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-          Thanks for applying to become a RateUp partner. Your dedicated partner
-          manager will be in touch within 3–5 business days.
+          Thanks for applying to become a RateUp partner. Your dedicated partner manager will be in
+          touch within 3–5 business days.
         </p>
       </div>
       <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
-        {["No joining fees", "Free demo account", "Recurring commissions"].map(
-          (t) => (
-            <Badge key={t} variant="secondary" className="gap-1 text-xs">
-              <CheckCircle2 className="h-3 w-3 text-primary" />
-              {t}
-            </Badge>
-          ),
-        )}
+        {["No joining fees", "Free demo account", "Recurring commissions"].map((t) => (
+          <Badge key={t} variant="secondary" className="gap-1 text-xs">
+            <CheckCircle2 className="h-3 w-3 text-primary" />
+            {t}
+          </Badge>
+        ))}
       </div>
     </div>
   );
@@ -604,10 +555,7 @@ interface PartnerApplyModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function PartnerApplyModal({
-  open,
-  onOpenChange,
-}: Readonly<PartnerApplyModalProps>) {
+export function PartnerApplyModal({ open, onOpenChange }: Readonly<PartnerApplyModalProps>) {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [data, setData] = useState<FormData>(INITIAL);
@@ -728,12 +676,7 @@ export function PartnerApplyModal({
           ) : step === 1 ? (
             <Step2 data={data} set={set} errors={errors} />
           ) : step === 2 ? (
-            <Step3
-              data={data}
-              set={set}
-              toggleService={toggleService}
-              errors={errors}
-            />
+            <Step3 data={data} set={set} toggleService={toggleService} errors={errors} />
           ) : (
             <Step4 data={data} set={set} errors={errors} />
           )}

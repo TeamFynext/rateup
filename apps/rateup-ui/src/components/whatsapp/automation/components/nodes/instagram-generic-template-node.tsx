@@ -1,13 +1,11 @@
-"use client";
-
-import { memo, useMemo } from "react";
-
 import { IconCards } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 import { Handle, Position } from "@xyflow/react";
+import { memo, useMemo } from "react";
 
 import type { InstagramGenericTemplateNodeData } from "../../types/node-types.ts";
 import BaseNode from "./base-node.tsx";
+
 import styles from "./node-styles.module.css";
 
 function InstagramGenericTemplateNode(
@@ -31,8 +29,7 @@ function InstagramGenericTemplateNode(
         if (button.type === "postback") {
           buttons.push({
             title: button.title,
-            _handleId:
-              button.id || button.payload || `btn_${cardIndex}_${btnIndex}`,
+            _handleId: button.id || button.payload || `btn_${cardIndex}_${btnIndex}`,
             cardIndex,
             btnIndex,
           });
@@ -45,12 +42,7 @@ function InstagramGenericTemplateNode(
   const elementCount = data.elements?.length || 0;
 
   return (
-    <BaseNode
-      {...props}
-      icon={<IconCards size={16} />}
-      color="#a855f7"
-      disableRight
-    >
+    <BaseNode {...props} icon={<IconCards size={16} />} color="#a855f7" disableRight>
       <div className={styles.buttonContent}>
         <div className={styles.question}>
           {elementCount} card{elementCount !== 1 ? "s" : ""}

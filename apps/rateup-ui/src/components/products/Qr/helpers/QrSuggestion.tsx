@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
@@ -44,9 +42,9 @@ export default function SuggestionBox() {
         </div>
 
         <p className="text-gray-600 max-w-[50%]">
-          Replace your dusty old complaint box with a smart QR code. Get
-          real-time feedback, understand your customers on a deeper level, and
-          turn their opinions into your biggest asset.
+          Replace your dusty old complaint box with a smart QR code. Get real-time feedback,
+          understand your customers on a deeper level, and turn their opinions into your biggest
+          asset.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">

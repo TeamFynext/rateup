@@ -1,5 +1,3 @@
-"use client";
-
 import { Loader2 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -7,12 +5,7 @@ import type { z } from "zod";
 
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import {
   Form,
   FormControl,
@@ -63,8 +56,8 @@ export function ReferralMessageSettings({
               render={() => (
                 <FormItem className="space-y-2">
                   <FormDescription className="text-xs">
-                    {t("Use variables")}: {"{{1}}"} {t("for contact name")},
-                    {"{{2}}"} {t("for referral code")}.{" "}
+                    {t("Use variables")}: {"{{1}}"} {t("for contact name")},{"{{2}}"}{" "}
+                    {t("for referral code")}.{" "}
                     {t("Both are required and each can be used only once.")}
                   </FormDescription>
 
@@ -75,16 +68,10 @@ export function ReferralMessageSettings({
                       variant="outline"
                       onClick={() => {
                         if (!hasContactNameVariable && !disabled) {
-                          const current = getPlainText(
-                            form.getValues("referralMessageTemplate"),
-                          );
-                          form.setValue(
-                            "referralMessageTemplate",
-                            current + "{{1}}",
-                            {
-                              shouldDirty: true,
-                            },
-                          );
+                          const current = getPlainText(form.getValues("referralMessageTemplate"));
+                          form.setValue("referralMessageTemplate", current + "{{1}}", {
+                            shouldDirty: true,
+                          });
                         }
                       }}
                       disabled={hasContactNameVariable || disabled}
@@ -97,16 +84,10 @@ export function ReferralMessageSettings({
                       variant="outline"
                       onClick={() => {
                         if (!hasReferralCodeVariable && !disabled) {
-                          const current = getPlainText(
-                            form.getValues("referralMessageTemplate"),
-                          );
-                          form.setValue(
-                            "referralMessageTemplate",
-                            current + "{{2}}",
-                            {
-                              shouldDirty: true,
-                            },
-                          );
+                          const current = getPlainText(form.getValues("referralMessageTemplate"));
+                          form.setValue("referralMessageTemplate", current + "{{2}}", {
+                            shouldDirty: true,
+                          });
                         }
                       }}
                       disabled={hasReferralCodeVariable || disabled}
@@ -119,13 +100,9 @@ export function ReferralMessageSettings({
                       variant="ghost"
                       onClick={() => {
                         if (!disabled) {
-                          form.setValue(
-                            "referralMessageTemplate",
-                            DEFAULT_JOIN_MESSAGE_TEMPLATE,
-                            {
-                              shouldDirty: true,
-                            },
-                          );
+                          form.setValue("referralMessageTemplate", DEFAULT_JOIN_MESSAGE_TEMPLATE, {
+                            shouldDirty: true,
+                          });
                         }
                       }}
                       disabled={disabled}
@@ -148,14 +125,10 @@ export function ReferralMessageSettings({
                     </FormControl>
 
                     <div className="space-y-1.5">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        {t("Preview")}
-                      </p>
+                      <p className="text-xs font-medium text-muted-foreground">{t("Preview")}</p>
                       <div className="rounded-md border bg-muted/20 p-3 text-sm whitespace-pre-wrap">
                         {previewWithSamples}
-                        <div className="text-blue-400">
-                          https://wa.me/referral?code=REF-4GB8
-                        </div>
+                        <div className="text-blue-400">https://wa.me/referral?code=REF-4GB8</div>
                       </div>
                     </div>
                   </div>

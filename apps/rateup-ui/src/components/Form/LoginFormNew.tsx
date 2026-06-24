@@ -1,8 +1,7 @@
-import { useState } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Key, Lock, Mail } from "lucide-react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -41,11 +40,7 @@ type SignInFlowProps = Readonly<{
   isLoading: boolean;
 }>;
 
-export default function SignInFlow({
-  setIsLoading,
-  signIn,
-  isLoading,
-}: SignInFlowProps) {
+export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFlowProps) {
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -55,9 +50,7 @@ export default function SignInFlow({
     password: z
       .string()
       .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
-        error: translations(
-          "Password should contain at least one letter and one number",
-        ),
+        error: translations("Password should contain at least one letter and one number"),
       })
       .min(5, translations("Password should be at least 5 characters long")),
   });
@@ -90,9 +83,7 @@ export default function SignInFlow({
                 <Lock size={14} /> Sign In
               </p>
               <h2 className="text-2xl font-bold">Welcome Back</h2>
-              <p className="font-normal text-xs">
-                Continue your growth journey with RateUp
-              </p>
+              <p className="font-normal text-xs">Continue your growth journey with RateUp</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <GoogleSignInButton
@@ -144,10 +135,7 @@ export default function SignInFlow({
                         </div>
                       </div>
                       {fieldState.invalid && (
-                        <FieldError
-                          errors={[fieldState.error]}
-                          className="text-xs"
-                        />
+                        <FieldError errors={[fieldState.error]} className="text-xs" />
                       )}
                     </Field>
                   )}
@@ -187,10 +175,7 @@ export default function SignInFlow({
                         </div>
                       </div>
                       {fieldState.invalid && (
-                        <FieldError
-                          errors={[fieldState.error]}
-                          className="text-xs"
-                        />
+                        <FieldError errors={[fieldState.error]} className="text-xs" />
                       )}
                     </Field>
                   )}
@@ -203,10 +188,7 @@ export default function SignInFlow({
                     id="remember"
                     className="border-2 border-gray-300 h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0"
                   />
-                  <Label
-                    htmlFor="remember"
-                    className="text-xs sm:text-sm text-gray-600"
-                  >
+                  <Label htmlFor="remember" className="text-xs sm:text-sm text-gray-600">
                     Remember me
                   </Label>
                 </div>
@@ -241,9 +223,7 @@ export default function SignInFlow({
               }
               className="hover:text-gray-600 uppercase tracking-wider text-xs"
             >
-              <span className="uppercase tracking-wider text-xs">
-                Privacy Policy
-              </span>
+              <span className="uppercase tracking-wider text-xs">Privacy Policy</span>
             </button>
             <button
               onClick={() =>
@@ -253,17 +233,13 @@ export default function SignInFlow({
               }
               className="hover:text-gray-600 uppercase tracking-wider text-xs"
             >
-              <span className="uppercase tracking-wider text-xs">
-                Terms of Service
-              </span>
+              <span className="uppercase tracking-wider text-xs">Terms of Service</span>
             </button>
             <button
               className="hover:text-gray-600 uppercase tracking-wider text-xs"
               onClick={() => window.open("https://docs.rateup.app", "_blank")}
             >
-              <span className="uppercase tracking-wider text-xs">
-                Help Center
-              </span>
+              <span className="uppercase tracking-wider text-xs">Help Center</span>
             </button>
           </div>
         </div>

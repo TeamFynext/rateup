@@ -1,10 +1,7 @@
-"use client";
-
-import { useCallback, useState } from "react";
-
 import { Button, Group } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
 import { isEqual } from "lodash";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -13,10 +10,8 @@ import { SAVE_HOTKEY } from "@/utils/constants.ts";
 
 import { ThemeTabEnum } from "../../SurveyTheme.enums";
 import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
-import {
-  useSelectedPageTab,
-  useSurveyThemeContextValue,
-} from "../../SurveyThemeContext.tsx";
+import { useSelectedPageTab, useSurveyThemeContextValue } from "../../SurveyThemeContext.tsx";
+
 import styles from "./SaveButton.module.css";
 
 function SaveButton({
@@ -35,20 +30,17 @@ function SaveButton({
   }
 
   const hasUnsavedChanges = !isEqual(themeObjFromApi, themeObjState);
-  let saveStatusText = "All changes saved";
+  let _saveStatusText = "All changes saved";
   if (hasUnsavedChanges) {
-    saveStatusText = "Unsaved changes";
+    _saveStatusText = "Unsaved changes";
   }
   if (isThemeObjBeingEditedDefaultTheme) {
-    saveStatusText = "Default Theme cannot be edited.";
+    _saveStatusText = "Default Theme cannot be edited.";
   }
 
   const [isSaving, setIsSaving] = useState(false);
   const { t: translations } = useTranslation();
-  const updateSurveyTheme = useUpdateSurveyTheme(
-    themeObjBeingEdited?.id,
-    survey?.id,
-  );
+  const updateSurveyTheme = useUpdateSurveyTheme(themeObjBeingEdited?.id, survey?.id);
 
   const handleSaveTheme = useCallback(async () => {
     if (!themeObjBeingEdited?.id) {
@@ -59,8 +51,7 @@ function SaveButton({
     }
     setIsSaving(true);
 
-    const newSurveyTheme =
-      await destructureThemeAndUploadImagesIfAny(themeObjState);
+    const newSurveyTheme = await destructureThemeAndUploadImagesIfAny(themeObjState);
 
     await updateSurveyTheme.mutateAsync({
       surveyThemeId: themeObjBeingEdited?.id,
@@ -93,11 +84,7 @@ function SaveButton({
       >
         {saveStatusText}
       </Text> */}
-      <Button
-        className={styles["save-btn"]}
-        loading={isSaving}
-        onClick={handleSaveTheme}
-      >
+      <Button className={styles["save-btn"]} loading={isSaving} onClick={handleSaveTheme}>
         {isThemeObjBeingEditedDefaultTheme
           ? translations("Apply")
           : selectedPageTab === ThemeTabEnum.SURVEY

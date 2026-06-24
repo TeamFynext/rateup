@@ -1,38 +1,25 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import type { SelectProps } from "@mantine/core";
-import {
-  Divider,
-  Group,
-  Loader,
-  Select,
-  Stack,
-  Switch,
-  TextInput,
-} from "@mantine/core";
+import { Divider, Group, Loader, Select, Stack, Switch, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconCheck } from "@tabler/icons-react";
 import classNames from "classnames/bind";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { QuestionType } from "@/types/enums.ts";
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "@/components/Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
+import { QuestionType } from "@/types/enums.ts";
 
 import { QuestionTabsEnum } from "../../EditSurvey.tsx";
 import AddGoogleReviewLinkForTeamModal from "../AddGoogleReviewLinkForTeamModal.tsx";
 import { reviewPageLogosObj } from "./constants.tsx";
 import OpinionQuestionCondition from "./OpinionQuestionCondition/index.tsx";
-import styles from "./QuestionReviewPageEditor.module.css";
 import RatingQuestionCondition from "./RatingQuestionCondition/index.tsx";
 import SmileyQuestionCondition from "./SmileyQuestionCondition/index.tsx";
+
+import styles from "./QuestionReviewPageEditor.module.css";
 
 const cx = classNames.bind(styles);
 
@@ -41,24 +28,17 @@ export enum ReviewPagePlatform {
   Custom = "Custom",
 }
 
-const renderSelectOption: SelectProps["renderOption"] = ({
-  option,
-  checked,
-}) => (
+const renderSelectOption: SelectProps["renderOption"] = ({ option, checked }) => (
   <Group flex="1" gap="xs">
     {reviewPageLogosObj[option.value]}
     {option.label}
-    {checked && (
-      <IconCheck style={{ marginInlineStart: "auto" }} size={"1rem"} />
-    )}
+    {checked && <IconCheck style={{ marginInlineStart: "auto" }} size={"1rem"} />}
   </Group>
 );
 
 function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
   const [state, setState] = useState(selectedQ?.reviewPageOptions);
-  const [reviewPagePlatformDDState, setReviewPageDDState] = useState(
-    selectedQ?.reviewPagePlatform,
-  );
+  const [reviewPagePlatformDDState, setReviewPageDDState] = useState(selectedQ?.reviewPagePlatform);
   const [isSwitchStateSaving, setIsSwitchStateSaving] = useState(false);
 
   const customPlatformForm = useForm({
@@ -77,9 +57,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
   const { t: translations } = useTranslation();
 
   const { data: teamsRes } = useTeamsByUser();
-  const teamsToDisplay = teamsRes?.data?.filter((t) =>
-    survey?.teams.some((st) => st.id === t.id),
-  );
+  const teamsToDisplay = teamsRes?.data?.filter((t) => survey?.teams.some((st) => st.id === t.id));
 
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId: survey?.id,
@@ -89,28 +67,19 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
   switch (selectedQuestionType) {
     case QuestionType.Rating: {
       componentToBeRendered = (
-        <RatingQuestionCondition
-          currentMinRating={state?.minRating}
-          setState={setState}
-        />
+        <RatingQuestionCondition currentMinRating={state?.minRating} setState={setState} />
       );
       break;
     }
     case QuestionType.Opinion: {
       componentToBeRendered = (
-        <OpinionQuestionCondition
-          currentMinOpinion={state?.minOpinion}
-          setState={setState}
-        />
+        <OpinionQuestionCondition currentMinOpinion={state?.minOpinion} setState={setState} />
       );
       break;
     }
     case QuestionType.Smiley: {
       componentToBeRendered = (
-        <SmileyQuestionCondition
-          currentSelectedEmojis={state?.reqOptions}
-          setState={setState}
-        />
+        <SmileyQuestionCondition currentSelectedEmojis={state?.reqOptions} setState={setState} />
       );
     }
   }
@@ -179,11 +148,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
   }, [reviewPagePlatformDDState]);
 
   const handleSave = async () => {
-    if (
-      teamsToDisplay.some(
-        (team) => !team?.["reviewPageLinks"]?.[reviewPagePlatformDDState],
-      )
-    ) {
+    if (teamsToDisplay.some((team) => !team?.["reviewPageLinks"]?.[reviewPagePlatformDDState])) {
       toast.error("Please enter review page link for all teams.");
       return;
     }
@@ -209,7 +174,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
       });
       setIsSwitchStateSaving(false);
       toast.success("Saved changes.");
-    } catch (err) {
+    } catch {
       toast.error("Something went wrong, please try again later.");
     }
   };
@@ -225,16 +190,12 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
         checked={Boolean(selectedQ?.reviewPageOptions)}
         onChange={handleSwitchChange}
         offLabel={isSwitchStateSaving ? <Loader size={"1rem"} /> : null}
-        onLabel={
-          isSwitchStateSaving ? <Loader size={"1rem"} color="white" /> : null
-        }
+        onLabel={isSwitchStateSaving ? <Loader size={"1rem"} color="white" /> : null}
       />
       <Stack className={cx("dropdown-and-conditon-comp-container")}>
         {selectedQ?.reviewPageOptions && (
           <>
-            <Group
-              className={cx("platform-dd-and-platform-name-input-container")}
-            >
+            <Group className={cx("platform-dd-and-platform-name-input-container")}>
               <Select
                 label="Choose Platform"
                 placeholder="Choose Platform"
@@ -275,10 +236,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
         )}
       </Stack>
       <Divider />
-      <Group
-        className={cx("save-cancel-btns-container")}
-        justify="space-between"
-      >
+      <Group className={cx("save-cancel-btns-container")} justify="space-between">
         <RateupButtonSecondary
           title={translations("Cancel")}
           size="md"

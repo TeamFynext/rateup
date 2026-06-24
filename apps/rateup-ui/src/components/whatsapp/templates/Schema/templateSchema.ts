@@ -2,10 +2,7 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
 
 import { OrderType, TemplateType, WaTemplateStatus } from "@/types/enums.ts";
-import {
-  WHATSAPP_BUTTON_TYPE,
-  WHATSAPP_TEMPLATE_BROADCAST_TYPE,
-} from "@/utils/constants.ts";
+import { WHATSAPP_BUTTON_TYPE, WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 
 const MB_BYTES = 1000000; // Number of bytes in a megabyte.
 const FILE_SIZE = 50;
@@ -24,12 +21,7 @@ export const configSchema = z.object({
   name: z.string().min(1).max(60),
 });
 
-const allowedMimesforMediaCarousel = [
-  "image/png",
-  "image/jpg",
-  "image/jpeg",
-  "video/mp4",
-];
+const allowedMimesforMediaCarousel = ["image/png", "image/jpg", "image/jpeg", "video/mp4"];
 
 const mimeTypeMaxSizes: Record<string, number> = {
   // Audio
@@ -41,14 +33,11 @@ const mimeTypeMaxSizes: Record<string, number> = {
   // Document
   "text/plain": 100 * 1024 * 1024,
   "application/vnd.ms-excel": 100 * 1024 * 1024,
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-    100 * 1024 * 1024,
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 100 * 1024 * 1024,
   "application/msword": 100 * 1024 * 1024,
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    100 * 1024 * 1024,
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": 100 * 1024 * 1024,
   "application/vnd.ms-powerpoint": 100 * 1024 * 1024,
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-    100 * 1024 * 1024,
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": 100 * 1024 * 1024,
   "application/pdf": 100 * 1024 * 1024,
   // Image
   "image/jpeg": 5 * 1024 * 1024,
@@ -129,11 +118,7 @@ export const templateSchema = z
               ),
             ])
             .optional(),
-          phone_number: z
-            .string()
-            .max(25)
-            .refine(isValidPhoneNumber)
-            .optional(),
+          phone_number: z.string().max(25).refine(isValidPhoneNumber).optional(),
           url: z.string().trim().max(2000).optional(),
           flow_id: z.string().optional(),
           flow_action: z.string().optional(),
@@ -179,11 +164,7 @@ export const templateSchema = z
                 text: z.string().max(25),
                 type: z.string(),
                 example: z.array(z.string().trim().min(1).max(2000)).optional(),
-                phone_number: z
-                  .string()
-                  .max(25)
-                  .refine(isValidPhoneNumber)
-                  .optional(),
+                phone_number: z.string().max(25).refine(isValidPhoneNumber).optional(),
                 url: z.string().trim().url().max(2000).optional(),
               }),
             )
@@ -317,10 +298,7 @@ export const templateSchema = z
             });
           } else {
             // If URL contains template variable like {{1}}, require example and validate
-            if (
-              typeof data.url === "string" &&
-              /{{\s*\d+\s*}}/.test(data.url)
-            ) {
+            if (typeof data.url === "string" && /{{\s*\d+\s*}}/.test(data.url)) {
               const example = data.example;
               const hasExample = Array.isArray(example)
                 ? example.length > 0
@@ -329,8 +307,7 @@ export const templateSchema = z
                 issues.push({
                   path: ["buttons", index, "example"],
                   code: "custom",
-                  message:
-                    "Example value is required when URL contains a variable",
+                  message: "Example value is required when URL contains a variable",
                   input: data.example,
                 });
               }
@@ -340,7 +317,7 @@ export const templateSchema = z
                 // Use URL constructor to validate
 
                 new URL(replaced);
-              } catch (e) {
+              } catch {
                 issues.push({
                   path: ["buttons", index, "url"],
                   code: "custom",
@@ -352,7 +329,7 @@ export const templateSchema = z
               // When no template placeholders present, validate a normal URL
               try {
                 new URL(data.url);
-              } catch (e) {
+              } catch {
                 issues.push({
                   path: ["buttons", index, "url"],
                   code: "custom",
@@ -390,9 +367,7 @@ export const templateSchema = z
           } else if (values.defaultValues.catalog.mpm.sections.length > 10) {
             errormsg = "Sections cannot be more than 10";
           } else if (
-            values.defaultValues.catalog.mpm.sections.some(
-              (s) => s.products.length > 30,
-            )
+            values.defaultValues.catalog.mpm.sections.some((s) => s.products.length > 30)
           ) {
             errormsg = "Each sections can have only upto 30 products";
           } else if (
@@ -438,22 +413,13 @@ export const templateSchema = z
     const typeNotString = typeof value !== "string";
     if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE && typeNotString) {
       errorMessage =
-        !imageType.includes(value?.type) &&
-        `Incorrect Type use only ${imageType?.join(",")}`;
-    } else if (
-      format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO &&
-      typeNotString
-    ) {
+        !imageType.includes(value?.type) && `Incorrect Type use only ${imageType?.join(",")}`;
+    } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO && typeNotString) {
       errorMessage =
-        !videoType.includes(value?.type) &&
-        `Incorrect Type use only ${videoType?.join(",")}`;
-    } else if (
-      format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.DOCUMENT &&
-      typeNotString
-    ) {
+        !videoType.includes(value?.type) && `Incorrect Type use only ${videoType?.join(",")}`;
+    } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.DOCUMENT && typeNotString) {
       errorMessage =
-        !documentType.includes(value?.type) &&
-        `Incorrect Type use only ${documentType?.join(",")}`;
+        !documentType.includes(value?.type) && `Incorrect Type use only ${documentType?.join(",")}`;
     } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT && !value) {
       errorMessage = "Header Text Needed";
     }
@@ -465,10 +431,7 @@ export const templateSchema = z
         input: "",
       });
 
-    if (
-      values.templateType === TemplateType.CAROUSEL &&
-      values.mediaCarousel.length
-    ) {
+    if (values.templateType === TemplateType.CAROUSEL && values.mediaCarousel.length) {
       if (values.mediaCarousel.length < 2) {
         issues.push({
           path: ["mediaCarousel"],
@@ -507,10 +470,7 @@ export const templateSchema = z
             message: msg,
             input: "",
           });
-        } else if (
-          format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO &&
-          cardHeaerTypeNotString
-        ) {
+        } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO && cardHeaerTypeNotString) {
           const msg =
             !videoType.includes((card.header as File)?.type) &&
             `Incorrect Type use only ${videoType?.join(",")}`;
@@ -531,10 +491,7 @@ export const templateSchema = z
       });
     }
 
-    if (
-      values.templateType === TemplateType.CAROUSEL &&
-      values.productCarousel.length
-    ) {
+    if (values.templateType === TemplateType.CAROUSEL && values.productCarousel.length) {
       if (values.productCarousel.length < 2) {
         issues.push({
           path: ["productCarousel"],

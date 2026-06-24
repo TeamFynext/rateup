@@ -1,14 +1,5 @@
-"use client";
-
+import { Autocomplete, Combobox, Loader, Select, TextInput } from "@mantine/core";
 import { useCallback, useState } from "react";
-
-import {
-  Autocomplete,
-  Combobox,
-  Loader,
-  Select,
-  TextInput,
-} from "@mantine/core";
 
 import { useLinkTypeOptions } from "@/backend/linktree/linktree.query";
 
@@ -31,16 +22,13 @@ function SurveyTypeDropdowns({
   onSelectedTeamDDChange,
   errors,
 }) {
-  const {
-    data: selectLinkTypeOptionsData,
-    isPending: isSelectedLinkTypeOptionsLoading,
-  } = useLinkTypeOptions(selectedLinkType);
+  const { data: selectLinkTypeOptionsData, isPending: isSelectedLinkTypeOptionsLoading } =
+    useLinkTypeOptions(selectedLinkType);
 
-  const [sTAutoCompleteSearchFocused, setSTAutoCompleteSearchFocused] =
-    useState(false);
+  const [sTAutoCompleteSearchFocused, setSTAutoCompleteSearchFocused] = useState(false);
 
   const handleSurveyTitleAutoCompleteOnBlur = useCallback(
-    (value) => {
+    (_value) => {
       onSurveyTitleAutoCompleteSearchChange(
         getSurveyTitleWithId(selectLinkTypeOptionsData, selectedSurveyTitle),
       );
@@ -49,13 +37,8 @@ function SurveyTypeDropdowns({
     [selectedSurveyTitle],
   );
 
-  let selectedSurveyTitleOptions = getSelectedSurveyTitleOptions(
-    selectLinkTypeOptionsData,
-  );
-  let selectedTeamOptions = getSelectedTeamOptions(
-    selectLinkTypeOptionsData,
-    selectedSurveyTitle,
-  );
+  let selectedSurveyTitleOptions = getSelectedSurveyTitleOptions(selectLinkTypeOptionsData);
+  let selectedTeamOptions = getSelectedTeamOptions(selectLinkTypeOptionsData, selectedSurveyTitle);
 
   if (!selectedSurveyTitleOptions?.length) {
     selectedSurveyTitleOptions = [
@@ -68,9 +51,7 @@ function SurveyTypeDropdowns({
   }
 
   if (!selectedTeamOptions?.length) {
-    selectedTeamOptions = [
-      { label: "Select survey to select team", value: "", disabled: true },
-    ];
+    selectedTeamOptions = [{ label: "Select survey to select team", value: "", disabled: true }];
   }
 
   return (
@@ -81,15 +62,9 @@ function SurveyTypeDropdowns({
         data={selectedSurveyTitleOptions}
         label={`Select ${getLinkTypeLabel(selectedLinkType)}`}
         rightSection={
-          isSelectedLinkTypeOptionsLoading ? (
-            <Loader size={"xs"} />
-          ) : (
-            <Combobox.Chevron />
-          )
+          isSelectedLinkTypeOptionsLoading ? <Loader size={"xs"} /> : <Combobox.Chevron />
         }
-        placeholder={
-          sTAutoCompleteSearchFocused ? "Search Survey" : "Select Survey"
-        }
+        placeholder={sTAutoCompleteSearchFocused ? "Search Survey" : "Select Survey"}
         onOptionSubmit={onSurveyTitleDDChange}
         onBlur={handleSurveyTitleAutoCompleteOnBlur}
         onFocus={() => {

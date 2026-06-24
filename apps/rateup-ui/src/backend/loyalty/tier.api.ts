@@ -36,9 +36,7 @@ export const getLoyaltyTiers = async (): Promise<LoyaltyTier[]> => {
 /**
  * Get a single loyalty tier by ID
  */
-export const getLoyaltyTierById = async (
-  tierId: string,
-): Promise<LoyaltyTier> => {
+export const getLoyaltyTierById = async (tierId: string): Promise<LoyaltyTier> => {
   const response = await axiosClient.get(`${LOYALTY_ROUTES_BASE}/${tierId}`);
   return response.data;
 };
@@ -46,9 +44,7 @@ export const getLoyaltyTierById = async (
 /**
  * Create a new loyalty tier
  */
-export const createLoyaltyTier = async (
-  tierData: LoyaltyTierInput,
-): Promise<LoyaltyTier> => {
+export const createLoyaltyTier = async (tierData: LoyaltyTierInput): Promise<LoyaltyTier> => {
   const response = await axiosClient.post(LOYALTY_ROUTES_BASE, tierData);
   return response.data;
 };
@@ -60,10 +56,7 @@ export const updateLoyaltyTier = async (
   tierId: string,
   tierData: LoyaltyTierUpdateInput,
 ): Promise<LoyaltyTier> => {
-  const response = await axiosClient.put(
-    `${LOYALTY_ROUTES_BASE}/${tierId}`,
-    tierData,
-  );
+  const response = await axiosClient.put(`${LOYALTY_ROUTES_BASE}/${tierId}`, tierData);
   return response.data;
 };
 

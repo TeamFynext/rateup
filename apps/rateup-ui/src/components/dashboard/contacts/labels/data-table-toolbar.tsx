@@ -1,5 +1,3 @@
-"use client";
-
 import type { Table } from "@tanstack/react-table";
 import { Plus, Search, X } from "lucide-react";
 
@@ -25,9 +23,7 @@ export function DataTableToolbar<TData>({
           <Input
             placeholder="Search labels..."
             value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
-            }
+            onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
             className="pl-8 w-[250px] lg:w-[300px]"
           />
         </div>

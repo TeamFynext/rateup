@@ -1,12 +1,7 @@
-"use client";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type {
-  EventTriggerInput,
-  EventTriggerUpdateInput,
-} from "./eventTriggers.api";
+import type { EventTriggerInput, EventTriggerUpdateInput } from "./eventTriggers.api";
 import {
   createEventTrigger,
   deleteEventTrigger,
@@ -42,20 +37,13 @@ export const useCreateEventTriggerMutation = (onSuccess?: () => void) => {
     },
     onError: (error) => {
       toast.error(
-        error?.message ||
-          error?.message ||
-          error.message ||
-          "Error creating event trigger",
+        error?.message || error?.message || error.message || "Error creating event trigger",
       );
     },
   });
 };
 
-const useUpdateEventTriggerMutation = (
-  id: string,
-  programId: string,
-  onSuccess?: () => void,
-) => {
+const useUpdateEventTriggerMutation = (id: string, programId: string, onSuccess?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -69,19 +57,13 @@ const useUpdateEventTriggerMutation = (
     },
     onError: (error) => {
       toast.error(
-        error?.message ||
-          error?.message ||
-          error.message ||
-          "Error updating event trigger",
+        error?.message || error?.message || error.message || "Error updating event trigger",
       );
     },
   });
 };
 
-const useDeleteEventTriggerMutation = (
-  programId: string,
-  onSuccess?: () => void,
-) => {
+const useDeleteEventTriggerMutation = (programId: string, onSuccess?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -94,10 +76,7 @@ const useDeleteEventTriggerMutation = (
     },
     onError: (error) => {
       toast.error(
-        error?.message ||
-          error?.message ||
-          error.message ||
-          "Error deleting event trigger",
+        error?.message || error?.message || error.message || "Error deleting event trigger",
       );
     },
   });
