@@ -165,7 +165,7 @@ const WaResponses = ({ survey, defaultLanguage, selectedTeamId, subscription, qu
   );
 
   useEffect(() => {
-    if (selectedResponseId && responseTeamId) openTicketModal();
+    if (selectedResponseId) openTicketModal();
   }, [selectedResponseId, responseTeamId, openTicketModal]);
 
   useEffect(() => {
@@ -398,6 +398,7 @@ const WaResponses = ({ survey, defaultLanguage, selectedTeamId, subscription, qu
         selectedTeamId={responseTeamId}
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
+        selectedResponse={data?.find((r: any) => r.id === selectedResponseId)}
       />
       <div className="h-full px-6 p-2">
         <DataTable

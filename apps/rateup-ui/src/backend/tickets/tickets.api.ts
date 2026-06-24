@@ -139,6 +139,8 @@ export const createCard = async (card: {
   ticketColumnId: string;
   type: TicketType;
   contactId?: string;
+  surveyResponseId?: string;
+  reviewId?: string;
   priority?: string;
 }): Promise<Card> => {
   const { data } = await axiosClient.post("/tickets/cards/create", card);
