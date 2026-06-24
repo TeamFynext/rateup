@@ -1,13 +1,7 @@
 import prisma from "../../../utils/prisma.js";
-import {
-  LoyaltyProgramInput,
-  LoyaltyProgramUpdateInput,
-} from "./program.schema.js";
+import { LoyaltyProgramInput, LoyaltyProgramUpdateInput } from "./program.schema.js";
 
-export async function createLoyaltyProgram(
-  data: LoyaltyProgramInput,
-  orgId: string,
-) {
+export async function createLoyaltyProgram(data: LoyaltyProgramInput, orgId: string) {
   // Check if program already exists
   const existing = await prisma.loyaltyProgram.findUnique({
     where: { orgId },
@@ -69,10 +63,7 @@ export async function getLoyaltyProgramByOrg(orgId: string) {
   });
 }
 
-export async function updateLoyaltyProgram(
-  programId: string,
-  data: LoyaltyProgramUpdateInput,
-) {
+export async function updateLoyaltyProgram(programId: string, data: LoyaltyProgramUpdateInput) {
   return await prisma.loyaltyProgram.update({
     where: { id: programId },
     data,
@@ -82,19 +73,14 @@ export async function updateLoyaltyProgram(
   });
 }
 
-export async function deleteLoyaltyProgram(
-  programId: string,
-  force: boolean = false,
-) {
+export async function deleteLoyaltyProgram(programId: string, force: boolean = false) {
   // Check if there are any customers
   const customerCount = await prisma.customerLoyaltyAccount.count({
     where: { programId },
   });
 
   if (customerCount > 0 && !force) {
-    throw new Error(
-      "Cannot delete program with existing customers. Archive it instead.",
-    );
+    throw new Error("Cannot delete program with existing customers. Archive it instead.");
   }
 
   return await prisma.loyaltyProgram.delete({

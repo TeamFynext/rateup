@@ -12,10 +12,7 @@ import {
   updateLoyaltyApiSetting,
 } from "./apiSetting.service.js";
 
-export async function getLoyaltyApiSettingsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getLoyaltyApiSettingsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const res = await getLoyaltyApiSettings(orgId);

@@ -2,10 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../utils/logger.js";
 import { handleFacebookWebhook } from "./facebook.service.js";
 
-export async function facebookWebhookEventHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function facebookWebhookEventHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const body = request.body as any;
 

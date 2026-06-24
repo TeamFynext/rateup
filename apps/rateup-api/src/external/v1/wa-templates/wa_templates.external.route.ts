@@ -60,8 +60,7 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
       schema: {
         body: sendTemplateByNameToPhone,
         tags: ["WhatsApp/Template"],
-        description:
-          "Send a template to a phone number. Phone number should contain country code",
+        description: "Send a template to a phone number. Phone number should contain country code",
         summary: "Send a template to a phone number",
       },
     },
@@ -75,8 +74,7 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
         consumes: ["multipart/form-data"],
         body: sendWithFileSchema,
         tags: ["WhatsApp/Template"],
-        description:
-          "Send a template to a phone number. Phone number should contain country code",
+        description: "Send a template to a phone number. Phone number should contain country code",
         summary: "Send a template to a phone number",
       },
     },

@@ -6,7 +6,6 @@ import {
   getAllUsers,
   getLoggedUserInfo,
   getLoggedUserProfile,
-  getUserRecipeName,
   pauseUser,
   updateUserActiveStatus,
   updateUserAvailablityStatus,
@@ -32,16 +31,10 @@ import { Prisma } from "../../../generated/prisma/client.js";
 import { log } from "../../utils/logger.js";
 import EmailPassword from "supertokens-node/recipe/emailpassword/index.js";
 import { IdParamInput } from "../survey/survey.schema.js";
-import {
-  deleteSuperTokenUserForId,
-  getUserInfo,
-} from "../../utils/supertoken/supertoken.js";
+import { deleteSuperTokenUserForId, getUserInfo } from "../../utils/supertoken/supertoken.js";
 import { UserRecipes } from "../../types/enums.js";
 
-export async function getLoggedUserInfoHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getLoggedUserInfoHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userData = await getLoggedUserInfo(request, reply);
     if (!userData) {
@@ -51,10 +44,7 @@ export async function getLoggedUserInfoHandler(
     }
   } catch (e) {
     log.error(e);
-    if (
-      e?.message === "Session does not exist anymore" ||
-      e?.message?.includes("Session")
-    ) {
+    if (e?.message === "Session does not exist anymore" || e?.message?.includes("Session")) {
       return reply.code(401).send({
         message: e.message,
       });
@@ -65,10 +55,7 @@ export async function getLoggedUserInfoHandler(
   }
 }
 
-export async function getLoggedUserProfileHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getLoggedUserProfileHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userData = await getLoggedUserProfile(request, reply);
     if (!userData) {
@@ -120,9 +107,7 @@ export async function createGoogleUserHandler(
           : undefined,
 
     goals: Array.isArray(body.goals) ? body.goals : [],
-    integrationsSelected: Array.isArray(body.integrationsSelected)
-      ? body.integrationsSelected
-      : [],
+    integrationsSelected: Array.isArray(body.integrationsSelected) ? body.integrationsSelected : [],
   };
   try {
     user = await createUserSignup({
@@ -144,10 +129,7 @@ export async function createGoogleUserHandler(
     console.error(e);
     let message = e.message;
 
-    if (
-      e instanceof Prisma.PrismaClientKnownRequestError &&
-      e.code === "P2002"
-    ) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       message = "User already exists. Please logout and Login again.";
     }
 
@@ -197,9 +179,7 @@ export async function createAppleUserHandler(
           : undefined,
 
     goals: Array.isArray(body.goals) ? body.goals : [],
-    integrationsSelected: Array.isArray(body.integrationsSelected)
-      ? body.integrationsSelected
-      : [],
+    integrationsSelected: Array.isArray(body.integrationsSelected) ? body.integrationsSelected : [],
   };
   try {
     user = await createUserSignup({
@@ -221,10 +201,7 @@ export async function createAppleUserHandler(
     console.error(e);
     let message = e.message;
 
-    if (
-      e instanceof Prisma.PrismaClientKnownRequestError &&
-      e.code === "P2002"
-    ) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       message = "User already exists. Please logout and Login again.";
     }
 
@@ -368,10 +345,10 @@ export async function updateProfilePhotoHandler(
   reply: FastifyReply,
 ) {
   const body = request.body;
-  let user;
+  let _user;
 
   try {
-    user = await updateUserProfilePhoto(body, request, reply);
+    _user = await updateUserProfilePhoto(body, request, reply);
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
@@ -431,10 +408,7 @@ export async function checkEmailExistHandler(
   }
 }
 
-export async function getAllUsersHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllUsersHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const users = await getAllUsers();
     reply.code(200).send(users);
@@ -444,10 +418,7 @@ export async function getAllUsersHandler(
   }
 }
 
-export async function updateRecipeNameHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function updateRecipeNameHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const res = await updateUserRecipe();
     reply.code(200).send(res);
@@ -493,12 +464,7 @@ export async function updateUserAvailabilityStatusHandler(
   try {
     const { userId, orgId } = request.user;
     const { presenceMode, status } = request.body;
-    const res = await updateUserAvailablityStatus(
-      userId,
-      orgId,
-      status,
-      presenceMode,
-    );
+    const res = await updateUserAvailablityStatus(userId, orgId, status, presenceMode);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -520,13 +486,7 @@ export async function auditLogHandler(
   try {
     const { orgId } = request.user;
     const { page = 1, limit = 25, sortBy, sortOrder } = request.query;
-    const logs = await auditLog(
-      orgId,
-      Number(page),
-      Number(limit),
-      sortBy,
-      sortOrder,
-    );
+    const logs = await auditLog(orgId, Number(page), Number(limit), sortBy, sortOrder);
     reply.send(logs);
   } catch (error) {
     log.error("Error fetching audit logs: %o", error);

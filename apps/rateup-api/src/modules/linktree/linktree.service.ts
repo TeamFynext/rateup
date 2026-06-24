@@ -3,9 +3,7 @@ import prisma from "../../utils/prisma.js";
 import { getShortUrlId } from "../../utils/commonUtils.js";
 import { CreateLinktreeReqBody } from "./linktree.schema.js";
 
-async function createLinktreeInDB(
-  req: FastifyRequest<{ Body: CreateLinktreeReqBody }>,
-) {
+async function createLinktreeInDB(req: FastifyRequest<{ Body: CreateLinktreeReqBody }>) {
   const {
     body: { name },
     user: { orgId, userId },
@@ -103,9 +101,7 @@ async function deleteLinktreeInDB(req) {
   return deletedLinktree;
 }
 
-async function generateAndGetOptionsFromDB(
-  req: FastifyRequest<{ Params: { linkType: string } }>,
-) {
+async function generateAndGetOptionsFromDB(req: FastifyRequest<{ Params: { linkType: string } }>) {
   const {
     params: { linkType },
     user: { orgId: requestedUserOrgId },
@@ -154,8 +150,7 @@ async function generateAndGetOptionsFromDB(
 
     surveysCreatedByUsrArr.forEach((surveyObj) => {
       const { id, title, teams, type } = surveyObj;
-      if (type === linkTypeInDB)
-        resultArr.push({ id, title, teams, type: linkType });
+      if (type === linkTypeInDB) resultArr.push({ id, title, teams, type: linkType });
     });
   });
 
@@ -168,7 +163,7 @@ async function updatePageVisitOrLinkClickInDB(req) {
     body: { resourceToBeUpdated, linkId },
   } = req;
   if (resourceToBeUpdated === "page-visit") {
-    const updatedRecord = await prisma.linktree.update({
+    await prisma.linktree.update({
       where: {
         shortUrlId,
       },
@@ -191,12 +186,8 @@ async function updatePageVisitOrLinkClickInDB(req) {
         links: true,
       },
     });
-    if (
-      links &&
-      links.length &&
-      links.find((linkObj) => linkObj.id === linkId)
-    ) {
-      const newLinks = links.map((linkObj, index) => {
+    if (links && links.length && links.find((linkObj) => linkObj.id === linkId)) {
+      const newLinks = links.map((linkObj, _index) => {
         const { noOfClicks = 0 } = linkObj;
         if (linkObj.id === linkId) {
           return {

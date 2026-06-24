@@ -8,24 +8,17 @@ import { getNestedProperty } from "../../utils/misc/obj.utils.js";
 export async function updateUsageStatsTemplateMessageCount() {
   const subscriptions = await prisma.subscription.findMany();
   for (const subscription of subscriptions) {
-    const thisYearCycleStart = dayjs(
-      subscription.renewedAt ?? subscription.createdAt,
-    ).year(dayjs().year());
+    const thisYearCycleStart = dayjs(subscription.renewedAt ?? subscription.createdAt).year(
+      dayjs().year(),
+    );
     const lastAnnualCycleStart = thisYearCycleStart.isAfter(dayjs())
       ? thisYearCycleStart.subtract(1, "year").toDate()
       : thisYearCycleStart.toDate();
     const monthlyDifference =
       dayjs()
         .startOf("day")
-        .diff(
-          dayjs(subscription.renewedAt ?? subscription.createdAt).startOf(
-            "day",
-          ),
-          "day",
-        ) % 30;
-    const lastMonthlyCycleStart = dayjs()
-      .subtract(monthlyDifference, "day")
-      .toDate();
+        .diff(dayjs(subscription.renewedAt ?? subscription.createdAt).startOf("day"), "day") % 30;
+    const lastMonthlyCycleStart = dayjs().subtract(monthlyDifference, "day").toDate();
     const res = await prisma.$queryRaw`SELECT 
           COUNT(wm."createdAt")::INTEGER AS "templateMessagesCount",
           COUNT(wm."createdAt") FILTER (
@@ -73,9 +66,7 @@ export async function updateSubscriptionAutomation() {
         features,
       },
     });
-    log.info(
-      `Updated subscription automation for orgId: ${updatedSubscription.orgId}`,
-    );
+    log.info(`Updated subscription automation for orgId: ${updatedSubscription.orgId}`);
   }
 }
 
@@ -84,10 +75,7 @@ export async function updateRateupPlanFeature() {
   const rateupPlans = await prisma.rateupPlan.findMany();
   for (const plan of rateupPlans) {
     const feature = plan.features as SubscriptionFeatures;
-    if (
-      feature.whatsapp.automation &&
-      feature.whatsapp.automation.automationTrigger
-    ) {
+    if (feature.whatsapp.automation && feature.whatsapp.automation.automationTrigger) {
       continue;
     }
     const newFeature = {
@@ -381,16 +369,13 @@ export async function syncTeamFeaturesFromSubscription(orgId?: string) {
     select: { orgId: true, features: true },
   });
 
-  const results: { orgId: string; teamsUpdated: number; features: string[] }[] =
-    [];
+  const results: { orgId: string; teamsUpdated: number; features: string[] }[] = [];
 
   for (const sub of subscriptions) {
     const subFeatures = sub.features as SubscriptionFeatures;
 
     // Determine which TeamFeatures are enabled by this subscription
-    const activeFeatures = (
-      Object.keys(subscriptionGates) as TeamFeature[]
-    ).filter((feature) => {
+    const activeFeatures = (Object.keys(subscriptionGates) as TeamFeature[]).filter((feature) => {
       const gate = subscriptionGates[feature];
       if (!gate) return true; // no gate → always enabled
       const gated = getNestedProperty(subFeatures, gate);
@@ -409,9 +394,7 @@ export async function syncTeamFeaturesFromSubscription(orgId?: string) {
       });
 
       const desiredSet = new Set(activeFeatures);
-      const toDelete = existing
-        .filter((r) => !desiredSet.has(r.feature))
-        .map((r) => r.id);
+      const toDelete = existing.filter((r) => !desiredSet.has(r.feature)).map((r) => r.id);
       const existingSet = new Set(existing.map((r) => r.feature));
       const toCreate = activeFeatures.filter((f) => !existingSet.has(f));
 

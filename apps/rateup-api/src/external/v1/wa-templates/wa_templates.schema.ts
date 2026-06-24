@@ -1,9 +1,5 @@
 import { z } from "zod";
-import {
-  WaButtonType,
-  WaTemplateCategory,
-  WaTemplateComponentType,
-} from "../../../types/enums.js";
+import { WaButtonType, WaTemplateCategory, WaTemplateComponentType } from "../../../types/enums.js";
 
 const waTemplateInput = {
   id: z.string().optional(),
@@ -87,9 +83,7 @@ const waTemplateFormattedInput = {
   category: z.enum(WaTemplateCategory),
 };
 const waTemplateInputSchema = z.object(waTemplateInput);
-export const waTemplateFormattedInputSchema = z.object(
-  waTemplateFormattedInput,
-);
+export const waTemplateFormattedInputSchema = z.object(waTemplateFormattedInput);
 export const sendWithFileSchema = z.object({
   timeDelay: z.coerce.number().int().min(15).optional(),
   templateName: z.string(),
@@ -106,9 +100,7 @@ export const sendWithFileSchema = z.object({
       return val;
     }, z.array(z.coerce.string()))
     .optional()
-    .describe(
-      "Array of variables for the template body. Example: ['variable1','variable2']",
-    ),
+    .describe("Array of variables for the template body. Example: ['variable1','variable2']"),
   teamId: z.string().optional(),
   tag: z.string().optional(),
   headerType: z.string().optional(),
@@ -120,10 +112,7 @@ export const sendWithFileSchema = z.object({
     ])
     .optional(),
   buttonVariable: z.string().optional(),
-  from: z
-    .string()
-    .optional()
-    .describe("WhatsApp phone number with country code (e.g. 1234567890)"),
+  from: z.string().optional().describe("WhatsApp phone number with country code (e.g. 1234567890)"),
   quickReplyPayload: z
     .preprocess((val) => {
       if (typeof val === "string") {
@@ -180,18 +169,12 @@ const waUserSendTemplateBodySchema = z.object({
 });
 
 export type CreateWaTemplateInput = z.infer<typeof waTemplateInputSchema>;
-export type CreateWaTemplateFormattedInput = z.infer<
-  typeof waTemplateFormattedInputSchema
->;
+export type CreateWaTemplateFormattedInput = z.infer<typeof waTemplateFormattedInputSchema>;
 export type WaTemplate = z.infer<typeof waTemplateSchema>;
 export type WaTemplateFormatted = z.infer<typeof waTemplateFormattedSchema>;
 export type ByTemplateIdParamsSchema = z.infer<typeof byTemplateIdParamsSchema>;
-export type RegisterTemplatesInDbBodySchema = z.infer<
-  typeof registerTemplatesInDbBodySchema
->;
-export type WaUserSendTemplateBodySchema = z.infer<
-  typeof waUserSendTemplateBodySchema
->;
+export type RegisterTemplatesInDbBodySchema = z.infer<typeof registerTemplatesInDbBodySchema>;
+export type WaUserSendTemplateBodySchema = z.infer<typeof waUserSendTemplateBodySchema>;
 
 export type SendWithFileSchema = z.infer<typeof sendWithFileSchema>;
 

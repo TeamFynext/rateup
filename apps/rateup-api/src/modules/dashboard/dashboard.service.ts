@@ -15,10 +15,7 @@ interface OverallStats {
   ticketCount: number;
 }
 
-export async function getOverallStats(
-  orgId: string,
-  userId: string,
-): Promise<OverallStats> {
+export async function getOverallStats(orgId: string, userId: string): Promise<OverallStats> {
   const counts = await prisma.$queryRaw`SELECT
   (SELECT COUNT(*)::INTEGER FROM "Contact" c WHERE c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."orgId" = ${orgId}::uuid) 
    AS "newChatCount",
@@ -46,9 +43,7 @@ interface ActiveSurvey {
   version?: number;
   responseCount: number;
 }
-export async function getActiveSurveyStats(
-  userId: string,
-): Promise<ActiveSurvey[]> {
+export async function getActiveSurveyStats(userId: string): Promise<ActiveSurvey[]> {
   return await prisma.$queryRaw`WITH filtered_surveys AS (SELECT s."id", s."type", s."isPublished",
   s."title", s."createdAt", wf."dbFlowId", wf."version", COUNT(DISTINCT sr.id)::INTEGER as "responseCount"
    FROM "Survey" s 
@@ -104,9 +99,7 @@ export async function getTeamMemberStats(
         const res = await Session.getSessionInformation(session);
         lastLoggedIn = Math.max(lastLoggedIn, res.timeCreated);
       }
-      const lastLoggedInAt = lastLoggedIn
-        ? dayjs(lastLoggedIn).utc().format()
-        : null;
+      const lastLoggedInAt = lastLoggedIn ? dayjs(lastLoggedIn).utc().format() : null;
       if (lastLoggedInAt || (user.lastLoggedInAt && !lastLoggedInAt))
         await updateLastLoggedInTime(user.id, lastLoggedInAt);
 

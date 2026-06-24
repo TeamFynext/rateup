@@ -7,9 +7,7 @@ export const redemptionIdParamSchema = z.object({
 export const transactionFilterSchema = z.object({
   fromDate: z.string().optional(),
   toDate: z.string().optional(),
-  transactionType: z
-    .enum(["earn", "redeem", "adjust", "expire", "refund"])
-    .optional(),
+  transactionType: z.enum(["earn", "redeem", "adjust", "expire", "refund"]).optional(),
   source: z.string().optional(),
   customerId: z.string().optional(),
   minPoints: z.coerce.number().optional(),

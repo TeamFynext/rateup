@@ -46,9 +46,7 @@ export async function updateReferral(code: string, type: "visit" | "signup") {
   });
 }
 
-async function generateUniqueReferralCode(
-  influencerName: string,
-): Promise<string> {
+async function generateUniqueReferralCode(influencerName: string): Promise<string> {
   const base = influencerName
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "")

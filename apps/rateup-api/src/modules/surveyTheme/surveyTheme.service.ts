@@ -12,7 +12,7 @@ export async function getSurveyThemeById(webSurveyThemeId: string) {
 }
 
 export async function getAllThemesOfUserOrgFromDB(req) {
-  const { orgId } = req?.user;
+  const { orgId } = req?.user || {};
   return await prisma.webSurveyTheme.findMany({
     where: {
       orgId,
@@ -32,7 +32,7 @@ export async function getAllThemesOfUserOrgFromDB(req) {
 }
 
 export async function createNewThemeInDB(req) {
-  const { orgId } = req?.user;
+  const { orgId } = req?.user || {};
   const { themeName } = req.body;
   return await prisma.webSurveyTheme.create({
     data: {
@@ -55,7 +55,7 @@ export async function applyThemeToSurvey(surveyId: string, themeId) {
 }
 
 export async function createAndApplyThemeToSurvey(req) {
-  const { orgId } = req?.user;
+  const { orgId } = req?.user || {};
   const { themeName } = req.body;
   const surveyId = req.body.surveyId;
   return prisma.$transaction(async (tx) => {
@@ -118,7 +118,7 @@ export async function updateSurveyThemeActiveSurveyThemeInDB(req) {
     });
   }
 
-  const updatedSurvey = await prisma.survey.update({
+  await prisma.survey.update({
     where: {
       id: surveyId,
     },
@@ -147,7 +147,7 @@ export async function deleteThemeInDB(req) {
   return deletedTheme;
 }
 
-export async function updateAllWebSurveyThemesInDB(reply: FastifyReply) {
+export async function updateAllWebSurveyThemesInDB(_reply: FastifyReply) {
   try {
     const allThemes = await prisma.webSurveyTheme.findMany();
     await prisma.$transaction(async (tx) => {

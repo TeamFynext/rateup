@@ -1,20 +1,12 @@
-import { FastifyInstance } from "fastify";
 import fastifyCron from "fastify-cron";
-import {
-  resetAnnualCounts,
-  resetMonthlyCounts,
-} from "../modules/stats/stats.service.js";
-import {
-  endSurveyCronAction,
-  publishSurveyCronAction,
-} from "../modules/survey/survey.service.js";
+import { resetAnnualCounts, resetMonthlyCounts } from "../modules/stats/stats.service.js";
+import { endSurveyCronAction, publishSurveyCronAction } from "../modules/survey/survey.service.js";
 import { sendCampaignCronAction } from "../modules/campaign/campaign.service.js";
 import {
   sendShopifySurveyCronAction,
   sendTemplateForShopifyAbandonedCheckouts,
 } from "../modules/integrations/shopify/shopify.service.js";
 import { refreshZohoTokensAndWebhooks } from "../modules/integrations/external/zoho/zoho.service.js";
-import { subscriptionExpiryAlert } from "../utils/email/payments/subscriptionExpiryAlert.js";
 import {
   processDripCampaigns,
   sendSchedulesWaMessages,
@@ -37,9 +29,7 @@ export async function registerCronJobs(
         name: "publishSurveys",
         cronTime: "0/15 * * * *",
         onTick: async () => {
-          server.log.info(
-            "Running every 15min JOB --> Survey Publish Updations",
-          );
+          server.log.info("Running every 15min JOB --> Survey Publish Updations");
           await Promise.all([
             publishSurveyCronAction(),
             endSurveyCronAction(),
@@ -54,9 +44,7 @@ export async function registerCronJobs(
         name: "dripCampaigns",
         cronTime: "*/4 * * * *",
         onTick: async () => {
-          server.log.info(
-            "Running every 4min JOB --> Drip Campaign Processing",
-          );
+          server.log.info("Running every 4min JOB --> Drip Campaign Processing");
           await processDripCampaigns();
         },
         start: true,
@@ -97,9 +85,7 @@ export async function registerCronJobs(
         name: "loyaltyBirthdayCheck",
         cronTime: "0 0 * * *", // Every day at 12:00 AM
         onTick: async () => {
-          server.log.info(
-            "Running Daily at 12:00 AM --> Loyalty Birthday Event Triggers",
-          );
+          server.log.info("Running Daily at 12:00 AM --> Loyalty Birthday Event Triggers");
           await checkBirthdayEventTriggers();
         },
         start: true,
@@ -108,9 +94,7 @@ export async function registerCronJobs(
         name: "loyaltyInactivityCheck",
         cronTime: "0 2 * * *", // Every day at 2:00 AM
         onTick: async () => {
-          server.log.info(
-            "Running Daily at 2:00 AM --> Loyalty Inactivity Event Triggers",
-          );
+          server.log.info("Running Daily at 2:00 AM --> Loyalty Inactivity Event Triggers");
           await checkInactivityEventTriggers();
         },
         start: true,
@@ -119,9 +103,7 @@ export async function registerCronJobs(
         name: "loyaltyPointsExpiration",
         cronTime: "0 1 * * *", // Every day at 1:00 AM
         onTick: async () => {
-          server.log.info(
-            "Running Daily at 1:00 AM --> Loyalty Points Expiration",
-          );
+          server.log.info("Running Daily at 1:00 AM --> Loyalty Points Expiration");
           await checkPointsExpiration();
         },
         start: true,

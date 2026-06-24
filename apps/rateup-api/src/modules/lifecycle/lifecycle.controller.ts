@@ -14,10 +14,7 @@ import {
   updateLifecycle,
 } from "./lifecycle.service.js";
 
-export async function getLifecyclesHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getLifecyclesHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const res = await getLifecycles(orgId);

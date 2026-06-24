@@ -4,10 +4,7 @@ import { WaAssignedChatPermission } from "../../types/enums.js";
 const orgCore = {
   name: z
     .string({
-      error: (issue) =>
-        issue.input === undefined
-          ? "Name is required"
-          : "Name must be a string",
+      error: (issue) => (issue.input === undefined ? "Name is required" : "Name must be a string"),
     })
     .nonempty("Name cannot be empty"),
   owner: z.string(),

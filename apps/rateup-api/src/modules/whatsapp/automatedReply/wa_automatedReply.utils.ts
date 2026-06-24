@@ -107,9 +107,7 @@ export function includesWholePhrase(text, phrase, caseSensitive = false) {
   const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
   const flags = caseSensitive ? "" : "i";
 
-  return new RegExp(String.raw`(?<!\w)${escapedPhrase}(?!\w)`, flags).test(
-    text,
-  );
+  return new RegExp(String.raw`(?<!\w)${escapedPhrase}(?!\w)`, flags).test(text);
 }
 
 /**
@@ -138,17 +136,14 @@ export async function validateAutomationMatchCondition(
       messageMatches = commands?.[0]?.toLowerCase() === message?.toLowerCase();
     }
   } else if (
-    [
-      WaAutomatedReplyMatchType.ContainsAllOf,
-      WaAutomatedReplyMatchType.ContainsAnyOf,
-    ].includes(matchType as WaAutomatedReplyMatchType)
+    [WaAutomatedReplyMatchType.ContainsAllOf, WaAutomatedReplyMatchType.ContainsAnyOf].includes(
+      matchType as WaAutomatedReplyMatchType,
+    )
   ) {
     let comparator: "some" | "every";
 
-    if (WaAutomatedReplyMatchType.ContainsAllOf === matchType)
-      comparator = "every";
-    if (WaAutomatedReplyMatchType.ContainsAnyOf === matchType)
-      comparator = "some";
+    if (WaAutomatedReplyMatchType.ContainsAllOf === matchType) comparator = "every";
+    if (WaAutomatedReplyMatchType.ContainsAnyOf === matchType) comparator = "some";
 
     const caseSensitive = !!matchData.caseSensitive;
     messageMatches = commands[comparator]((keyword) =>
@@ -165,11 +160,7 @@ export async function validateAutomationMatchCondition(
   if (!orgId || !phone) return messageMatches;
 
   // Validate contact filters
-  const contactFiltersValid = await validateContactFilters(
-    matchData.contactFilters,
-    orgId,
-    phone,
-  );
+  const contactFiltersValid = await validateContactFilters(matchData.contactFilters, orgId, phone);
   if (!contactFiltersValid) return false;
 
   return true;
@@ -291,10 +282,7 @@ export enum ReplyComponentType {
   AiBot = "AiBot",
 }
 
-export async function verifyAutomationLimit(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function verifyAutomationLimit(request: FastifyRequest, reply: FastifyReply) {
   try {
     let orgId = request.user.orgId;
     const subscription = request.subscription;
@@ -346,12 +334,9 @@ async function validateContactFilters(
 
   // Check if contact is in required groups
   if (contactFilters.inGroups?.length > 0) {
-    const contactGroups =
-      contact?.contactGroups?.map((g) => g.contactGroupId) || [];
+    const contactGroups = contact?.contactGroups?.map((g) => g.contactGroupId) || [];
     const requiredGroups = contactFilters.inGroups;
-    const hasRequiredGroup = requiredGroups.some((group) =>
-      contactGroups.includes(group),
-    );
+    const hasRequiredGroup = requiredGroups.some((group) => contactGroups.includes(group));
     return hasRequiredGroup;
   }
 
@@ -391,15 +376,11 @@ async function validateContactFilters(
 /**
  * Validates time window conditions
  */
-export function validateTimeWindow(
-  businessHour: automationProps["businessHour"],
-): boolean {
+export function validateTimeWindow(businessHour: automationProps["businessHour"]): boolean {
   if (!businessHour?.schedule) return true;
 
   const now = dayjs().tz(businessHour.timezone);
-  const currentDay = now
-    .format("dddd")
-    .toLowerCase() as keyof typeof businessHour.schedule;
+  const currentDay = now.format("dddd").toLowerCase() as keyof typeof businessHour.schedule;
   const currentTime = now.format("HH:mm");
 
   const daySchedule = businessHour.schedule[currentDay];
@@ -433,9 +414,9 @@ export function validateTimeWindow(
  * @param automations Array of automations with businessHour property
  * @returns Selected automation or undefined if none match
  */
-export function selectAutomationByBusinessHours<
-  T extends { businessHour: any },
->(automations: T[]): T | undefined {
+export function selectAutomationByBusinessHours<T extends { businessHour: any }>(
+  automations: T[],
+): T | undefined {
   let selectedAutomation: T | undefined;
 
   // First priority: Look for automations with business hours that are currently valid
@@ -455,9 +436,7 @@ export function selectAutomationByBusinessHours<
 
   // Second priority: If no valid business hour automation found, use null business hour automation
   if (!selectedAutomation) {
-    selectedAutomation = automations.find(
-      (automation) => automation.businessHour === null,
-    );
+    selectedAutomation = automations.find((automation) => automation.businessHour === null);
   }
 
   return selectedAutomation;
@@ -519,9 +498,7 @@ async function validateRuleCondition(
 
       // Check business hours if messageBodyLock exists
       if (condition.messageBodyLock?.businessHour) {
-        const isWithinBusinessHours = validateTimeWindow(
-          condition.messageBodyLock.businessHour,
-        );
+        const isWithinBusinessHours = validateTimeWindow(condition.messageBodyLock.businessHour);
         if (!isWithinBusinessHours) return false;
       }
 
@@ -572,8 +549,7 @@ async function validateRuleCondition(
       const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
       if (!contact) return false;
 
-      const contactGroups =
-        contact?.contactGroups?.map((g) => g.contactGroupId) || [];
+      const contactGroups = contact?.contactGroups?.map((g) => g.contactGroupId) || [];
       return contactGroups.includes(value);
     }
 
@@ -582,8 +558,7 @@ async function validateRuleCondition(
       const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
       if (!contact) return false;
 
-      const contactLabels =
-        contact?.ContactLabelMap?.map((l) => l.labelId) || [];
+      const contactLabels = contact?.ContactLabelMap?.map((l) => l.labelId) || [];
       return contactLabels.includes(value);
     }
 
@@ -613,24 +588,14 @@ async function validateConditionGroup(
 
   if (operator === "AND") {
     for (const condition of conditions) {
-      const isValid = await validateRuleCondition(
-        condition,
-        message,
-        orgId,
-        phone,
-      );
+      const isValid = await validateRuleCondition(condition, message, orgId, phone);
       if (!isValid) return false;
     }
     return true;
   } else {
     // OR operator
     for (const condition of conditions) {
-      const isValid = await validateRuleCondition(
-        condition,
-        message,
-        orgId,
-        phone,
-      );
+      const isValid = await validateRuleCondition(condition, message, orgId, phone);
       if (isValid) return true;
     }
     return false;
@@ -671,35 +636,21 @@ export async function validateRuleConditions(
     }
   }
 
-  if (
-    rule.triggerEvent !== TriggerEvent.MESSAGE_RECEIVED &&
-    rule.groups.length === 0
-  )
-    return true;
+  if (rule.triggerEvent !== TriggerEvent.MESSAGE_RECEIVED && rule.groups.length === 0) return true;
   if (rule.groups.length === 0) return false;
 
   const { operator, groups } = rule;
 
   if (operator === "AND") {
     for (const group of groups) {
-      const isValid = await validateConditionGroup(
-        group,
-        message,
-        orgId,
-        phone,
-      );
+      const isValid = await validateConditionGroup(group, message, orgId, phone);
       if (!isValid) return false;
     }
     return true;
   } else {
     // OR operator
     for (const group of groups) {
-      const isValid = await validateConditionGroup(
-        group,
-        message,
-        orgId,
-        phone,
-      );
+      const isValid = await validateConditionGroup(group, message, orgId, phone);
       if (isValid) return true;
     }
     return false;
@@ -794,7 +745,11 @@ export async function checkAndExecuteRuleByTriggerEvent(
     [RuleWithConditions[], RuleWithConditions[]]
   >(
     (acc, rule) => {
-      hasBusinessHours(rule) ? acc[0].push(rule) : acc[1].push(rule);
+      if (hasBusinessHours(rule)) {
+        acc[0].push(rule);
+      } else {
+        acc[1].push(rule);
+      }
       return acc;
     },
     [[], []],
@@ -802,9 +757,7 @@ export async function checkAndExecuteRuleByTriggerEvent(
 
   const isWildcardMessageBodyRule = (rule: RuleWithConditions): boolean =>
     rule.groups?.some((group) =>
-      group.conditions?.some(
-        (cond) => cond.field === "MESSAGE_BODY" && cond.value === "*",
-      ),
+      group.conditions?.some((cond) => cond.field === "MESSAGE_BODY" && cond.value === "*"),
     );
 
   const tryMatchRules = async (
@@ -822,9 +775,9 @@ export async function checkAndExecuteRuleByTriggerEvent(
 
       // Filter by product IDs if configured
       if (triggerEvent === TriggerEvent.SHOPIFY_EVENT) {
-        const configuredProductIds = [
-          ...(rule.options?.shopifyProductIds ?? []),
-        ].map((id) => String(id));
+        const configuredProductIds = [...(rule.options?.shopifyProductIds ?? [])].map((id) =>
+          String(id),
+        );
 
         if (!configuredProductIds.length) {
           // No product-specific filter configured
@@ -844,30 +797,17 @@ export async function checkAndExecuteRuleByTriggerEvent(
         if (scope === "SPECIFIC") {
           const configuredPostIds = rule.options?.instagramPostIds ?? [];
           if (!configuredPostIds.length) continue;
-          if (
-            !context.instagramMediaId ||
-            !configuredPostIds.includes(context.instagramMediaId)
-          ) {
+          if (!context.instagramMediaId || !configuredPostIds.includes(context.instagramMediaId)) {
             continue;
           }
         }
         // Check comment text against rule conditions (message body, etc.)
-        const isMatch = await validateRuleConditions(
-          rule,
-          messageText,
-          orgId,
-          phoneText,
-        );
+        const isMatch = await validateRuleConditions(rule, messageText, orgId, phoneText);
         if (!isMatch) continue;
       } else if (triggerEvent === TriggerEvent.INSTAGRAM_STORY_MENTION) {
         // Story mentions always match — no post filtering or message checks
       } else {
-        const isMatch = await validateRuleConditions(
-          rule,
-          messageText,
-          orgId,
-          phoneText,
-        );
+        const isMatch = await validateRuleConditions(rule, messageText, orgId, phoneText);
         if (!isMatch) continue;
       }
 
@@ -892,16 +832,12 @@ export async function checkAndExecuteRuleByTriggerEvent(
     isWildcardBatch: boolean;
   }> = [
     {
-      rules: businessHourRules.filter(
-        (rule) => !isWildcardMessageBodyRule(rule),
-      ),
+      rules: businessHourRules.filter((rule) => !isWildcardMessageBodyRule(rule)),
       isBusinessHour: true,
       isWildcardBatch: false,
     },
     {
-      rules: nonBusinessHourRules.filter(
-        (rule) => !isWildcardMessageBodyRule(rule),
-      ),
+      rules: nonBusinessHourRules.filter((rule) => !isWildcardMessageBodyRule(rule)),
       isBusinessHour: false,
       isWildcardBatch: false,
     },
@@ -920,11 +856,7 @@ export async function checkAndExecuteRuleByTriggerEvent(
   for (const batch of evaluationBatches) {
     if (!batch.rules.length) continue;
 
-    const result = await tryMatchRules(
-      batch.rules,
-      batch.isBusinessHour,
-      batch.isWildcardBatch,
-    );
+    const result = await tryMatchRules(batch.rules, batch.isBusinessHour, batch.isWildcardBatch);
     if (result) return result;
   }
 
@@ -959,73 +891,43 @@ async function executeRuleActions(
           break;
 
         case "ATTACH_LABEL":
-          success = await executeAttachLabelAction(
-            action.value as string,
-            actionContext,
-          );
+          success = await executeAttachLabelAction(action.value as string, actionContext);
           break;
 
         case "ASSIGN_USER":
-          success = await executeAssignUserAction(
-            action.value as string,
-            actionContext,
-          );
+          success = await executeAssignUserAction(action.value as string, actionContext);
           break;
 
         case "ASSIGN_TEAM":
-          success = await executeAssignTeamAction(
-            action.value as string,
-            actionContext,
-          );
+          success = await executeAssignTeamAction(action.value as string, actionContext);
           break;
 
         case "ASSIGN_LIFECYCLE":
-          success = await executeAssignLifecycleAction(
-            action.value as string,
-            actionContext,
-          );
+          success = await executeAssignLifecycleAction(action.value as string, actionContext);
           break;
 
         case "SEND_MESSAGE":
-          success = await executeSendMessageAction(
-            action.value as string,
-            actionContext,
-          );
+          success = await executeSendMessageAction(action.value as string, actionContext);
           break;
 
         case "SEND_WEB_SURVEY":
-          success = await executeSendWebSurveyAction(
-            action.value as string,
-            actionContext,
-          );
+          success = await executeSendWebSurveyAction(action.value as string, actionContext);
           break;
 
         case "SEND_TEMPLATE":
-          success = await executeSendTemplateAction(
-            action.value as string,
-            actionContext,
-          );
+          success = await executeSendTemplateAction(action.value as string, actionContext);
           break;
 
         case "SEND_FLOW":
-          success = await executeSendFlowAction(
-            action.value as string,
-            actionContext,
-          );
+          success = await executeSendFlowAction(action.value as string, actionContext);
           break;
 
         case "TRIGGER_CHATBOT":
-          success = await executeTriggerChatbotAction(
-            action.value as string,
-            actionContext,
-          );
+          success = await executeTriggerChatbotAction(action.value as string, actionContext);
           break;
 
         case "CALL_EXTERNAL_API":
-          success = await executeExternalApiAction(
-            action.value as string,
-            actionContext,
-          );
+          success = await executeExternalApiAction(action.value as string, actionContext);
           break;
 
         default:
@@ -1039,10 +941,7 @@ async function executeRuleActions(
 
       log.trace(`Action ${action.type} executed with result: ${success}`);
     } catch (error) {
-      log.error(
-        `Error executing action ${action.id} (${action.type}): %o`,
-        error,
-      );
+      log.error(`Error executing action ${action.id} (${action.type}): %o`, error);
       results.push({
         actionId: action.id,
         success: false,
@@ -1095,10 +994,7 @@ export function generateInternalMessageId() {
   );
 }
 
-async function executeAttachLabelAction(
-  labelId: string,
-  context: any,
-): Promise<boolean> {
+async function executeAttachLabelAction(labelId: string, context: any): Promise<boolean> {
   if (!context.orgId || !context.phone || !labelId) return false;
   const contactId = await prisma.contact.findFirst({
     where: {
@@ -1127,10 +1023,7 @@ async function executeAttachLabelAction(
   return true;
 }
 
-async function executeAssignUserAction(
-  userId: string,
-  context: any,
-): Promise<boolean> {
+async function executeAssignUserAction(userId: string, context: any): Promise<boolean> {
   if (!context.phone || !userId || !context.orgId) return false;
 
   const contact = await getOrCreateContactByPhone(context.phone, context.orgId);
@@ -1151,10 +1044,7 @@ async function executeAssignUserAction(
   return true;
 }
 
-async function executeAssignTeamAction(
-  teamId: string,
-  context: any,
-): Promise<boolean> {
+async function executeAssignTeamAction(teamId: string, context: any): Promise<boolean> {
   if (!context.phone || !teamId || !context.orgId) return false;
 
   const contact = await getOrCreateContactByPhone(context.phone, context.orgId);
@@ -1232,13 +1122,9 @@ async function executeAssignLifecycleAction(
 
   // Update Zoho Lead
   if (integrationIds?.zoho?.lead?.id) {
-    await updateZohoLeadQueue(
-      updatedContact.orgId,
-      integrationIds.zoho.lead.id,
-      {
-        Lead_Status: lifecycle.name,
-      },
-    );
+    await updateZohoLeadQueue(updatedContact.orgId, integrationIds.zoho.lead.id, {
+      Lead_Status: lifecycle.name,
+    });
   }
 
   // Trigger Zoho automation / deal sync
@@ -1263,10 +1149,7 @@ async function executeAssignLifecycleAction(
   return true;
 }
 
-async function executeSendMessageAction(
-  messageText: string,
-  context: any,
-): Promise<boolean> {
+async function executeSendMessageAction(messageText: string, context: any): Promise<boolean> {
   if (!context.phone || !messageText || !context.orgId) return false;
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
@@ -1278,11 +1161,7 @@ async function executeSendMessageAction(
       context.phoneNumberId,
     );
   } else {
-    await sendTextMessage(
-      { phone: context.phone, orgId: context.orgId },
-      null,
-      messageText,
-    );
+    await sendTextMessage({ phone: context.phone, orgId: context.orgId }, null, messageText);
   }
 
   return true;
@@ -1313,9 +1192,7 @@ async function executeSendWebSurveyAction(
   });
 
   if (!surveyTeamMap) {
-    log.warn(
-      `SEND_WEB_SURVEY action received invalid surveyTeamMapId: ${surveyTeamMapId}`,
-    );
+    log.warn(`SEND_WEB_SURVEY action received invalid surveyTeamMapId: ${surveyTeamMapId}`);
     return false;
   }
 
@@ -1337,11 +1214,7 @@ async function executeSendWebSurveyAction(
       context.phoneNumberId,
     );
   } else {
-    await sendTextMessage(
-      { phone: context.phone, orgId: context.orgId },
-      null,
-      messageText,
-    );
+    await sendTextMessage({ phone: context.phone, orgId: context.orgId }, null, messageText);
   }
 
   return true;
@@ -1366,9 +1239,7 @@ async function executeSendTemplateAction(
 
   if (!context.phone || !templateId || !context.orgId) return false;
 
-  const hasContactMappings = variableMapping.some((m) =>
-    m.shopifyPath.startsWith("contact."),
-  );
+  const hasContactMappings = variableMapping.some((m) => m.shopifyPath.startsWith("contact."));
   const contactData = hasContactMappings
     ? await getContactByPhoneNumberAndOrgId(context.phone, context.orgId)
     : null;
@@ -1435,18 +1306,13 @@ function buildTemplateParameterData(
   const sortedMappings = [...variableMapping].sort(
     (a, b) => a.templateParamIndex - b.templateParamIndex,
   );
-  const maxIndex = Math.max(
-    ...sortedMappings.map((m) => m.templateParamIndex),
-    -1,
-  );
+  const maxIndex = Math.max(...sortedMappings.map((m) => m.templateParamIndex), -1);
   if (maxIndex < 0) return [];
 
   const bodyParameters: any[] = [];
   for (let i = 0; i <= maxIndex; i++) {
     const mapping = sortedMappings.find((m) => m.templateParamIndex === i);
-    const text = mapping
-      ? resolveVariablePath(mapping.shopifyPath, shopifyBody, contactData)
-      : "";
+    const text = mapping ? resolveVariablePath(mapping.shopifyPath, shopifyBody, contactData) : "";
 
     bodyParameters.push({ type: "text", text });
   }
@@ -1454,10 +1320,7 @@ function buildTemplateParameterData(
   return [{ type: "body", parameters: bodyParameters }];
 }
 
-async function executeSendFlowAction(
-  flowId: string,
-  context: any,
-): Promise<boolean> {
+async function executeSendFlowAction(flowId: string, context: any): Promise<boolean> {
   if (!context.phone || !flowId || !context.orgId) return false;
 
   await sendFlow({
@@ -1508,19 +1371,10 @@ async function startAutomationFlow(
 
   // Import processNextNode dynamically to avoid circular dependencies
 
-  await processNextNode(
-    phone,
-    automation,
-    startNode.id,
-    orgId,
-    automationLog?.id,
-  );
+  await processNextNode(phone, automation, startNode.id, orgId, automationLog?.id);
 }
 
-async function executeTriggerChatbotAction(
-  chatbotId: string,
-  context: any,
-): Promise<boolean> {
+async function executeTriggerChatbotAction(chatbotId: string, context: any): Promise<boolean> {
   if (!context.phone || !chatbotId || !context.orgId) return false;
 
   if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
@@ -1576,9 +1430,7 @@ async function executeExternalApiAction(
   }
 
   if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    log.warn(
-      `Unsupported protocol for external API URL: ${parsedUrl.protocol}`,
-    );
+    log.warn(`Unsupported protocol for external API URL: ${parsedUrl.protocol}`);
     return false;
   }
 
@@ -1605,13 +1457,9 @@ async function executeExternalApiAction(
 
       return true;
     } catch (error) {
-      const status = axios.isAxiosError(error)
-        ? error.response?.status
-        : undefined;
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
 
-      const message = axios.isAxiosError(error)
-        ? error.message
-        : "Unknown error";
+      const message = axios.isAxiosError(error) ? error.message : "Unknown error";
 
       log.warn(
         `External API call attempt ${attempt} failed ` +
@@ -1620,10 +1468,7 @@ async function executeExternalApiAction(
       );
 
       if (attempt === 2) {
-        log.error(
-          `External API failed after retry for ${parsedUrl.toString()}: %o`,
-          error,
-        );
+        log.error(`External API failed after retry for ${parsedUrl.toString()}: %o`, error);
 
         return false;
       }

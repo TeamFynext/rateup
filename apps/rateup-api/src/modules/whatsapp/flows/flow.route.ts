@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { getFlowsFromWa } from "./flow.service.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import {
   cloneAndDeprecateFlowHandler,

@@ -22,16 +22,9 @@ import { WaFlow } from "../../../../generated/prisma/client.js";
 import { UpdateFlowInput } from "./flow.schema.js";
 import FormData from "form-data";
 import { log } from "../../../utils/logger.js";
-import {
-  LogicAction,
-  QuestionType,
-  WaFlowStatus,
-} from "../../../types/enums.js";
+import { LogicAction, QuestionType, WaFlowStatus } from "../../../types/enums.js";
 import { FlowLogicJump } from "../../../types/global.js";
-import {
-  getGoogleUrlBySurveyTeamMapId,
-  getSurveyById,
-} from "../../survey/survey.service.js";
+import { getGoogleUrlBySurveyTeamMapId, getSurveyById } from "../../survey/survey.service.js";
 import {
   deleteSession,
   getSession,
@@ -41,18 +34,9 @@ import {
   shouldShowGoogleReviewV2,
   updateSession,
 } from "../whatsappSurvey/wasurvey.service.js";
-import {
-  validateLogic,
-  validateLogicV2,
-} from "../../question/question.utils.js";
-import {
-  createCTAButtonMessage,
-  parseMessage,
-} from "../whatsappSurvey/wasurvey.utils.js";
-import {
-  getShortUrlId,
-  shortIdUniqueConstraintErrHandler,
-} from "../../../utils/commonUtils.js";
+import { validateLogic, validateLogicV2 } from "../../question/question.utils.js";
+import { createCTAButtonMessage, parseMessage } from "../whatsappSurvey/wasurvey.utils.js";
+import { getShortUrlId, shortIdUniqueConstraintErrHandler } from "../../../utils/commonUtils.js";
 import { WaMessageBody } from "../../../types/whatsapp.types.js";
 import {
   getIntegrationByName,
@@ -78,11 +62,7 @@ dayjs.extend(timezone);
 export async function getFlowsFromWa(orgId: string) {
   const waSettings = await getWaSettings(orgId);
 
-  const res = await callMetaApi(
-    `/${waSettings.wabaId}/flows`,
-    "GET",
-    waSettings.accessToken,
-  );
+  const res = await callMetaApi(`/${waSettings.wabaId}/flows`, "GET", waSettings.accessToken);
 
   const flows = res.data.data as WaFlowWa[];
 
@@ -109,11 +89,7 @@ export async function getFlowFromWa(orgId: string, flowId: string) {
 export async function getFlowPreviewFromWa(orgId: string, waFlowId: string) {
   const waSettings = await getWaSettings(orgId);
 
-  const res = await callMetaApi(
-    `/${waFlowId}?fields=preview`,
-    "GET",
-    waSettings.accessToken,
-  );
+  const res = await callMetaApi(`/${waFlowId}?fields=preview`, "GET", waSettings.accessToken);
 
   return res.data.preview as WaFlowPreview;
 }
@@ -129,10 +105,7 @@ export async function getFlowPreviewFromDb(dbFlowId: string) {
 
 export async function getFlowPreview(orgId: string, dbFlowId: string) {
   const flow = await getFlowFromDb(dbFlowId);
-  if (
-    flow?.preview?.expires_at &&
-    new Date(flow.preview.expires_at) > new Date()
-  ) {
+  if (flow?.preview?.expires_at && new Date(flow.preview.expires_at) > new Date()) {
     return flow.preview;
   } else {
     const preview = await getFlowPreviewFromWa(orgId, flow.flowId);
@@ -229,9 +202,9 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
         .filter(({ id }) => id),
     );
 
-    const footer = flow.json.screens?.[
-      flow.json.screens.length - 1
-    ]?.layout.children.find((child) => child.type === "Footer");
+    const footer = flow.json.screens?.[flow.json.screens.length - 1]?.layout.children.find(
+      (child) => child.type === "Footer",
+    );
 
     if (footer) {
       footer["on-click-action"] = {
@@ -254,11 +227,7 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
       flow.logicJumps,
     );
   }
-  const response = await updateFlowJsonInWa(
-    orgId,
-    flow.flowId,
-    jsonWithTitle as WaFlowJson,
-  );
+  const response = await updateFlowJsonInWa(orgId, flow.flowId, jsonWithTitle as WaFlowJson);
   await publishFlowInWa(orgId, flow.flowId);
 
   log.trace({ message: "Flow synced to whatsapp", response });
@@ -278,10 +247,7 @@ export async function getFlowFromDbByFlowId(orgId: string, flowId: string) {
   return flow;
 }
 
-export async function getFlowWithSurveyTeamMapIds(
-  orgId: string,
-  flowId: string,
-) {
+export async function getFlowWithSurveyTeamMapIds(orgId: string, flowId: string) {
   return await prisma.waFlow.findFirst({
     where: {
       flowId: flowId,
@@ -302,9 +268,7 @@ export async function getFlowWithSurveyTeamMapIds(
     },
   });
 }
-export async function getFlowWithSurveyTeamMapIdsWithDbFlowId(
-  dbFlowId: string,
-) {
+export async function getFlowWithSurveyTeamMapIdsWithDbFlowId(dbFlowId: string) {
   return await prisma.waFlow.findFirst({
     where: {
       dbFlowId,
@@ -350,12 +314,7 @@ export async function updateFlowIdAndStatusInDb(
   });
 }
 
-export async function cloneFlow(
-  previousFlow: any,
-  flowId: string,
-  userId: string,
-  teamId: string,
-) {
+export async function cloneFlow(previousFlow: any, flowId: string, userId: string, teamId: string) {
   const surveyId = previousFlow.surveyId;
   const survey = await prisma.survey.findUnique({
     where: {
@@ -364,7 +323,7 @@ export async function cloneFlow(
   });
 
   if (!survey) return "Survey not found to duplicate";
-  const { id, spreadSheetId, ...surveyWithoutId } = survey;
+  const { spreadSheetId: _spreadSheetId, ...surveyWithoutId } = survey;
 
   const existingSurveys = await prisma.survey.findMany({
     where: {
@@ -418,8 +377,7 @@ export async function cloneFlow(
     });
     return cloned;
   };
-  const newClonedSurvey =
-    await shortIdUniqueConstraintErrHandler(createClonedSurvey);
+  const newClonedSurvey = await shortIdUniqueConstraintErrHandler(createClonedSurvey);
   const { json, map, orgId, logicJumps, templateMessage } = previousFlow;
   await prisma.waFlow.create({
     data: {
@@ -440,9 +398,7 @@ export async function cloneFlow(
 
 export async function getFlowJsonFromWa(orgId: string, waFlowId: string) {
   const assets = await getFlowAssets(orgId, waFlowId);
-  const jsonAssetLink = assets.find(
-    (asset) => asset.asset_type === "FLOW_JSON",
-  ).download_url;
+  const jsonAssetLink = assets.find((asset) => asset.asset_type === "FLOW_JSON").download_url;
 
   const res = await axios.get(jsonAssetLink);
   const json = injectIdToFlowJson(res.data);
@@ -459,11 +415,7 @@ export async function getFlowAssets(orgId: string, waFlowId: string) {
   const waSettings = await getWaSettings(orgId);
   // TODO: handle pagination
 
-  const res = await callMetaApi(
-    `/${waFlowId}/assets`,
-    "GET",
-    waSettings.accessToken,
-  );
+  const res = await callMetaApi(`/${waFlowId}/assets`, "GET", waSettings.accessToken);
 
   return res.data.data;
 }
@@ -489,13 +441,7 @@ export async function sendFlow({
       to: phone,
       dbFlow,
     });
-    await sendMessage(
-      orgId,
-      { ...messageData, to: phone },
-      null,
-      userId,
-      whatsappSettingsPhoneId,
-    );
+    await sendMessage(orgId, { ...messageData, to: phone }, null, userId, whatsappSettingsPhoneId);
     return true;
   } catch (e) {
     log.error(e);
@@ -563,12 +509,7 @@ export async function createFlowInWa(
 ) {
   const { wabaId, accessToken } = await getWaSettings(orgId);
 
-  const { data } = await callMetaApi(
-    `/${wabaId}/flows`,
-    "POST",
-    accessToken,
-    createFlowInput,
-  );
+  const { data } = await callMetaApi(`/${wabaId}/flows`, "POST", accessToken, createFlowInput);
   return data as { id: string };
 }
 
@@ -582,20 +523,11 @@ export async function cloneFlowInWa(
 ) {
   const { wabaId, accessToken } = await getWaSettings(orgId);
 
-  const { data } = await callMetaApi(
-    `/${wabaId}/flows`,
-    "POST",
-    accessToken,
-    createFlowInput,
-  );
+  const { data } = await callMetaApi(`/${wabaId}/flows`, "POST", accessToken, createFlowInput);
   return data as { id: string };
 }
 
-export async function updateFlowInDb(
-  orgId: string,
-  dbFlowId: string,
-  data: UpdateFlowInput,
-) {
+export async function updateFlowInDb(orgId: string, dbFlowId: string, data: UpdateFlowInput) {
   const updatedFlow = await prisma.waFlow.update({
     where: {
       dbFlowId: dbFlowId,
@@ -613,9 +545,7 @@ export async function updateFlowInDb(
   if (data.name || data.status === WaFlowStatus.PUBLISHED) {
     const updateData = {
       title: data.name?.trim(),
-      isPublished: data.status
-        ? data.status === WaFlowStatus.PUBLISHED
-        : undefined,
+      isPublished: data.status ? data.status === WaFlowStatus.PUBLISHED : undefined,
     };
     await prisma.survey.update({
       where: {
@@ -633,12 +563,7 @@ export async function updateFlowMetaDataInWa(
   updatedData: { name?: string; categories?: string[]; endpoint_uri?: string },
 ) {
   const { accessToken } = await getWaSettings(orgId);
-  const { data } = await callMetaApi(
-    `/${flowId}`,
-    "POST",
-    accessToken,
-    updatedData,
-  );
+  const { data } = await callMetaApi(`/${flowId}`, "POST", accessToken, updatedData);
   return data as { id: string };
 }
 
@@ -651,11 +576,7 @@ export async function updateFlowMetaDataInWa(
  * @param waFlowId
  * @param json
  */
-export async function updateFlowJsonInWa(
-  orgId: string,
-  waFlowId: string,
-  json: WaFlowJson,
-) {
+export async function updateFlowJsonInWa(orgId: string, waFlowId: string, json: WaFlowJson) {
   const { accessToken } = await getWaSettings(orgId);
   json = removeIdFromFlowJson(json);
 
@@ -670,7 +591,7 @@ export async function updateFlowJsonInWa(
   formData.append("name", "flow.json");
 
   try {
-    const res = await axios.post(
+    await axios.post(
       `https://graph.facebook.com/v21.0/${waFlowId}/assets`,
       formData, // Upload the FormData
       {
@@ -720,10 +641,7 @@ export async function getFlowBySurveyId(surveyId: string) {
 }
 
 // TODO: move to controller.ts
-export const handleDecryptedFlowRequest = async (
-  decryptedBody,
-  dbFlow: WaFlow,
-) => {
+export const handleDecryptedFlowRequest = async (decryptedBody, dbFlow: WaFlow) => {
   const { screen, data, version, action, flow_token } = decryptedBody;
   try {
     log.trace("action: %s", action);
@@ -778,13 +696,8 @@ export const handleDecryptedFlowRequest = async (
       if (data.component_action === "update_date") {
         if (!data?.date) return noSlot;
 
-        let question = questions.find(
-          (data) => data.type === QuestionType.Date,
-        );
-        const integration: any = await getIntegrationByName(
-          session.orgId,
-          question?.waAppName,
-        );
+        let question = questions.find((data) => data.type === QuestionType.Date);
+        const integration: any = await getIntegrationByName(session.orgId, question?.waAppName);
         if (integration?.length <= 0) return noSlot;
 
         const response = await getWaAmeliaTimeSlot({
@@ -792,9 +705,7 @@ export const handleDecryptedFlowRequest = async (
           acessToken: integration?.[0]?.credential?.apiKey,
           serviceId: integration?.[0]?.credential?.serviceId,
           method: "get",
-          startDateTime: dayjs(Number(data?.date))
-            .tz("Asia/Kolkata")
-            .format("YYYY-MM-DD"),
+          startDateTime: dayjs(Number(data?.date)).tz("Asia/Kolkata").format("YYYY-MM-DD"),
         });
         const slots = transformSlots(
           dayjs(Number(data?.date)).tz("Asia/Kolkata").format("YYYY-MM-DD"),
@@ -819,14 +730,8 @@ export const handleDecryptedFlowRequest = async (
       const currentScreen = json.screens[currentIndex];
 
       if (Object.keys(dbFlow.logicJumps[screen] || {}).length > 0) {
-        log.trace(
-          "Logic jumps found for screen: %s \n %o",
-          screen,
-          dbFlow.logicJumps[screen],
-        );
-        const logicJumps = dbFlow.logicJumps[
-          screen
-        ] as unknown as FlowLogicJump[];
+        log.trace("Logic jumps found for screen: %s \n %o", screen, dbFlow.logicJumps[screen]);
+        const logicJumps = dbFlow.logicJumps[screen] as unknown as FlowLogicJump[];
         for (const logicJump of logicJumps) {
           let logicPassed = logicJump.conditions.every((condition) => {
             if (versionCheck) {
@@ -834,9 +739,7 @@ export const handleDecryptedFlowRequest = async (
                 condition.questionId,
                 dbFlow.map,
               );
-              const question = questions.find(
-                (q) => q.id === condition.questionId,
-              );
+              const question = questions.find((q) => q.id === condition.questionId);
               log.trace("raw response: %o", data[flowElementName]);
               if (!data[flowElementName]) {
                 // TODO: add logicCondition for skipped questions
@@ -865,17 +768,11 @@ export const handleDecryptedFlowRequest = async (
               }
               let response = parseFlowResponseV2(
                 question?.metaType,
-                currentScreenResponses.find(
-                  (screen) => screen.questionId === condition.questionId,
-                ).response,
+                currentScreenResponses.find((screen) => screen.questionId === condition.questionId)
+                  .response,
                 question?.["data-source"],
               );
-              return validateLogicV2(
-                question,
-                response,
-                condition.condition,
-                condition.response,
-              );
+              return validateLogicV2(question, response, condition.condition, condition.response);
             }
           });
 
@@ -889,10 +786,7 @@ export const handleDecryptedFlowRequest = async (
                 decryptedBody,
               });
             } else {
-              log.trace(
-                "Logic passed, jumping to screen: %s",
-                logicJump.action,
-              );
+              log.trace("Logic passed, jumping to screen: %s", logicJump.action);
               nextScreen = logicJump.action;
             }
           }
@@ -988,10 +882,7 @@ async function handleFlowEnd({ session, decryptedBody }: handleFlowEndProps) {
   };
 }
 
-export async function handleStaticFlowReply(
-  orgId: string,
-  waMessage: WaMessageBody,
-) {
+export async function handleStaticFlowReply(orgId: string, waMessage: WaMessageBody) {
   log.trace("handling flow reply");
   const { from, flowResponse } = parseMessage(waMessage);
   if (flowResponse["responses_saved"]) {
@@ -1050,9 +941,7 @@ export async function handleStaticFlowReply(
 
     if (!nextEdge) return;
 
-    const nextNode = matchData?.json?.nodes?.find(
-      (node: any) => node.id === nextEdge.source,
-    );
+    const nextNode = matchData?.json?.nodes?.find((node: any) => node.id === nextEdge.source);
 
     if (!nextNode) return;
 
@@ -1096,13 +985,9 @@ interface sendGReviewLinkProps {
   orgId: string;
 }
 
-export async function sendGReviewLink({
-  phone,
-  surveyTeamMapId,
-  orgId,
-}: sendGReviewLinkProps) {
+export async function sendGReviewLink({ phone, surveyTeamMapId, orgId }: sendGReviewLinkProps) {
   log.trace("Sending google review link to %s", phone);
-  const thankYouPage = `${process.env.FRONTEND_URL}/public/survey/${surveyTeamMapId}/end?k=n&msg=thanks`;
+
   const reviewPage = await getGoogleUrlBySurveyTeamMapId(surveyTeamMapId);
   if (!reviewPage) {
     log.trace("Google Review page not found");

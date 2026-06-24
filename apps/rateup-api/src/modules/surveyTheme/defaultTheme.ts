@@ -27,14 +27,7 @@ const title = {
     textAlign: "center",
   },
 };
-const subtitle = {
-  subtitle: "",
-  styles: {
-    fontWeight: "400",
-    fontSize: 16,
-    textAlign: "center",
-  },
-};
+
 const button = {
   label: "",
   styles: {

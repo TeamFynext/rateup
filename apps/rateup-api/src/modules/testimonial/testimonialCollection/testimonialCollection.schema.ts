@@ -62,15 +62,9 @@ const MultipleTestimonialToCollectionSchema = z.object({
 });
 
 export type ByCollectionIdParamsInput = z.infer<typeof byIdParamsSchema>;
-export type CreateTestimonialCollectionInput = z.infer<
-  typeof createTestimonialCollectionSchema
->;
-export type TestimonialCollectionQuery = z.infer<
-  typeof testimonialCollectionQuerySchema
->;
-export type UpdateTestimonialCollectionInput = z.infer<
-  typeof updateTestimonialCollectionSchema
->;
+export type CreateTestimonialCollectionInput = z.infer<typeof createTestimonialCollectionSchema>;
+export type TestimonialCollectionQuery = z.infer<typeof testimonialCollectionQuerySchema>;
+export type UpdateTestimonialCollectionInput = z.infer<typeof updateTestimonialCollectionSchema>;
 
 //the below type is used to add multiple testimonials to a collection
 export type MultipleTestimonialToCollectionInput = z.infer<

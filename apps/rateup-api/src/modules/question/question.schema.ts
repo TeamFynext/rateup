@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-  LogicCondition,
-  NPSWeightage,
-  PageType,
-  QuestionType,
-} from "../../types/enums.js";
+import { LogicCondition, NPSWeightage, PageType, QuestionType } from "../../types/enums.js";
 
 export const logicConditionSchema = z.enum(LogicCondition);
 
@@ -110,9 +105,7 @@ const questionCore = {
     ])
     .optional(),
   logic: z.array(logicJumpSchema).optional(),
-  validationRules: z
-    .union([z.null(), validationRulesSchema, z.any()])
-    .optional(),
+  validationRules: z.union([z.null(), validationRulesSchema, z.any()]).optional(),
   tnc: z
     .record(
       z.string(),
@@ -212,9 +205,7 @@ const updateQuestionRequestSchema = z.object({
       }),
     ])
     .optional(),
-  validationRules: z
-    .union([z.null(), validationRulesSchema, z.any()])
-    .optional(),
+  validationRules: z.union([z.null(), validationRulesSchema, z.any()]).optional(),
   optinScreenId: z.string().optional(),
   onSelectAction: z.boolean().optional(),
   waAppName: z.string().optional(),
@@ -243,9 +234,7 @@ const updateQuestionRequestSchema = z.object({
 const updateQuestionsOrderRequestSchema = z.array(z.string());
 
 export type CreateQuestionInput = z.infer<typeof createQuestionRequestSchema>;
-export type UpdateQuestionsOrderInput = z.infer<
-  typeof updateQuestionsOrderRequestSchema
->;
+export type UpdateQuestionsOrderInput = z.infer<typeof updateQuestionsOrderRequestSchema>;
 export type UpdateQuestionInput = z.infer<typeof updateQuestionRequestSchema>;
 export type QuestionRouteParams = z.infer<typeof questionRouteParamsSchema>;
 export type QuestionsRouteParams = z.infer<typeof questionsRouteParamsSchema>;

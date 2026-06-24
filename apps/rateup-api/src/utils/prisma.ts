@@ -17,10 +17,7 @@ export default prisma;
  * @param fields
  * @returns
  */
-export function excludeFields<T, K extends keyof T>(
-  obj: T,
-  fields: K[],
-): Omit<T, K> {
+export function excludeFields<T, K extends keyof T>(obj: T, fields: K[]): Omit<T, K> {
   const newObj = { ...obj };
   fields.forEach((field) => {
     delete newObj[field];

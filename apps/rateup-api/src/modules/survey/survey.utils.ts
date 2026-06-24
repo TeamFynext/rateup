@@ -1,9 +1,4 @@
-import {
-  QuestionType,
-  SurveyType,
-  SurveyVariableType,
-} from "../../types/enums.js";
-import { createEmailBodyOTPGeneration } from "../email/emailTemplates/emailTemplateOTPGeneration.js";
+import { QuestionType, SurveyType, SurveyVariableType } from "../../types/enums.js";
 import prisma from "../../utils/prisma.js";
 import { createSurveyVariable, getSurveyById } from "./survey.service.js";
 
@@ -36,11 +31,7 @@ export async function getSurveyTeamMapIdFromShortId(shortId: string) {
   return res?.id;
 }
 
-export async function createSurveyDefaultVariableForQuestion(
-  surveyId,
-  question,
-  position,
-) {
+export async function createSurveyDefaultVariableForQuestion(surveyId, question, position) {
   const survey = await getSurveyById(surveyId);
   if (survey.type !== SurveyType.Web) return;
   const variables = [];

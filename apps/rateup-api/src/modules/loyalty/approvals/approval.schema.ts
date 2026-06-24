@@ -80,12 +80,8 @@ export const cancelRequestSchema = z.object({
 });
 
 // Types
-export type CreateApprovalRequestInput = z.infer<
-  typeof createApprovalRequestSchema
->;
-export type GetApprovalRequestsInput = z.infer<
-  typeof getApprovalRequestsSchema
->;
+export type CreateApprovalRequestInput = z.infer<typeof createApprovalRequestSchema>;
+export type GetApprovalRequestsInput = z.infer<typeof getApprovalRequestsSchema>;
 export type ApprovalIdParam = z.infer<typeof approvalIdParamSchema>;
 export type ApproveRequestInput = z.infer<typeof approveRequestSchema>;
 export type RejectRequestInput = z.infer<typeof rejectRequestSchema>;

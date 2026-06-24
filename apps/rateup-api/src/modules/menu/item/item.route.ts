@@ -14,10 +14,7 @@ import { checkSession } from "../../../utils/checkSession.js";
 import fastifyMultipart from "@fastify/multipart";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
-import {
-  ByMenuItemIdParamsSchema,
-  createMenuItemInputSchema,
-} from "./item.schema.js";
+import { ByMenuItemIdParamsSchema, createMenuItemInputSchema } from "./item.schema.js";
 import {
   ByCategoryIdParamsSchema,
   SortMenuCategoryInputSchema,
@@ -25,10 +22,7 @@ import {
 
 export async function menuItemRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook(
-    "preHandler",
-    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Menu]),
-  );
+  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeaturePathName.Menu]));
 
   server.post(
     "/",

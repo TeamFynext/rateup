@@ -11,10 +11,7 @@ import dayjs from "dayjs";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
 import xlsx from "node-xlsx";
 
-import {
-  WaTemplateComponent,
-  WHATSAPP_BUTTON_TYPE,
-} from "../../types/whatsapp.types.js";
+import { WaTemplateComponent, WHATSAPP_BUTTON_TYPE } from "../../types/whatsapp.types.js";
 import {
   getCampaignCount,
   waCampaignDequeue,
@@ -34,18 +31,12 @@ export function getLatestStatus(participant = []) {
   let latestTimestamp = null;
 
   participant?.forEach((mapping) => {
-    Object.entries(mapping?.waMessage?.stats ?? {}).forEach(
-      ([status, timestamp]) => {
-        if (
-          timestamp &&
-          (!latestTimestamp ||
-            dayjs(timestamp as string).isAfter(latestTimestamp))
-        ) {
-          latestTimestamp = dayjs(timestamp as string);
-          latestStatus = status;
-        }
-      },
-    );
+    Object.entries(mapping?.waMessage?.stats ?? {}).forEach(([status, timestamp]) => {
+      if (timestamp && (!latestTimestamp || dayjs(timestamp as string).isAfter(latestTimestamp))) {
+        latestTimestamp = dayjs(timestamp as string);
+        latestStatus = status;
+      }
+    });
   });
 
   return latestStatus;
@@ -323,10 +314,7 @@ export async function createCampaign(data: CreateCampaignInput) {
   return campaign;
 }
 
-export async function updateCampaign(
-  campaignId: string,
-  data: UpdateCampaignInput,
-) {
+export async function updateCampaign(campaignId: string, data: UpdateCampaignInput) {
   const { dripStages, startedAt, ...rest } = data;
 
   if (startedAt) {
@@ -364,9 +352,7 @@ export async function updateCampaign(
     });
 
     // Create a map of existing stages by ID for quick lookup
-    const existingStagesMap = new Map(
-      existingDripStages.map((stage) => [stage.id, stage]),
-    );
+    const existingStagesMap = new Map(existingDripStages.map((stage) => [stage.id, stage]));
 
     // Process each drip step
     for (const step of dripStages) {
@@ -433,12 +419,7 @@ export async function sendCampaign(
     scheduledStatuses: [],
   });
   log.trace("updated campaign status to active");
-  await sendCampaignToParticipants(
-    campaignId,
-    sendToStatuses,
-    participantId,
-    userId,
-  );
+  await sendCampaignToParticipants(campaignId, sendToStatuses, participantId, userId);
   // add state indicating survey is sent to all participants?
 }
 
@@ -486,10 +467,7 @@ export async function sendCampaignCronAction() {
   if (campaignsToBeSent?.length === 0) return;
 
   for await (const campaign of campaignsToBeSent) {
-    await sendCampaign(
-      campaign.id,
-      campaign.scheduledStatuses as CampaignParticipantStatus[],
-    );
+    await sendCampaign(campaign.id, campaign.scheduledStatuses as CampaignParticipantStatus[]);
   }
 
   log.info(`sent ${campaignsToBeSent.length} campaings. At ${currentTime}`);
@@ -511,24 +489,17 @@ export const getResponseByCampaignById = async (id: string) => {
   const responsesWithTitles = responses.map(
     ({ id, createdAt, tag, phone, language, teamId, responses, questions }) => {
       // Create a mapping of questionId to title for easier lookup
-      const questionMap = questions.reduce(
-        (map, { id, title, description, label }) => {
-          map[id] =
-            Object.values(title)?.[0] ||
-            Object.values(description)?.[0] ||
-            Object.values(label)?.[0];
-          return map;
-        },
-        {},
-      );
+      const questionMap = questions.reduce((map, { id, title, description, label }) => {
+        map[id] =
+          Object.values(title)?.[0] || Object.values(description)?.[0] || Object.values(label)?.[0];
+        return map;
+      }, {});
       // Map over each response to replace questionId with the corresponding title
-      const updatedResponses = responses.map(
-        ({ questionId, response = {}, ...rest }) => ({
-          ...rest,
-          response: Object.values(response)?.[0],
-          title: questionMap[questionId],
-        }),
-      );
+      const updatedResponses = responses.map(({ questionId, response = {}, ...rest }) => ({
+        ...rest,
+        response: Object.values(response)?.[0],
+        title: questionMap[questionId],
+      }));
 
       // Return the updated response object
       return {
@@ -546,10 +517,7 @@ export const getResponseByCampaignById = async (id: string) => {
   return responsesWithTitles;
 };
 
-export const getResponseExcelByCampaignById = async (
-  id: string,
-  selectedDripStage?: string,
-) => {
+export const getResponseExcelByCampaignById = async (id: string, selectedDripStage?: string) => {
   const stats = await getCampaginStatsById(id, selectedDripStage);
   const pageSize = 10000; // Number of records per batch
   let page = 0;
@@ -633,13 +601,7 @@ export const getResponseExcelByCampaignById = async (
       page++;
     }
   }
-  const headerArray = [
-    "Created At",
-    "Participant Name",
-    "Phone",
-    "Status",
-    "Sent At",
-  ];
+  const headerArray = ["Created At", "Participant Name", "Phone", "Status", "Sent At"];
   const bodyArray = campaignParticipants?.map((participant) => [
     participant?.createdAt,
     participant?.contact?.name,
@@ -681,10 +643,7 @@ export const getResponseExcelByCampaignById = async (
   return { title: campaign?.name, data: buffer };
 };
 
-export async function getCampaginStatsById(
-  campaignId: string,
-  selectedDripStage = "all",
-) {
+export async function getCampaginStatsById(campaignId: string, selectedDripStage = "all") {
   if (selectedDripStage === "all") {
     const stats = await prisma.campaignStats.findUnique({
       where: {
@@ -810,9 +769,7 @@ export function getFlowIdFromTemplateComponents(
   return flowId;
 }
 
-export const deleteCampaignParticipantsByCampaignId = async (
-  campaignId: string,
-) => {
+export const deleteCampaignParticipantsByCampaignId = async (campaignId: string) => {
   waCampaignDequeue.add(campaignId, { campaignId });
 };
 

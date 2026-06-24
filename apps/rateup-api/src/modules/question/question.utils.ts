@@ -46,40 +46,32 @@ export function parseLogicAction(
           );
         } else {
           userResponseIndices = [
-            getChoiceIndex(
-              userResponse as Choice,
-              question.choices[language],
-            ).toString(),
+            getChoiceIndex(userResponse as Choice, question.choices[language]).toString(),
           ];
         }
         switch (logic.condition) {
           case LogicCondition.IncludesAllOf:
             iterator = "every";
-            comparator = (choiceIndex) =>
-              userResponseIndices.includes(choiceIndex);
+            comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
             break;
 
           case LogicCondition.IncludesAnyOf:
             iterator = "some";
-            comparator = (choiceIndex) =>
-              userResponseIndices.includes(choiceIndex);
+            comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
             break;
 
           case LogicCondition.IncludesNoneOf:
             iterator = "every";
-            comparator = (choiceIndex) =>
-              !userResponseIndices.includes(choiceIndex);
+            comparator = (choiceIndex) => !userResponseIndices.includes(choiceIndex);
             break;
 
           case LogicCondition.Equals:
             iterator = "every";
-            comparator = (choiceIndex) =>
-              userResponseIndices.includes(choiceIndex);
+            comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
             break;
           case LogicCondition.NotEquals:
             iterator = "every";
-            comparator = (choiceIndex) =>
-              !userResponseIndices.includes(choiceIndex);
+            comparator = (choiceIndex) => !userResponseIndices.includes(choiceIndex);
             break;
 
           default:
@@ -171,40 +163,32 @@ export function validateLogic(
         );
       } else {
         userResponseIndices = [
-          getChoiceIndex(
-            userResponse as Choice,
-            question.choices[language],
-          ).toString(),
+          getChoiceIndex(userResponse as Choice, question.choices[language]).toString(),
         ];
       }
       switch (condition) {
         case LogicCondition.IncludesAllOf:
           iterator = "every";
-          comparator = (choiceIndex) =>
-            userResponseIndices.includes(choiceIndex);
+          comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
           break;
 
         case LogicCondition.IncludesAnyOf:
           iterator = "some";
-          comparator = (choiceIndex) =>
-            userResponseIndices.includes(choiceIndex);
+          comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
           break;
 
         case LogicCondition.IncludesNoneOf:
           iterator = "every";
-          comparator = (choiceIndex) =>
-            !userResponseIndices.includes(choiceIndex);
+          comparator = (choiceIndex) => !userResponseIndices.includes(choiceIndex);
           break;
 
         case LogicCondition.Equals:
           iterator = "every";
-          comparator = (choiceIndex) =>
-            userResponseIndices.includes(choiceIndex);
+          comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
           break;
         case LogicCondition.NotEquals:
           iterator = "every";
-          comparator = (choiceIndex) =>
-            !userResponseIndices.includes(choiceIndex);
+          comparator = (choiceIndex) => !userResponseIndices.includes(choiceIndex);
           break;
 
         default:
@@ -285,47 +269,36 @@ export function validateLogicV2(
       let userResponseIndices: string[];
       if (Array.isArray(userResponse)) {
         userResponseIndices = userResponse.map((choice) =>
-          (
-            question?.["data-source"].findIndex((q) => q.title === choice) + 1
-          )?.toString(),
+          (question?.["data-source"].findIndex((q) => q.title === choice) + 1)?.toString(),
         );
       } else {
         userResponseIndices = [
-          (
-            question?.["data-source"].findIndex(
-              (q) => q.title === userResponse,
-            ) + 1
-          )?.toString(),
+          (question?.["data-source"].findIndex((q) => q.title === userResponse) + 1)?.toString(),
         ];
       }
       switch (condition) {
         case LogicCondition.IncludesAllOf:
           iterator = "every";
-          comparator = (choiceIndex) =>
-            userResponseIndices.includes(choiceIndex);
+          comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
           break;
 
         case LogicCondition.IncludesAnyOf:
           iterator = "some";
-          comparator = (choiceIndex) =>
-            userResponseIndices.includes(choiceIndex);
+          comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
           break;
 
         case LogicCondition.IncludesNoneOf:
           iterator = "every";
-          comparator = (choiceIndex) =>
-            !userResponseIndices.includes(choiceIndex);
+          comparator = (choiceIndex) => !userResponseIndices.includes(choiceIndex);
           break;
 
         case LogicCondition.Equals:
           iterator = "every";
-          comparator = (choiceIndex) =>
-            userResponseIndices.includes(choiceIndex);
+          comparator = (choiceIndex) => userResponseIndices.includes(choiceIndex);
           break;
         case LogicCondition.NotEquals:
           iterator = "every";
-          comparator = (choiceIndex) =>
-            !userResponseIndices.includes(choiceIndex);
+          comparator = (choiceIndex) => !userResponseIndices.includes(choiceIndex);
           break;
 
         default:
@@ -428,23 +401,16 @@ export function getPageTypeQuestionObj(languages, type, additionalData = {}) {
 }
 
 // This function also adds title, description to other page type questions if they are not present.
-export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(
-  questionsArr,
-  languagesArr,
-) {
+export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(questionsArr, languagesArr) {
   let questionsArrCopy = cloneDeep(questionsArr);
   if (languagesArr?.length) {
     const languagePageObj = questionsArrCopy.find(
-      (question) =>
-        question.type === (PageType.Language as unknown as QuestionType),
+      (question) => question.type === (PageType.Language as unknown as QuestionType),
     );
     if (languagesArr?.length > 1) {
       if (!languagePageObj) {
         const [newLanguagePageObj] = getPageQuestions(languagesArr);
-        if (
-          questionsArrCopy[0]?.type ===
-          (PageType.Welcome as unknown as QuestionType)
-        ) {
+        if (questionsArrCopy[0]?.type === (PageType.Welcome as unknown as QuestionType)) {
           questionsArrCopy.splice(1, 0, newLanguagePageObj);
         } else {
           questionsArrCopy.splice(0, 0, newLanguagePageObj);
@@ -465,8 +431,7 @@ export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(
       languagesArr?.forEach((language) => {
         if (questionType !== PageType.Custom) {
           questionObj.title[language] = `${questionType} Page`;
-          questionObj.description[language] =
-            `This is the ${questionType} page of the survey`;
+          questionObj.description[language] = `This is the ${questionType} page of the survey`;
         } else {
           if (!questionObj.title[language]?.trim().length) {
             questionObj.title[language] = "<p>Custom HTML Page</p>";
@@ -480,10 +445,7 @@ export async function getQuestionsArrUpdatedWithLanguageTypeQuestion(
 }
 
 // GR => GoogleReview
-export async function getQuestionsArrUpdatedGRTypeQuestion(
-  questionsArr,
-  surveyId,
-) {
+export async function getQuestionsArrUpdatedGRTypeQuestion(questionsArr, surveyId) {
   const questionsArrCopy = cloneDeep(questionsArr);
   const googleReviewPageObjIndex = questionsArrCopy.findIndex((question) => {
     return question.type === (PageType.GoogleReview as unknown as QuestionType);
@@ -496,15 +458,12 @@ export async function getQuestionsArrUpdatedGRTypeQuestion(
   });
 
   let hasGoogleReview = questionsArrCopy?.some(
-    (item) =>
-      item.reviewPageOptions !== null && item.reviewPageOptions !== undefined,
+    (item) => item.reviewPageOptions !== null && item.reviewPageOptions !== undefined,
   );
 
   if (hasGoogleReview) {
     if (googleReviewPageObjIndex === -1) {
-      questionsArrCopy.push(
-        getPageTypeQuestionObj(survey.languages, PageType.GoogleReview),
-      );
+      questionsArrCopy.push(getPageTypeQuestionObj(survey.languages, PageType.GoogleReview));
     }
   } else if (!hasGoogleReview) {
     if (googleReviewPageObjIndex > -1) {

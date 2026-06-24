@@ -29,9 +29,7 @@ export async function campaignRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   server.addHook(
     "preHandler",
-    getVerifySubscriptionHandler([
-      SubscriptionFeaturePathName.WhatsAppCampaign,
-    ]),
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.WhatsAppCampaign]),
   );
   server.addHook("preHandler", requireFeature(TeamFeature.campaigns));
   server.register(campaignParticipantRoutes, {

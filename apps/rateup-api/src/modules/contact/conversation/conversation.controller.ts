@@ -33,9 +33,7 @@ export async function updateConversationHandler(
     reply.send(res);
   } catch (error) {
     log.error({ err: error }, "Error updating conversation:");
-    reply
-      .status(500)
-      .send({ error: "An error occurred while updating the conversation." });
+    reply.status(500).send({ error: "An error occurred while updating the conversation." });
   }
 }
 
@@ -72,13 +70,9 @@ export async function getResolvedConversationStatsHandler(
     );
     reply.send(response);
   } catch (error) {
-    log.error(
-      { err: error },
-      "Error fetching resolved conversation resolved stats:",
-    );
+    log.error({ err: error }, "Error fetching resolved conversation resolved stats:");
     reply.status(500).send({
-      error:
-        "An error occurred while fetching the resolved conversation resolved stats.",
+      error: "An error occurred while fetching the resolved conversation resolved stats.",
     });
   }
 }
@@ -99,8 +93,7 @@ export async function getAverageConversationResponseTimeHandler(
   } catch (e) {
     log.error("Error fetching average conversation response time stats:%o", e);
     reply.status(500).send({
-      error:
-        "An error occurred while fetching the average conversation response time stats.",
+      error: "An error occurred while fetching the average conversation response time stats.",
     });
   }
 }
@@ -111,19 +104,12 @@ export async function getConversationOnAccountDistributionHandler(
 ) {
   try {
     const dateRange = request.query.dateRange?.split(",") || [];
-    const res = await getConversationOnAccountDistribution(
-      request.user.orgId,
-      dateRange,
-    );
+    const res = await getConversationOnAccountDistribution(request.user.orgId, dateRange);
     reply.send(res);
   } catch (e) {
-    log.error(
-      "Error fetching conversation on account distribution stats: %o",
-      e,
-    );
+    log.error("Error fetching conversation on account distribution stats: %o", e);
     reply.status(500).send({
-      error:
-        "An error occurred while fetching the conversation on account distribution stats.",
+      error: "An error occurred while fetching the conversation on account distribution stats.",
     });
   }
 }
@@ -138,8 +124,7 @@ export async function getOverAllQuickStatsOfConversationsHandler(
   } catch (e) {
     log.error("Error fetching overall quick stats of conversations:%o", e);
     reply.status(500).send({
-      error:
-        "An error occurred while fetching the overall quick stats of conversations.",
+      error: "An error occurred while fetching the overall quick stats of conversations.",
     });
   }
 }
@@ -150,10 +135,7 @@ export async function getStaffConverSationMetricsHandler(
 ) {
   try {
     const dateRange = request.query.dateRange?.split(",") || [];
-    const res = await getStaffConverSationMetrics(
-      request.user.orgId,
-      dateRange,
-    );
+    const res = await getStaffConverSationMetrics(request.user.orgId, dateRange);
     reply.send(res);
   } catch (e) {
     log.error("Error fetching staff conversation metrics:%o", e);

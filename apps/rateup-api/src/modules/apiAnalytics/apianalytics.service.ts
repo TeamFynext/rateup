@@ -150,14 +150,10 @@ export async function getWaMessageOverviewByTeamAndOrg(
   const avgDeliveryTime = current.avg_delivery_time_seconds ?? null;
 
   const deliveredPercentage =
-    totalMessages === 0
-      ? 0
-      : Number(((deliveredMessages / totalMessages) * 100).toFixed(2));
+    totalMessages === 0 ? 0 : Number(((deliveredMessages / totalMessages) * 100).toFixed(2));
 
   const failedPercentage =
-    totalMessages === 0
-      ? 0
-      : Number(((failedMessages / totalMessages) * 100).toFixed(2));
+    totalMessages === 0 ? 0 : Number(((failedMessages / totalMessages) * 100).toFixed(2));
 
   return {
     totalMessages,
@@ -170,10 +166,7 @@ export async function getWaMessageOverviewByTeamAndOrg(
     failedPercentage,
 
     avgDeliveryTimeSeconds: avgDeliveryTime,
-    avgDeliveryTimeChange: percentChange(
-      avgDeliveryTime,
-      previous.avg_delivery_time_seconds,
-    ),
+    avgDeliveryTimeChange: percentChange(avgDeliveryTime, previous.avg_delivery_time_seconds),
   };
 }
 
@@ -404,10 +397,7 @@ export async function getTemplateCategoryOverview(
     byCategory: byCategory.map((r) => ({
       category: r.category,
       count: r.count,
-      percentage:
-        totalTemplates === 0
-          ? 0
-          : Number(((r.count / totalTemplates) * 100).toFixed(2)),
+      percentage: totalTemplates === 0 ? 0 : Number(((r.count / totalTemplates) * 100).toFixed(2)),
     })),
   };
 }
@@ -499,14 +489,10 @@ export async function getTemplatePerformanceStats(
 
   return rows.map((r) => {
     const successPercentage =
-      r.total_sent === 0
-        ? 0
-        : Number(((r.delivered_count / r.total_sent) * 100).toFixed(2));
+      r.total_sent === 0 ? 0 : Number(((r.delivered_count / r.total_sent) * 100).toFixed(2));
 
     const failurePercentage =
-      r.total_sent === 0
-        ? 0
-        : Number(((r.failed_count / r.total_sent) * 100).toFixed(2));
+      r.total_sent === 0 ? 0 : Number(((r.failed_count / r.total_sent) * 100).toFixed(2));
 
     return {
       templateName: r.template_name,
@@ -592,9 +578,7 @@ export async function getTeamPerformanceStats(
 
   return rows.map((r) => {
     const successPercentage =
-      r.total_sent === 0
-        ? 0
-        : Number(((r.delivered_count / r.total_sent) * 100).toFixed(2));
+      r.total_sent === 0 ? 0 : Number(((r.delivered_count / r.total_sent) * 100).toFixed(2));
 
     return {
       teamId: r.team_id,

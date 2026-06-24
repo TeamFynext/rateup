@@ -29,16 +29,13 @@ export async function verifyTemplateMessageLimit(subscription) {
     usage &&
     subscription?.isAnnualMessageLimit &&
     usage.annualTemplateMessageCount >=
-      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
-        ?.monthlyMessageLimit *
-        12
+      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count?.monthlyMessageLimit * 12
   ) {
     throw new Error("You have reached the maximum annual limit of messages.");
   }
   if (
     usage?.monthlyTemplateMessageCount >=
-    subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
-      ?.monthlyMessageLimit
+    subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count?.monthlyMessageLimit
   ) {
     throw new Error("You have reached the maximum monthly limit of messages.");
   }

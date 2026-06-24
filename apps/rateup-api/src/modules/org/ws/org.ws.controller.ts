@@ -70,10 +70,7 @@ subscriber.on("message", (channel, message) => {
     const connections = activeConnections.get(orgId);
     if (!connections) return;
     for (const client of connections.values()) {
-      if (
-        client.readyState === 1 &&
-        (!roleFilter || (client as any).role === roleFilter)
-      ) {
+      if (client.readyState === 1 && (!roleFilter || (client as any).role === roleFilter)) {
         client.send(JSON.stringify(data));
       }
     }
@@ -133,19 +130,13 @@ export async function sendViaWstoOrgHandler(
   roleFilter?: string,
 ) {
   try {
-    await publisher.publish(
-      WS_CHANNEL,
-      JSON.stringify({ orgId, data: message, roleFilter }),
-    );
+    await publisher.publish(WS_CHANNEL, JSON.stringify({ orgId, data: message, roleFilter }));
   } catch (err) {
     log.error("Error publishing message to org %s: %s", orgId, err);
   }
 }
 
-export async function orgWsAuthCheckHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function orgWsAuthCheckHandler(request: FastifyRequest, reply: FastifyReply) {
   const { orgId } = request.user;
   const afterAuthId = connectionManager.generateAfterAuthIdforOrgId(orgId);
   reply.send({ afterAuthId });
@@ -155,9 +146,7 @@ export const checkMobileId = async (
   request: FastifyRequest<{ Querystring: { accessToken?: string } }>,
   reply: FastifyReply,
 ) => {
-  const session = await getSessionWithoutRequestResponse(
-    request.query.accessToken,
-  );
+  const session = await getSessionWithoutRequestResponse(request.query.accessToken);
   const userId = session.getUserId();
   if (!userId) {
     log.error("No userId found in session\n%o", request.headers);

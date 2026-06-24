@@ -1,9 +1,6 @@
 import crypto from "node:crypto";
 
-export function aes_encrypt(
-  dataToEncrypt: string,
-  encryptionKey: crypto.CipherKey,
-) {
+export function aes_encrypt(dataToEncrypt: string, encryptionKey: crypto.CipherKey) {
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv("aes-256-cbc", encryptionKey, iv);
   let encrypted = cipher.update(dataToEncrypt, "utf8", "hex");
@@ -19,11 +16,7 @@ export function aes_decrypt(
   encryptionKey: crypto.CipherKey,
   iv: string,
 ): string {
-  const decipher = crypto.createDecipheriv(
-    "aes-256-cbc",
-    encryptionKey,
-    Buffer.from(iv, "hex"),
-  );
+  const decipher = crypto.createDecipheriv("aes-256-cbc", encryptionKey, Buffer.from(iv, "hex"));
   let decrypted = decipher.update(encryptedData, "hex", "utf8");
   decrypted += decipher.final("utf8");
   return decrypted;

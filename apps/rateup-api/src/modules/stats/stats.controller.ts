@@ -3,10 +3,7 @@ import { getUsageStat } from "./stats.service.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import { getOrgIdAndRole } from "../user/user.service.js";
 
-export async function getUsageStatHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getUsageStatHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     let session = await Session.getSession(request, reply);
     let userId = session.getUserId();

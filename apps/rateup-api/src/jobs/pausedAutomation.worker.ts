@@ -17,28 +17,21 @@ interface PausedAutomationJobData {
 export const pausedAutomationWorker = new Worker(
   "pausedAutomationQueue",
   async (job: Job<PausedAutomationJobData>) => {
-    const { automationMessageId, phone, orgId, currentNode, automationId } =
-      job.data;
+    const { automationMessageId, phone, orgId, currentNode } = job.data;
 
-    log.info(
-      `Processing paused automation resume: ${automationMessageId} for phone ${phone}`,
-    );
+    log.info(`Processing paused automation resume: ${automationMessageId} for phone ${phone}`);
 
     try {
       // Fetch the automation message to verify it still exists and is paused
-      const automationMessage = await prisma.waAutomatedReplyMessage.findUnique(
-        {
-          where: { id: automationMessageId },
-          include: {
-            waAutomatedReply: true,
-          },
+      const automationMessage = await prisma.waAutomatedReplyMessage.findUnique({
+        where: { id: automationMessageId },
+        include: {
+          waAutomatedReply: true,
         },
-      );
+      });
 
       if (!automationMessage) {
-        log.warn(
-          `Automation message ${automationMessageId} not found, skipping resume`,
-        );
+        log.warn(`Automation message ${automationMessageId} not found, skipping resume`);
         return;
       }
 
@@ -59,9 +52,7 @@ export const pausedAutomationWorker = new Worker(
 
       const automation = automationMessage.waAutomatedReply;
       if (!automation || !currentNode) {
-        log.error(
-          `Missing automation or currentNode for message ${automationMessageId}`,
-        );
+        log.error(`Missing automation or currentNode for message ${automationMessageId}`);
         return;
       }
 
@@ -73,13 +64,7 @@ export const pausedAutomationWorker = new Worker(
       if (nextEdges && nextEdges.length > 0) {
         // Process each next node
         for (const nextEdge of nextEdges) {
-          await processNextNode(
-            phone,
-            automation,
-            nextEdge.target,
-            orgId,
-            automationMessageId,
-          );
+          await processNextNode(phone, automation, nextEdge.target, orgId, automationMessageId);
         }
         log.info(
           `Successfully resumed automation ${automationMessageId}, processed ${nextEdges.length} next nodes`,

@@ -58,11 +58,9 @@ const sendTemplatesToContacts = scheduleTemplate.extend({
 const sendTemplateToContactsParamsWithOrgId = byTemplateIdParamsSchema.extend({
   orgId: z.string(),
 });
-const sendTemplateToContact = sendTemplatesToContacts
-  .omit({ contactIds: true })
-  .extend({
-    body_variables: z.array(z.string()).optional(),
-  });
+const sendTemplateToContact = sendTemplatesToContacts.omit({ contactIds: true }).extend({
+  body_variables: z.array(z.string()).optional(),
+});
 
 const sendTemplateByNameToPhone = scheduleTemplate.extend({
   templateName: z.string(),
@@ -114,11 +112,9 @@ const sendTemplateToContactParams = z.object({
   contactId: z.string(),
 });
 
-const sendTemplateToContactParamsWithOrgId = sendTemplateToContactParams.extend(
-  {
-    orgId: z.string(),
-  },
-);
+const sendTemplateToContactParamsWithOrgId = sendTemplateToContactParams.extend({
+  orgId: z.string(),
+});
 
 const sendTemplatesToContactGroups = scheduleTemplate.extend({
   teamId: z.string().optional(),
@@ -126,19 +122,12 @@ const sendTemplatesToContactGroups = scheduleTemplate.extend({
   header: templateHeaderComponent.optional(),
 });
 
-const sendTemplateToContactGroupsParamsWithOrgId =
-  byTemplateIdParamsSchema.extend({
-    orgId: z.string(),
-  });
+const sendTemplateToContactGroupsParamsWithOrgId = byTemplateIdParamsSchema.extend({
+  orgId: z.string(),
+});
 const errorLogsQuery = z.object({
-  startDate: z
-    .string()
-    .optional()
-    .describe("Filter logs from this date (FORMAT: mm/dd/yyyy)"),
-  endDate: z
-    .string()
-    .optional()
-    .describe("Filter logs before this date (FORMAT: mm/dd/yyyy)"),
+  startDate: z.string().optional().describe("Filter logs from this date (FORMAT: mm/dd/yyyy)"),
+  endDate: z.string().optional().describe("Filter logs before this date (FORMAT: mm/dd/yyyy)"),
 });
 
 const errorLogResponse = z.object({
@@ -172,18 +161,10 @@ const messageStatusResponse = z.object({
 
 export type SendTemplateToContacts = z.infer<typeof sendTemplatesToContacts>;
 export type SendTemplateToContact = z.infer<typeof sendTemplateToContact>;
-export type SendTemplateToContactParams = z.infer<
-  typeof sendTemplateToContactParams
->;
-export type SendTemplateToContactGroups = z.infer<
-  typeof sendTemplatesToContactGroups
->;
-export type SendTemplateHeaderComponent = z.infer<
-  typeof templateHeaderComponent
->;
-export type SendTemplateByNameToPhone = z.infer<
-  typeof sendTemplateByNameToPhone
->;
+export type SendTemplateToContactParams = z.infer<typeof sendTemplateToContactParams>;
+export type SendTemplateToContactGroups = z.infer<typeof sendTemplatesToContactGroups>;
+export type SendTemplateHeaderComponent = z.infer<typeof templateHeaderComponent>;
+export type SendTemplateByNameToPhone = z.infer<typeof sendTemplateByNameToPhone>;
 
 export type ErrorLogsQuery = z.infer<typeof errorLogsQuery>;
 

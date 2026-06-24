@@ -280,25 +280,13 @@ export const getLoyaltyDashboardStats = async (orgId: string) => {
     currencySymbol: program.currencySymbol,
     summary: {
       totalMembers,
-      totalMembersChange: calcChangePercent(
-        totalMembers,
-        totalMembersLastMonth,
-      ),
+      totalMembersChange: calcChangePercent(totalMembers, totalMembersLastMonth),
       activeThisMonth,
-      activeThisMonthChange: calcChangePercent(
-        activeThisMonth,
-        activeLastMonth,
-      ),
+      activeThisMonthChange: calcChangePercent(activeThisMonth, activeLastMonth),
       pointsIssued: pointsIssuedCurrent,
-      pointsIssuedChange: calcChangePercent(
-        pointsIssuedCurrent,
-        pointsIssuedPrev,
-      ),
+      pointsIssuedChange: calcChangePercent(pointsIssuedCurrent, pointsIssuedPrev),
       rewardsRedeemed: rewardsRedeemedThisMonth,
-      rewardsRedeemedChange: calcChangePercent(
-        rewardsRedeemedThisMonth,
-        rewardsRedeemedLastMonth,
-      ),
+      rewardsRedeemedChange: calcChangePercent(rewardsRedeemedThisMonth, rewardsRedeemedLastMonth),
     },
     memberGrowth,
     pointsActivity,

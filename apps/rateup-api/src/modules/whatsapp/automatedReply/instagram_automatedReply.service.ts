@@ -23,10 +23,7 @@ export async function getInstagramAutomatedRepliesByOrgId(orgId: string) {
       },
     });
   } catch (error) {
-    log.error(
-      `[Instagram Automation] Error fetching automations for orgId ${orgId}: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation] Error fetching automations for orgId ${orgId}: %o`, error);
     throw error;
   }
 }
@@ -43,10 +40,7 @@ export async function getInstagramAutomatedReplyById(id: string) {
       },
     });
   } catch (error) {
-    log.error(
-      `[Instagram Automation] Error fetching automation ${id}: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation] Error fetching automation ${id}: %o`, error);
     throw error;
   }
 }
@@ -73,9 +67,7 @@ export async function createInstagramAutomatedReply(data: {
       },
     });
 
-    log.info(
-      `[Instagram Automation] Created automation ${automation.id} for orgId ${data.orgId}`,
-    );
+    log.info(`[Instagram Automation] Created automation ${automation.id} for orgId ${data.orgId}`);
 
     return automation;
   } catch (error) {
@@ -119,10 +111,7 @@ export async function updateInstagramAutomatedReply(
 
     return automation;
   } catch (error) {
-    log.error(
-      `[Instagram Automation] Error updating automation ${id}: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation] Error updating automation ${id}: %o`, error);
     throw error;
   }
 }
@@ -149,10 +138,7 @@ export async function deleteInstagramAutomatedReply(id: string) {
 
     return { success: true };
   } catch (error) {
-    log.error(
-      `[Instagram Automation] Error deleting automation ${id}: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation] Error deleting automation ${id}: %o`, error);
     throw error;
   }
 }
@@ -262,10 +248,7 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
       });
     }
   } catch (error) {
-    log.error(
-      `[Instagram Automation] Error creating/updating automation message: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation] Error creating/updating automation message: %o`, error);
     throw error;
   }
 }
@@ -292,10 +275,7 @@ export async function wasInstagramAutomationSentRecently(
 
     return !!recentMessage;
   } catch (error) {
-    log.error(
-      `[Instagram Automation] Error checking recent automation: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation] Error checking recent automation: %o`, error);
     return false;
   }
 }

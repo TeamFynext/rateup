@@ -2,11 +2,7 @@ import dayjs from "dayjs";
 import prisma from "../../prisma.js";
 import { formatDateT1 } from "../../date.js";
 import { sendAWSEmail } from "../sendAWSEmail.js";
-import {
-  billingPage,
-  rateupLogo,
-  statsPage,
-} from "../../constants/constants.js";
+import { billingPage, rateupLogo, statsPage } from "../../constants/constants.js";
 import { log } from "../../logger.js";
 
 export async function subscriptionExpiryAlert() {

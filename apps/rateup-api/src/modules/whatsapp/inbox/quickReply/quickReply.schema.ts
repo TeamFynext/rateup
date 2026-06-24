@@ -26,9 +26,4 @@ export type ByQuickReplyIdParam = z.infer<typeof byQuickReplyIdParamSchema>;
 export type UpdateOrderBody = z.infer<typeof updateOrderSchema>;
 
 // Auto-exported after fastify-zod migration
-export {
-  byQuickReplyIdParamSchema,
-  quickReplyCore,
-  updateQuickReplyShema,
-  updateOrderSchema,
-};
+export { byQuickReplyIdParamSchema, quickReplyCore, updateQuickReplyShema, updateOrderSchema };

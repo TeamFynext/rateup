@@ -19,9 +19,7 @@ const byTypeQuerySchema = z.object({
   type: z.enum(LoyaltyTemplateTypes),
 });
 
-const updateLoyaltyTemplateSchema = loyaltyTemplateSchema
-  .omit({ type: true })
-  .partial();
+const updateLoyaltyTemplateSchema = loyaltyTemplateSchema.omit({ type: true }).partial();
 
 const byIdSchema = z.object({
   id: z.string(),
@@ -36,18 +34,14 @@ const eventTriggerSchema = z.object({
   rewardId: z.string().optional(),
 });
 
-const updateEventTriggerSchema = eventTriggerSchema
-  .omit({ programId: true })
-  .partial();
+const updateEventTriggerSchema = eventTriggerSchema.omit({ programId: true }).partial();
 
 const programIdQuerySchema = z.object({
   programId: z.string().optional(),
 });
 
 export type LoyaltyTemplateInput = z.infer<typeof loyaltyTemplateSchema>;
-export type UpdateLoyaltyTemplateInput = z.infer<
-  typeof updateLoyaltyTemplateSchema
->;
+export type UpdateLoyaltyTemplateInput = z.infer<typeof updateLoyaltyTemplateSchema>;
 export type ByTypeQueryInput = z.infer<typeof byTypeQuerySchema>;
 export type IdParamInput = z.infer<typeof byIdSchema>;
 export type EventTriggerInput = z.infer<typeof eventTriggerSchema>;

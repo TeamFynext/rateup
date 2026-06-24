@@ -1,8 +1,5 @@
 import z from "zod";
-import {
-  LoyaltyPointRewardSubType,
-  LoyaltyRewardType,
-} from "../../../types/loyalty.js";
+import { LoyaltyPointRewardSubType, LoyaltyRewardType } from "../../../types/loyalty.js";
 
 export enum LoyaltyRewardStatus {
   ACTIVE = "ACTIVE",
@@ -119,7 +116,5 @@ export const rewardIdParamSchema = z.object({
 });
 
 export type LoyaltyRewardInput = z.infer<typeof loyaltyRewardSchema>;
-export type LoyaltyRewardUpdateInput = z.infer<
-  typeof loyaltyRewardUpdateSchema
->;
+export type LoyaltyRewardUpdateInput = z.infer<typeof loyaltyRewardUpdateSchema>;
 export type RewardIdParam = z.infer<typeof rewardIdParamSchema>;

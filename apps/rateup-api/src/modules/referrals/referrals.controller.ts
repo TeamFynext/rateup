@@ -16,9 +16,7 @@ export async function trackVisitHandler(
       return reply.code(400).send({ message: "code is required" });
     }
     await updateReferral(code, "visit");
-    return reply
-      .code(200)
-      .send({ success: true, message: "Visit tracked successfully" });
+    return reply.code(200).send({ success: true, message: "Visit tracked successfully" });
   } catch (error: any) {
     request.log.error(error, "Failed to track referral visit");
     if (error.message === "Referral not found") {
@@ -38,19 +36,14 @@ export async function deleteReferralHandler(
       return reply.code(400).send({ message: "id is required" });
     }
     await deleteReferral(id);
-    return reply
-      .code(200)
-      .send({ success: true, message: "Referral deleted successfully" });
+    return reply.code(200).send({ success: true, message: "Referral deleted successfully" });
   } catch (error) {
     request.log.error(error, "Failed to delete referral");
     return reply.code(500).send({ message: "Internal server error" });
   }
 }
 
-export async function getAllReferralsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllReferralsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const referrals = await getAllReferrals();
     return reply.code(200).send(referrals);

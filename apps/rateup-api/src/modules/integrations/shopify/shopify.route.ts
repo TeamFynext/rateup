@@ -12,10 +12,7 @@ import {
   getFulfillmentOrdersHandler,
   createFulfillmentHandler,
 } from "./shopify.controller.js";
-import {
-  byShopParamsSchema,
-  registerWebhookbyTopicSchema,
-} from "./shopify.schema.js";
+import { byShopParamsSchema, registerWebhookbyTopicSchema } from "./shopify.schema.js";
 
 export async function shopifyRoutes(server: FastifyInstance) {
   server.put(

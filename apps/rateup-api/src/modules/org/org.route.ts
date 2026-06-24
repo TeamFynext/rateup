@@ -26,7 +26,6 @@ import {
 } from "./businessHour.controller.js";
 import {
   createBusinessHourSchema,
-  businessHourResponseSchema,
   businessHourParamsSchema,
   updateBusinessHourSchema,
 } from "./businessHour.schema.js";
@@ -110,10 +109,7 @@ export async function orgRoutes(server: FastifyInstance) {
 
   server.get("/members-with-teams", getAllMembersWithTeamsHandler);
 
-  server.get(
-    "/members-with-teams-and-invitation",
-    getAllMembersWithTeamsAndInvitationHandler,
-  );
+  server.get("/members-with-teams-and-invitation", getAllMembersWithTeamsAndInvitationHandler);
 
   server.put(
     "/update-logo",

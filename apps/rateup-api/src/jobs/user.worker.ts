@@ -17,17 +17,9 @@ export const userAvailabilityWorker = new Worker(
     if (user?.presenceMode !== UserPresenceMode.automatic) return;
     try {
       if (job.name === "set-online") {
-        await updateUserAvailablityStatus(
-          userId,
-          orgId,
-          UserAvailabilityStatus.online,
-        );
+        await updateUserAvailablityStatus(userId, orgId, UserAvailabilityStatus.online);
       } else if (job.name === "set-offline") {
-        await updateUserAvailablityStatus(
-          userId,
-          orgId,
-          UserAvailabilityStatus.offline,
-        );
+        await updateUserAvailablityStatus(userId, orgId, UserAvailabilityStatus.offline);
       }
     } catch (err) {
       log.error("Error updating user availability: %s", err);

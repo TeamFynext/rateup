@@ -1,12 +1,6 @@
-import { faker } from "@faker-js/faker";
 import { zapierTriggerQueue } from "../../../../utils/redisConnection.js";
 import prisma from "../../../../utils/prisma.js";
-import { PlatformType } from "../../../../../generated/prisma/client.js";
-import {
-  QuestionType,
-  WaMessageAssignStatus,
-} from "../../../../types/enums.js";
-import { TicketPriority } from "../../../../../generated/prisma/enums.js";
+import { WaMessageAssignStatus } from "../../../../types/enums.js";
 
 export enum ZapierTriggers {
   CONTACT_CREATE = "new_contact_create",
@@ -24,11 +18,7 @@ export enum ZapierTriggers {
   NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
 }
 
-export async function getSampleDataForTrigger(
-  triggerKey: ZapierTriggers,
-  orgId,
-  page?,
-) {
+export async function getSampleDataForTrigger(triggerKey: ZapierTriggers, orgId, page?) {
   let data = [];
   switch (triggerKey) {
     case ZapierTriggers.CONTACT_CREATE:
@@ -406,11 +396,7 @@ export async function getSampleDataForTrigger(
   return data;
 }
 
-export async function addZapierTriggerToQueue(
-  name: ZapierTriggers,
-  data,
-  orgId,
-) {
+export async function addZapierTriggerToQueue(name: ZapierTriggers, data, orgId) {
   await zapierTriggerQueue.add(name, { data, orgId });
 }
 

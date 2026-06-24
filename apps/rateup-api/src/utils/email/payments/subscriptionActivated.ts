@@ -162,11 +162,7 @@ export function createEmailBodySubscriptionActivated(
       `;
 }
 
-export function createEmailBodyTrialSubscriptionActivated(
-  plan,
-  expiresAt: string,
-  userName,
-) {
+export function createEmailBodyTrialSubscriptionActivated(plan, expiresAt: string, userName) {
   return `
       <!DOCTYPE html>
 <html lang="en">

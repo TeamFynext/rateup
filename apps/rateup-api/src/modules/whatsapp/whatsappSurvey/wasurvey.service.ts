@@ -35,10 +35,7 @@ import {
   sendResponseToWebhook,
   updateResponse,
 } from "../../response/response.service.js";
-import {
-  updateCompletedSurvey,
-  updateVisitedSurvey,
-} from "../../survey/survey.service.js";
+import { updateCompletedSurvey, updateVisitedSurvey } from "../../survey/survey.service.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import {
   getWaSettings,
@@ -61,12 +58,8 @@ import {
 import { getGraphApiErrorMessage } from "../wa_error_handler.js";
 import { uploadFile } from "../../../utils/upload/s3Upload.js";
 import axios from "axios";
-import { handleLoyaltyFeedback } from "../../loyalty/settings/settings.service.js";
 
-import {
-  findRecentAutomation,
-  logAutomationAction,
-} from "./automation-logger.utils.js";
+import { findRecentAutomation, logAutomationAction } from "./automation-logger.utils.js";
 import { processNextNode } from "./wasurvey.controller.js";
 import { LeadgenNodeData } from "./node-types.js";
 import { hasFeature } from "../../subscription/subscription.service.js";
@@ -98,12 +91,7 @@ export async function sendMessage(
   platform: PlatformType = PlatformType.WHATSAPP,
   category?: WaTemplateCategory,
   teamId: string | null = null,
-  messageType:
-    | "INBOX"
-    | "TEMPLATE"
-    | "CAMPAIGN"
-    | "AUTOMATED"
-    | "FLOW" = "INBOX",
+  messageType: "INBOX" | "TEMPLATE" | "CAMPAIGN" | "AUTOMATED" | "FLOW" = "INBOX",
   isAutomated?: boolean,
   externalApi?: boolean,
 ) {
@@ -121,9 +109,7 @@ export async function sendMessage(
   } else if (platform === PlatformType.FACEBOOK) {
     waSettings = await getWaSettingsByPageId(whatsappSettingsPhoneId);
     if (!waSettings) {
-      throw new Error(
-        `Facebook page is not configured for page ID: ${whatsappSettingsPhoneId}`,
-      );
+      throw new Error(`Facebook page is not configured for page ID: ${whatsappSettingsPhoneId}`);
     }
     to = (messageData as FbSendMessageBody).recipient.id;
     configId = "me";
@@ -150,17 +136,12 @@ export async function sendMessage(
         "POST",
         platform === PlatformType.INSTAGRAM ? null : accessToken,
         messageData,
-        platform === PlatformType.INSTAGRAM
-          ? { params: { access_token: accessToken } }
-          : {},
+        platform === PlatformType.INSTAGRAM ? { params: { access_token: accessToken } } : {},
       );
       log.trace(`sent successfully %o %o `, res.data, res.statusText);
     }
     let messageId;
-    if (
-      platform === PlatformType.INSTAGRAM ||
-      platform === PlatformType.FACEBOOK
-    ) {
+    if (platform === PlatformType.INSTAGRAM || platform === PlatformType.FACEBOOK) {
       messageId = res?.data?.message_id;
     } else if (platform === PlatformType.WEBCHAT) {
       const phone = (messageData as WaSendMessageBody).to.replace(/\D/g, "");
@@ -281,12 +262,8 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
     }
     if (res.status === 400 && res.data?.error?.code === 139100) {
       log.error("Failed to block some users: see error %o", res.data);
-      const blockedNumbers = res.data?.blocked_users?.added_users?.map(
-        (user) => user?.input,
-      );
-      const failedNumbers = res.data?.blocked_users?.failed_users?.map(
-        (user) => user?.input,
-      );
+      const blockedNumbers = res.data?.blocked_users?.added_users?.map((user) => user?.input);
+      const failedNumbers = res.data?.blocked_users?.failed_users?.map((user) => user?.input);
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
       await prisma.contact.updateMany({
         where: {
@@ -312,10 +289,7 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
   }
 }
 
-export async function unblockWhatsappUser(
-  orgId: string,
-  phoneNumbers: string[],
-) {
+export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[]) {
   const waSettings = await getWaSettings(orgId);
   const body = createBlockWhatsappUserBody(phoneNumbers);
   try {
@@ -342,12 +316,8 @@ export async function unblockWhatsappUser(
     }
     if (res.status === 400 && res.data?.error?.code === 139100) {
       log.error("Failed to block some users: see error %o", res.data);
-      const unblockedNumbers = res.data?.blocked_users?.added_users?.map(
-        (user) => user?.input,
-      );
-      const failedNumbers = res.data?.blocked_users?.failed_users?.map(
-        (user) => user?.input,
-      );
+      const unblockedNumbers = res.data?.blocked_users?.added_users?.map((user) => user?.input);
+      const failedNumbers = res.data?.blocked_users?.failed_users?.map((user) => user?.input);
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
       await prisma.contact.updateMany({
         where: {
@@ -475,10 +445,7 @@ export async function updateSession(orgId: string, phone: string, data: any) {
   return session as unknown as WaSessionWithRelations; // overriding JSON type of responses
 }
 
-export async function sendNextQuestion(
-  session: WaSessionWithRelations,
-  response: any,
-) {
+export async function sendNextQuestion(session: WaSessionWithRelations, response: any) {
   const { currentQuestionId, surveyTeamMap } = session;
   if (!currentQuestionId) {
     log.error("CurrentQuestionId is null");
@@ -497,10 +464,7 @@ export async function sendNextQuestion(
     // Send next question
     const nextQuestion = questions[currentIndex + 1];
     await sendQuestion(nextQuestion, session);
-  } else if (
-    next === LogicAction.EndSurvey ||
-    questions.length <= currentIndex + 1
-  ) {
+  } else if (next === LogicAction.EndSurvey || questions.length <= currentIndex + 1) {
     // End Survey
     await saveResponses(session);
     if (
@@ -519,11 +483,7 @@ export async function sendNextQuestion(
       });
       await sendMessage(session.orgId, googleReviewMessage);
     } else {
-      const ThankYouMessage = createTextMessage(
-        session.phone,
-        "Thank You",
-        "Have a nice day!",
-      );
+      const ThankYouMessage = createTextMessage(session.phone, "Thank You", "Have a nice day!");
       await sendMessage(session.orgId, ThankYouMessage);
     }
     await deleteSession(session.orgId, session.phone);
@@ -542,10 +502,7 @@ interface ShouldShowGoogleReviewProps {
   questions: Question[];
   responses: QuestionResponse[];
 }
-export function shouldShowGoogleReview({
-  questions,
-  responses,
-}: ShouldShowGoogleReviewProps) {
+export function shouldShowGoogleReview({ questions, responses }: ShouldShowGoogleReviewProps) {
   log.trace("q\n%o\nr%o", questions, responses);
   let showGoogleReview = false;
   questions.forEach((q: Question) => {
@@ -562,9 +519,7 @@ export function shouldShowGoogleReview({
           break;
         case Q.Smiley:
           if (
-            q.googleReview.reqOptions.includes(
-              questionResponse.response[questionResponse.type],
-            )
+            q.googleReview.reqOptions.includes(questionResponse.response[questionResponse.type])
           ) {
             showGoogleReview = true;
           }
@@ -585,9 +540,7 @@ export function shouldShowGoogleReview({
 export function shouldShowGoogleReviewV2({ screens, responses }) {
   const questions = screens.flatMap((screen) =>
     screen.layout.children.filter((child) =>
-      [WaQuestions.Rating, WaQuestions.Smiley, WaQuestions.Opinion].includes(
-        child.metaType,
-      ),
+      [WaQuestions.Rating, WaQuestions.Smiley, WaQuestions.Opinion].includes(child.metaType),
     ),
   );
   log.trace("q\n%o\nr%o", questions, responses);
@@ -597,10 +550,7 @@ export function shouldShowGoogleReviewV2({ screens, responses }) {
       const questionResponse = responses.find((r) => r.questionId === q.id);
       switch (q.metaType) {
         case WaQuestions.Rating:
-          if (
-            Number.parseInt(questionResponse.response) >=
-            q.googleReview.minRating
-          ) {
+          if (Number.parseInt(questionResponse.response) >= q.googleReview.minRating) {
             showGoogleReview = true;
           }
           break;
@@ -610,10 +560,7 @@ export function shouldShowGoogleReviewV2({ screens, responses }) {
           }
           break;
         case WaQuestions.Opinion:
-          if (
-            Number.parseInt(questionResponse.response) >=
-            q.googleReview.minOpinion
-          ) {
+          if (Number.parseInt(questionResponse.response) >= q.googleReview.minOpinion) {
             showGoogleReview = true;
           }
           break;
@@ -622,16 +569,8 @@ export function shouldShowGoogleReviewV2({ screens, responses }) {
   });
   return showGoogleReview;
 }
-async function updateCurrentQuestion(
-  orgId: string,
-  from: string,
-  newQId: string,
-) {
-  log.trace(
-    "Updating current question for %o => %s\n",
-    { from, orgId },
-    newQId,
-  );
+async function updateCurrentQuestion(orgId: string, from: string, newQId: string) {
+  log.trace("Updating current question for %o => %s\n", { from, orgId }, newQId);
   await prisma.waSession.update({
     where: {
       phone_orgId: {
@@ -644,14 +583,9 @@ async function updateCurrentQuestion(
     },
   });
 }
-export async function sendQuestion(
-  question: Question,
-  session: WaSessionWithRelations,
-) {
+export async function sendQuestion(question: Question, session: WaSessionWithRelations) {
   if (question.type == QuestionType.Testimonial) {
-    const hasResponse = session.responses.find(
-      (s) => s.questionId == question.id,
-    );
+    const hasResponse = session.responses.find((s) => s.questionId == question.id);
     if (!hasResponse) {
       await startTestimonialQuestion(question, session);
     } else {
@@ -672,26 +606,20 @@ function checkShouldRaiseTicket(ticketIssued: FlowTicket[], responses) {
     if (ticket.condition.submissionTicket) shouldRaiseTicket = true;
     switch (ticket.type) {
       case QuestionType2.Rating:
-        shouldRaiseTicket =
-          Number(response.response) <= ticket.condition.minRating;
+        shouldRaiseTicket = Number(response.response) <= ticket.condition.minRating;
         break;
       case QuestionType2.Smiley:
-        shouldRaiseTicket = ticket.condition.reqOptions.includes(
-          response.response,
-        );
+        shouldRaiseTicket = ticket.condition.reqOptions.includes(response.response);
         break;
       case QuestionType2.Opinion:
-        shouldRaiseTicket =
-          Number(response.response) <= ticket.condition.minOpinion;
+        shouldRaiseTicket = Number(response.response) <= ticket.condition.minOpinion;
         break;
       case QuestionType2.CheckboxGroup:
       case QuestionType2.ChipsSelector:
       case QuestionType2.Dropdown:
       case QuestionType2.RadioButtonsGroup:
         shouldRaiseTicket = Array.isArray(response.response)
-          ? ticket.condition.reqOptions.some((op) =>
-              response.response.includes(op),
-            )
+          ? ticket.condition.reqOptions.some((op) => response.response.includes(op))
           : ticket.condition.reqOptions.includes(response.response);
         break;
     }
@@ -720,8 +648,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
     phone: anonymous ? "anonynous" : session.phone,
     responses: session.responses,
   });
-  let questionResponses =
-    session.responses as unknown as Array<QuestionResponse>;
+  let questionResponses = session.responses as unknown as Array<QuestionResponse>;
   let responsesWithSha256 = questionResponses?.filter((response) => {
     return (
       response.response &&
@@ -735,11 +662,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
       // Step 1: Download the media from WhatsApp API
       for await (let response of responsesWithSha256) {
         let parsedResponse = response.response?.[0];
-        const fileUrl = await callMetaApi(
-          `/${parsedResponse?.id}`,
-          "GET",
-          settings.accessToken,
-        );
+        const fileUrl = await callMetaApi(`/${parsedResponse?.id}`, "GET", settings.accessToken);
         if (fileUrl?.data) {
           // Step 2: Convert the downloaded media to a Buffer (for binary data)
           const fileResponse = await axios.get(fileUrl?.data.url, {
@@ -774,9 +697,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
     }
   }
   // TODO: save name
-  const { contact } =
-    !anonymous &&
-    (await getOrCreateContactByPhone(session.phone, session.orgId));
+  const { contact } = !anonymous && (await getOrCreateContactByPhone(session.phone, session.orgId));
   const surveyResponse: CreateResponseInput = {
     surveyTeamMapId: session.surveyTeamMapId,
     responses: questionResponses,
@@ -788,20 +709,13 @@ export async function saveResponses(session: WaSessionWithRelations) {
   };
   const ticketIssued = session?.surveyTeamMap?.survey?.WaFlow
     ?.ticketIssued as unknown as FlowTicket[];
-  let shouldRaiseTicket =
-    session?.surveyTeamMap?.survey?.enableAutoGenerateTicket;
+  let shouldRaiseTicket = session?.surveyTeamMap?.survey?.enableAutoGenerateTicket;
   let columnId = session?.surveyTeamMap?.survey?.ticketColumnId;
   if (ticketIssued.length && !shouldRaiseTicket) {
     columnId = getColumnIdFromTickets(ticketIssued, questionResponses);
     shouldRaiseTicket = checkShouldRaiseTicket(ticketIssued, questionResponses);
   }
-  const res = await createResponse(
-    surveyResponse,
-    shouldRaiseTicket,
-    false,
-    null,
-    columnId,
-  );
+  const res = await createResponse(surveyResponse, shouldRaiseTicket, false, null, columnId);
   await updateResponse(res.id, { ip: session.ip, location: undefined });
   // TODO: CHECK LOYALTY FEATURE
   // const loyalty = await prisma.loyaltyAction.findFirst({
@@ -828,13 +742,10 @@ export async function saveResponses(session: WaSessionWithRelations) {
   updateCompletedSurvey(session.surveyTeamMapId).catch((e) => log.error(e));
   if (session.campaignParticipantId) {
     if (session.campaignParticipantDripStageId) {
-      await updateDripCampaignParticipant(
-        session.campaignParticipantDripStageId,
-        {
-          status: CampaignParticipantStatus.COMPLETED,
-          // responseId: res.id,
-        },
-      );
+      await updateDripCampaignParticipant(session.campaignParticipantDripStageId, {
+        status: CampaignParticipantStatus.COMPLETED,
+        // responseId: res.id,
+      });
       await updateDripCampaignStats(session.campaignParticipantDripStageId);
     } else {
       await updateCampaignParticipant(session.campaignParticipantId, {
@@ -962,8 +873,9 @@ export async function handleTestimonialQuestion(
 ) {
   const features = question.features?.[session.language];
   const to = session.phone;
-  const response = session?.responses?.find((s) => s.questionId == question.id)
-    ?.response?.[QuestionType.Testimonial];
+  const response = session?.responses?.find((s) => s.questionId == question.id)?.response?.[
+    QuestionType.Testimonial
+  ];
   if (features?.jobTitle && !response.jobTitle) {
     const description = "\nPlease share your job title";
     const nextSubQuestion = createTextMessage(to, null, description);
@@ -984,12 +896,7 @@ export async function handleTestimonialQuestion(
         })),
       },
     ];
-    const nextSubQuestion = createNativeListMessage(
-      to,
-      null,
-      description,
-      sections,
-    );
+    const nextSubQuestion = createNativeListMessage(to, null, description, sections);
     await sendMessage(session.orgId, nextSubQuestion);
   }
   if (features?.photo && !response.photo) {
@@ -1009,8 +916,7 @@ export async function startTestimonialQuestion(
     throw new Error("No language found for session");
   }
   const title = question.title[session.language];
-  let description =
-    question.description[session.language] + "\n\nPlease share your name";
+  let description = question.description[session.language] + "\n\nPlease share your name";
   const message = createTextMessage(session.phone, title, description);
   await updateCurrentQuestion(session.orgId, session.phone, question.id);
   await sendMessage(session.orgId, message);
@@ -1023,8 +929,9 @@ export async function handleTestimonialReply(
 ) {
   const features = question.features?.[session?.language];
   let message = parseMessage(reply).message;
-  const response = session?.responses?.find((s) => s.questionId == question.id)
-    ?.response?.[QuestionType.Testimonial] || {
+  const response = session?.responses?.find((s) => s.questionId == question.id)?.response?.[
+    QuestionType.Testimonial
+  ] || {
     name: "",
     testimonial: "",
   };
@@ -1042,23 +949,19 @@ export async function handleTestimonialReply(
   } else if (features?.rating && !response.rating) {
     //assume its rating
     const rating = Number.parseInt(
-      (reply.entry[0].changes[0].value as WaReceiveMessageBody).messages[0]
-        .interactive.list_reply.id,
+      (reply.entry[0].changes[0].value as WaReceiveMessageBody).messages[0].interactive.list_reply
+        .id,
     );
     if (rating < 1 || rating > 5) isValid = false;
     else response.rating = rating;
   } else if (features?.photo && !response.photo) {
     //assume its photo
     const { message } = getMessageObject(reply);
-    const uniqueFilename = await downloadAndUpload(
-      session?.orgId,
-      message.image.id,
-    );
+    const uniqueFilename = await downloadAndUpload(session?.orgId, message.image.id);
     if (!(message.type === "image")) {
       return undefined;
     }
-    if (!(typeof uniqueFilename === "string" && uniqueFilename.length > 0))
-      isValid = false;
+    if (!(typeof uniqueFilename === "string" && uniqueFilename.length > 0)) isValid = false;
     else response.photo = uniqueFilename;
   }
   if (!isValid) {
@@ -1073,9 +976,9 @@ export async function handleTestimonialReply(
     },
     type: QuestionType.Testimonial,
   };
-  const currentResponses = (
-    session.responses as unknown as Array<QuestionResponse>
-  ).filter((r) => r.questionId !== session.currentQuestionId);
+  const currentResponses = (session.responses as unknown as Array<QuestionResponse>).filter(
+    (r) => r.questionId !== session.currentQuestionId,
+  );
   const updatedResponses = [...currentResponses, formattedResponse] as any;
 
   session = await updateSession(session.orgId, session.phone, {
@@ -1151,9 +1054,7 @@ export async function aibotNodeCompletion(phone: string, orgId: string) {
 
     if (!nextEdge) return;
 
-    const nextNode = matchData?.json?.nodes?.find(
-      (node: any) => node.id === nextEdge.source,
-    );
+    const nextNode = matchData?.json?.nodes?.find((node: any) => node.id === nextEdge.source);
 
     const automationLog = await logAutomationAction({
       phone,
@@ -1163,13 +1064,7 @@ export async function aibotNodeCompletion(phone: string, orgId: string) {
     });
 
     if (nextNode) {
-      await processNextNode(
-        phone,
-        automation,
-        progress.currentNode,
-        orgId,
-        automationLog?.id,
-      );
+      await processNextNode(phone, automation, progress.currentNode, orgId, automationLog?.id);
     }
   }
 }
@@ -1199,31 +1094,17 @@ export async function handleLeadGen(body: WaMessageBody) {
       },
     });
     if (!automation) {
-      log.trace(
-        "No lead automation found for pageid:%s and ad id: %s",
-        page_id,
-        ad_id,
-      );
+      log.trace("No lead automation found for pageid:%s and ad id: %s", page_id, ad_id);
       return;
     }
-    if (
-      !hasFeature(
-        automation.orgId,
-        SubscriptionFeaturePathName.LeadAdAutomation,
-      )
-    ) {
-      log.trace(
-        "Aborting..Not subscribed to lead automation, orgId => %s",
-        automation.orgId,
-      );
+    if (!hasFeature(automation.orgId, SubscriptionFeaturePathName.LeadAdAutomation)) {
+      log.trace("Aborting..Not subscribed to lead automation, orgId => %s", automation.orgId);
       return;
     }
     const matchData = automation.matchData as {
       json: { edges: any[]; nodes: any };
     };
-    const leadgenNode = matchData?.json.nodes.find(
-      (node) => node.type === "leadgenNode",
-    );
+    const leadgenNode = matchData?.json.nodes.find((node) => node.type === "leadgenNode");
     const leadgenNodeData = leadgenNode.data as LeadgenNodeData;
     let phone = leadgenNodeData.phone;
     let errorMessage = "";
@@ -1251,9 +1132,7 @@ export async function handleLeadGen(body: WaMessageBody) {
         });
         if (leadgenNodeData.phoneField?.trim().length) {
           const formValues = res.data.field_data;
-          const fieldValue = formValues.find(
-            (field) => field.name === leadgenNodeData.phoneField,
-          );
+          const fieldValue = formValues.find((field) => field.name === leadgenNodeData.phoneField);
           if (fieldValue) {
             phone = fieldValue?.values[0];
           }

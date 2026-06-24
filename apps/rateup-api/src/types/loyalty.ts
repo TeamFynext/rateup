@@ -162,10 +162,7 @@ export interface FreeItemValue {
   item_value?: number;
 }
 
-export type LoyaltyRewardValue =
-  | DiscountFixedValue
-  | DiscountPercentageValue
-  | FreeItemValue;
+export type LoyaltyRewardValue = DiscountFixedValue | DiscountPercentageValue | FreeItemValue;
 
 // ============================================================================
 // REDEMPTION RULES

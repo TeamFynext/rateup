@@ -9,14 +9,11 @@ import {
   updateContactSchema,
 } from "./contact.schema.js";
 import Papa from "papaparse";
-import { getContactTag } from "../whatsapp/settings/wa_settings.service.js";
 import xlsx from "node-xlsx";
 import { MultipartFile } from "@fastify/multipart";
 import {
-  addExistingContactsToGroup,
   addExistingContactsToMultipleGroups,
   addNewContactsToGroup,
-  removeContactsFromGroup,
 } from "./contactGroup/contactGroup.service.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { BATCH_SIZE } from "../../utils/constants/constants.js";
@@ -38,44 +35,24 @@ import {
   createConversation,
   getLastCreatedConversationForContact,
   updateClosedConversationStatus,
-  updateConversationAssignees,
 } from "./conversation/conversation.service.js";
-import {
-  WaMessageAssignStatusTab,
-  WaMessageClosedStatus,
-} from "../whatsapp/constants.js";
+import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../whatsapp/constants.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
-import {
-  integrationTriggerQueue,
-  notificationQueue,
-} from "../../utils/redisConnection.js";
-import {
-  updateZohoLeadQueue,
-  ZohoTriggers,
-} from "../integrations/external/zoho/zoho.service.js";
+import { integrationTriggerQueue, notificationQueue } from "../../utils/redisConnection.js";
+import { updateZohoLeadQueue, ZohoTriggers } from "../integrations/external/zoho/zoho.service.js";
 import {
   addZohoContactToQueue,
   buildZohoContactPayload,
   buildZohoLeadPayload,
 } from "../integrations/external/zoho/zoho.utils.js";
 
-export async function createContact(
-  contact: ContactCore & { orgId: string },
-  userId?: string,
-) {
+export async function createContact(contact: ContactCore & { orgId: string }, userId?: string) {
   if (!contact.phone) {
     throw new Error("Phone must be provided");
   }
   const chatbot = await getChatbotDetails(contact.orgId);
   if (chatbot?.enableAllWaChat) contact.aiWaChat = true;
-  const {
-    customFields,
-    labels,
-    contactGroupIds,
-    assignedUserIds,
-    lifecycleId,
-    ...rest
-  } = contact;
+  const { customFields, labels, contactGroupIds, assignedUserIds, lifecycleId, ...rest } = contact;
   const user = await prisma.contact.create({
     data: {
       ...rest,
@@ -105,8 +82,7 @@ export async function createContact(
     addExistingContactsToMultipleGroups([user.id], contactGroupIds, user.orgId);
   }
   if (assignedUserIds?.length) {
-    const assignees: { teamId: string; userId: string }[] =
-      await prisma.$queryRaw`
+    const assignees: { teamId: string; userId: string }[] = await prisma.$queryRaw`
        SELECT DISTINCT ON (tm."userId") tm."userId", tm."teamId"
         FROM "TeamMember" tm
         JOIN "Team" t ON tm."teamId"= t.id
@@ -114,11 +90,7 @@ export async function createContact(
           AND t."orgId" = ${user.orgId}::uuid
         ORDER BY tm."userId", tm.id ASC;
       `;
-    assignWaMessageToUser(
-      { assignees, contactId: user.id },
-      user.orgId,
-      userId,
-    );
+    assignWaMessageToUser({ assignees, contactId: user.id }, user.orgId, userId);
   }
   checkAndExecuteRuleByTriggerEvent("CONTACT_CREATED", {
     orgId: user?.orgId,
@@ -177,9 +149,7 @@ export async function createContact(
   return user;
 }
 
-export async function getOrcreateContact(
-  contact: ContactCore & { orgId: string },
-) {
+export async function getOrcreateContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
     throw new Error("Phone must be provided");
   }
@@ -225,10 +195,7 @@ export async function getOrcreateContact(
   return user;
 }
 
-export async function createMultipleContacts(
-  contacts: createMultipleContactInput,
-  orgId: string,
-) {
+export async function createMultipleContacts(contacts: createMultipleContactInput, orgId: string) {
   const chatbot = await getChatbotDetails(orgId);
   const aiWaChat = chatbot && chatbot.enableAllWaChat ? true : false;
   const contactsData = contacts.map((contact) => ({
@@ -272,8 +239,7 @@ export async function createMultipleContacts(
         });
       }
       if (inputData.assignedUserIds && inputData.assignedUserIds.length > 0) {
-        const assignees: { teamId: string; userId: string }[] =
-          await prisma.$queryRaw`
+        const assignees: { teamId: string; userId: string }[] = await prisma.$queryRaw`
         SELECT DISTINCT ON (tm."userId") tm."userId", tm."teamId"
           FROM "TeamMember" tm
           JOIN "Team" t ON tm."teamId"= t.id
@@ -297,9 +263,7 @@ export async function createMultipleContacts(
   if (createdContacts.length) {
     // Batch delete custom field values
     for (let i = 0; i < createdContacts.length; i += BATCH_SIZE) {
-      const batchIds = createdContacts
-        .slice(i, i + BATCH_SIZE)
-        .map((c) => c.id);
+      const batchIds = createdContacts.slice(i, i + BATCH_SIZE).map((c) => c.id);
       await prisma.contactCustomFieldValue.deleteMany({
         where: {
           contactId: {
@@ -314,8 +278,7 @@ export async function createMultipleContacts(
       .filter((contact) => contact.customFields?.length)
       .flatMap((contact) =>
         contact.customFields.map((field) => ({
-          contactId:
-            createdContacts.find((c) => c.phone === contact.phone)?.id || "",
+          contactId: createdContacts.find((c) => c.phone === contact.phone)?.id || "",
           fieldId: field.id,
           value: field.value,
         })),
@@ -398,17 +361,13 @@ export async function getContactById(contactId: string) {
   });
   return user;
 }
-export async function getContactsByOrgId(
-  orgId: string,
-  query?: PaginationQuery,
-) {
+export async function getContactsByOrgId(orgId: string, query?: PaginationQuery) {
   const {
     page = 0,
     limit = 500,
     search = "",
     sort = "createdAt",
-    desc = "asc",
-    type = ContactGroupType.NORMAL,
+    // type = ContactGroupType.NORMAL,
     ...filter
   } = query ?? {
     page: 0,
@@ -489,18 +448,20 @@ export async function getContactsByOrgId(
     }
   }
   if (search?.length > 0) {
-    filterData.push({
-      name: {
-        contains: search,
-        mode: "insensitive",
+    filterData.push(
+      {
+        name: {
+          contains: search,
+          mode: "insensitive",
+        },
       },
-    });
-    filterData.push({
-      phone: {
-        contains: search,
-        mode: "insensitive",
+      {
+        phone: {
+          contains: search,
+          mode: "insensitive",
+        },
       },
-    });
+    );
   }
   // Define the search condition
   let groupTypeCondition =
@@ -576,20 +537,14 @@ export async function getContactsByOrgId(
     include: includeCondition,
     skip: pageNo * Number(limit),
     take: Number(limit),
-    orderBy: [
-      { [sort]: "desc" },
-      ...(sort === "name" ? [] : [{ name: "asc" as const }]),
-    ],
+    orderBy: [{ [sort]: "desc" }, ...(sort === "name" ? [] : [{ name: "asc" as const }])],
   });
 
   // Return the result
   return { users, totalCount };
 }
 
-export async function getContactByPhoneNumberAndOrgId(
-  phone: string,
-  orgId: string,
-) {
+export async function getContactByPhoneNumberAndOrgId(phone: string, orgId: string) {
   const contact = await prisma.contact.findFirst({
     where: {
       phone,
@@ -691,18 +646,14 @@ export async function updateContactById(
       phone: contact.phone,
       aiWaChat: contact.aiWaChat,
       waMessageAssignStatus: contact.waMessageAssignStatus,
-      lastReceivedMessageTimeStamp:
-        contact.lastReceivedMessageTimeStamp || undefined,
-      ...(contactRecord.waMessageAssignStatus !==
-        contact.waMessageAssignStatus &&
+      lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp || undefined,
+      ...(contactRecord.waMessageAssignStatus !== contact.waMessageAssignStatus &&
       WaMessageClosedStatus.includes(contact.waMessageAssignStatus)
         ? {
             closedAt: new Date(),
             closedBy:
               userId &&
-              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-                userId,
-              )
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)
                 ? userId
                 : null,
           }
@@ -748,11 +699,9 @@ export async function updateContactById(
     );
     const newGroupIds = contact.contactGroupIds.filter(
       (contactGroupId) =>
-        !updatedContact.contactGroups.some(
-          (c) => c.contactGroupId === contactGroupId,
-        ),
+        !updatedContact.contactGroups.some((c) => c.contactGroupId === contactGroupId),
     );
-    await prisma.$transaction(async (t) => {
+    await prisma.$transaction(async (_t) => {
       await prisma.contactGroupMap.deleteMany({
         where: {
           contactId: updatedContact.id,
@@ -775,9 +724,7 @@ export async function updateContactById(
     );
     const newAssignees = contact.assignedUserIds.filter(
       (assignedUserId) =>
-        !updatedContact.waInboxAssign.some(
-          (c) => c.assignedUserId === assignedUserId,
-        ),
+        !updatedContact.waInboxAssign.some((c) => c.assignedUserId === assignedUserId),
     );
     await prisma.$transaction(async (t) => {
       if (removedAssignees.length)
@@ -790,8 +737,7 @@ export async function updateContactById(
           },
         });
       if (newAssignees.length) {
-        const assignees: { teamId: string; userId: string }[] =
-          await t.$queryRaw`
+        const assignees: { teamId: string; userId: string }[] = await t.$queryRaw`
         SELECT DISTINCT ON (tm."userId") tm."userId", tm."teamId"
           FROM "TeamMember" tm
           JOIN "Team" t ON tm."teamId"= t.id
@@ -885,9 +831,7 @@ export async function updateContactById(
     triggerConversionsApiForContact(updatedContact, updatedContact.lifecycleId);
   }
   if (
-    WaMessageClosedStatus.includes(
-      updatedContact.waMessageAssignStatus as WaMessageAssignStatus,
-    )
+    WaMessageClosedStatus.includes(updatedContact.waMessageAssignStatus as WaMessageAssignStatus)
   ) {
     await addZapierTriggerToQueue(
       ZapierTriggers.CONVERSATION_CLOSED,
@@ -924,9 +868,7 @@ export async function updateContactById(
         messageId: contact.messageId,
       });
     }
-    const conversation = await getLastCreatedConversationForContact(
-      updatedContact.id,
-    );
+    const conversation = await getLastCreatedConversationForContact(updatedContact.id);
     if (conversation)
       await updateClosedConversationStatus(
         conversation.id,
@@ -937,10 +879,7 @@ export async function updateContactById(
   return updatedContact;
 }
 
-export async function updateContactLabelsById(
-  contactId: string,
-  lifecycleId: string,
-) {
+export async function updateContactLabelsById(contactId: string, lifecycleId: string) {
   const contact = await prisma.contact.update({
     where: {
       id: contactId,
@@ -1359,11 +1298,9 @@ export async function importCSVContacts(
 ) {
   const { mimetype } = fileBody;
   const csvType = ["text/csv", "application/vnd.ms-excel"];
-  const file = csvType.includes(mimetype)
-    ? fileBody.file
-    : await fileBody.toBuffer();
+  const file = csvType.includes(mimetype) ? fileBody.file : await fileBody.toBuffer();
 
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     let contacts = [];
     let errorContact = [];
 
@@ -1374,16 +1311,10 @@ export async function importCSVContacts(
         ? rawPhone?.replace(/\s+/g, "")
         : `+${rawPhone?.replace(/\s+/g, "")}`;
 
-      if (
-        !contact?.phone ||
-        !isValidPhoneNumber(formattedPhone) ||
-        !contact?.name
-      ) {
+      if (!contact?.phone || !isValidPhoneNumber(formattedPhone) || !contact?.name) {
         errorContact.push({
           name: contact?.name || "name is missing/invalid",
-          phone: contact?.phone
-            ? `${contact?.phone}: Invalid phone number`
-            : "phone is missing",
+          phone: contact?.phone ? `${contact?.phone}: Invalid phone number` : "phone is missing",
         });
       } else {
         contact.phone = formattedPhone.slice(1); // Remove the '+' for storage
@@ -1435,9 +1366,7 @@ export async function importCSVContacts(
     } else {
       const workSheetsFromFile = xlsx.parse(file);
       const headers =
-        workSheetsFromFile?.[0]?.data?.[0]?.map((header) =>
-          header?.toString().toLowerCase(),
-        ) ?? [];
+        workSheetsFromFile?.[0]?.data?.[0]?.map((header) => header?.toString().toLowerCase()) ?? [];
       const headerIndices = headers.map((header, index) => ({
         header: header?.trim()?.toLowerCase(),
         index,
@@ -1466,7 +1395,7 @@ export async function importCSVContacts(
         }
         processContact(contact);
       }
-      await finalizeProcessing();
+      finalizeProcessing();
     }
   });
 }
@@ -1511,10 +1440,7 @@ export async function createContactsFromCsv(
   return "sucess";
 }
 
-export async function getExistingContactCountByPhno(
-  ids: string[],
-  orgId: string,
-) {
+export async function getExistingContactCountByPhno(ids: string[], orgId: string) {
   const BATCH_SIZE = 30000; // Keep it below the database limit
   let totalCount = 0;
 
@@ -1534,10 +1460,7 @@ export async function getExistingContactCountByPhno(
   return totalCount;
 }
 
-export async function updateMulitplceContacts(
-  contacts: createMultipleContactInput,
-  orgId: string,
-) {
+export async function updateMulitplceContacts(contacts: createMultipleContactInput, orgId: string) {
   const chatbot = await getChatbotDetails(orgId);
   const aiWaChat = chatbot && chatbot.enableAllWaChat ? true : false;
 
@@ -1657,20 +1580,13 @@ export async function updateMulitplceContacts(
           },
           rateupContactId: updatedContact.id,
         });
-        triggerConversionsApiForContact(
-          updatedContact,
-          updatedContact.lifecycleId,
-        );
+        triggerConversionsApiForContact(updatedContact, updatedContact.lifecycleId);
       }
     }
   }
 }
 
-export const handleContactConsent = async (
-  orgId: string,
-  phone: string,
-  consent: boolean,
-) => {
+export const handleContactConsent = async (orgId: string, phone: string, consent: boolean) => {
   const contact_consent = await prisma.contact.findFirst({
     where: {
       phone,
@@ -1698,10 +1614,7 @@ export async function getCustomFields(orgId: string) {
   return fields;
 }
 
-export async function addCustomField(
-  orgId: string,
-  data: Required<CustomFieldSchema>,
-) {
+export async function addCustomField(orgId: string, data: Required<CustomFieldSchema>) {
   const field = await prisma.contactCustomField.create({
     data: {
       ...data,
@@ -1928,16 +1841,10 @@ export async function bulkUpdateWaMessageAssignStatus(
       }
 
       // Close conversation
-      const conversation = await getLastCreatedConversationForContact(
-        contact.id,
-      );
+      const conversation = await getLastCreatedConversationForContact(contact.id);
 
       if (conversation) {
-        await updateClosedConversationStatus(
-          conversation.id,
-          waMessageAssignStatus,
-          userId,
-        );
+        await updateClosedConversationStatus(conversation.id, waMessageAssignStatus, userId);
       }
     }),
   );

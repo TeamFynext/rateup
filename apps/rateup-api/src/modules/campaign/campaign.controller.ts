@@ -21,15 +21,9 @@ import {
   getResponseExcelByCampaignById,
   updateCampaign,
 } from "./campaign.service.js";
-import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service.js";
 import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema.js";
-import {
-  CampaignStatus,
-  CampaignType,
-  SentCampaignEnum,
-} from "../../types/enums.js";
+import { CampaignStatus, CampaignType, SentCampaignEnum } from "../../types/enums.js";
 import { log } from "../../utils/logger.js";
-import prisma from "../../utils/prisma.js";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
@@ -66,10 +60,7 @@ export async function updateCampaignByIdHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const campaign = await updateCampaign(
-    request.params.campaignId,
-    request.body,
-  );
+  const campaign = await updateCampaign(request.params.campaignId, request.body);
   return reply.status(200).send(campaign);
 }
 
@@ -88,14 +79,8 @@ export async function sendCampaignHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const {
-    status,
-    campaignSentAt,
-    sentCampaignChoice,
-    sendToStatuses,
-    participantId,
-    type,
-  } = request.body;
+  const { status, campaignSentAt, sentCampaignChoice, sendToStatuses, participantId, type } =
+    request.body;
   const { campaignId } = request.params;
 
   try {
@@ -124,20 +109,13 @@ export async function sendCampaignHandler(
       });
     }
     const campaign = await getCampaignById(campaignId);
-    if (
-      [CampaignStatus.DEQUEUING, CampaignStatus.QUEUING].includes(
-        campaign.status,
-      )
-    ) {
+    if ([CampaignStatus.DEQUEUING, CampaignStatus.QUEUING].includes(campaign.status)) {
       return reply.status(400).send({
         message: `Campaign ${campaign.status} is in progress, so no action can be performed at this time.`,
         code: "CAMPAIGN_ENQUEUE_DEQUEUE_IN_PROGRESS",
       });
     }
-    const count = await getCampaignParticipantCountByStatuses(
-      campaignId,
-      sendToStatuses,
-    );
+    const count = await getCampaignParticipantCountByStatuses(campaignId, sendToStatuses);
     if (count === 0) {
       return reply.status(400).send({
         message: `No participants with the specified statuses to send the campaign to.`,
@@ -151,12 +129,7 @@ export async function sendCampaignHandler(
         campaignSentAt,
         scheduledStatuses: [],
       });
-      await enqueueCampaignMessage(
-        campaignId,
-        sendToStatuses,
-        undefined,
-        campaignSentAt,
-      );
+      await enqueueCampaignMessage(campaignId, sendToStatuses, undefined, campaignSentAt);
       return reply.status(200).send({
         message: "Campaign scheduling requested",
         code: "MSG_SCHEDULE_REQUESTED",
@@ -170,8 +143,7 @@ export async function sendCampaignHandler(
 
     await enqueueCampaignMessage(campaignId, sendToStatuses, participantId);
     return reply.status(200).send({
-      message:
-        "Campaign enqueue request accepted. Processing will occur asynchronously.",
+      message: "Campaign enqueue request accepted. Processing will occur asynchronously.",
       code: "ENQUEUE_REQUEST_ACCEPTED",
     });
   } catch (error) {
@@ -225,10 +197,7 @@ export async function getResponseExcelByCampaignByIdHandler(
     reply.header("Access-Control-Expose-Headers", "filename");
     reply.status(200).type("application/xlsx").send(data);
   } catch (error) {
-    log.error(
-      { err: error },
-      "Error while handling getResponseExcelByCampaignById",
-    );
+    log.error({ err: error }, "Error while handling getResponseExcelByCampaignById");
     return reply.code(500).send(error);
   }
 }

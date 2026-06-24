@@ -45,9 +45,7 @@ export async function createApprovalRequest(data: CreateApprovalRequestInput) {
       },
     });
 
-    log.info(
-      `Created approval request ${approval.id} for account ${data.accountId}`,
-    );
+    log.info(`Created approval request ${approval.id} for account ${data.accountId}`);
     return approval;
   } catch (error) {
     log.error({ err: error }, "Error creating approval request:");
@@ -58,20 +56,9 @@ export async function createApprovalRequest(data: CreateApprovalRequestInput) {
 /**
  * Get approval requests with filters
  */
-export async function getApprovalRequests(
-  programId: string,
-  filters: GetApprovalRequestsInput,
-) {
+export async function getApprovalRequests(programId: string, filters: GetApprovalRequestsInput) {
   try {
-    const {
-      status,
-      requestType,
-      accountId,
-      fromDate,
-      toDate,
-      page = 1,
-      limit = 20,
-    } = filters;
+    const { requestType, accountId, fromDate, toDate, page = 1, limit = 20 } = filters;
 
     const where: any = {
       account: {
@@ -184,9 +171,7 @@ export async function approveApprovalRequest(data: ApproveRequestInput) {
     const approval = await getApprovalRequestById(data.approvalId);
 
     if (approval.status !== "PENDING") {
-      throw new Error(
-        `Approval request is not pending (current status: ${approval.status})`,
-      );
+      throw new Error(`Approval request is not pending (current status: ${approval.status})`);
     }
 
     // Check if expired
@@ -209,9 +194,7 @@ export async function approveApprovalRequest(data: ApproveRequestInput) {
       case "BULK_OPERATION":
         return await approveBulkOperation(approval, data);
       default:
-        throw new Error(
-          `Unknown approval request type: ${approval.requestType}`,
-        );
+        throw new Error(`Unknown approval request type: ${approval.requestType}`);
     }
   } catch (error) {
     console.log("🚀 ~ approveApprovalRequest ~ error:", error);
@@ -228,9 +211,7 @@ export async function rejectApprovalRequest(data: RejectRequestInput) {
     const approval = await getApprovalRequestById(data.approvalId);
 
     if (approval.status !== "PENDING") {
-      throw new Error(
-        `Approval request is not pending (current status: ${approval.status})`,
-      );
+      throw new Error(`Approval request is not pending (current status: ${approval.status})`);
     }
 
     return await prisma.$transaction(async (tx) => {
@@ -286,9 +267,7 @@ export async function cancelApprovalRequest(data: CancelRequestInput) {
     const approval = await getApprovalRequestById(data.approvalId);
 
     if (approval.status !== "PENDING") {
-      throw new Error(
-        `Approval request is not pending (current status: ${approval.status})`,
-      );
+      throw new Error(`Approval request is not pending (current status: ${approval.status})`);
     }
 
     return await prisma.$transaction(async (tx) => {
@@ -454,10 +433,7 @@ async function approveRedemption(approval: any, data: ApproveRequestInput) {
 /**
  * Approve a points adjustment (add or deduct)
  */
-async function approvePointsAdjustment(
-  approval: any,
-  data: ApproveRequestInput,
-) {
+async function approvePointsAdjustment(approval: any, data: ApproveRequestInput) {
   return await prisma.$transaction(async (tx) => {
     const customer = await tx.customerLoyaltyAccount.findUnique({
       where: { id: approval.accountId },
@@ -541,9 +517,7 @@ async function approvePointsAdjustment(
       },
     });
 
-    log.info(
-      `Approved points adjustment for account ${approval.accountId}: ${points} points`,
-    );
+    log.info(`Approved points adjustment for account ${approval.accountId}: ${points} points`);
 
     if (approval.account?.contact?.phone && approval.account?.contact?.orgId) {
       await dispatchLoyaltyNotification(
@@ -631,10 +605,7 @@ async function approveTierOverride(approval: any, data: ApproveRequestInput) {
 /**
  * Approve an account suspension
  */
-async function approveAccountSuspension(
-  approval: any,
-  data: ApproveRequestInput,
-) {
+async function approveAccountSuspension(approval: any, data: ApproveRequestInput) {
   return await prisma.$transaction(async (tx) => {
     // Suspend account
     await tx.customerLoyaltyAccount.update({
@@ -672,10 +643,7 @@ async function approveAccountSuspension(
 /**
  * Approve an account reactivation
  */
-async function approveAccountReactivation(
-  approval: any,
-  data: ApproveRequestInput,
-) {
+async function approveAccountReactivation(approval: any, data: ApproveRequestInput) {
   return await prisma.$transaction(async (tx) => {
     // Reactivate account
     await tx.customerLoyaltyAccount.update({

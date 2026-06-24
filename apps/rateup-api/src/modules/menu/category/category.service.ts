@@ -51,11 +51,8 @@ export async function getMenuCategory(categoryId: string) {
   return category;
 }
 
-export async function updateMenuCategory(
-  categoryId: string,
-  data: UpdateMenuCategoryInput,
-) {
-  let { itemOrder, ...newData } = data;
+export async function updateMenuCategory(categoryId: string, data: UpdateMenuCategoryInput) {
+  let { ...newData } = data;
 
   const category = await prisma.menuCategory.update({
     where: {
@@ -66,10 +63,7 @@ export async function updateMenuCategory(
   return category;
 }
 
-export async function sortMenuCategory(
-  menuId: string,
-  data: SortMenuCategoryInput,
-) {
+export async function sortMenuCategory(menuId: string, data: SortMenuCategoryInput) {
   let index = 0;
   let { itemOrder = [] } = data;
 
@@ -109,9 +103,7 @@ export async function deleteMenuCategory(categoryId: string) {
         images: true,
       },
     });
-    let fileKeyArray = items?.flatMap((item) =>
-      item?.images?.map((image) => ({ Key: image })),
-    );
+    let fileKeyArray = items?.flatMap((item) => item?.images?.map((image) => ({ Key: image })));
     if (categoryData?.image) fileKeyArray.push({ Key: categoryData?.image });
     const params = {
       Bucket: process?.env?.AWS_S3_BUCKET || "rateup-survey-uploads",

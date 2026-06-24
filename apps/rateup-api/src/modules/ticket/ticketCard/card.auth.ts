@@ -34,8 +34,6 @@ export async function verifyCardAccess(
   const hasAccess = await isBoardMember(boardId, userId);
 
   if (!hasAccess) {
-    return reply
-      .code(403)
-      .send({ message: "You don't have access to this card" });
+    return reply.code(403).send({ message: "You don't have access to this card" });
   }
 }

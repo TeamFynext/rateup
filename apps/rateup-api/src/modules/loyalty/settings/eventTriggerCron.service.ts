@@ -37,38 +37,35 @@ export async function checkBirthdayEventTriggers() {
       return;
     }
 
-    log.info(
-      `Birthday Event Trigger Cron - Found ${birthdayTriggers.length} enabled triggers`,
-    );
+    log.info(`Birthday Event Trigger Cron - Found ${birthdayTriggers.length} enabled triggers`);
 
     // Process each trigger's program
     for (const trigger of birthdayTriggers) {
       try {
         // Get all active customers with birthdays today in this program
-        const customersWithBirthday =
-          await prisma.customerLoyaltyAccount.findMany({
-            where: {
-              programId: trigger.programId,
-              status: "active",
-              contact: {
-                dob: {
-                  not: null,
-                },
+        const customersWithBirthday = await prisma.customerLoyaltyAccount.findMany({
+          where: {
+            programId: trigger.programId,
+            status: "active",
+            contact: {
+              dob: {
+                not: null,
               },
             },
-            include: {
-              contact: {
-                select: {
-                  id: true,
-                  phone: true,
-                  name: true,
-                  dob: true,
-                  orgId: true,
-                },
+          },
+          include: {
+            contact: {
+              select: {
+                id: true,
+                phone: true,
+                name: true,
+                dob: true,
+                orgId: true,
               },
-              program: true,
             },
-          });
+            program: true,
+          },
+        });
 
         // Filter customers whose birthday is today
         const birthdayCustomers = customersWithBirthday.filter((customer) => {
@@ -85,9 +82,7 @@ export async function checkBirthdayEventTriggers() {
         for (const customer of birthdayCustomers) {
           try {
             if (!customer.contact.phone) {
-              log.warn(
-                `Birthday Event Trigger - Customer ${customer.id} has no phone number`,
-              );
+              log.warn(`Birthday Event Trigger - Customer ${customer.id} has no phone number`);
               continue;
             }
 
@@ -166,18 +161,14 @@ export async function checkInactivityEventTriggers() {
       return;
     }
 
-    log.info(
-      `Inactivity Event Trigger Cron - Found ${inactivityTriggers.length} enabled triggers`,
-    );
+    log.info(`Inactivity Event Trigger Cron - Found ${inactivityTriggers.length} enabled triggers`);
 
     // Process each trigger
     for (const trigger of inactivityTriggers) {
       try {
         if (!trigger.triggerDays) continue;
 
-        const inactivityDate = dayjs()
-          .subtract(trigger.triggerDays, "days")
-          .toDate();
+        const inactivityDate = dayjs().subtract(trigger.triggerDays, "days").toDate();
 
         log.info(
           `Inactivity Event Trigger - Program ${trigger.program.name}: Checking customers inactive since ${dayjs(inactivityDate).format("YYYY-MM-DD")}`,
@@ -213,9 +204,7 @@ export async function checkInactivityEventTriggers() {
         for (const customer of inactiveCustomers) {
           try {
             if (!customer.contact.phone) {
-              log.warn(
-                `Inactivity Event Trigger - Customer ${customer.id} has no phone number`,
-              );
+              log.warn(`Inactivity Event Trigger - Customer ${customer.id} has no phone number`);
               continue;
             }
 
@@ -238,10 +227,7 @@ export async function checkInactivityEventTriggers() {
             }
 
             // Calculate days since last activity
-            const daysSinceActivity = dayjs().diff(
-              dayjs(customer.lastActivityAt),
-              "days",
-            );
+            const daysSinceActivity = dayjs().diff(dayjs(customer.lastActivityAt), "days");
 
             // Prepare dynamic variables for template
             const dynamicVariables = [
@@ -328,14 +314,9 @@ async function issueRewardToCustomer(accountId: string, rewardId: string) {
       },
     });
 
-    log.info(
-      `Issued reward ${rewardId} to customer account ${accountId} (code: ${shortCode})`,
-    );
+    log.info(`Issued reward ${rewardId} to customer account ${accountId} (code: ${shortCode})`);
   } catch (error) {
-    log.error(
-      { err: error },
-      `Error issuing reward ${rewardId} to customer ${accountId}:`,
-    );
+    log.error({ err: error }, `Error issuing reward ${rewardId} to customer ${accountId}:`);
   }
 }
 
@@ -373,9 +354,7 @@ export async function checkPointsExpiryAlerts() {
     });
 
     if (programsWithExpiration.length === 0) {
-      log.info(
-        "Points Expiry Alert Cron - No programs with expiration enabled",
-      );
+      log.info("Points Expiry Alert Cron - No programs with expiration enabled");
       return;
     }
 
@@ -405,20 +384,19 @@ export async function checkPointsExpiryAlerts() {
           .endOf("day")
           .toDate();
 
-        const customersNearExpiry =
-          await prisma.customerLoyaltyAccount.findMany({
-            where: {
-              programId: program.id,
-              status: "active",
-              currentPoints: { gt: 0 },
-              lastActivityAt: { gte: alertFrom, lte: alertTo },
+        const customersNearExpiry = await prisma.customerLoyaltyAccount.findMany({
+          where: {
+            programId: program.id,
+            status: "active",
+            currentPoints: { gt: 0 },
+            lastActivityAt: { gte: alertFrom, lte: alertTo },
+          },
+          include: {
+            contact: {
+              select: { id: true, phone: true, name: true, orgId: true },
             },
-            include: {
-              contact: {
-                select: { id: true, phone: true, name: true, orgId: true },
-              },
-            },
-          });
+          },
+        });
 
         log.info(
           `Points Expiry Alert - Program ${program.name}: ${customersNearExpiry.length} customers near expiry`,
@@ -452,10 +430,7 @@ export async function checkPointsExpiryAlerts() {
           }
         }
       } catch (error) {
-        log.error(
-          { err: error },
-          `Points Expiry Alert - Error processing program ${program.id}:`,
-        );
+        log.error({ err: error }, `Points Expiry Alert - Error processing program ${program.id}:`);
       }
     }
 
@@ -503,9 +478,7 @@ export async function checkPointsExpiration() {
     for (const program of programsWithExpiration) {
       try {
         // Calculate expiration cutoff date
-        const expirationDate = dayjs()
-          .subtract(program.pointsExpirationMonths, "months")
-          .toDate();
+        const expirationDate = dayjs().subtract(program.pointsExpirationMonths, "months").toDate();
 
         log.info(
           `Points Expiration - Program ${program.name}: Expiring points earned before ${dayjs(expirationDate).format("YYYY-MM-DD")}`,
@@ -539,9 +512,7 @@ export async function checkPointsExpiration() {
         for (const account of customerAccounts) {
           try {
             // Find all 'earn' transactions older than expiration date that haven't been fully expired
-            const expiredTransactions = await prisma.$queryRaw<
-              { id: string; points: number }[]
-            >`
+            const expiredTransactions = await prisma.$queryRaw<{ id: string; points: number }[]>`
               SELECT DISTINCT t.id, t.points
               FROM "LoyaltyTransaction" t
               WHERE t."accountId" = ${account.id}::uuid
@@ -568,10 +539,7 @@ export async function checkPointsExpiration() {
             );
 
             // Don't expire more points than the customer currently has
-            const pointsToExpire = Math.min(
-              totalExpiredPoints,
-              account.currentPoints,
-            );
+            const pointsToExpire = Math.min(totalExpiredPoints, account.currentPoints);
 
             if (pointsToExpire <= 0) {
               continue;
@@ -582,11 +550,10 @@ export async function checkPointsExpiration() {
               const pointsFromThisTx = Number(expiredTx.points);
 
               // Calculate new balance after expiring these points
-              const currentBalance =
-                await prisma.customerLoyaltyAccount.findUnique({
-                  where: { id: account.id },
-                  select: { currentPoints: true },
-                });
+              const currentBalance = await prisma.customerLoyaltyAccount.findUnique({
+                where: { id: account.id },
+                select: { currentPoints: true },
+              });
 
               const newBalance = Math.max(
                 0,
@@ -631,16 +598,10 @@ export async function checkPointsExpiration() {
             // Send WA notification for points expiry
             if (account.contact.phone) {
               await handleSendTemplate(
-                await resolveEventTriggerTemplateId(
-                  program.orgId,
-                  LoyaltyEventType.POINTS_EXPIRED,
-                ),
+                await resolveEventTriggerTemplateId(program.orgId, LoyaltyEventType.POINTS_EXPIRED),
                 program.orgId,
                 account.contact.phone,
-                [
-                  account.contact.name || "Valued Customer",
-                  pointsToExpire.toString(),
-                ],
+                [account.contact.name || "Valued Customer", pointsToExpire.toString()],
               );
             }
           } catch (error) {
@@ -653,10 +614,7 @@ export async function checkPointsExpiration() {
 
         log.info(`Points Expiration - Program ${program.name}: Completed`);
       } catch (error) {
-        log.error(
-          { err: error },
-          `Points Expiration - Error processing program ${program.id}:`,
-        );
+        log.error({ err: error }, `Points Expiration - Error processing program ${program.id}:`);
       }
     }
 

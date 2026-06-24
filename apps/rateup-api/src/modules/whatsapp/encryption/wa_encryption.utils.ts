@@ -1,22 +1,12 @@
 import crypto from "node:crypto";
 import { FastifyReply, FastifyRequest } from "fastify";
-import {
-  getWaSettings,
-  updateWaSettings,
-} from "../settings/wa_settings.service.js";
+import { getWaSettings, updateWaSettings } from "../settings/wa_settings.service.js";
 import { setBusinessPublicKey } from "./wa_encryption.service.js";
 import { log } from "../../../utils/logger.js";
-import {
-  getFlowFromDb,
-  handleDecryptedFlowRequest,
-} from "../flows/flow.service.js";
+import { getFlowFromDb, handleDecryptedFlowRequest } from "../flows/flow.service.js";
 import { WhatsappSettings } from "../../../../generated/prisma/client.js";
-import prisma from "../../../utils/prisma.js";
-import { handleLoyaltyPointsCommand } from "../../loyalty/settings/settings.service.js";
 
-export function generateKeyPairsForWaEncryption(
-  passphrase: string,
-): WaEncryptionKeys {
+export function generateKeyPairsForWaEncryption(passphrase: string): WaEncryptionKeys {
   const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
     modulusLength: 2048,
     publicKeyEncoding: {
@@ -68,11 +58,7 @@ export const decryptRequest = (body, privatePem, passphrase) => {
   const encrypted_flow_data_body = flowDataBuffer.subarray(0, -TAG_LENGTH);
   const encrypted_flow_data_tag = flowDataBuffer.subarray(-TAG_LENGTH);
 
-  const decipher = crypto.createDecipheriv(
-    "aes-128-gcm",
-    decryptedAesKey,
-    initialVectorBuffer,
-  );
+  const decipher = crypto.createDecipheriv("aes-128-gcm", decryptedAesKey, initialVectorBuffer);
   decipher.setAuthTag(encrypted_flow_data_tag);
 
   const decryptedJSONString = Buffer.concat([
@@ -87,11 +73,7 @@ export const decryptRequest = (body, privatePem, passphrase) => {
   };
 };
 
-export const encryptResponse = (
-  response,
-  aesKeyBuffer,
-  initialVectorBuffer,
-) => {
+export const encryptResponse = (response, aesKeyBuffer, initialVectorBuffer) => {
   // flip initial vector
   const flipped_iv = [];
   for (const pair of initialVectorBuffer.entries()) {
@@ -99,11 +81,7 @@ export const encryptResponse = (
   }
 
   // encrypt response data
-  const cipher = crypto.createCipheriv(
-    "aes-128-gcm",
-    aesKeyBuffer,
-    Buffer.from(flipped_iv),
-  );
+  const cipher = crypto.createCipheriv("aes-128-gcm", aesKeyBuffer, Buffer.from(flipped_iv));
   return Buffer.concat([
     cipher.update(JSON.stringify(response), "utf-8"),
     cipher.final(),
@@ -144,11 +122,7 @@ export async function handleFlowResponse(
   }>,
   res: FastifyReply,
 ) {
-  log.trace(
-    "Received request to handle flow response \n%o\n%o",
-    req.url,
-    req.body,
-  );
+  log.trace("Received request to handle flow response \n%o\n%o", req.url, req.body);
   const { orgId } = req.params;
 
   let { encryption: e, phoneId, accessToken } = await getWaSettings(orgId);
@@ -160,9 +134,7 @@ export async function handleFlowResponse(
       throw new Error("WA_FLOW_ENCRYPTION is not set in .env file");
     }
 
-    const encryption: WaEncryptionKeys = JSON.parse(
-      process.env.wa_flow_encryption,
-    );
+    const encryption: WaEncryptionKeys = JSON.parse(process.env.wa_flow_encryption);
 
     await setBusinessPublicKey(encryption.publicKey, phoneId, accessToken);
     await updateWaSettings(orgId, phoneId, { encryption });
@@ -212,29 +184,25 @@ export async function handleFlowResponse(
     const dbFlow = await getFlowFromDb(req.params.dbFlowId);
     log.trace("👉 DB Flow:%o", { name: dbFlow.name, status: dbFlow.status });
 
-    const screenResponse = await handleDecryptedFlowRequest(
-      decryptedBody,
-      dbFlow,
-    );
+    const screenResponse = await handleDecryptedFlowRequest(decryptedBody, dbFlow);
 
     log.trace("👉 Response to Encrypt:%o", screenResponse);
 
-    res.send(
-      encryptResponse(screenResponse, aesKeyBuffer, initialVectorBuffer),
-    );
+    res.send(encryptResponse(screenResponse, aesKeyBuffer, initialVectorBuffer));
   } catch (error) {
     log.error("Error getting next screen: %o", error);
     return res.status(500).send();
   }
 }
-const passphrase = process.env.WA_ENCRYPTION_PASSPHRASE;
+// const passphrase = process.env.WA_ENCRYPTION_PASSPHRASE;
 
-const APP_SECRET = passphrase;
+// const APP_SECRET = passphrase;
 
-export function isRequestSignatureValid(req: FastifyRequest) {
+export function isRequestSignatureValid(_req: FastifyRequest) {
   // AFAIK you can't access rawBody natively in Fastify. So skipping signature validation for now.
   // TODO: implement this after adding rawBody support in Fastify (maybe use fastify-raw-body?)
   return true;
+  /*
   try {
     log.trace("Checking if request signature is valid");
     log.trace("Request headers: %o", req.headers);
@@ -247,10 +215,7 @@ export function isRequestSignatureValid(req: FastifyRequest) {
     }
 
     const signatureHeader = req.headers["x-hub-signature-256"] as string;
-    const signatureBuffer = Buffer.from(
-      signatureHeader.replace("sha256=", ""),
-      "utf-8",
-    );
+    const signatureBuffer = Buffer.from(signatureHeader.replace("sha256=", ""), "utf-8");
 
     const hmac = crypto.createHmac("sha256", APP_SECRET);
     const digestString = hmac.update("").digest("hex");
@@ -266,4 +231,5 @@ export function isRequestSignatureValid(req: FastifyRequest) {
     log.error("Error checking request signature: %o", error);
     console.log("erorrrr", error);
   }
+  */
 }

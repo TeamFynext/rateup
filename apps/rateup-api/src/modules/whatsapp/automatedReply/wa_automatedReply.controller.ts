@@ -25,10 +25,7 @@ export async function getAutomatedRepliesMessagIdHandler(
   req: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply,
 ) {
-  const automatedReplies = await getAutomatedRepliesMessagId(
-    req.params.id,
-    req.user.orgId,
-  );
+  const automatedReplies = await getAutomatedRepliesMessagId(req.params.id, req.user.orgId);
   reply.send(automatedReplies);
 }
 
@@ -43,9 +40,7 @@ export async function getAutomatedRepliesByIdHandler(
   req: FastifyRequest<{ Params: ByWaAutomatedReplyIdParams }>,
   reply: FastifyReply,
 ) {
-  const automatedReply = await getAutomatedReplyById(
-    req.params.waAutomatedReplyId,
-  );
+  const automatedReply = await getAutomatedReplyById(req.params.waAutomatedReplyId);
   reply.send(automatedReply);
 }
 
@@ -58,14 +53,10 @@ export async function createAutomatedReplyHandler(
     reply.code(201).send(automatedReply);
   } catch (error) {
     if (error.code === "P2002") {
-      reply
-        .code(409)
-        .send("Some specified keywords already exist for this organization.");
+      reply.code(409).send("Some specified keywords already exist for this organization.");
     } else {
       log.error(error);
-      reply
-        .code(500)
-        .send(error?.message || "error in creating automatedReply");
+      reply.code(500).send(error?.message || "error in creating automatedReply");
     }
   }
 }
@@ -102,22 +93,14 @@ export async function updateAutomatedReplyHandler(
   reply: FastifyReply,
 ) {
   try {
-    await updateAutomatedReply(
-      req.params.waAutomatedReplyId,
-      req.body,
-      req.user.orgId,
-    );
+    await updateAutomatedReply(req.params.waAutomatedReplyId, req.body, req.user.orgId);
     reply.code(204).send();
   } catch (error) {
     if (error.code === "P2002") {
-      reply
-        .code(409)
-        .send("Some specified keywords already exist for this organization.");
+      reply.code(409).send("Some specified keywords already exist for this organization.");
     } else {
       log.error(error);
-      reply
-        .code(500)
-        .send(error?.message || "error in updating automatedReply");
+      reply.code(500).send(error?.message || "error in updating automatedReply");
     }
   }
 }
@@ -166,9 +149,7 @@ export async function verifyAutomationTriggerLimitHandler(
   try {
     const { orgId } = request.user;
     if (!(await verifyAutomationTriggerLimit(orgId))) {
-      return reply
-        .code(403)
-        .send("Automation Trigger is inactive or limit reached");
+      return reply.code(403).send("Automation Trigger is inactive or limit reached");
     }
   } catch (e) {
     log.error(e);

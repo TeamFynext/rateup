@@ -1,13 +1,7 @@
 import prisma from "../../../utils/prisma.js";
-import {
-  LoyaltyRewardInput,
-  LoyaltyRewardUpdateInput,
-} from "./reward.schema.js";
+import { LoyaltyRewardInput, LoyaltyRewardUpdateInput } from "./reward.schema.js";
 
-export async function createLoyaltyReward(
-  data: LoyaltyRewardInput,
-  programId: string,
-) {
+export async function createLoyaltyReward(data: LoyaltyRewardInput, programId: string) {
   return await prisma.loyaltyReward.create({
     data: {
       programId,
@@ -55,10 +49,7 @@ export async function getLoyaltyRewardById(rewardId: string) {
   });
 }
 
-export async function updateLoyaltyReward(
-  rewardId: string,
-  data: LoyaltyRewardUpdateInput,
-) {
+export async function updateLoyaltyReward(rewardId: string, data: LoyaltyRewardUpdateInput) {
   return await prisma.loyaltyReward.update({
     where: { id: rewardId },
     data,
@@ -77,9 +68,7 @@ export async function deleteLoyaltyReward(rewardId: string) {
   });
 
   if (pendingRedemptions > 0) {
-    throw new Error(
-      "Cannot delete reward with pending redemptions. Complete them first.",
-    );
+    throw new Error("Cannot delete reward with pending redemptions. Complete them first.");
   }
 
   return await prisma.loyaltyReward.delete({

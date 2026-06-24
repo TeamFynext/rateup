@@ -56,8 +56,5 @@ export function initTestSupertokens() {
 export async function createNewTestSession(email: string) {
   const user = await getUserByEmail(email);
   let recipeUserId = await getAsRecipeUserIdType(user.id);
-  return Session.createNewSessionWithoutRequestResponse(
-    test_tenantId,
-    recipeUserId,
-  );
+  return Session.createNewSessionWithoutRequestResponse(test_tenantId, recipeUserId);
 }

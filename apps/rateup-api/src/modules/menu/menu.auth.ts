@@ -15,9 +15,7 @@ export async function verifyMenuAccess(
 
   const hasAccess = await hasAccessToMenu(menuId, request.userId);
   if (!hasAccess) {
-    reply
-      .code(403)
-      .send({ message: "You don't have access to this menu item" });
+    reply.code(403).send({ message: "You don't have access to this menu item" });
   }
 }
 
@@ -49,10 +47,7 @@ export async function verifyMenuMaxCountRestriction(
     },
   });
 
-  if (
-    count >=
-    request.subscription.features[SubscriptionFeaturePathName.Menu].count.max
-  ) {
+  if (count >= request.subscription.features[SubscriptionFeaturePathName.Menu].count.max) {
     const team = await prisma.team.findUnique({
       where: {
         id: request.body.teamId,

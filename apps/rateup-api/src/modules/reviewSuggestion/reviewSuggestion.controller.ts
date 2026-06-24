@@ -1,8 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import {
-  BySurveyTeamMapIdParams,
-  ByTeamIdParams,
-} from "../team/team.schema.js";
+import { BySurveyTeamMapIdParams, ByTeamIdParams } from "../team/team.schema.js";
 import {
   createReviewSuggestions,
   deleteReviewSuggestion,
@@ -39,9 +36,7 @@ export async function getReviewsBySurveyTeamMapIdHandler(
   const { surveyTeamMapId } = request.params;
   const { language } = request.query;
 
-  log.trace(
-    `Getting reviews for surveyTeamMapId: ${surveyTeamMapId} for language: ${language}`,
-  );
+  log.trace(`Getting reviews for surveyTeamMapId: ${surveyTeamMapId} for language: ${language}`);
   const reviews = await getReviewsBySurveyTeamMapId(surveyTeamMapId, language);
   const reviewLink = await getGoogleUrlBySurveyTeamMapId(surveyTeamMapId);
   reply.send({ reviews, reviewLink });
@@ -63,10 +58,7 @@ export async function createReviewSuggestionsHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const reviews = await createReviewSuggestions(
-    request.body,
-    request.params.teamId,
-  );
+  const reviews = await createReviewSuggestions(request.body, request.params.teamId);
   reply.send(reviews);
 }
 
@@ -82,10 +74,7 @@ export async function updateReviewSuggestionHandler(
     reply.code(403);
     return;
   }
-  const updatedReview = await updateReviewSuggestion(
-    reviewSuggestionId,
-    request.body,
-  );
+  const updatedReview = await updateReviewSuggestion(reviewSuggestionId, request.body);
   reply.send(updatedReview);
 }
 
@@ -98,11 +87,7 @@ export async function deleteReviewSuggestionHandler(
   reply.send(reviews);
 }
 
-export function errorHandler(
-  error,
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export function errorHandler(error, request: FastifyRequest, reply: FastifyReply) {
   log.error(error);
   reply.status(500).send({ message: "Something went wrong" });
 }

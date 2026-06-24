@@ -27,8 +27,7 @@ export async function createCatalogProductsBatch(
   const newProducts = [];
   for (const data of dataList) {
     let input;
-    const shopifyVariantId: string | undefined =
-      data.shopifyVariantId ?? undefined;
+    const shopifyVariantId: string | undefined = data.shopifyVariantId ?? undefined;
     if (type === "PRODUCT_ITEM") {
       const {
         price,
@@ -50,14 +49,8 @@ export async function createCatalogProductsBatch(
       };
     }
     if (type === "HOTEL") {
-      const {
-        base_price,
-        currencyCode,
-        tags,
-        numbertags,
-        sale_price,
-        ...rest
-      } = data as catalogItemSchema["HOTEL"];
+      const { base_price, currencyCode, tags, numbertags, sale_price, ...rest } =
+        data as catalogItemSchema["HOTEL"];
       let tagInputs = {};
       tags.map((tag, index) => {
         tagInputs[`custom_label_${index}`] = tag;
@@ -73,8 +66,7 @@ export async function createCatalogProductsBatch(
       };
     }
     if (type === "HOTEL_ROOM") {
-      const { base_price, currencyCode, ...rest } =
-        data as catalogItemSchema["HOTEL_ROOM"];
+      const { base_price, currencyCode, ...rest } = data as catalogItemSchema["HOTEL_ROOM"];
       input = {
         ...rest,
         base_price: `${base_price} ${currencyCode}`,
@@ -85,9 +77,7 @@ export async function createCatalogProductsBatch(
     const props = {
       currency: data.currencyCode,
       image_link: data.image.length ? data.image[0].url : undefined,
-      additional_image_link: data.image.length
-        ? data.image.map((image) => image.url)
-        : undefined,
+      additional_image_link: data.image.length ? data.image.map((image) => image.url) : undefined,
       ...rest,
     };
     newProducts.push({
@@ -125,26 +115,16 @@ interface SendProductRequestProps {
   method: "CREATE" | "UPDATE" | "DELETE";
   data: any;
 }
-export async function sendProducts(
-  orgId,
-  requests: SendProductRequestProps[],
-  type,
-  catalogId,
-) {
+export async function sendProducts(orgId, requests: SendProductRequestProps[], type, catalogId) {
   const { accessToken } = await getWaSettings(orgId);
   const data = {
     access_token: accessToken,
     item_type: type,
     requests,
   };
-  const res = await callMetaApi(
-    `/${catalogId}/items_batch`,
-    "POST",
-    null,
-    data,
-    null,
-    { "Content-Type": "application/json" },
-  );
+  const res = await callMetaApi(`/${catalogId}/items_batch`, "POST", null, data, null, {
+    "Content-Type": "application/json",
+  });
 
   return res.data;
 }
@@ -203,14 +183,8 @@ export async function syncCatalogProducts(
           },
         },
       });
-      const {
-        name,
-        image_url,
-        additional_image_urls,
-        retailer_id,
-        id,
-        ...rest
-      } = product as CatalogResponseInput;
+      const { name, image_url, additional_image_urls, retailer_id, id, ...rest } =
+        product as CatalogResponseInput;
       const item = {
         title: name,
         additional_image_link: additional_image_urls,
@@ -323,7 +297,7 @@ export async function syncCatalogProducts(
   };
 }
 
-export async function getCatalogProducts(catalogId, query = null) {
+export async function getCatalogProducts(catalogId, _query = null) {
   return await prisma.waCatalogProduct.findMany({
     where: {
       catalogId,
@@ -358,12 +332,7 @@ export async function deleteCatalogProducts(
     return obj;
   });
 
-  await sendProducts(
-    orgId,
-    requests,
-    getCatalogProdutType(vertical),
-    catalogId,
-  );
+  await sendProducts(orgId, requests, getCatalogProdutType(vertical), catalogId);
   let whereCondition;
   if (vertical === "commerce") {
     whereCondition = {
@@ -396,34 +365,22 @@ export async function updateCatalogProducts(orgId, catalogId, dataList, type) {
   const newProducts = [];
   for (const data of dataList) {
     let input;
-    let productIndex;
+
     if (type === "PRODUCT_ITEM") {
-      const {
-        price,
-        currencyCode,
-        internal_label,
-        sale_price,
-        retailer_id,
-        ...rest
-      } = data as Partial<catalogItemSchema["PRODUCT_ITEM"]>;
+      const { price, currencyCode, internal_label, sale_price, retailer_id, ...rest } =
+        data as Partial<catalogItemSchema["PRODUCT_ITEM"]>;
       input = {
         ...rest,
         id: retailer_id,
         price: `${price} ${currencyCode}`,
         sale_price: `${sale_price} ${currencyCode}`,
-        internal_label:
-          internal_label && internal_label.map((label) => `'${label}'`),
+        internal_label: internal_label && internal_label.map((label) => `'${label}'`),
       };
     }
     if (type === "HOTEL") {
-      const {
-        base_price,
-        currencyCode,
-        tags,
-        numbertags,
-        sale_price,
-        ...rest
-      } = data as Partial<catalogItemSchema["HOTEL"]>;
+      const { base_price, currencyCode, tags, numbertags, sale_price, ...rest } = data as Partial<
+        catalogItemSchema["HOTEL"]
+      >;
       let tagInputs = {};
       tags.map((tag, index) => {
         tagInputs[`custom_label_${index}`] = tag;
@@ -454,23 +411,14 @@ export async function updateCatalogProducts(orgId, catalogId, dataList, type) {
       retailer_id: id ?? undefined,
       currency: data.currencyCode,
       image_link: data.image.length ? data.image[0].url : undefined,
-      additional_image_link: data.image.length
-        ? data.image.map((image) => image.url)
-        : undefined,
+      additional_image_link: data.image.length ? data.image.map((image) => image.url) : undefined,
       ...rest,
     };
     newProducts.push(obj);
   }
   await sendProducts(orgId, requests, type, catalogId);
   for (const product of newProducts) {
-    const {
-      retailer_id,
-      type,
-      hotel_id,
-      hotel_ratailer_id,
-      hotel_room_id,
-      ...rest
-    } = product;
+    const { retailer_id, type, hotel_id, hotel_ratailer_id, hotel_room_id, ...rest } = product;
     if (type === CatalogProductTypes.PRODUCT_ITEM) {
       await prisma.waCatalogProduct.update({
         where: {
@@ -525,10 +473,7 @@ function getCatalogProdutType(vertical) {
 
 // Fetches all Shopify products, maps them to catalogProductCore format,
 // and filters out any variants already imported into this catalog.
-export async function getShopifyProductsForCatalog(
-  orgId: string,
-  catalogId: string,
-) {
+export async function getShopifyProductsForCatalog(orgId: string, catalogId: string) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo?.credential?.session) {
     throw new Error("No Shopify integration found for this org");
@@ -594,9 +539,7 @@ export async function getShopifyProductsForCatalog(
     where: { catalogId },
     select: { retailer_id: true },
   });
-  const existingIds = new Set(
-    existing.map((p) => p.retailer_id).filter(Boolean),
-  );
+  const existingIds = new Set(existing.map((p) => p.retailer_id).filter(Boolean));
 
   // Map each unimported variant to a catalogProductCore item
   const catalogItems: any[] = [];
@@ -607,8 +550,7 @@ export async function getShopifyProductsForCatalog(
     if (images.length === 0) continue; // Meta requires at least one image
 
     const productLink: string =
-      product.onlineStoreUrl ??
-      `https://${shopDomain}/products/${product.handle}`;
+      product.onlineStoreUrl ?? `https://${shopDomain}/products/${product.handle}`;
     const productGroupId: string = product.id.split("/").pop() ?? product.id;
 
     for (const variantEdge of product.variants?.edges ?? []) {
@@ -617,12 +559,9 @@ export async function getShopifyProductsForCatalog(
 
       if (existingIds.has(numericId)) continue; // skip already imported
 
-      const variantSuffix =
-        v.title && v.title !== "Default Title" ? ` - ${v.title}` : "";
+      const variantSuffix = v.title && v.title !== "Default Title" ? ` - ${v.title}` : "";
       const salePrice = parseFloat(v.price);
-      const originalPrice = v.compareAtPrice
-        ? parseFloat(v.compareAtPrice)
-        : salePrice;
+      const originalPrice = v.compareAtPrice ? parseFloat(v.compareAtPrice) : salePrice;
 
       catalogItems.push({
         retailer_id: numericId,
@@ -743,29 +682,20 @@ export async function syncShopifyProductsToCatalog(
     if (images.length === 0) continue;
 
     const productLink: string =
-      product.onlineStoreUrl ??
-      `https://${shopDomain}/products/${product.handle}`;
+      product.onlineStoreUrl ?? `https://${shopDomain}/products/${product.handle}`;
     const productGroupId: string = product.id.split("/").pop() ?? product.id;
-    const variantSuffix =
-      v.title && v.title !== "Default Title" ? ` - ${v.title}` : "";
+    const variantSuffix = v.title && v.title !== "Default Title" ? ` - ${v.title}` : "";
     const salePrice = parseFloat(v.price);
-    const originalPrice = v.compareAtPrice
-      ? parseFloat(v.compareAtPrice)
-      : salePrice;
+    const originalPrice = v.compareAtPrice ? parseFloat(v.compareAtPrice) : salePrice;
     const availability = v.availableForSale ? "in stock" : "out of stock";
     const newTitle = `${product.title}${variantSuffix}`.substring(0, 100);
-    const newDescription = (product.description || product.title).substring(
-      0,
-      5000,
-    );
+    const newDescription = (product.description || product.title).substring(0, 5000);
     const newBrand: string = product.vendor || product.title;
 
     // Compare against stored productProps (prices stored as "10.00 USD")
     const props: any = dbProd.productProps ?? {};
     const currentPrice = parseFloat(String(props.price ?? "0").split(" ")[0]);
-    const currentSalePrice = parseFloat(
-      String(props.sale_price ?? "0").split(" ")[0],
-    );
+    const currentSalePrice = parseFloat(String(props.sale_price ?? "0").split(" ")[0]);
 
     const hasChanged =
       props.title !== newTitle ||
@@ -804,12 +734,7 @@ export async function syncShopifyProductsToCatalog(
   }
 
   if (toUpdate.length > 0) {
-    await updateCatalogProducts(
-      orgId,
-      catalogId,
-      toUpdate,
-      CatalogProductTypes.PRODUCT_ITEM,
-    );
+    await updateCatalogProducts(orgId, catalogId, toUpdate, CatalogProductTypes.PRODUCT_ITEM);
   }
 
   log.info(
@@ -834,17 +759,9 @@ export async function importSelectedShopifyProducts(
     shopifyVariantId: item.retailer_id,
   }));
 
-  await createCatalogProductsBatch(
-    orgId,
-    CatalogProductTypes.PRODUCT_ITEM,
-    taggedItems,
-    catalogId,
-  );
+  await createCatalogProductsBatch(orgId, CatalogProductTypes.PRODUCT_ITEM, taggedItems, catalogId);
 
-  log.info(
-    { orgId, catalogId, imported: items.length },
-    "Shopify→Catalog import complete",
-  );
+  log.info({ orgId, catalogId, imported: items.length }, "Shopify→Catalog import complete");
 
   return { imported: items.length };
 }

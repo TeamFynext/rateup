@@ -63,10 +63,7 @@ export async function createWaSettingsHandler(
   return res.status(200).send(waSettings);
 }
 
-export async function getWaSettingsHandler(
-  req: FastifyRequest,
-  res: FastifyReply,
-) {
+export async function getWaSettingsHandler(req: FastifyRequest, res: FastifyReply) {
   const { orgId } = req.user;
   const waSettings = await getAllWaSettings(orgId);
   if (!waSettings?.length) {
@@ -92,11 +89,7 @@ export async function updateWaSettingsHandler(
       message: "You are not authorized to perform this action",
     });
   }
-  const waSettings = await updateWaSettings(
-    org.orgId,
-    req.body?.phoneId,
-    req.body,
-  );
+  const waSettings = await updateWaSettings(org.orgId, req.body?.phoneId, req.body);
   return res.status(200).send(waSettings);
 }
 
@@ -112,11 +105,7 @@ export async function upsertWaSettingsHandler(
         message: "You are not authorized to perform this action",
       });
     }
-    const waSettings = await upsertWaSettings(
-      org.orgId,
-      req.body?.phoneId,
-      req.body as any,
-    );
+    const waSettings = await upsertWaSettings(org.orgId, req.body?.phoneId, req.body as any);
     return res.status(200).send(waSettings);
   } catch (e) {
     log.error(e);
@@ -125,7 +114,7 @@ export async function upsertWaSettingsHandler(
 }
 
 export async function subscribePageToApp(pageId, pageAccessToken, fields) {
-  const res = await callMetaApi(
+  await callMetaApi(
     `/${pageId}/subscribed_apps?subscribed_fields=${fields.join(",")}&access_token=${pageAccessToken}`,
     "POST",
   );
@@ -141,15 +130,12 @@ export async function updateWaSettingsByIdHandler(
   try {
     const { whatsappSettingsId } = request.params;
     const settings = await getWaSettingsById(whatsappSettingsId);
-    if (
-      request.body.fbPageId?.length &&
-      settings.fbPageId !== request.body.fbPageId
-    ) {
-      await subscribePageToApp(
-        request.body.fbPageId,
-        request.body.pageAccessToken,
-        ["messages", "message_reads", "message_reactions"],
-      );
+    if (request.body.fbPageId?.length && settings.fbPageId !== request.body.fbPageId) {
+      await subscribePageToApp(request.body.fbPageId, request.body.pageAccessToken, [
+        "messages",
+        "message_reads",
+        "message_reactions",
+      ]);
       const igData = await callMetaApi(
         `/${request.body.ibaId}?fields=username&access_token=${settings?.accessToken}`,
         "GET",
@@ -195,10 +181,7 @@ export async function deleteWaSettingsHandler(
   return res.status(200).send();
 }
 
-export async function getContactTagHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getContactTagHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const data = await getContactTag(orgId);
@@ -249,10 +232,9 @@ export async function syncFbPagesHandler(
   try {
     const { whatsappSettingsId } = request.params;
     const pages = await getFbPagesFromWa(whatsappSettingsId);
-    if (!pages || !pages?.length)
-      return reply.code(404).send("No fb pages found");
+    if (!pages || !pages?.length) return reply.code(404).send("No fb pages found");
     const data = pages.map((page) => ({ ...page, subscribedFields: [] }));
-    const res = await syncMetaAssetstoDb("pages", data, whatsappSettingsId);
+    await syncMetaAssetstoDb("pages", data, whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
     log.error("Error while getting fb pages %o", error);
@@ -269,14 +251,10 @@ export async function syncLeadgenFormsHandler(
 ) {
   try {
     const { fbPageId, pageAccessToken } = request.body;
-    const { orgId } = request.user;
+
     const forms = await getLeadgenFormsFromWa(fbPageId, pageAccessToken);
     const data = forms.map((form) => ({ ...form, pageId: fbPageId }));
-    const res = await syncMetaAssetstoDb(
-      "leadgenForms",
-      data,
-      request.params.whatsappSettingsId,
-    );
+    await syncMetaAssetstoDb("leadgenForms", data, request.params.whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
     log.error("Error while getting leadgen forms %o", error);
@@ -296,11 +274,7 @@ export async function syncLeadgenFormQuestionsHandler(
     const { formId } = request.params;
     const { whatsappSettingsId } = request.query;
     const { fbPageId, pageAccessToken } = request.body;
-    const data = await getLeadgenFormQuestionsFromWa(
-      fbPageId,
-      formId,
-      pageAccessToken,
-    );
+    const data = await getLeadgenFormQuestionsFromWa(fbPageId, formId, pageAccessToken);
     const assets = await getMetaAssets(whatsappSettingsId);
     const newLeadgenForms = assets.leadgenForms.map((form) => {
       if (form.id === formId) {
@@ -308,11 +282,7 @@ export async function syncLeadgenFormQuestionsHandler(
       }
       return form;
     });
-    const res = await syncMetaAssetstoDb(
-      "leadgenForms",
-      newLeadgenForms,
-      whatsappSettingsId,
-    );
+    await syncMetaAssetstoDb("leadgenForms", newLeadgenForms, whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
     log.error("Error while getting leadgen form questions %o", error);
@@ -327,11 +297,7 @@ export async function syncAdAccountsHandler(
   try {
     const { whatsappSettingsId } = request.params;
     const data = await getAdAccountsFromWa(whatsappSettingsId);
-    const res = await syncMetaAssetstoDb(
-      "adAccounts",
-      data,
-      whatsappSettingsId,
-    );
+    await syncMetaAssetstoDb("adAccounts", data, whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
     log.error("Error while getting ad accounts %o", error);
@@ -357,11 +323,7 @@ export async function syncAdsByAdAccountHandler(
       }
       return acc;
     });
-    const res = await syncMetaAssetstoDb(
-      "adAccounts",
-      newAdaccounts,
-      whatsappSettingsId,
-    );
+    await syncMetaAssetstoDb("adAccounts", newAdaccounts, whatsappSettingsId);
     reply.code(200).send(data);
   } catch (error) {
     log.error("Error while getting ads %o", error);
@@ -388,18 +350,12 @@ export async function subscribeFieldstoPageHandler(
       if (index !== -1) {
         newPages[index] = {
           ...newPages[index],
-          subscribedFields: Array.from(
-            new Set([...newPages[index].subscribedFields, ...fields]),
-          ),
+          subscribedFields: Array.from(new Set([...newPages[index].subscribedFields, ...fields])),
         };
       } else {
         return reply.code(404).send("Page not synced yet");
       }
-      const res = await syncMetaAssetstoDb(
-        "pages",
-        newPages,
-        whatsappSettingsId,
-      );
+      await syncMetaAssetstoDb("pages", newPages, whatsappSettingsId);
     } else {
       return reply.code(400).send({ message: "Unable to subscribe" });
     }
@@ -424,10 +380,7 @@ export async function getMetaAssetsHandler(
   }
 }
 
-export async function getWaSettingsForOrgHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getWaSettingsForOrgHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const data = await getWaSettings(orgId);
@@ -485,11 +438,7 @@ export async function updateConversationalAutomationHandler(
   try {
     const { orgId } = request.user;
     const { phoneId } = request.params;
-    const data = await updateConversationalAutomation(
-      orgId,
-      phoneId,
-      request.body,
-    );
+    const data = await updateConversationalAutomation(orgId, phoneId, request.body);
     reply.code(200).send(data);
   } catch (error) {
     log.error({ err: error }, "Error while updating conversational automation");

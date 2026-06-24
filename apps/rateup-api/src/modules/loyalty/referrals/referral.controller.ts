@@ -6,11 +6,7 @@ import {
   trackReferral,
 } from "./referral.service.js";
 import { log } from "../../../utils/logger.js";
-import {
-  CompleteReferralInput,
-  ReferrerIdParam,
-  TrackReferralInput,
-} from "./referral.schema.js";
+import { CompleteReferralInput, ReferrerIdParam, TrackReferralInput } from "./referral.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 
 export async function trackReferralHandler(
@@ -41,10 +37,7 @@ export async function completeReferralHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await completeReferral(
-      request.body.referralId,
-      request.body.purchaseAmount,
-    );
+    const result = await completeReferral(request.body.referralId, request.body.purchaseAmount);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
@@ -65,10 +58,7 @@ export async function getReferralsByReferrerHandler(
   }
 }
 
-export async function getReferralsByProgramHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getReferralsByProgramHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const program = await getLoyaltyProgramByOrg(request.user.orgId);
     if (!program) {

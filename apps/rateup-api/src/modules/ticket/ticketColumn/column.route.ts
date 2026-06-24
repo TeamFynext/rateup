@@ -23,10 +23,7 @@ import { verifyBoardAccess } from "../ticketBoard/board.auth.js";
 
 export async function columnRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook(
-    "preHandler",
-    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Ticket]),
-  );
+  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeaturePathName.Ticket]));
 
   // Create column
   server.post(

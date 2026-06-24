@@ -1,9 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import prisma from "../../utils/prisma.js";
-import {
-  CampaignParticipantStatus,
-  SubscriptionFeaturePathName,
-} from "../../types/enums.js";
+import { CampaignParticipantStatus, SubscriptionFeaturePathName } from "../../types/enums.js";
 import { ByCampaignIdParams, SendCampaignInput } from "./campaign.schema.js";
 import { log } from "../../utils/logger.js";
 
@@ -50,10 +47,7 @@ export async function verifyMessageMonthlyLimitRestrictionForCampaign(
     const orgId = request.user.orgId;
     const {
       participantId,
-      sendToStatuses = [
-        CampaignParticipantStatus.PENDING,
-        CampaignParticipantStatus.FAILED,
-      ],
+      sendToStatuses = [CampaignParticipantStatus.PENDING, CampaignParticipantStatus.FAILED],
     } = request.body;
     const { campaignId } = request.params;
     const subscription = request.subscription;
@@ -61,20 +55,13 @@ export async function verifyMessageMonthlyLimitRestrictionForCampaign(
     const usage = await getUsageStats(orgId);
 
     if (!usage || !subscription) {
-      return reply
-        .code(404)
-        .send({ message: "Usage stats or subscription not found." });
+      return reply.code(404).send({ message: "Usage stats or subscription not found." });
     }
 
-    const campaignData = await getCampaignParticipants(
-      participantId,
-      campaignId,
-      sendToStatuses,
-    );
+    const campaignData = await getCampaignParticipants(participantId, campaignId, sendToStatuses);
     const newMessagesCount = campaignData.length;
     const monthlyMessageLimit =
-      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
-        ?.monthlyMessageLimit ?? 0;
+      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count?.monthlyMessageLimit ?? 0;
     const annualLimit = monthlyMessageLimit * 12;
 
     if (
@@ -91,10 +78,7 @@ export async function verifyMessageMonthlyLimitRestrictionForCampaign(
         message: errorMessage,
         displayMessageInClient: true,
       });
-    } else if (
-      (usage.monthlyTemplateMessageCount ?? 0) + newMessagesCount >
-      monthlyMessageLimit
-    ) {
+    } else if ((usage.monthlyTemplateMessageCount ?? 0) + newMessagesCount > monthlyMessageLimit) {
       return reply.code(403).send({
         message:
           usage.monthlyTemplateMessageCount >= monthlyMessageLimit

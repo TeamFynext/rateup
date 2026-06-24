@@ -9,10 +9,7 @@ import {
 } from "./integrations.schema.js";
 import { callMetaApi } from "../whatsapp/wa_axios.js";
 import { log } from "../../utils/logger.js";
-import {
-  getWaSettings,
-  getWaSettingsById,
-} from "../whatsapp/settings/wa_settings.service.js";
+import { getWaSettings, getWaSettingsById } from "../whatsapp/settings/wa_settings.service.js";
 import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service.js";
 import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils.js";
 import { getScheduleTime } from "../../utils/date.js";
@@ -70,10 +67,7 @@ export const getWaPaymentConfigurations = async (
 
   const filteredConfigurations =
     res?.data?.data?.flatMap((item) => item?.payment_configurations) || [];
-  const waPayment: any = await getIntegrationByName(
-    orgId,
-    IntegratedApps.waPayment,
-  );
+  const waPayment: any = await getIntegrationByName(orgId, IntegratedApps.waPayment);
   const mapedData = filteredConfigurations.map((itemA) => {
     const matchingItemB = waPayment?.credential?.find(
       (itemB) => itemB.configuration_name === itemA.configuration_name,
@@ -81,10 +75,8 @@ export const getWaPaymentConfigurations = async (
     return matchingItemB
       ? {
           ...itemA,
-          ...{
-            oauth_url: matchingItemB?.oauth_url,
-            expiration: matchingItemB?.expiration,
-          },
+          oauth_url: matchingItemB?.oauth_url,
+          expiration: matchingItemB?.expiration,
         }
       : itemA;
   });
@@ -142,10 +134,7 @@ export const getWaPaymentConfigByName = async (orgId: string, name: string) => {
   }
 };
 
-export const getRegenerateWaPaymentConfigOauth = async (
-  orgId: string,
-  name: string,
-) => {
+export const getRegenerateWaPaymentConfigOauth = async (orgId: string, name: string) => {
   const data: any = await prisma.integration.findUnique({
     where: {
       orgid_integration_name_unique: {
@@ -166,9 +155,7 @@ export const getRegenerateWaPaymentConfigOauth = async (
   );
 
   if (res.status === 200) {
-    const formatedData = data.credential.find(
-      (item) => item.configuration_name === name,
-    );
+    const formatedData = data.credential.find((item) => item.configuration_name === name);
     formatedData.oauth_url = res.data?.oauth_url;
     formatedData.expiration = res.data?.expiration;
 
@@ -190,10 +177,7 @@ export const getRegenerateWaPaymentConfigOauth = async (
   }
 };
 
-export const createWaPaymentConfigurations = async (
-  orgId: string,
-  body: WaPaymentCreateSchema,
-) => {
+export const createWaPaymentConfigurations = async (orgId: string, body: WaPaymentCreateSchema) => {
   const waSettings = await getWaSettings(orgId);
 
   const res = await callMetaApi(
@@ -206,7 +190,7 @@ export const createWaPaymentConfigurations = async (
     log.trace("Payment configuration created in whatsapp");
     const configList = await getWaPaymentConfigurations(orgId, true);
 
-    configList?.data?.forEach((item, i) => {
+    configList?.data?.forEach((item) => {
       item.payment_configurations.forEach((config) => {
         if (config.configuration_name === body?.configuration_name) {
           config.oauth_url = res?.data?.oauth_url;
@@ -236,18 +220,12 @@ export const createWaPaymentConfigurations = async (
     });
     return true;
   } else {
-    log.error(
-      "Error creating payment configurations in whatsapp res => %o",
-      res.data,
-    );
+    log.error("Error creating payment configurations in whatsapp res => %o", res.data);
     return false;
   }
 };
 
-export const deleteWaPaymentConfiguration = async (
-  orgId: string,
-  name: string,
-) => {
+export const deleteWaPaymentConfiguration = async (orgId: string, name: string) => {
   const wa_payment_configuration: any = await prisma.integration.findUnique({
     where: {
       orgid_integration_name_unique: {
@@ -273,15 +251,12 @@ export const deleteWaPaymentConfiguration = async (
   return;
 };
 
-export const createIntegration = async (
-  data: IntegrationSchema,
-  orgId?: string,
-) => {
+export const createIntegration = async (data: IntegrationSchema, orgId?: string) => {
   let apikey;
   if (data.name === IntegratedApps.zapier) {
     const { key, hash } = await generateApiKey();
     data.credential = {
-      ...(data?.credential ?? {}),
+      ...data?.credential,
       accessToken: hash,
     };
     apikey = key;
@@ -308,7 +283,7 @@ export const updateIntegrationByName = async (
     data.credential.accessToken = hash;
     apikey = key;
   }
-  const { updateKey, ...rest } = data;
+  const { ...rest } = data;
   const integration = await prisma.integration.update({
     where: {
       orgid_integration_name_unique: {
@@ -436,9 +411,7 @@ export async function sendPetpoojaWaTemplateCronAction() {
     if (!history.length) return;
 
     const schedules = history.filter(
-      (hist) =>
-        hist.status === "SCHEDULED" &&
-        new Date(hist.scheduledAt) <= fiveMinutesLater,
+      (hist) => hist.status === "SCHEDULED" && new Date(hist.scheduledAt) <= fiveMinutesLater,
     );
 
     if (!schedules.length) return;
@@ -451,23 +424,15 @@ export async function sendPetpoojaWaTemplateCronAction() {
         schedule.teamId,
         schedule.name,
       );
-      const integration = integrations.find(
-        (integration) => integration.orgId === schedule.orgId,
-      );
+      const integration = integrations.find((integration) => integration.orgId === schedule.orgId);
       const newHistory = [...integration.credential.history];
       newHistory.forEach((hist) => {
         if (hist.id === schedule.id)
-          hist.status = res
-            ? res.status
-              ? "SENT"
-              : `FAILED: ${res?.message}`
-            : "FAILED";
+          hist.status = res ? (res.status ? "SENT" : `FAILED: ${res?.message}`) : "FAILED";
       });
-      await updateIntegrationByName(
-        integration.orgId,
-        IntegratedApps.petpooja,
-        { credential: { ...integration.credential, history: newHistory } },
-      );
+      await updateIntegrationByName(integration.orgId, IntegratedApps.petpooja, {
+        credential: { ...integration.credential, history: newHistory },
+      });
     }
   } catch (e) {
     log.error(e);
@@ -500,11 +465,7 @@ export async function sendWaTemplateOnPetpoojaOrder(integration, customer) {
     );
     history.push({
       ...newHistory,
-      status: res
-        ? res.status
-          ? "SENT"
-          : `FAILED: ${res?.message}`
-        : "FAILED",
+      status: res ? (res.status ? "SENT" : `FAILED: ${res?.message}`) : "FAILED",
     });
   }
   await updateIntegrationByName(integration.orgId, IntegratedApps.petpooja, {
@@ -517,7 +478,7 @@ export async function deleteZapierTriggerHooks(
   orgId,
 ) {
   if (data.active) {
-    const res = await axios.delete(data.hookUrl);
+    await axios.delete(data.hookUrl);
   }
   const integration = (await getIntegrationByName(
     orgId,

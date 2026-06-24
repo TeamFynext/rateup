@@ -21,14 +21,8 @@ export async function linkRoutes(server: FastifyInstance) {
   });
 
   // public routes
-  server.get(
-    "/public/:shortUrlId",
-    getPublicLandingPageWithShortIdRouteOptions,
-  );
-  server.patch(
-    "/pageVisits/:shortUrlId",
-    updatePageVisitsWithShortIdRouteOptions,
-  );
+  server.get("/public/:shortUrlId", getPublicLandingPageWithShortIdRouteOptions);
+  server.patch("/pageVisits/:shortUrlId", updatePageVisitsWithShortIdRouteOptions);
 
   // private routes
   server.get("/:shortUrlId", getLandingPageWithShortIdRouteOptions);

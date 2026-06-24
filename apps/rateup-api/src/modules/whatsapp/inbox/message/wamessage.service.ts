@@ -19,10 +19,7 @@ import { log } from "../../../../utils/logger.js";
 import { callMetaApi } from "../../wa_axios.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
 import axios from "axios";
-import {
-  WaAssignedChatPermission,
-  WaMessageAssignStatus,
-} from "../../../../types/enums.js";
+import { WaAssignedChatPermission, WaMessageAssignStatus } from "../../../../types/enums.js";
 import { updateContactById } from "../../../contact/contact.service.js";
 import { wait } from "../../whatsappSurvey/wasurvey.controller.js";
 import { sendMessage } from "../../whatsappSurvey/wasurvey.service.js";
@@ -34,10 +31,7 @@ import {
   createContactMessage,
   createLocationMessage,
 } from "../../whatsappSurvey/wasurvey.utils.js";
-import {
-  WaMessageAssignStatusTab,
-  WaMessageClosedStatus,
-} from "../../constants.js";
+import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../../constants.js";
 import { Role } from "../../../org/org.services.js";
 import { getTeamIdsByUserId } from "../../../team/team.service.js";
 import { UserAvailabilityStatus } from "../../../user/user.schema.js";
@@ -47,15 +41,11 @@ import {
   ZapierTriggers,
 } from "../../../integrations/external/zapier/zapier.service.js";
 import { faker } from "@faker-js/faker";
-import { v4 as uuidv4 } from "uuid";
 import {
   getLastCreatedConversationForContact,
   updateConversationAssignees,
 } from "../../../contact/conversation/conversation.service.js";
-import {
-  notificationQueue,
-  sendMessageQueue,
-} from "../../../../utils/redisConnection.js";
+import { notificationQueue, sendMessageQueue } from "../../../../utils/redisConnection.js";
 import dayjs from "dayjs";
 
 export async function addNewWaMessage(
@@ -83,10 +73,7 @@ export async function addNewWaMessage(
     initialStats.delivered = waCreatedAt;
   }
 
-  if (
-    sourcePlatform === PlatformType.INSTAGRAM ||
-    sourcePlatform === PlatformType.FACEBOOK
-  ) {
+  if (sourcePlatform === PlatformType.INSTAGRAM || sourcePlatform === PlatformType.FACEBOOK) {
     initialStats.sent = waCreatedAt;
   }
 
@@ -197,32 +184,31 @@ export async function getWaMessagesByContactId(
 
 export async function generateChatFilterData(orgId: string) {
   try {
-    const [contactTags, tagsFromContacts, cGroups, campaigns] =
-      await Promise.all([
-        prisma.$queryRaw<Partial<WaAccountSettings>[]>`
+    const [contactTags, tagsFromContacts, cGroups, campaigns] = await Promise.all([
+      prisma.$queryRaw<Partial<WaAccountSettings>[]>`
     SELECT "contactTags" 
     FROM "WaAccountSettings" 
     WHERE "orgId" = ${orgId}::uuid`,
-        prisma.$queryRaw<Array<Partial<Contact>>>`
+      prisma.$queryRaw<Array<Partial<Contact>>>`
     SELECT DISTINCT ON ("tags") "tags" 
     FROM "Contact" 
     WHERE "tags" <> '{}'::jsonb 
     AND "tags" NOTNULL 
     AND "orgId" = ${orgId}::uuid`,
-        prisma.$queryRaw<Partial<ContactGroup>[]>`
+      prisma.$queryRaw<Partial<ContactGroup>[]>`
     SELECT cg."id",cg."name" 
     FROM "ContactGroup" cg 
     INNER JOIN "Team" tm 
     ON cg."teamId" = tm.id 
     WHERE tm."orgId" = ${orgId}::uuid
     `,
-        prisma.$queryRaw<Partial<Campaign>[]>`
+      prisma.$queryRaw<Partial<Campaign>[]>`
     SELECT cn."id",cn."name" 
     FROM "Campaign" cn 
     INNER JOIN "Team" tm 
     ON cn."teamId" = tm."id" 
     WHERE "orgId" = ${orgId}::uuid`,
-      ]);
+    ]);
 
     const groupData = {
       group: "Groups",
@@ -371,8 +357,7 @@ export async function filterChats(
             `c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."waMessageAssignStatus" = $${paramIndex++}::TEXT`,
           );
         } else {
-          const assignedStatus =
-            WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
+          const assignedStatus = WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
           if (assignedStatus === "ADDRESSED") {
             if (bodyFilterProps.status.length) {
               params.push(bodyFilterProps.status);
@@ -386,15 +371,11 @@ export async function filterChats(
           }
           if (isAssignedToMe) {
             params.push(userId);
-            const assignedQuery = [
-              `winb."assignedUserId" = $${paramIndex++}::uuid`,
-            ];
+            const assignedQuery = [`winb."assignedUserId" = $${paramIndex++}::uuid`];
 
             if (bodyFilterProps?.assignedTeams?.length) {
               params.push(bodyFilterProps.assignedTeams);
-              assignedQuery.push(
-                `winb."teamId" = ANY($${paramIndex++}::uuid[])`,
-              );
+              assignedQuery.push(`winb."teamId" = ANY($${paramIndex++}::uuid[])`);
             }
 
             filters.push(`EXISTS (
@@ -426,8 +407,7 @@ export async function filterChats(
         }
         newQuery += ` )`;
         if (
-          (!bodyFilterProps.waMessageAssignStatus &&
-            bodyFilterProps.status.includes("ASSIGNED")) ||
+          (!bodyFilterProps.waMessageAssignStatus && bodyFilterProps.status.includes("ASSIGNED")) ||
           (bodyFilterProps.assignedUserIds?.length && !isAssignedToMe) ||
           bodyFilterProps.assignedTeams?.length
         )
@@ -543,9 +523,7 @@ export async function filterChats(
       }
 
       // Blocked filter
-      filters.push(
-        `c."blockedOnWhatsApp" = ${bodyFilterProps?.blockedUsers ? "TRUE" : "FALSE"}`,
-      );
+      filters.push(`c."blockedOnWhatsApp" = ${bodyFilterProps?.blockedUsers ? "TRUE" : "FALSE"}`);
     }
 
     // Search term
@@ -713,11 +691,7 @@ export async function filterChats(
 
 export async function getMediaFile(mediaId: string, orgId: string) {
   const waSettings = await getWaSettings(orgId);
-  const fileUrl = await callMetaApi(
-    `/${mediaId}`,
-    "GET",
-    waSettings.accessToken,
-  );
+  const fileUrl = await callMetaApi(`/${mediaId}`, "GET", waSettings.accessToken);
   if (fileUrl?.data) {
     // Step 2: Convert the downloaded media to a Buffer (for binary data)
     const fileResponse = await axios.get(fileUrl?.data.url, {
@@ -782,10 +756,7 @@ export async function exportWhatsapChats(
     }
 
     // Filter for contactGroups when ContactGroup (cg) is accessible
-    if (
-      bodyFilterProps?.contactGroups &&
-      bodyFilterProps?.contactGroups?.length > 0
-    ) {
+    if (bodyFilterProps?.contactGroups && bodyFilterProps?.contactGroups?.length > 0) {
       extendedWhereClause += `AND cg."id" IN (${bodyFilterProps.contactGroups
         ?.map((v: string) => `'${v}'::uuid`)
         .join(",")})`;
@@ -862,13 +833,9 @@ export async function assignWaMessageToUser(
 
     const incomingUserIds = data.assignees.map((a) => a.userId);
 
-    const addedUsers = data.assignees.filter(
-      (a) => !existingUserIds.includes(a.userId),
-    );
+    const addedUsers = data.assignees.filter((a) => !existingUserIds.includes(a.userId));
 
-    const revokedUsers = existingUsers.filter(
-      (u) => !incomingUserIds.includes(u.assignedUserId),
-    );
+    const revokedUsers = existingUsers.filter((u) => !incomingUserIds.includes(u.assignedUserId));
 
     const isReassignment = revokedUsers.length > 0 && addedUsers.length > 0;
 
@@ -876,9 +843,7 @@ export async function assignWaMessageToUser(
       let updateCount = false;
       const existingUser =
         existingUsers?.length > 0
-          ? existingUsers.find(
-              (user) => user.assignedUserId === assignee.userId,
-            )
+          ? existingUsers.find((user) => user.assignedUserId === assignee.userId)
           : false;
       if (!existingUser) {
         if (assignIfOnline) {
@@ -891,17 +856,14 @@ export async function assignWaMessageToUser(
             },
           });
           if (
-            [
-              UserAvailabilityStatus.busy,
-              UserAvailabilityStatus.online,
-            ].includes(user?.status as UserAvailabilityStatus)
+            [UserAvailabilityStatus.busy, UserAvailabilityStatus.online].includes(
+              user?.status as UserAvailabilityStatus,
+            )
           ) {
             newUsers.push(assignee);
             updateCount = true;
           } else {
-            const error: any = new Error(
-              `User is offline and cannot be assigned`,
-            );
+            const error: any = new Error(`User is offline and cannot be assigned`);
             error.statusCode = 400;
             throw error;
           }
@@ -943,7 +905,7 @@ export async function assignWaMessageToUser(
         });
     }
 
-    const res = await prisma.waInboxAssign.createMany({
+    await prisma.waInboxAssign.createMany({
       data: newUsers.map((user) => ({
         contactId: data.contactId,
         assignedUserId: user.userId,
@@ -994,7 +956,7 @@ export async function assignWaMessageToUser(
       }
     }
 
-    const contact = await prisma.waInboxAssign.deleteMany({
+    await prisma.waInboxAssign.deleteMany({
       where: {
         contactId: data.contactId,
         assignedUserId: {
@@ -1006,35 +968,20 @@ export async function assignWaMessageToUser(
     const updatedContact = await updateContactById(data.contactId, {
       waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
     });
-    const conversation = await getLastCreatedConversationForContact(
-      updatedContact.id,
-    );
+    const conversation = await getLastCreatedConversationForContact(updatedContact.id);
     if (conversation) {
       const updatedAssignees = [
         ...newUsers,
         ...data.assignees.filter(
-          (t) =>
-            !newUsers.find(
-              (n) => n.userId === t.userId && n.teamId === t.teamId,
-            ),
+          (t) => !newUsers.find((n) => n.userId === t.userId && n.teamId === t.teamId),
         ),
       ];
-      await updateConversationAssignees(
-        conversation.id,
-        { assignees: updatedAssignees },
-        userId,
-      );
+      await updateConversationAssignees(conversation.id, { assignees: updatedAssignees }, userId);
     }
 
     for (const user of newUsers) {
-      const notificationSetting = await getNotificationSettings(
-        user.userId,
-        updatedContact.orgId,
-      );
-      if (
-        notificationSetting &&
-        notificationSetting.waMessageAssignNotification
-      ) {
+      const notificationSetting = await getNotificationSettings(user.userId, updatedContact.orgId);
+      if (notificationSetting && notificationSetting.waMessageAssignNotification) {
         await notificationQueue.add("notification", {
           systemNotificationData: {
             userId: user.userId,
@@ -1088,10 +1035,7 @@ export async function getAssignedUserForContact(contactId) {
   });
 }
 
-export async function getAssignedUsersCountForContactByTeam(
-  contactId: string,
-  teamId: string,
-) {
+export async function getAssignedUsersCountForContactByTeam(contactId: string, teamId: string) {
   return await prisma.waInboxAssign.count({
     where: {
       contactId,
@@ -1108,11 +1052,7 @@ export async function deleteAssignedUsersforContact(contactId) {
   });
 }
 
-export async function getContactsCountByInbox(
-  orgId: string,
-  userId: string,
-  role,
-) {
+export async function getContactsCountByInbox(orgId: string, userId: string, role) {
   const teamIds = await getTeamIdsByUserId(userId);
   const count: {
     new_assigned_count: number;
@@ -1192,10 +1132,7 @@ export async function getContactsCountByInbox(
   GROUP BY "teamId";
 `;
 
-  if (
-    count[0].new_assigned_count === 0 &&
-    count[0].new_assigned_to_me_count > 0
-  ) {
+  if (count[0].new_assigned_count === 0 && count[0].new_assigned_to_me_count > 0) {
     count[0].new_assigned_count = count[0].new_assigned_to_me_count;
   }
 
@@ -1235,22 +1172,11 @@ export async function sendMediaMessages(
     let messageBody;
     switch (item.type) {
       case "image": {
-        messageBody = createReplyImageMessage(
-          to,
-          item.url,
-          platform,
-          captionMsg,
-        );
+        messageBody = createReplyImageMessage(to, item.url, platform, captionMsg);
         break;
       }
       case "document": {
-        messageBody = createDocumentMessage(
-          to,
-          item.url,
-          item.name,
-          captionMsg,
-          platform,
-        );
+        messageBody = createDocumentMessage(to, item.url, item.name, captionMsg, platform);
         break;
       }
       case "video": {
@@ -1277,7 +1203,7 @@ export async function sendMediaMessages(
 }
 
 export async function markMessagesAsRead(contactId: string, userId: string) {
-  const res = await prisma.$executeRawUnsafe(
+  await prisma.$executeRawUnsafe(
     `
     UPDATE "WaMessage"
     SET "readUsers" = "readUsers" || $2::TEXT
@@ -1370,9 +1296,7 @@ export async function sendLocationMessage(
   );
 }
 
-export async function getWaMessageByMessageId(
-  messageId: string,
-): Promise<WaMessage> {
+export async function getWaMessageByMessageId(messageId: string): Promise<WaMessage> {
   return await prisma.waMessage.findFirst({
     where: {
       messageId,
@@ -1392,11 +1316,7 @@ export async function updateWaMessageByMessageId(
   });
 
   if (!message) {
-    log.trace(
-      "Message not found on %s: %s",
-      id ? "id" : "messageId",
-      id || messageId,
-    );
+    log.trace("Message not found on %s: %s", id ? "id" : "messageId", id || messageId);
     return null;
   }
 
@@ -1478,49 +1398,6 @@ export async function getChatByContactId(req, res) {
     res.status(500).send({ error: "Failed to retrieve chat" });
   }
 }
-/**
- * Generate a "send" text message
- */
-function generateSendMessage(contact) {
-  return {
-    send: {
-      to: contact.phone,
-      text: { body: faker.lorem.sentence(), preview_url: false },
-      type: "text",
-      recipient_type: "individual",
-      messaging_product: "whatsapp",
-    },
-    receive: null,
-    exchangeProcess: "send",
-  };
-}
-
-/**
- * Generate a "receive" text message
- */
-function generateReceiveMessage(contact, settings) {
-  return {
-    send: null,
-    receive: {
-      contacts: [{ wa_id: contact.phone, profile: { name: contact.name } }],
-      messages: [
-        {
-          id: `wamid.${uuidv4()}`,
-          from: contact.phone,
-          text: { body: faker.lorem.sentence() },
-          type: "text",
-          timestamp: Math.floor(Date.now() / 1000).toString(),
-        },
-      ],
-      metadata: {
-        phone_number_id: settings.phoneId,
-        display_phone_number: settings.phone,
-      },
-      messaging_product: "whatsapp",
-    },
-    exchangeProcess: "receive",
-  };
-}
 
 /**
  * Seed chats for all contacts
@@ -1528,7 +1405,7 @@ function generateReceiveMessage(contact, settings) {
 export async function generateInboxResponse(
   body: GenerateInboxResponseBody,
   orgId: string,
-  userId: string,
+  _userId: string,
 ) {
   let skip = 0;
   if (body.numberOfContacts === 1) {
@@ -1551,9 +1428,7 @@ export async function generateInboxResponse(
   const settings = await getWaSettings(orgId);
 
   for (const contact of contacts) {
-    console.log(
-      `Seeding chats for contact: ${contact.name} (${contact.phone})`,
-    );
+    console.log(`Seeding chats for contact: ${contact.name} (${contact.phone})`);
 
     for (let i = 0; i < (body.messagesPerContact || 1); i++) {
       const isSend = faker.datatype.boolean();
@@ -1605,11 +1480,7 @@ export async function createInternalWaMessage({
 
   let triggeredByUserDetails: { id: string; name: string } | null = null;
 
-  if (
-    trigerredByUser &&
-    trigerredByUser !== "RateUp" &&
-    trigerredByUser !== "Automation"
-  ) {
+  if (trigerredByUser && trigerredByUser !== "RateUp" && trigerredByUser !== "Automation") {
     const user = await prisma.user.findUnique({
       where: { id: trigerredByUser },
       select: { id: true, name: true },
@@ -1643,10 +1514,7 @@ export async function createInternalWaMessage({
         waMessageAssignStatus === "REASSIGNED") &&
       (addedUsers.length || removedUsers.length)
     ) {
-      const userIds = [
-        ...addedUsers.map((u) => u.userId),
-        ...removedUsers.map((u) => u.userId),
-      ];
+      const userIds = [...addedUsers.map((u) => u.userId), ...removedUsers.map((u) => u.userId)];
 
       if (userIds.length) {
         const users = await prisma.user.findMany({
@@ -1654,27 +1522,21 @@ export async function createInternalWaMessage({
           select: { id: true, name: true },
         });
 
-        assignedUserDetails = users
-          .filter((u) => u.name)
-          .map((u) => ({ id: u.id, name: u.name! }));
+        assignedUserDetails = users.filter((u) => u.name).map((u) => ({ id: u.id, name: u.name! }));
       }
     }
 
     switch (waMessageAssignStatus) {
       case WaMessageAssignStatus.ASSIGNED:
         messageText = assignedUserDetails.length
-          ? `Chat assigned to ${assignedUserDetails
-              .map((u) => u.name)
-              .join(", ")}`
+          ? `Chat assigned to ${assignedUserDetails.map((u) => u.name).join(", ")}`
           : "Assigned this chat";
         assignStatus = WaMessageAssignStatus.ASSIGNED;
         break;
 
       case WaMessageAssignStatus.UNASSIGNED:
         messageText = assignedUserDetails.length
-          ? `Chat revoked from ${assignedUserDetails
-              .map((u) => u.name)
-              .join(", ")}`
+          ? `Chat revoked from ${assignedUserDetails.map((u) => u.name).join(", ")}`
           : "Unassigned this chat";
         assignStatus = WaMessageAssignStatus.UNASSIGNED;
         break;
@@ -1750,9 +1612,7 @@ export async function createInternalWaMessage({
         select: { id: true, name: true },
       });
 
-      mentionedUserDetails = users
-        .filter((u) => u.name)
-        .map((u) => ({ id: u.id, name: u.name! }));
+      mentionedUserDetails = users.filter((u) => u.name).map((u) => ({ id: u.id, name: u.name! }));
     }
     const wamessage = await prisma.waMessage.create({
       data: {
@@ -1820,9 +1680,7 @@ type CreateWaMessageOrgTeamMapInput = {
   externalApi: boolean;
 };
 
-export async function createWaMessageOrgTeamMap(
-  data: CreateWaMessageOrgTeamMapInput,
-) {
+export async function createWaMessageOrgTeamMap(data: CreateWaMessageOrgTeamMapInput) {
   return prisma.waMessageOrgTeamMap.create({
     data: {
       teamId: data.teamId,
@@ -1875,9 +1733,7 @@ export async function getWaMessageLogs(
   }
 
   const statusFilter =
-    status && status !== "all"
-      ? Prisma.sql`AND LOWER(ws.status) = LOWER(${status})`
-      : Prisma.sql``;
+    status && status !== "all" ? Prisma.sql`AND LOWER(ws.status) = LOWER(${status})` : Prisma.sql``;
 
   const isNumericSearch = searchQuery && /^\d+$/.test(searchQuery.trim());
 

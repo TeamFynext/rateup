@@ -230,11 +230,7 @@ export async function teamRoutes(server: FastifyInstance) {
   server.get(
     `/:teamId/survey-languages`,
     {
-      preHandler: [
-        checkSession,
-        getVerifySubscriptionHandler([sf.Team]),
-        verifyTeamAccess,
-      ],
+      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), verifyTeamAccess],
       schema: {
         params: getTeamMembersRequestSchema,
       },

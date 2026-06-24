@@ -8,11 +8,7 @@ import {
   updateLoyaltyReward,
 } from "./reward.service.js";
 import { log } from "../../../utils/logger.js";
-import {
-  LoyaltyRewardInput,
-  LoyaltyRewardUpdateInput,
-  RewardIdParam,
-} from "./reward.schema.js";
+import { LoyaltyRewardInput, LoyaltyRewardUpdateInput, RewardIdParam } from "./reward.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 
 export async function createLoyaltyRewardHandler(
@@ -79,10 +75,7 @@ export async function updateLoyaltyRewardHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await updateLoyaltyReward(
-      request.params.rewardId,
-      request.body,
-    );
+    const result = await updateLoyaltyReward(request.params.rewardId, request.body);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);

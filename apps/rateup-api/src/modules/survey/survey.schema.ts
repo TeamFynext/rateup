@@ -4,16 +4,12 @@ import { questionSchema } from "../question/question.schema.js";
 
 const surveyCore = {
   title: z.string({
-    error: (issue) =>
-      issue.input === undefined
-        ? "Title is required"
-        : "Title must be a string",
+    error: (issue) => (issue.input === undefined ? "Title is required" : "Title must be a string"),
   }),
   languages: z.array(z.string()),
   teamIds: z.array(
     z.string({
-      error: (issue) =>
-        issue.input === undefined ? "TeamId is required" : undefined,
+      error: (issue) => (issue.input === undefined ? "TeamId is required" : undefined),
     }),
   ),
   active: z.boolean().default(true),
@@ -28,31 +24,21 @@ const createSurveyRequestSchema = z.object({
 });
 const createSurveyLandingRequestSchema = z.object({
   title: z.string({
-    error: (issue) =>
-      issue.input === undefined
-        ? "Title is required"
-        : "Title must be a string",
+    error: (issue) => (issue.input === undefined ? "Title is required" : "Title must be a string"),
   }),
   header: z.string({
     error: (issue) =>
-      issue.input === undefined
-        ? "Header is required"
-        : "Header must be a string",
+      issue.input === undefined ? "Header is required" : "Header must be a string",
   }),
   surveys: z.array(z.string()),
 });
 const createSurveyLandingResponseSchema = z.object({
   title: z.string({
-    error: (issue) =>
-      issue.input === undefined
-        ? "Title is required"
-        : "Title must be a string",
+    error: (issue) => (issue.input === undefined ? "Title is required" : "Title must be a string"),
   }),
   header: z.string({
     error: (issue) =>
-      issue.input === undefined
-        ? "Header is required"
-        : "Header must be a string",
+      issue.input === undefined ? "Header is required" : "Header must be a string",
   }),
   surveys: z.array(z.string()),
   id: z.string(),
@@ -127,9 +113,7 @@ const updateSurveyRequestSchema = z.object({
   title: z
     .string({
       error: (issue) =>
-        issue.input === undefined
-          ? "Title is required"
-          : "Title must be a string",
+        issue.input === undefined ? "Title is required" : "Title must be a string",
     })
     .optional(),
   languages: z.array(z.string()).optional(),
@@ -170,17 +154,13 @@ const updateLandingPageRequestSchema = z.object({
   title: z
     .string({
       error: (issue) =>
-        issue.input === undefined
-          ? "Title is required"
-          : "Title must be a string",
+        issue.input === undefined ? "Title is required" : "Title must be a string",
     })
     .optional(),
   header: z
     .string({
       error: (issue) =>
-        issue.input === undefined
-          ? "Header is required"
-          : "Header must be a string",
+        issue.input === undefined ? "Header is required" : "Header must be a string",
     })
     .optional(),
   surveys: z.array(z.string()).optional(),
@@ -190,19 +170,14 @@ const updateLandingPageRequestSchema = z.object({
 const updateSurveyPasswordRequestSchema = z.object({
   password: z.string({
     error: (issue) =>
-      issue.input === undefined
-        ? "Password is required"
-        : "Password must be a string",
+      issue.input === undefined ? "Password is required" : "Password must be a string",
   }),
 });
 
 const updateGoogleLinkRequestSchema = z.object({
   googleLink: z
     .string({
-      error: (issue) =>
-        issue.input === undefined
-          ? "Link is required"
-          : "Link must be a string",
+      error: (issue) => (issue.input === undefined ? "Link is required" : "Link must be a string"),
     })
     .min(5, "Invalid link"),
 });
@@ -228,36 +203,20 @@ const graphResponseParamsSchema = z.object({
 export type PhoneParamInput = z.infer<typeof phoneParamsSchema>;
 
 export type CreateSurveyInput = z.infer<typeof createSurveyRequestSchema>;
-export type CreateSurveyLandingInput = z.infer<
-  typeof createSurveyLandingRequestSchema
->;
-export type GetSurveyTemplatesParams = z.infer<
-  typeof getSurveyTemplatesParamsSchema
->;
+export type CreateSurveyLandingInput = z.infer<typeof createSurveyLandingRequestSchema>;
+export type GetSurveyTemplatesParams = z.infer<typeof getSurveyTemplatesParamsSchema>;
 export type GetSurveyByIdParams = z.infer<typeof getSurveyByIdParamsSchema>;
-export type GetSurveyLandingByIdParams = z.infer<
-  typeof getSurveyLandingByIdParamsSchema
->;
+export type GetSurveyLandingByIdParams = z.infer<typeof getSurveyLandingByIdParamsSchema>;
 export type UpdateSurveyInput = z.infer<typeof updateSurveyRequestSchema>;
-export type UpdateLandingPageInput = z.infer<
-  typeof updateLandingPageRequestSchema
->;
-export type UpdateSurveyPassword = z.infer<
-  typeof updateSurveyPasswordRequestSchema
->;
-export type DeleteTeamSurveyInput = z.infer<
-  typeof deleteTeamSurveyRequestSchema
->;
+export type UpdateLandingPageInput = z.infer<typeof updateLandingPageRequestSchema>;
+export type UpdateSurveyPassword = z.infer<typeof updateSurveyPasswordRequestSchema>;
+export type DeleteTeamSurveyInput = z.infer<typeof deleteTeamSurveyRequestSchema>;
 export type IdParamInput = z.infer<typeof idParamsSchema>;
 export type CloneSurveyInput = z.infer<typeof cloneSurveySchema>;
-export type UpdateGoogleLinkInput = z.infer<
-  typeof updateGoogleLinkRequestSchema
->;
+export type UpdateGoogleLinkInput = z.infer<typeof updateGoogleLinkRequestSchema>;
 export type surveyVariableInput = z.infer<typeof surveyVariableSchema>;
 
-export type surveyVariableUpdateInput = z.infer<
-  typeof surveyVariableUpdateSchema
->;
+export type surveyVariableUpdateInput = z.infer<typeof surveyVariableUpdateSchema>;
 export type GraphResponseParams = z.infer<typeof graphResponseParamsSchema>;
 
 // Auto-exported after fastify-zod migration

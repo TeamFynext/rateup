@@ -23,14 +23,12 @@ export async function sendWebhook(endpoint: string, payload, orgId: string) {
           "X-Webhook-Id": webhookId,
         },
       });
-      if (res.status >= 200 && res.status <= 300)
-        log.info("Webhook delivered successfully");
+      if (res.status >= 200 && res.status <= 300) log.info("Webhook delivered successfully");
       else log.trace("something went wrong in sending webhook");
       break;
     } catch (e) {
       log.error(e);
-      if (e.response && e.response.status >= 500)
-        log.trace("error sending webhook");
+      if (e.response && e.response.status >= 500) log.trace("error sending webhook");
       else break;
       attempt++;
       await wait(Math.pow(2, attempt) * 1000);
@@ -44,24 +42,11 @@ export async function getWebhookSecret(orgId) {
   return derivedKey.toString("base64");
 }
 
-function pbkdf2Async(
-  input,
-  salt,
-  iterations = 100000,
-  keylen = 32,
-  digest = "sha256",
-) {
+function pbkdf2Async(input, salt, iterations = 100000, keylen = 32, digest = "sha256") {
   return new Promise((resolve, reject) => {
-    crypto.pbkdf2(
-      input,
-      salt,
-      iterations,
-      keylen,
-      digest,
-      (err, derivedKey) => {
-        if (err) reject(err);
-        else resolve(derivedKey);
-      },
-    );
+    crypto.pbkdf2(input, salt, iterations, keylen, digest, (err, derivedKey) => {
+      if (err) reject(err);
+      else resolve(derivedKey);
+    });
   });
 }

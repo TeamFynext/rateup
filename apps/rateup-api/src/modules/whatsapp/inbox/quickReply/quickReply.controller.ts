@@ -1,10 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../../utils/logger.js";
-import {
-  ByQuickReplyIdParam,
-  QuickReplyBody,
-  UpdateQuickReplyInput,
-} from "./quickReply.schema.js";
+import { ByQuickReplyIdParam, QuickReplyBody, UpdateQuickReplyInput } from "./quickReply.schema.js";
 import {
   createWaQuickReply,
   deleteWaQuickReplyById,
@@ -26,10 +22,7 @@ export async function createWaQuickReplyHandler(
   }
 }
 
-export async function getWaQuickRepliesHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getWaQuickRepliesHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const res = await getWaQuickReplies(request.user.orgId);
     reply.code(200).send(res);
@@ -73,10 +66,7 @@ export async function updateWaQuickReplyByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await updateWaQuickReplyById(
-      request.params.quickReplyId,
-      request.body,
-    );
+    const res = await updateWaQuickReplyById(request.params.quickReplyId, request.body);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

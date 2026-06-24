@@ -9,11 +9,7 @@ import {
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import { getOrgIdAndRole } from "../../user/user.service.js";
-import {
-  createSession,
-  deleteSession,
-  sendMessage,
-} from "../whatsappSurvey/wasurvey.service.js";
+import { createSession, deleteSession, sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import {
   ByTemplateIdParamsSchema,
@@ -41,18 +37,12 @@ import {
   updateTemplateInDb,
   uploadFileToWaTemplate,
 } from "./wa_templates.service.js";
-import {
-  generateTemplate,
-  getFlowIdFromTemplateComponents,
-} from "./wa_templates.utils.js";
+import { generateTemplate, getFlowIdFromTemplateComponents } from "./wa_templates.utils.js";
 import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import prisma from "../../../utils/prisma.js";
 import { GraphApiError } from "../wa_axios.js";
-import {
-  getGraphApiErrorMessage,
-  handleWhatsappError,
-} from "../wa_error_handler.js";
+import { getGraphApiErrorMessage, handleWhatsappError } from "../wa_error_handler.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
 import {
   generateOrderReferenceId,
@@ -68,7 +58,6 @@ import dayjs from "dayjs";
 import { validateFile } from "../../../utils/upload/validate.js";
 import {
   ErrorLogsQuery,
-  SendTemplateToContactGroups,
   SendTemplateToContacts,
 } from "../../../external/v1/wa-templates/wa_templates.external.schema.js";
 
@@ -79,10 +68,7 @@ export async function getTemplatesHandler(
   reply: FastifyReply,
 ) {
   const { orgId } = request.user;
-  const templates = await getTemplatesByOrgIdAndTemplateType(
-    orgId,
-    request.query.templateType,
-  );
+  const templates = await getTemplatesByOrgIdAndTemplateType(orgId, request.query.templateType);
   reply.code(200).send(templates);
 }
 
@@ -93,10 +79,7 @@ export async function getTemplateByIdHandler(
   reply: FastifyReply,
 ) {
   const { orgId } = await getOrgIdAndRole({ id: request.userId });
-  const templates = await getTemplateByIdAndOrgId(
-    request.params.templateId,
-    orgId,
-  );
+  const templates = await getTemplateByIdAndOrgId(request.params.templateId, orgId);
   reply.code(200).send(templates);
 }
 
@@ -110,13 +93,8 @@ export async function createTemplateHandler(
     const orgId = request.user.orgId;
     // TODO: restrict access to super admin and admin?
 
-    const {
-      defaultValues,
-      templateType,
-      config,
-      whatsappSettingsPhoneId,
-      ...templateData
-    } = request.body;
+    const { defaultValues, templateType, config, whatsappSettingsPhoneId, ...templateData } =
+      request.body;
     const formattedTemplate = generateTemplate({
       ...templateData,
       whatsappSettingsPhoneId: whatsappSettingsPhoneId || "default_phone_id",
@@ -127,17 +105,9 @@ export async function createTemplateHandler(
       case TemplateType.GENERAL_NOTIFICATION:
       case TemplateType.LOYALTY:
       case TemplateType.CAROUSEL:
-        const template = await createTemplate(
-          orgId,
-          formattedTemplate,
-          whatsappSettingsPhoneId,
-        );
+        const template = await createTemplate(orgId, formattedTemplate, whatsappSettingsPhoneId);
         //this is required to fetch the template from whatsapp to retreive the actual template data from whatsap
-        fetchedTemplate = await fetchTemplate(
-          template?.name,
-          orgId,
-          whatsappSettingsPhoneId,
-        );
+        fetchedTemplate = await fetchTemplate(template?.name, orgId, whatsappSettingsPhoneId);
         break;
       case TemplateType.ORDER_DETAILS:
         fetchedTemplate = {
@@ -198,12 +168,7 @@ export async function saveTemplateAsDraftHandler(
 ) {
   try {
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
-    const {
-      defaultValues,
-      templateType,
-      whatsappSettingsPhoneId,
-      ...templateData
-    } = request.body;
+    const { defaultValues, templateType, whatsappSettingsPhoneId, ...templateData } = request.body;
     let formattedTemplate: any = generateTemplate({
       ...templateData,
       whatsappSettingsPhoneId,
@@ -268,16 +233,11 @@ export async function updateTemplateHandler(
       reply.status(403);
       return;
     }
-    const updatedTemplate = await updateTemplate(
-      request.params.templateId,
-      request.body,
-    );
+    const updatedTemplate = await updateTemplate(request.params.templateId, request.body);
     if (updatedTemplate) {
       reply.status(200).send(updatedTemplate);
     } else {
-      reply
-        .status(400)
-        .send("You can only edit an active template once in 24 hours.");
+      reply.status(400).send("You can only edit an active template once in 24 hours.");
     }
   } catch (e) {
     log.error("Error updating template \n%o", e?.response?.data);
@@ -309,7 +269,7 @@ export async function deleteTemplateHandler(
     }
     await deleteTemplateFromDb(templateId);
     reply.code(204);
-  } catch (e) {
+  } catch {
     reply.code(500);
   }
 }
@@ -328,10 +288,7 @@ export async function syncTemplatesHandler(
     reply.code(403);
     return;
   }
-  const result = await syncTemplates(
-    orgId,
-    request.body.whatsappSettingsPhoneIds,
-  );
+  const result = await syncTemplates(orgId, request.body.whatsappSettingsPhoneIds);
   if (result.success) {
     reply.code(200).send(result);
   } else {
@@ -369,10 +326,7 @@ export async function registerTemplatesInDbHandler(
   }
 }
 
-export async function uploadHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function uploadHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const data = await request.file();
     const validation = validateFile({ data });
@@ -382,17 +336,11 @@ export async function uploadHandler(
     }
     const size: number = data.fields?.size?.["value"] || 0;
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
-    const { uploadSessionId, fileHandle } = await uploadFileToWaTemplate(
-      data,
-      size,
-      orgId,
-    );
-    if (fileHandle === "error")
-      return reply.code(400).send("image upload failed");
+    const { uploadSessionId, fileHandle } = await uploadFileToWaTemplate(data, size, orgId);
+    if (fileHandle === "error") return reply.code(400).send("image upload failed");
     return reply.code(200).send({ id: fileHandle, uploadSessionId });
   } catch (e) {
-    const error =
-      typeof e?.message === "string" ? e?.message : e?.response?.data;
+    const error = typeof e?.message === "string" ? e?.message : e?.response?.data;
     log.error("Error uploading image to whatsapp templates \n%o", error);
 
     reply.code(500).send(error);
@@ -456,9 +404,7 @@ export async function sendTemplateToUserCore(
       throw new Error("Flow not found in db");
     }
 
-    surveyTeamMapId = dbFlow?.survey?.teams.find(
-      (t) => t.teamId === teamId,
-    )?.id;
+    surveyTeamMapId = dbFlow?.survey?.teams.find((t) => t.teamId === teamId)?.id;
     if (!surveyTeamMapId) {
       throw new Error("Team not found in survey");
     }
@@ -504,9 +450,7 @@ export async function sendTemplateToUserCore(
             getFileUrlFromKey(defaultValues.image.link),
           );
         } else {
-          throw new Error(
-            "Image not found in template. Please upload an image and try again",
-          );
+          throw new Error("Image not found in template. Please upload an image and try again");
         }
         break;
 
@@ -518,9 +462,7 @@ export async function sendTemplateToUserCore(
             defaultValues?.document?.filename,
           );
         } else {
-          throw new Error(
-            "File not found in template. Please upload a document and try again",
-          );
+          throw new Error("File not found in template. Please upload a document and try again");
         }
         break;
       case WaTemplateSupportedFormats.VIDEO:
@@ -530,9 +472,7 @@ export async function sendTemplateToUserCore(
             getFileUrlFromKey(defaultValues.video.link),
           );
         } else {
-          throw new Error(
-            "Video not found in template. Please upload a video and try again",
-          );
+          throw new Error("Video not found in template. Please upload a video and try again");
         }
         break;
       case WaTemplateSupportedFormats.PRODUCT:
@@ -543,9 +483,7 @@ export async function sendTemplateToUserCore(
             defaultValues.catalog.catalogId,
             whatsappSettingsPhoneId,
           );
-          throw Error(
-            "The selected catalog not linked to the selected whatsapp account",
-          );
+          throw Error("The selected catalog not linked to the selected whatsapp account");
         }
         components.push({
           type: WaTemplateComponentType.HEADER,
@@ -553,8 +491,7 @@ export async function sendTemplateToUserCore(
             {
               type: WaTemplateSupportedFormats.PRODUCT.toLocaleUpperCase(),
               [WaTemplateSupportedFormats.PRODUCT.toLocaleLowerCase()]: {
-                product_retailer_id:
-                  defaultValues?.catalog.spm.product_retailer_id,
+                product_retailer_id: defaultValues?.catalog.spm.product_retailer_id,
                 catalog_id: catalog.catalogId,
               },
             },
@@ -581,13 +518,12 @@ export async function sendTemplateToUserCore(
                 where: { shortUrlId },
               });
 
-              const surveyTeamMapWithTeam =
-                await prisma.surveyTeamMap.findFirst({
-                  where: {
-                    surveyId: surveyTeamMapData.surveyId,
-                    ...(teamId && { teamId }),
-                  },
-                });
+              const surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
+                where: {
+                  surveyId: surveyTeamMapData.surveyId,
+                  ...(teamId && { teamId }),
+                },
+              });
 
               let url =
                 surveyTeamMapWithTeam?.shortUrlId ||
@@ -598,8 +534,7 @@ export async function sendTemplateToUserCore(
               log.info("Short URL ID: %s", url);
               log.info(
                 "length : %s",
-                `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`
-                  .length,
+                `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`.length,
               );
               components.push({
                 type: "button",
@@ -661,8 +596,7 @@ export async function sendTemplateToUserCore(
                         type: "action",
                         action: {
                           thumbnail_product_retailer_id:
-                            defaultValues?.catalog
-                              ?.thumbnail_product_retailer_id,
+                            defaultValues?.catalog?.thumbnail_product_retailer_id,
                         },
                       },
                     ],
@@ -679,17 +613,14 @@ export async function sendTemplateToUserCore(
                   type: "action",
                   action: {
                     thumbnail_product_retailer_id:
-                      isEmptyString(
-                        defaultValues?.catalog?.thumbnail_product_retailer_id,
-                      ) ?? undefined,
-                    sections: defaultValues?.catalog?.mpm?.sections?.map(
-                      ({ title, products }) => ({
-                        title,
-                        product_items: products.map((p) => ({
-                          product_retailer_id: p,
-                        })),
-                      }),
-                    ),
+                      isEmptyString(defaultValues?.catalog?.thumbnail_product_retailer_id) ??
+                      undefined,
+                    sections: defaultValues?.catalog?.mpm?.sections?.map(({ title, products }) => ({
+                      title,
+                      product_items: products.map((p) => ({
+                        product_retailer_id: p,
+                      })),
+                    })),
                   },
                 },
               ],
@@ -697,9 +628,7 @@ export async function sendTemplateToUserCore(
           } else if (
             button.type === WHATSAPP_BUTTON_TYPE.ORDER_DETAILS &&
             dbTemplate.templateType !== TemplateType.ORDER_DETAILS &&
-            !components.some(
-              (c) => c.type === "button" && c.sub_type === "order_details",
-            )
+            !components.some((c) => c.type === "button" && c.sub_type === "order_details")
           ) {
             const sub_total =
               Number(defaultValues?.orderDetails?.item?.price) *
@@ -726,13 +655,11 @@ export async function sendTemplateToUserCore(
                           type: "payment_gateway",
                           payment_gateway: {
                             type: defaultValues?.orderDetails?.paymentType,
-                            configuration_name:
-                              defaultValues?.orderDetails?.paymentConfigName,
+                            configuration_name: defaultValues?.orderDetails?.paymentConfigName,
                           },
                         },
                       ],
-                      ...(defaultValues?.orderDetails?.productType ===
-                      "physical-goods"
+                      ...(defaultValues?.orderDetails?.productType === "physical-goods"
                         ? {
                             shipping_info: {
                               country: "IN",
@@ -745,42 +672,26 @@ export async function sendTemplateToUserCore(
                           {
                             amount: {
                               offset: 100,
-                              value:
-                                Number(
-                                  defaultValues?.orderDetails?.item?.price,
-                                ) * 100,
+                              value: Number(defaultValues?.orderDetails?.item?.price) * 100,
                             },
                             ...(defaultValues?.orderDetails?.item?.salePrice
                               ? {
                                   sale_amount: {
                                     offset: 100,
                                     value:
-                                      Number(
-                                        defaultValues?.orderDetails?.item
-                                          ?.salePrice,
-                                      ) * 100,
+                                      Number(defaultValues?.orderDetails?.item?.salePrice) * 100,
                                   },
                                 }
                               : {}),
                             name: defaultValues?.orderDetails?.item?.name,
-                            quantity:
-                              defaultValues?.orderDetails?.item?.quantity,
-                            country_of_origin:
-                              defaultValues?.orderDetails?.item?.origin,
-                            importer_name:
-                              defaultValues?.orderDetails?.item?.importerName,
+                            quantity: defaultValues?.orderDetails?.item?.quantity,
+                            country_of_origin: defaultValues?.orderDetails?.item?.origin,
+                            importer_name: defaultValues?.orderDetails?.item?.importerName,
                             importer_address: {
-                              address_line1:
-                                defaultValues?.orderDetails?.item
-                                  ?.importerAddress1,
-                              city: defaultValues?.orderDetails?.item
-                                ?.importerCity,
-                              zone_code:
-                                defaultValues?.orderDetails?.item
-                                  ?.importerZoneCode,
-                              postal_code:
-                                defaultValues?.orderDetails?.item
-                                  ?.importerPostalCode,
+                              address_line1: defaultValues?.orderDetails?.item?.importerAddress1,
+                              city: defaultValues?.orderDetails?.item?.importerCity,
+                              zone_code: defaultValues?.orderDetails?.item?.importerZoneCode,
+                              postal_code: defaultValues?.orderDetails?.item?.importerPostalCode,
                               country_code: "IN",
                             },
                           },
@@ -791,26 +702,19 @@ export async function sendTemplateToUserCore(
                         },
                         shipping: {
                           offset: 100,
-                          value:
-                            Number(defaultValues?.orderDetails?.shipping) * 100,
+                          value: Number(defaultValues?.orderDetails?.shipping) * 100,
                         },
                         tax: {
                           offset: 100,
-                          discription:
-                            defaultValues?.orderDetails?.taxDescription,
+                          discription: defaultValues?.orderDetails?.taxDescription,
                           value: Number(defaultValues?.orderDetails?.tax) * 100,
                         },
                         ...(defaultValues?.orderDetails?.discount
                           ? {
                               discount: {
                                 offset: 100,
-                                discription:
-                                  defaultValues?.orderDetails
-                                    ?.discountDescription,
-                                value:
-                                  Number(
-                                    defaultValues?.orderDetails?.discount,
-                                  ) * 100,
+                                discription: defaultValues?.orderDetails?.discountDescription,
+                                value: Number(defaultValues?.orderDetails?.discount) * 100,
                               },
                             }
                           : {}),
@@ -818,9 +722,7 @@ export async function sendTemplateToUserCore(
                         ...(defaultValues?.orderDetails?.expiry
                           ? {
                               expiration: {
-                                timestamp: dayjs(
-                                  defaultValues?.orderDetails?.expiry,
-                                )
+                                timestamp: dayjs(defaultValues?.orderDetails?.expiry)
                                   .add(300, "seconds")
                                   .unix(),
                               },
@@ -837,10 +739,7 @@ export async function sendTemplateToUserCore(
               ],
             });
           } else if (button.type === WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
-            if (
-              quickReplyPayload?.length > quickReplyIdx &&
-              quickReplyPayload?.[quickReplyIdx]
-            ) {
+            if (quickReplyPayload?.length > quickReplyIdx && quickReplyPayload?.[quickReplyIdx]) {
               components.push({
                 type: "button",
                 sub_type: button.type,
@@ -863,20 +762,15 @@ export async function sendTemplateToUserCore(
         )?.format;
         if (headerFormat === WaTemplateSupportedFormats.PRODUCT) {
           const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId);
-          if (
-            !catalog ||
-            catalog.catalogId !== defaultValues.catalog.catalogId
-          ) {
+          if (!catalog || catalog.catalogId !== defaultValues.catalog.catalogId) {
             log.error(
               "The selected catalog not linked to the selected account: catalogId => %s, phoneId => %s",
               defaultValues.catalog.catalogId,
               whatsappSettingsPhoneId,
             );
-            throw Error(
-              "The selected catalog not linked to the selected whatsapp account",
-            );
+            throw Error("The selected catalog not linked to the selected whatsapp account");
           }
-          let cards = await Promise.all([
+          let cards = await Promise.all(
             item?.cards?.map(async (card, index) => {
               const cardInComponents = components.find(
                 (c) => c.type === WaTemplateComponentType.CAROUSEL,
@@ -884,18 +778,10 @@ export async function sendTemplateToUserCore(
               const cardDefaultValues = defaultValues?.productCarousel.find(
                 (c) => c.cardIndex === index,
               );
-              let cardComponents = cardInComponents
-                ? [...cardInComponents.components]
-                : [];
+              let cardComponents = cardInComponents ? [...cardInComponents.components] : [];
               for (const comp of card.components) {
-                if (
-                  comp.type.toLowerCase() === WaTemplateComponentType.HEADER
-                ) {
-                  if (
-                    !cardComponents?.some(
-                      (c) => c.type === WaTemplateComponentType.HEADER,
-                    )
-                  ) {
+                if (comp.type.toLowerCase() === WaTemplateComponentType.HEADER) {
+                  if (!cardComponents?.some((c) => c.type === WaTemplateComponentType.HEADER)) {
                     const productId = cardDefaultValues?.product_retailer_id;
                     cardComponents.push({
                       type: WaTemplateComponentType.HEADER,
@@ -910,40 +796,34 @@ export async function sendTemplateToUserCore(
                       ],
                     });
                   }
-                } else if (
-                  comp.type.toLowerCase() === WaTemplateComponentType.BUTTONS
-                ) {
-                  for (const [idx, button] of comp.buttons?.entries()) {
+                } else if (comp.type.toLowerCase() === WaTemplateComponentType.BUTTONS) {
+                  for (const [idx, button] of comp.buttons?.entries() ?? []) {
                     if (button?.type === "URL") {
                       if (button?.example?.[0]?.startsWith(":")) {
                         let shortUrlId = button?.example[0].slice(1);
                         if (shortUrlId?.startsWith("error")) continue;
 
-                        const surveyTeamMapData =
-                          await prisma.surveyTeamMap.findFirst({
-                            where: { shortUrlId },
-                          });
+                        const surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
+                          where: { shortUrlId },
+                        });
 
-                        const surveyTeamMapWithTeam =
-                          await prisma.surveyTeamMap.findFirst({
-                            where: {
-                              surveyId: surveyTeamMapData.surveyId,
-                              ...(teamId && { teamId }),
-                            },
-                          });
+                        const surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
+                          where: {
+                            surveyId: surveyTeamMapData.surveyId,
+                            ...(teamId && { teamId }),
+                          },
+                        });
 
                         let url =
                           surveyTeamMapWithTeam?.shortUrlId ||
                           surveyTeamMapWithTeam?.id ||
                           shortUrlId ||
                           "error";
-                        let convertedTag =
-                          tag?.trim()?.replace(/\s+/g, "-") ?? "";
+                        let convertedTag = tag?.trim()?.replace(/\s+/g, "-") ?? "";
                         log.info("Short URL ID: %s", url);
                         log.info(
                           "length : %s",
-                          `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`
-                            .length,
+                          `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`.length,
                         );
                         cardComponents.push({
                           type: "button",
@@ -981,8 +861,8 @@ export async function sendTemplateToUserCore(
                 card_index: index,
                 components: cardComponents,
               };
-            }),
-          ]);
+            }) ?? [],
+          );
           components.push({
             type: "carousel",
             cards,
@@ -996,18 +876,10 @@ export async function sendTemplateToUserCore(
               const cardDefaultValues = defaultValues?.mediaCarousel.find(
                 (c) => c.cardIndex === index,
               );
-              let cardComponents = cardInComponents
-                ? [...cardInComponents.components]
-                : [];
+              let cardComponents = cardInComponents ? [...cardInComponents.components] : [];
               for (const comp of card.components) {
-                if (
-                  comp.type.toLowerCase() === WaTemplateComponentType.HEADER
-                ) {
-                  if (
-                    !cardComponents?.some(
-                      (c) => c.type === WaTemplateComponentType.HEADER,
-                    )
-                  ) {
+                if (comp.type.toLowerCase() === WaTemplateComponentType.HEADER) {
+                  if (!cardComponents?.some((c) => c.type === WaTemplateComponentType.HEADER)) {
                     const fileKey = cardDefaultValues?.headerLink;
                     cardComponents.push({
                       type: WaTemplateComponentType.HEADER,
@@ -1021,9 +893,7 @@ export async function sendTemplateToUserCore(
                       ],
                     });
                   }
-                } else if (
-                  comp.type.toLowerCase() === WaTemplateComponentType.BODY
-                ) {
+                } else if (comp.type.toLowerCase() === WaTemplateComponentType.BODY) {
                   const defaultValue = comp.example?.body_text[0];
                   if (defaultValue?.length > 0) {
                     const cardBodyIndex = cardComponents.findIndex(
@@ -1038,9 +908,7 @@ export async function sendTemplateToUserCore(
                           }
                         });
                         if (params.length < defaultValue?.length) {
-                          const remainingValues = defaultValue.slice(
-                            params.length,
-                          );
+                          const remainingValues = defaultValue.slice(params.length);
                           remainingValues.forEach((value) => {
                             params.push({
                               type: "text",
@@ -1063,44 +931,36 @@ export async function sendTemplateToUserCore(
                       });
                     }
                   } else {
-                    cardComponents = cardComponents.filter(
-                      (f) => f.type !== "body",
-                    );
+                    cardComponents = cardComponents.filter((f) => f.type !== "body");
                   }
-                } else if (
-                  comp.type.toLowerCase() === WaTemplateComponentType.BUTTONS
-                ) {
-                  for (const [idx, button] of comp.buttons?.entries()) {
+                } else if (comp.type.toLowerCase() === WaTemplateComponentType.BUTTONS) {
+                  for (const [idx, button] of comp.buttons?.entries() ?? []) {
                     if (button?.type === "URL") {
                       if (button?.example?.[0]?.startsWith(":")) {
                         let shortUrlId = button?.example[0].slice(1);
                         if (shortUrlId?.startsWith("error")) continue;
 
-                        const surveyTeamMapData =
-                          await prisma.surveyTeamMap.findFirst({
-                            where: { shortUrlId },
-                          });
+                        const surveyTeamMapData = await prisma.surveyTeamMap.findFirst({
+                          where: { shortUrlId },
+                        });
 
-                        const surveyTeamMapWithTeam =
-                          await prisma.surveyTeamMap.findFirst({
-                            where: {
-                              surveyId: surveyTeamMapData.surveyId,
-                              ...(teamId && { teamId }),
-                            },
-                          });
+                        const surveyTeamMapWithTeam = await prisma.surveyTeamMap.findFirst({
+                          where: {
+                            surveyId: surveyTeamMapData.surveyId,
+                            ...(teamId && { teamId }),
+                          },
+                        });
 
                         let url =
                           surveyTeamMapWithTeam?.shortUrlId ||
                           surveyTeamMapWithTeam?.id ||
                           shortUrlId ||
                           "error";
-                        let convertedTag =
-                          tag?.trim()?.replace(/\s+/g, "-") ?? "";
+                        let convertedTag = tag?.trim()?.replace(/\s+/g, "-") ?? "";
                         log.info("Short URL ID: %s", url);
                         log.info(
                           "length : %s",
-                          `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`
-                            .length,
+                          `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`.length,
                         );
                         cardComponents.push({
                           type: "button",
@@ -1175,9 +1035,8 @@ export async function sendTemplateToUserCore(
     },
     components: components,
   };
-  const defaultValue = dbTemplate?.data?.components?.find(
-    (data) => data.example?.body_text,
-  )?.example?.body_text?.[0];
+  const defaultValue = dbTemplate?.data?.components?.find((data) => data.example?.body_text)
+    ?.example?.body_text?.[0];
 
   if (defaultValue?.length > 0) {
     let params = templateQuery?.components.find(
@@ -1212,12 +1071,7 @@ export async function sendTemplateToUserCore(
   }
   let templateMessage;
   if (dbTemplate.templateType === TemplateType.ORDER_DETAILS) {
-    templateMessage = await sendPaymentInitTemplate(
-      orgId,
-      phone,
-      templateQuery,
-      dbTemplate,
-    );
+    templateMessage = await sendPaymentInitTemplate(orgId, phone, templateQuery, dbTemplate);
   } else {
     templateMessage = createTemplateMessage(phone, templateQuery);
   }
@@ -1249,10 +1103,7 @@ export async function sendTemplateToUserCore(
       false,
       externalApi,
     );
-    await updateMonthlyStat(
-      SubscriptionFeaturePathName.WhatsAppTemplate,
-      orgId,
-    );
+    await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppTemplate, orgId);
     log.trace("Template send to user successfully");
   }
   return res;
@@ -1289,9 +1140,7 @@ export async function sendTemplateToUserHandler(
     if (error instanceof Error) {
       reply.code(400).send(error?.message);
     } else {
-      reply
-        .code(500)
-        .send(error?.message ?? "Error sending template to contacts");
+      reply.code(500).send(error?.message ?? "Error sending template to contacts");
     }
   }
 }
@@ -1358,15 +1207,12 @@ export async function getMessageStatusByIdHandler(
         errorMessage: true,
       },
     });
-    if (!messageStatus)
-      return reply.code(404).send({ message: "Message not found" });
+    if (!messageStatus) return reply.code(404).send({ message: "Message not found" });
     let status = getLatestStatus(messageStatus.stats);
     let response = {
       messageId: messageStatus.messageId,
       status,
-      ...(status === "failed"
-        ? { errorMessage: messageStatus.errorMessage }
-        : {}),
+      ...(status === "failed" ? { errorMessage: messageStatus.errorMessage } : {}),
     };
 
     reply.code(200).send(response);
@@ -1387,12 +1233,8 @@ export async function getErrorLogsHandler(
       where: {
         orgId: request.user.orgId,
         createdAt: {
-          ...(request.query.endDate
-            ? { lte: new Date(request.query.endDate) }
-            : {}),
-          ...(request.query.startDate
-            ? { gte: new Date(request.query.startDate) }
-            : {}),
+          ...(request.query.endDate ? { lte: new Date(request.query.endDate) } : {}),
+          ...(request.query.startDate ? { gte: new Date(request.query.startDate) } : {}),
         },
       },
       orderBy: {

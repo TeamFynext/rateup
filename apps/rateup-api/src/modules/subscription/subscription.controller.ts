@@ -7,17 +7,11 @@ import {
   updateSubscription,
 } from "./subscription.service.js";
 import { ByOrgIdParams } from "../org/org.schema.js";
-import {
-  deleteSubscriptionsInput,
-  updateSubscriptionInput,
-} from "./subscription.schema.js";
+import { deleteSubscriptionsInput, updateSubscriptionInput } from "./subscription.schema.js";
 import { getRateuplanById } from "../payment/payment.service.js";
 import { FreePlanSubscriptionFeatures } from "./subscription.data.js";
 import dayjs from "dayjs";
-import {
-  updateAnnualMessageCount,
-  updateUsageStatsLastReset,
-} from "../stats/stats.service.js";
+import { updateAnnualMessageCount, updateUsageStatsLastReset } from "../stats/stats.service.js";
 import { log } from "../../utils/logger.js";
 
 export async function getUserSubscriptionHandler(req, res) {
@@ -54,9 +48,7 @@ export async function updateSubscriptionHandler(
   if (updatedData?.basePlanId) {
     const rateupPlan = await getRateuplanById(updatedData?.basePlanId);
     if (rateupPlan.paymentPlanId)
-      return res
-        .code(403)
-        .send({ message: "You cannot change to Razorpay plans manually" });
+      return res.code(403).send({ message: "You cannot change to Razorpay plans manually" });
     else if (rateupPlan.name === "RATEUP TRIAL")
       updatedData.features = FreePlanSubscriptionFeatures;
     else updatedData.features = rateupPlan?.features;
@@ -66,10 +58,7 @@ export async function updateSubscriptionHandler(
   res.send(subscription);
   if ("isAnnualMessageLimit" in updatedData) {
     if (!updatedData.isAnnualMessageLimit)
-      await updateUsageStatsLastReset(
-        orgId,
-        subscription.renewedAt ?? subscription.createdAt,
-      );
+      await updateUsageStatsLastReset(orgId, subscription.renewedAt ?? subscription.createdAt);
     else await updateAnnualMessageCount(orgId);
   }
 }

@@ -41,9 +41,7 @@ export function canAccess(
 ): boolean {
   const subGate = subscriptionGates[feature];
 
-  const subOk = subGate
-    ? Boolean(getNestedProperty(subscriptionFeatures, subGate)?.active)
-    : true;
+  const subOk = subGate ? Boolean(getNestedProperty(subscriptionFeatures, subGate)?.active) : true;
 
   const teamOk = userFeatures.has(feature);
 

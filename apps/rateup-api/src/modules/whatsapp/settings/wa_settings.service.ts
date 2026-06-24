@@ -1,8 +1,5 @@
 import { WhatsappSettings } from "../../../../generated/prisma/client.js";
-import {
-  aes_decrypt,
-  aes_encrypt,
-} from "../../../../utils/encryption/encryption.utils.js";
+import { aes_decrypt, aes_encrypt } from "../../../../utils/encryption/encryption.utils.js";
 import prisma from "../../../utils/prisma.js";
 import { getPhoneDetails } from "../auth/wa_auth.service.js";
 import { WaConfigType, WhatsappSettingsStatus } from "../../../types/enums.js";
@@ -16,17 +13,11 @@ import {
 import { callMetaApi } from "../wa_axios.js";
 import { subscribePageToApp } from "./wa_settings.controller.js";
 
-export async function createWaSettings(
-  orgId: string,
-  data: Partial<WhatsappSettings>,
-) {
+export async function createWaSettings(orgId: string, data: Partial<WhatsappSettings>) {
   const accessToken = data.accessToken;
   if (data.phoneId) {
     if (!data.phone) {
-      const { display_phone_number } = await getPhoneDetails(
-        data.phoneId,
-        accessToken,
-      );
+      const { display_phone_number } = await getPhoneDetails(data.phoneId, accessToken);
       data.phone = display_phone_number?.replace(/\s+/g, "");
     }
     const encryptedToken = aes_encrypt(
@@ -51,10 +42,7 @@ export async function createWaSettings(
   }
 }
 
-export async function getWaSettings(
-  orgId: string,
-  whatsappSettingsPhoneId?: string,
-) {
+export async function getWaSettings(orgId: string, whatsappSettingsPhoneId?: string) {
   const res = await prisma.whatsappSettings.findFirst({
     where: {
       orgId: orgId,
@@ -98,9 +86,7 @@ export async function getAllWaSettings(orgId: string) {
   }
 
   // Decrypt access token for each setting
-  const decryptedSettings = res.map((setting) =>
-    getWaSettingsWithAccessTokenDecrypted(setting),
-  );
+  const decryptedSettings = res.map((setting) => getWaSettingsWithAccessTokenDecrypted(setting));
 
   return decryptedSettings;
 }
@@ -230,8 +216,7 @@ export async function upsertWaSettings(
         "message_reads",
         "message_reactions",
       ]);
-      const { accessToken } =
-        getWaSettingsWithAccessTokenDecrypted(existingSettings);
+      const { accessToken } = getWaSettingsWithAccessTokenDecrypted(existingSettings);
       if (data.ibaId) {
         const igData = await callMetaApi(
           `/${data.ibaId}?fields=username&access_token=${accessToken}`,
@@ -346,7 +331,7 @@ export async function getAdAccountsFromWa(whatsappSettingsId) {
   }
   const url = `/me/adaccounts?fields=id,name&access_token=${accessToken}`;
   const res = await callMetaApi(url, "GET");
-  const adAccounts = [...res.data?.data];
+  const adAccounts = [...(res.data?.data || [])];
   for (const acc of adAccounts) {
     const ads = await callMetaApi(
       `/${acc?.id}/ads?fields=id,name&access_token=${accessToken}`,
@@ -379,11 +364,11 @@ export async function getMetaDatasetsFromWa(whatsappSettingsId) {
         if (pixelsRes.data?.data) {
           datasets = [...datasets, ...pixelsRes.data.data];
         }
-      } catch (e) {
+      } catch {
         log.warn("Failed to fetch pixels for business %s", business.id);
       }
     }
-  } catch (e) {
+  } catch {
     log.warn("Failed to fetch businesses");
   }
 
@@ -401,18 +386,16 @@ export async function getMetaDatasetsFromWa(whatsappSettingsId) {
         if (pixelsRes.data?.data) {
           datasets = [...datasets, ...pixelsRes.data.data];
         }
-      } catch (e) {
+      } catch {
         log.warn("Failed to fetch pixels for ad account %s", acc.id);
       }
     }
-  } catch (e) {
+  } catch {
     log.warn("Failed to fetch ad accounts");
   }
 
   // Deduplicate
-  const uniqueDatasets = Array.from(
-    new Map(datasets.map((item) => [item.id, item])).values(),
-  );
+  const uniqueDatasets = Array.from(new Map(datasets.map((item) => [item.id, item])).values());
   return uniqueDatasets;
 }
 
@@ -428,11 +411,7 @@ export async function subscribeFieldtoPage(fbPageId, pageAccessToken, fields) {
   return res.data;
 }
 
-export async function getLeadgenFormQuestionsFromWa(
-  fbPageId,
-  leadgenFormId,
-  pageAccessToken,
-) {
+export async function getLeadgenFormQuestionsFromWa(fbPageId, leadgenFormId, pageAccessToken) {
   const url = `/${fbPageId}/${leadgenFormId}?fields=questions&access_token=${pageAccessToken}`;
   const res = await callMetaApi(url, "GET");
   return res.data?.data;
@@ -499,10 +478,7 @@ export async function getMetaAssets(whatsappSettingsId: string) {
   })) as unknown as MetaAsset;
 }
 
-export async function getConversationalAutomation(
-  orgId: string,
-  phoneId: string,
-) {
+export async function getConversationalAutomation(orgId: string, phoneId: string) {
   const settings = await prisma.whatsappSettings.findFirst({
     where: { orgId, phoneId },
     select: { conversationalAutomation: true },
@@ -517,10 +493,7 @@ export async function getConversationalAutomation(
   );
 }
 
-export async function syncConversationalAutomation(
-  orgId: string,
-  phoneId: string,
-) {
+export async function syncConversationalAutomation(orgId: string, phoneId: string) {
   const settings = await getWaSettings(orgId, phoneId);
   if (!settings) throw new Error("WhatsApp settings not found");
 
@@ -588,10 +561,7 @@ export async function getWaSettingsByPhone(phone: string) {
   });
 }
 
-export async function updateWaSettingsStatus(
-  phoneId: string,
-  status: WhatsappSettingsStatus,
-) {
+export async function updateWaSettingsStatus(phoneId: string, status: WhatsappSettingsStatus) {
   return await prisma.whatsappSettings.update({
     where: { phoneId },
     data: { status },

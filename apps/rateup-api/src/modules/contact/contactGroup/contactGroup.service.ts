@@ -59,10 +59,7 @@ export async function getContactGroupsByTeamId(teamId: string) {
   return contactGroups;
 }
 //also used in zapier controller
-export async function getContactGroupsByOrgId(
-  orgId: string,
-  type?: ContactGroupType,
-) {
+export async function getContactGroupsByOrgId(orgId: string, type?: ContactGroupType) {
   const contactGroups = await prisma.contactGroup.findMany({
     where: {
       team: {
@@ -85,9 +82,7 @@ export async function getContactGroupsByOrgId(
   });
   return contactGroups;
 }
-export async function createContactGroup(
-  contactGroup: CreateContactGroupInput,
-) {
+export async function createContactGroup(contactGroup: CreateContactGroupInput) {
   return await prisma.contactGroup.create({
     data: {
       name: contactGroup.name,
@@ -265,9 +260,7 @@ export async function addNewContactsToGroup(
   if (!contactGroup) {
     throw new Error("Contact group not found");
   }
-  const contacts = contactsBody.filter((data) =>
-    isValidPhoneNumber(`+${data.phone}`),
-  );
+  const contacts = contactsBody.filter((data) => isValidPhoneNumber(`+${data.phone}`));
   const phoneChunks = chunkArray(
     contacts.map((contact) => contact.phone).filter((phone) => phone),
     BATCH_SIZE,
@@ -329,10 +322,7 @@ export async function addExistingContactsToGroup(
   }
 }
 
-export async function updateContactGroup(
-  contactGroupId: string,
-  data: UpdateContactGroupInput,
-) {
+export async function updateContactGroup(contactGroupId: string, data: UpdateContactGroupInput) {
   return await prisma.contactGroup.update({
     where: {
       id: contactGroupId,
@@ -408,10 +398,7 @@ export async function deleteManyContactGroups(groupIds: string[]) {
   });
 }
 
-export async function getContactGroupByNameAndTeam(
-  name: string,
-  teamId: string,
-) {
+export async function getContactGroupByNameAndTeam(name: string, teamId: string) {
   return await prisma.contactGroup.findUnique({
     where: {
       group_name_team_id_unique: {
@@ -422,10 +409,7 @@ export async function getContactGroupByNameAndTeam(
   });
 }
 
-export async function getContactGroupsByContactId(
-  contactId: string,
-  orgId: string,
-) {
+export async function getContactGroupsByContactId(contactId: string, orgId: string) {
   const mappings = await prisma.contactGroupMap.findMany({
     where: {
       contactId,

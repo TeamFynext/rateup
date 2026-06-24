@@ -252,11 +252,7 @@ You are now registered in our Loyalty Program.
   return account;
 }
 
-export async function getCustomerAccounts(
-  programId: string,
-  search?: string,
-  name?: string,
-) {
+export async function getCustomerAccounts(programId: string, search?: string, name?: string) {
   const contactFilter: Record<string, unknown> = {};
   if (name) {
     contactFilter.name = { contains: name, mode: "insensitive" };
@@ -270,9 +266,7 @@ export async function getCustomerAccounts(
   return await prisma.customerLoyaltyAccount.findMany({
     where: {
       programId,
-      ...(Object.keys(contactFilter).length > 0
-        ? { contact: contactFilter }
-        : {}),
+      ...(Object.keys(contactFilter).length > 0 ? { contact: contactFilter } : {}),
     },
     include: {
       currentTier: true,
@@ -346,10 +340,7 @@ export async function getCustomerAccountById(customerId: string) {
   });
 }
 
-export async function getCustomerAccountByContact(
-  programId: string,
-  contactId: string,
-) {
+export async function getCustomerAccountByContact(programId: string, contactId: string) {
   return await prisma.customerLoyaltyAccount.findUnique({
     where: {
       programId_contactId: {
@@ -512,39 +503,28 @@ export async function awardPoints(
   });
 
   // Check for tier upgrade
-  const upgradeResult = await checkAndUpgradeTier(
-    customer.id,
-    Number(updatedCustomer.totalSpend),
-  );
+  const upgradeResult = await checkAndUpgradeTier(customer.id, Number(updatedCustomer.totalSpend));
 
   // Dispatch Notifications
   if (customer.contact?.phone && customer.contact?.orgId) {
     // Points Issued
-    await dispatchLoyaltyNotification(
-      customer.contact.orgId,
-      LoyaltyEventType.POINTS_ISSUED,
-      {
-        customerPhone: customer.contact.phone,
-        customerName: customer.contact.name || "Customer",
-        points,
-        balanceAfter: updatedCustomer.currentPoints,
-        reason: "Purchase",
-      },
-    );
+    await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.POINTS_ISSUED, {
+      customerPhone: customer.contact.phone,
+      customerName: customer.contact.name || "Customer",
+      points,
+      balanceAfter: updatedCustomer.currentPoints,
+      reason: "Purchase",
+    });
 
     // Tier Upgraded
     if (upgradeResult?.upgraded) {
-      await dispatchLoyaltyNotification(
-        customer.contact.orgId,
-        LoyaltyEventType.TIER_UPGRADED,
-        {
-          customerPhone: customer.contact.phone,
-          customerName: customer.contact.name || "Customer",
-          newTier: upgradeResult.newTier?.name || "New Tier",
-          oldTier: customer.currentTier?.name || undefined, // We only have ID here, ideal would be name
-          lifetimePoints: updatedCustomer.lifetimePoints,
-        },
-      );
+      await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.TIER_UPGRADED, {
+        customerPhone: customer.contact.phone,
+        customerName: customer.contact.name || "Customer",
+        newTier: upgradeResult.newTier?.name || "New Tier",
+        oldTier: customer.currentTier?.name || undefined, // We only have ID here, ideal would be name
+        lifetimePoints: updatedCustomer.lifetimePoints,
+      });
     }
   }
 
@@ -579,7 +559,7 @@ export async function getLCustomerByPhone(phone, orgId) {
 export async function assignRewardToCustomer(
   customerId: string,
   rewardId: string,
-  notes?: string,
+  _notes?: string,
 ) {
   // Check if customer exists
   const customer = await prisma.customerLoyaltyAccount.findUnique({
@@ -642,18 +622,14 @@ export async function assignRewardToCustomer(
 
   // Dispatch Notification
   if (customer.contact?.phone && customer.contact?.orgId) {
-    await dispatchLoyaltyNotification(
-      customer.contact.orgId,
-      LoyaltyEventType.REWARD_ISSUED,
-      {
-        customerPhone: customer.contact.phone,
-        customerName: customer.contact.name || "Customer",
-        rewardName: reward.name,
-        redemptionCode: shortCode,
-        rewardId: reward.id,
-        rewardWaTemplateId: reward.waTemplateId,
-      },
-    );
+    await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.REWARD_ISSUED, {
+      customerPhone: customer.contact.phone,
+      customerName: customer.contact.name || "Customer",
+      rewardName: reward.name,
+      redemptionCode: shortCode,
+      rewardId: reward.id,
+      rewardWaTemplateId: reward.waTemplateId,
+    });
   }
 
   return assignment;

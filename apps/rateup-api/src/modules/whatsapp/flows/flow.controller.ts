@@ -47,11 +47,7 @@ import { GraphApiError, callMetaApi } from "../wa_axios.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
 import { getGraphApiErrorMessage } from "../wa_error_handler.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
-import {
-  createSession,
-  deleteSession,
-  getSession,
-} from "../whatsappSurvey/wasurvey.service.js";
+import { createSession, deleteSession, getSession } from "../whatsappSurvey/wasurvey.service.js";
 import { validateSession } from "../whatsappSurvey/wasurvey.utils.js";
 
 /**
@@ -81,7 +77,6 @@ export async function getFlowHandler(
   }>,
   res: FastifyReply,
 ) {
-  const { orgId } = req.user;
   const { waFlowId } = req.params;
 
   const flow = await getFlowFromDb(waFlowId);
@@ -110,10 +105,7 @@ export async function getFlowMetricsHandler(
     return res.status(500).send(error?.response);
   }
 }
-export async function getUnsyncedFlowsHandler(
-  req: FastifyRequest,
-  res: FastifyReply,
-) {
+export async function getUnsyncedFlowsHandler(req: FastifyRequest, _res: FastifyReply) {
   return await getUnsyncedFlows(req.user.orgId, req.userId);
 }
 
@@ -135,7 +127,7 @@ export async function importFlowsHandler(
   req: FastifyRequest<{
     Body: ImportFlowsBody;
   }>,
-  res: FastifyReply,
+  _res: FastifyReply,
 ) {
   const { orgId } = req.user;
   const { waFlowIds, mapData } = req.body;
@@ -147,18 +139,17 @@ export async function importFlowsHandler(
     log.trace("fetching flow json %s", waFlowId);
     const json = await getFlowJsonFromWa(orgId, waFlowId); // TODO: cache?
     log.trace("creating survey from flow %s", waFlowId);
-    const { survey, flowMap: flowMapWithQuestionId } =
-      await createSurveyFromFlow({
-        orgId: orgId,
-        flowJson: json,
-        flowMap: mapData[waFlowId],
-        req: req,
-        teamIds: req.body.teamIds,
-        title: waFlow.name,
-      });
+    const { survey, flowMap: flowMapWithQuestionId } = await createSurveyFromFlow({
+      orgId: orgId,
+      flowJson: json,
+      flowMap: mapData[waFlowId],
+      req: req,
+      teamIds: req.body.teamIds,
+      title: waFlow.name,
+    });
 
     log.trace("creating flow copy in db %s", waFlowId);
-    const dbFlow = await createFlowCopyInDb({
+    await createFlowCopyInDb({
       orgId,
       flowId: waFlowId,
       name: waFlow.name,
@@ -238,8 +229,7 @@ export async function updateFlowHandler(
     pendingSave: true,
   });
   const updatedWaAppIntegration = updatedFlow?.survey?.questions?.some(
-    (qs: any) =>
-      qs.type === QuestionType.Date && qs?.onSelectAction && qs?.waAppName,
+    (qs: any) => qs.type === QuestionType.Date && qs?.onSelectAction && qs?.waAppName,
   );
 
   // add data_channel_uri if logic jumps are updated
@@ -251,9 +241,7 @@ export async function updateFlowHandler(
     log.trace("updating data_channel_uri in wa %s", updatedFlow.flowId);
 
     const domain = process.env.API_URL;
-    const server_url = domain.startsWith("https")
-      ? domain
-      : `https://${domain}`;
+    const server_url = domain.startsWith("https") ? domain : `https://${domain}`;
     const endpoint_uri = `${server_url}/api/wa/endpoint/${orgId}/${updatedFlow.dbFlowId}`;
 
     await updateFlowMetaDataInWa(orgId, updatedFlow.flowId, {
@@ -295,12 +283,7 @@ export async function updateFlowMetaDataHandler(
     const previousFlow = await getFlowFromDb(dbFlowId);
     await updateFlowInDb(orgId, dbFlowId, req.body);
     const { accessToken } = await getWaSettings(orgId);
-    const { data } = await callMetaApi(
-      `/${previousFlow?.flowId}`,
-      "POST",
-      accessToken,
-      req.body,
-    );
+    const { data } = await callMetaApi(`/${previousFlow?.flowId}`, "POST", accessToken, req.body);
     if (!data?.success) {
       log.error({ err: data }, "Flow Not updated in whatsapp");
       throw new Error("Flow Not updated in whatsapp");
@@ -415,7 +398,7 @@ export async function deprecateFlowHandler(
   req: FastifyRequest<{
     Params: ByDbFlowIdParams;
   }>,
-  res: FastifyReply,
+  _res: FastifyReply,
 ) {
   const { orgId } = req.user;
   const { dbFlowId } = req.params;
@@ -445,7 +428,7 @@ export async function publishFlowHandler(
   req: FastifyRequest<{
     Params: ByDbFlowIdParams;
   }>,
-  res: FastifyReply,
+  _res: FastifyReply,
 ) {
   const { orgId } = req.user;
   const { dbFlowId } = req.params;
@@ -474,16 +457,13 @@ export async function sendFlowHandler(
       userId,
       whatsappSettingsPhoneId,
     };
-    orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    if (orgId) {
+      updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    }
     const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
-    const surveyTeamMapId = dbFlow?.survey?.teams?.find(
-      (t) => t.teamId === teamId,
-    )?.id;
+    const surveyTeamMapId = dbFlow?.survey?.teams?.find((t) => t.teamId === teamId)?.id;
     const session = await getSession(orgId, phone);
-    if (
-      !validateSession(session) ||
-      session.surveyTeamMapId !== surveyTeamMapId
-    ) {
+    if (!validateSession(session) || session.surveyTeamMapId !== surveyTeamMapId) {
       await deleteSession(orgId, phone);
       await createSession({
         phone,

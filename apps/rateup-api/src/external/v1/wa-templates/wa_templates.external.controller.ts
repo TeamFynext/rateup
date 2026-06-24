@@ -6,16 +6,10 @@ import {
 } from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
 import { TemplateTypeParamsSchema } from "../../../modules/whatsapp/messageTemplates/wa_templates.schema.js";
 import { getTemplatesByOrgIdAndTemplateType } from "../../../modules/whatsapp/messageTemplates/wa_templates.service.js";
-import {
-  SendTemplateByNameToPhone,
-  SendTemplateWithFile,
-} from "./wa_templates.external.schema.js";
+import { SendTemplateByNameToPhone, SendTemplateWithFile } from "./wa_templates.external.schema.js";
 import { log } from "../../../utils/logger.js";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
-import {
-  getWaSettings,
-  getWaSettingsByPhone,
-} from "../../../modules/whatsapp/settings/wa_settings.service.js";
+import { getWaSettings } from "../../../modules/whatsapp/settings/wa_settings.service.js";
 import { WaTemplateComponentType } from "../../../types/enums.js";
 import { templateFileUploadSchema } from "./wa_templates.utils.js";
 import FormData from "form-data";
@@ -28,10 +22,7 @@ export async function getTemplatesExternalController(
   reply: FastifyReply,
 ) {
   const { orgId } = request.user;
-  const templates = await getTemplatesByOrgIdAndTemplateType(
-    orgId,
-    request.query.templateType,
-  );
+  const templates = await getTemplatesByOrgIdAndTemplateType(orgId, request.query.templateType);
   reply.code(200).send(templates);
 }
 
@@ -103,19 +94,13 @@ export async function sendTemplateByNameToPhoneExternalController(
     );
     rep
       .code(200)
-      .send(
-        timeDelay
-          ? { status: response.status, scheduleId: response?.id }
-          : response,
-      );
+      .send(timeDelay ? { status: response.status, scheduleId: response?.id } : response);
   } catch (error) {
     log.error("Error sending template to contacts \n%o", error);
     if (error instanceof Error) {
       rep.code(400).send(error?.message);
     } else {
-      rep
-        .code(500)
-        .send(error?.message ?? "Error sending template to contacts");
+      rep.code(500).send(error?.message ?? "Error sending template to contacts");
     }
   }
 }
@@ -212,9 +197,7 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
             type,
             [type]: {
               id: uploadedFile?.data?.id,
-              ...(type === "document"
-                ? { filename: filename ? filename : file?.filename }
-                : {}),
+              ...(type === "document" ? { filename: filename ? filename : file?.filename } : {}),
             },
           },
         ],
@@ -247,27 +230,18 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
     );
     rep
       .code(200)
-      .send(
-        timeDelay
-          ? { status: response.status, scheduleId: response?.id }
-          : response,
-      );
+      .send(timeDelay ? { status: response.status, scheduleId: response?.id } : response);
   } catch (error) {
     log.error("Error sending template to contacts \n%o", error);
     if (error instanceof Error) {
       rep.code(400).send(error?.message);
     } else {
-      rep
-        .code(500)
-        .send(error?.message ?? "Error sending template to contacts");
+      rep.code(500).send(error?.message ?? "Error sending template to contacts");
     }
   }
 }
 
-export async function getErrorLogsExternalController(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getErrorLogsExternalController(request: FastifyRequest, reply: FastifyReply) {
   return getErrorLogsHandler(request as any, reply);
 }
 

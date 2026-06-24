@@ -32,10 +32,7 @@ export async function getInboxAutomationHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await getInboxAutomation(
-      request.user.orgId,
-      request.query.condition,
-    );
+    const res = await getInboxAutomation(request.user.orgId, request.query.condition);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -50,11 +47,7 @@ export async function updateInboxAutomationHandler(
   try {
     const { condition, ...rest } = request.body;
     console.log(request.body);
-    const res = await updateInboxAutomation(
-      request.user.orgId,
-      condition,
-      rest,
-    );
+    const res = await updateInboxAutomation(request.user.orgId, condition, rest);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -67,10 +60,7 @@ export async function deleteInboxAutomationHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await deleteInboxAutomation(
-      request.user.orgId,
-      request.query.condition,
-    );
+    const res = await deleteInboxAutomation(request.user.orgId, request.query.condition);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

@@ -1,12 +1,6 @@
 import prisma from "../../../utils/prisma.js";
-import {
-  validateRedemption,
-  generateRedemptionCode,
-} from "../redemptionValidator.js";
-import {
-  ApplyRedemptionInput,
-  RedeemRewardInput,
-} from "../accounts/account.schema.js";
+import { validateRedemption, generateRedemptionCode } from "../redemptionValidator.js";
+import { ApplyRedemptionInput, RedeemRewardInput } from "../accounts/account.schema.js";
 import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
 import { LoyaltyEventType } from "../../../types/enums.js";
 
@@ -36,10 +30,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   }
 
   // Check if customer has enough points (skip for assigned type rewards)
-  if (
-    reward.rewardType !== "assigned" &&
-    customer.currentPoints < reward.pointsCost
-  ) {
+  if (reward.rewardType !== "assigned" && customer.currentPoints < reward.pointsCost) {
     throw new Error(
       `Insufficient points. Required: ${reward.pointsCost}, Available: ${customer.currentPoints}`,
     );
@@ -51,9 +42,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   });
 
   if (!validation.valid) {
-    throw new Error(
-      `Redemption validation failed: ${validation.violations.join(", ")}`,
-    );
+    throw new Error(`Redemption validation failed: ${validation.violations.join(", ")}`);
   }
 
   // Handle different reward types
@@ -90,8 +79,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
       },
     });
 
-    const instantRedemptionCode =
-      "INSTANT_" + Date.now().toString(36).toUpperCase();
+    const instantRedemptionCode = "INSTANT_" + Date.now().toString(36).toUpperCase();
 
     const redemption = await prisma.loyaltyRedemption.create({
       data: {
@@ -125,18 +113,13 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
     }
 
     if (customer.contact?.phone && customer.contact?.orgId) {
-      await dispatchLoyaltyNotification(
-        customer.contact.orgId,
-        LoyaltyEventType.POINTS_ISSUED,
-        {
-          customerPhone: customer.contact.phone,
-          customerName: customer.contact.name || "Customer",
-          points: pointsToAdd,
-          balanceAfter:
-            customer.currentPoints - reward.pointsCost + pointsToAdd,
-          reason: `Redeemed point reward: ${reward.name}`,
-        },
-      );
+      await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.POINTS_ISSUED, {
+        customerPhone: customer.contact.phone,
+        customerName: customer.contact.name || "Customer",
+        points: pointsToAdd,
+        balanceAfter: customer.currentPoints - reward.pointsCost + pointsToAdd,
+        reason: `Redeemed point reward: ${reward.name}`,
+      });
     }
 
     return {
@@ -150,8 +133,7 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
   if (reward.rewardType === "coupon") {
     const redemptionCode = await generateRedemptionCode();
     const requiresApproval =
-      reward.redemptionRules?.["approval_rules"]?.["requires_approval"] ||
-      false;
+      reward.redemptionRules?.["approval_rules"]?.["requires_approval"] || false;
 
     const status = requiresApproval ? "PENDING" : "APPROVED";
 
@@ -363,20 +345,16 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
     }
 
     if (customer.contact?.phone && customer.contact?.orgId) {
-      await dispatchLoyaltyNotification(
-        customer.contact.orgId,
-        LoyaltyEventType.REWARD_ISSUED,
-        {
-          customerPhone: customer.contact.phone,
-          customerName: customer.contact.name || "Customer",
-          rewardName: reward.name,
-          redemptionCode: shortCode,
-          points: -reward.pointsCost,
-          balanceAfter: customer.currentPoints - reward.pointsCost,
-          rewardId: reward.id,
-          rewardWaTemplateId: reward.waTemplateId,
-        },
-      );
+      await dispatchLoyaltyNotification(customer.contact.orgId, LoyaltyEventType.REWARD_ISSUED, {
+        customerPhone: customer.contact.phone,
+        customerName: customer.contact.name || "Customer",
+        rewardName: reward.name,
+        redemptionCode: shortCode,
+        points: -reward.pointsCost,
+        balanceAfter: customer.currentPoints - reward.pointsCost,
+        rewardId: reward.id,
+        rewardWaTemplateId: reward.waTemplateId,
+      });
     }
   }
 

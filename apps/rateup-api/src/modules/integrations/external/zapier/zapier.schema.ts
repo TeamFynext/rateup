@@ -107,14 +107,10 @@ const contactLabelSchema = z.object({
   lifecycleId: z.string(),
 });
 
-export type TriggerSubscriptionBodySchema = z.infer<
-  typeof triggerSubscriptionBodySchema
->;
+export type TriggerSubscriptionBodySchema = z.infer<typeof triggerSubscriptionBodySchema>;
 export type TicketCardSchema = z.infer<typeof ticketCardSchema>;
 export type NewMemberToGroupShema = z.infer<typeof newMemberToGroupShema>;
-export type InviteMemberRequestSchema = z.infer<
-  typeof inviteMemberRequestSchema
->;
+export type InviteMemberRequestSchema = z.infer<typeof inviteMemberRequestSchema>;
 export type SendMessageSchema = z.infer<typeof sendMessageSchema>;
 export type ContactLabelSchema = z.infer<typeof contactLabelSchema>;
 export type PageSchema = z.infer<typeof pageSchema>;

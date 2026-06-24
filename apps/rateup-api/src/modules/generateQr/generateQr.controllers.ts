@@ -20,10 +20,7 @@ async function createGenerateQrRecord(
   }>,
   rep: FastifyReply,
 ) {
-  const newLandingPage = await shortIdUniqueConstraintErrHandler(
-    createGenerateQrRecordInDB,
-    req,
-  );
+  const newLandingPage = await shortIdUniqueConstraintErrHandler(createGenerateQrRecordInDB, req);
   rep.code(201).send(newLandingPage);
 }
 
@@ -46,8 +43,7 @@ async function getPublicGenerateQrRecordWithShortId(
   req: FastifyRequest<{ Params: { shortUrlId: string } }>,
   rep: FastifyReply,
 ) {
-  const generateQrRecordWithShortUrlId =
-    await getPublicGenerateQrRecordWithShortIdFromDB(req);
+  const generateQrRecordWithShortUrlId = await getPublicGenerateQrRecordWithShortIdFromDB(req);
   rep.code(200).send(generateQrRecordWithShortUrlId);
 }
 
@@ -60,8 +56,7 @@ async function updateGenerateQrRecordWithShortId(
   req: FastifyRequest<{ Body: updateGenerateQrRecordReqBodyType }>,
   rep: FastifyReply,
 ) {
-  const updatedGenerateQrRecord =
-    await updateGenerateQrRecordWithShortIdInDB(req);
+  const updatedGenerateQrRecord = await updateGenerateQrRecordWithShortIdInDB(req);
   rep.code(200).send(updatedGenerateQrRecord);
 }
 
@@ -69,7 +64,7 @@ async function deleteGenerateQrRecordWithShortId(
   req: FastifyRequest<{ Params: { shortUrlId: string } }>,
   rep: FastifyReply,
 ) {
-  const deletedGenerateQrRecord = await deleteGenerateQrRecordInDB(req);
+  await deleteGenerateQrRecordInDB(req);
   rep.code(200).send({ success: true, message: "Deleted QR sucessfully." });
 }
 
