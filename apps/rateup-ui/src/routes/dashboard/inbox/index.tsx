@@ -3,9 +3,7 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { useEffect } from "react";
 
 import { useContactById } from "@/backend/campaign/contacts/contacts.query";
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
-import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -103,21 +101,14 @@ function WhatsAppInbox() {
 }
 
 function ResizeableChat() {
-  const { data, isPending } = useWaSettings();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const isChatDisplayOpen = useIsChatDisplayOpen();
-
-  if (isPending) return <RateupLoader />;
 
   // Mobile: show either chat list or chat display (full width, no resize)
   if (isMobile) {
     return (
       <div className="h-full w-full">
-        {isChatDisplayOpen ? (
-          <WaInboxChatDisplay waSettings={data} smallScreen />
-        ) : (
-          <WaInboxChatSelect />
-        )}
+        {isChatDisplayOpen ? <WaInboxChatDisplay /> : <WaInboxChatSelect />}
       </div>
     );
   }
@@ -130,7 +121,7 @@ function ResizeableChat() {
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel defaultSize={"72%"} minSize={"60%"} maxSize={"78%"}>
-        <WaInboxChatDisplay waSettings={data} />
+        <WaInboxChatDisplay />
       </ResizablePanel>
     </ResizablePanelGroup>
   );

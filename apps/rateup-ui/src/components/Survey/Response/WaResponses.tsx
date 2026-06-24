@@ -122,7 +122,7 @@ const WaResponses = ({ survey, defaultLanguage, subscription, questions }) => {
     [subscription, survey],
   );
 
-  const deleteResponse = useDeleteResponse(surveyId, surveyTeamMapId, close, setIsDeleting);
+  const deleteResponse = useDeleteResponse(surveyId, surveyTeamMapId, close);
   const { t: translations } = useTranslation();
 
   useEffect(() => {
@@ -395,10 +395,8 @@ const WaResponses = ({ survey, defaultLanguage, subscription, questions }) => {
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
         closeTicketModal={closeTicketModal}
-        selectedTeamId={responseTeamId}
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
-        selectedResponse={data?.find((r: any) => r.id === selectedResponseId)}
       />
       <div className="h-full px-6 p-2">
         <DataTable
