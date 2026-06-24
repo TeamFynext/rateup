@@ -12,7 +12,6 @@ import { useTranslation } from "react-i18next";
 import { useGetStripeCheckoutSession } from "@/backend/payment/stripe/stripe.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 
-
 export const Route = createFileRoute("/dashboard/payment/summary/")({
   component: CheckoutReturn,
 });

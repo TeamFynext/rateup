@@ -36,11 +36,11 @@ import { SurveyType } from "@/types/enums.ts";
 import { updateSurvey } from "@/backend/surveys/survey.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
-import { getContent } from "@/utils/index.ts";
 import {
   formatIsoDateStringWithTime,
   roundOffMinutesAndSeconds,
 } from "@/utils/dateTime.ts";
+import { getContent } from "@/utils/index.ts";
 
 import {
   RateupButtonBlue,

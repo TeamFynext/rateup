@@ -23,4 +23,3 @@ const uploadFile = async (prop, file) => {
 };
 
 export { uploadFile };
-

@@ -20,7 +20,12 @@ import {
 } from "@/backend/conversation/conversation.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 

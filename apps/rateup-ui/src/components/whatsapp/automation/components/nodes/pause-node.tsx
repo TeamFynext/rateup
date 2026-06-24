@@ -5,7 +5,6 @@ import { IconClockPause } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
 import type { PauseNodeData } from "../../types/node-types.ts";
-
 import BaseNode from "./base-node.tsx";
 
 function PauseNode(props: NodeProps & { data: PauseNodeData }) {

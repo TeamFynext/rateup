@@ -15,7 +15,6 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
 import { API_URL } from "@/utils/constants.ts";
 
-
 export const Route = createFileRoute("/auth/shopify/retry/")({
   component: Page,
 });

@@ -21,8 +21,8 @@ import {
   useDeleteSurveyVariableMutation,
   useUpdateSurveyVariableMutation,
 } from "@/backend/surveys/surveys.query";
-
 import SurveyContext from "@/context/SurveyContext.ts";
+
 import { RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
 import FormModalLayout from "../../Modal/FormModalLayout.tsx";

@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+
 import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
@@ -38,4 +39,3 @@ export function TextForm() {
     </FormPaperLayout>
   );
 }
-

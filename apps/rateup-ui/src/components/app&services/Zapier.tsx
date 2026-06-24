@@ -25,6 +25,7 @@ import {
   useIntegrationByType,
   useUpdateIntegrationMutation,
 } from "@/backend/appsIntegration/integration.query";
+import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
@@ -34,8 +35,6 @@ import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
-
-import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 
 export function Zapier() {
   const {

@@ -8,7 +8,12 @@ import { TemplateType } from "@/types/enums.ts";
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { FormField } from "@/components/ui/form.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 

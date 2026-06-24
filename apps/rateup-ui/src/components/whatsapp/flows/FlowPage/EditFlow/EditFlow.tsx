@@ -18,6 +18,7 @@ import {
 import type { WaFlowJson } from "@/types/global";
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { FlowQuestionTypes } from "@/utils/constants.ts";
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
 import { createBlankQuestion } from "@/utils/questions.ts";
@@ -32,7 +33,6 @@ import {
   updateFlowJsonNavigationAndDataPassing,
 } from "@/utils/whatsapp/flow.utils";
 
-import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { QuestionTypeSelection } from "../../../../Survey/Question/QuestionTypeSelection.tsx";
 import { PreviewPanel } from "../../Preview/PreviewPanel.tsx";
 import FlowScreensList from "../FlowScreensList/index.tsx";
@@ -330,4 +330,3 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
 }
 
 export default EditFlow;
-

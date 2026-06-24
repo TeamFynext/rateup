@@ -17,13 +17,13 @@ import { Dropzone } from "@mantine/dropzone";
 import { IconFileFilled, IconUpload, IconX } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import {
   deleteUploadedFiles,
   getFileNameFromKey,
   uploadFile,
 } from "@/utils/file-upload/upload.ts";
 
-import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import PaperLayout from "../../../../styled/Layouts/PaperLayout.tsx";
 
 interface FileInputFormProps extends Partial<DropzoneProps> {
@@ -164,4 +164,3 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
 };
 
 export default FileInputForm;
-

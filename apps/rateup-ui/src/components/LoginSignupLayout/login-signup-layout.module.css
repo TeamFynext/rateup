@@ -39,7 +39,8 @@
     width: 100%;
     position: initial;
     border-radius: initial;
-    background-image: url("https://djd7kjh9uwow0.cloudfront.net/images/login-signup-pages/abstract-pattern.svg"),
+    background-image:
+      url("https://djd7kjh9uwow0.cloudfront.net/images/login-signup-pages/abstract-pattern.svg"),
       linear-gradient(135deg, var(--shade-of-blue-5), var(--shade-of-blue-3));
   }
 }

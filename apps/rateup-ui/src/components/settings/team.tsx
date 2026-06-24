@@ -36,7 +36,11 @@ import {
   useTeamMembersFromInvitation,
   useUpdateTeamFeatures,
 } from "@/backend/team/team.query";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {

@@ -9,7 +9,12 @@ import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import { useLoyaltyRewards } from "@/backend/loyalty/reward.query";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { FormField } from "@/components/ui/form.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import {

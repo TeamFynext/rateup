@@ -32,6 +32,8 @@ import {
   useQuestionUpdateMutation,
 } from "@/backend/surveys/questions/questions.query";
 import HTMLEditor from "@/components/RichTextEditor/HTMLEditor.tsx";
+import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
 import {
@@ -40,8 +42,6 @@ import {
 } from "@/utils/questions.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
-import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
-import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import TextEditor from "../../RichTextEditor/TextEditor.tsx";
 import type { QuestionTabsEnum } from "../EditSurvey.tsx";

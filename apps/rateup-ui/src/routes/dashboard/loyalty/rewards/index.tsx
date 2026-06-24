@@ -46,7 +46,12 @@ import { RewardFormContainer } from "@/components/LoyaltyComponents/RewardFormCo
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
   Select,
@@ -55,10 +60,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
-import { couponSchema, giftSchema, pointRewardSchema } from "../../../../components/dashboard/loyalty/rewards/schemas.ts";
+import {
+  couponSchema,
+  giftSchema,
+  pointRewardSchema,
+} from "../../../../components/dashboard/loyalty/rewards/schemas.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/rewards/")({
   component: RewardsPage,

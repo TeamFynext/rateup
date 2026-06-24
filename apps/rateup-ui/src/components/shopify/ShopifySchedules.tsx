@@ -14,7 +14,11 @@ import type {
   ShopifySurvey,
 } from "@/types/global";
 import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
-import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
+import {
+  createSortableHeader,
+  DataTable,
+} from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -22,7 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import { shopifyEventData } from "@/utils/constants.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 

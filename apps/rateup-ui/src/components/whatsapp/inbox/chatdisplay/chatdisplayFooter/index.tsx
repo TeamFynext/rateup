@@ -20,6 +20,11 @@ import {
   useSendNewWaMessage,
   useUnBlockWhatsAppUser,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
+import useContactStore, {
+  useContactsStore,
+  useMessagesStore,
+} from "@/components/dashboard/inbox/store.ts";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import WaTextEditor, {
@@ -27,14 +32,14 @@ import WaTextEditor, {
 } from "@/components/RichTextEditor/waTextEditor.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
 import { formatDateWithRelativeTime } from "@/utils/dateTime.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";

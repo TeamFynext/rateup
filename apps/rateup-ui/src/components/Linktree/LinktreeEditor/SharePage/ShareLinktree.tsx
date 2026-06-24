@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
-
 import { uploadFile } from "@/utils/file-upload/upload.ts";
+
 import { RateupButtonBlue } from "../../../Button/RateupButtons.tsx";
 import Preview from "../../../Survey/ShareSurvey/Preview/Preview.tsx";
 import LogoTabpanel from "../../../Survey/ShareSurvey/ShareQR/LogoTabPanel/index.tsx";
@@ -95,4 +95,3 @@ function ShareLinktree({ url, isPublished, title }) {
 }
 
 export default ShareLinktree;
-

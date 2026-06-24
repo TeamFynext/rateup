@@ -19,10 +19,14 @@ import {
 } from "@/components/settings/team.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { UserRole } from "@/utils/enums/index.ts";
-
 
 export const Route = createFileRoute("/dashboard/settings/team/$teamId/")({
   component: TeamManagement,

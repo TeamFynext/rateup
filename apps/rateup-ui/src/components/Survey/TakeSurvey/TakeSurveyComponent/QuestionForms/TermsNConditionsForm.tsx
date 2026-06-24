@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
@@ -87,4 +88,3 @@ export function TermsNConditionsForm({ tncData }) {
     </>
   );
 }
-

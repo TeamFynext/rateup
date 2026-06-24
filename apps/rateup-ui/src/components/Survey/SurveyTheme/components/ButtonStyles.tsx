@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import { Box, Flex, Stack } from "@mantine/core";
 
 import { COORDINATESX, COORDINATESY } from "@/utils/constants.ts";
+
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput.tsx";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker/index.tsx";
 import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
@@ -120,4 +121,3 @@ function ButtonStyles() {
 }
 
 export default ButtonStyles;
-

@@ -35,7 +35,10 @@ import {
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal.tsx";
 import { ParticipantMenu } from "@/components/Contacts/GroupParticipant.tsx";
-import { CONTACT_SORT, contactColumn } from "@/components/Contacts/utils/utils.tsx";
+import {
+  CONTACT_SORT,
+  contactColumn,
+} from "@/components/Contacts/utils/utils.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -61,9 +64,8 @@ import {
   uploadFile,
 } from "@/utils/file-upload/upload.ts";
 
-import { useGroupTableStore } from "../../../../../components/dashboard/contacts/store/group-table-store.ts";
 import { DataTableToolbar } from "../../../../../components/dashboard/contacts/groups/$groupId/data-table-toolbar.tsx";
-
+import { useGroupTableStore } from "../../../../../components/dashboard/contacts/store/group-table-store.ts";
 
 export const Route = createFileRoute("/dashboard/contacts/groups/$groupId/")({
   component: ContactGroup,

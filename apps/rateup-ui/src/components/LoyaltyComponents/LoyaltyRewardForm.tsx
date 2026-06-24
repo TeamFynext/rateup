@@ -3,6 +3,11 @@
 import { Info } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 
+import type {
+  CouponFormValues,
+  GiftFormValues,
+  PointRewardFormValues,
+} from "@/components/dashboard/loyalty/rewards/schemas.ts";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
   Form,
@@ -24,11 +29,6 @@ import {
 } from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import type {
-  CouponFormValues,
-  GiftFormValues,
-  PointRewardFormValues,
-} from "@/components/dashboard/loyalty/rewards/schemas.ts";
 
 interface LoyaltyRewardFormProps {
   category: string;

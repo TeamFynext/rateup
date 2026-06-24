@@ -1,7 +1,5 @@
 "use client";
 
-import { Image as NextImage } from '@unpic/react'
-
 import {
   Divider,
   Flex,
@@ -15,13 +13,14 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { IconCheck, IconChevronLeft } from "@tabler/icons-react";
+import { Image as NextImage } from "@unpic/react";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 
 import { QuestionType as Q } from "@/types/enums.ts";
-
-import { extractText, isHtml } from "@/utils/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
+import { extractText, isHtml } from "@/utils/index.ts";
+
 import {
   RateupButtonBlackOutline,
   RateupButtonBlue,
@@ -374,4 +373,3 @@ const getContent = (title: string | boolean) => {
   else if (isHtml(title)) return extractText(title);
   else return title;
 };
-

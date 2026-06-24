@@ -6,6 +6,7 @@ import { Group, Input, Stack, Text, Textarea } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+
 import classes from "./Style.module.css";
 
 const TncExtraProps = ({ form }) => {
@@ -74,4 +75,3 @@ const TncExtraProps = ({ form }) => {
 };
 
 export default TncExtraProps;
-

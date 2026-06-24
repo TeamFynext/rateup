@@ -32,10 +32,8 @@ import TestimonialSelect from "@/components/testimonial/TestimonialSelect.tsx";
 import TestimonialShare, {
   TestimonialShareModal,
 } from "@/components/testimonial/TestimonialShare.tsx";
-import { getFilteredTestimonials } from "@/utils/testimonial.ts";
-
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
-
+import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 
 export const Route = createFileRoute("/dashboard/testimonial/$collectionId/")({
   component: CollectionById,
@@ -374,4 +372,3 @@ function UtilityComponent({
     </Paper>
   );
 }
-

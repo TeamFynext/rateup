@@ -7,8 +7,8 @@ import { isNumber } from "@tiptap/react";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import AutosaveInput from "@/components/input/AutosaveInput/index.tsx";
-
 import { cordinateStyle } from "@/utils/index.ts";
+
 import { CreditsCard } from "../../../../../Card/CreditsCard.tsx";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils.ts";
 import classes from "../../../SurveyTheme.module.css";
@@ -191,4 +191,3 @@ export function getInlineStyleFromStyleObj(styles) {
   }
   return newStyles.join(";") + ";";
 }
-

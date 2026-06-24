@@ -4,16 +4,16 @@ import { Edit2, Save, Trash2, X } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 
 import { LoyaltyRewardStatus } from "@/types/enums.ts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Label } from "@/components/ui/label.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
 import type {
   CouponFormValues,
   GiftFormValues,
   PointRewardFormValues,
 } from "@/components/dashboard/loyalty/rewards/schemas.ts";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 
 import { LoyaltyRewardForm } from "./LoyaltyRewardForm.tsx";
 

@@ -6,6 +6,7 @@ import { Text } from "@mantine/core";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+
 import classes from "./TakeSurvey.module.css";
 import { getReplacedTitleFromVariable } from "./util.tsx";
 
@@ -79,4 +80,3 @@ function getFirstLineAlignmentFromHTML(htmlContent) {
   }
   return classAlign?.replace("text-", "") ?? "left";
 }
-

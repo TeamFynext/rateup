@@ -10,8 +10,8 @@ import { useTranslation } from "react-i18next";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useCreateFlowMutation } from "@/backend/whatsapp/flow/flow.query";
-
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
+
 import {
   ContainedMultiSelect,
   ContainedTextField,
@@ -126,4 +126,3 @@ function CreateFlowModal({ opened, onClose }) {
 }
 
 export default CreateFlowModal;
-

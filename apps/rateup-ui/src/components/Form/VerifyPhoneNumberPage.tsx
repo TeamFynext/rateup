@@ -14,9 +14,9 @@ import {
 } from "supertokens-auth-react/recipe/passwordless";
 
 import { fetchUserProfile } from "@/backend/user/user.api";
-
 import { resendOTP } from "@/utils/auth/index.tsx";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
+
 import { RateupButtonBlue } from "../Button/RateupButtons.tsx";
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import styles from "./AuthForm.module.css";

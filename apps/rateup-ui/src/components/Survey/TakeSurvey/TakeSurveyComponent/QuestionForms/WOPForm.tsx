@@ -5,8 +5,8 @@ import { useContext, useState } from "react";
 import { Group } from "@mantine/core";
 
 import type { Wop } from "@/types/global";
-
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+
 import { DEFAULT_WOP } from "../util.tsx";
 import WheelComponent from "../WheelComponent.tsx";
 
@@ -50,4 +50,3 @@ const WOPForm = ({
 };
 
 export default WOPForm;
-

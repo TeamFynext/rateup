@@ -11,14 +11,14 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
 
-import CustomMultiselectForMobile from "../components/CustomMultiselectForMobile/index.tsx";
-import { sampleChoices } from "@/utils/constants/forms.ts";
-
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+import { sampleChoices } from "@/utils/constants/forms.ts";
+
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
+import CustomMultiselectForMobile from "../components/CustomMultiselectForMobile/index.tsx";
 import classes from "../TakeSurvey.module.css";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
@@ -124,4 +124,3 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
     />
   );
 }
-

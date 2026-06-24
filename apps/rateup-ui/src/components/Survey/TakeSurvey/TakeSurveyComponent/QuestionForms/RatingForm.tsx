@@ -9,6 +9,7 @@ import { useAnimate } from "motion/react";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 import classes from "../TakeSurvey.module.css";
 
@@ -59,4 +60,3 @@ export function RatingForm() {
     />
   );
 }
-

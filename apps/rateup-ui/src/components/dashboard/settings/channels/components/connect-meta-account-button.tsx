@@ -37,8 +37,7 @@ export function ConnectMetaAccountButton() {
   }, []);
 
   const configId = useMemo(() => {
-    if (selectedAssets.length === 1)
-      return import.meta.env.VITE_META_CONFIG_ID;
+    if (selectedAssets.length === 1) return import.meta.env.VITE_META_CONFIG_ID;
     if (assets.every((asset) => selectedAssets.includes(asset))) {
       return import.meta.env.VITE_META_CONFIG_ID_ALL;
     }

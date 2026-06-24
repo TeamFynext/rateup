@@ -5,7 +5,12 @@ import { useTranslation } from "react-i18next";
 
 import { MessagePlatform } from "@/types/enums.ts";
 import { useGetConversationAccountDistribution } from "@/backend/conversation/conversation.query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 

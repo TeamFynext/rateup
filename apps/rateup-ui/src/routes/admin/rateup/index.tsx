@@ -29,7 +29,10 @@ import { ContainedTagInput } from "@/components/input/ContainedInput/ContainedIn
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import RateupPlanModal from "@/components/Modal/RateupPlanModal.tsx";
-import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import {
+  createSortableHeader,
+  DataTable,
+} from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -123,7 +126,8 @@ function RateupPlan() {
       accessorKey: "description",
       header: "Description",
       cell: ({ row }) => {
-        const description = (row.getValue("description") as string[] | undefined) ?? [];
+        const description =
+          (row.getValue("description") as string[] | undefined) ?? [];
         return (
           <div className="max-w-[200px]">
             {description.length > 0 ? (

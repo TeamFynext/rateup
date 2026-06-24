@@ -16,7 +16,6 @@ import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
 import style from "@/components/Graph/graph.module.css";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 
-
 export const Route = createFileRoute("/(marketing)/pricing/shopify/")({
   component: Page,
 });

@@ -10,7 +10,6 @@ import {
 import { useCreateAuthToken } from "@/backend/appsIntegration/integration.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
 
-
 export const Route = createFileRoute("/auth/oauth2callback/")({
   component: AuthCallBack,
 });

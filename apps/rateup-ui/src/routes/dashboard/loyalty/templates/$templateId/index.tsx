@@ -3,7 +3,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { TemplateType } from "@/types/enums.ts";
-
 import { WhatsappTemplateById } from "@/components/whatsapp/templates/WhatsappTemplateById.tsx";
 
 export const Route = createFileRoute(

@@ -5,7 +5,6 @@ import { IconUser } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
 import type { AssignNodeData } from "../../types/node-types.ts";
-
 import BaseNode from "./base-node.tsx";
 
 function AssignNode(props: NodeProps & { data: AssignNodeData }) {

@@ -5,7 +5,6 @@ import { IconPlayerPlay } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
 import type { StartNodeData } from "../../types/node-types.ts";
-
 import BaseNode from "./base-node.tsx";
 
 function StartNode(props: NodeProps & { data: StartNodeData }) {

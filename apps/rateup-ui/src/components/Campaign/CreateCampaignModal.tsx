@@ -56,7 +56,12 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 

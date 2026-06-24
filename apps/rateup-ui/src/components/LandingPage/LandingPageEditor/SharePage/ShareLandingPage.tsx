@@ -9,8 +9,8 @@ import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
 
 import { useUpdateLandingPageMutation } from "@/backend/landingPage/landingPage.query";
-
 import { uploadFile } from "@/utils/file-upload/upload.ts";
+
 import { RateupButtonBlue } from "../../../Button/RateupButtons.tsx";
 import Preview from "../../../Survey/ShareSurvey/Preview/Preview.tsx";
 import LogoTabpanel from "../../../Survey/ShareSurvey/ShareQR/LogoTabPanel/index.tsx";
@@ -97,4 +97,3 @@ function ShareLandingPage({ url, isPublished, title }) {
 }
 
 export default ShareLandingPage;
-

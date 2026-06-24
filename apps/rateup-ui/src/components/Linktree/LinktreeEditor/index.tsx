@@ -6,8 +6,8 @@ import { Box, Center, Loader } from "@mantine/core";
 import { useParams, useSearch } from "@tanstack/react-router";
 
 import { useGetLinktreeWithShortId } from "@/backend/linktree/linktree.query";
-
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
+
 import { LinktreeContextProvider } from "./LinktreeContext/LinktreeContext.tsx";
 import styles from "./LinktreeEditor.module.css";
 import TabPanelsComp from "./TabPanels.tsx";

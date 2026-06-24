@@ -12,14 +12,22 @@ import { toast } from "sonner";
 import { IntegratedApps } from "@/types/enums.ts";
 import { useGetAllIntegrations } from "@/backend/appsIntegration/integration.query";
 import { useDeleteShopifyIntegrationByShop } from "@/backend/appsIntegration/shopify/shopify.query";
+import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
-import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import {
+  createSortableHeader,
+  DataTable,
+} from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
-import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import { DataTableToolbar } from "../../../components/admin/shopify/data-table-toolbar.tsx";
 
 export const Route = createFileRoute("/admin/shopify/")({

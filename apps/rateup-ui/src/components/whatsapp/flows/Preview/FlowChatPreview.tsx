@@ -3,11 +3,11 @@
 import { Title, useMantineTheme } from "@mantine/core";
 
 import type { WaFlowFormElement, WaFlowScreen } from "@/types/global";
-
 import {
   getFlowFooterElementsFromScreen,
   getFlowFormElementsFromScreen,
 } from "@/utils/whatsapp/flow.utils";
+
 import {
   FlowFormElementPreview,
   FlowPreviewContainer,
@@ -52,4 +52,3 @@ export const FlowChatPreview = ({
     </>
   );
 };
-

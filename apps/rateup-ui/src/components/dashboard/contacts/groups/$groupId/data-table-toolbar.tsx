@@ -10,6 +10,7 @@ import {
   useRemoveContactsFromGroup,
 } from "@/backend/campaign/contactGroup/contactGroup.query";
 import AddCustomerModal from "@/components/Contacts/AddCustomerModal.tsx";
+import { useGroupTableStore } from "@/components/dashboard/contacts/store/group-table-store.ts";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -22,8 +23,6 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
-
-import { useGroupTableStore } from "@/components/dashboard/contacts/store/group-table-store.ts";
 
 interface DataTableToolbarProps<TData, TValue> {
   table: Table<TData>;

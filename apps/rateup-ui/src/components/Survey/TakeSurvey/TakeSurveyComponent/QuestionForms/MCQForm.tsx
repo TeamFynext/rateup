@@ -13,13 +13,13 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion, useAnimate } from "motion/react";
 
-import { sampleChoices } from "@/utils/constants/forms.ts";
-
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+import { sampleChoices } from "@/utils/constants/forms.ts";
+
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard.tsx";
 import classes from "../TakeSurvey.module.css";
 
@@ -164,4 +164,3 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
     </Stack>
   );
 }
-

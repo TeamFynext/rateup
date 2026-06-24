@@ -5,8 +5,8 @@ import { useContext } from "react";
 import { Group } from "@mantine/core";
 
 import { PageType, QuestionType as Q } from "@/types/enums.ts";
-
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+
 import classes from "./TakeSurvey.module.css";
 import { getQuestionForm } from "./util.tsx";
 
@@ -45,4 +45,3 @@ function getFormAlignment(alignment) {
   }
 }
 export default QuestionForm;
-

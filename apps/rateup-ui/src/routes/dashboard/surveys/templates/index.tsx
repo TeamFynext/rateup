@@ -17,16 +17,15 @@ import {
   RateupButtonPrimary,
 } from "@/components/Button/RateupButtons.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import SurveyTemplates from "@/components/dashboard/surveys/templates/surveyTemplates.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
 import Heading from "@/components/styled/Heading/Heading.tsx";
 import { CreateSurveyModal } from "@/components/Survey/CreateSurveyModal.tsx";
+import { useUser } from "@/context/UserContext.tsx";
 import { docsPath } from "@/utils/constants.ts";
 import { UserRole } from "@/utils/enums/index.ts";
-
-import { useUser } from "@/context/UserContext.tsx";
-import SurveyTemplates from "@/components/dashboard/surveys/templates/surveyTemplates.tsx";
 
 export const Route = createFileRoute("/dashboard/surveys/templates/")({
   component: Templates,

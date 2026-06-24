@@ -6,13 +6,13 @@ import { Radio } from "@mantine/core";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAnimate } from "motion/react";
 
-import { samplePictureChoices } from "@/utils/constants/forms.ts";
-
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+import { samplePictureChoices } from "@/utils/constants/forms.ts";
+
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard.tsx";
 
@@ -105,4 +105,3 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
     </Radio.Group>
   );
 }
-

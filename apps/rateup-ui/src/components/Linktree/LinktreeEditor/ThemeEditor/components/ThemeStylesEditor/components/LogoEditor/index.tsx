@@ -14,6 +14,7 @@ import { modals } from "@mantine/modals";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 
 import { mmImageCropModalClassnames } from "@/utils/constants.ts";
+
 import {
   useThemeDispatch,
   useThemeObj,
@@ -150,4 +151,3 @@ function LogoEditor() {
 }
 
 export default LogoEditor;
-

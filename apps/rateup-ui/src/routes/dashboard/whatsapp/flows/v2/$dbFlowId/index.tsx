@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState,lazy, Suspense  } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/dashboard/whatsapp/flows/v2/$dbFlowId/")(
 );
 
 const ResultsOverviewWebForm = lazy(
-  () => import("@/components/Survey/Result/ResultsOverviewWebForm.tsx")
+  () => import("@/components/Survey/Result/ResultsOverviewWebForm.tsx"),
 );
 
 function Flow() {
@@ -213,7 +214,13 @@ function Flow() {
                 value={FlowTabEnum.Analytics}
                 className="h-full overflow-y-auto mt-0"
               >
-                <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center h-64">
+                      Loading...
+                    </div>
+                  }
+                >
                   <ResultsOverviewWebForm
                     surveyId={survey?.id}
                     aiResponseSummary={(survey as any)?.aiResponseSummary}

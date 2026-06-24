@@ -7,6 +7,7 @@ import { getHotkeyHandler } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
 
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
+
 import {
   RateupButtonBlue,
   RateupButtonSecondary,

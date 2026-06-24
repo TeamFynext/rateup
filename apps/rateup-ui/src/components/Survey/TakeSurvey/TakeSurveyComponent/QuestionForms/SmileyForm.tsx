@@ -5,6 +5,7 @@ import { useContext } from "react";
 import { Group } from "@mantine/core";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+
 import SmileyRating from "../SmileyRating/index.tsx";
 
 export function SmileyForm({ features }) {
@@ -19,4 +20,3 @@ export function SmileyForm({ features }) {
     </Group>
   );
 }
-

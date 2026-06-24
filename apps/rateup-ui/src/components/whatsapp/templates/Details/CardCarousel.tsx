@@ -45,11 +45,11 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
-import { parseStringWithVariables } from "@/utils/whatsapp/templates.tsx";
 import {
   WHATSAPP_BUTTON_TYPE,
   WHATSAPP_TEMPLATE_BROADCAST_TYPE,
 } from "@/utils/constants.ts";
+import { parseStringWithVariables } from "@/utils/whatsapp/templates.tsx";
 
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector.tsx";
 import { QuickReplyButton } from "../../MessageComponents.tsx";

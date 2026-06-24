@@ -3,7 +3,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Package, Receipt } from "lucide-react";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 
 import RazorpayPlans from "../../../components/admin/razorpay/plans.tsx";
 import RazorpaySubscriptions from "../../../components/admin/razorpay/subscriptions.tsx";

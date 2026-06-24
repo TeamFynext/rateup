@@ -9,6 +9,7 @@ import PhoneInputWithCountrySelect from "react-phone-number-input";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+
 import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
@@ -99,4 +100,3 @@ const ContactForm = ({ features }) => {
 };
 
 export default ContactForm;
-

@@ -4,7 +4,6 @@ import { IconFileDescription } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
 import type { DocumentNodeData } from "../../types/node-types.ts";
-
 import BaseNode from "./base-node.tsx";
 import styles from "./node-styles.module.css";
 

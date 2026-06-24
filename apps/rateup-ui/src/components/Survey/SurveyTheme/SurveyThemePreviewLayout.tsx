@@ -8,7 +8,10 @@ import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage/i
 import WelcomePageThemeView from "./components/previewcomponents/welcomepage/index.tsx";
 import { PreviewTypeEnum, ThemeTabEnum } from "./SurveyTheme.enums";
 import styles from "./SurveyTheme.module.css";
-import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext.tsx";
+import {
+  useSelectedPageTab,
+  useSelectedPreview,
+} from "./SurveyThemeContext.tsx";
 
 function SurveyThemePreviewLayout({
   survey,

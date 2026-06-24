@@ -28,7 +28,10 @@ import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { ActionIconCommon } from "@/components/menu/ActionIcon/ActionIconCommon.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
-import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import {
+  createSortableHeader,
+  DataTable,
+} from "@/components/Table/data-table.tsx";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 const PETPOOJA_WEBHOOK_ENDPOINT = `${import.meta.env.VITE_API_URL}/api/public/integrations/petpooja`;

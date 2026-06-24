@@ -3,14 +3,14 @@
 import { ArrowLeft, Loader2, Plus } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 
-import { LoyaltyRewardForm } from "@/components/LoyaltyComponents/LoyaltyRewardForm.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import type {
   CouponFormValues,
   GiftFormValues,
   PointRewardFormValues,
 } from "@/components/dashboard/loyalty/rewards/schemas.ts";
+import { LoyaltyRewardForm } from "@/components/LoyaltyComponents/LoyaltyRewardForm.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
 
 interface RewardFormContainerProps {
   category: string;

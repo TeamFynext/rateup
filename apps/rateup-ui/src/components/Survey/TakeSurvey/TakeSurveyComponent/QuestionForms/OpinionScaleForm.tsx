@@ -15,6 +15,7 @@ import { useAnimate } from "motion/react";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 import styles from "./OpinionScaleForm.module.css";
@@ -144,4 +145,3 @@ export function OpinionScaleForm({ initValue }: iProps) {
     </Group>
   );
 }
-

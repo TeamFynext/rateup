@@ -6,6 +6,7 @@ import { Text } from "@mantine/core";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+
 import classes from "./TakeSurvey.module.css";
 
 function QuestionDesc({ largeScreen, themeStyles }) {
@@ -23,4 +24,3 @@ function QuestionDesc({ largeScreen, themeStyles }) {
 }
 
 export default QuestionDesc;
-

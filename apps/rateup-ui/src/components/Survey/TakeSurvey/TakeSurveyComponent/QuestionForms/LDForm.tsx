@@ -8,10 +8,10 @@ import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 import { useAnimate } from "motion/react";
 
 import { LDResponse } from "@/types/enums.ts";
-
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+
 import { RateupButtonBlue } from "../../../../Button/RateupButtons.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 import styles from "./LDForm.module.css";
@@ -95,4 +95,3 @@ export function LDForm() {
     </Group>
   );
 }
-

@@ -41,7 +41,6 @@ import { formatDate } from "@/utils/dateTime.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
-
 export const Route = createFileRoute("/dashboard/settings/team/")({
   component: Team,
 });

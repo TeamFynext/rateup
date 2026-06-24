@@ -6,10 +6,10 @@ import { Box, Group, isLightColor, useMantineTheme } from "@mantine/core";
 import { animate } from "motion/react";
 
 import { YNResponse } from "@/types/enums.ts";
-
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+
 import { RateupButtonBlue } from "../../../../Button/RateupButtons.tsx";
 import styles from "./YNForm.module.css";
 
@@ -78,4 +78,3 @@ export function YNForm() {
     </Group>
   );
 }
-

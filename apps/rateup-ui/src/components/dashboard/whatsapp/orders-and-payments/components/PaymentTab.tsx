@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Banknote,
@@ -27,10 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-
-const CLOUDFRONT_BASE = import.meta.env.VITE_AWS_CLOUDFRONT_URL
-  ? import.meta.env.VITE_AWS_CLOUDFRONT_URL.replace(/\/+$/, "")
-  : "https://d2uj946b0i8y27.cloudfront.net";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 // ─── Shopify payment options ─────────────────────────────────────────────────
 const SHOPIFY_METHODS = [
@@ -42,12 +39,12 @@ const SHOPIFY_METHODS = [
     label: "Shopify Checkout URL",
     desc: "Customer receives a Shopify cart link to complete address, delivery, and payment directly on your store.",
     logos: [
-      { src: `${CLOUDFRONT_BASE}/payment-logos/visa.svg`, alt: "Visa" },
+      { src: getFileUrlFromKey("payment-logos/visa.svg"), alt: "Visa" },
       {
-        src: `${CLOUDFRONT_BASE}/payment-logos/mastercard.svg`,
+        src: getFileUrlFromKey("payment-logos/mastercard.svg"),
         alt: "Mastercard",
       },
-      { src: `${CLOUDFRONT_BASE}/payment-logos/rupay.svg`, alt: "RuPay" },
+      { src: getFileUrlFromKey("payment-logos/rupay.svg"), alt: "RuPay" },
     ],
     badges: [],
     collectAddressApplicable: false,
@@ -61,9 +58,9 @@ const SHOPIFY_METHODS = [
     label: "WhatsApp Native Payment",
     desc: "Customer submits address and delivery inside WhatsApp, then pays directly via WhatsApp Pay. Orders sync to Shopify.",
     logos: [
-      { src: `${CLOUDFRONT_BASE}/payment-logos/gpay.svg`, alt: "GPay" },
-      { src: `${CLOUDFRONT_BASE}/payment-logos/phonepe.svg`, alt: "PhonePe" },
-      { src: `${CLOUDFRONT_BASE}/payment-logos/upi.svg`, alt: "UPI" },
+      { src: getFileUrlFromKey("payment-logos/gpay.svg"), alt: "GPay" },
+      { src: getFileUrlFromKey("payment-logos/phonepe.svg"), alt: "PhonePe" },
+      { src: getFileUrlFromKey("payment-logos/upi.svg"), alt: "UPI" },
     ],
     badges: [],
     collectAddressApplicable: true,
@@ -94,9 +91,9 @@ const STANDARD_METHODS = [
     label: "UPI Payment Link",
     desc: "Customer receives an instant UPI payment link for the total order amount.",
     logos: [
-      { src: `${CLOUDFRONT_BASE}/payment-logos/gpay.svg`, alt: "GPay" },
-      { src: `${CLOUDFRONT_BASE}/payment-logos/phonepe.svg`, alt: "PhonePe" },
-      { src: `${CLOUDFRONT_BASE}/payment-logos/upi.svg`, alt: "UPI" },
+      { src: getFileUrlFromKey("payment-logos/gpay.svg"), alt: "GPay" },
+      { src: getFileUrlFromKey("payment-logos/phonepe.svg"), alt: "PhonePe" },
+      { src: getFileUrlFromKey("payment-logos/upi.svg"), alt: "UPI" },
     ],
     badges: [],
     fields: [
@@ -166,9 +163,9 @@ const STANDARD_METHODS = [
     label: "WhatsApp Native Payment",
     desc: "Customer completes checkout and pays directly inside WhatsApp via WhatsApp Pay.",
     logos: [
-      { src: "/images/gpay.svg", alt: "GPay" },
-      { src: "/images/phonepe.svg", alt: "PhonePe" },
-      { src: "/images/upi.svg", alt: "UPI" },
+      { src: getFileUrlFromKey("payment-logos/gpay.svg"), alt: "GPay" },
+      { src: getFileUrlFromKey("payment-logos/phonepe.svg"), alt: "PhonePe" },
+      { src: getFileUrlFromKey("payment-logos/upi.svg"), alt: "UPI" },
     ],
     badges: [],
     fields: [],
@@ -189,7 +186,7 @@ function CollectToggles({
   fixedDeliveryAmount,
   onFixedChargeChange,
   onFixedAmountChange,
-}: {
+}: Readonly<{
   collectAddress: boolean;
   collectDelivery: boolean;
   onAddressChange: (v: boolean) => void;
@@ -201,7 +198,7 @@ function CollectToggles({
   fixedDeliveryAmount: number;
   onFixedChargeChange: (v: boolean) => void;
   onFixedAmountChange: (v: number) => void;
-}) {
+}>) {
   if (!addressApplicable && !deliveryApplicable) return null;
   return (
     <div className="space-y-4 rounded-xl border bg-muted/20 p-4">
@@ -297,10 +294,10 @@ function CollectToggles({
 export default function PaymentTab({
   catalogId,
   isShopifyConnected,
-}: {
+}: Readonly<{
   catalogId: string;
   isShopifyConnected: boolean;
-}) {
+}>) {
   const { data: settings, isLoading } = useCatalogSettings(catalogId);
   const { mutateAsync: save, isPending: isSaving } =
     useUpdateCatalogSettings(catalogId);
@@ -430,9 +427,9 @@ export default function PaymentTab({
         <div className="rounded-lg border border-border bg-card overflow-hidden shadow-xs">
           {methods.map((method) => {
             const isSelected = paymentMethod === method.id;
-            const fields = (method as any).fields ?? [];
-            const logos = (method as any).logos ?? [];
-            const badges = (method as any).badges ?? [];
+            const fields = method.fields ?? [];
+            const logos = method.logos ?? [];
+            const badges = method.badges ?? [];
             return (
               <div
                 key={method.id}

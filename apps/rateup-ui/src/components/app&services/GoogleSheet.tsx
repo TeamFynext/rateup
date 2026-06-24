@@ -34,14 +34,19 @@ export function GoogleSheet() {
   const { data: authUrl } = useGetGoogleSheetAuthorizationUrl();
   const [callbackRoute, setCallBackRoute] = useState<string>(() => {
     try {
-      return localStorage.getItem("google-callback-route") ?? "/dashboard/apps&services/googlesheet";
+      return (
+        localStorage.getItem("google-callback-route") ??
+        "/dashboard/apps&services/googlesheet"
+      );
     } catch {
       return "/dashboard/apps&services/googlesheet";
     }
   });
   const persistCallbackRoute = (value: string) => {
     setCallBackRoute(value);
-    try { localStorage.setItem("google-callback-route", value); } catch {}
+    try {
+      localStorage.setItem("google-callback-route", value);
+    } catch {}
   };
 
   const handleSignOutGoogleSync = () => {

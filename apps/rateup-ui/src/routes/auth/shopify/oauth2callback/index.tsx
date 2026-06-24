@@ -13,7 +13,6 @@ import { useCreateAuthToken } from "@/backend/appsIntegration/integration.query"
 import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 
-
 export const Route = createFileRoute("/auth/shopify/oauth2callback/")({
   component: Page,
 });
