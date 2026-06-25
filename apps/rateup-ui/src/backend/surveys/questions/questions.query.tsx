@@ -49,7 +49,7 @@ export const useQuestionUpdateMutation = ({ surveyId }: iProps) => {
   const updateMutation = useMutation({
     mutationFn: ({ qId, data }: QuestionUpdateMutationArgs) => {
       // stripping type from question data
-      const { ...rest } = data;
+      const { type, ...rest } = data;
       return updateQuestion(surveyId, qId, rest);
     },
     onSuccess: () => {
