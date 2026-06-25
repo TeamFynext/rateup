@@ -140,7 +140,6 @@ function CardDetailPage() {
 
   const { history } = useRouter();
   const { data: card, isPending, error } = useCardById(ticketId);
-  console.log(card);
 
   const questions = useMemo(() => {
     return card?.surveyResponse?.surveyTeamMap?.survey?.WaFlow?.json?.screens?.flatMap(
@@ -702,7 +701,7 @@ function RightSidebar({
                   </div>
                 </div>
                 <Link
-                  to={`/dashboard/inbox?tab=mine&contactId=${linkedContact.id}`}
+                  to={`/dashboard/inbox?tab=All&contactId=${linkedContact.id}`}
                   className="w-full"
                 >
                   <Button className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-2 h-10 rounded-lg font-semibold">

@@ -100,7 +100,7 @@ export function SurveysPage({
   const filteredSurvey = sortedSurveys.filter((s) => s.title.includes(searchQuery));
 
   return (
-    <div className="flex flex-col gap-2 h-full">
+    <div className="flex flex-col gap-2 h-full flex-1 overflow-y-auto">
       <SurveyHeader
         selectedTeamId={selectedTeamId}
         setSelectedTeamId={setSelectedTeamId}
@@ -113,7 +113,7 @@ export function SurveysPage({
         setSearchQuery={setSearchQuery}
       />
       {surveys?.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredSurvey
             .filter((s) => {
               if (filterParam === "active") {

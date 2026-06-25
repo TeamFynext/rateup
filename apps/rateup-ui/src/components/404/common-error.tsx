@@ -1,10 +1,12 @@
+import * as Sentry from "@sentry/tanstackstart-react";
 import { useRouterState } from "@tanstack/react-router";
 import { cx } from "class-variance-authority";
+import { useEffect } from "react";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 
 const CommonError = ({
-  error: _error,
+  error,
   reset,
   className = "",
 }: {
@@ -16,6 +18,10 @@ const CommonError = ({
     select: (s) => s.location.pathname,
   });
   const lastSegment = pathname?.split("/")?.filter(Boolean)?.pop() || "page";
+
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
 
   const handleRetry = () => {
     reset();

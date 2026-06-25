@@ -12,6 +12,7 @@ The project uses Vite for development/build, Nitro for server output, and Tailwi
 - shadcn/ui (preferred for new UI) + existing Mantine components
 - Vitest for tests
 - OXC (oxlint + oxfmt) for linting/formatting
+- Husky for pre-commit hooks
 
 ## Prerequisites
 
@@ -34,11 +35,10 @@ npm run start      # Start Nitro server from .output/server/index.mjs
 npm run test       # Run tests with Vitest
 npm run lint       # Run oxlint
 npm run lint:fix   # Run oxlint with auto-fix
-npm run fmt        # Format with oxfmt
-npm run fmt:check  # Check formatting with oxfmt
-npm run typecheck  # Run TypeScript type checking
-npm run translate  # Run locale translation script
-npx i18next-cli extract  # Extract i18n keys to locale files
+npm run fmt        # Format with oxfmt (oxfmt)
+npm run fmt:check  # Check formatting (oxfmt --check)
+npm run typecheck  # Run TypeScript type checking (tsc --noEmit)
+npm run translate  # Extract i18n keys and auto-translate locales
 ```
 
 ### Useful Commands
@@ -71,10 +71,6 @@ Kill the process running on port 3000 (Windows PowerShell)
 ## Internationalization
 
 - Uses `react-i18next` with locale files in `src/locales/`.
-
-## Error Monitoring
-
-- Sentry is integrated (see `sentry.edge.config.ts` and `sentry.server.config.ts`).
 
 ## Reference Docs
 

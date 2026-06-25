@@ -98,10 +98,6 @@ import { Route as DashboardLoyaltyCommandIndexRouteImport } from './routes/dashb
 import { Route as DashboardLoyaltyCashierIndexRouteImport } from './routes/dashboard/loyalty/cashier/index'
 import { Route as DashboardLoyaltyApprovalsIndexRouteImport } from './routes/dashboard/loyalty/approvals/index'
 import { Route as DashboardLandingPagesShortUrlIdIndexRouteImport } from './routes/dashboard/landingPages/$shortUrlId/index'
-import { Route as DashboardInstagramPersistentMenuIndexRouteImport } from './routes/dashboard/instagram/persistent-menu/index'
-import { Route as DashboardInstagramIgMeLinksIndexRouteImport } from './routes/dashboard/instagram/ig-me-links/index'
-import { Route as DashboardInstagramIceBreakersIndexRouteImport } from './routes/dashboard/instagram/ice-breakers/index'
-import { Route as DashboardInstagramFlowbotsIndexRouteImport } from './routes/dashboard/instagram/flowbots/index'
 import { Route as DashboardContactsLifecycleIndexRouteImport } from './routes/dashboard/contacts/lifecycle/index'
 import { Route as DashboardContactsLabelsIndexRouteImport } from './routes/dashboard/contacts/labels/index'
 import { Route as DashboardContactsGroupsIndexRouteImport } from './routes/dashboard/contacts/groups/index'
@@ -139,6 +135,7 @@ import { Route as authLoginVerifyEmailIndexRouteImport } from './routes/(auth)/l
 import { Route as authLoginSetupIndexRouteImport } from './routes/(auth)/login/setup/index'
 import { Route as authLoginResetPasswordIndexRouteImport } from './routes/(auth)/login/reset-password/index'
 import { Route as authLoginCompleteLoginIndexRouteImport } from './routes/(auth)/login/complete-login/index'
+import { Route as DashboardInstagramFlowbotsFlowbotIdRouteImport } from './routes/dashboard/instagram/flowbots/$flowbotId'
 import { Route as marketingBlogTagSitemapDotxmlRouteImport } from './routes/(marketing)/blog/tag/sitemap[.]xml'
 import { Route as marketingBlogAuthorSitemapDotxmlRouteImport } from './routes/(marketing)/blog/author/sitemap[.]xml'
 import { Route as DashboardWhatsappTemplatesTemplateIdIndexRouteImport } from './routes/dashboard/whatsapp/templates/$templateId/index'
@@ -148,7 +145,6 @@ import { Route as DashboardSettingsTeamTeamIdIndexRouteImport } from './routes/d
 import { Route as DashboardSettingsIntegrationsIdIndexRouteImport } from './routes/dashboard/settings/integrations/$id/index'
 import { Route as DashboardSettingsChannelsChannelIndexRouteImport } from './routes/dashboard/settings/channels/$channel/index'
 import { Route as DashboardLoyaltyTemplatesTemplateIdIndexRouteImport } from './routes/dashboard/loyalty/templates/$templateId/index'
-import { Route as DashboardInstagramFlowbotsFlowbotIdIndexRouteImport } from './routes/dashboard/instagram/flowbots/$flowbotId/index'
 import { Route as DashboardContactsGroupsGroupIdIndexRouteImport } from './routes/dashboard/contacts/groups/$groupId/index'
 import { Route as DashboardAnalyticsTeamTeamidIndexRouteImport } from './routes/dashboard/analytics/team/$teamid/index'
 import { Route as publicFacingWsShortIdResponseSubmittedIndexRouteImport } from './routes/(public-facing)/ws/$shortId/response-submitted/index'
@@ -658,30 +654,6 @@ const DashboardLandingPagesShortUrlIdIndexRoute =
     path: '/landingPages/$shortUrlId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardInstagramPersistentMenuIndexRoute =
-  DashboardInstagramPersistentMenuIndexRouteImport.update({
-    id: '/instagram/persistent-menu/',
-    path: '/instagram/persistent-menu/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardInstagramIgMeLinksIndexRoute =
-  DashboardInstagramIgMeLinksIndexRouteImport.update({
-    id: '/instagram/ig-me-links/',
-    path: '/instagram/ig-me-links/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardInstagramIceBreakersIndexRoute =
-  DashboardInstagramIceBreakersIndexRouteImport.update({
-    id: '/instagram/ice-breakers/',
-    path: '/instagram/ice-breakers/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardInstagramFlowbotsIndexRoute =
-  DashboardInstagramFlowbotsIndexRouteImport.update({
-    id: '/instagram/flowbots/',
-    path: '/instagram/flowbots/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
 const DashboardContactsLifecycleIndexRoute =
   DashboardContactsLifecycleIndexRouteImport.update({
     id: '/contacts/lifecycle/',
@@ -899,6 +871,12 @@ const authLoginCompleteLoginIndexRoute =
     path: '/login/complete-login/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DashboardInstagramFlowbotsFlowbotIdRoute =
+  DashboardInstagramFlowbotsFlowbotIdRouteImport.update({
+    id: '/instagram/flowbots/$flowbotId',
+    path: '/instagram/flowbots/$flowbotId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const marketingBlogTagSitemapDotxmlRoute =
   marketingBlogTagSitemapDotxmlRouteImport.update({
     id: '/tag/sitemap.xml',
@@ -951,12 +929,6 @@ const DashboardLoyaltyTemplatesTemplateIdIndexRoute =
   DashboardLoyaltyTemplatesTemplateIdIndexRouteImport.update({
     id: '/loyalty/templates/$templateId/',
     path: '/loyalty/templates/$templateId/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardInstagramFlowbotsFlowbotIdIndexRoute =
-  DashboardInstagramFlowbotsFlowbotIdIndexRouteImport.update({
-    id: '/instagram/flowbots/$flowbotId/',
-    path: '/instagram/flowbots/$flowbotId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardContactsGroupsGroupIdIndexRoute =
@@ -1138,6 +1110,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/whatsapp/': typeof DashboardWhatsappIndexRoute
   '/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
+  '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/login/complete-login/': typeof authLoginCompleteLoginIndexRoute
   '/login/reset-password/': typeof authLoginResetPasswordIndexRoute
   '/login/setup/': typeof authLoginSetupIndexRoute
@@ -1175,10 +1148,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle/': typeof DashboardContactsLifecycleIndexRoute
-  '/dashboard/instagram/flowbots/': typeof DashboardInstagramFlowbotsIndexRoute
-  '/dashboard/instagram/ice-breakers/': typeof DashboardInstagramIceBreakersIndexRoute
-  '/dashboard/instagram/ig-me-links/': typeof DashboardInstagramIgMeLinksIndexRoute
-  '/dashboard/instagram/persistent-menu/': typeof DashboardInstagramPersistentMenuIndexRoute
   '/dashboard/landingPages/$shortUrlId/': typeof DashboardLandingPagesShortUrlIdIndexRoute
   '/dashboard/loyalty/approvals/': typeof DashboardLoyaltyApprovalsIndexRoute
   '/dashboard/loyalty/cashier/': typeof DashboardLoyaltyCashierIndexRoute
@@ -1226,7 +1195,6 @@ export interface FileRoutesByFullPath {
   '/ws/$shortId/response-submitted/': typeof publicFacingWsShortIdResponseSubmittedIndexRoute
   '/dashboard/analytics/team/$teamid/': typeof DashboardAnalyticsTeamTeamidIndexRoute
   '/dashboard/contacts/groups/$groupId/': typeof DashboardContactsGroupsGroupIdIndexRoute
-  '/dashboard/instagram/flowbots/$flowbotId/': typeof DashboardInstagramFlowbotsFlowbotIdIndexRoute
   '/dashboard/loyalty/templates/$templateId/': typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
   '/dashboard/settings/channels/$channel/': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id/': typeof DashboardSettingsIntegrationsIdIndexRoute
@@ -1297,6 +1265,7 @@ export interface FileRoutesByTo {
   '/dashboard/whatsapp': typeof DashboardWhatsappIndexRoute
   '/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
+  '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/login/complete-login': typeof authLoginCompleteLoginIndexRoute
   '/login/reset-password': typeof authLoginResetPasswordIndexRoute
   '/login/setup': typeof authLoginSetupIndexRoute
@@ -1334,10 +1303,6 @@ export interface FileRoutesByTo {
   '/dashboard/contacts/groups': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle': typeof DashboardContactsLifecycleIndexRoute
-  '/dashboard/instagram/flowbots': typeof DashboardInstagramFlowbotsIndexRoute
-  '/dashboard/instagram/ice-breakers': typeof DashboardInstagramIceBreakersIndexRoute
-  '/dashboard/instagram/ig-me-links': typeof DashboardInstagramIgMeLinksIndexRoute
-  '/dashboard/instagram/persistent-menu': typeof DashboardInstagramPersistentMenuIndexRoute
   '/dashboard/landingPages/$shortUrlId': typeof DashboardLandingPagesShortUrlIdIndexRoute
   '/dashboard/loyalty/approvals': typeof DashboardLoyaltyApprovalsIndexRoute
   '/dashboard/loyalty/cashier': typeof DashboardLoyaltyCashierIndexRoute
@@ -1385,7 +1350,6 @@ export interface FileRoutesByTo {
   '/ws/$shortId/response-submitted': typeof publicFacingWsShortIdResponseSubmittedIndexRoute
   '/dashboard/analytics/team/$teamid': typeof DashboardAnalyticsTeamTeamidIndexRoute
   '/dashboard/contacts/groups/$groupId': typeof DashboardContactsGroupsGroupIdIndexRoute
-  '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdIndexRoute
   '/dashboard/loyalty/templates/$templateId': typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
   '/dashboard/settings/channels/$channel': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id': typeof DashboardSettingsIntegrationsIdIndexRoute
@@ -1460,6 +1424,7 @@ export interface FileRoutesById {
   '/dashboard/whatsapp/': typeof DashboardWhatsappIndexRoute
   '/(marketing)/blog/author/sitemap.xml': typeof marketingBlogAuthorSitemapDotxmlRoute
   '/(marketing)/blog/tag/sitemap.xml': typeof marketingBlogTagSitemapDotxmlRoute
+  '/dashboard/instagram/flowbots/$flowbotId': typeof DashboardInstagramFlowbotsFlowbotIdRoute
   '/(auth)/login/complete-login/': typeof authLoginCompleteLoginIndexRoute
   '/(auth)/login/reset-password/': typeof authLoginResetPasswordIndexRoute
   '/(auth)/login/setup/': typeof authLoginSetupIndexRoute
@@ -1497,10 +1462,6 @@ export interface FileRoutesById {
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle/': typeof DashboardContactsLifecycleIndexRoute
-  '/dashboard/instagram/flowbots/': typeof DashboardInstagramFlowbotsIndexRoute
-  '/dashboard/instagram/ice-breakers/': typeof DashboardInstagramIceBreakersIndexRoute
-  '/dashboard/instagram/ig-me-links/': typeof DashboardInstagramIgMeLinksIndexRoute
-  '/dashboard/instagram/persistent-menu/': typeof DashboardInstagramPersistentMenuIndexRoute
   '/dashboard/landingPages/$shortUrlId/': typeof DashboardLandingPagesShortUrlIdIndexRoute
   '/dashboard/loyalty/approvals/': typeof DashboardLoyaltyApprovalsIndexRoute
   '/dashboard/loyalty/cashier/': typeof DashboardLoyaltyCashierIndexRoute
@@ -1548,7 +1509,6 @@ export interface FileRoutesById {
   '/(public-facing)/ws/$shortId/response-submitted/': typeof publicFacingWsShortIdResponseSubmittedIndexRoute
   '/dashboard/analytics/team/$teamid/': typeof DashboardAnalyticsTeamTeamidIndexRoute
   '/dashboard/contacts/groups/$groupId/': typeof DashboardContactsGroupsGroupIdIndexRoute
-  '/dashboard/instagram/flowbots/$flowbotId/': typeof DashboardInstagramFlowbotsFlowbotIdIndexRoute
   '/dashboard/loyalty/templates/$templateId/': typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
   '/dashboard/settings/channels/$channel/': typeof DashboardSettingsChannelsChannelIndexRoute
   '/dashboard/settings/integrations/$id/': typeof DashboardSettingsIntegrationsIdIndexRoute
@@ -1624,6 +1584,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/'
     | '/blog/author/sitemap.xml'
     | '/blog/tag/sitemap.xml'
+    | '/dashboard/instagram/flowbots/$flowbotId'
     | '/login/complete-login/'
     | '/login/reset-password/'
     | '/login/setup/'
@@ -1661,10 +1622,6 @@ export interface FileRouteTypes {
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
     | '/dashboard/contacts/lifecycle/'
-    | '/dashboard/instagram/flowbots/'
-    | '/dashboard/instagram/ice-breakers/'
-    | '/dashboard/instagram/ig-me-links/'
-    | '/dashboard/instagram/persistent-menu/'
     | '/dashboard/landingPages/$shortUrlId/'
     | '/dashboard/loyalty/approvals/'
     | '/dashboard/loyalty/cashier/'
@@ -1712,7 +1669,6 @@ export interface FileRouteTypes {
     | '/ws/$shortId/response-submitted/'
     | '/dashboard/analytics/team/$teamid/'
     | '/dashboard/contacts/groups/$groupId/'
-    | '/dashboard/instagram/flowbots/$flowbotId/'
     | '/dashboard/loyalty/templates/$templateId/'
     | '/dashboard/settings/channels/$channel/'
     | '/dashboard/settings/integrations/$id/'
@@ -1783,6 +1739,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/blog/author/sitemap.xml'
     | '/blog/tag/sitemap.xml'
+    | '/dashboard/instagram/flowbots/$flowbotId'
     | '/login/complete-login'
     | '/login/reset-password'
     | '/login/setup'
@@ -1820,10 +1777,6 @@ export interface FileRouteTypes {
     | '/dashboard/contacts/groups'
     | '/dashboard/contacts/labels'
     | '/dashboard/contacts/lifecycle'
-    | '/dashboard/instagram/flowbots'
-    | '/dashboard/instagram/ice-breakers'
-    | '/dashboard/instagram/ig-me-links'
-    | '/dashboard/instagram/persistent-menu'
     | '/dashboard/landingPages/$shortUrlId'
     | '/dashboard/loyalty/approvals'
     | '/dashboard/loyalty/cashier'
@@ -1871,7 +1824,6 @@ export interface FileRouteTypes {
     | '/ws/$shortId/response-submitted'
     | '/dashboard/analytics/team/$teamid'
     | '/dashboard/contacts/groups/$groupId'
-    | '/dashboard/instagram/flowbots/$flowbotId'
     | '/dashboard/loyalty/templates/$templateId'
     | '/dashboard/settings/channels/$channel'
     | '/dashboard/settings/integrations/$id'
@@ -1945,6 +1897,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/'
     | '/(marketing)/blog/author/sitemap.xml'
     | '/(marketing)/blog/tag/sitemap.xml'
+    | '/dashboard/instagram/flowbots/$flowbotId'
     | '/(auth)/login/complete-login/'
     | '/(auth)/login/reset-password/'
     | '/(auth)/login/setup/'
@@ -1982,10 +1935,6 @@ export interface FileRouteTypes {
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
     | '/dashboard/contacts/lifecycle/'
-    | '/dashboard/instagram/flowbots/'
-    | '/dashboard/instagram/ice-breakers/'
-    | '/dashboard/instagram/ig-me-links/'
-    | '/dashboard/instagram/persistent-menu/'
     | '/dashboard/landingPages/$shortUrlId/'
     | '/dashboard/loyalty/approvals/'
     | '/dashboard/loyalty/cashier/'
@@ -2033,7 +1982,6 @@ export interface FileRouteTypes {
     | '/(public-facing)/ws/$shortId/response-submitted/'
     | '/dashboard/analytics/team/$teamid/'
     | '/dashboard/contacts/groups/$groupId/'
-    | '/dashboard/instagram/flowbots/$flowbotId/'
     | '/dashboard/loyalty/templates/$templateId/'
     | '/dashboard/settings/channels/$channel/'
     | '/dashboard/settings/integrations/$id/'
@@ -2738,34 +2686,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLandingPagesShortUrlIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/instagram/persistent-menu/': {
-      id: '/dashboard/instagram/persistent-menu/'
-      path: '/instagram/persistent-menu'
-      fullPath: '/dashboard/instagram/persistent-menu/'
-      preLoaderRoute: typeof DashboardInstagramPersistentMenuIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/instagram/ig-me-links/': {
-      id: '/dashboard/instagram/ig-me-links/'
-      path: '/instagram/ig-me-links'
-      fullPath: '/dashboard/instagram/ig-me-links/'
-      preLoaderRoute: typeof DashboardInstagramIgMeLinksIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/instagram/ice-breakers/': {
-      id: '/dashboard/instagram/ice-breakers/'
-      path: '/instagram/ice-breakers'
-      fullPath: '/dashboard/instagram/ice-breakers/'
-      preLoaderRoute: typeof DashboardInstagramIceBreakersIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/instagram/flowbots/': {
-      id: '/dashboard/instagram/flowbots/'
-      path: '/instagram/flowbots'
-      fullPath: '/dashboard/instagram/flowbots/'
-      preLoaderRoute: typeof DashboardInstagramFlowbotsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
     '/dashboard/contacts/lifecycle/': {
       id: '/dashboard/contacts/lifecycle/'
       path: '/contacts/lifecycle'
@@ -3025,6 +2945,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authLoginCompleteLoginIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/instagram/flowbots/$flowbotId': {
+      id: '/dashboard/instagram/flowbots/$flowbotId'
+      path: '/instagram/flowbots/$flowbotId'
+      fullPath: '/dashboard/instagram/flowbots/$flowbotId'
+      preLoaderRoute: typeof DashboardInstagramFlowbotsFlowbotIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/(marketing)/blog/tag/sitemap.xml': {
       id: '/(marketing)/blog/tag/sitemap.xml'
       path: '/tag/sitemap.xml'
@@ -3086,13 +3013,6 @@ declare module '@tanstack/react-router' {
       path: '/loyalty/templates/$templateId'
       fullPath: '/dashboard/loyalty/templates/$templateId/'
       preLoaderRoute: typeof DashboardLoyaltyTemplatesTemplateIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/instagram/flowbots/$flowbotId/': {
-      id: '/dashboard/instagram/flowbots/$flowbotId/'
-      path: '/instagram/flowbots/$flowbotId'
-      fullPath: '/dashboard/instagram/flowbots/$flowbotId/'
-      preLoaderRoute: typeof DashboardInstagramFlowbotsFlowbotIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/contacts/groups/$groupId/': {
@@ -3296,6 +3216,7 @@ interface DashboardRouteRouteChildren {
   DashboardTestimonialIndexRoute: typeof DashboardTestimonialIndexRoute
   DashboardTicketsIndexRoute: typeof DashboardTicketsIndexRoute
   DashboardWhatsappIndexRoute: typeof DashboardWhatsappIndexRoute
+  DashboardInstagramFlowbotsFlowbotIdRoute: typeof DashboardInstagramFlowbotsFlowbotIdRoute
   DashboardAnalyticsStaffidIndexRoute: typeof DashboardAnalyticsStaffidIndexRoute
   DashboardAnalyticsAuditLogIndexRoute: typeof DashboardAnalyticsAuditLogIndexRoute
   DashboardAutomationAutomationIdIndexRoute: typeof DashboardAutomationAutomationIdIndexRoute
@@ -3304,10 +3225,6 @@ interface DashboardRouteRouteChildren {
   DashboardContactsGroupsIndexRoute: typeof DashboardContactsGroupsIndexRoute
   DashboardContactsLabelsIndexRoute: typeof DashboardContactsLabelsIndexRoute
   DashboardContactsLifecycleIndexRoute: typeof DashboardContactsLifecycleIndexRoute
-  DashboardInstagramFlowbotsIndexRoute: typeof DashboardInstagramFlowbotsIndexRoute
-  DashboardInstagramIceBreakersIndexRoute: typeof DashboardInstagramIceBreakersIndexRoute
-  DashboardInstagramIgMeLinksIndexRoute: typeof DashboardInstagramIgMeLinksIndexRoute
-  DashboardInstagramPersistentMenuIndexRoute: typeof DashboardInstagramPersistentMenuIndexRoute
   DashboardLandingPagesShortUrlIdIndexRoute: typeof DashboardLandingPagesShortUrlIdIndexRoute
   DashboardLoyaltyApprovalsIndexRoute: typeof DashboardLoyaltyApprovalsIndexRoute
   DashboardLoyaltyCashierIndexRoute: typeof DashboardLoyaltyCashierIndexRoute
@@ -3344,7 +3261,6 @@ interface DashboardRouteRouteChildren {
   DashboardWhatsappTemplatesIndexRoute: typeof DashboardWhatsappTemplatesIndexRoute
   DashboardAnalyticsTeamTeamidIndexRoute: typeof DashboardAnalyticsTeamTeamidIndexRoute
   DashboardContactsGroupsGroupIdIndexRoute: typeof DashboardContactsGroupsGroupIdIndexRoute
-  DashboardInstagramFlowbotsFlowbotIdIndexRoute: typeof DashboardInstagramFlowbotsFlowbotIdIndexRoute
   DashboardLoyaltyTemplatesTemplateIdIndexRoute: typeof DashboardLoyaltyTemplatesTemplateIdIndexRoute
   DashboardSettingsChannelsChannelIndexRoute: typeof DashboardSettingsChannelsChannelIndexRoute
   DashboardSettingsIntegrationsIdIndexRoute: typeof DashboardSettingsIntegrationsIdIndexRoute
@@ -3377,6 +3293,8 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardTestimonialIndexRoute: DashboardTestimonialIndexRoute,
   DashboardTicketsIndexRoute: DashboardTicketsIndexRoute,
   DashboardWhatsappIndexRoute: DashboardWhatsappIndexRoute,
+  DashboardInstagramFlowbotsFlowbotIdRoute:
+    DashboardInstagramFlowbotsFlowbotIdRoute,
   DashboardAnalyticsStaffidIndexRoute: DashboardAnalyticsStaffidIndexRoute,
   DashboardAnalyticsAuditLogIndexRoute: DashboardAnalyticsAuditLogIndexRoute,
   DashboardAutomationAutomationIdIndexRoute:
@@ -3387,12 +3305,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardContactsGroupsIndexRoute: DashboardContactsGroupsIndexRoute,
   DashboardContactsLabelsIndexRoute: DashboardContactsLabelsIndexRoute,
   DashboardContactsLifecycleIndexRoute: DashboardContactsLifecycleIndexRoute,
-  DashboardInstagramFlowbotsIndexRoute: DashboardInstagramFlowbotsIndexRoute,
-  DashboardInstagramIceBreakersIndexRoute:
-    DashboardInstagramIceBreakersIndexRoute,
-  DashboardInstagramIgMeLinksIndexRoute: DashboardInstagramIgMeLinksIndexRoute,
-  DashboardInstagramPersistentMenuIndexRoute:
-    DashboardInstagramPersistentMenuIndexRoute,
   DashboardLandingPagesShortUrlIdIndexRoute:
     DashboardLandingPagesShortUrlIdIndexRoute,
   DashboardLoyaltyApprovalsIndexRoute: DashboardLoyaltyApprovalsIndexRoute,
@@ -3440,8 +3352,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
     DashboardAnalyticsTeamTeamidIndexRoute,
   DashboardContactsGroupsGroupIdIndexRoute:
     DashboardContactsGroupsGroupIdIndexRoute,
-  DashboardInstagramFlowbotsFlowbotIdIndexRoute:
-    DashboardInstagramFlowbotsFlowbotIdIndexRoute,
   DashboardLoyaltyTemplatesTemplateIdIndexRoute:
     DashboardLoyaltyTemplatesTemplateIdIndexRoute,
   DashboardSettingsChannelsChannelIndexRoute:
@@ -3573,10 +3483,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.ts'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
