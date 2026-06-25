@@ -181,7 +181,7 @@ function InstagramDashboard() {
       <Separator />
 
       <Tabs defaultValue="ice-breakers">
-        <TabsList className="w-full justify-start overflow-x-auto">
+        <TabsList>
           <TabsTrigger value="ice-breakers">
             <IconMessageDots className="mr-1.5 size-4" />
             {t("Ice Breakers")}
@@ -200,11 +200,11 @@ function InstagramDashboard() {
           </TabsTrigger>
           <TabsTrigger value="comments">
             <IconMessageDots className="mr-1.5 size-4" />
-            {t("Comments")}
+            {t("Private Replies")}
           </TabsTrigger>
           <TabsTrigger value="stories">
             <IconHistory className="mr-1.5 size-4" />
-            {t("Stories")}
+            {t("Story Mentions")}
           </TabsTrigger>
         </TabsList>
 
