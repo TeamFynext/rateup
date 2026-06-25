@@ -348,7 +348,8 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    /* forcing ring-1 to all components */
+    @apply border-border outline-ring/50 focus-visible:ring-1!;
   }
   body {
     @apply bg-background text-foreground;
