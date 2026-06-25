@@ -12,7 +12,6 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronRight, IconUserPlus } from "@tabler/icons-react";
-import React from "react";
 
 import { useImportCSVContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import CreateContactModal from "@/components/Contacts/CreateContactModal.tsx";

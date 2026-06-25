@@ -1,5 +1,3 @@
-import React from "react";
-
 import { MessagePlatform } from "@/types/enums.ts";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar.tsx";

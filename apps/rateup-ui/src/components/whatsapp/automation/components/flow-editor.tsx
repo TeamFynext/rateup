@@ -205,7 +205,7 @@ function FlowEditorContent({
     }
   }, [historyManager, setNodes, setEdges, updateUndoRedoState]);
 
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNode(node as any);
     setIsEditorOpen(true);
   }, []);

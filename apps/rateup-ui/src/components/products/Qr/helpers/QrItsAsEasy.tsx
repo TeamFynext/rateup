@@ -1,7 +1,6 @@
 import { Image } from "@unpic/react";
 import type { Variants } from "motion/react";
 import { motion } from "motion/react";
-import React from "react";
 
 import { imagesPath } from "@/utils/constants.ts";
 

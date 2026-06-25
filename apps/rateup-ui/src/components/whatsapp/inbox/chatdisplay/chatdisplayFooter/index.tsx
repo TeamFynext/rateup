@@ -518,7 +518,8 @@ export const WaInboxAssignUserFooter = ({
             <span className="text-xs">This chat has been closed</span>
             {closedAt && (
               <span className="text-xs lowercase">
-                by {closedUser.name} at {formatDateWithRelativeTime(contact.closedAt)}.
+                by {closedUser?.name ?? "Unknown"} at {formatDateWithRelativeTime(contact.closedAt)}
+                .
               </span>
             )}
           </>

@@ -63,7 +63,7 @@ export const useCreateContactMutation = () => {
   });
 };
 
-const _useImportContactMutation = () => {
+export const useImportContactMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: importContacts,
@@ -110,7 +110,7 @@ export const useContactDeleteMutation = (groupId: string) => {
   const { deleteContactsByIds } = useContactsStore();
   return useMutation({
     mutationFn: deleteContact,
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
@@ -156,7 +156,7 @@ export const useEditContactMutation = (groupId?: string) => {
   });
 };
 
-const _useEditContactLabelsMutation = (_contactId: string) => {
+export const useEditContactLabelsMutation = (_contactId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: editContactLabels,
@@ -179,7 +179,7 @@ export const useDeleteManyContactsMutation = () => {
   const { deleteContactsByIds } = useContactsStore();
   return useMutation({
     mutationFn: deleteManyContacts,
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],

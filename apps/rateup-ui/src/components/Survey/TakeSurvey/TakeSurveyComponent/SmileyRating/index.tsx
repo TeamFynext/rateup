@@ -79,7 +79,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
         );
         Object.values(SmileyResponse)
           .reverse()
-          .map((s, i) => {
+          .map((_s, i) => {
             if (colorType === SmileyColorType.Gradient) newColor[i + 1] = colorArray[i];
             else newColor[i + 1] = color?.[i + 1] ?? theme.primaryColor;
           });

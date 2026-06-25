@@ -1,7 +1,7 @@
 import { useDisclosure } from "@mantine/hooks";
 import { IconLogin2, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import {

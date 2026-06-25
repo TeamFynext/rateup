@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { Loader2, Package } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";

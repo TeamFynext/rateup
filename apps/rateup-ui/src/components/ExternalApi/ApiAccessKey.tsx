@@ -7,7 +7,7 @@ import {
   IconServer,
   IconTrash,
 } from "@tabler/icons-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {

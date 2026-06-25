@@ -1,6 +1,5 @@
 import { Box, Group, Stack, Switch } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateFlowMetaDataMutation } from "@/backend/whatsapp/flow/flow.query";

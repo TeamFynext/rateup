@@ -1,5 +1,4 @@
 import { Group, Pagination } from "@mantine/core";
-import React from "react";
 
 import { PAGE_SIZE } from "@/utils/constants.ts";
 

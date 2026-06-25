@@ -1,6 +1,6 @@
 import { Center, Stack, Text } from "@mantine/core";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import React, { Suspense, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { toast } from "sonner";
 
 import { useUpdateUserAccessToken } from "@/backend/whatsapp/settings/waSettings.query";

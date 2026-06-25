@@ -1,6 +1,6 @@
 import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";

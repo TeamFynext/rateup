@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAddExistingContactMutation } from "@/backend/campaign/contactGroup/contactGroup.query";

@@ -91,7 +91,7 @@ export const decryptPrivateKey = async (nonceWithEncryptedPrivateKey: any, passk
 };
 
 function stringifyUint8Array(array: Uint8Array) {
-  return JSON.stringify(array, (k, v) => {
+  return JSON.stringify(array, (_k, v) => {
     if (v instanceof Uint8Array) {
       return Array.from(v);
     }
@@ -100,7 +100,7 @@ function stringifyUint8Array(array: Uint8Array) {
 }
 
 function parsetoUint8Array(string: string) {
-  return JSON.parse(string, (k, v) => {
+  return JSON.parse(string, (_k, v) => {
     if (Array.isArray(v)) {
       return new Uint8Array(v);
     }

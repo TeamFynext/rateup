@@ -1,5 +1,5 @@
 import { IconEdit, IconExternalLink, IconShoppingBag, IconTrash } from "@tabler/icons-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";

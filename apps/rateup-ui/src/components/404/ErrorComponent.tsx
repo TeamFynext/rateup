@@ -1,6 +1,5 @@
 import { Box, Container, Image, Stack, Text, Title } from "@mantine/core";
 import type { QueryObserverResult, RefetchOptions } from "@tanstack/react-query";
-import React from "react";
 
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 

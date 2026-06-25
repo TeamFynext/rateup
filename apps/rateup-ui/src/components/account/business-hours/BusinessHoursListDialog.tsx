@@ -1,5 +1,5 @@
 import { Edit, Plus, Trash2 } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { IBusinessHour } from "@/backend/org/business-hours/business-hours.api";

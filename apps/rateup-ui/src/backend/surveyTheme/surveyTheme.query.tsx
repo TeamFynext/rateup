@@ -11,7 +11,7 @@ import {
   updateSurveyTheme,
 } from "./surveyTheme.api";
 
-const _useSurveyTheme = (surveyThemeId: string) => {
+export const useSurveyTheme = (surveyThemeId: string) => {
   return useQuery({
     queryKey: ["surveyTheme", surveyThemeId],
     queryFn: () => getSurveyTheme(surveyThemeId),
@@ -106,7 +106,7 @@ export const useDeleteThemeMutation = () => {
   });
 };
 
-const _useUpdateAllThemesMutation = () => {
+export const useUpdateAllThemesMutation = () => {
   return useMutation({
     mutationFn: updateAllThemes,
     onSuccess: () => {

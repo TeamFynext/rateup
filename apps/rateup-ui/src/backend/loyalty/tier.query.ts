@@ -22,7 +22,7 @@ export const useLoyaltyTiers = () =>
 /**
  * Hook to fetch a single loyalty tier by ID
  */
-const _useLoyaltyTierById = (tierId: string) =>
+export const useLoyaltyTierById = (tierId: string) =>
   useQuery({
     enabled: !!tierId,
     queryKey: ["loyalty-tier", tierId],
@@ -32,7 +32,7 @@ const _useLoyaltyTierById = (tierId: string) =>
 /**
  * Hook to create a new loyalty tier
  */
-const _useCreateLoyaltyTierMutation = (onSuccess?: () => void, onError?: () => void) => {
+export const useCreateLoyaltyTierMutation = (onSuccess?: () => void, onError?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -52,7 +52,7 @@ const _useCreateLoyaltyTierMutation = (onSuccess?: () => void, onError?: () => v
 /**
  * Hook to update an existing loyalty tier
  */
-const _useUpdateLoyaltyTierMutation = (
+export const useUpdateLoyaltyTierMutation = (
   tierId: string,
   onSuccess?: () => void,
   onError?: () => void,
@@ -77,7 +77,7 @@ const _useUpdateLoyaltyTierMutation = (
 /**
  * Hook to delete a loyalty tier
  */
-const _useDeleteLoyaltyTierMutation = (onSuccess?: () => void, onError?: () => void) => {
+export const useDeleteLoyaltyTierMutation = (onSuccess?: () => void, onError?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({

@@ -3,7 +3,7 @@ import { RichTextEditorControl } from "@mantine/tiptap";
 import { IconLocation, IconMapPin } from "@tabler/icons-react";
 import type { Point } from "pigeon-maps";
 import { Map, Marker } from "pigeon-maps";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";

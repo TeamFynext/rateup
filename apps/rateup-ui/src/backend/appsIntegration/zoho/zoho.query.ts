@@ -10,7 +10,7 @@ import {
   unsubscribeZoho,
 } from "./zoho.api";
 
-function _useZohoContacts(orgId?: string, product: "crm" | "bigin" = "crm") {
+export function useZohoContacts(orgId?: string, product: "crm" | "bigin" = "crm") {
   return useQuery({
     queryKey: ["zoho-contacts", orgId, product],
 

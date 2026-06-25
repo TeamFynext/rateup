@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate, useParams, useRouter } from "@tanstack/re
 import type { ColumnDef, ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { Image } from "@unpic/react";
 import { ArrowLeft, Check, Edit, Folder, Trash2, Upload, Users, X } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {

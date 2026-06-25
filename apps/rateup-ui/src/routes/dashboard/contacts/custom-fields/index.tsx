@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import React from "react";
 
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";

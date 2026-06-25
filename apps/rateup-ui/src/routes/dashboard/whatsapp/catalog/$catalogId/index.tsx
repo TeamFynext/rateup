@@ -1,5 +1,4 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import React from "react";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";

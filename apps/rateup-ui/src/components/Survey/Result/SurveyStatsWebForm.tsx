@@ -5,7 +5,7 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react";
 import { Percent } from "lucide-react";
-import React, { useContext, useMemo } from "react";
+import { useContext, useMemo } from "react";
 
 import { useResponseCount } from "@/backend/surveys/response/response.query";
 import { useGetSurveyStats } from "@/backend/surveys/surveys.query";

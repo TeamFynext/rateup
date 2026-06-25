@@ -153,7 +153,7 @@ export function useUpdateMemberProfileMutation() {
   });
 }
 
-function _useUpdateUserLanguageMutation(setIsLoading) {
+export function useUpdateUserLanguageMutation(setIsLoading) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: IUpdateUserLanguage) => updateUserLanguage(values),

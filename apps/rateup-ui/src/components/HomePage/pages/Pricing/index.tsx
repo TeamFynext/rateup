@@ -1,7 +1,7 @@
 import { Box, SegmentedControl, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
-import React, { useState } from "react";
+import { useState } from "react";
 
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
 import { useCheckSession } from "@/hooks/checkSession.tsx";

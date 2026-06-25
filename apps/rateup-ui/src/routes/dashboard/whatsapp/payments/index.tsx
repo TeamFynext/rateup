@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, MapPin, Truck } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";

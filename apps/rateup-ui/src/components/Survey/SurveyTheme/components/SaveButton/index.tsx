@@ -1,6 +1,5 @@
 import { Button, Group } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
-import { isEqual } from "lodash";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -24,19 +23,6 @@ function SaveButton({
   const selectedPageTab = useSelectedPageTab();
 
   const themeObjState = useSurveyThemeContextValue();
-  let themeObjFromApi = themeObjState;
-  if (themeObjBeingEdited) {
-    themeObjFromApi = themeObjBeingEdited.theme;
-  }
-
-  const hasUnsavedChanges = !isEqual(themeObjFromApi, themeObjState);
-  let _saveStatusText = "All changes saved";
-  if (hasUnsavedChanges) {
-    _saveStatusText = "Unsaved changes";
-  }
-  if (isThemeObjBeingEditedDefaultTheme) {
-    _saveStatusText = "Default Theme cannot be edited.";
-  }
 
   const [isSaving, setIsSaving] = useState(false);
   const { t: translations } = useTranslation();

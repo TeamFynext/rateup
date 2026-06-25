@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
-import React from "react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { Button } from "@/components/ui/button.tsx";

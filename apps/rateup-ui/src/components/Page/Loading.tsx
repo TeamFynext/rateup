@@ -1,5 +1,4 @@
 import { Flex, Loader, Paper } from "@mantine/core";
-import React from "react";
 
 const Loading = ({ h }: { h?: number }) => {
   return (

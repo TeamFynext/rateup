@@ -1,6 +1,6 @@
 import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
 import { Send } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";

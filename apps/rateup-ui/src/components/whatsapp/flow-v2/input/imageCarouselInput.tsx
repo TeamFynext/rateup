@@ -1,6 +1,6 @@
 import { Button, Card, Flex, SimpleGrid } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { RateupFileUploadButton } from "@/components/Button/RateupButtons.tsx";

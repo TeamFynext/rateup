@@ -47,9 +47,8 @@ function AddLinkModal({ title, opened, onClose, links }) {
       },
       linkUrl: (value) => {
         if (value) {
-          let _url;
           try {
-            _url = new URL(value);
+            new URL(value);
           } catch {
             return "Please enter a valid url";
           }

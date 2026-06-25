@@ -9,7 +9,7 @@ import {
   IconMoodSmile,
   IconNavigationFilled,
 } from "@tabler/icons-react";
-import React, { useContext } from "react";
+import { useContext } from "react";
 
 import { useHappyIndex } from "@/backend/surveys/response/response.query";
 import SurveyContext from "@/context/SurveyContext.ts";

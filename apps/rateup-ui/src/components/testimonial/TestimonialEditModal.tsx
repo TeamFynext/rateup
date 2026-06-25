@@ -322,7 +322,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: TestimonialEditModalPr
                     <Stack>
                       <Radio icon={CheckIcon} value="vertical" label={translations("Vertical")} />
                       <SimpleGrid cols={4} spacing={"md"} verticalSpacing={"sm"}>
-                        {Array.apply(null, { length: 8 }).map((e, index) => (
+                        {Array.apply(null, { length: 8 }).map((_e, index) => (
                           <Box
                             bg={"#E2E5ED"}
                             h={80}

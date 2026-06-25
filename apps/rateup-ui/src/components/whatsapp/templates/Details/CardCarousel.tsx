@@ -28,7 +28,7 @@ import {
   IconWorld,
   IconX,
 } from "@tabler/icons-react";
-import React, { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { z } from "zod/v4";

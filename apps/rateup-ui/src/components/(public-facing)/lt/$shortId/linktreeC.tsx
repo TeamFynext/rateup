@@ -1,7 +1,7 @@
 import { Box, Image } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { produce } from "immer";
-import React, { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 import { usePageVisitsOrLinkClicksUpdateMutation } from "@/backend/linktree/linktree.query";
 import UnsplashCreditText from "@/components/Linktree/LinktreeEditor/ThemeEditor/components/UnsplashCreditText/index.tsx";
@@ -26,13 +26,10 @@ const LinkTreeC = ({ linktreeObj }) => {
     linkListItem: { styles: linkListItemStyles },
   } = theme;
 
-  let _backgroundImageUrl = "";
   const backgroundImageObj = {};
   if (!isMobile) {
-    if (desktopBgImgUrl) _backgroundImageUrl = desktopBgImgUrl;
     backgroundImageObj["backgroundImage"] = `url(${desktopBgImgUrl})`;
   } else if (isMobile) {
-    if (mobileBgImgUrl) _backgroundImageUrl = mobileBgImgUrl;
     backgroundImageObj["backgroundImage"] = `url(${mobileBgImgUrl})`;
   }
   const backgroundStylesObj = {

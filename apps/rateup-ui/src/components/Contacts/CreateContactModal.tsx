@@ -87,7 +87,7 @@ const CreateContactModal = ({
         values.source == importMethod.MANUAL &&
         (value.length ? null : translations("Name cannot be blank")),
       customFields: {
-        "*": (value, values, path) => {
+        "*": (value, _values, path) => {
           const fieldId = path.split(".")[1];
           const customField = customFields.find((field) => field.slug === fieldId);
 

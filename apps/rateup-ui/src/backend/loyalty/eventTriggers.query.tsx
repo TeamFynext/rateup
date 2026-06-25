@@ -17,7 +17,7 @@ export const useEventTriggers = (programId: string) =>
     enabled: !!programId,
   });
 
-const _useEventTrigger = (id: string) =>
+export const useEventTrigger = (id: string) =>
   useQuery({
     queryKey: ["event-trigger", id],
     queryFn: () => getEventTrigger(id),
@@ -41,7 +41,11 @@ export const useCreateEventTriggerMutation = (onSuccess?: () => void) => {
   });
 };
 
-const _useUpdateEventTriggerMutation = (id: string, programId: string, onSuccess?: () => void) => {
+export const useUpdateEventTriggerMutation = (
+  id: string,
+  programId: string,
+  onSuccess?: () => void,
+) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -59,7 +63,7 @@ const _useUpdateEventTriggerMutation = (id: string, programId: string, onSuccess
   });
 };
 
-const _useDeleteEventTriggerMutation = (programId: string, onSuccess?: () => void) => {
+export const useDeleteEventTriggerMutation = (programId: string, onSuccess?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
