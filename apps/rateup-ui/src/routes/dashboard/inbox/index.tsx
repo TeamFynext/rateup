@@ -2,6 +2,8 @@ import { useMediaQuery } from "@mantine/hooks";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect } from "react";
 
+import { useContactById } from "@/backend/campaign/contacts/contacts.query";
+import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -23,11 +25,55 @@ export const Route = createFileRoute("/dashboard/inbox/")({
 });
 
 function WhatsAppInbox() {
-  const searchParams: { tab?: string } = useSearch({
+  const searchParams: { tab?: string; contactId?: string } = useSearch({
     from: Route.id,
   });
   const tab = searchParams.tab;
+  const contactId = searchParams.contactId;
   const navigate = useNavigate();
+
+  const { selectedContact, setSelectedContact, contactsById } = useContactsStore();
+  const { data: fetchedContact } = useContactById(
+    contactId && !contactsById.has(contactId) ? contactId : "",
+  );
+
+  useEffect(() => {
+    if (contactId) {
+      if (selectedContact?.id !== contactId) {
+        const contactFromStore = contactsById.get(contactId);
+        let consumed = false;
+        if (contactFromStore) {
+          setSelectedContact(contactFromStore);
+          consumed = true;
+        } else if (fetchedContact) {
+          setSelectedContact(fetchedContact);
+          consumed = true;
+        }
+        if (consumed) {
+          navigate({
+            to: "/dashboard/inbox",
+            search: { tab } as never,
+            replace: true,
+          });
+        }
+      } else {
+        // The chat is already selected, just consume the parameter to clear it from the URL
+        navigate({
+          to: "/dashboard/inbox",
+          search: { tab } as never,
+          replace: true,
+        });
+      }
+    }
+  }, [
+    contactId,
+    fetchedContact,
+    contactsById,
+    selectedContact?.id,
+    setSelectedContact,
+    navigate,
+    tab,
+  ]);
 
   useEffect(() => {
     if (!tab) {

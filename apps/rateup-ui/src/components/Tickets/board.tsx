@@ -3,6 +3,7 @@ import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
+import { IconPlus } from "@tabler/icons-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -21,6 +22,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
 
 import { Column } from "./column.tsx";
 import { SettingsContext } from "./settings-context.tsx";
@@ -47,6 +50,10 @@ export function Board({
   const { t } = useTranslation();
   const { settings } = useContext(SettingsContext);
   const scrollableRef = useRef<HTMLDivElement | null>(null);
+  const [newColumnTitle, setNewColumnTitle] = useState("");
+  const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const open = () => setIsAddingColumn(true);
+  const close = () => setIsAddingColumn(false);
 
   const [deleteColumnId, setDeleteColumnId] = useState<string | null>(null);
   // get userInformation for checking the role
@@ -58,6 +65,7 @@ export function Board({
   const {
     board,
     isLoading,
+    createColumn,
     updateColumn,
     deleteColumn,
     moveColumn,
@@ -68,6 +76,18 @@ export function Board({
 
   // Use the fetched board data or fall back to initial prop
   const data = board || initial;
+
+  const handleAddColumn = () => {
+    if (!newColumnTitle.trim()) return;
+
+    createColumn({
+      title: newColumnTitle,
+      ticketBoardId: data.id,
+    });
+
+    close();
+    setNewColumnTitle("");
+  };
 
   const handleDeleteColumn = (columnId: string) => {
     if (!isAdmin) {
@@ -345,6 +365,48 @@ export function Board({
                 />
               );
             })}
+
+          {/* Column add form */}
+          {isAddingColumn ? (
+            <div className="flex flex-col w-[280px] shrink-0 bg-muted/30 p-3 rounded-[12px] border border-border/50 shadow-sm self-start mt-0">
+              <Input
+                autoFocus
+                value={newColumnTitle}
+                onChange={(e) => setNewColumnTitle(e.target.value)}
+                placeholder={t("Enter list title...")}
+                className="h-9 bg-background text-sm mb-3 shadow-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddColumn();
+                  if (e.key === "Escape") close();
+                }}
+              />
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleAddColumn}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 font-semibold"
+                >
+                  {t("Add list")}
+                </Button>
+                <Button
+                  onClick={close}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 px-3 text-muted-foreground hover:text-foreground"
+                >
+                  {t("Cancel")}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={open}
+              className="w-[280px] shrink-0 h-[46px] rounded-[12px] self-start mt-0 border-2 border-dashed border-border/60 bg-transparent text-muted-foreground font-body text-sm font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-150 hover:border-primary/50 hover:text-primary hover:bg-muted/30"
+            >
+              <IconPlus size={16} strokeWidth={2.5} /> {t("Add another list")}
+            </button>
+          )}
 
           <AlertDialog
             open={!!deleteColumnId}
