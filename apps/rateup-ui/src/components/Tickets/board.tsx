@@ -3,7 +3,6 @@ import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
-import { IconPlus } from "@tabler/icons-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -22,8 +21,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
 
 import { Column } from "./column.tsx";
 import { SettingsContext } from "./settings-context.tsx";
@@ -50,10 +47,6 @@ export function Board({
   const { t } = useTranslation();
   const { settings } = useContext(SettingsContext);
   const scrollableRef = useRef<HTMLDivElement | null>(null);
-  const [newColumnTitle, setNewColumnTitle] = useState("");
-  const [isAddingColumn, setIsAddingColumn] = useState(false);
-  const open = () => setIsAddingColumn(true);
-  const close = () => setIsAddingColumn(false);
 
   const [deleteColumnId, setDeleteColumnId] = useState<string | null>(null);
   // get userInformation for checking the role
@@ -65,7 +58,6 @@ export function Board({
   const {
     board,
     isLoading,
-    createColumn,
     updateColumn,
     deleteColumn,
     moveColumn,
@@ -76,18 +68,6 @@ export function Board({
 
   // Use the fetched board data or fall back to initial prop
   const data = board || initial;
-
-  const handleAddColumn = () => {
-    if (!newColumnTitle.trim()) return;
-
-    createColumn({
-      title: newColumnTitle,
-      ticketBoardId: data.id,
-    });
-
-    close();
-    setNewColumnTitle("");
-  };
 
   const handleDeleteColumn = (columnId: string) => {
     if (!isAdmin) {
