@@ -140,7 +140,6 @@ function CardDetailPage() {
 
   const { history } = useRouter();
   const { data: card, isPending, error } = useCardById(ticketId);
-  console.log(card);
 
   const questions = useMemo(() => {
     return card?.surveyResponse?.surveyTeamMap?.survey?.WaFlow?.json?.screens?.flatMap(

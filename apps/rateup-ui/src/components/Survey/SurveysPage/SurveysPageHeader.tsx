@@ -25,8 +25,8 @@ export function SurveyHeader({
   const { t: translations } = useTranslation();
 
   return (
-    <div className="border-b px-4 sm:px-6 py-3">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="sticky top-0 z-10 bg-ink-25 dark:bg-background">
+      <div className="flex flex-col gap-4 border-b py-3 lg:flex-row lg:items-center lg:justify-between dark:border-zinc-800">
         {/* Left Section (Create button) */}
         {user?.role !== UserRole.MEMBER && (
           <Button onClick={openCreateSurvey} className="bg-primary shadow-sm h-9 w-full sm:w-auto">
@@ -65,6 +65,15 @@ export function SurveyHeader({
               <Search className="w-4 h-4" />
             </Button>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-4 pb-2">
+        <div className="font-display font-black text-[28px] text-gray-900 dark:text-zinc-100 tracking-tight">
+          {translations("Surveys")}
+        </div>
+        <div className="font-body text-sm text-gray-500 dark:text-zinc-400 mt-1">
+          {translations("Manage and analyze surveys across your team")}
         </div>
       </div>
     </div>
