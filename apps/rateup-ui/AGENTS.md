@@ -16,9 +16,12 @@ This file provides essential guidance for AI coding agents working in this codeb
 - **Preview:** `npm run preview`
 - **Start:** `npm run start`
 - **Lint:** `npm run lint`
-- **Format (write):** `npm run format`
-- **Format (check):** `npm run check`
+- **Lint (auto-fix):** `npm run lint:fix`
+- **Format (write):** `npm run fmt`
+- **Format (check):** `npm run fmt:check`
+- **Type check:** `npm run typecheck`
 - **Tests:** `npm run test`
+- **Translate:** `npm run translate`
 
 ## Key Conventions
 
@@ -47,19 +50,15 @@ This file provides essential guidance for AI coding agents working in this codeb
 - Compose UI using provided patterns (see shadcn skill)
 - Do not perform broad Mantine-to-shadcn rewrites unless explicitly requested.
 
-## Error Handling & Monitoring
-
-- Sentry is integrated (see `sentry.edge.config.ts`, `sentry.server.config.ts`)
-
 ## Internationalization
 
-- Uses `react-i18next` and `dictionaries/` for locale messages
+- Uses `react-i18next` with locale files in `src/locales/`
 
 ## Additional Notes
 
-- For custom scripts, see `package.json` scripts section
+- For custom scripts, see `package.json` scripts section.
 - For Tailwind and theme-related config, see `src/config/`.
-- `next.config.ts` may exist for legacy/transition context; prefer active TanStack Start + Vite conventions for new work.
+- Pre-commit hooks managed via Husky.
 
 ---
 
@@ -70,7 +69,7 @@ This file provides essential guidance for AI coding agents working in this codeb
 - [TanStack Router best practices skill](.agents/skills/tanstack-router-best-practices/SKILL.md)
 - [package.json](package.json)
 - [vite.config.ts](vite.config.ts)
-- [src/config/mantineTheme.ts](src/config/mantineTheme.ts)
+- [src/config/](src/config/)
 
 ---
 

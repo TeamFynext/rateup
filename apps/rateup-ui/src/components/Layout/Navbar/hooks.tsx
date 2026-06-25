@@ -388,33 +388,6 @@ export function useNavMain({
                     title: t("Instagram"),
                     url: "/dashboard/instagram",
                     icon: IconBrandInstagram,
-                    items: [
-                      {
-                        title: t("Overview"),
-                        url: "/dashboard/instagram",
-                        icon: IconBrandInstagram,
-                      },
-                      {
-                        title: t("Ice Breakers"),
-                        url: "/dashboard/instagram/ice-breakers",
-                        icon: IconMessageChatbot,
-                      },
-                      {
-                        title: t("Persistent Menu"),
-                        url: "/dashboard/instagram/persistent-menu",
-                        icon: IconSettings,
-                      },
-                      {
-                        title: t("ig.me Links"),
-                        url: "/dashboard/instagram/ig-me-links",
-                        icon: IconLinkPlus,
-                      },
-                      {
-                        title: t("Chatbots"),
-                        url: "/dashboard/instagram/flowbots",
-                        icon: IconSitemap,
-                      },
-                    ],
                   },
                 ]
               : []),
