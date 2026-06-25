@@ -1,6 +1,6 @@
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useParams, useRouter, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, useRouter } from "@tanstack/react-router";
 import parse from "html-react-parser";
 import {
   AlertCircle,
@@ -36,7 +36,6 @@ import {
   useDeleteCommentMutation,
   useUpdateCardMutation,
 } from "@/backend/tickets/tickets.query";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import TicketTextEditor from "@/components/RichTextEditor/TicketTextEditor.tsx";
 import { getCellData } from "@/components/Survey/Response/WaResponses.tsx";
@@ -400,8 +399,6 @@ function RightSidebar({
   const { t } = useTranslation();
   const { mutate } = useUpdateCardMutation();
   const { data: members = [] } = useCardTeamMembersById(ticketId);
-  const navigate = useNavigate();
-  const setSelectedContact = useContactsStore((s) => s.setSelectedContact);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const deleteCardMutation = useDeleteCardMutation(onClose);
@@ -704,22 +701,16 @@ function RightSidebar({
                     <span className="text-xs text-muted-foreground">+{linkedContact.phone}</span>
                   </div>
                 </div>
-                <Button
-                  onClick={() => {
-                    if (linkedContact) {
-                      setSelectedContact(linkedContact);
-                      navigate({
-                        to: "/dashboard/inbox",
-                        search: { tab: "All" } as never,
-                      });
-                    }
-                  }}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-2 h-10 rounded-lg font-semibold"
+                <Link
+                  to={`/dashboard/inbox?tab=mine&contactId=${linkedContact.id}`}
+                  className="w-full"
                 >
-                  <IconBrandWhatsapp className="h-4 w-4" />
-                  {t("Open Chat In Inbox")}
-                  <ExternalLink className="h-3.5 w-3.5 ml-1" />
-                </Button>
+                  <Button className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-2 h-10 rounded-lg font-semibold">
+                    <IconBrandWhatsapp className="h-4 w-4" />
+                    {t("Open Chat In Inbox")}
+                    <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                </Link>
               </div>
             </div>
           ) : (
@@ -762,7 +753,7 @@ function RightSidebar({
           <div>
             <MetaLabel>{t("Attachments")}</MetaLabel>
             <div className="flex gap-[7px] flex-wrap mt-1">
-              {(ticket.attachments || []).map((key: string) => {
+              {((ticket.attachments as string[]) || []).map((key: string) => {
                 const fileIsImage = isImage(key);
                 const fileUrl = getFileUrlFromKey(key);
                 const ext = key.split(".").pop()?.toUpperCase() ?? "FILE";

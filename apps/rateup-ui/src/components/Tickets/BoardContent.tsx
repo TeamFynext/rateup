@@ -332,6 +332,10 @@ export function BoardContent({
                 );
               })}
             </div>
+            <div className="flex-1" />
+            <div className="hidden md:block text-xs text-muted-foreground font-medium">
+              {t("Drag and drop the card or column to reorder")}
+            </div>
           </div>
         </div>
 
