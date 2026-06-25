@@ -1,72 +1,101 @@
-# Rateup API
+# rateup-api
 
-This repository contains the scalable API backend for the Rateup platform, built with TypeScript and Node.js.
+Scalable API backend for the [Rateup](https://rateup.app) platform.
 
-## Project Overview
+## Tech Stack
 
-- **Type:** API backend
-- **Language:** TypeScript (Node.js)
-- **Main entry:** `src/index.ts`
-- **Repository:** https://github.com/TeamFynext/rateup-api
+- **Runtime:** Node.js 24.x
+- **Framework:** Fastify 5 (TypeScript, ESM)
+- **Database:** PostgreSQL via Prisma ORM (v7)
+- **Queue:** BullMQ + Redis
+- **Streaming:** Kafka
+- **Auth:** SuperTokens
+- **Authorization:** CASL
+- **Payments:** Stripe, Razorpay
+- **Storage:** AWS S3
+- **Email:** SendGrid, Nodemailer
+- **Validation:** Zod 4
+- **API Docs:** Swagger + Scalar
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 24.x
-- npm
-- PostgreSQL database (for Prisma)
+- PostgreSQL
+- Redis
 
-### Installation
+### Setup
 
-1. Clone the repository
-2. Install dependencies:
-   ```sh
-   npm install
-   ```
-3. Set up your `.env` file (see example or project documentation)
+```bash
+# Install dependencies
+npm install
 
-### Build & Run
+# Set up environment variables
+cp .env.example .env
 
-- **Build:**
-  ```sh
-  npm run build
-  ```
-- **Start (production):**
-  ```sh
-  npm run start
-  ```
-- **Development (hot-reload):**
-  ```sh
-  npm run dev
-  ```
-- **Test:**
-  ```sh
-  npm run test
-  ```
-- **Prisma generate (after schema changes):**
-  ```sh
-  npx prisma generate
-  ```
+# Run database migrations
+npx prisma migrate dev
 
-## Conventions & Notes
+# Start development server
+npm run dev
+```
 
-- Prisma schema and migrations are in the `prisma/` directory.
-- Prettier is enforced on staged files via lint-staged and husky.
-- Always run `npx prisma generate` after modifying the schema.
-- Use Node.js 24.x as specified in `package.json`.
+## Scripts
 
-## Directory Structure
+| Command             | Description                                        |
+| ------------------- | -------------------------------------------------- |
+| `npm run dev`       | Start dev server with hot reload (tsx watch)       |
+| `npm run build`     | Compile TypeScript (`tsc -p tsconfig.json`)        |
+| `npm run start`     | Start production server (`node dist/src/index.js`) |
+| `npm run test`      | Run tests (Vitest)                                 |
+| `npm run lint`      | Lint with oxlint                                   |
+| `npm run lint:fix`  | Lint and auto-fix                                  |
+| `npm run fmt`       | Format with oxfmt                                  |
+| `npm run fmt:check` | Check formatting                                   |
 
-- `src/` — Main application code
-- `prisma/` — Prisma schema and migrations
-- `generated/` — Generated Prisma client code
-- `utils/` — Utility modules
+## Project Structure
 
-## Agent & Contributor Instructions
+```
+src/
+├── app.ts              # Fastify app setup
+├── config.ts           # Configuration
+├── index.ts            # Entry point
+├── registerRoutes.ts   # Route registration
+├── modules/            # Feature modules (routes, handlers, schemas, auth)
+│   ├── ai/             # AI features
+│   ├── campaign/       # Campaign management
+│   ├── chatbot/        # Chatbot
+│   ├── contact/        # Contact management
+│   ├── dashboard/      # Dashboard
+│   ├── integrations/   # Third-party integrations
+│   ├── loyalty/        # Loyalty program
+│   ├── org/            # Organization management
+│   ├── payment/        # Payment processing
+│   ├── survey/         # Survey engine
+│   ├── ticket/         # Ticketing system
+│   ├── webhook/        # Webhook handlers
+│   └── ...             # And more
+├── plugins/            # Fastify plugins (cron, kafka, swagger)
+├── jobs/               # Background job processors (BullMQ)
+├── external/           # External API integrations
+├── routes/             # Route definitions
+├── types/              # TypeScript types
+└── utils/              # Shared utilities
+prisma/                 # Database schema and migrations
+generated/              # Generated Prisma client
+```
 
-See [AGENTS.md](AGENTS.md) for detailed instructions and conventions for AI coding agents and contributors.
+## Conventions
 
----
+- **Linting & Formatting:** oxlint + oxfmt, enforced on staged files via lint-staged + husky.
+- **Prisma:** Run `npx prisma generate` after schema changes (also runs automatically on `npm install`).
+- **ESM:** The project uses ES modules (`"type": "module"`).
 
-For more details, refer to the project documentation or contact the Rateup Team.
+## Agent Instructions
+
+See [AGENTS.md](AGENTS.md) for detailed conventions and instructions for AI coding agents.
+
+## License
+
+MIT

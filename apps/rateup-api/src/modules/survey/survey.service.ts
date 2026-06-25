@@ -117,7 +117,7 @@ export async function cloneSurvey(
   });
 
   if (survey) {
-    const { id, ...surveyWithoutId } = survey;
+    const { id: _id, ...surveyWithoutId } = survey;
 
     const existingSurveys = await prisma.survey.findMany({
       where: {
