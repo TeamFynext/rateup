@@ -9,6 +9,8 @@ import { Database, GitBranch, Settings } from "lucide-react";
 import { useWaAutomatedRepliesMessageById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useInstagramAutomationById } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { DataTableToolbar } from "@/components/dashboard/whatsapp/flowbots/$flowbotId/data-table-toolbar.tsx";
+import { AutomatedReplyForm } from "@/components/dashboard/whatsapp/flowbots/create.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
@@ -16,10 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 import FlowEditor from "@/components/whatsapp/automation/components/flow-editor.tsx";
 import { cn } from "@/lib/utils.ts";
 
-import { DataTableToolbar } from "../../../../../components/dashboard/whatsapp/flowbots/$flowbotId/data-table-toolbar.tsx";
-import { AutomatedReplyForm } from "../../../../../components/dashboard/whatsapp/flowbots/create.tsx";
-
-export const Route = createFileRoute("/dashboard/instagram/flowbots/$flowbotId/")({
+export const Route = createFileRoute("/dashboard/instagram/flowbots/$flowbotId")({
   component: InstagramFlowbotId,
 });
 

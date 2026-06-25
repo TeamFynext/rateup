@@ -152,7 +152,8 @@
     "vitest": "^4.1.9"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,css,md}": "oxfmt"
+    "*.{ts,tsx,js,jsx,json,css,md}": "oxfmt",
+    "*.{js,jsx,ts,tsx,mjs,cjs}": "npm run lint"
   },
   "engines": {
     "node": "24.x"
