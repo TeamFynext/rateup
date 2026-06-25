@@ -173,7 +173,7 @@ function InstagramDashboard() {
             </SelectContent>
           </Select>
           <Badge variant="secondary" className="text-xs">
-            {t("{{count}} connected", { count: connectedSettings.length })}
+            {t("{count} connected", { count: connectedSettings.length })}
           </Badge>
         </div>
       </div>
@@ -299,7 +299,7 @@ function IceBreakersTab({ waSettingId }: Readonly<{ waSettingId: string }>) {
           >
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">
-                {t("Question {{number}}", { number: index + 1 })}
+                {t("Question {number}", { number: index + 1 })}
               </span>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -572,7 +572,7 @@ function PersistentMenuTab({ waSettingId }: Readonly<{ waSettingId: string }>) {
                   {item.type === "postback" ? t("Postback") : t("Web URL")}
                 </Badge>
                 <span className="text-sm font-medium text-muted-foreground">
-                  {t("Item {{number}}", { number: index + 1 })}
+                  {t("Item {number}", { number: index + 1 })}
                 </span>
               </div>
               <Tooltip>
