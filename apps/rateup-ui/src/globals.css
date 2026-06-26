@@ -277,6 +277,8 @@
   --animate-float-b: floatB 4.4s ease-in-out infinite;
   --animate-panel-fade: panelFade 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-blink: blink 1.2s infinite both;
+  --shadow-custom-base: 0 1px 3px rgba(11, 31, 72, 0.05);
+  --shadow-custom-hover: 0 8px 28px rgba(11, 31, 72, 0.1);
 
   @keyframes floatA {
     0%,
@@ -348,9 +350,20 @@
 
 @layer base {
   * {
-    /* forcing ring-1 to all components */
-    @apply border-border outline-ring/50 focus-visible:ring-1!;
+    @apply border-border outline-ring/50;
   }
+
+  /* Focus styles for shadcn components */
+  button:not(:disabled),
+  input:not(:disabled),
+  select:not(:disabled),
+  textarea:not(:disabled),
+  [role="button"]:not(:disabled),
+  [role="tab"]:not(:disabled),
+  [role="menuitem"]:not(:disabled) {
+    @apply focus-visible:ring-1!;
+  }
+
   body {
     @apply bg-background text-foreground;
   }

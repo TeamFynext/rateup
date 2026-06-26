@@ -2,7 +2,7 @@ import { IconDots } from "@tabler/icons-react";
 import { Trash2 } from "lucide-react";
 import type { MouseEvent } from "react";
 
-import { GenericActionCard } from "@/components/common/generic-card.tsx";
+import { ActionCard } from "@/components/common/action-card.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -59,7 +59,7 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
   );
 
   return (
-    <GenericActionCard
+    <ActionCard
       title={item.name}
       titleTooltip={item.name}
       subtitle={item.triggerEvent}

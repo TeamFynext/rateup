@@ -51,12 +51,10 @@ const pricingFaqJsonLd = {
 
 export const Route = createFileRoute("/(marketing)/pricing/")({
   server: {
-    middleware: [
-      createMarkdownMiddleware(async () => {
-        const plans = await getAllRateupPaymentPlans();
-        return buildPricingMarkdown(plans);
-      }),
-    ],
+    middleware: createMarkdownMiddleware(async () => {
+      const plans = await getAllRateupPaymentPlans();
+      return buildPricingMarkdown(plans);
+    }),
   },
   component: Pricing,
   loader: getAllRateupPaymentPlans,

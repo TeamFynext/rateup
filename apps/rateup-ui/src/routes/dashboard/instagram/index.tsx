@@ -35,8 +35,13 @@ import {
   useUpdateRuleMutation,
 } from "@/backend/whatsapp/rule/rule.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { GenericCardGrid } from "@/components/common/generic-card.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
 import { RuleCard } from "@/components/dashboard/automation/components/rule-card.tsx";
+import {
+  IceBreakersPhone,
+  IgMeLinkPhone,
+  PersistentMenuPhone,
+} from "@/components/dashboard/instagram/instagram-preview.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -58,6 +63,7 @@ import {
 } from "@/components/ui/empty.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import {
   Select,
   SelectContent,
@@ -211,7 +217,10 @@ function InstagramDashboard() {
         {selectedSetting && (
           <>
             <TabsContent value="ice-breakers" className="mt-4">
-              <IceBreakersTab waSettingId={selectedSetting.id} />
+              <IceBreakersTab
+                waSettingId={selectedSetting.id}
+                businessName={selectedSetting.igDisplayName || selectedSetting.igUserName || ""}
+              />
             </TabsContent>
             <TabsContent value="ig-me-links" className="mt-4">
               <IgMeLinksTab
@@ -220,7 +229,10 @@ function InstagramDashboard() {
               />
             </TabsContent>
             <TabsContent value="persistent-menu" className="mt-4">
-              <PersistentMenuTab waSettingId={selectedSetting.id} />
+              <PersistentMenuTab
+                waSettingId={selectedSetting.id}
+                businessName={selectedSetting.igDisplayName || selectedSetting.igUserName || ""}
+              />
             </TabsContent>
             <TabsContent value="chatbots" className="mt-4">
               <ChatbotsTab />
@@ -240,7 +252,10 @@ function InstagramDashboard() {
 
 type DraftIceBreaker = { id: string; question: string; payload: string };
 
-function IceBreakersTab({ waSettingId }: Readonly<{ waSettingId: string }>) {
+function IceBreakersTab({
+  waSettingId,
+  businessName,
+}: Readonly<{ waSettingId: string; businessName: string }>) {
   const { data } = useInstagramProfile(waSettingId);
   const setMutation = useSetInstagramIceBreakersMutation(waSettingId);
   const syncMutation = useSyncInstagramIceBreakersMutation(waSettingId);
@@ -286,6 +301,9 @@ function IceBreakersTab({ waSettingId }: Readonly<{ waSettingId: string }>) {
               {t("Up to 4 starter questions shown when users open your Instagram DM.")}
             </CardDescription>
           </div>
+          <PhonePreviewButton platform="instagram">
+            <IceBreakersPhone items={items} businessName={businessName} />
+          </PhonePreviewButton>
           <Badge variant="outline" className="text-xs tabular-nums">
             {items.length}/4
           </Badge>
@@ -424,7 +442,7 @@ function IgMeLinksTab({
           <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950">
             <IconLink className="size-4.5 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div>
+          <div className="flex-1">
             <CardTitle className="text-base">{t("Shareable ig.me link")}</CardTitle>
             <CardDescription>
               {t(
@@ -432,6 +450,9 @@ function IgMeLinksTab({
               )}
             </CardDescription>
           </div>
+          <PhonePreviewButton platform="instagram">
+            <IgMeLinkPhone link={link} businessName={displayName || username || ""} />
+          </PhonePreviewButton>
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -496,7 +517,10 @@ type DraftMenuItem = {
   url: string;
 };
 
-function PersistentMenuTab({ waSettingId }: Readonly<{ waSettingId: string }>) {
+function PersistentMenuTab({
+  waSettingId,
+  businessName,
+}: Readonly<{ waSettingId: string; businessName: string }>) {
   const { data } = useInstagramProfile(waSettingId);
   const setMutation = useSetInstagramPersistentMenuMutation(waSettingId);
   const syncMutation = useSyncInstagramPersistentMenuMutation(waSettingId);
@@ -555,6 +579,9 @@ function PersistentMenuTab({ waSettingId }: Readonly<{ waSettingId: string }>) {
               )}
             </CardDescription>
           </div>
+          <PhonePreviewButton platform="instagram">
+            <PersistentMenuPhone items={items} businessName={businessName} />
+          </PhonePreviewButton>
           <Badge variant="outline" className="text-xs tabular-nums">
             {items.length}/5
           </Badge>
@@ -872,7 +899,7 @@ function CommentsTab() {
         )}
 
         {commentRules.length > 0 && (
-          <GenericCardGrid
+          <CardGrid
             items={commentRules}
             getKey={(item) => item.id}
             renderItem={(item) => (
@@ -957,7 +984,7 @@ function StoriesTab() {
         )}
 
         {storyMentionRules.length > 0 && (
-          <GenericCardGrid
+          <CardGrid
             items={storyMentionRules}
             getKey={(item) => item.id}
             renderItem={(item) => (

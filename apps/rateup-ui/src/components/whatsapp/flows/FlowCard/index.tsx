@@ -11,7 +11,7 @@ import {
   useDeleteFlowMutation,
   useDeprecateFlowMutation,
 } from "@/backend/whatsapp/flow/flow.query";
-import { GenericActionCard } from "@/components/common/generic-card.tsx";
+import { ActionCard } from "@/components/common/action-card.tsx";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
@@ -172,7 +172,7 @@ function FlowCard({
 
   return (
     <>
-      <GenericActionCard
+      <ActionCard
         title={name}
         titleTooltip={name}
         subtitle={category}

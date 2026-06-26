@@ -5,7 +5,7 @@ import { Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { GenericCardGrid } from "@/components/common/generic-card.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -164,7 +164,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
           </Empty>
         </div>
       ) : viewMode === "grid" ? (
-        <GenericCardGrid
+        <CardGrid
           items={data}
           getKey={(item) => item.id}
           renderItem={(item) => (

@@ -1,22 +1,28 @@
-import { Box, Group, Loader, Stack, Text, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconPlus } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 
 import { useSurveyTemplates } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
-import { RateupButtonBlue, RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import {
+  ListPage,
+  ListPageContent,
+  ListPageHeader,
+  ListPageHeaderSection,
+} from "@/components/common/list-page-layout.tsx";
 import SurveyTemplates from "@/components/dashboard/surveys/templates/surveyTemplates.tsx";
-import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
-import NothingFound from "@/components/NothingFound/NothingFound.tsx";
-import Heading from "@/components/styled/Heading/Heading.tsx";
 import { CreateSurveyModal } from "@/components/Survey/CreateSurveyModal.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { docsPath } from "@/utils/constants.ts";
 import { UserRole } from "@/utils/enums/index.ts";
@@ -30,10 +36,9 @@ function Templates() {
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const navigate = useNavigate();
-  const [opened, { open, close }] = useDisclosure(false);
   const { t: translations } = useTranslation();
-  const [createSurveyOpened, { open: openCreateSurvey, close: closeCreateSurvey }] =
-    useDisclosure(false);
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [createSurveyOpened, setCreateSurveyOpened] = useState(false);
 
   const { isLoading, data: allTemplates } = useSurveyTemplates("web");
 
@@ -41,125 +46,110 @@ function Templates() {
     backgroundColor: "#fff",
   };
 
+  const handleTemplateSelect = (template: any) => {
+    setSelectedTemplate(template);
+    setIsTemplateDialogOpen(true);
+  };
+
+  const handleCreateFromTemplate = () => {
+    setIsTemplateDialogOpen(false);
+    setCreateSurveyOpened(true);
+  };
+
   function Category({ categoryName, surveys }) {
     return (
-      <Stack mt="md">
-        <h2>{categoryName}</h2>
-        <Group mt="-30px" align="flex-start">
+      <div className="mt-6">
+        <h3 className="text-lg font-semibold mb-4">{categoryName}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {surveys?.map((survey, index) => (
-            <Box key={survey?.id}>
+            <div
+              key={survey?.id}
+              className="cursor-pointer"
+              onClick={() => handleTemplateSelect(survey)}
+            >
               <SurveyTemplates
                 key={index}
                 survey={survey}
-                setSelectedTemplate={setSelectedTemplate}
+                setSelectedTemplate={handleTemplateSelect}
                 bgTemp={bgTemp}
-                open={open}
+                open={() => handleTemplateSelect(survey)}
               />
-              <Text
-                style={{
-                  marginLeft: "3rem",
-                  marginTop: "12px",
-                  marginBottom: "15px",
-                }}
-              >
-                {" "}
-                {survey.title}
-              </Text>
-            </Box>
+              <p className="text-sm text-muted-foreground mt-3">{survey.title}</p>
+            </div>
           ))}
-        </Group>
-      </Stack>
+        </div>
+      </div>
     );
   }
 
-  if (isLoading || teamsLoading) return <RateupLoader />;
-
   return (
-    <Stack gap={0}>
-      {/* <Modal opened={opened} onClose={close} title="Create Survey from Template" size="auto" centered> */}
-      <Group style={{ textAlign: "center", alignItems: "center", margin: "auto" }}>
-        <FormModalLayout
-          opened={opened}
-          title={translations("Create Survey from Template")}
-          onClose={close}
-          centered
-          size={"lg"}
+    <>
+      <ListPage>
+        <ListPageHeader>
+          <ListPageHeaderSection className="gap-3">
+            {user?.role !== UserRole.MEMBER && (
+              <Button
+                onClick={() => {
+                  navigate({
+                    to: `/dashboard/surveys?action=create`,
+                  });
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {translations("Start Blank")}
+              </Button>
+            )}
+            <InfoButton docUrl={`${docsPath}/webSurvey/surveyTemplates`} />
+            <RefreshButton queryKeys={["survey-templates"]} />
+          </ListPageHeaderSection>
+        </ListPageHeader>
+
+        <ListPageContent
+          isLoading={isLoading || teamsLoading}
+          isError={false}
+          isEmpty={!isLoading && !teamsLoading && Object.keys(allTemplates || {}).length === 0}
+          emptyTitle={translations("No templates found")}
+          emptyDescription={translations("Check back later for more survey templates.")}
         >
-          <Stack style={{ Width: "100%", textAlign: "center" }}>
-            <Title order={3} style={{ alignItems: "center", color: "var(--shade-of-blue-3)" }}>
+          <div className="px-6 pb-6">
+            {allTemplates &&
+              Object.entries(allTemplates).map(([categoryName, surveys], index) => (
+                <Category key={index} categoryName={categoryName} surveys={surveys as any} />
+              ))}
+          </div>
+        </ListPageContent>
+      </ListPage>
+
+      <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{translations("Create Survey from Template")}</DialogTitle>
+            <DialogDescription>
               {selectedTemplate?.title || translations("Template")}
-            </Title>
-            <Text
-              style={{
-                alignItems: "center",
-                textAlign: "center",
-                marginBottom: "1rem",
-              }}
-            >
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
               {translations(
                 "Customize and deploy this survey effortlessly to uncover actionable data that drives informed decisions and enhances your business strategies",
               )}
-            </Text>
-            <RateupButtonPrimary
-              title={translations("Try this Template")}
-              onClick={() => {
-                setSelectedTemplate(selectedTemplate);
-                close();
-                openCreateSurvey();
-              }}
-            />
-          </Stack>
-        </FormModalLayout>
-      </Group>
-      {/* </Modal> */}
+            </p>
+            <Button onClick={handleCreateFromTemplate} className="w-full">
+              {translations("Try this Template")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <CreateSurveyModal
         open={createSurveyOpened}
-        close={closeCreateSurvey}
+        close={() => setCreateSurveyOpened(false)}
         surveyType={"web"}
         teamsData={teamRes?.data}
         template={selectedTemplate}
         setTemplate={setSelectedTemplate}
       />
-      <Group gap="md" justify="space-between">
-        <Group ml="md">
-          <Heading title={translations("Survey Templates")} titleprops={{ w: "500px" }} />
-          <InfoButton docUrl={`${docsPath}/webSurvey/surveyTemplates`} />
-          <RefreshButton queryKeys={["survey-templates"]} />
-        </Group>
-        {user?.role !== UserRole.MEMBER && (
-          <RateupButtonBlue
-            miw={"10.9375rem"}
-            mr={"200px"}
-            rightIcon={<IconPlus />}
-            title={translations("Start Blank")}
-            onClick={() => {
-              navigate({
-                to: `/dashboard/surveys?action=create`,
-              });
-              toast.loading(translations("Hold.. your survey is getting setup.."), {
-                id: "blank-survey",
-              });
-            }}
-          />
-        )}
-      </Group>
-      {isLoading && (
-        <Box m="200px">
-          {" "}
-          <Loader type="bars" />{" "}
-        </Box>
-      )}
-      {allTemplates && (
-        <Box m="lg" pb="xl">
-          {Object?.entries(allTemplates)?.length < 1 && (
-            <NothingFound text={translations("No templates found..!!")} />
-          )}
-
-          {Object?.entries(allTemplates)?.map(([categoryName, surveys], index) => (
-            <Category key={index} categoryName={categoryName} surveys={surveys} />
-          ))}
-        </Box>
-      )}
-    </Stack>
+    </>
   );
 }

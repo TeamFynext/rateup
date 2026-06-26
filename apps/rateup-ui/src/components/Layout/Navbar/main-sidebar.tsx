@@ -7,6 +7,7 @@ import { TeamFeaturesProvider } from "@/context/TeamFeaturesContext.tsx";
 import { useChatSocket } from "@/hooks/useChatSocket.tsx";
 
 import NavbarSkeleton from "../../animation/skeleton/Navbar.Skeleton";
+import { PhonePreviewPanel, PhonePreviewProvider } from "../../ui/phone-preview.tsx";
 import { SidebarProvider } from "../../ui/sidebar.tsx";
 import AppSidebar from "./app-sidebar.tsx";
 import CorruptedSessionScreen from "./corrupted-session.tsx";
@@ -49,38 +50,42 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
       <WebSocketHandler />
 
       <TeamFeaturesProvider>
-        <SidebarProvider
-          defaultOpen={true}
-          style={
-            {
-              "--sidebar-width": "0px", // for custom second sidebar width
-              "--sidebar-width-icon": "53px",
-            } as CSSProperties
-          }
-        >
-          {isLoading ? (
-            <NavbarSkeleton />
-          ) : (
-            <AppSidebar
-              subscription={subscription}
-              contactLabels={contactLabels}
-              lifecycles={lifecycles}
-              userData={resolvedUserInfo ?? undefined}
-              staff={staff}
-              teams={teams}
-            />
-          )}
-
-          <div
-            className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-ink-25 dark:bg-[#121212] relative`}
+        <PhonePreviewProvider>
+          <SidebarProvider
+            defaultOpen={true}
+            style={
+              {
+                "--sidebar-width": "0px", // for custom second sidebar width
+                "--sidebar-width-icon": "53px",
+              } as CSSProperties
+            }
           >
-            <LifecycleContext value={lifecycles || []}>
-              <CustomFieldsProvider initialFields={customFieldData || []}>
-                <RouteAccessGuard>{children}</RouteAccessGuard>
-              </CustomFieldsProvider>
-            </LifecycleContext>
-          </div>
-        </SidebarProvider>
+            {isLoading ? (
+              <NavbarSkeleton />
+            ) : (
+              <AppSidebar
+                subscription={subscription}
+                contactLabels={contactLabels}
+                lifecycles={lifecycles}
+                userData={resolvedUserInfo ?? undefined}
+                staff={staff}
+                teams={teams}
+              />
+            )}
+
+            <div
+              className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-ink-25 dark:bg-[#121212] relative`}
+            >
+              <LifecycleContext value={lifecycles || []}>
+                <CustomFieldsProvider initialFields={customFieldData || []}>
+                  <RouteAccessGuard>{children}</RouteAccessGuard>
+                </CustomFieldsProvider>
+              </LifecycleContext>
+            </div>
+
+            <PhonePreviewPanel />
+          </SidebarProvider>
+        </PhonePreviewProvider>
       </TeamFeaturesProvider>
     </>
   );

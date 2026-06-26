@@ -21,7 +21,7 @@ import { createMarkdownMiddleware } from "../../../../markdown/serveMarkdown";
 
 export const Route = createFileRoute("/(marketing)/products/whatsapp-survey/")({
   server: {
-    middleware: [createMarkdownMiddleware(productsMarkdown)],
+    middleware: createMarkdownMiddleware(productsMarkdown),
   },
   component: Page,
   head: () => buildPageHead("/products/whatsapp-survey"),
