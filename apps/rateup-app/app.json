@@ -51,7 +51,9 @@
     },
     "plugins": [
       "expo-router",
-      ["expo-apple-authentication"],
+      [
+        "expo-apple-authentication"
+      ],
       "@react-native-google-signin/google-signin",
       "expo-notifications",
       [
@@ -82,7 +84,8 @@
           "enableFileSharing": true
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

@@ -29,17 +29,22 @@ import { Check, UserCheck, Users } from "lucide-react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { colors } from "@/constants/constants";
 import { useChatAssignStatusStore } from "@/utils/store";
+import { Colors } from "@/constants/colors";
 
 export default function AssignToUser({
   contactId,
   color,
   iconSize = 16,
   fontSize = 14,
+  iconOnly = false,
+  iconColor,
 }: {
   contactId: string;
   iconSize?: number;
   color?: boolean;
   fontSize?: number;
+  iconOnly?: boolean;
+  iconColor?: string;
 }) {
   const [visible, setVisible] = useState(false);
   const assignMut = useAssignInboxToUser(contactId);
@@ -54,11 +59,11 @@ export default function AssignToUser({
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const buttonBgColor = color
-    ? colors["primary-blue"]
+    ? Colors.brand.blue
     : isDark
-    ? colors["gray-900"]
-    : "white";
-  const textColor = color ? "white" : isDark ? "white" : "black";
+      ? Colors.dark.surface
+      : "white";
+  const textColor = color ? "white" : isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
 
   const membersByTeam = useMemo(() => {
     if (!teamMembers?.data) return {};
@@ -120,21 +125,41 @@ export default function AssignToUser({
 
   return (
     <>
-      <TouchableOpacity
-        onPress={() => setVisible(true)}
-        style={{
-          backgroundColor: buttonBgColor,
-        }}
-        className="py-1 px-4 rounded-xl flex-row items-center justify-center gap-1"
-      >
-        <UserCheck color={textColor} size={iconSize} />
-        <Text
-          style={{ color: textColor, fontSize: fontSize }}
-          className={`font-semibold`}
+      {iconOnly ? (
+        <TouchableOpacity
+          onPress={() => setVisible(true)}
+          style={{ padding: 4 }}
         >
-          Assign
-        </Text>
-      </TouchableOpacity>
+          <UserCheck color={iconColor || textColor} size={iconSize} />
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          onPress={() => setVisible(true)}
+          style={{
+            backgroundColor: buttonBgColor,
+            borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+            borderWidth: color ? 0 : 1,
+            borderRadius: 12,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+          }}
+        >
+          <UserCheck color={textColor} size={iconSize} />
+          <Text
+            style={{
+              color: textColor,
+              fontSize: fontSize,
+              fontFamily: "Nunito_600SemiBold",
+            }}
+          >
+            Assign
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <Modal
         visible={visible}
@@ -143,13 +168,32 @@ export default function AssignToUser({
         onRequestClose={() => setVisible(false)}
       >
         <Pressable className="flex-1" onPress={() => setVisible(false)}>
-          <View className="flex-1 bg-black/40" />
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }} />
         </Pressable>
 
-        <SafeAreaView className="bg-white dark:bg-slate-900 rounded-t-2xl px-4 pt-4 pb-6 max-h-[70%]">
-          <View className="w-12 h-1.5 bg-gray-300 rounded-full self-center mb-4" />
+        <SafeAreaView
+          style={{
+            backgroundColor: isDark ? Colors.dark.surface : "#fff",
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 24,
+            maxHeight: "70%",
+            borderWidth: 1,
+            borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+          }}
+        >
+          <View style={{ width: 48, height: 6, backgroundColor: isDark ? "rgba(255,255,255,0.2)" : "#d1d5db", borderRadius: 999, alignSelf: "center", marginBottom: 16 }} />
 
-          <Text className="text-lg font-semibold mb-4 dark:text-white">
+          <Text
+            style={{
+              fontFamily: "Nunito_700Bold",
+              fontSize: 18,
+              color: isDark ? "#fff" : Colors.light.textPrimary,
+              marginBottom: 16,
+            }}
+          >
             Assign chat
           </Text>
 
@@ -161,16 +205,22 @@ export default function AssignToUser({
               const teamStaff = membersByTeam[team.id] ?? [];
               if (teamsLoading || isAssignedLoading) {
                 return (
-                  <SafeAreaView className="flex-1 justify-center items-center">
-                    <ActivityIndicator />
-                  </SafeAreaView>
+                  <View key={team.id} style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingVertical: 20 }}>
+                    <ActivityIndicator size="small" color={Colors.brand.blue} />
+                  </View>
                 );
               }
               return (
-                <View key={team.id} className="mb-4">
-                  <View className="flex-row items-center gap-1 mb-2">
-                    <Users size={14} color={isDark ? "white" : "black"} />
-                    <Text className="font-medium dark:text-white">
+                <View key={team.id} style={{ marginBottom: 16 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                    <Users size={14} color={isDark ? Colors.dark.textSubtle : Colors.light.textSubtle} />
+                    <Text
+                      style={{
+                        fontFamily: "Nunito_700Bold",
+                        fontSize: 14,
+                        color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
+                      }}
+                    >
                       {team.name}
                     </Text>
                   </View>
@@ -183,7 +233,12 @@ export default function AssignToUser({
                     return (
                       <Pressable
                         key={member.id}
-                        className="flex-row items-center justify-between"
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          paddingVertical: 8,
+                        }}
                         onPress={() => {
                           setAssignedStaff((prev) => {
                             const exists = prev.find(
@@ -201,28 +256,38 @@ export default function AssignToUser({
                           });
                         }}
                       >
-                        <View className="ml-2 mt-2">
-                          <View className="flex-row items-center gap-1">
-                            <View className="w-8 h-8 rounded-full bg-chatAvatarBlue flex items-center justify-center">
-                              <Text className="text-white text-sm font-bold">
+                        <View style={{ marginLeft: 8 }}>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                            <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.brand.blue, alignItems: "center", justifyContent: "center" }}>
+                              <Text style={{ color: "#fff", fontSize: 12, fontFamily: "Nunito_700Bold" }}>
                                 {namePreview(member?.name)}
                               </Text>
                             </View>
                             <View>
-                              <Text className="dark:text-white">
+                              <Text
+                                style={{
+                                  fontFamily: "Nunito_600SemiBold",
+                                  fontSize: 14,
+                                  color: isDark ? "#fff" : Colors.light.textPrimary,
+                                }}
+                              >
                                 {member.name}
                               </Text>
-                              <Text className="text-xs text-gray-500">
-                                {member.status === "online"
-                                  ? "Online"
-                                  : "Offline"}
+                              <Text
+                                style={{
+                                  fontFamily: "Nunito_400Regular",
+                                  fontSize: 11,
+                                  color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
+                                }}
+                              >
+                                {member.status === "online" ? "Online" : "Offline"}
                               </Text>
                             </View>
                           </View>
                         </View>
 
                         {isSelected && (
-                          <Check size={18} color={isDark ? "white" : "black"} />
+                          <Check size={16} color={isDark ? Colors.accent.cyan : Colors.brand.blue} />
                         )}
                       </Pressable>
                     );
@@ -237,9 +302,21 @@ export default function AssignToUser({
               handleAssign();
               setVisible(false);
             }}
-            className="mt-4 bg-primaryBlue py-3 rounded-lg"
+            style={{
+              marginTop: 16,
+              backgroundColor: Colors.brand.blue,
+              paddingVertical: 12,
+              borderRadius: 12,
+              shadowColor: Colors.brand.blue,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: isDark ? 0.4 : 0.2,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
           >
-            <Text className="text-white text-center font-semibold">Assign</Text>
+            <Text style={{ color: "#fff", textAlign: "center", fontFamily: "Nunito_700Bold", fontSize: 15 }}>
+              Assign
+            </Text>
           </TouchableOpacity>
         </SafeAreaView>
       </Modal>

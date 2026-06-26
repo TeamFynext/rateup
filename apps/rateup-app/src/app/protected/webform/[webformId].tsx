@@ -10,7 +10,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+import { createMaterialTopTabNavigator } from "expo-router/js-top-tabs";
 import {
   useResponseAnalytics,
   useResponsesBySurvey,

@@ -20,10 +20,11 @@ import {
 import { useChatFilterData } from "@/api/inbox/contacts/contacts.query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ArrowLeft } from "lucide-react-native";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
-import { IconArrowLeft } from "@tabler/icons-react-native";
 import { useTeamsByUser } from "@/api/teams/teams.query";
 import { colors } from "@/constants/constants";
+import { Colors } from "@/constants/colors";
 
 const FiltersScreen = () => {
   const colorScheme = useColorScheme();
@@ -76,9 +77,9 @@ const FiltersScreen = () => {
   );
   const teamOptions = teamRes
     ? teamRes.data?.map((team: any) => ({
-        value: team?.id,
-        label: team?.name,
-      }))
+      value: team?.id,
+      label: team?.name,
+    }))
     : [];
 
   useEffect(() => {
@@ -153,11 +154,11 @@ const FiltersScreen = () => {
     { value: "automation", label: "Automation" },
   ];
 
-  const textColor = isDark ? "white" : colors["slate-950"];
-  const bgColor = isDark ? colors["slate-950"] : "white";
+  const textColor = isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
+  const bgColor = isDark ? Colors.dark.bg : "white";
 
   return (
-    <SafeAreaView className="bg-white dark:bg-slate-950 flex-1">
+    <View style={{ backgroundColor: bgColor }} className="flex-grow flex-1">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -172,7 +173,7 @@ const FiltersScreen = () => {
             <View className="flex-row justify-between items-center mb-4">
               <View className="flex-row items-center gap-2">
                 <Pressable onPress={() => router.back()}>
-                  <IconArrowLeft height={24} width={24} color={textColor} />
+                  <ArrowLeft size={24} color={textColor} />
                 </Pressable>
                 <Text className="text-2xl font-bold dark:text-white">
                   Filters
@@ -234,12 +235,12 @@ const FiltersScreen = () => {
 
                               const updated = exists
                                 ? current.filter(
-                                    (item) =>
-                                      !(
-                                        item.value === value &&
-                                        item.group === group
-                                      )
-                                  )
+                                  (item) =>
+                                    !(
+                                      item.value === value &&
+                                      item.group === group
+                                    )
+                                )
                                 : [...current, { group, value }];
 
                               const contactGroups = updated.filter(
@@ -261,11 +262,10 @@ const FiltersScreen = () => {
                                 tags,
                               });
                             }}
-                            className={`px-4 py-2 rounded-full border ${
-                              isSelected
+                            className={`px-4 py-2 rounded-full border ${isSelected
                                 ? "bg-rateUpGreen border-rateUpGreen"
                                 : "border-lightgray"
-                            }`}
+                              }`}
                           >
                             <Text
                               className={
@@ -376,7 +376,7 @@ const FiltersScreen = () => {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 

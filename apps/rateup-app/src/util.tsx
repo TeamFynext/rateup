@@ -1,12 +1,9 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { AlertCircle, Archive, CheckCircle2, MessageCircle, StarIcon, UserCog ,Circle} from "lucide-react-native";
+import { AlertCircle, Archive, CheckCircle2, MessageCircle, StarIcon, UserCog, Circle } from "lucide-react-native";
 import { QuestionType2, WaQuestions } from "./components/flow/enum";
 import { create } from "zustand";
-import {
-  IconBrandWhatsapp,
-  IconBrandInstagram,
-} from "@tabler/icons-react-native";
+import { FontAwesome } from "@expo/vector-icons";
 import { MessagePlatform } from "./constants/enums";
 import { WaMessageAssignStatus } from "./api/inbox/types";
 import { colors } from "./constants/constants";
@@ -110,9 +107,8 @@ export const renderChoiceItem = (
     case WaQuestions.Opinion:
       return renderStatRow(
         <View
-          className={`border border-rateUpBlue px-2 py-2 w-10 h-10 flex items-center justify-center rounded-md  ${
-            isMostVoted ? "bg-[#C4D7F5]" : ""
-          }`}
+          className={`border border-rateUpBlue px-2 py-2 w-10 h-10 flex items-center justify-center rounded-md  ${isMostVoted ? "bg-[#C4D7F5]" : ""
+            }`}
         >
           <Text className="text-sm text-gray-900 dark:text-gray-200">{item.choice}</Text>
         </View>
@@ -172,36 +168,36 @@ export function getSoucePlatformIconAndColor(
   switch (sourcePlatform) {
     case MessagePlatform.WHATSAPP:
       return {
-        icon: <IconBrandWhatsapp color={"white"} size={20}/>,
+        icon: <FontAwesome name="whatsapp" color={"white"} size={16} />,
         bgColor: "bg-green-600",
       };
     case MessagePlatform.INSTAGRAM:
       return {
-        icon: <IconBrandInstagram color={"white"} size={20}/>,
+        icon: <FontAwesome name="instagram" color={"white"} size={16} />,
         bgColor: "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500",
       };
     case MessagePlatform.WEBCHAT:
       return {
-        icon: <MessageCircle color={"white"} size={20} />,
+        icon: <MessageCircle color={"white"} size={16} />,
         bgColor: "bg-blue-600",
       };
   }
 }
 
 export const getClosedIcon = (status: any) => {
-    switch (status) {
-      case WaMessageAssignStatus.RESOLVED:
-        return <CheckCircle2 size={16} color={colors["status-resolved"]} />;
-      case WaMessageAssignStatus.UNRESOLVED:
-        return <Circle size={16} color={colors["status-unresolved"]} />;
-      case WaMessageAssignStatus.CLOSED:
-        return <Archive size={16} color={colors["status-closed"]} />;
-      case WaMessageAssignStatus.SPAM:
-        return <AlertCircle size={16} color={colors["status-spam"]} />;
-      default:
-        return <UserCog size={16} color={colors["status-default"]} />;
-    }
-  };
+  switch (status) {
+    case WaMessageAssignStatus.RESOLVED:
+      return <CheckCircle2 size={16} color={colors["status-resolved"]} />;
+    case WaMessageAssignStatus.UNRESOLVED:
+      return <Circle size={16} color={colors["status-unresolved"]} />;
+    case WaMessageAssignStatus.CLOSED:
+      return <Archive size={16} color={colors["status-closed"]} />;
+    case WaMessageAssignStatus.SPAM:
+      return <AlertCircle size={16} color={colors["status-spam"]} />;
+    default:
+      return <UserCog size={16} color={colors["status-default"]} />;
+  }
+};
 
 
 export function parseToWhatsAppFormat(editorContent) {

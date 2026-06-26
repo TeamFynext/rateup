@@ -24,7 +24,7 @@ import {
   User,
 } from "lucide-react-native";
 import { colors } from "@/constants/constants";
-import { IconGift } from "@tabler/icons-react-native";
+
 import {
   useAssignRewardMutation,
   useAwardPointsMutation,
@@ -37,6 +37,64 @@ import {
   AvailableRewardsCard,
   PendingRedemptionsCard,
 } from "./cashierPortal/components";
+interface ActionCardProps {
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  color: string;
+  lightBg: string;
+  border: string;
+  onPress: () => void;
+}
+
+const ActionCard = ({
+  title,
+  subtitle,
+  icon,
+  color,
+  lightBg,
+  border,
+  onPress,
+}: ActionCardProps) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`rounded-xl p-4 w-[48%] mb-4 border ${
+        isDark ? "bg-slate-900 border-slate-800" : ""
+      }`}
+      style={{
+        backgroundColor: isDark ? undefined : lightBg,
+        borderColor: border,
+      }}
+    >
+      <View className="flex-row items-center">
+        <View
+          className="w-10 h-10 rounded-lg items-center justify-center mr-3"
+          style={{ backgroundColor: color }}
+        >
+          {icon}
+        </View>
+
+        <View className="flex-1">
+          <Text
+            className="text-sm font-semibold"
+            style={{ color: isDark ? "#fff" : "#0f172a" }}
+          >
+            {title}
+          </Text>
+          <Text
+            className="text-xs"
+            style={{ color: isDark ? "#9ca3af" : "#64748b" }}
+          >
+            {subtitle}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+};
 
 const CashierPortal = () => {
   const [phone, setPhone] = useState("");
@@ -190,51 +248,6 @@ const CashierPortal = () => {
     }
   };
 
-  const ActionCard = ({
-    title,
-    subtitle,
-    icon,
-    color,
-    lightBg,
-    border,
-    onPress,
-  }: any) => (
-    <Pressable
-      onPress={onPress}
-      className={`rounded-xl p-4 w-[48%] mb-4 border ${
-        isDark ? "bg-slate-900 border-slate-800" : ""
-      }`}
-      style={{
-        backgroundColor: isDark ? undefined : lightBg,
-        borderColor: border,
-      }}
-    >
-      <View className="flex-row items-center">
-        <View
-          className="w-10 h-10 rounded-lg items-center justify-center mr-3"
-          style={{ backgroundColor: color }}
-        >
-          {icon}
-        </View>
-
-        <View className="flex-1">
-          <Text
-            className="text-sm font-semibold"
-            style={{ color: isDark ? "#fff" : "#0f172a" }}
-          >
-            {title}
-          </Text>
-          <Text
-            className="text-xs"
-            style={{ color: isDark ? "#9ca3af" : "#64748b" }}
-          >
-            {subtitle}
-          </Text>
-        </View>
-      </View>
-    </Pressable>
-  );
-
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       onPress={() => handleSelectCountry(item)}
@@ -263,7 +276,7 @@ const CashierPortal = () => {
       {/* Header */}
       <View className="flex-row px-5 py-6 bg-primaryBlue items-start">
         <View className="flex-row items-start gap-3 flex-1">
-          <IconGift color="white" strokeWidth={2} size={26} />
+          <Gift color="white" strokeWidth={2} size={26} />
           <View className="flex-1">
             <Text className="text-white text-xl font-bold">Cashier Portal</Text>
             <Text className="text-white/80 text-sm mt-1">

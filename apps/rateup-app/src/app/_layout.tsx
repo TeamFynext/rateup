@@ -3,10 +3,48 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { colors } from "@/constants/constants";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import { StatusBar, useColorScheme } from "react-native";
+import { StatusBar, useColorScheme, Text, TextInput } from "react-native";
+import { Colors } from "@/constants/colors";
 import ToastManager from "toastify-react-native";
 import { CheckCircle, XCircle, Info, AlertTriangle } from "lucide-react-native";
+import {
+  useFonts,
+  Nunito_300Light,
+  Nunito_400Regular,
+  Nunito_500Medium,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+  Nunito_900Black,
+} from "@expo-google-fonts/nunito";
 import "../global.css";
+
+// Monkey-patch Text and TextInput components to use Nunito_400Regular as the global default font
+if ((Text as any).defaultProps) {
+  (Text as any).defaultProps.style = {
+    fontFamily: "Nunito_400Regular",
+    ...(Text as any).defaultProps.style,
+  };
+} else {
+  (Text as any).defaultProps = {
+    style: {
+      fontFamily: "Nunito_400Regular",
+    },
+  };
+}
+
+if ((TextInput as any).defaultProps) {
+  (TextInput as any).defaultProps.style = {
+    fontFamily: "Nunito_400Regular",
+    ...(TextInput as any).defaultProps.style,
+  };
+} else {
+  (TextInput as any).defaultProps = {
+    style: {
+      fontFamily: "Nunito_400Regular",
+    },
+  };
+}
 
 export const queryClient = new QueryClient();
 
@@ -17,14 +55,14 @@ function RootLayout() {
     <>
       <StatusBar
         barStyle={isDark ? "light-content" : "dark-content"}
-        backgroundColor={isDark ? colors["slate-950"] : "white"}
+        backgroundColor={isDark ? Colors.dark.bg : "white"}
         translucent
       />
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: isDark ? colors["slate-950"] : "white",
+            backgroundColor: isDark ? Colors.dark.bg : "white",
           },
         }}
       >
@@ -37,6 +75,21 @@ function RootLayout() {
 }
 
 export default function LayoutWrapper() {
+  const [fontsLoaded] = useFonts({
+    Nunito_300Light,
+    Nunito_400Regular,
+    Nunito_500Medium,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Nunito_900Black,
+    Geist: require("@/assets/fonts/Geist-Regular.ttf"),
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>

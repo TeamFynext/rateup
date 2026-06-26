@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   useColorScheme,
 } from "react-native";
+import { Colors } from "@/constants/colors";
 import { useAssignInboxToUser } from "@/api/inbox/messages/message.query";
 import AssignToUser from "./AssignToUser";
 import { generateInternalMessageId } from "@/utils/chatbox_utils";
@@ -54,15 +55,45 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
   };
 
   return (
-    <View className="bg-white dark:bg-gray-900 flex-row p-3 justify-center gap-4">
+    <View
+      style={{
+        backgroundColor: isDark ? Colors.dark.surface : Colors.light.card,
+        flexDirection: "row",
+        padding: 12,
+        justifyContent: "center",
+        gap: 16,
+        borderTopWidth: 1,
+        borderTopColor: isDark ? Colors.dark.border : Colors.light.border,
+      }}
+    >
       <TouchableOpacity onPress={handleAssignToMe} disabled={loadingUser}>
-        <View className="rounded-xl flex-row justify-center items-center gap-1 border dark:border-white px-4 py-2">
+        <View
+          style={{
+            borderRadius: 12,
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 6,
+            borderWidth: 1,
+            borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+          }}
+        >
           {loadingUser ? (
-            <ActivityIndicator size="small" color="#009987" />
+            <ActivityIndicator size="small" color={Colors.brand.blue} />
           ) : (
             <>
-              <CircleUser color={isDark ? "white" : "black"} size={18} />
-              <Text className="dark:text-white">Assign To Me</Text>
+              <CircleUser color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary} size={18} />
+              <Text
+                style={{
+                  fontFamily: "Nunito_600SemiBold",
+                  color: isDark ? Colors.dark.textPrimary : Colors.light.textPrimary,
+                  fontSize: 14,
+                }}
+              >
+                Assign To Me
+              </Text>
             </>
           )}
         </View>

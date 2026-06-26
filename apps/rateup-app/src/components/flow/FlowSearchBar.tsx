@@ -11,17 +11,18 @@ import { Search, SlidersHorizontal } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useSearchFlowStore, useFlowFilterStore } from "@/utils/store";
 import { colors } from "@/constants/constants";
+import { Colors } from "@/constants/colors";
 
 const FlowSearchBar = () => {
   const colorScheme = useColorScheme();
 
   const isDark = colorScheme === "dark";
 
-  const textColor = isDark ? "white" : colors["slate-950"];
+  const textColor = isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
 
-  const bgColor = isDark ? "#0f172a" : "#f8fafc";
+  const bgColor = isDark ? Colors.dark.surface : Colors.light.inputBg;
 
-  const borderColor = isDark ? "#1e293b" : "#e2e8f0";
+  const borderColor = isDark ? Colors.dark.border : Colors.light.border;
 
   const router = useRouter();
 
@@ -60,7 +61,7 @@ const FlowSearchBar = () => {
             marginTop: Platform.OS === "ios" ? 1 : 0,
           }}
           placeholder="Search Flow"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder}
           value={search}
           onChangeText={setSearch}
         />

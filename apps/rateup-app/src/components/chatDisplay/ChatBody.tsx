@@ -5,6 +5,7 @@ import {
   Dimensions,
   TouchableOpacity,
   FlatList,
+  useColorScheme,
 } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import React, { useRef, useCallback, useMemo } from "react";
@@ -19,10 +20,17 @@ import { useGetMessagesByContactId } from "@/api/inbox/messages/message.query";
 import { ChevronDown } from "lucide-react-native";
 import { useWsData } from "@/context/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { Colors } from "@/constants/colors";
 
 const { height: screenHeight } = Dimensions.get("window");
 
+const viewabilityConfig = {
+  itemVisiblePercentThreshold: 50,
+};
+
 const ChatBody = ({ id }: { id: string }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const {
     data,
     fetchNextPage,
@@ -81,12 +89,16 @@ const ChatBody = ({ id }: { id: string }) => {
 
   const markedAsRead = useRef(new Set<string>());
 
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 50,
-  };
+  const onViewableItemsChangedHandler = useRef<
+    (({ viewableItems }: { viewableItems: Array<ViewToken> }) => void) | null
+  >(null);
 
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
+  React.useEffect(() => {
+    onViewableItemsChangedHandler.current = ({
+      viewableItems,
+    }: {
+      viewableItems: Array<ViewToken>;
+    }) => {
       viewableItems.forEach(({ item }) => {
         const isReceived = item.messageBody.exchangeProcess === "receive";
         const isUnread = !item.messageBody.readUsers?.includes(userId);
@@ -96,8 +108,15 @@ const ChatBody = ({ id }: { id: string }) => {
           markedAsRead.current.add(item.id);
         }
       });
+    };
+  }, [userId, id, markRead]);
+
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
+      onViewableItemsChangedHandler.current?.({ viewableItems });
     },
-  ).current;
+    [],
+  );
 
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => {
@@ -113,7 +132,12 @@ const ChatBody = ({ id }: { id: string }) => {
 
       const shouldShowDate = currentDate !== nextDate;
       return (
-        <View className="bg-gray-50 dark:bg-slate-800 px-2">
+        <View
+          style={{
+            backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+            paddingHorizontal: 8,
+          }}
+        >
           {shouldShowDate && (
             <DateSeparator
               label={dayjs(item.createdAt).format("DD MMM YYYY")}
@@ -140,15 +164,29 @@ const ChatBody = ({ id }: { id: string }) => {
 
   if (isPending) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-slate-800">
-        <ActivityIndicator size="large" color="#009987" />
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+        }}
+      >
+        <ActivityIndicator size="large" color={Colors.brand.blue} />
       </View>
     );
   }
 
   if (isError) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-slate-800">
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+        }}
+      >
         <Text className="text-red-500">
           {error?.message || "Something went wrong"}
         </Text>
@@ -157,7 +195,12 @@ const ChatBody = ({ id }: { id: string }) => {
   }
 
   return (
-    <View className="flex-1 bg-gray-50 dark:bg-slate-800">
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+      }}
+    >
       <FlatList
         inverted
         data={messageList}

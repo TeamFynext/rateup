@@ -5,42 +5,43 @@ import {
   Pressable,
   Modal,
   Dimensions,
-  ActivityIndicator,
   useColorScheme,
 } from "react-native";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "expo-router";
 import {
   generateInternalMessageId,
   namePreview,
 } from "../../utils/chatbox_utils";
-import { closeChat } from "@/api/inbox/contacts/contacts.api";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useChatAssignStatusStore } from "@/utils/store";
 import AssignToUser from "./chatFooter/AssignToUser";
+import LinearGradient from "react-native-linear-gradient";
 import {
   ArrowLeft,
   CircleCheckBig,
   MoreVertical,
   Pencil,
+  Clock,
 } from "lucide-react-native";
-import { useEditContactMutation } from "@/api/inbox/contacts/contacts.query";
-import { WaMessageClosedStatus } from "@/constants/constants";
-import { WaMessageAssignStatus } from "@/api/inbox/types";
+import { Colors } from "@/constants/colors";
 import { getClosedIcon } from "@/util";
+import { useEditContactMutation } from "@/api/inbox/contacts/contacts.query";
+import { WaMessageAssignStatus } from "@/api/inbox/types";
 
 const { width: screenWidth } = Dimensions.get("window");
-let contactId: string;
 
 const MoreOptions = ({
   visible,
   onClose,
   onCloseChatPress,
+  contactId,
 }: {
   visible: boolean;
   onClose: () => void;
   onCloseChatPress: () => void;
+  contactId: string;
 }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -58,11 +59,26 @@ const MoreOptions = ({
     >
       <Pressable className="flex-1" onPress={onClose}>
         <View
-          className="absolute right-[10px] top-[55px] rounded-md p-2 bg-white dark:bg-slate-900 shadow-md z-50 flex items-start"
-          style={{ width: modalWidth }}
+          style={{
+            position: "absolute",
+            right: 10,
+            top: 55,
+            borderRadius: 12,
+            padding: 8,
+            backgroundColor: isDark ? Colors.dark.surface : "#fff",
+            borderWidth: 1,
+            borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isDark ? 0.3 : 0.1,
+            shadowRadius: 8,
+            elevation: 5,
+            width: modalWidth,
+            alignItems: "flex-start",
+          }}
         >
           <TouchableOpacity
-            className="p-3 w-full"
+            style={{ padding: 12, width: "100%" }}
             onPress={() => {
               onClose();
               router.push({
@@ -71,27 +87,39 @@ const MoreOptions = ({
               });
             }}
           >
-            <View className="flex-row items-center gap-1">
-              <Pencil color={isDark ? "white" : "black"} size={18} />
-              <Text className="dark:text-white font-semibold" style={{fontSize:16}}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Pencil color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary} size={18} />
+              <Text
+                style={{
+                  fontFamily: "Nunito_600SemiBold",
+                  color: isDark ? "#fff" : Colors.light.textPrimary,
+                  fontSize: 15,
+                }}
+              >
                 Edit
               </Text>
             </View>
           </TouchableOpacity>
 
-          <AssignToUser contactId={contactId} iconSize={18} fontSize={16} />
+          <AssignToUser contactId={contactId} iconSize={18} fontSize={15} />
 
           {waAssignStatus !== "CLOSED" ? (
             <TouchableOpacity
-              className="p-3 w-full"
+              style={{ padding: 12, width: "100%" }}
               onPress={() => {
                 onClose();
                 onCloseChatPress();
               }}
             >
-              <View className="flex-row items-center gap-1">
-                <CircleCheckBig color={isDark ? "white" : "black"} size={18} />
-                <Text className="dark:text-white font-semibold" style={{fontSize:16}}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <CircleCheckBig color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary} size={18} />
+                <Text
+                  style={{
+                    fontFamily: "Nunito_600SemiBold",
+                    color: isDark ? "#fff" : Colors.light.textPrimary,
+                    fontSize: 15,
+                  }}
+                >
                   Close
                 </Text>
               </View>
@@ -112,6 +140,8 @@ const ConfirmationModal = ({
   onCancel: () => void;
   contactId: string;
 }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const queryClient = useQueryClient();
   const editContactMutation = useEditContactMutation();
 
@@ -149,45 +179,68 @@ const ConfirmationModal = ({
       onRequestClose={onCancel}
     >
       {/* Center Container */}
-      <View className="flex-1 justify-center items-center px-16">
-        <View className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 px-5 py-6">
-          <Text className="text-lg font-semibold mb-4 dark:text-white text-center">
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40, backgroundColor: "rgba(0,0,0,0.4)" }}>
+        <View
+          style={{
+            width: "100%",
+            maxWidth: 320,
+            borderRadius: 16,
+            backgroundColor: isDark ? Colors.dark.surface : "#fff",
+            padding: 20,
+            borderWidth: 1,
+            borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isDark ? 0.4 : 0.15,
+            shadowRadius: 12,
+            elevation: 8,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Nunito_700Bold",
+              fontSize: 18,
+              color: isDark ? "#fff" : Colors.light.textPrimary,
+              textAlign: "center",
+              marginBottom: 16,
+            }}
+          >
             Close Chat
           </Text>
-          <View className="flex items-center justify-center">
+          <View style={{ alignItems: "center", justifyContent: "center" }}>
             <TouchableOpacity
               onPress={() => handleCloseChat(WaMessageAssignStatus.RESOLVED)}
-              className="py-3 flex-row items-center justify-center gap-2 w-full"
+              style={{ paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}
             >
               {getClosedIcon(WaMessageAssignStatus.RESOLVED)}
-              <Text className="text-lg font-semibold text-green-500">
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#22c55e" }}>
                 Mark as Resolved
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleCloseChat(WaMessageAssignStatus.CLOSED)}
-              className="py-3 flex-row items-center justify-center gap-2 w-full"
+              style={{ paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}
             >
               {getClosedIcon(WaMessageAssignStatus.CLOSED)}
-              <Text className="text-lg font-semibold text-blue-500">
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: Colors.brand.blue }}>
                 Mark as Closed
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleCloseChat(WaMessageAssignStatus.SPAM)}
-              className="py-3 flex-row items-center justify-center gap-2 w-full"
+              style={{ paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}
             >
               {getClosedIcon(WaMessageAssignStatus.SPAM)}
-              <Text className="text-lg font-semibold text-red-500">
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#ef4444" }}>
                 Mark as Spam
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleCloseChat(WaMessageAssignStatus.UNRESOLVED)}
-              className="py-3 flex-row items-center justify-center gap-2 w-full"
+              style={{ paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}
             >
               {getClosedIcon(WaMessageAssignStatus.UNRESOLVED)}
-              <Text className="text-lg font-semibold text-orange-500">
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#f97316" }}>
                 Mark as Unresolved
               </Text>
             </TouchableOpacity>
@@ -195,9 +248,15 @@ const ConfirmationModal = ({
           {/* Cancel */}
           <TouchableOpacity
             onPress={onCancel}
-            className="mt-4 py-3 rounded-lg bg-slate-800"
+            style={{
+              marginTop: 16,
+              paddingVertical: 12,
+              borderRadius: 12,
+              backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "#f3f4f6",
+              width: "100%",
+            }}
           >
-            <Text className="text-center font-semibold text-white">
+            <Text style={{ textAlign: "center", fontFamily: "Nunito_700Bold", color: isDark ? "#fff" : "#4b5563" }}>
               Cancel
             </Text>
           </TouchableOpacity>
@@ -221,7 +280,7 @@ const ChatHeader = ({
   const router = useRouter();
   const [optionsVisible, setOptionsVisible] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-  contactId = id;
+  const contactId = id;
   const sessionExpiry = dayjs(lastReceivedMessageTimeStamp).add(24, "hour");
   const now = dayjs();
   const diffInMinutes = sessionExpiry.diff(now, "minute");
@@ -232,48 +291,131 @@ const ChatHeader = ({
   const minutesLeft = diffInMinutes % 60;
 
   return (
-    <View className="flex-row items-center justify-between px-6 pb-4 bg-white dark:bg-slate-950 shadow-md gap-3">
-      <View className="flex-row items-center gap-3">
-        <TouchableOpacity onPress={() => router.back()} className="p-1">
-          <ArrowLeft color={isDark ? "white" : "black"} />
+    <View
+      style={{
+        backgroundColor: isDark
+          ? Colors.brand.navyDeep
+          : Colors.brand.blue,
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 14,
+        borderBottomWidth: isDark ? 1 : 0,
+        borderBottomColor: Colors.dark.borderLight,
+      }}
+    >
+      <View
+        style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={{ padding: 4 }}>
+          <ArrowLeft size={20} color="#fff" />
         </TouchableOpacity>
 
-        <View className="w-12 h-12 rounded-full bg-chatAvatarBlue flex items-center justify-center">
-          <Text className="text-white font-bold text-xl">
+        <LinearGradient
+          colors={[Colors.brand.blueLight, Colors.brand.blue] as any}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Nunito_900Black",
+              fontSize: 15,
+              color: "#fff",
+            }}
+          >
             {namePreview(name)}
           </Text>
+        </LinearGradient>
+
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontSize: 15,
+              fontFamily: "Nunito_700Bold",
+              color: "#fff",
+              letterSpacing: -0.1,
+            }}
+          >
+            {formatName(name) || phone}
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
+              marginTop: 2,
+            }}
+          >
+            <Clock
+              size={11}
+              color={
+                isSessionActive
+                  ? isDark
+                    ? Colors.accent.orange
+                    : "rgba(255,216,140,0.95)"
+                  : "#ef4444"
+              }
+            />
+            <Text
+              style={{
+                fontSize: 11,
+                color: isSessionActive
+                  ? isDark
+                    ? Colors.accent.orange
+                    : "rgba(255,216,140,0.95)"
+                  : "#ef4444",
+                fontFamily: "Nunito_600SemiBold",
+              }}
+            >
+              {isSessionActive
+                ? `Session expires in ${hoursLeft}h ${minutesLeft}m`
+                : "Session expired"}
+            </Text>
+          </View>
         </View>
 
-        <View>
-          <Text className="text-xl dark:text-white font-medium">{formatName(name)}</Text>
-          <Text className="text-gray-500">{phone}</Text>
-          {isSessionActive ? (
-            <View className="mt-1 w-fit px-2 py-0.5 rounded-md">
-              <Text className="text-primaryBlue text-sm text-center">
-                Session expires in {hoursLeft}h {minutesLeft}m
-              </Text>
-            </View>
-          ) : (
-            <View className="mt-1 bg-red-100 w-fit px-2 py-0.5 rounded-md">
-              <Text className="text-red-600 text-sm text-center">
-                Session expired
-              </Text>
-            </View>
-          )}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+          }}
+        >
+          <AssignToUser
+            contactId={id}
+            iconOnly
+            iconSize={18}
+            iconColor={
+              isDark
+                ? "rgba(255,255,255,0.5)"
+                : "rgba(255,255,255,0.65)"
+            }
+          />
+          <TouchableOpacity onPress={() => setOptionsVisible(true)} style={{ padding: 4 }}>
+            <MoreVertical
+              size={18}
+              color={
+                isDark
+                  ? "rgba(255,255,255,0.5)"
+                  : "rgba(255,255,255,0.65)"
+              }
+            />
+          </TouchableOpacity>
         </View>
       </View>
-
-      <TouchableOpacity
-        className="h-5 w-5 flex justify-center items-center p-4"
-        onPress={() => setOptionsVisible(true)}
-      >
-        <MoreVertical color={isDark ? "white" : "black"} />
-      </TouchableOpacity>
 
       <MoreOptions
         visible={optionsVisible}
         onClose={() => setOptionsVisible(false)}
         onCloseChatPress={() => setConfirmModalVisible(true)}
+        contactId={contactId}
       />
 
       <ConfirmationModal
@@ -287,7 +429,7 @@ const ChatHeader = ({
 
 export default ChatHeader;
 
-function formatName(name:string) {
+function formatName(name: string) {
   return name.length > 20 ? name.slice(0, 20) + "..." : name;
 }
 

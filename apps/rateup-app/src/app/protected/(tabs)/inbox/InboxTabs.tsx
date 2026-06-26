@@ -8,6 +8,7 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   UserCheck,
   Sparkles,
@@ -20,7 +21,8 @@ import InboxButtons from "@/components/inbox/InboxButtons";
 import { useChatFilterStore } from "@/utils/store";
 import Inbox from "@/components/inbox/inbox";
 import SearchBar from "@/components/inbox/inboxSearchBar";
-import { colors } from "@/constants/constants";
+import RefreshButton from "@/components/inbox/RefreshButton";
+import { Colors } from "@/constants/colors";
 
 type IconType = React.ComponentType<any>;
 
@@ -37,26 +39,81 @@ function TabIcon({
 }) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+
   const backgroundColor = focused
-    ? colors["primary-blue"]
+    ? isDark
+      ? "#fff"
+      : Colors.brand.blue
     : isDark
-      ? colors["gray-900"]
-      : colors["gray-100"];
-  const textColor = focused ? "white" : isDark ? "white" : colors["gray-700"];
+      ? "transparent"
+      : "#fff";
+
+  const textColor = focused
+    ? isDark
+      ? Colors.brand.blue
+      : "#fff"
+    : isDark
+      ? Colors.dark.pillText
+      : Colors.light.pillText;
+
+  const borderWidth = focused ? 0 : 1;
+  const borderColor = isDark
+    ? Colors.dark.pillBorder
+    : Colors.light.border;
+
   return (
     <View
-      className="relative px-4 py-1.5 rounded-full flex flex-row items-center gap-1"
-      style={{ backgroundColor }}
+      style={{
+        backgroundColor,
+        borderRadius: 999,
+        paddingVertical: 6,
+        paddingHorizontal: 14,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        borderWidth,
+        borderColor,
+      }}
     >
-      <Icon color={textColor} size={16} />
-      <View className="flex flex-row items-center gap-1">
-        <Text style={{ color: textColor }} className="font-semibold text-sm">
-          {label}
+      <Icon color={textColor} size={15} />
+      <Text
+        style={{
+          fontSize: 13,
+          fontFamily: focused ? "Nunito_700Bold" : "Nunito_400Regular",
+          color: textColor,
+        }}
+      >
+        {label}
+      </Text>
+      {count !== undefined && count > 0 && (
+        <Text
+          style={
+            focused
+              ? {
+                backgroundColor: isDark
+                  ? Colors.brand.blue
+                  : "rgba(255,255,255,0.22)",
+                color: isDark ? "#fff" : "#fff",
+                borderRadius: 999,
+                paddingHorizontal: 7,
+                paddingVertical: 1,
+                fontSize: 10,
+                fontFamily: "Nunito_700Bold",
+                lineHeight: 16,
+                overflow: "hidden",
+              }
+              : {
+                fontSize: 12,
+                fontFamily: "Nunito_400Regular",
+                color: isDark
+                  ? Colors.dark.textMuted
+                  : Colors.light.textMuted,
+              }
+          }
+        >
+          {count}
         </Text>
-        <Text style={{ color: textColor }} className="font-semibold text-sm">
-          {count && count > 0 ? `(${count})`:""}
-        </Text>
-      </View>
+      )}
     </View>
   );
 }
@@ -66,6 +123,7 @@ export default function InboxLayout() {
   const [activeTab, setActiveTab] = useState<
     "New" | "Assigned" | "Mine" | "Closed" | "All"
   >("New");
+
   const renderInboxContent = () => {
     switch (activeTab) {
       case "New":
@@ -117,6 +175,7 @@ export default function InboxLayout() {
         return null;
     }
   };
+
   const {
     data: contactCounts = {
       all: 0,
@@ -137,29 +196,71 @@ export default function InboxLayout() {
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const tabBg = isDark ? colors["slate-950"] : "white";
+  const listBgColor = isDark ? Colors.dark.bg : Colors.light.bg;
 
   return (
-    <View className="flex-1 bg-white dark:bg-slate-950">
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+      }}
+    >
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View className="flex-row px-4 bg-primaryBlue py-3 justify-between">
-          <View className="flex-row items-start justify-center gap-2">
-            <View>
-              <Text className="text-white text-xl font-bold">Inbox</Text>
-              <Text className="text-white text-sm">
-                You have {contactCounts.new} new chats.
-              </Text>
-            </View>
+        {/* Header */}
+        <View
+          style={{
+            backgroundColor: Colors.brand.blue,
+            paddingHorizontal: 20,
+            paddingTop: 14,
+            paddingBottom: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <View>
+            <Text
+              style={{
+                fontFamily: "Nunito_800ExtraBold",
+                fontSize: 23,
+                color: "#fff",
+                lineHeight: 25,
+                letterSpacing: -0.5,
+              }}
+            >
+              Inbox
+            </Text>
+            <Text
+              style={{
+                fontSize: 12,
+                color: isDark
+                  ? "rgba(255,255,255,0.68)"
+                  : "rgba(255,255,255,0.72)",
+                marginTop: 2,
+              }}
+            >
+              {contactCounts.new} {contactCounts.new === 1 ? "conversation needs" : "conversations need"} attention
+            </Text>
           </View>
-          <View className="flex-row items-center gap-2">
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+            <RefreshButton />
             <InboxButtons activeFilterCount={activeFilterCount} />
           </View>
         </View>
-        <View style={{ height: 48 }}>
+
+        {/* Tab Filters */}
+        <View
+          style={{
+            backgroundColor: isDark ? Colors.dark.surface : Colors.light.surface,
+            paddingVertical: 10,
+            borderBottomWidth: 1,
+            borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
+          }}
+        >
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -213,8 +314,33 @@ export default function InboxLayout() {
             </Pressable>
           </ScrollView>
         </View>
-        <View className="flex-1">{renderInboxContent()}</View>
+
+        <View className="flex-1" style={{ backgroundColor: listBgColor }}>
+          <InboxContentWrapper
+            activeTab={activeTab}
+            searchTerm={searchTerm}
+            renderInboxContent={renderInboxContent}
+            isDark={isDark}
+          />
+        </View>
       </KeyboardAvoidingView>
     </View>
   );
 }
+
+// Wrapper to prevent re-rendering list background layout issues
+const InboxContentWrapper = React.memo(function InboxContentWrapper({
+  renderInboxContent,
+  isDark,
+}: {
+  activeTab: string;
+  searchTerm: string;
+  renderInboxContent: () => React.ReactNode;
+  isDark: boolean;
+}) {
+  return (
+    <View style={{ flex: 1, backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg }}>
+      {renderInboxContent()}
+    </View>
+  );
+});

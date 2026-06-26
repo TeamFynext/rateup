@@ -1,13 +1,12 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import "@/config/superTokens";
-import { useFonts } from "expo-font";
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
-} from "@react-navigation/native";
+} from "expo-router/react-navigation";
 import { useColorScheme } from "react-native";
-import { colors } from "@/constants/constants";
+import { Colors } from "@/constants/colors";
 import { useSubscription } from "@/api/sunscription/subscription.query";
 import { hasFeature } from "@/utils/subscription";
 import { SubscriptionFeaturePathName } from "../../../../enums";
@@ -15,18 +14,15 @@ import { SubscriptionFeaturePathName } from "../../../../enums";
 function ProtectedLayout() {
   const colorScheme = useColorScheme();
   const { data: sub, isPending } = useSubscription();
-  useFonts({
-    Geist: require("@/assets/fonts/Geist-Regular.ttf"),
-  });
 
   const hasLoyalty = hasFeature(sub, SubscriptionFeaturePathName.Loyalty);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <NativeTabs
-        tintColor={colors["primary-blue"]}
+        tintColor={colorScheme === "dark" ? Colors.brand.blueLight : Colors.brand.blue}
         backgroundColor={
-          colorScheme === "dark" ? colors["slate-950"] : colors["gray-50"]
+          colorScheme === "dark" ? Colors.dark.surface : Colors.light.surface
         }
         indicatorColor={"transparent"}
       >

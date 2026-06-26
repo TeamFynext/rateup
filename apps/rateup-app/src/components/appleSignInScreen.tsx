@@ -8,7 +8,7 @@ import { loggedUserDetails } from "../api/api";
 import { useAuth } from "../context/AuthContext";
 import { registerForPushNotificationsAsync } from "../utils/notification";
 import { addToken } from "../api/notification";
-import { IconBrandAppleFilled } from "@tabler/icons-react-native";
+import { FontAwesome } from "@expo/vector-icons";
 
 const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
   const router = useRouter();
@@ -68,7 +68,7 @@ const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
         disabled={loading}
         className="bg-black py-3 rounded-md items-center flex-row justify-center w-[86vw] gap-1 dark:border dark:border-gray-500"
       >
-        <IconBrandAppleFilled color="white" size={20} />
+        <FontAwesome name="apple" color="white" size={20} />
         <Text className="text-white font-medium text-[16px]">
           {loading ? "Please Wait..." : "Sign in with Apple"}
         </Text>

@@ -5,6 +5,7 @@ import {
   Modal,
   Pressable,
   FlatList,
+  useColorScheme,
 } from "react-native";
 import React, { useState } from "react";
 import NotAssigned from "./chatFooter/NotAssigned";
@@ -16,8 +17,11 @@ import { WaMessageClosedStatus } from "@/constants/constants";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { useGetAssignedUserForContact } from "@/api/inbox/messages/message.query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Colors } from "@/constants/colors";
 
 const ChatFooter = ({ id }: { id: string }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const insets = useSafeAreaInsets();
   const waAssignStatus = useChatAssignStatusStore(
     (state) => state.waAssignStatus,
@@ -30,57 +34,38 @@ const ChatFooter = ({ id }: { id: string }) => {
   );
   const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
   const toggleModal = () => setModalVisible(!isModalVisible);
-  const AssignedUsersModal = () => (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={isModalVisible}
-      onRequestClose={toggleModal}
-    >
-      <Pressable
-        className="flex-1 justify-center items-center bg-black/50"
-        onPress={toggleModal}
-      >
-        <View className=" rounded-2xl p-4 w-[80%] max-h-[50%] min-h-[50%]">
-          <Text className="text-xl font-bold mb-4">Assigned Members</Text>
-          <FlatList
-            contentContainerStyle={{
-              display: "flex",
-              justifyContent: "center",
-              gap: 5,
-            }}
-            data={assignedUsers}
-            keyExtractor={(item) => item.assignedUserId}
-            renderItem={({ item }) => (
-              <View className="flex-row gap-1 justify-start items-center px-6 bg-rateUpGreen20 rounded-lg">
-                <UserCheck color="#7A8289" width={20} height={20} />
-                <Text className="text-lg text-gray-500">
-                  {item.assignedUser?.name}
-                </Text>
-              </View>
-            )}
-            ListEmptyComponent={
-              <Text className="text-gray-500 text-center">
-                No assigned users
-              </Text>
-            }
-          />
-        </View>
-      </Pressable>
-    </Modal>
-  );
 
   if (
-    !currentUserAssignment ||
+    !hasAssignedUsers ||
     waAssignStatus === "UNASSIGNED" ||
     waAssignStatus === "NEW" ||
     WaMessageClosedStatus.includes(waAssignStatus as WaMessageAssignStatus)
   ) {
     return (
       <View style={{ paddingBottom: insets.bottom }}>
-        <View className="bg-black flex-row py-2 px-1 items-center justify-center gap-1">
-          <Info color={"white"} size={16} />
-          <Text className="text-white">Please assign to start the chat</Text>
+        <View
+          style={{
+            flexDirection: "row",
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            backgroundColor: isDark ? Colors.dark.surface : Colors.light.surface,
+            borderBottomWidth: 1,
+            borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
+          }}
+        >
+          <Info color={isDark ? Colors.accent.cyan : Colors.brand.blue} size={16} />
+          <Text
+            style={{
+              fontFamily: "Nunito_600SemiBold",
+              color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
+              fontSize: 13,
+            }}
+          >
+            Please assign to start the chat
+          </Text>
         </View>
         <NotAssigned contactId={id} />
       </View>
@@ -90,19 +75,35 @@ const ChatFooter = ({ id }: { id: string }) => {
   return (
     <View style={{ paddingBottom: insets.bottom }}>
       {!currentUserAssignment && hasAssignedUsers && (
-        <View className="bg-black flex-row py-3 px-1 items-center justify-center gap-1 flex-wrap">
-          <Info color={"white"} size={16} />
-          <Text className="text-white">This chat is not assigned to you.</Text>
-          {assignedUsers && (
-            <TouchableOpacity onPress={toggleModal}>
-              <Text className="text-rateUpGreen underline">View Members?</Text>
-            </TouchableOpacity>
-          )}
+        <View
+          style={{
+            flexDirection: "row",
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            flexWrap: "wrap",
+            backgroundColor: isDark ? Colors.dark.surface : Colors.light.surface,
+            borderBottomWidth: 1,
+            borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
+          }}
+        >
+          <Info color={isDark ? Colors.accent.cyan : Colors.brand.blue} size={16} />
+          <Text
+            style={{
+              fontFamily: "Nunito_600SemiBold",
+              color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
+              fontSize: 13,
+            }}
+          >
+            This chat is not assigned to you.
+          </Text>
         </View>
       )}
 
       {currentUserAssignment && <MessageSendPanel />}
-      <AssignedUsersModal />
+
     </View>
   );
 };

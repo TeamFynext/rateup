@@ -31,14 +31,14 @@ const requestPermission = async () => {
   return granted;
 };
 
-const WaveBar = ({ delay }: { delay: number }) => {
+const WaveBar = ({ delay, size = "default" }: { delay: number; size?: "default" | "small" }) => {
   const height = useSharedValue(4);
 
   useEffect(() => {
     height.value = withDelay(
       delay,
       withRepeat(
-        withTiming(20, {
+        withTiming(size === "small" ? 10 : 20, {
           duration: 400,
           easing: Easing.inOut(Easing.ease),
         }),
@@ -56,10 +56,10 @@ const WaveBar = ({ delay }: { delay: number }) => {
     <Animated.View
       style={[
         {
-          width: 4,
+          width: size === "small" ? 3 : 4,
           backgroundColor: colors["primary-blue"],
           borderRadius: 2,
-          marginHorizontal: 2,
+          marginHorizontal: 1,
         },
         animatedStyle,
       ]}
@@ -82,13 +82,13 @@ const VoiceWave = () => {
 const VoiceRecorder = ({
   onRecordingUpload,
   iconColor,
+  compact,
+  isDark,
 }: {
   iconColor?: string;
-  onRecordingUpload?: (file: {
-    key: string;
-    url: string;
-    name: string;
-  }) => void;
+  compact?: boolean;
+  isDark?: boolean;
+  onRecordingUpload?: (file: { key: string; url: string; name: string }) => void;
 }) => {
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [isRecording, setIsRecording] = useState(false);
@@ -108,30 +108,61 @@ const VoiceRecorder = ({
     const name = `voice-${Date.now()}.m4a`;
     setIsUploading(true);
     try {
-      //@ts-ignore
-      const key = await uploadFile({ uri: result, name, type: "audio/mp4" });
+      const key = await uploadFile({ uri: result, name, type: "audio/mp4" } as any);
       const url = getFileUrlFromKey(key);
       //@ts-ignore
       onRecordingUpload?.({ key, url, name });
-    } catch (err) {
-      Toast.show({
-        type: "error",
-        text1: "Voice upload failed"
-      });
+    } catch {
+      Toast.show({ type: "error", text1: "Voice upload failed" });
     } finally {
       setIsUploading(false);
     }
   };
 
+  if (compact) {
+    return (
+      <View className="w-10 h-10 items-center justify-center">
+        {isRecording ? (
+          <Pressable
+            onPress={stopRecording}
+            className="w-10 h-10 rounded-full items-center justify-center"
+            style={{ backgroundColor: isDark ? "#3a1a1a" : "#fde8e8" }}
+          >
+            {/* Mini wave inside the circle */}
+            <View className="flex-row items-end" style={{ gap: 2 }}>
+              {[0, 80, 160, 80, 0].map((delay, i) => (
+                <WaveBar key={i} delay={delay} size="small" />
+              ))}
+            </View>
+          </Pressable>
+        ) : isUploading ? (
+          <View
+            className="w-10 h-10 rounded-full items-center justify-center"
+            style={{ backgroundColor: isDark ? "#3a1a1a" : "#FCEBEB" }}
+          >
+            <ActivityIndicator size="small" color={isDark ? "#e87070" : "#A32D2D"} />
+          </View>
+        ) : (
+          <Pressable
+            onPress={startRecording}
+            className="w-10 h-10 rounded-full items-center justify-center"
+            style={{ backgroundColor: isDark ? "#3a1a1a" : "#FCEBEB" }}
+          >
+            <Mic size={20} color={isDark ? "#e87070" : "#A32D2D"} strokeWidth={1.5} />
+          </Pressable>
+        )}
+      </View>
+    );
+  }
+
+  // Default mode
   return (
     <View className="flex-row items-center gap-2 mb-3">
       {isRecording && <VoiceWave />}
       {isUploading ? (
         <ActivityIndicator size="small" color="gray" />
       ) : (
-        <Pressable
-          onPress={isRecording ? stopRecording : startRecording}
-        >
+        <Pressable onPress={isRecording ? stopRecording : startRecording}>
           {isRecording ? (
             <CircleStop size={30} color={iconColor} strokeWidth={1.5} />
           ) : (
@@ -142,7 +173,6 @@ const VoiceRecorder = ({
     </View>
   );
 };
-
 type VoiceStore = {
   isRecording: boolean;
   isPlaying: boolean;

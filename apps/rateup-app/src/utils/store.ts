@@ -343,6 +343,7 @@ type WaMedia = {
   url: string;
   name: string;
   key: string;
+  uploading?: boolean;
 };
 
 interface MediaStore {

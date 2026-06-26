@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   TextInput,
@@ -9,9 +9,10 @@ import {
   Modal,
   ScrollView,
   useColorScheme,
-  Switch,
   Pressable,
 } from "react-native";
+
+import { Colors } from "@/constants/colors";
 import { useForm } from "react-hook-form";
 import * as DocumentPicker from "expo-document-picker";
 import {
@@ -38,7 +39,6 @@ import {
 import TemplateSending from "./TemplateSending";
 import { generateInternalMessageId } from "@/utils/chatbox_utils";
 import { create } from "zustand";
-import { colors } from "@/constants/constants";
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -61,20 +61,19 @@ type FormValues = {
 };
 
 const MessageSendPanel = () => {
+
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
   const isDark = colorScheme === "dark";
   const iconColor = isDark ? "white" : "black";
   const selectedContactId = useContactIdStore((s) => s.selectedContactId);
   const { media, resetMedia, addMedia, removeMedia } = useMediaStore();
-  const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
-  const { body, setBody, resetBody } = useMessageBodyStore();
+  const { audioUrl, setAudioUrl } = useVoiceRecordStore();
+  const { body, setBody } = useMessageBodyStore();
   //@ts-ignore
   const sendnewWaMessage = useSendNewWaMessage(selectedContactId);
   const createPrivateMessage = useCreatePrivateMessage(selectedContactId);
   let { isSessionActive } = useSessionActiveStore();
-  //@ts-ignore
-  isSessionActive = isSessionActive === "true";
   const form = useForm<FormValues>({
     defaultValues: {
       type: "text",
@@ -126,6 +125,7 @@ const MessageSendPanel = () => {
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
   const [mediaPanelVisible, setMediaPanelVisible] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   //@ts-ignore
   const isUploading = media.some((m) => m.uploading);
@@ -164,9 +164,9 @@ const MessageSendPanel = () => {
           key: tempKey,
           type,
           name: file.name,
-          url: null,
+          url: null as any,
           uploading: true,
-        });
+        } as any);
 
         try {
           const uploadable = {
@@ -175,7 +175,7 @@ const MessageSendPanel = () => {
             type: file.mimeType || "application/octet-stream",
           };
 
-          const key = await uploadFile(uploadable);
+          const key = await uploadFile(uploadable as any);
           const cloudUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`;
           removeMedia(tempKey);
           addMedia({
@@ -184,7 +184,7 @@ const MessageSendPanel = () => {
             name: file.name,
             url: cloudUrl,
             uploading: false,
-          });
+          } as any);
         } catch {
           removeMedia(tempKey);
         }
@@ -222,13 +222,16 @@ const MessageSendPanel = () => {
 
   return (
     <View
-      className="bg-white dark:bg-slate-950 px-3 pt-3"
-      style={{ paddingBottom: insets.bottom || 10 }}
+      style={{
+        backgroundColor: isDark ? Colors.dark.surface : Colors.light.card,
+        borderTopWidth: 1,
+        borderTopColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+      }}
     >
       {isSessionActive ? (
         <View className="opacity-100" pointerEvents="auto">
           {media.length > 0 && (
-            <View className="flex-row flex-wrap gap-2 mb-3 px-1">
+            <View className="flex-row flex-wrap gap-2 mb-3 px-4 pt-3">
               {media.map((item) => {
                 return (
                   <View key={item.key} className="relative w-[80px] h-[80px]">
@@ -263,7 +266,7 @@ const MessageSendPanel = () => {
                       <Image
                         source={{ uri: item.url }}
                         className="w-full h-full rounded-xl"
-                        onError={(e) => {}}
+                        onError={(e) => { }}
                       />
                     ) : (
                       <View className="w-full h-full rounded-xl bg-gray-200 items-center justify-center">
@@ -292,232 +295,266 @@ const MessageSendPanel = () => {
           )}
 
           {mediaPanelVisible && (
-            <View className="flex-row justify-between px-1 mb-3">
-              <TouchableOpacity
-                onPress={() => pickMedia("image")}
-                className="items-center mx-2"
-              >
-                <ImageIcon size={30} color={iconColor} strokeWidth={1.5} />
-              </TouchableOpacity>
+            <View className="px-3.5 pt-3 pb-1">
 
-              <TouchableOpacity
-                onPress={() => pickMedia("video")}
-                className="items-center mx-2"
-              >
-                <VideoIcon size={30} color={iconColor} strokeWidth={1.5} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => pickMedia("document")}
-                className="items-center mx-2"
-              >
-                <File size={30} color={iconColor} strokeWidth={1.5} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => pickMedia("audio")}
-                className="items-center mx-2"
-              >
-                <MusicIcon size={30} color={iconColor} strokeWidth={1.5} />
-              </TouchableOpacity>
-
-              <VoiceRecorder
-                iconColor={iconColor}
-                onRecordingUpload={({ key, url, name }) =>
-                  //@ts-ignore
-                  addMedia({ key, url, name, type: "audio", uploading: false })
-                }
-              />
-            </View>
-          )}
-
-          <View className="flex">
-            <View className="flex-row items-center justify-start mb-3 px-2 gap-1">
-              <View
-                className={`rounded-md w-24 flex items-center justify-center ${
-                  isPrivate ? "bg-amber-50" : "bg-blue-50"
-                }`}
-              >
-                <Text
-                  className={`text-sm font-medium px-2 py-1 ${
-                    isPrivate ? "text-amber-500" : "text-primaryBlue"
-                  }`}
+              {/* File chips */}
+              {media.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  className="mb-3"
+                  contentContainerStyle={{ gap: 8, flexDirection: "row" }}
                 >
-                  {isPrivate ? "Private Note" : "Message"}
-                </Text>
-              </View>
-
-              <Switch
-                value={isPrivate}
-                onValueChange={setIsPrivate}
-                trackColor={{
-                  false: colors["primary-blue"],
-                  true: colors["amber-500"],
-                }}
-                thumbColor={isDark ? "white" : "black"}
-              />
-            </View>
-
-            <View className="flex-row items-center justify-center">
-              <View className="relative flex-row items-center flex-1 bg-white border border-gray-200 rounded-full px-3 py-2 space-x-2">
-                <Pressable
-                  onPress={togglePanel}
-                  style={({ pressed }) => ({
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                >
-                  <Animated.View
-                    style={animatedPlusStyle}
-                    className="bg-primaryBlue rounded-full p-1"
-                  >
-                    <Plus color={"white"} />
-                  </Animated.View>
-                </Pressable>
-
-                {templateOptionsVisible && (
-                  <View className="absolute bottom-12 rounded-xl shadow-xl p-2 z-50 bg-primaryBlue">
-                    <Pressable
-                      style={({ pressed }) => [
-                        {
-                          opacity: pressed ? 0.6 : 1,
-                        },
-                      ]}
-                      onPress={() => {
-                        setTemplateModalVisible(true);
-                        setTemplateOptionsVisible(false);
+                  {media.map((item) => (
+                    <View
+                      key={item.key}
+                      className="flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full border-[0.5px]"
+                      style={{
+                        backgroundColor: isDark ? Colors.dark.surface : Colors.light.surface,
+                        borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
                       }}
-                      className="py-1 px-3"
                     >
-                      <Text className="text-white text-sm font-semibold">
-                        Send Template
+                      {item.type === "image" && <ImageIcon size={13} color={iconColor} />}
+                      {item.type === "video" && <VideoIcon size={13} color={iconColor} />}
+                      {item.type === "audio" && <MusicIcon size={13} color={iconColor} />}
+                      {item.type === "document" && <File size={13} color={iconColor} />}
+                      <Text
+                        numberOfLines={1}
+                        className="text-xs max-w-[100px]"
+                        style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}
+                      >
+                        {item.name}
                       </Text>
-                    </Pressable>
-                  </View>
-                )}
-
-                <Modal
-                  visible={templateModalVisible}
-                  transparent
-                  animationType="fade"
-                  onRequestClose={() => setTemplateModalVisible(false)}
-                >
-                  <View className="flex-1 bg-black/30 justify-center items-center px-4">
-                    <View className="bg-white w-full rounded-2xl overflow-hidden max-h-[80%] min-h-[50%] shadow-lg">
-                      <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 bg-primaryBlue rounded-t-2xl">
-                        <Text className="text-white text-lg font-semibold">
-                          Send Template
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() => setTemplateModalVisible(false)}
-                          className="w-8 h-8 rounded-full bg-white/20 items-center justify-center"
-                        >
-                          <Text className="text-white text-xl font-bold">
+                      {!item.uploading ? (
+                        <TouchableOpacity onPress={() => removeMedia(item.key)}>
+                          <Text
+                            className="text-sm leading-4"
+                            style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}
+                          >
                             ×
                           </Text>
                         </TouchableOpacity>
-                      </View>
-
-                      <ScrollView
-                        contentContainerStyle={{
-                          padding: 16,
-                          paddingBottom: 32,
-                        }}
-                        className="bg-white"
-                      >
-                        <TemplateSending
-                          onClose={() => setTemplateModalVisible(false)}
-                          contact={selectedContactId}
-                        />
-                      </ScrollView>
+                      ) : (
+                        <ActivityIndicator size={10} color={isDark ? "#aaa" : "#888"} />
+                      )}
                     </View>
-                  </View>
-                </Modal>
+                  ))}
+                </ScrollView>
+              )}
 
-                <TextInput
-                  className="flex-1 text-base text-black max-h-28 px-1"
-                  placeholder="Type a message"
-                  placeholderTextColor="#7A8289"
-                  multiline
-                  value={textBody}
-                  onChangeText={(val) =>
-                    setValue("text.body", val, { shouldDirty: true })
-                  }
-                />
-                {!isPrivate && (
-                  <Pressable
-                    onPress={() => setMediaPanelVisible((prev) => !prev)}
-                  >
-                    <Paperclip color={"black"} strokeWidth={1} />
-                  </Pressable>
-                )}
-              </View>
+              {/* Divider */}
+              <View
+                className="h-[0.5px] mb-3"
+                style={{ backgroundColor: isDark ? Colors.dark.borderLight : Colors.light.border }}
+              />
 
-              <View>
-                {isPrivate ? (
+              {/* Icon grid */}
+              <View className="flex-row justify-between">
+                {[
+                  {
+                    type: "image" as const,
+                    label: "Image",
+                    Icon: ImageIcon,
+                    bg: isDark ? "#1a2a3a" : "#EBF3FB",
+                    color: isDark ? "#60aee8" : "#185FA5",
+                  },
+                  {
+                    type: "video" as const,
+                    label: "Video",
+                    Icon: VideoIcon,
+                    bg: isDark ? "#1e1a33" : "#EEEDFE",
+                    color: isDark ? "#9f94e8" : "#534AB7",
+                  },
+                  {
+                    type: "document" as const,
+                    label: "Doc",
+                    Icon: File,
+                    bg: isDark ? "#2a2210" : "#FAEEDA",
+                    color: isDark ? "#e8a030" : "#854F0B",
+                  },
+                  {
+                    type: "audio" as const,
+                    label: "Audio",
+                    Icon: MusicIcon,
+                    bg: isDark ? "#122210" : "#EAF3DE",
+                    color: isDark ? "#7ac44d" : "#3B6D11",
+                  },
+                ].map(({ type, label, Icon, bg, color }) => (
                   <TouchableOpacity
-                    onPress={handleSendPrivateMessage}
-                    disabled={isUploading}
-                    className="ml-2 w-10 h-10 items-center justify-center"
+                    key={type}
+                    onPress={() => pickMedia(type)}
+                    activeOpacity={0.75}
+                    className="flex-1 mx-1 items-center gap-1.5 py-2.5 rounded-xl border-[0.5px]"
+                    style={{
+                      backgroundColor: isDark ? Colors.dark.surface : Colors.light.card,
+                      borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+                    }}
                   >
-                    <View className="p-2 bg-amber-500 rounded-full h-10 w-10 flex items-center justify-center">
-                      <Send color={"white"} size={16} />
+                    <View
+                      className="w-10 h-10 rounded-full items-center justify-center"
+                      style={{ backgroundColor: bg }}
+                    >
+                      <Icon size={20} color={color} strokeWidth={1.5} />
                     </View>
+                    <Text
+                      className="text-[11px]"
+                      style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}
+                    >
+                      {label}
+                    </Text>
                   </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    onPress={handleSend}
-                    disabled={isUploading}
-                    className="ml-2 w-10 h-10 items-center justify-center"
+                ))}
+
+                {/* Voice cell */}
+                <View
+                  className="flex-1 mx-1 items-center gap-1.5 py-2.5 rounded-xl border-[0.5px]"
+                  style={{
+                    backgroundColor: isDark ? Colors.dark.surface : Colors.light.card,
+                    borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
+                  }}
+                >
+                  <VoiceRecorder
+                    compact
+                    isDark={isDark}
+                    onRecordingUpload={({ key, url, name }) =>
+                      addMedia({ key, url, name, type: "audio", uploading: false } as any)
+                    }
+                  />
+                  <Text
+                    className="text-[11px]"
+                    style={{ color: isDark ? Colors.dark.textMuted : Colors.light.textMuted }}
                   >
-                    {isUploading ? (
-                      <ActivityIndicator
-                        size="small"
-                        color={colors["primary-blue"]}
-                      />
-                    ) : (
-                      <View className="p-2 bg-primaryBlue rounded-full h-10 w-10 flex items-center justify-center">
-                        <Send color={"white"} size={16} />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                )}
+                    Voice
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
-        </View>
-      ) : (
-        <View>
-          <View className="flex-row items-center justify-center">
-            <View className="relative flex-row items-center flex-1 bg-white border border-gray-200 rounded-full px-3 py-2 space-x-2">
-              <Pressable
-                onPress={togglePanel}
-                style={({ pressed }) => ({
-                  opacity: pressed ? 0.7 : 1,
-                })}
+          )}
+
+          <View>
+            {/* Segmented control for Message / Note toggle */}
+            <View style={{ paddingTop: 10, paddingHorizontal: 16, paddingBottom: 6 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  backgroundColor: isDark ? "rgba(255,255,255,0.07)" : Colors.light.surface,
+                  borderRadius: 8,
+                  padding: 3,
+                }}
               >
-                <Animated.View
-                  style={animatedPlusStyle}
-                  className="bg-primaryBlue rounded-full p-1"
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedIndex(0);
+                    setIsPrivate(false);
+                  }}
+                  activeOpacity={0.8}
+                  style={{
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingVertical: 8,
+                    borderRadius: 6,
+                    backgroundColor: selectedIndex === 0
+                      ? (isDark ? Colors.accent.cyan : Colors.brand.blue)
+                      : "transparent",
+                  }}
                 >
-                  <Plus color={"white"} />
-                </Animated.View>
+                  <Text
+                    style={{
+                      color: selectedIndex === 0
+                        ? (isDark ? "#091522" : "#fff")
+                        : (isDark ? Colors.dark.textMuted : Colors.light.textMuted),
+                      fontSize: 13,
+                      fontFamily: "Nunito_600SemiBold",
+                    }}
+                  >
+                    Message
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedIndex(1);
+                    setIsPrivate(true);
+                  }}
+                  activeOpacity={0.8}
+                  style={{
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingVertical: 8,
+                    borderRadius: 6,
+                    backgroundColor: selectedIndex === 1
+                      ? Colors.accent.orange
+                      : "transparent",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: selectedIndex === 1
+                        ? "#fff"
+                        : (isDark ? Colors.dark.textMuted : Colors.light.textMuted),
+                      fontSize: 13,
+                      fontFamily: "Nunito_600SemiBold",
+                    }}
+                  >
+                    Note
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View
+              style={{
+                paddingHorizontal: 14,
+                paddingTop: 6,
+                paddingBottom: 16,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <Pressable onPress={togglePanel}>
+                <View
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 19,
+                    backgroundColor: Colors.brand.blue,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Animated.View style={animatedPlusStyle}>
+                    <Plus size={18} color="#fff" />
+                  </Animated.View>
+                </View>
               </Pressable>
 
               {templateOptionsVisible && (
-                <View className="absolute bottom-12 rounded-xl shadow-xl p-2 z-50 bg-primaryBlue">
+                <View
+                  style={{
+                    position: "absolute",
+                    bottom: 50,
+                    left: 0,
+                    borderRadius: 12,
+                    padding: 8,
+                    zIndex: 50,
+                    backgroundColor: Colors.brand.blue,
+                  }}
+                >
                   <Pressable
-                    style={({ pressed }) => [
-                      {
-                        opacity: pressed ? 0.6 : 1,
-                      },
-                    ]}
+                    style={({ pressed }) => ({
+                      opacity: pressed ? 0.6 : 1,
+                      paddingVertical: 4,
+                      paddingHorizontal: 12,
+                    })}
                     onPress={() => {
                       setTemplateModalVisible(true);
                       setTemplateOptionsVisible(false);
                     }}
-                    className="py-1 px-3"
                   >
-                    <Text className="text-white text-sm font-semibold">
+                    <Text style={{ color: "#fff", fontSize: 13, fontFamily: "Nunito_600SemiBold" }}>
                       Send Template
                     </Text>
                   </Pressable>
@@ -530,17 +567,17 @@ const MessageSendPanel = () => {
                 animationType="fade"
                 onRequestClose={() => setTemplateModalVisible(false)}
               >
-                <View className="flex-1 bg-black/30 justify-center items-center px-4">
-                  <View className="bg-white w-full rounded-2xl overflow-hidden max-h-[80%] min-h-[50%] shadow-lg">
-                    <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 bg-rateUpGreen rounded-t-2xl">
-                      <Text className="text-white text-lg font-semibold">
+                <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "center", alignItems: "center", paddingHorizontal: 16 }}>
+                  <View style={{ backgroundColor: isDark ? Colors.dark.surface : "#fff", width: "100%", borderRadius: 16, overflow: "hidden", maxHeight: "80%", minHeight: "50%" }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: isDark ? Colors.dark.border : "#e5e7eb", backgroundColor: Colors.brand.blue }}>
+                      <Text style={{ color: "#fff", fontSize: 16, fontFamily: "Nunito_700Bold", flex: 1 }}>
                         Send Template
                       </Text>
                       <TouchableOpacity
                         onPress={() => setTemplateModalVisible(false)}
-                        className="w-8 h-8 rounded-full bg-white/20 items-center justify-center"
+                        style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}
                       >
-                        <Text className="text-white text-xl font-bold">×</Text>
+                        <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>×</Text>
                       </TouchableOpacity>
                     </View>
 
@@ -549,7 +586,7 @@ const MessageSendPanel = () => {
                         padding: 16,
                         paddingBottom: 32,
                       }}
-                      className="bg-white"
+                      style={{ backgroundColor: isDark ? Colors.dark.surface : "#fff" }}
                     >
                       <TemplateSending
                         onClose={() => setTemplateModalVisible(false)}
@@ -561,24 +598,227 @@ const MessageSendPanel = () => {
               </Modal>
 
               <View
-                className="flex-row items-center flex-1 opacity-50"
-                pointerEvents="none"
+                style={{
+                  flex: 1,
+                  backgroundColor: isDark
+                    ? Colors.dark.inputBg
+                    : Colors.light.inputBg,
+                  borderRadius: 24,
+                  paddingVertical: 10,
+                  paddingHorizontal: 14,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                  borderWidth: 1,
+                  borderColor: isDark
+                    ? Colors.dark.inputBorder
+                    : Colors.light.border,
+                }}
               >
                 <TextInput
-                  className="flex-1 text-base text-black max-h-28 text-center"
-                  placeholder="Session expired"
-                  placeholderTextColor="red"
+                  style={{
+                    flex: 1,
+                    fontSize: 14,
+                    fontFamily: "Nunito_400Regular",
+                    color: isDark ? "#fff" : Colors.light.textPrimary,
+                    padding: 0,
+                    maxHeight: 120,
+                  }}
+                  placeholder={
+                    selectedIndex === 0 ? "Type a message…" : "Add a note…"
+                  }
+                  placeholderTextColor={
+                    isDark
+                      ? Colors.dark.textPlaceholder
+                      : Colors.light.textPlaceholder
+                  }
                   multiline
+                  value={textBody}
+                  onChangeText={(val) =>
+                    setValue("text.body", val, { shouldDirty: true })
+                  }
                 />
+                {!isPrivate && (
+                  <Pressable
+                    onPress={() => setMediaPanelVisible((prev) => !prev)}
+                  >
+                    <Paperclip
+                      size={17}
+                      color={
+                        isDark ? Colors.dark.inactive : Colors.light.textPlaceholder
+                      }
+                    />
+                  </Pressable>
+                )}
+              </View>
+
+              <Pressable
+                onPress={isPrivate ? handleSendPrivateMessage : handleSend}
+                disabled={isUploading}
+              >
+                <View
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 21,
+                    backgroundColor: isPrivate
+                      ? Colors.accent.orange
+                      : Colors.brand.blue,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {isUploading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Send size={18} color="#fff" />
+                  )}
+                </View>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      ) : (
+        <View
+          style={{
+            paddingHorizontal: 14,
+            paddingTop: 6,
+            paddingBottom: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <Pressable onPress={togglePanel}>
+            <View
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 19,
+                backgroundColor: Colors.brand.blue,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Animated.View style={animatedPlusStyle}>
+                <Plus size={18} color="#fff" />
+              </Animated.View>
+            </View>
+          </Pressable>
+
+          {templateOptionsVisible && (
+            <View
+              style={{
+                position: "absolute",
+                bottom: 50,
+                left: 0,
+                borderRadius: 12,
+                padding: 8,
+                zIndex: 50,
+                backgroundColor: Colors.brand.blue,
+              }}
+            >
+              <Pressable
+                style={({ pressed }) => ({
+                  opacity: pressed ? 0.6 : 1,
+                  paddingVertical: 4,
+                  paddingHorizontal: 12,
+                })}
+                onPress={() => {
+                  setTemplateModalVisible(true);
+                  setTemplateOptionsVisible(false);
+                }}
+              >
+                <Text style={{ color: "#fff", fontSize: 13, fontFamily: "Nunito_600SemiBold" }}>
+                  Send Template
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
+          <Modal
+            visible={templateModalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setTemplateModalVisible(false)}
+          >
+            <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "center", alignItems: "center", paddingHorizontal: 16 }}>
+              <View style={{ backgroundColor: isDark ? Colors.dark.surface : "#fff", width: "100%", borderRadius: 16, overflow: "hidden", maxHeight: "80%", minHeight: "50%" }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: isDark ? Colors.dark.border : "#e5e7eb", backgroundColor: Colors.brand.blue }}>
+                  <Text style={{ color: "#fff", fontSize: 16, fontFamily: "Nunito_700Bold", flex: 1 }}>
+                    Send Template
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setTemplateModalVisible(false)}
+                    style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>×</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView
+                  contentContainerStyle={{
+                    padding: 16,
+                    paddingBottom: 32,
+                  }}
+                  style={{ backgroundColor: isDark ? Colors.dark.surface : "#fff" }}
+                >
+                  <TemplateSending
+                    onClose={() => setTemplateModalVisible(false)}
+                    contact={selectedContactId}
+                  />
+                </ScrollView>
               </View>
             </View>
+          </Modal>
 
-            <TouchableOpacity className="ml-2 w-10 h-10 items-center justify-center opacity-50">
-              <View className="p-2 bg-primaryBlue rounded-full h-10 w-10 flex items-center justify-center">
-                <Send color={"white"} size={16} />
-              </View>
-            </TouchableOpacity>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: isDark
+                ? Colors.dark.inputBg
+                : Colors.light.inputBg,
+              borderRadius: 24,
+              paddingVertical: 10,
+              paddingHorizontal: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              borderWidth: 1,
+              borderColor: isDark
+                ? Colors.dark.inputBorder
+                : Colors.light.border,
+              opacity: 0.6,
+            }}
+          >
+            <TextInput
+              editable={false}
+              placeholder="Session expired"
+              placeholderTextColor="#ef4444"
+              style={{
+                flex: 1,
+                fontSize: 14,
+                fontFamily: "Nunito_600SemiBold",
+                color: "#ef4444",
+                padding: 0,
+                textAlign: "center",
+              }}
+            />
           </View>
+
+          <Pressable
+            disabled
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 999,
+              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Send size={18} color={isDark ? Colors.dark.inactive : Colors.light.inactive} style={{ marginLeft: 2 }} />
+          </Pressable>
         </View>
       )}
     </View>
@@ -587,7 +827,16 @@ const MessageSendPanel = () => {
 
 export default MessageSendPanel;
 
-const initialMessgabody = {
+const initialMessgabody: {
+  type: "text" | "media" | "contact" | "location";
+  media: any[];
+  text: { body: string };
+  contacts: {
+    contactIds: string[];
+    groupIds: string[];
+  };
+  location: any | null;
+} = {
   type: "text",
   media: [],
   text: { body: "" },
@@ -607,14 +856,9 @@ export const useMessageBodyStore = create<{
       contactIds: string[];
       groupIds: string[];
     };
-    location?: {
-      longitude: string;
-      latitude: string;
-      name?: string;
-      address?: string;
-    };
+    location?: any | null;
   };
-  setBody: (value) => void;
+  setBody: (value: any) => void;
   resetBody: () => void;
 }>((set) => ({
   body: initialMessgabody,

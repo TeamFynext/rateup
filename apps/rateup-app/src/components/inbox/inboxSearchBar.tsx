@@ -7,6 +7,7 @@ import {
 import { useRef, useState } from "react";
 import { Search, X } from "lucide-react-native";
 import { colors } from "@/constants/constants";
+import { Colors } from "@/constants/colors";
 
 type SearchBarProps = {
   searchTerm: string;
@@ -22,14 +23,19 @@ export default function SearchBar({
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const textColor = isDark ? "white" : colors["slate-950"];
-  const bgColor = isDark ? "#0f172a" : "#f8fafc";
+  const textColor = isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
+  const bgColor = isDark ? Colors.dark.surface : Colors.light.inputBg;
+  const iconColor = isDark
+    ? Colors.dark.textMuted
+    : Colors.light.textMuted;
 
   return (
     <View className="relative">
       {/* SEARCH ICON */}
-      <Pressable onPress={() => setOpen(true)} hitSlop={10}>
-        <Search size={20} color={"white"} />
+      <Pressable onPress={() => setOpen(true)}>
+        <View className="p-1">
+          <Search size={20} color={iconColor} />
+        </View>
       </Pressable>
 
       {/* FLOATING SEARCH MODAL */}
@@ -44,17 +50,19 @@ export default function SearchBar({
               value={searchTerm}
               onChangeText={setSearchTerm}
               placeholder="Search…"
-              placeholderTextColor={isDark ? "#94a3b8" : "#64748b"}
+              placeholderTextColor={isDark ? Colors.dark.textPlaceholder : Colors.light.textPlaceholder}
               className="flex-1 text-base"
               style={{ color: textColor }}
               returnKeyType="search"
               clearButtonMode="while-editing"
             />
-            <Pressable onPress={()=>{
+            <Pressable onPress={() => {
               setSearchTerm("")
               setOpen(false)
-            }} hitSlop={10}>
-              <X size={20} color={textColor} />
+            }}>
+              <View className="p-2 -mr-2">
+                <X size={20} color={textColor} />
+              </View>
             </Pressable>
           </View>
         </View>

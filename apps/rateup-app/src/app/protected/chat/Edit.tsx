@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   useWindowDimensions,
+  useColorScheme,
 } from "react-native";
 import ToggleSwitch from "toggle-switch-react-native";
 import { ArrowLeft, ChevronDown, ChevronUp, User } from "lucide-react-native";
@@ -19,9 +20,12 @@ import {
 } from "@/api/inbox/contacts/contacts.api";
 import { convertFullPhoneNumToCoutryCodeAndNationalNum } from "@/utils/phoneNumConvert";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Colors } from "@/constants/colors";
 
 export default function EditContacts() {
   const { contactId }: { contactId: string } = useLocalSearchParams();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [fullPhoneNumber, setFullPhoneNumber] = useState("");
@@ -104,25 +108,26 @@ export default function EditContacts() {
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       onPress={() => handleSelectCountry(item)}
-      className="flex-row items-center px-3 py-3 bg-white"
+      style={{ backgroundColor: isDark ? Colors.dark.surface : "white" }}
+      className="flex-row items-center px-3 py-3"
     >
-      <Text className="text-black mr-2">{item.flag}</Text>
-      <Text className="text-black mr-2">{item.name}</Text>
-      <Text className="text-black text-sm">{item.dial_code}</Text>
+      <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="mr-2">{item.flag}</Text>
+      <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="mr-2">{item.name}</Text>
+      <Text style={{ color: isDark ? Colors.dark.textMuted : "#7A8289" }} className="text-sm">{item.dial_code}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView className="flex-grow bg-white">
+    <SafeAreaView style={{ backgroundColor: isDark ? Colors.dark.bg : "white" }} className="flex-grow">
       <View className="flex-1 p-4">
         {/* Top Part */}
         <View className="flex-1">
           {/* Header */}
           <View className="flex-row items-center mb-8 gap-2">
             <Pressable onPress={() => router.back()}>
-              <ArrowLeft />
+              <ArrowLeft color={isDark ? Colors.dark.textPrimary : "black"} />
             </Pressable>
-            <Text className="text-black text-2xl font-bold">Edit</Text>
+            <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="text-2xl font-bold">Edit</Text>
           </View>
 
           {/* Error / Success Message */}
@@ -146,12 +151,16 @@ export default function EditContacts() {
             <Text className="text-[#7A8289] mb-2 text-base">
               Name <Text className="text-[#CC292C]">*</Text>
             </Text>
-            <View className="border border-[#E2E5ED] rounded-lg px-4 py-4 flex-row gap-2 items-center">
-              <User size={16} />
+            <View 
+              style={{ borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED", backgroundColor: isDark ? Colors.dark.inputBg : "transparent" }}
+              className="border rounded-lg px-4 py-4 flex-row gap-2 items-center"
+            >
+              <User size={16} color={isDark ? Colors.dark.textMuted : "#7A8289"} />
               <TextInput
-                className="text-black text-base flex-1"
+                style={{ color: isDark ? Colors.dark.textPrimary : "black" }}
+                className="text-base flex-1"
                 placeholder="Enter contact name"
-                placeholderTextColor="#E2E5ED"
+                placeholderTextColor={isDark ? Colors.dark.textPlaceholder : "#E2E5ED"}
                 value={name}
                 onChangeText={setName}
               />
@@ -168,31 +177,33 @@ export default function EditContacts() {
               <View className="relative">
                 <Pressable
                   onPress={() => setShowDropdown(!showDropdown)}
-                  className="flex-row items-center border border-[#E2E5ED] rounded-lg px-3 py-3 bg-white"
-                  style={{ minWidth: width * 0.28 }}
+                  style={{ minWidth: width * 0.28, borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED", backgroundColor: isDark ? Colors.dark.inputBg : "white" }}
+                  className="flex-row items-center border rounded-lg px-3 py-3"
                 >
-                  <Text className="text-black mr-2 text-base">
+                  <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="mr-2 text-base">
                     {selectedCountry.flag}
                   </Text>
-                  <Text className="text-black text-base">
+                  <Text style={{ color: isDark ? Colors.dark.textPrimary : "black" }} className="text-base">
                     {selectedCountry.dial_code}
                   </Text>
                   {showDropdown ? (
-                    <ChevronUp size={18} color="black" className="ml-1" />
+                    <ChevronUp size={18} color={isDark ? Colors.dark.textPrimary : "black"} className="ml-1" />
                   ) : (
-                    <ChevronDown size={18} color="black" className="ml-1" />
+                    <ChevronDown size={18} color={isDark ? Colors.dark.textPrimary : "black"} className="ml-1" />
                   )}
                 </Pressable>
 
                 {/* Dropdown */}
                 {showDropdown && (
                   <View
-                    className="absolute top-14 border border-[#E2E5ED] rounded-lg shadow-md bg-white"
                     style={{
                       width: width * 0.8,
                       maxHeight: height * 0.4,
                       zIndex: 10,
+                      borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED",
+                      backgroundColor: isDark ? Colors.dark.surface : "white"
                     }}
+                    className="absolute top-14 border rounded-lg shadow-md"
                   >
                     <FlatList
                       data={countries}
@@ -206,9 +217,10 @@ export default function EditContacts() {
 
               {/* Phone Input */}
               <TextInput
-                className="flex-1 ml-2 border border-[#E2E5ED] rounded-lg px-4 py-4 text-black text-base"
+                style={{ color: isDark ? Colors.dark.textPrimary : "black", borderColor: isDark ? Colors.dark.borderLight : "#E2E5ED", backgroundColor: isDark ? Colors.dark.inputBg : "transparent" }}
+                className="flex-1 ml-2 border rounded-lg px-4 py-4 text-base"
                 placeholder="Enter contact phone number"
-                placeholderTextColor="#E2E5ED"
+                placeholderTextColor={isDark ? Colors.dark.textPlaceholder : "#E2E5ED"}
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
@@ -216,15 +228,14 @@ export default function EditContacts() {
             </View>
           </View>
           <View
-            className={`flex-row items-center p-3 justify-between rounded-lg ${
-              isAiChatActive ? "bg-[#00998733]" : "bg-[#F5F5F5]"
-            }`}
+            style={{ backgroundColor: isAiChatActive ? (isDark ? "rgba(0,153,135,0.15)" : "#00998733") : (isDark ? Colors.dark.surface : "#F5F5F5") }}
+            className="flex-row items-center p-3 justify-between rounded-lg"
           >
-            <Text className="text-[#000] text-xl font-semibold">AI Chat</Text>
+            <Text style={{ color: isDark ? Colors.dark.textPrimary : "#000" }} className="text-xl font-semibold">AI Chat</Text>
             <ToggleSwitch
               isOn={isAiChatActive}
               onColor="#009987"
-              offColor="#000"
+              offColor={isDark ? Colors.dark.border : "#000"}
               onToggle={(isOn) => setIsAiChatActive(isOn)}
             />
           </View>

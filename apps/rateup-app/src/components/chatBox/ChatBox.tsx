@@ -1,10 +1,44 @@
 import React, { memo, useMemo } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
+import LinearGradient from "react-native-linear-gradient";
+import { Image as ImageIcon } from "lucide-react-native";
 import { ContactsWithLastMessage } from "@/api/inbox/types";
 import { namePreview } from "../../utils/chatbox_utils";
 import { MessagePlatform } from "@/constants/enums";
 import { getSoucePlatformIconAndColor } from "@/util";
 import { useLifecycleContext } from "@/context/LifecycleContext";
+import { Colors, avatarGradients } from "@/constants/colors";
+
+interface AvatarProps {
+  initials: string;
+  gradient: readonly [string, string];
+  isDark: boolean;
+}
+
+function Avatar({ initials, gradient }: AvatarProps) {
+  return (
+    <LinearGradient
+      colors={gradient as any}
+      style={{
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text
+        style={{
+          color: "#fff",
+          fontSize: 16,
+          fontFamily: "Nunito_700Bold",
+        }}
+      >
+        {initials}
+      </Text>
+    </LinearGradient>
+  );
+}
 
 const ChatBox: React.FC<
   ContactsWithLastMessage & { onPress?: () => void }
@@ -17,92 +51,242 @@ const ChatBox: React.FC<
   lastMessageTimeStamp,
   unReadMessageCount,
   waMessageAssignStatus,
-  isSessionActive,
   lifecycleId,
   onPress,
 }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const isUnread = unReadMessageCount > 0;
+
+  const gradient = useMemo(() => {
+    if (!id) return avatarGradients[0];
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % avatarGradients.length;
+    return avatarGradients[index];
+  }, [id]);
+
+  const rowBgColor = isUnread
+    ? isDark
+      ? Colors.dark.unreadBg
+      : Colors.light.unreadBg
+    : isDark
+      ? "transparent"
+      : Colors.light.card;
+
+  const statusStyle = isUnread
+    ? {
+        color: isDark ? Colors.accent.cyan : Colors.brand.blue,
+        backgroundColor: isDark ? Colors.dark.cyanBg : Colors.light.activeBg,
+        fontFamily: "Nunito_600SemiBold",
+      }
+    : {
+        color: isDark ? Colors.dark.statusText : Colors.light.statusText,
+        backgroundColor: isDark
+          ? Colors.dark.statusBg
+          : Colors.light.statusBg,
+        fontFamily: "Nunito_400Regular",
+      };
+
   const lifeCycleLabels = useLifecycleContext();
   const lifecycleInfo = useMemo(() => {
-    const label = lifeCycleLabels?.find(
-      (label: any) => label.id === lifecycleId
-    );
-    return label;
+    return lifeCycleLabels?.find((label: any) => label.id === lifecycleId);
   }, [lifecycleId, lifeCycleLabels]);
+
+  const isPhoto = useMemo(() => {
+    const lowerMsg = (lastMessage || "").toLowerCase();
+    return lowerMsg.includes("image") || lowerMsg.includes("photo") || lowerMsg.includes("📷");
+  }, [lastMessage]);
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      className={`${
-        unReadMessageCount > 0 && "bg-blue-50 dark:bg-transparent"
-      }`}
+      style={{
+        paddingVertical: 14,
+        paddingRight: 20,
+        paddingLeft: isUnread ? 20 : 23,
+        flexDirection: "row",
+        gap: 13,
+        alignItems: "center",
+        backgroundColor: rowBgColor,
+        borderBottomWidth: 1,
+        borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
+        borderLeftWidth: isUnread ? 3 : 0,
+        borderLeftColor: isUnread
+          ? isDark
+            ? Colors.accent.cyan
+            : Colors.brand.blue
+          : "transparent",
+      }}
     >
-      <View className="flex-row items-center p-4">
-        {/* Profile initials */}
-        <View className="relative w-16 h-16 mr-4">
-          {/* Profile initials circle */}
-          <View className="w-full h-full rounded-full bg-chatAvatarBlue flex items-center justify-center">
-            <Text className="text-white font-bold text-[24px]">
-              {namePreview(name)}
-            </Text>
-          </View>
-          {unReadMessageCount > 0 && (
-            <View className="absolute top-0 right-0">
-              <View className="bg-primaryBlue w-5 h-5 rounded-full flex items-center justify-center">
-                <Text className="text-white text-sm">{unReadMessageCount}</Text>
-              </View>
-            </View>
-          )}
+      {/* Avatar Container */}
+      <View style={{ position: "relative" }}>
+        <Avatar
+          initials={namePreview(name)}
+          gradient={gradient}
+          isDark={isDark}
+        />
+        {platform && (
           <View
-            className={`absolute -bottom-1 -right-1 rounded-full p-0.5 ${
-              platform === MessagePlatform.WHATSAPP
-                ? "bg-green-600 border border-white"
+            style={{
+              position: "absolute",
+              bottom: -2,
+              right: -2,
+              width: 22,
+              height: 22,
+              borderRadius: 11,
+              backgroundColor: platform === MessagePlatform.WHATSAPP
+                ? Colors.accent.whatsapp
                 : platform === MessagePlatform.INSTAGRAM
-                ? "bg-pink-500 border border-white"
-                : "bg-blue-600 border border-white"
-            }`}
+                  ? "#E1306C"
+                  : Colors.brand.blue,
+              borderWidth: 1.5,
+              borderColor: rowBgColor,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            {getSoucePlatformIconAndColor(platform)?.icon}
+            <View style={{ transform: [{ scale: 0.75 }] }}>
+              {getSoucePlatformIconAndColor(platform)?.icon}
+            </View>
+          </View>
+        )}
+      </View>
+
+      {/* Main Content */}
+      <View style={{ flex: 1, minWidth: 0 }}>
+        {/* Name and Time Header */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 3,
+          }}
+        >
+          <Text
+            numberOfLines={1}
+            style={{
+              fontSize: 15,
+              fontFamily: isUnread ? "Nunito_700Bold" : "Nunito_600SemiBold",
+              color: isDark
+                ? isUnread
+                  ? "#fff"
+                  : Colors.dark.textSecondary
+                : isUnread
+                  ? Colors.light.textPrimary
+                  : Colors.light.textSecondary,
+              flex: 1,
+              marginRight: 8,
+            }}
+          >
+            {name || phone}
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: "Nunito_400Regular",
+                color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
+              }}
+            >
+              {lastMessageTimeStamp}
+            </Text>
+            {isUnread && (
+              <View
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: isDark
+                    ? Colors.accent.cyan
+                    : Colors.brand.blue,
+                }}
+              />
+            )}
           </View>
         </View>
-        {/* Main Content */}
-        <View className="flex-1 flex-row items-center justify-between">
-          <View className="gap-1">
-            {/* Name and Assigned */}
-            <View className="flex-row items-center justify-between gap-1">
-              <Text
-                className="text-lg font-semibold text-black dark:text-white"
-                numberOfLines={1}
-              >
-                {(name || phone)?.length > 20
-                  ? (name || phone).slice(0, 17) + "..."
-                  : name || phone}
-              </Text>
-            </View>
-            {/* Last Message Preview */}
-            <Text
-              className="text-sm text-black dark:text-white min-w-[40vw] max-w-[60vw]"
-              numberOfLines={1}
+
+        {/* Message Snippet Preview */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 5,
+            marginBottom: 7,
+          }}
+        >
+          {isPhoto && (
+            <ImageIcon
+              size={13}
+              color={isDark ? Colors.dark.textMuted : Colors.light.textMuted}
+            />
+          )}
+          <Text
+            numberOfLines={1}
+            style={{
+              fontSize: 13,
+              fontFamily: "Nunito_400Regular",
+              color: isDark ? Colors.dark.textSubtle : Colors.light.textSubtle,
+              flex: 1,
+            }}
+          >
+            {lastMessage || ""}
+          </Text>
+        </View>
+
+        {/* Status and Lifecycle Badges */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          {waMessageAssignStatus && (
+            <View
+              style={{
+                alignSelf: "flex-start",
+                backgroundColor: statusStyle.backgroundColor,
+                borderRadius: 999,
+                paddingVertical: 3,
+                paddingHorizontal: 10,
+              }}
             >
-              {formatMessage(lastMessage)}
-            </Text>
-            <View className="flex flex-row items-center gap-1.5">
-              <View>
-                {lifecycleInfo && (
-                  <Text className="text-[9px] px-2 py-0.5 bg-lightBlue dark:bg-transparent dark:border dark:border-primaryBlue text-primaryBlue rounded-full">
-                    {lifecycleInfo?.emoji + " " + lifecycleInfo?.name}
-                  </Text>
-                )}
-              </View>
-              {/* assignststus here */}
-              <Text className="bg-gray-100 dark:border text-[9px] dark:border-white dark:bg-transparent dark:text-white py-0.5 px-2 rounded-full">
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontFamily: statusStyle.fontFamily,
+                  color: statusStyle.color,
+                  letterSpacing: 0.2,
+                }}
+              >
                 {waMessageAssignStatus}
               </Text>
             </View>
-          </View>
-          <View className="flex items-center justify-center gap-1">
-            <Text className="text-xs text-[#7A8289] ml-2">
-              {lastMessageTimeStamp}
-            </Text>
-          </View>
+          )}
+
+          {lifecycleInfo && (
+            <View
+              style={{
+                alignSelf: "flex-start",
+                backgroundColor: isDark ? "rgba(24,115,232,0.15)" : Colors.light.activeBg,
+                borderRadius: 999,
+                paddingVertical: 3,
+                paddingHorizontal: 10,
+                borderWidth: isDark ? 1 : 0,
+                borderColor: Colors.brand.blueLight,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontFamily: "Nunito_600SemiBold",
+                  color: isDark ? Colors.accent.cyan : Colors.brand.blue,
+                  letterSpacing: 0.2,
+                }}
+              >
+                {lifecycleInfo.emoji + " " + lifecycleInfo.name}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -110,7 +294,3 @@ const ChatBox: React.FC<
 };
 
 export default memo(ChatBox);
-
-function formatMessage(msg:string) {
-  return msg.length > 12 ? msg.slice(0, 12) + "..." : msg;
-}

@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, useColorScheme } from "react-native";
 import React, { memo, useCallback } from "react";
 import WaInboxText, {
   WaInboxAudio,
@@ -13,9 +13,10 @@ import { WaTemplateComponent } from "@/context/type";
 import {
   Lock,
 } from "lucide-react-native";
-import { colors } from "@/constants/constants";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { getClosedIcon } from "@/util";
+import LinearGradient from "react-native-linear-gradient";
+import { Colors } from "@/constants/colors";
 
 type MessageBubbleProps = {
   messageContent: any;
@@ -77,8 +78,8 @@ const MessageBubble = ({
     }
   };
 
-  const getBorder = () =>{
-    switch (exchangeProcess){
+  const getBorder = () => {
+    switch (exchangeProcess) {
       case "send":
       case "privateNote":
         return "rounded-br-md rounded-3xl";
@@ -89,10 +90,10 @@ const MessageBubble = ({
     }
   }
 
-  const renderContent = useCallback(() => {
+  const renderContent = useCallback((textColor?: string) => {
     switch (messageType) {
       case "text":
-        return <WaInboxText messageContent={messageContent} />;
+        return <WaInboxText messageContent={messageContent} textColor={textColor} />;
       case "image":
         return <WaInboxImage messageContent={messageContent} />;
       case "audio":
@@ -104,9 +105,9 @@ const MessageBubble = ({
       case "video":
         return <WaInboxVideo messageContent={messageContent} />;
       case "reaction":
-        return <Text className="text-xl">{messageContent}</Text>;
+        return <Text style={{ fontSize: 20, color: textColor }}>{messageContent}</Text>;
       case "button":
-        return <Text>buttons</Text>;
+        return <Text style={{ color: textColor }}>buttons</Text>;
       case "template":
         return (
           <WaInboxTemplate
@@ -122,68 +123,318 @@ const MessageBubble = ({
           />
         );
       default:
-        return <Text className="text-black text-sm">{messageContent}</Text>;
+        return <Text style={{ color: textColor, fontSize: 14 }}>{messageContent}</Text>;
     }
   }, [messageContent, messageType, timestamp]);
+
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const getInternalStyles = () => {
+    switch (assignStatus) {
+      case WaMessageAssignStatus.RESOLVED:
+        return {
+          bg: isDark ? "rgba(34,197,94,0.12)" : "#f0fdf4",
+          border: isDark ? "rgba(34,197,94,0.25)" : "#dcfce7",
+          text: isDark ? "#4ade80" : "#166534",
+        };
+      case WaMessageAssignStatus.UNRESOLVED:
+        return {
+          bg: isDark ? "rgba(249,149,29,0.12)" : "rgba(249,149,29,0.06)",
+          border: isDark ? "rgba(249,149,29,0.25)" : "rgba(249,149,29,0.15)",
+          text: isDark ? "#fb923c" : "#c2410c",
+        };
+      case WaMessageAssignStatus.CLOSED:
+        return {
+          bg: isDark ? "rgba(28,81,142,0.15)" : "#eff6ff",
+          border: isDark ? "rgba(28,81,142,0.28)" : "#dbeafe",
+          text: isDark ? Colors.accent.cyan : Colors.brand.blue,
+        };
+      case WaMessageAssignStatus.SPAM:
+        return {
+          bg: isDark ? "rgba(239,68,68,0.12)" : "#fef2f2",
+          border: isDark ? "rgba(239,68,68,0.25)" : "#fee2e2",
+          text: isDark ? "#f87171" : "#991b1b",
+        };
+      default:
+        return {
+          bg: isDark ? "rgba(99,102,241,0.12)" : "#e0e7ff",
+          border: isDark ? "rgba(99,102,241,0.25)" : "#e0e7ff",
+          text: isDark ? "#818cf8" : "#3730a3",
+        };
+    }
+  };
+
+  // SPECIAL CASE: Internal assignment changes (System Messages) — centered pill with content
+  if (exchangeProcess === "internal") {
+    const styles = getInternalStyles();
+    return (
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          width: "100%",
+          marginBottom: 10,
+          paddingHorizontal: 8,
+        }}
+      >
+        <View
+          style={{
+            maxWidth: "85%",
+            backgroundColor: styles.bg,
+            borderWidth: 1,
+            borderColor: styles.border,
+            borderRadius: 16,
+            paddingVertical: 10,
+            paddingHorizontal: 14,
+            alignItems: "center",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 6,
+            }}
+          >
+            {getClosedIcon(assignStatus)}
+            <Text
+              style={{
+                fontSize: 11,
+                fontFamily: "Nunito_700Bold",
+                color: styles.text,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+              }}
+            >
+              {assignStatus}
+            </Text>
+          </View>
+          {renderContent(isDark ? Colors.dark.textPrimary : Colors.light.textPrimary)}
+          {timestamp ? (
+            <Text
+              style={{
+                fontSize: 10,
+                fontFamily: "Nunito_400Regular",
+                color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
+                marginTop: 4,
+              }}
+            >
+              {timestamp}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+    );
+  }
 
   // SPECIAL CASE: Received audio message — no bubble
   if (messageType === "audio" && exchangeProcess !== "send") {
     return (
-      <View className="flex-row px-2 w-full mb-2 items-center gap-1 justify-start">
+      <View style={{ flexDirection: "row", width: "100%", paddingHorizontal: 8, marginBottom: 10, justifyContent: "flex-start" }}>
         {renderContent()}
       </View>
     );
   }
 
+  const isSender = exchangeProcess === "send";
+  const isPrivateNote = exchangeProcess === "privateNote";
+  const showAvatar = isSender || isPrivateNote;
+
+  const bubbleBgColor = isSender
+    ? Colors.brand.blue
+    : isPrivateNote
+      ? isDark
+        ? Colors.dark.surface
+        : "rgba(248,149,29,0.12)"
+      : isDark
+        ? Colors.dark.surface
+        : "#fff";
+
+  const bubbleTextColor = isSender
+    ? "#fff"
+    : isPrivateNote
+      ? isDark
+        ? Colors.dark.textPrimary
+        : "#78350f" // dark amber for private notes
+      : isDark
+        ? Colors.dark.textPrimary
+        : Colors.light.textPrimary;
+
+  const timestampColor = isSender
+    ? "rgba(255,255,255,0.6)"
+    : isDark
+      ? Colors.dark.textMuted
+      : Colors.light.textMuted;
+
+  const borderStyle = isSender || isPrivateNote
+    ? {
+      borderTopLeftRadius: 18,
+      borderTopRightRadius: 18,
+      borderBottomLeftRadius: 18,
+      borderBottomRightRadius: 4,
+    }
+    : {
+      borderTopLeftRadius: 18,
+      borderTopRightRadius: 18,
+      borderBottomRightRadius: 18,
+      borderBottomLeftRadius: 4,
+    };
+
   return (
     <View
-      className={`relative flex-row px-2 w-full mb-2 items-center gap-1
-         ${
-        exchangeProcess === "send" || exchangeProcess === "privateNote"
-          ? "justify-end"
-          : exchangeProcess === "internal"
-          ? "justify-center"
-          : "justify-start"
-      }`}
+      style={{
+        flexDirection: "row",
+        justifyContent: isSender || isPrivateNote ? "flex-end" : "flex-start",
+        alignItems: "flex-end",
+        gap: showAvatar ? 8 : 0,
+        width: "100%",
+        marginBottom: 10,
+        paddingHorizontal: 8,
+      }}
     >
-      <View
-        className={`flex-col max-w-[75%] px-3 py-2 shadow-md ${getBorder()} ${getBgColor()}`}
-      >
-        {exchangeProcess === "privateNote" && (
-          <View className="flex-row items-center justify-start gap-1">
-            <Lock color={colors["amber-500"]} size={10} />
-            <Text className="text-xs text-amber-500">Private note</Text>
+      {!isSender && !isPrivateNote && (
+        <View style={{ maxWidth: "78%" }}>
+          <View
+            style={{
+              backgroundColor: bubbleBgColor,
+              ...borderStyle,
+              paddingVertical: 10,
+              paddingHorizontal: 14,
+              ...(isDark
+                ? {}
+                : {
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 3,
+                  elevation: 2,
+                }),
+            }}
+          >
+            {renderContent(bubbleTextColor)}
           </View>
-        )}
-        {(exchangeProcess === "send" || exchangeProcess === "privateNote") && (
-          <Text className="text-primaryBlue opacity-70 p-1 text-sm">{senderName}</Text>
-        )}
-        {exchangeProcess === "internal" && (
-          <View className="flex-row items-center gap-1">
-            {getClosedIcon(assignStatus)}
-            <Text className={`${getTextColor()} opacity-70 p-1`}>
-              {assignStatus}
-            </Text>
-          </View>
-        )}
-        {renderContent()}
-        {messageType !== "audio" && (
-          <Text className="text-sm text-gray-500 text-right mt-1">
+          <Text
+            style={{
+              fontSize: 11,
+              fontFamily: "Nunito_400Regular",
+              color: timestampColor,
+              marginTop: 3,
+              marginLeft: 4,
+            }}
+          >
             {timestamp}
-          </Text>
-        )}
-      </View>
-
-      {exchangeProcess === "send" && (
-        <View className="w-8 h-8 rounded-full bg-chatAvatarBlue flex items-center justify-center">
-          <Text className="text-white font-bold text-md">
-            {namePreview(senderName)}
           </Text>
         </View>
       )}
-      {exchangeProcess === "privateNote" && (
-        <View className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center">
-          <Text className="text-primaryBlue opacity-70 font-bold text-md">
+
+      {(isSender || isPrivateNote) && (
+        <View style={{ maxWidth: "74%" }}>
+          {senderName ? (
+            <Text
+              style={{
+                fontSize: 11,
+                fontFamily: "Nunito_600SemiBold",
+                color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
+                textAlign: "right",
+                marginBottom: 3,
+              }}
+            >
+              {senderName}
+            </Text>
+          ) : null}
+
+          <View
+            style={{
+              backgroundColor: bubbleBgColor,
+              ...borderStyle,
+              paddingVertical: 10,
+              paddingHorizontal: 14,
+              ...(isDark
+                ? {}
+                : {
+                  shadowColor: Colors.brand.blue,
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 3,
+                  elevation: 2,
+                }),
+            }}
+          >
+            {isPrivateNote && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                <Lock color="#f59e0b" size={10} />
+                <Text style={{ fontSize: 11, fontFamily: "Nunito_600SemiBold", color: "#f59e0b" }}>
+                  Private Note
+                </Text>
+              </View>
+            )}
+            {renderContent(bubbleTextColor)}
+          </View>
+
+          <Text
+            style={{
+              fontSize: 11,
+              fontFamily: "Nunito_400Regular",
+              color: timestampColor,
+              textAlign: "right",
+              marginTop: 3,
+              marginRight: 4,
+            }}
+          >
+            {timestamp}
+          </Text>
+        </View>
+      )}
+
+      {isSender && (
+        <LinearGradient
+          colors={[Colors.brand.blue, Colors.brand.blueLight] as any}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 18,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Nunito_900Black",
+              fontSize: 10,
+              color: "#fff",
+            }}
+          >
+            {namePreview(senderName)}
+          </Text>
+        </LinearGradient>
+      )}
+
+      {isPrivateNote && (
+        <View
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: isDark ? Colors.dark.surface : "rgba(248,149,29,0.15)",
+            borderWidth: 1,
+            borderColor: "#f59e0b",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 18,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Nunito_900Black",
+              fontSize: 10,
+              color: "#f59e0b",
+            }}
+          >
             {namePreview(senderName)}
           </Text>
         </View>
