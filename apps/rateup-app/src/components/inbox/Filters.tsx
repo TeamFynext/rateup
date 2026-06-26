@@ -16,14 +16,14 @@ import {
   ChatFilter,
   useChatFilterStore,
   useSelectedTabStore,
-} from "@/src/utils/store";
-import { useChatFilterData } from "@/src/api/inbox/contacts/contacts.query";
+} from "@/utils/store";
+import { useChatFilterData } from "@/api/inbox/contacts/contacts.query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { WaMessageAssignStatus } from "@/src/api/inbox/types";
+import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { IconArrowLeft } from "@tabler/icons-react-native";
-import { useTeamsByUser } from "@/src/api/teams/teams.query";
-import { colors } from "@/src/constants/constants";
+import { useTeamsByUser } from "@/api/teams/teams.query";
+import { colors } from "@/constants/constants";
 
 const FiltersScreen = () => {
   const colorScheme = useColorScheme();

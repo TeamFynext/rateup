@@ -9,14 +9,16 @@ import {
 import React, { useState } from "react";
 import NotAssigned from "./chatFooter/NotAssigned";
 import MessageSendPanel from "./chatFooter/MessageSendPanel";
-import { useAuth } from "@/src/context/AuthContext";
-import { useChatAssignStatusStore } from "@/src/utils/store";
+import { useAuth } from "@/context/AuthContext";
+import { useChatAssignStatusStore } from "@/utils/store";
 import { Info, UserCheck } from "lucide-react-native";
-import { WaMessageClosedStatus } from "@/src/constants/constants";
-import { WaMessageAssignStatus } from "@/src/api/inbox/types";
-import { useGetAssignedUserForContact } from "@/src/api/inbox/messages/message.query";
+import { WaMessageClosedStatus } from "@/constants/constants";
+import { WaMessageAssignStatus } from "@/api/inbox/types";
+import { useGetAssignedUserForContact } from "@/api/inbox/messages/message.query";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ChatFooter = ({ id }: { id: string }) => {
+  const insets = useSafeAreaInsets();
   const waAssignStatus = useChatAssignStatusStore(
     (state) => state.waAssignStatus,
   );
@@ -75,7 +77,7 @@ const ChatFooter = ({ id }: { id: string }) => {
     WaMessageClosedStatus.includes(waAssignStatus as WaMessageAssignStatus)
   ) {
     return (
-      <View>
+      <View style={{ paddingBottom: insets.bottom }}>
         <View className="bg-black flex-row py-2 px-1 items-center justify-center gap-1">
           <Info color={"white"} size={16} />
           <Text className="text-white">Please assign to start the chat</Text>
@@ -86,7 +88,7 @@ const ChatFooter = ({ id }: { id: string }) => {
   }
 
   return (
-    <View>
+    <View style={{ paddingBottom: insets.bottom }}>
       {!currentUserAssignment && hasAssignedUsers && (
         <View className="bg-black flex-row py-3 px-1 items-center justify-center gap-1 flex-wrap">
           <Info color={"white"} size={16} />

@@ -1,6 +1,6 @@
-import { WaTemplateFetchBody } from "@/src/context/type";
+import { WaTemplateFetchBody } from "@/context/type";
 import { WaMessageAssignStatus, WaSendMessageBody } from "../types";
-import { WaMessageClosedStatus } from "@/src/constants/constants";
+import { WaMessageClosedStatus } from "@/constants/constants";
 
 export type ParsedWaMessageReturn = {
   timeStamp: string;

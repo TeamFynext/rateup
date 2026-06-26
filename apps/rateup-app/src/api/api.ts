@@ -1,10 +1,11 @@
-import axios from "@/src/config/axios";
+import axios from "@/config/axios";
 import { router } from "expo-router";
 import SuperTokens from "supertokens-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { registerForPushNotificationsAsync } from "../utils/notification";
 import { deleteToken } from "./notification";
+import { Toast } from "toastify-react-native";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -28,14 +29,14 @@ export const signIn = async (email: string, password: string) => {
     if (!sessionExists) {
       return {
         success: false,
-        message: "Session could not be created",
+        message: "Incorrect email or password. Please try again.",
       };
     }
     const token = await SuperTokens.getAccessToken();
     if (!token) {
       return {
         success: false,
-        message: "Token not found",
+        message: "Authentication error. Please try again",
       };
     }
     await AsyncStorage.setItem("accessToken", token);
@@ -77,7 +78,7 @@ export const sendPasswordResetEmail = async (email: string) => {
       `${API_URL}/api/auth/user/password/reset/token`,
       {
         formFields: [{ id: "email", value: email }],
-      }
+      },
     );
 
     const data = response.data;
@@ -125,3 +126,33 @@ export const useLoggedInUser = () =>
 export const createGoogleUser = async (data: ICreateGoogleUser) => {
   await axios.post("/user/complete-google-signup", data);
 };
+
+export const updateActiveStatus = (userId: string) =>
+  axios({
+    url: `/api/user/update-active-status/${userId}`,
+    method: "PUT",
+  });
+
+export function useUpdateActiveStatusMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => updateActiveStatus(userId),
+
+    onSuccess: () => {
+      Toast.success("Account deleted successfully!");
+
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["loggedUser"] });
+    },
+
+    onError: (error: any) => {
+      console.error("Error deleting member", error?.message);
+
+      Toast.error(error?.message || "Something went wrong");
+    },
+  });
+}

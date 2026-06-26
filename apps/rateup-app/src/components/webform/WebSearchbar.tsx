@@ -4,23 +4,28 @@ import {
   TouchableOpacity,
   Text,
   useColorScheme,
+  Platform,
 } from "react-native";
 import React from "react";
 import { Search, SlidersHorizontal } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import {
-  useSearchWebFormStore,
-  useWebFormFilterStore,
-} from "@/src/utils/store";
-import { colors } from "@/src/constants/constants";
+import { useSearchWebFormStore, useWebFormFilterStore } from "@/utils/store";
+import { colors } from "@/constants/constants";
 
 const WebFormSearchBar = () => {
   const router = useRouter();
+
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+
   const textColor = isDark ? "white" : colors["slate-950"];
+
   const bgColor = isDark ? "#0f172a" : "#f8fafc";
+
+  const borderColor = isDark ? "#1e293b" : "#e2e8f0";
+
   const { search, setSearch } = useSearchWebFormStore();
+
   const { teamId, status, sortByDate, alphabetical } = useWebFormFilterStore();
 
   const activeFilterCount =
@@ -30,30 +35,48 @@ const WebFormSearchBar = () => {
     (alphabetical !== null ? 1 : 0);
 
   return (
-    <View className="px-4 py-4 flex-row items-center justify-between">
+    <View className="px-4 py-4 flex-row items-center">
       {/* Search Box */}
-      <View className="flex-row items-center flex-1 rounded-full px-4 py-0.5 shadow-sm" style={{backgroundColor:bgColor}}>
-        <Search size={16} color={textColor} />
+      <View
+        className="flex-1 flex-row items-center rounded-full px-4 border"
+        style={{
+          backgroundColor: bgColor,
+          borderColor,
+          height: 48,
+        }}
+      >
+        <Search size={18} color={textColor} />
+
         <TextInput
-          className="ml-2 flex-1 text-sm"
-          style={{color:textColor}}
+          className="flex-1 ml-3 text-sm"
+          style={{
+            color: textColor,
+            paddingVertical: 0,
+            includeFontPadding: false,
+            textAlignVertical: "center",
+            height: 48,
+            marginTop: Platform.OS === "ios" ? 1 : 0,
+          }}
           placeholder="Search Web forms"
           placeholderTextColor="#9CA3AF"
           value={search}
           onChangeText={setSearch}
         />
       </View>
+
+      {/* Filter Button */}
       <View className="relative ml-3">
         <TouchableOpacity
           onPress={() => {
-            router.push("/protected/webForms/WebFormFilter");
+            router.push("/protected/webform/WebFormFilter");
           }}
-          className="w-9 h-9 rounded-full flex items-center justify-center"
+          className="w-11 h-11 rounded-full items-center justify-center bg-transparent"
         >
-          <SlidersHorizontal size={18} color={textColor} />
+          <SlidersHorizontal size={20} color={textColor} />
         </TouchableOpacity>
+
         {activeFilterCount > 0 && (
-          <View className="absolute -top-1 -right-1 min-w-[16px] h-4 px-[4px] rounded-full bg-red-500 items-center justify-center">
+          <View className="absolute top-0 right-0 min-w-[18px] h-[18px] px-[4px] rounded-full bg-red-500 items-center justify-center">
             <Text className="text-white text-[10px] font-bold">
               {activeFilterCount}
             </Text>

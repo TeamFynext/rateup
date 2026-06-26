@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { signInWithGoogle } from "../api/google_auth";
 import { useEffect, useState } from "react";
 import { configureGoogleSignIn } from "../config/googleConfig";
@@ -48,10 +48,10 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
       setError("Failed to enable push notifications");
     }
 
-    router.replace("/protected/Home");
+    router.replace("/protected/inbox");
   } catch (error) {
     console.error("Unexpected Google login error:", error);
-    setError("Something went wrong. Please try again.");
+    setError("Something went wrong.");
   } finally {
     setLoading(false);
   }
@@ -67,7 +67,7 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
       >
         <GoogleIcon />
         <Text className="text-[#004F98] font-medium text-[16px]">
-          {loading ? "Please Wait..." : "Continue with Google"}
+          {loading ? "Please Wait..." : "Sign in with Google"}
         </Text>
       </TouchableOpacity>
     </View>

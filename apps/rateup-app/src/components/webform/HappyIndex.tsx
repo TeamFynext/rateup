@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, useColorScheme } from "react-native";
 import React from "react";
 import {
   FrownIcon,
@@ -7,14 +7,19 @@ import {
   MehIcon,
   AngryIcon,
 } from "lucide-react-native";
-import { useHappyIndex } from "@/src/api/response/response.query";
+import { useHappyIndex } from "@/api/response/response.query";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
 import { ProgressBar } from "react-native-paper";
 
 const HappyIndex = ({ surveyId }: { surveyId: string }) => {
+  const isDark = useColorScheme() === "dark";
+
   const { data, isLoading } = useHappyIndex(surveyId);
+
   const h_index = Number(((data?.happinessIndex ?? 0) / 10).toFixed(1));
+
   const happinessValue = Number(data?.happinessIndex ?? 0);
+
   const moodList = [
     {
       label: "Very Happy",
@@ -52,7 +57,9 @@ const HappyIndex = ({ surveyId }: { surveyId: string }) => {
       color: "#FF6161",
     },
   ];
+
   let happinessIndexStatus, happyIndexStatusBg;
+
   if (h_index >= 9) {
     happinessIndexStatus = "Very Happy";
     happyIndexStatusBg = "#00BF83";
@@ -69,26 +76,26 @@ const HappyIndex = ({ surveyId }: { surveyId: string }) => {
     happinessIndexStatus = "Very Unhappy";
     happyIndexStatusBg = "#FF6161";
   }
+
   if (isLoading) {
     return (
-      <View className="bg-white p-4 flex-1 space-y-6">
-        {/* Heading */}
-
-        {/* Circle Chart Placeholder */}
+      <View className="bg-white dark:bg-slate-950 p-4 flex-1 space-y-6">
         <View className="flex items-center gap-6">
-          <View className="w-[170px] h-[170px] rounded-full bg-gray-200" />
+          <View className="w-[170px] h-[170px] rounded-full bg-gray-200 dark:bg-slate-800" />
 
-          {/* Mood list placeholders */}
           <View className="flex space-y-4">
             {[...Array(5)].map((_, index) => (
               <View key={index} className="flex-row items-center gap-2 w-full">
-                <View className="w-10 h-10 rounded-full bg-gray-200" />
+                <View className="w-10 h-10 rounded-full bg-gray-200 dark:bg-slate-800" />
+
                 <View className="flex-1 space-y-2">
                   <View className="flex-row justify-between">
-                    <View className="h-3 w-20 bg-gray-200 rounded" />
-                    <View className="h-4 w-12 bg-gray-300 rounded-full" />
+                    <View className="h-3 w-20 bg-gray-200 dark:bg-slate-700 rounded" />
+
+                    <View className="h-4 w-12 bg-gray-300 dark:bg-slate-700 rounded-full" />
                   </View>
-                  <View className="h-2 bg-gray-200 rounded-full w-full" />
+
+                  <View className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full w-full" />
                 </View>
               </View>
             ))}
@@ -99,8 +106,10 @@ const HappyIndex = ({ surveyId }: { surveyId: string }) => {
   }
 
   return (
-    <View className="bg-white p-4 lg:col-span-3 w-full flex-1 h-full">
-      <Text className="text-lg font-semibold mb-4">Happiness Index</Text>
+    <View className="bg-white dark:bg-slate-950 p-4 lg:col-span-3 w-full flex-1 h-full">
+      <Text className="text-lg font-semibold mb-4 text-black dark:text-white">
+        Happiness Index
+      </Text>
 
       <View className="flex flex-col md:flex-row items-center gap-6 px-4">
         <AnimatedCircularProgress
@@ -108,16 +117,20 @@ const HappyIndex = ({ surveyId }: { surveyId: string }) => {
           width={15}
           fill={happinessValue}
           tintColor={happyIndexStatusBg}
-          backgroundColor="#E6ECF2"
+          backgroundColor={isDark ? "#1e293b" : "#E6ECF2"}
           rotation={0}
           lineCap="round"
         >
           {() => (
             <View className="items-center">
-              <Text className="text-4xl font-bold">
+              <Text className="text-4xl font-bold text-black dark:text-white">
                 {(happinessValue / 10).toFixed(1)}
               </Text>
-              <Text className="text-xs text-[#7A8289]">Out of 10</Text>
+
+              <Text className="text-xs text-[#7A8289] dark:text-slate-400">
+                Out of 10
+              </Text>
+
               <View
                 style={{ backgroundColor: happyIndexStatusBg }}
                 className="rounded px-2 py-1 mt-2"
@@ -133,18 +146,21 @@ const HappyIndex = ({ surveyId }: { surveyId: string }) => {
         <View className="flex flex-col gap-4 w-full">
           {moodList?.map(({ label, value, percentage, icon: Icon, color }) => (
             <View key={label} className="flex-row items-center gap-2 w-full">
-              <View className="bg-[#004F981F] rounded-full p-1">
-                <Icon color="#004F98" size={30} />
+              <View className="bg-[#004F981F] dark:bg-slate-800 rounded-full p-1">
+                <Icon color={isDark ? "#60A5FA" : "#004F98"} size={30} />
               </View>
+
               <View className="flex-1">
                 <View className="flex-row justify-between items-center">
-                  <Text className="font-semibold text-xs text-[#343A40]">
+                  <Text className="font-semibold text-xs text-[#343A40] dark:text-white">
                     {label}
                   </Text>
+
                   <View className="flex-row items-center gap-1">
-                    <Text className="text-[#7A8289] text-xs">
+                    <Text className="text-[#7A8289] dark:text-slate-400 text-xs">
                       ({value ?? 0})
                     </Text>
+
                     <View className="bg-[#004F98] rounded-full px-2 py-0.5">
                       <Text className="text-white text-xs">
                         {Math.round(percentage)}%
@@ -152,10 +168,16 @@ const HappyIndex = ({ surveyId }: { surveyId: string }) => {
                     </View>
                   </View>
                 </View>
+
                 <ProgressBar
                   progress={percentage / 100}
                   color={color}
-                  style={{ height: 6, borderRadius: 10, marginTop: 6 }}
+                  style={{
+                    height: 6,
+                    borderRadius: 10,
+                    marginTop: 6,
+                    backgroundColor: isDark ? "#1e293b" : "#E5E7EB",
+                  }}
                 />
               </View>
             </View>

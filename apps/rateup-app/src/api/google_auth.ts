@@ -1,6 +1,6 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "@/src/config/axios";
+import axios from "@/config/axios";
 import SuperTokens from "supertokens-react-native";
 
 export const signInWithGoogle = async () => {
@@ -20,11 +20,12 @@ export const signInWithGoogle = async () => {
       `${process.env.EXPO_PUBLIC_API_URL}/api/auth/signinup`,
       {
         thirdPartyId: "google",
+        clientType: "mobile",
         oAuthTokens: {
           access_token: accessToken,
           id_token: idToken,
         },
-      }
+      },
     );
 
     // Validate session creation
@@ -32,7 +33,7 @@ export const signInWithGoogle = async () => {
     if (!sessionExists) {
       return {
         success: false,
-        message: "Session could not be created",
+        message: "No account found.",
       };
     }
 
@@ -41,7 +42,7 @@ export const signInWithGoogle = async () => {
     if (!token) {
       return {
         success: false,
-        message: "Access token not found",
+        message: "Authentication error. Please try again",
       };
     }
 

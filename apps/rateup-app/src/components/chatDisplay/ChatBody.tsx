@@ -8,16 +8,16 @@ import {
 } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import React, { useRef, useCallback, useMemo } from "react";
-import { parseWaMessage_ } from "@/src/api/inbox/messages/utils";
+import { parseWaMessage_ } from "@/api/inbox/messages/utils";
 import MessageBubble from "./chatBody/MessageBubble";
 import DateSeparator from "./chatBody/DateSeperator";
 import dayjs from "dayjs";
-import { useMarkMessageAsRead } from "@/src/api/inbox/contacts/contacts.query";
-import { useAuth } from "@/src/context/AuthContext";
+import { useMarkMessageAsRead } from "@/api/inbox/contacts/contacts.query";
+import { useAuth } from "@/context/AuthContext";
 import { ViewToken } from "react-native";
-import { useGetMessagesByContactId } from "@/src/api/inbox/messages/message.query";
+import { useGetMessagesByContactId } from "@/api/inbox/messages/message.query";
 import { ChevronDown } from "lucide-react-native";
-import { useWsData } from "@/src/context/UserContext";
+import { useWsData } from "@/context/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
 
 const { height: screenHeight } = Dimensions.get("window");
@@ -113,7 +113,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
       const shouldShowDate = currentDate !== nextDate;
       return (
-        <View className="bg-gray-50 dark:bg-slate-800">
+        <View className="bg-gray-50 dark:bg-slate-800 px-2">
           {shouldShowDate && (
             <DateSeparator
               label={dayjs(item.createdAt).format("DD MMM YYYY")}

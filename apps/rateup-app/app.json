@@ -2,35 +2,41 @@
   "expo": {
     "name": "RateUp",
     "slug": "rateup",
-    "version": "1.0.4",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "RateUp",
+    "scheme": "rateup",
     "userInterfaceStyle": "automatic",
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true,
+      "usesAppleSignIn": true,
       "bundleIdentifier": "com.rateupapp.rateup",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow RateUp to access microphone.",
         "CFBundleURLTypes": [
-      {
-        "CFBundleURLSchemes": [
-          "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
-        ]
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
+            ]
+          }
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
-    ]
-      } 
     },
     "android": {
       "permissions": [
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
-      "statusBar": {
-        "translucent": true,
-        "backgroundColor": "transparent"
-      },
-      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -45,6 +51,7 @@
     },
     "plugins": [
       "expo-router",
+      ["expo-apple-authentication"],
       "@react-native-google-signin/google-signin",
       "expo-notifications",
       [
@@ -59,7 +66,23 @@
           }
         }
       ],
-      "expo-audio"
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone.",
+          "enableBackgroundPlayback": false,
+          "enableBackgroundRecording": false
+        }
+      ],
+      "expo-font",
+      [
+        "expo-document-picker",
+        {
+          "supportsOpeningDocumentsInPlace": true,
+          "enableFileSharing": true
+        }
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

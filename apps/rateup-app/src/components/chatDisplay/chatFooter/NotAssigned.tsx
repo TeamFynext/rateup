@@ -1,4 +1,4 @@
-import { useLoggedInUser } from "@/src/api/api";
+import { useLoggedInUser } from "@/api/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { CircleUser } from "lucide-react-native";
 import {
@@ -8,10 +8,10 @@ import {
   ActivityIndicator,
   useColorScheme,
 } from "react-native";
-import { useAssignInboxToUser } from "@/src/api/inbox/messages/message.query";
+import { useAssignInboxToUser } from "@/api/inbox/messages/message.query";
 import AssignToUser from "./AssignToUser";
-import { generateInternalMessageId } from "@/src/utils/chatbox_utils";
-import { useChatAssignStatusStore } from "@/src/utils/store";
+import { generateInternalMessageId } from "@/utils/chatbox_utils";
+import { useChatAssignStatusStore } from "@/utils/store";
 const NotAssigned = ({ contactId }: { contactId: string }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";

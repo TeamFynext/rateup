@@ -1,9 +1,9 @@
+import { Toast } from "toastify-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { View, ActivityIndicator, Pressable } from "react-native";
 import { Mic, CircleStop } from "lucide-react-native";
-import { uploadFile, getFileUrlFromKey } from "@/src/utils/fileUpload";
+import { uploadFile, getFileUrlFromKey } from "@/utils/fileUpload";
 import { create } from "zustand";
-import { useToast } from "react-native-toast-notifications";
 import {
   useAudioRecorder,
   RecordingPresets,
@@ -18,7 +18,7 @@ import Animated, {
   withTiming,
   Easing,
 } from "react-native-reanimated";
-import { colors } from "@/src/constants/constants";
+import { colors } from "@/constants/constants";
 
 const requestPermission = async () => {
   const { granted } = await requestRecordingPermissionsAsync();
@@ -93,7 +93,6 @@ const VoiceRecorder = ({
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [isRecording, setIsRecording] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const toast = useToast();
 
   const startRecording = async () => {
     if (!(await requestPermission())) return;
@@ -115,7 +114,10 @@ const VoiceRecorder = ({
       //@ts-ignore
       onRecordingUpload?.({ key, url, name });
     } catch (err) {
-      toast.show("Voice upload failed", { type: "danger" });
+      Toast.show({
+        type: "error",
+        text1: "Voice upload failed"
+      });
     } finally {
       setIsUploading(false);
     }

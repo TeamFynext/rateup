@@ -1,11 +1,12 @@
+import { Toast } from "toastify-react-native";
 import {
   useAssignInboxToUser,
   useGetAssignedUserForContact,
-} from "@/src/api/inbox/messages/message.query";
+} from "@/api/inbox/messages/message.query";
 import {
   useTeamsByUser,
   useTeamsMembersOfOrg,
-} from "@/src/api/teams/teams.query";
+} from "@/api/teams/teams.query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
@@ -19,16 +20,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import lodash from "lodash";
-import { TeamMembersData } from "@/src/context/type";
+import { TeamMembersData } from "@/context/type";
 import {
   generateInternalMessageId,
   namePreview,
-} from "@/src/utils/chatbox_utils";
+} from "@/utils/chatbox_utils";
 import { Check, UserCheck, Users } from "lucide-react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from "react-native-toast-notifications";
-import { colors } from "@/src/constants/constants";
-import { useChatAssignStatusStore } from "@/src/utils/store";
+import { colors } from "@/constants/constants";
+import { useChatAssignStatusStore } from "@/utils/store";
 
 export default function AssignToUser({
   contactId,
@@ -59,7 +59,6 @@ export default function AssignToUser({
     ? colors["gray-900"]
     : "white";
   const textColor = color ? "white" : isDark ? "white" : "black";
-  const toast = useToast();
 
   const membersByTeam = useMemo(() => {
     if (!teamMembers?.data) return {};
@@ -99,9 +98,9 @@ export default function AssignToUser({
       {
         onSuccess: () => {
           setWaAssignStatus("ASSIGNED")
-          toast.show("Assigned Successfully", {
+          Toast.show({
             type: "success",
-            duration: 2000,
+            text1: "Assigned Successfully"
           });
 
           queryClient.invalidateQueries({

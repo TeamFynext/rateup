@@ -1,4 +1,4 @@
-import axios from "@/src/config/axios";
+import axios from "@/config/axios";
 
 const SURVEYURL = "/api/survey";
 
