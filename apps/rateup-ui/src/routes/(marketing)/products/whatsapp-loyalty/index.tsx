@@ -184,7 +184,7 @@ const jsonLd = {
 
 export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")({
   server: {
-    middleware: [createMarkdownMiddleware(productsMarkdown)],
+    middleware: createMarkdownMiddleware(productsMarkdown),
   },
   component: LoyaltyLandingPage,
   head: () => ({

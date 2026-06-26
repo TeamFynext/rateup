@@ -9,19 +9,17 @@ import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
 
 export const Route = createFileRoute("/(marketing)/blog/$slug/")({
   server: {
-    middleware: [
-      createMarkdownMiddleware(async ({ request }) => {
-        const pathname = new URL(request.url).pathname;
-        const slugPath = pathname.replace(/^\/(?:[a-z]{2}\/)?blog\//i, "").replace(/\/$/, "");
-        const content = await getMarkdownContent(slugPath);
+    middleware: createMarkdownMiddleware(async ({ request }) => {
+      const pathname = new URL(request.url).pathname;
+      const slugPath = pathname.replace(/^\/(?:[a-z]{2}\/)?blog\//i, "").replace(/\/$/, "");
+      const content = await getMarkdownContent(slugPath);
 
-        if (!content) {
-          return new Response("Not Found", { status: 404 });
-        }
+      if (!content) {
+        return new Response("Not Found", { status: 404 });
+      }
 
-        return content;
-      }),
-    ],
+      return content;
+    }),
   },
   component: Page,
   loader: async ({ params }) => {
