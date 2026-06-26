@@ -1,23 +1,21 @@
-import {
-  ActionIcon,
-  Button,
-  Divider,
-  Group,
-  MultiSelect,
-  Paper,
-  Radio,
-  Rating,
-  ScrollAreaAutosize,
-  Stack,
-  Text,
-} from "@mantine/core";
-import { IconRestore } from "@tabler/icons-react";
+import { IconRestore, IconStar } from "@tabler/icons-react";
 import { produce } from "immer";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useGetAllTestimonialsByOrg } from "@/backend/testimonials/testimonial.query";
+import { Button } from "@/components/ui/button.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
 import type { filterType } from "@/routes/dashboard/testimonial/$collectionId/index.tsx";
 import { TestimonialTabs } from "@/routes/dashboard/testimonial/$collectionId/index.tsx";
 
@@ -42,6 +40,7 @@ const TestimonialFilter = ({
     ?.filter(({ teamId }) => (filters?.teams?.length > 0 ? filters?.teams?.includes(teamId) : true))
     .map(({ survey }) => ({ label: survey?.name, value: survey?.id }));
   const { t: translations } = useTranslation();
+
   function removeDuplicates(surveyMultiSelectOptions) {
     const uniqueArray = [];
     const encounteredIds = [];
@@ -56,6 +55,7 @@ const TestimonialFilter = ({
   }
 
   const [allRatings] = useState(true);
+
   const filterData = (type: "date" | "rating" | "surveys" | "teams" | "length", newValue) => {
     setFilters(
       produce((draft: filterType) => {
@@ -64,6 +64,7 @@ const TestimonialFilter = ({
     );
     setType(type);
   };
+
   useEffect(() => {
     if (allRatings) {
       setFilters({ ...filters, rating: null });
@@ -71,15 +72,15 @@ const TestimonialFilter = ({
   }, [allRatings]);
 
   return (
-    <ScrollAreaAutosize scrollbarSize={5}>
-      <Paper radius="md" withBorder p="sm" maw={200} miw={200}>
-        <Group justify="space-between" mb={2}>
-          <Text size="sm" c="dimmed" fw={500}>
+    <ScrollArea className="h-full">
+      <div className="border rounded-lg p-3 w-52 space-y-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-muted-foreground">
             {translations("Filters")}
-          </Text>
-          <ActionIcon
+          </span>
+          <Button
             size="sm"
-            variant="light"
+            variant="ghost"
             onClick={() => {
               setFilters({
                 date: null,
@@ -90,108 +91,146 @@ const TestimonialFilter = ({
               });
               setType(null);
             }}
+            className="h-6 w-6 p-0"
           >
-            <IconRestore size={15} />
-          </ActionIcon>
-        </Group>
-        <Divider />
-        <Stack gap={2}>
-          {activeTab == TestimonialTabs.Select && (
+            <IconRestore size={14} />
+          </Button>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          {activeTab === TestimonialTabs.Select && (
             <>
-              <MultiSelect
-                radius={"10px"}
-                searchable
-                clearable
-                label={translations("Select Team")}
-                styles={{ label: { fontSize: 12 } }}
-                data={teamMultiSelectOptions}
-                value={filters?.teams}
-                onChange={(value) => filterData("teams", value)}
-                placeholder={filters?.teams?.length > 0 ? "" : translations("All Teams")}
-              />
-              <MultiSelect
-                radius={"10px"}
-                searchable
-                clearable
-                label={translations("Select survey")}
-                styles={{ label: { fontSize: 12 } }}
-                data={removeDuplicates(surveyMultiSelectOptions)}
-                value={filters?.surveys}
-                onChange={(value) => filterData("surveys", value)}
-                placeholder={filters?.teams?.length > 0 ? "" : translations("All Surveys")}
-              />
+              <div>
+                <label className="text-xs font-medium mb-1.5 block">
+                  {translations("Select Team")}
+                </label>
+                <Select
+                  value={filters?.teams?.[0] || ""}
+                  onValueChange={(value) => filterData("teams", [value])}
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder={translations("All Teams")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teamMultiSelectOptions?.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium mb-1.5 block">
+                  {translations("Select survey")}
+                </label>
+                <Select
+                  value={filters?.surveys?.[0] || ""}
+                  onValueChange={(value) => filterData("surveys", [value])}
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder={translations("All Surveys")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {removeDuplicates(surveyMultiSelectOptions)?.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </>
           )}
-          <Stack gap={"sm"}>
-            {activeTab != TestimonialTabs.Share && (
+
+          <div className="space-y-3">
+            {activeTab !== TestimonialTabs.Share && (
               <>
-                <Divider label={translations("Date")} labelPosition="left" />
-                <Radio.Group onChange={(value) => filterData("date", value)} value={filters?.date}>
-                  <Group>
-                    <Radio
-                      label={translations("newest")}
-                      value="new"
-                      size="xs"
-                      styles={{ label: { fontSize: 12 } }}
-                    />
-                    <Radio
-                      label={translations("older")}
-                      value="old"
-                      size="xs"
-                      styles={{ label: { fontSize: 12 } }}
-                    />
-                  </Group>
-                </Radio.Group>
-                <Divider label={translations("Length")} labelPosition="left" />
-                <Radio.Group
-                  onChange={(value) => filterData("length", value)}
-                  value={filters?.length}
-                >
-                  <Group>
-                    <Radio
-                      label={translations("longest")}
-                      value="longest"
-                      size="xs"
-                      styles={{ label: { fontSize: 12 } }}
-                    />
-                    <Radio
-                      label={translations("shortest")}
-                      value="shortest"
-                      size="xs"
-                      styles={{ label: { fontSize: 12 } }}
-                    />
-                  </Group>
-                </Radio.Group>
-                <Divider
-                  label={
-                    <Group gap={"xs"}>
-                      <Text size="xs" c="dimmed">
-                        {translations("Rating")}
-                      </Text>
-                      <Button
-                        size="compact-xs"
-                        onClick={() => filterData("rating", null)}
-                        variant="light"
+                <div>
+                  <div className="text-xs font-medium mb-2">{translations("Date")}</div>
+                  <RadioGroup
+                    value={filters?.date || ""}
+                    onValueChange={(value) => filterData("date", value)}
+                  >
+                    <div className="flex gap-4">
+                      <div className="flex items-center space-x-1.5">
+                        <RadioGroupItem value="new" id="date-new" />
+                        <label htmlFor="date-new" className="text-xs cursor-pointer">
+                          {translations("newest")}
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-1.5">
+                        <RadioGroupItem value="old" id="date-old" />
+                        <label htmlFor="date-old" className="text-xs cursor-pointer">
+                          {translations("older")}
+                        </label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <div className="text-xs font-medium mb-2">{translations("Length")}</div>
+                  <RadioGroup
+                    value={filters?.length || ""}
+                    onValueChange={(value) => filterData("length", value)}
+                  >
+                    <div className="flex gap-4">
+                      <div className="flex items-center space-x-1.5">
+                        <RadioGroupItem value="longest" id="length-longest" />
+                        <label htmlFor="length-longest" className="text-xs cursor-pointer">
+                          {translations("longest")}
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-1.5">
+                        <RadioGroupItem value="shortest" id="length-shortest" />
+                        <label htmlFor="length-shortest" className="text-xs cursor-pointer">
+                          {translations("shortest")}
+                        </label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-muted-foreground">{translations("Rating")}</span>
+                    <Button size="xs" variant="outline" onClick={() => filterData("rating", null)}>
+                      {translations("All")}
+                    </Button>
+                  </div>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => filterData("rating", star)}
+                        className="p-0.5"
                       >
-                        {translations("All")}
-                      </Button>
-                    </Group>
-                  }
-                  labelPosition="left"
-                />
-                <Group gap={2}>
-                  <Rating
-                    value={filters?.rating}
-                    onChange={(value) => filterData("rating", value)}
-                    size={"lg"}
-                  />
-                </Group>
+                        <IconStar
+                          size={20}
+                          className={
+                            filters?.rating >= star
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
+                          }
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </>
             )}
-          </Stack>
-        </Stack>
-      </Paper>
-    </ScrollAreaAutosize>
+          </div>
+        </div>
+      </div>
+    </ScrollArea>
   );
 };
 

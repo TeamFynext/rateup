@@ -1,11 +1,21 @@
+import { IconPlus } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
-import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
+import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import {
+  ListPage,
+  ListPageContent,
+  ListPageHeader,
+  ListPageHeaderSection,
+  ListPageSearchInput,
+  ListPageSortDropdown,
+} from "@/components/common/list-page-layout.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
+import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { WaAutomationCards } from "@/components/whatsapp/automation/AutomationCards.tsx";
 import type { WaAutomatedReply } from "@/types/global";
@@ -47,42 +57,48 @@ function FlowbotsPage() {
 
   const isEmpty = !isLoading && !isError && filteredData.length === 0;
 
-  const handleRefetch = () => {
-    void waRefetch();
-  };
-
   return (
     <>
-      <ListPageLayout
-        canCreate
-        createLabel={translations("Create Chatbot")}
-        createDisabledText=""
-        docsUrl="whatsapp/chatbot"
-        isLoading={isLoading}
-        queryKeys={["allWaAutomatedReplies"]}
-        search={searchQuery}
-        searchPlaceholder={translations("Search chatbots...")}
-        tourSteps={[]}
-        onCreate={() => setOpened(true)}
-        onSearchChange={setSearchQuery}
-        sortValue={sortOption}
-        onSortChange={setSortOption}
-        isError={isError}
-        onRetry={handleRefetch}
-        isEmpty={isEmpty}
-        emptyTitle={
-          debouncedSearchQuery
-            ? translations("No chatbots found matching your search")
-            : translations("No chatbots found")
-        }
-        emptyDescription={
-          debouncedSearchQuery
-            ? translations("Try a different search term.")
-            : translations("Create your first chatbot to start automating conversations.")
-        }
-      >
-        <WaAutomationCards data={filteredData} detailsBasePath="/dashboard/whatsapp/flowbots" />
-      </ListPageLayout>
+      <ListPage>
+        <ListPageHeader>
+          <ListPageHeaderSection className="gap-3">
+            <Button onClick={() => setOpened(true)} disabled={isLoading}>
+              {translations("Create Chatbot")}
+              <IconPlus size={16} className="ml-2" />
+            </Button>
+            <RefreshButton queryKeys={["allWaAutomatedReplies"]} />
+          </ListPageHeaderSection>
+
+          <ListPageHeaderSection>
+            <ListPageSearchInput
+              placeholder={translations("Search chatbots...")}
+              value={searchQuery}
+              onChange={setSearchQuery}
+            />
+            <ListPageSortDropdown value={sortOption} onChange={setSortOption} />
+          </ListPageHeaderSection>
+        </ListPageHeader>
+
+        <ListPageContent
+          isLoading={isLoading}
+          isError={isError}
+          isEmpty={isEmpty}
+          emptyTitle={
+            debouncedSearchQuery
+              ? translations("No chatbots found matching your search")
+              : translations("No chatbots found")
+          }
+          emptyDescription={
+            debouncedSearchQuery
+              ? translations("Try a different search term.")
+              : translations("Create your first chatbot to start automating conversations.")
+          }
+          onRetry={waRefetch}
+        >
+          <WaAutomationCards data={filteredData} detailsBasePath="/dashboard/whatsapp/flowbots" />
+        </ListPageContent>
+      </ListPage>
+
       <Dialog open={opened} onOpenChange={setOpened}>
         <DialogContent className="sm:max-w-175">
           <DialogHeader>

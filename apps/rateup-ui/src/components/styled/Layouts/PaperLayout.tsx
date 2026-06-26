@@ -14,6 +14,7 @@ export interface PaperLayoutProps extends PaperProps {
   layoutAnimation?: boolean;
   onClick?: (e?: any) => void;
 }
+/** @deprecated Use `Card` from "@component/ui/card" */
 export default function PaperLayout({
   hoveractive,
   selected = true,

@@ -1121,6 +1121,7 @@ type DescriptionBlock = {
 type RatingBlock = {
   bg: string;
   isRemoved: boolean;
+  ratingType?: string;
 };
 
 type DateBlock = {

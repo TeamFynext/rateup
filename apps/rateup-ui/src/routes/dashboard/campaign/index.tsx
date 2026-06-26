@@ -5,9 +5,19 @@ import { useTranslation } from "react-i18next";
 
 import { useCampaignById, useCampaignData } from "@/backend/campaign/campaign.query";
 import UnauthorizedPage from "@/components/404/UnAuthorizedError.tsx";
-import CampaignCardList from "@/components/Campaign/CampaignListCard.tsx";
+import InfoButton from "@/components/Button/InfoButton.tsx";
+import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import CampaignCard from "@/components/Campaign/CampaignCard.tsx";
 import CreateCampaignModal from "@/components/Campaign/CreateCampaignModal.tsx";
-import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
+import {
+  ListPage,
+  ListPageContent,
+  ListPageHeader,
+  ListPageHeaderSection,
+  ListPageSearchInput,
+  ListPageSortDropdown,
+} from "@/components/common/list-page-layout.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
@@ -23,6 +33,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { CampaignType } from "@/types/enums.ts";
+import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/campaign/")({
   component: CampaignsPage,
@@ -157,34 +168,50 @@ function CampaignsPage() {
 
   return (
     <>
-      <ListPageLayout
-        canCreate
-        createLabel={t("Create Campaign")}
-        createDisabledText=""
-        docsUrl="campaign"
-        isLoading={isPending}
-        queryKeys={["campaigns"]}
-        search={search}
-        searchPlaceholder={t("Search campaigns...")}
-        tourSteps={[]}
-        onCreate={openCreateCampaign}
-        onSearchChange={setSearch}
-        sortValue={sortOption}
-        onSortChange={setSortOption}
-        leftControls={leftControls}
-        rightControls={rightControls}
-        isError={isError}
-        onRetry={refetch}
-        isEmpty={!isPending && !isError && filteredCampaigns.length === 0}
-        emptyTitle="No campaigns found"
-        emptyDescription="Try adjusting your filters or create a new campaign."
-      >
-        <CampaignCardList
-          campaigns={filteredCampaigns}
-          onEdit={openEditCampaign}
-          onView={handleViewDetails}
-        />
-      </ListPageLayout>
+      <ListPage>
+        <ListPageHeader>
+          <ListPageHeaderSection className="gap-3">
+            <Button onClick={openCreateCampaign} disabled={isPending}>
+              {t("Create Campaign")}
+            </Button>
+            <InfoButton docUrl={`${docsPath}/campaign`} />
+            <RefreshButton queryKeys={["campaigns"]} />
+          </ListPageHeaderSection>
+
+          <ListPageHeaderSection>
+            <ListPageSearchInput
+              placeholder={t("Search campaigns...")}
+              value={search}
+              onChange={setSearch}
+            />
+            <ListPageSortDropdown value={sortOption} onChange={setSortOption} />
+            {leftControls}
+            {rightControls}
+          </ListPageHeaderSection>
+        </ListPageHeader>
+
+        <ListPageContent
+          isLoading={isPending}
+          isError={isError}
+          isEmpty={!isPending && !isError && filteredCampaigns.length === 0}
+          emptyTitle={t("No campaigns found")}
+          emptyDescription={t("Try adjusting your filters or create a new campaign.")}
+          onRetry={refetch}
+        >
+          <CardGrid
+            items={filteredCampaigns}
+            getKey={(campaign) => campaign.id}
+            renderItem={(campaign) => (
+              <CampaignCard
+                campaign={campaign}
+                onEdit={openEditCampaign}
+                onView={handleViewDetails}
+              />
+            )}
+          />
+        </ListPageContent>
+      </ListPage>
+
       {isCreateOpen && <CreateCampaignModal close={closeCreateCampaign} campaignType={activeTab} />}
       {selectedCampaignId && campaignByIdQuery?.data && (
         <CreateCampaignModal

@@ -6,7 +6,7 @@ import {
   useDeleteCampaignMutation,
   useUpdateCampaignMutation,
 } from "@/backend/campaign/campaign.query";
-import { GenericActionCard } from "@/components/common/generic-card.tsx";
+import { ActionCard } from "@/components/common/action-card.tsx";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -168,7 +168,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
   );
 
   return (
-    <GenericActionCard
+    <ActionCard
       title={campaign.name}
       titleTooltip={campaign.name}
       subtitle={campaign.type}

@@ -1,10 +1,10 @@
-import { GenericCardGrid } from "@/components/common/generic-card.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
 
 import FlowCard from "../FlowCard/index.tsx";
 
 function FlowCardsList({ flows, teamsData }: Readonly<{ flows: DbFlow[]; teamsData }>) {
   return (
-    <GenericCardGrid
+    <CardGrid
       items={flows ?? []}
       getKey={(flow) => flow.dbFlowId}
       renderItem={(flow) => {

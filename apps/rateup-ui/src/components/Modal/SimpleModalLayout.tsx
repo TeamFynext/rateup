@@ -18,6 +18,7 @@ interface FormModalLayoutProps {
   zIndex?: number;
 }
 
+/** @deprecated Use `Modal` from "@component/ui/modal" */
 export default function SimpleModalLayout({
   onClose,
   opened,

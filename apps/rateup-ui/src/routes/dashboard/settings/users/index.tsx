@@ -521,12 +521,12 @@ function UsersPage() {
       <div className="flex flex-col w-full">
         {data?.data?.members?.length > 0 && (
           <>
-            <h3 className="col-span-full text-sm font-semibold text-gray-500 uppercase">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">
               {translations("Active Members")}
             </h3>
-            <div className="flex flex-col items-center gap-2 md:flex-row md:gap-4 p-4 flex-wrap">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
               {filteredMembers?.map((member: any) => (
-                <Card key={member.id} className="p-3  group relative min-w-[15vw] lg:max-w-[15vw]">
+                <Card key={member.id} className="p-3 group relative">
                   <div className="flex flex-col items-center text-center justify-center gap-1">
                     <div className="relative mb-2">
                       <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
@@ -609,14 +609,14 @@ function UsersPage() {
 
         {data?.data?.invitations?.length > 0 && (
           <>
-            <h3 className="col-span-full text-sm font-semibold text-gray-500 uppercase mt-6">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">
               {translations("Pending Invitations")}
             </h3>
-            <div className="flex flex-col items-center gap-2 md:flex-row md:gap-4 p-4 flex-wrap w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full">
               {filteredInvitations?.map((invite: any) => (
                 <Card
                   key={invite.id}
-                  className="p-3 lg:max-w-[15vw] min-w-[15vw] border-dashed border-gray-300 hover:border-rateup-orange/40 hover:shadow-md transition-all group relative"
+                  className="p-3 border-dashed border-gray-300 hover:border-rateup-orange/40 hover:shadow-md transition-all group relative"
                 >
                   <button
                     type="button"

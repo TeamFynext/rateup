@@ -1,18 +1,7 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { Calendar } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import TimeSinceText from "@/components/DateAndTime/TimeSinceText.tsx";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardAction,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card.tsx";
+import { ActionCard } from "@/components/common/action-card.tsx";
 
 import { SurveyMenu } from "./SurveyMenu.tsx";
 
@@ -86,7 +75,6 @@ export function SurveyCard({
 }: Readonly<SurveyCardProps>) {
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
-  const [hovered, setHovered] = useState(false);
   const pathname = useRouterState({
     select: (s) => s.location.pathname,
   });
@@ -111,77 +99,59 @@ export function SurveyCard({
     color: getColorForType(type),
   }));
 
+  const statusBadge = survey?.active ? (
+    <span className="text-[11px] font-semibold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full dark:bg-green-900/30 dark:text-green-400">
+      {translations("Active")}
+    </span>
+  ) : (
+    <span className="text-[11px] font-semibold text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full dark:bg-zinc-800 dark:text-zinc-400">
+      {translations("Inactive")}
+    </span>
+  );
+
+  const content = (
+    <div className="flex items-center gap-2 flex-wrap h-10">
+      <span className="text-xs font-bold dark:text-zinc-100">
+        {totalResponses}{" "}
+        {totalResponses >= 1 ? translations("Response") : translations("Responses")}
+      </span>
+      {tags.slice(0, 4).map((tag) => (
+        <span
+          key={tag.type}
+          className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${tagColorClasses[tag.color]}`}
+          title={tag.type}
+        >
+          {tag.count} {tag.type.length > 6 ? `${tag.type.slice(0, 6)}..` : tag.type}
+        </span>
+      ))}
+      {tags.length > 4 && (
+        <span className="text-[11px] font-medium px-2 py-0.5 rounded-md border border-gray-200 bg-gray-50 text-gray-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
+          +{tags.length - 4} more
+        </span>
+      )}
+    </div>
+  );
+
   return (
-    <Card
-      onClick={(e) => {
-        e.stopPropagation();
+    <ActionCard
+      title={survey?.title}
+      subtitle={`${questionCount} ${translations("questions")}`}
+      content={content}
+      footerLeft={statusBadge}
+      createdAt={survey?.createdAt}
+      onClick={() => {
         navigate({
           to: route || `${pathname}/${survey?.id}${survey?.isPublished ? `?tab=Result` : ""}`,
         });
       }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="cursor-pointer transition-all duration-200 flex flex-col h-full gap-2 [--card-spacing:--spacing(4)] dark:bg-card dark:border-zinc-800"
-      style={{
-        boxShadow: hovered ? "0 8px 28px rgba(11,31,72,.10)" : "0 1px 3px rgba(11,31,72,.05)",
-        transform: hovered ? "translateY(-2px)" : "none",
-      }}
-    >
-      <CardHeader>
-        <CardTitle className="text-base whitespace-nowrap overflow-hidden text-ellipsis dark:text-zinc-100">
-          {survey?.title}
-        </CardTitle>
-        <CardDescription className="text-xs whitespace-nowrap overflow-hidden text-ellipsis dark:text-zinc-400">
-          {questionCount} {translations("questions")}
-        </CardDescription>
-        <CardAction>
-          <div className="-mt-0.5" onClick={(e) => e.stopPropagation()}>
-            <SurveyMenu
-              survey={survey}
-              selectedTeamId={selectedTeamId || ""}
-              teamsData={teamsData}
-              refetchSurveys={refetchSurveys}
-            />
-          </div>
-        </CardAction>
-      </CardHeader>
-
-      <CardContent className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs font-bold dark:text-zinc-100">
-          {totalResponses}{" "}
-          {totalResponses >= 1 ? translations("Response") : translations("Responses")}
-        </span>
-        {tags.slice(0, 4).map((tag) => (
-          <span
-            key={tag.type}
-            className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${tagColorClasses[tag.color]}`}
-            title={tag.type}
-          >
-            {tag.count} {tag.type.length > 6 ? `${tag.type.slice(0, 6)}..` : tag.type}
-          </span>
-        ))}
-        {tags.length > 4 && (
-          <span className="text-[11px] font-medium px-2 py-0.5 rounded-md border border-gray-200 bg-gray-50 text-gray-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
-            +{tags.length - 4} more
-          </span>
-        )}
-      </CardContent>
-
-      <CardFooter className="justify-between border-t border-gray-100 mt-auto dark:border-zinc-800">
-        {survey?.active ? (
-          <span className="text-[11px] font-semibold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full dark:bg-green-900/30 dark:text-green-400">
-            {translations("Active")}
-          </span>
-        ) : (
-          <span className="text-[11px] font-semibold text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full dark:bg-zinc-800 dark:text-zinc-400">
-            {translations("Inactive")}
-          </span>
-        )}
-        <span className="flex items-center gap-[5px] text-xs text-gray-500 font-medium dark:text-zinc-400">
-          <Calendar size={13} />
-          <TimeSinceText isoDateString={survey?.createdAt || new Date().toISOString()} />
-        </span>
-      </CardFooter>
-    </Card>
+      actions={
+        <SurveyMenu
+          survey={survey}
+          selectedTeamId={selectedTeamId || ""}
+          teamsData={teamsData}
+          refetchSurveys={refetchSurveys}
+        />
+      }
+    />
   );
 }

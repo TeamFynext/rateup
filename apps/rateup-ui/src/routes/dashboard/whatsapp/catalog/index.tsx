@@ -6,8 +6,15 @@ import {
   useSyncCatalogs,
   useSyncConnectedCatalog,
 } from "@/backend/whatsapp/catalog/catalog.query";
-import { GenericActionCard, GenericCardGrid } from "@/components/common/generic-card.tsx";
-import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
+import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import { ActionCard } from "@/components/common/action-card.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
+import {
+  ListPage,
+  ListPageContent,
+  ListPageHeader,
+  ListPageHeaderSection,
+} from "@/components/common/list-page-layout.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
@@ -21,77 +28,80 @@ function Catalog() {
   const syncConnected = useSyncConnectedCatalog();
   const navigate = useNavigate();
 
-  const syncButton = (
-    <div className="flex gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => syncConnected.mutate()}
-        disabled={syncConnected.isPending || isPending}
-      >
-        <IconRefresh size={16} className="mr-2" />
-        Sync Connected
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => sync.mutate()}
-        disabled={sync.isPending || isPending}
-      >
-        <IconRefresh size={16} className="mr-2" />
-        Sync Catalogs
-      </Button>
-    </div>
-  );
+  const isEmpty = !isPending && !isError && (catalogs ?? []).length === 0;
 
   return (
-    <ListPageLayout
-      hideCreate
-      canCreate={false}
-      docsUrl="whatsapp/catalogs"
-      isLoading={isPending}
-      queryKeys={["allWaCatalog"]}
-      isError={isError}
-      onRetry={refetch}
-      isEmpty={!isPending && !isError && (catalogs ?? []).length === 0}
-      emptyTitle="No catalogs found"
-      emptyDescription="Sync your Meta catalogs to get started."
-      rightControls={syncButton}
-    >
-      <GenericCardGrid
-        items={catalogs ?? []}
-        getKey={(catalog) => catalog.catalogId}
-        renderItem={(catalog) => (
-          <GenericActionCard
-            title={catalog.name}
-            titleTooltip={catalog.name}
-            subtitle={`ID: ${catalog.catalogId}`}
-            onClick={() =>
-              navigate({
-                to: `/dashboard/whatsapp/catalog/${catalog.catalogId}`,
-              })
-            }
-            footerLeft={
-              catalog.connectedWaPhoneIds && catalog.connectedWaPhoneIds.length > 0 ? (
-                <Badge variant="default" className="text-xs">
-                  Linked to WhatsApp
-                </Badge>
-              ) : (
-                <Badge variant="secondary" className="text-xs">
-                  Not Linked
-                </Badge>
-              )
-            }
-            footerRight={
-              catalog.vertical ? (
-                <Badge variant="outline" className="text-xs">
-                  {catalog.vertical}
-                </Badge>
-              ) : undefined
-            }
-          />
-        )}
-      />
-    </ListPageLayout>
+    <ListPage>
+      <ListPageHeader>
+        <ListPageHeaderSection className="gap-3">
+          <RefreshButton queryKeys={["allWaCatalog"]} />
+        </ListPageHeaderSection>
+
+        <ListPageHeaderSection>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => syncConnected.mutate()}
+            disabled={syncConnected.isPending || isPending}
+          >
+            <IconRefresh size={16} className="mr-2" />
+            Sync Connected
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => sync.mutate()}
+            disabled={sync.isPending || isPending}
+          >
+            <IconRefresh size={16} className="mr-2" />
+            Sync Catalogs
+          </Button>
+        </ListPageHeaderSection>
+      </ListPageHeader>
+
+      <ListPageContent
+        isLoading={isPending}
+        isError={isError}
+        isEmpty={isEmpty}
+        emptyTitle="No catalogs found"
+        emptyDescription="Sync your Meta catalogs to get started."
+        onRetry={refetch}
+      >
+        <CardGrid
+          items={catalogs ?? []}
+          getKey={(catalog) => catalog.catalogId}
+          renderItem={(catalog) => (
+            <ActionCard
+              title={catalog.name}
+              subtitle={`ID: ${catalog.catalogId}`}
+              onClick={() =>
+                navigate({
+                  to: `/dashboard/whatsapp/catalog/${catalog.catalogId}`,
+                })
+              }
+              content={<></>}
+              footer={
+                <div className="flex gap-2">
+                  {catalog.connectedWaPhoneIds && catalog.connectedWaPhoneIds.length > 0 ? (
+                    <Badge variant="default" className="text-xs">
+                      Linked to WhatsApp
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="text-xs">
+                      Not Linked
+                    </Badge>
+                  )}
+                  {catalog.vertical && (
+                    <Badge variant="outline" className="text-xs">
+                      {catalog.vertical}
+                    </Badge>
+                  )}
+                </div>
+              }
+            />
+          )}
+        />
+      </ListPageContent>
+    </ListPage>
   );
 }

@@ -1,13 +1,22 @@
+import { IconPlus } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-// ...existing code...
 import { toast } from "sonner";
 
 import { useSaveTemplateAsDraftMutation, useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
-import { GenericActionCard, GenericCardGrid } from "@/components/common/generic-card.tsx";
-import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
+import InfoButton from "@/components/Button/InfoButton.tsx";
+import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import { ActionCard } from "@/components/common/action-card.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
+import {
+  ListPage,
+  ListPageContent,
+  ListPageHeader,
+  ListPageHeaderSection,
+  ListPageSearchInput,
+  ListPageSortDropdown,
+} from "@/components/common/list-page-layout.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-// ...existing code...
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -21,6 +30,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge.tsx";
 import { TemplateType } from "@/types/enums.ts";
+import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/templates/")({
   component: LoyaltyTemplateListPage,
@@ -211,52 +221,63 @@ function LoyaltyTemplateListPage() {
 
   return (
     <>
-      <ListPageLayout
-        canCreate={true}
-        createLabel={"Create"}
-        docsUrl={"loyalty/templates"}
-        isLoading={isPending}
-        queryKeys={["watemplates"]}
-        search={search}
-        searchPlaceholder="Search loyalty templates..."
-        onCreate={() => {
-          setShowModal(true);
-          setStep("pick");
-          setSelectedPredefined(null);
-          setSelectedAccountId("");
-        }}
-        onSearchChange={setSearch}
-        sortValue={sortOption}
-        onSortChange={setSortOption}
-        isError={isError}
-        onRetry={refetch}
-        isEmpty={!isPending && !isError && filteredDrafts.length === 0}
-        emptyTitle={"No loyalty templates found"}
-        emptyDescription={"Try changing filters or create a new template."}
-        tourSteps={[]}
-        createDisabledText=""
-      >
-        <GenericCardGrid
-          items={filteredDrafts}
-          getKey={(template) => template.id}
-          renderItem={(template) => (
-            <GenericActionCard
-              title={template?.data?.name}
-              titleTooltip={template?.data?.name}
-              subtitle={template?.data?.category || "Template"}
-              actions={null}
-              content={
-                <div className="flex flex-wrap gap-2">
-                  <WaTemplateStatusBadge status={template?.data?.status as never} />
-                </div>
-              }
-              createdAt={template.createdAt}
-              onClick={() => handleEditClick(template)}
+      <ListPage>
+        <ListPageHeader>
+          <ListPageHeaderSection className="gap-3">
+            <Button
+              onClick={() => {
+                setShowModal(true);
+                setStep("pick");
+                setSelectedPredefined(null);
+                setSelectedAccountId("");
+              }}
+            >
+              Create
+              <IconPlus size={16} className="ml-2" />
+            </Button>
+
+            <InfoButton docUrl={`${docsPath}/loyalty/templates`} />
+            <RefreshButton queryKeys={["watemplates"]} />
+          </ListPageHeaderSection>
+
+          <ListPageHeaderSection>
+            <ListPageSearchInput
+              placeholder="Search loyalty templates..."
+              value={search}
+              onChange={setSearch}
             />
-          )}
-        />
-        {/* Modal for template picker and account selection */}
-      </ListPageLayout>
+            <ListPageSortDropdown value={sortOption} onChange={setSortOption} />
+          </ListPageHeaderSection>
+        </ListPageHeader>
+
+        <ListPageContent
+          isLoading={isPending}
+          isError={isError}
+          isEmpty={!isPending && !isError && filteredDrafts.length === 0}
+          emptyTitle={"No loyalty templates found"}
+          emptyDescription={"Try changing filters or create a new template."}
+          onRetry={refetch}
+        >
+          <CardGrid
+            items={filteredDrafts}
+            getKey={(template) => template.id}
+            renderItem={(template) => (
+              <ActionCard
+                title={template?.data?.name}
+                subtitle={template?.data?.category || "Template"}
+                content={
+                  <Badge variant="default" className="text-xs">
+                    {template?.whatsappSettingsPhoneId ?? "No Account"}
+                  </Badge>
+                }
+                footer={<WaTemplateStatusBadge status={template?.data?.status} />}
+                createdAt={template.createdAt}
+                onClick={() => handleEditClick(template)}
+              />
+            )}
+          />
+        </ListPageContent>
+      </ListPage>
       <Dialog
         open={showModal}
         onOpenChange={(open) => {
@@ -287,11 +308,11 @@ function LoyaltyTemplateListPage() {
           </DialogHeader>
           <div className="-mx-4 no-scrollbar max-h-[80vh] overflow-y-auto px-4">
             {step === "pick" ? (
-              <GenericCardGrid
+              <CardGrid
                 items={PREDEFINED_TEMPLATES}
                 getKey={(tpl) => tpl.name}
                 renderItem={(tpl) => (
-                  <GenericActionCard
+                  <ActionCard
                     title={tpl.name}
                     titleTooltip={tpl.name}
                     subtitle={tpl.description}

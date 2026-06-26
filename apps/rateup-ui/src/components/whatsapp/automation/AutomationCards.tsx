@@ -16,7 +16,8 @@ import {
   useUpdateWaAutomatedReplyMutation,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useDeleteInstagramAutomationMutation } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
-import { GenericActionCard, GenericCardGrid } from "@/components/common/generic-card.tsx";
+import { ActionCard } from "@/components/common/action-card.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -41,7 +42,7 @@ export function WaAutomationCards({
   if (!data || !Array.isArray(data)) return null;
 
   return (
-    <GenericCardGrid
+    <CardGrid
       items={data}
       getKey={(automation) => automation.id}
       renderItem={(automation) => (
@@ -87,7 +88,7 @@ function AutomationCard({ automation, detailsBasePath }: Readonly<WaAutomationCa
   );
 
   return (
-    <GenericActionCard
+    <ActionCard
       title={automation.name}
       titleTooltip={automation.name}
       actions={

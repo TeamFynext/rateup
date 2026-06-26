@@ -37,7 +37,7 @@ interface Props {
   miw?: string | number;
   w?: string | number;
 }
-
+/** @deprecated Use `Button` from "@component/ui/button" */
 export const RateupButtonPrimary = ({
   loading,
   fullWidth,
@@ -80,6 +80,7 @@ export const RateupButtonPrimary = ({
   );
 };
 
+/** @deprecated Use `Button` from "@component/ui/button" */
 export const RateupButtonBlue = ({
   loading,
   title,
@@ -115,6 +116,7 @@ export const RateupButtonBlue = ({
   );
 };
 
+/** @deprecated Use `Button` from "@component/ui/button" */
 export const RateupButtonSecondary = ({
   mt,
   fullWidth,
@@ -159,6 +161,7 @@ export const RateupButtonSecondary = ({
   );
 };
 
+/** @deprecated Use `Button` from "@component/ui/button" */
 export const RateupButtonBlackOutline = ({
   radius,
   title,
@@ -201,6 +204,7 @@ type RateupFileUploadButtonProps = {
   size?: "xs" | "sm" | "md" | "lg";
   rightSection?: React.ReactNode;
 };
+
 export const RateupFileUploadButton = ({
   resetRef,
   handleFileChange,

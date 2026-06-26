@@ -1,4 +1,4 @@
-import { GenericCardGrid } from "@/components/common/generic-card.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
 
 import type { Campaign } from "./CampaignCard.tsx";
 import CampaignCard from "./CampaignCard.tsx";
@@ -11,7 +11,7 @@ interface CampaignCardListProps {
 
 export default function CampaignCardList({ campaigns, onView, onEdit }: CampaignCardListProps) {
   return (
-    <GenericCardGrid
+    <CardGrid
       items={campaigns}
       getKey={(campaign) => campaign.id}
       renderItem={(campaign) => (
