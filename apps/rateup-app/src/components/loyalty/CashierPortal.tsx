@@ -37,6 +37,7 @@ import {
   AvailableRewardsCard,
   PendingRedemptionsCard,
 } from "./cashierPortal/components";
+import { Colors } from "@/constants/colors";
 interface ActionCardProps {
   title: string;
   subtitle: string;
@@ -61,9 +62,8 @@ const ActionCard = ({
   return (
     <Pressable
       onPress={onPress}
-      className={`rounded-xl p-4 w-[48%] mb-4 border ${
-        isDark ? "bg-slate-900 border-slate-800" : ""
-      }`}
+      className={`rounded-xl p-4 w-[48%] mb-4 border ${isDark ? "bg-slate-900 border-slate-800" : ""
+        }`}
       style={{
         backgroundColor: isDark ? undefined : lightBg,
         borderColor: border,
@@ -114,7 +114,7 @@ const CashierPortal = () => {
     useCustomerRewardsByPhone(fullPhoneNumber);
   const awardPoints = useAwardPointsMutation();
   const redeemRewardMutation = useRedeemReward(fullPhoneNumber);
-  const assignReward = useAssignRewardMutation(() => {});
+  const assignReward = useAssignRewardMutation(() => { });
   const redeemRewardByShortCode = useRedeemRewardByShortCode();
 
   const [pointsAmount, setPointsAmount] = useState("");
@@ -274,10 +274,10 @@ const CashierPortal = () => {
   return (
     <View className="flex-1 w-full bg-white dark:bg-gray-900">
       {/* Header */}
-      <View className="flex-row px-5 py-6 bg-primaryBlue items-start">
+      <View className="flex-row px-5 py-6 items-start" style={{ backgroundColor: Colors.brand.blue }}>
         <View className="flex-row items-start gap-3 flex-1">
           <Gift color="white" strokeWidth={2} size={26} />
-          <View className="flex-1">
+          <View className="flex-1">s
             <Text className="text-white text-xl font-bold">Cashier Portal</Text>
             <Text className="text-white/80 text-sm mt-1">
               Quick customer lookup and transaction processing
@@ -359,11 +359,10 @@ const CashierPortal = () => {
           <Pressable
             onPress={handleSearch}
             disabled={phone.length < 6}
-            className={`mt-5 py-3 rounded-xl items-center ${
-              phone.length < 6
-                ? "bg-gray-300 dark:bg-slate-700"
-                : "bg-primaryBlue active:opacity-80"
-            }`}
+            className={`mt-5 py-3 rounded-xl items-center ${phone.length < 6
+              ? "bg-gray-300 dark:bg-slate-700"
+              : "bg-primaryBlue active:opacity-80"
+              }`}
           >
             <Text className="text-white font-semibold text-base">
               {isLoadingCustomer ? "Searching..." : "Search Customer"}
@@ -661,11 +660,10 @@ const CashierPortal = () => {
                     <Pressable
                       key={reward.id}
                       onPress={() => setSelectedRewardId(reward.id)}
-                      className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${
-                        selected
-                          ? "border-primaryBlue bg-primaryBlue/5"
-                          : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                      }`}
+                      className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${selected
+                        ? "border-primaryBlue bg-primaryBlue/5"
+                        : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                        }`}
                     >
                       {/* Left */}
                       <View className="flex-1 mr-3">
@@ -704,11 +702,10 @@ const CashierPortal = () => {
               <Pressable
                 onPress={handleClaimReward}
                 disabled={!selectedRewardId || redeemRewardMutation?.isPending}
-                className={`px-5 py-2 rounded-lg flex-row items-center ${
-                  !selectedRewardId
-                    ? "bg-gray-300 dark:bg-slate-700"
-                    : "bg-primaryBlue"
-                }`}
+                className={`px-5 py-2 rounded-lg flex-row items-center ${!selectedRewardId
+                  ? "bg-gray-300 dark:bg-slate-700"
+                  : "bg-primaryBlue"
+                  }`}
               >
                 {redeemRewardMutation?.isPending && (
                   <Loader2 size={16} color="white" style={{ marginRight: 6 }} />
@@ -758,11 +755,10 @@ const CashierPortal = () => {
                   <Pressable
                     key={reward.id}
                     onPress={() => setSelectedRewardId(reward.id)}
-                    className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${
-                      selected
-                        ? "border-primaryBlue bg-primaryBlue/5"
-                        : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                    }`}
+                    className={`flex-row justify-between items-center p-3 mb-2 rounded-xl border ${selected
+                      ? "border-primaryBlue bg-primaryBlue/5"
+                      : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                      }`}
                   >
                     <View className="flex-1">
                       <Text className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -811,11 +807,10 @@ const CashierPortal = () => {
               <Pressable
                 onPress={handleAssignReward}
                 disabled={!selectedRewardId || assignReward?.isPending}
-                className={`px-5 py-2 rounded-lg flex-row items-center ${
-                  !selectedRewardId
-                    ? "bg-gray-300 dark:bg-slate-700"
-                    : "bg-primaryBlue"
-                }`}
+                className={`px-5 py-2 rounded-lg flex-row items-center ${!selectedRewardId
+                  ? "bg-gray-300 dark:bg-slate-700"
+                  : "bg-primaryBlue"
+                  }`}
               >
                 {assignReward?.isPending && (
                   <Loader2 size={16} color="white" style={{ marginRight: 6 }} />
@@ -882,11 +877,10 @@ const CashierPortal = () => {
               <Pressable
                 onPress={handleRedeemCoupon}
                 disabled={!couponCode}
-                className={`px-5 py-2 rounded-lg ${
-                  !couponCode
-                    ? "bg-gray-300 dark:bg-slate-700"
-                    : "bg-primaryBlue active:opacity-80"
-                }`}
+                className={`px-5 py-2 rounded-lg ${!couponCode
+                  ? "bg-gray-300 dark:bg-slate-700"
+                  : "bg-primaryBlue active:opacity-80"
+                  }`}
               >
                 <Text className="text-white font-semibold">Redeem Coupon</Text>
               </Pressable>
