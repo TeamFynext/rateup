@@ -392,6 +392,7 @@ export enum WaMessageTypes {
   image = "image",
   interactive = "interactive",
   button = "button",
+  order = "order",
 }
 export enum WaTemplateCategory {
   MARKETING = "MARKETING",

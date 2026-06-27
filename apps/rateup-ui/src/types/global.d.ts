@@ -1309,6 +1309,16 @@ export type WaReceiveMessageBody = {
         name: string;
         address: string;
       };
+      order?: {
+        text?: string;
+        catalog_id: string;
+        product_items: {
+          currency: string;
+          quantity: number;
+          item_price: number;
+          product_retailer_id: string;
+        }[];
+      };
     },
   ];
   statuses: [
