@@ -6,7 +6,6 @@ import {
 } from "react-native";
 import { useRef, useState } from "react";
 import { Search, X } from "lucide-react-native";
-import { colors } from "@/constants/constants";
 import { Colors } from "@/constants/colors";
 
 type SearchBarProps = {
@@ -26,8 +25,8 @@ export default function SearchBar({
   const textColor = isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
   const bgColor = isDark ? Colors.dark.surface : Colors.light.inputBg;
   const iconColor = isDark
-    ? Colors.dark.textMuted
-    : Colors.light.textMuted;
+    ? "rgba(255,255,255,0.85)"
+    : "rgba(255,255,255,0.88)";
 
   return (
     <View className="relative">
