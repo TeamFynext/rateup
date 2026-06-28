@@ -6,9 +6,11 @@ import { z } from "zod";
 
 import { useTrackVisitMutation } from "@/backend/referrals/referrals.query";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
+import CaseStudies from "@/components/RateupHomePage/shared/CaseStudies";
 import Features from "@/components/RateupHomePage/shared/Features";
 import HeroSectionNew from "@/components/RateupHomePage/shared/HeroSectionNew";
 import HowItWorks from "@/components/RateupHomePage/shared/HowItWorks";
+import Integrations from "@/components/RateupHomePage/shared/Integrations";
 import LoyaltySection from "@/components/RateupHomePage/shared/LoyaltySection";
 import Problem from "@/components/RateupHomePage/shared/Problem";
 import TrustedBy from "@/components/RateupHomePage/shared/TrustedBy";
@@ -114,11 +116,17 @@ function RouteComponent() {
   return (
     <Layout contentClassName={styles.theme}>
       <HeroSectionNew />
-      <TrustedBy />
-      <Problem />
-      <HowItWorks />
-      <Features />
-      <LoyaltySection />
+
+      {/* Wrap everything else in the light theme container */}
+      <div className={styles.lightSection}>
+        <TrustedBy />
+        <Problem />
+        <HowItWorks />
+        <Features />
+        <CaseStudies />
+        <Integrations />
+        <LoyaltySection />
+      </div>
     </Layout>
   );
 }

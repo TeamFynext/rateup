@@ -9,7 +9,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -109,7 +109,7 @@ function TemplatePicker({ open, onClose, onSelect, platform }: Readonly<Template
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col gap-0 p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col gap-0 p-0 overflow-hidden">
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2 text-xl">
@@ -327,6 +327,7 @@ export function AutomatedReplyForm({
   platform = AutomationPlatform.WHATSAPP,
 }: Readonly<AutoPilotFormProps>) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   // FIX: Added validation rules
   const rootForm = useForm({
@@ -420,9 +421,14 @@ export function AutomatedReplyForm({
 
     if (isInstagram) {
       createInstagramMutation.mutate(data, {
-        onSuccess: () => {
+        onSuccess: (response) => {
           toast.success(t("Instagram automation created!"));
           setSaveSuccess(true);
+          if (response?.data?.id) {
+            navigate({
+              to: `/dashboard/instagram/flowbots/${response.data.id}`,
+            });
+          }
         },
         onSettled: () => {
           rootForm.reset();
@@ -433,8 +439,13 @@ export function AutomatedReplyForm({
     }
 
     createMutation.mutate(data, {
-      onSuccess: () => {
+      onSuccess: (response) => {
         setSaveSuccess(true);
+        if (response?.id) {
+          navigate({
+            to: `/dashboard/whatsapp/flowbots/${response.id}`,
+          });
+        }
       },
       onSettled: () => {
         rootForm.reset();
@@ -463,11 +474,11 @@ export function AutomatedReplyForm({
   const nameErrorMessage =
     typeof rootForm.errors.name === "string" ? rootForm.errors.name : undefined;
 
-  let submitLabel = t("Save Chatbot");
+  let submitLabel = t("Create Chatbot");
   if (isSaving) {
-    submitLabel = t("Saving…");
+    submitLabel = t("Creating…");
   } else if (saveSuccess && editMode) {
-    submitLabel = t("Saved");
+    submitLabel = t("Chatbot created!");
   }
 
   return (
