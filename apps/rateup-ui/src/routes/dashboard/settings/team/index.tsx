@@ -7,7 +7,8 @@ import { toast } from "sonner";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useCreateTeamMutation, useTeamsByUser } from "@/backend/team/team.query";
-import { GenericActionCard, GenericCardGrid } from "@/components/common/generic-card.tsx";
+import { ActionCard } from "@/components/common/action-card.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
 import { colorArray } from "@/components/settings/team.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -257,12 +258,11 @@ function Team() {
         )}
       </div>
       {/* Teams Grid with Skeletons */}
-      <GenericCardGrid
-        className="grid grid-cols-1 lg:grid-cols-3 gap-2.5 w-full "
+      <CardGrid
         items={teamsData?.data ?? []}
         getKey={(team) => team.id}
         renderItem={(team) => (
-          <GenericActionCard
+          <ActionCard
             onClick={() => {
               if (user?.role === UserRole.SUPADM) {
                 navigate({
@@ -292,7 +292,7 @@ function Team() {
               </div>
             }
             footerLeft={
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between w-full">
                 <div className="flex items-center">
                   <div className="flex">
                     {Array.from({
@@ -319,9 +319,9 @@ function Team() {
                     {team._count.members === 1 ? translations("member") : translations("members")}
                   </span>
                 </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
               </div>
             }
-            footerRight={<ChevronRight className="w-4 h-4 text-muted-foreground/40" />}
           />
         )}
       />

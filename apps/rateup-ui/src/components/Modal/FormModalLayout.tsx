@@ -27,6 +27,7 @@ interface FormModalLayoutProps {
   submitButtonLeftIcon?: React.ReactNode;
   zIndex?: number | string;
 }
+/** @deprecated Use `Modal` from "@component/ui/modal" */
 export default function FormModalLayout({
   centered,
   onClose,

@@ -71,7 +71,7 @@ const marketingSearchSchema = z.object({
 export const Route = createFileRoute("/(marketing)/")({
   validateSearch: (search) => marketingSearchSchema.parse(search),
   server: {
-    middleware: [createMarkdownMiddleware(homepageMarkdown)],
+    middleware: createMarkdownMiddleware(homepageMarkdown),
   },
   component: RouteComponent,
   loader: async () => {

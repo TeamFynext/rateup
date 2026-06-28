@@ -23,51 +23,13 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
   const formSchema = z.object({
     name: z
       .string()
+      .min(3, translations("Name must be at least 3 characters long."))
       .regex(
         /^[a-zA-Z][a-zA-Z0-9_\s]{2,}$/,
-        translations(
-          "Name should be alphanumeric, start with a letter, and be at least 3 characters.",
-        ),
+        translations("Name should be alphanumeric, start with a letter"),
       ),
 
-    url: z.string().superRefine((value, ctx) => {
-      // === Your exact logic replicated ===
-
-      // If creating → URL is required
-      if (mode === "create") {
-        if (!value) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: translations("URL is required."),
-          });
-          return;
-        }
-
-        // Validate format
-        try {
-          new URL(value);
-        } catch {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: translations("Please enter a valid url."),
-          });
-        }
-      }
-
-      // If NOT creating → Only validate if provided
-      else {
-        if (value) {
-          try {
-            new URL(value);
-          } catch {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: translations("Please enter a valid url."),
-            });
-          }
-        }
-      }
-    }),
+    url: z.url(translations("Please enter a valid URL.")),
   });
 
   const form = useForm({
@@ -108,75 +70,12 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
     form.reset();
   }, [form]);
 
-  // return (
-  //   <Modal
-  //     opened={opened}
-  //     onClose={onClose}
-  //     title={
-  //       mode === "create"
-  //         ? translations("Create QR")
-  //         : translations("Rename QR")
-  //     }
-  //     centered
-  //     classNames={{
-  //       header: modalStyles["modal-header"],
-  //       body: modalStyles["modal-body"],
-  //       content: modalStyles["modal-content"],
-  //     }}
-  //     onClick={(e) => e.stopPropagation()}
-  //   >
-  //     <Box className={modalStyles["modal-content-container"]}>
-  //       <form
-  //         className={styles["create-qr-form"]}
-  //         onSubmit={
-  //           mode === "create"
-  //             ? form.onSubmit(handleCreateQrFormSubmit)
-  //             : form.onSubmit(handleUpdateQrFormSubmit)
-  //         }
-  //       >
-  //         <TextInput
-  //           className={styles["name-text-input"]}
-  //           label={translations("Name")}
-  //           placeholder={translations("Enter name of QR")}
-  //           onClick={(e) => e.stopPropagation()}
-  //           {...form.getInputProps("name")}
-  //           withAsterisk
-  //         />
-  //         {mode === "create" && (
-  //           <TextInput
-  //             className={styles["url-text-input"]}
-  //             label={translations("URL")}
-  //             placeholder={translations("Enter URL")}
-  //             onClick={(e) => e.stopPropagation()}
-  //             {...form.getInputProps("url")}
-  //             withAsterisk
-  //           />
-  //         )}
-  //         <Button
-  //           style={{ display: "none" }}
-  //           type="submit"
-  //           ref={formSubmitBtnRef}
-  //         />
-  //       </form>
-  //     </Box>
-  //     <Box className={modalStyles["cancel-save-btns-container"]}>
-  //       <Button
-  //         onClick={handleCancelBtnClick}
-  //         className={modalStyles["cancel-btn"]}
-  //       >
-  //         {translations("Cancel")}
-  //       </Button>
-  //       <Button onClick={handleCreateBtnClick}>
-  //         {mode === "create"
-  //           ? translations("Create")
-  //           : translations("Save changes")}
-  //       </Button>
-  //     </Box>
-  //   </Modal>
-  // );
   return (
     <Dialog open={opened} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
+      <DialogContent
+        className="sm:max-w-lg p-0 gap-0 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header with gradient background */}
         <DialogHeader className="relative bg-primary text-white px-6 py-6 space-y-3">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
@@ -228,7 +127,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
 
               {form.formState.errors.name?.message && (
                 <p className="text-xs text-red-600 mt-1">
-                  {form.formState.errors.name.message.toString()}
+                  {form.formState.errors.name.message?.toString()}
                 </p>
               )}
             </div>
@@ -248,7 +147,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
                   className="w-full h-11 shadow-sm"
                 />
 
-                {form.formState.errors.name?.message && (
+                {form.formState.errors.url?.message && (
                   <p className="text-xs text-red-600 mt-1">{form.formState.errors.url.message}</p>
                 )}
               </div>

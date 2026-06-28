@@ -9,7 +9,7 @@ import { createMarkdownMiddleware } from "../../../markdown/serveMarkdown";
 
 export const Route = createFileRoute("/(marketing)/about-us/")({
   server: {
-    middleware: [createMarkdownMiddleware(aboutUsMarkdown)],
+    middleware: createMarkdownMiddleware(aboutUsMarkdown),
   },
   component: AboutUs,
   head: () => buildPageHead("/about-us"),

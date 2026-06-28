@@ -1,102 +1,135 @@
-import { ActionIcon, Group, Menu, Stack, Text, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
+import { Edit, Share2, Trash2 } from "lucide-react";
+import { MoreVertical } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useDeleteTestimonialCollection } from "@/backend/testimonials/testimonial.query";
-import { formatDate } from "@/utils/dateTime.ts";
+import { ActionCard } from "@/components/common/action-card.tsx";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
 
-import ConfirmationModal from "../Modal/ConfirmationModal.tsx";
-import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
+type TestimonialCollectionCardProps = {
+  readonly collection: {
+    readonly id: string;
+    readonly name: string;
+    readonly createdAt: string | Date;
+    readonly _count?: { readonly testimonials: number };
+    readonly teamId?: string;
+  };
+};
 
-const TestimonialCollectionCard = ({ collection }) => {
+function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectionCardProps>) {
   const navigate = useNavigate();
   const deleteCollectionMutation = useDeleteTestimonialCollection();
-  const [dialogOpened, { open: openDialog, close: closeDialog }] = useDisclosure(false);
-  function deleteCollection() {
-    deleteCollectionMutation.mutate(collection?.id);
-  }
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { t: translations } = useTranslation();
-  return (
-    <PaperLayout
-      hoveractive
-      shadow="xl"
-      onClick={() => {
-        navigate({
-          to: `testimonial/${collection.id}`,
-        });
-      }}
-    >
-      <Stack>
-        <ConfirmationModal
-          forDeleteFunctionality
-          confirmLabel={translations("Delete")}
-          headerLabel={translations("Are you sure to delete this collection?")}
-          headerTitle={translations("Delete Testimonial Collection?")}
-          opened={dialogOpened}
-          onClose={closeDialog}
-          onConfirm={deleteCollection}
-        />
-        <Group justify="space-between">
-          <Title order={4}>{collection?.name}</Title>
-          <TestimonialCollectionCardMenu collectionId={collection?.id} openDialog={openDialog} />
-        </Group>
 
-        <Stack gap={0}>
-          <Text fz={15}>{`${collection?._count?.testimonials} Testimonials`}</Text>
-          <Text fz={15}>{formatDate(collection?.createdAt)}</Text>
-        </Stack>
-      </Stack>
-    </PaperLayout>
-  );
-};
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate({
+      to: `testimonial/${collection.id}?tab=Edit`,
+    });
+  };
 
-const TestimonialCollectionCardMenu = ({ collectionId, openDialog }) => {
-  const navigate = useNavigate();
-  const { t: translations } = useTranslation();
-  return (
-    <Menu shadow="md" width={200}>
-      <Menu.Target>
-        <ActionIcon variant="subtle" color="gray" onClick={(e) => e.stopPropagation()}>
-          <IconDots />
-        </ActionIcon>
-      </Menu.Target>
-      <Menu.Dropdown>
-        <Menu.Item
-          leftSection={<IconEdit />}
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate({
-              to: `testimonial/${collectionId}?tab=Edit`,
-            });
-          }}
-        >
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate({
+      to: `testimonial/${collection.id}?tab=Share`,
+    });
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    deleteCollectionMutation.mutate(collection.id);
+    setIsDeleteDialogOpen(false);
+  };
+
+  const handleCardClick = () => {
+    navigate({
+      to: `${collection.id}`,
+    });
+  };
+
+  const actions = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <MoreVertical className="w-4 h-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={handleEdit}>
+          <Edit className="w-4 h-4 mr-2" />
           {translations("Edit")}
-        </Menu.Item>
-        <Menu.Item
-          leftSection={<IconShare />}
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate({
-              to: `testimonial/${collectionId}?tab=Share`,
-            });
-          }}
-        >
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleShare}>
+          <Share2 className="w-4 h-4 mr-2" />
           {translations("Share")}
-        </Menu.Item>
-        <Menu.Item
-          leftSection={<IconTrash />}
-          onClick={(e) => {
-            e.stopPropagation();
-            openDialog();
-          }}
-        >
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+          <Trash2 className="w-4 h-4 mr-2" />
           {translations("Delete")}
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
-};
+
+  const content = (
+    <div className="space-y-1">
+      <div className="text-sm text-muted-foreground">
+        {collection._count?.testimonials ?? 0} {translations("Testimonials")}
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <ActionCard
+        title={collection.name}
+        actions={actions}
+        content={content}
+        createdAt={collection.createdAt}
+        onClick={handleCardClick}
+      />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{translations("Delete Testimonial Collection?")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {translations("Are you sure to delete this collection?")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{translations("Cancel")}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={confirmDelete}>
+              {translations("Delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
 
 export default TestimonialCollectionCard;

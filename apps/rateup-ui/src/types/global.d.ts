@@ -1121,6 +1121,7 @@ type DescriptionBlock = {
 type RatingBlock = {
   bg: string;
   isRemoved: boolean;
+  ratingType?: string;
 };
 
 type DateBlock = {
@@ -1307,6 +1308,16 @@ export type WaReceiveMessageBody = {
         latitude: number;
         name: string;
         address: string;
+      };
+      order?: {
+        text?: string;
+        catalog_id: string;
+        product_items: {
+          currency: string;
+          quantity: number;
+          item_price: number;
+          product_retailer_id: string;
+        }[];
       };
     },
   ];

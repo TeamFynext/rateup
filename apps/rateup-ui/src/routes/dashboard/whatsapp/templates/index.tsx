@@ -1,4 +1,4 @@
-import { IconDots, IconTrash } from "@tabler/icons-react";
+import { IconDots, IconPlus, IconTrash } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,8 +6,18 @@ import { toast } from "sonner";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useDeleteWaTemplateMutation, useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
-import { GenericActionCard, GenericCardGrid } from "@/components/common/generic-card.tsx";
-import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
+import InfoButton from "@/components/Button/InfoButton.tsx";
+import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import { ActionCard } from "@/components/common/action-card.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
+import {
+  ListPage,
+  ListPageContent,
+  ListPageHeader,
+  ListPageHeaderSection,
+  ListPageSearchInput,
+  ListPageSortDropdown,
+} from "@/components/common/list-page-layout.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
@@ -22,10 +32,12 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps.jsx";
+import WelcomeTour from "@/components/WelcomeTour/WelcomeTour.tsx";
 import { TemplateFilterSort } from "@/components/whatsapp/templates/FilterAndSort.tsx";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates.tsx";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge.tsx";
 import { TemplateType, WhatsappSettingsStatus } from "@/types/enums.ts";
+import { docsPath } from "@/utils/constants.ts";
 
 import styles from "@/components/WelcomeTour/components/Tour.module.css";
 
@@ -150,6 +162,13 @@ function Template() {
 
   const tourSteps = WaPageTourSteps({ styles });
 
+  const createButton = (
+    <Button onClick={handleCreateClick} disabled={!data || isPending}>
+      {translations("Create Templates")}
+      <IconPlus size={16} className="ml-2" />
+    </Button>
+  );
+
   const rightControls = (
     <>
       <TemplateFilterSort
@@ -158,6 +177,7 @@ function Template() {
         templateTypeOptions={templateTypeOptions}
       />
       <AccountSelector value={selectedAccountId} onChange={setSelectedAccountId} withAllOption />
+      <ListPageSortDropdown value={sortOption} onChange={setSortOption} />
 
       {data ? (
         <SyncTemplatesButton disabled={isPending} whatsappSettingsPhoneIds={syncAccountIds} />
@@ -177,35 +197,59 @@ function Template() {
   );
 
   return (
-    <ListPageLayout
-      canCreate={Boolean(data)}
-      createLabel={translations("Create Templates")}
-      createDisabledText={translations(
-        "Connect a WhatsApp number in settings to create a Template",
-      )}
-      docsUrl={"whatsapp/templates"}
-      isLoading={isPending}
-      queryKeys={["watemplates"]}
-      search={search}
-      searchPlaceholder="Search templates..."
-      tourSteps={tourSteps}
-      onCreate={handleCreateClick}
-      onSearchChange={setSearch}
-      sortValue={sortOption}
-      onSortChange={setSortOption}
-      isError={isError}
-      onRetry={refetch}
-      isEmpty={!isPending && !isError && filteredTemplates.length === 0}
-      emptyTitle={translations("No templates found")}
-      emptyDescription={translations("Try changing filters or create a new template.")}
-      rightControls={rightControls}
-    >
-      <TemplateCardList
-        handleEditClick={handleEditClick}
-        setSelectedTemplate={setSelectedTemplate}
-        sortedTemplates={filteredTemplates}
-        toggle={() => setDeleteDialogOpened((prev) => !prev)}
-      />
+    <ListPage>
+      <ListPageHeader>
+        <ListPageHeaderSection className="gap-3">
+          {data ? (
+            createButton
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>{createButton}</div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{translations("Connect a WhatsApp number in settings to create a Template")}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          <InfoButton docUrl={`${docsPath}/whatsapp/templates`} />
+          {tourSteps && <WelcomeTour steps={tourSteps} />}
+          <RefreshButton queryKeys={["watemplates"]} />
+        </ListPageHeaderSection>
+
+        <ListPageHeaderSection>
+          <ListPageSearchInput
+            placeholder="Search templates..."
+            value={search}
+            onChange={setSearch}
+          />
+          {rightControls}
+        </ListPageHeaderSection>
+      </ListPageHeader>
+
+      <ListPageContent
+        isLoading={isPending}
+        isError={isError}
+        isEmpty={!isPending && !isError && filteredTemplates.length === 0}
+        emptyTitle={translations("No templates found")}
+        emptyDescription={translations("Try changing filters or create a new template.")}
+        onRetry={refetch}
+      >
+        <CardGrid
+          items={filteredTemplates ?? []}
+          getKey={(template) => template.id}
+          renderItem={(template) => (
+            <TemplateCard
+              template={template}
+              onClick={() => handleEditClick(template)}
+              toggle={() => setDeleteDialogOpened((prev) => !prev)}
+              setSelectedTemplate={setSelectedTemplate}
+            />
+          )}
+        />
+      </ListPageContent>
+
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteDialogOpened}
@@ -222,36 +266,7 @@ function Template() {
           }
         }}
       />
-    </ListPageLayout>
-  );
-}
-
-type TemplateCardListProps = {
-  readonly sortedTemplates: TemplateListEntry[];
-  readonly toggle: () => void;
-  readonly handleEditClick: (template: TemplateListEntry) => void;
-  readonly setSelectedTemplate: (value: string) => void;
-};
-
-function TemplateCardList({
-  sortedTemplates,
-  toggle,
-  handleEditClick,
-  setSelectedTemplate,
-}: Readonly<TemplateCardListProps>) {
-  return (
-    <GenericCardGrid
-      items={sortedTemplates ?? []}
-      getKey={(template) => template.id}
-      renderItem={(template) => (
-        <TemplateCard
-          template={template}
-          onClick={() => handleEditClick(template)}
-          toggle={toggle}
-          setSelectedTemplate={setSelectedTemplate}
-        />
-      )}
-    />
+    </ListPage>
   );
 }
 
@@ -312,6 +327,7 @@ function TemplateCard({
       </DropdownMenuContent>
     </DropdownMenu>
   );
+
   const content = (
     <div className="flex flex-wrap gap-2">
       <Badge variant="default" className="text-xs">
@@ -330,13 +346,12 @@ function TemplateCard({
   );
 
   return (
-    <GenericActionCard
+    <ActionCard
       title={template?.data?.name}
-      titleTooltip={template?.data?.name}
       subtitle={template?.data?.category || "Template"}
       actions={menu}
       content={content}
-      footerLeft={<WaTemplateStatusBadge status={template?.data?.status as never} />}
+      footer={<WaTemplateStatusBadge status={template?.data?.status as never} />}
       createdAt={template.createdAt}
       onClick={onClick}
     />

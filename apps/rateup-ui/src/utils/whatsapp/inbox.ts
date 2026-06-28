@@ -173,6 +173,9 @@ export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMes
         case "location":
           messageContent = { ...receive.messages[0].location };
           break;
+        case "order":
+          messageContent = { ...receive.messages[0].order };
+          break;
       }
     }
     if (messageBody?.exchangeProcess === "internal") {

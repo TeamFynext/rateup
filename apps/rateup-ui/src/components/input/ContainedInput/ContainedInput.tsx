@@ -36,6 +36,7 @@ import { LengthTracker } from "../LengthTracker.tsx";
 
 import classes from "./ContainedInput.module.css";
 
+/** @deprecated Use `TextInput` from "@component/ui/input" */
 export const ContainedTextField = React.forwardRef(function ContainedTextField(
   props: TextInputProps,
   ref?: React.Ref<HTMLInputElement>,
@@ -57,6 +58,7 @@ export const ContainedTextField = React.forwardRef(function ContainedTextField(
     />
   );
 });
+/** @deprecated Use `TextInput` from "@component/ui/input" */
 export const ContainedTextInputWithCounter = (props: TextInputProps) => {
   return (
     <TextInput
@@ -84,6 +86,7 @@ export const ContainedTextInputWithCounter = (props: TextInputProps) => {
   );
 };
 
+/** @deprecated Use `Textarea` from "@component/ui/input" */
 export function ContainedTextArea(props: TextareaProps) {
   return (
     <Textarea
@@ -101,14 +104,17 @@ export function ContainedTextArea(props: TextareaProps) {
   );
 }
 
+/** @deprecated Use `Select` from "@component/ui/input" */
 export function ContainedSelection(props: SelectProps) {
   return <Select comboboxProps={{ withinPortal: true }} classNames={classes} {...props} />;
 }
 
+/** @deprecated Use `PasswordInput` from "@component/ui/input" */
 export function ContainedPasswordInput(props: PasswordInputProps) {
   return <PasswordInput classNames={classes} {...props} />;
 }
 
+/** @deprecated Use `FileInput` from "@component/ui/input" */
 export const ContainedFileInput = React.forwardRef(function ContainedFileInput(
   props: FileInputProps,
   ref: React.Ref<HTMLButtonElement>,
@@ -116,10 +122,12 @@ export const ContainedFileInput = React.forwardRef(function ContainedFileInput(
   return <FileInput ref={ref} classNames={classes} {...props} />;
 });
 
+/** @deprecated Use `NumberInput` from "@component/ui/input" */
 export function ContainedNumberInput(props: NumberInputProps) {
   return <NumberInput classNames={classes} {...props} />;
 }
 
+/** @deprecated Use `ColorInput` from "@component/ui/input" */
 export function ContainedColorInput(props: ColorInputProps) {
   return <ColorInput disallowInput classNames={classes} {...props} />;
 }
@@ -128,6 +136,7 @@ interface fileButtonPropsExtend extends FileButtonProps {
   error?: string;
   helperText?: string;
 }
+/** @deprecated Use `FileButton` from "@component/ui/input" */
 export function ContainedFileButton(props: fileButtonPropsExtend) {
   const { label, error, helperText, ...restProps } = props;
   return (
@@ -163,6 +172,7 @@ const getDayProps = (date) => ({
   },
 });
 
+/** @deprecated Use `DateTimePicker` from "@component/ui/date-picker" */
 export function ContainedDateTimePickerInput(props: DateTimePickerProps) {
   return <DateTimePicker classNames={classes} getDayProps={getDayProps} {...props} />;
 }
@@ -182,6 +192,7 @@ const formatter: DateFormatter = ({ type, date, locale, format }) => {
     ? `${date.length} dates selected`
     : dayjs(date).locale(locale).format(format);
 };
+/** @deprecated Use `DatePicker` from "@component/ui/date-picker" */
 export function ContainedDatePickerInput(props: DatePickerInputProps) {
   return (
     <DatePickerInput
@@ -193,6 +204,7 @@ export function ContainedDatePickerInput(props: DatePickerInputProps) {
   );
 }
 
+/** @deprecated Use `MultiSelect` from "@component/ui/multi-select" */
 export function ContainedMultiSelect(props: MultiSelectProps) {
   const { styles, ...restProps } = props;
   return (
@@ -211,6 +223,7 @@ export function ContainedMultiSelect(props: MultiSelectProps) {
   );
 }
 
+/** @deprecated Use `TagsInput` from "@component/ui/tags-input" */
 export function ContainedTagInput(props: TagsInputProps) {
   return (
     <TagsInput
@@ -225,6 +238,7 @@ export function ContainedTagInput(props: TagsInputProps) {
   );
 }
 
+/** @deprecated Use `JsonInput` from "@component/ui/json-input" */
 export function ContainedJsonInput(props: JsonInputProps) {
   return (
     <JsonInput

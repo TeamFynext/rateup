@@ -1,151 +1,156 @@
-import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
-import { Plus, RefreshCw, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLinktrees } from "@/backend/linktree/linktree.query";
+import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import { CardGrid } from "@/components/common/generic-card.tsx";
+import {
+  ListPage,
+  ListPageContent,
+  ListPageHeader,
+  ListPageHeaderSection,
+  ListPageSearchInput,
+  ListPageSortDropdown,
+} from "@/components/common/list-page-layout.tsx";
+import { sortData } from "@/components/dashboard/SortDropDown.tsx";
+import useDebounce from "@/components/menu/hook/useDebounce.ts";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
 
-import LCard from "../Card/CardALandLP.tsx";
-import SortDropdown, { sortData } from "../dashboard/SortDropDown.tsx";
-import NothingFound from "../NothingFound/NothingFound.tsx";
-import { Button } from "../ui/button.tsx";
-import { Input } from "../ui/input.tsx";
-import { Loader } from "../ui/loader.tsx";
 import CreateLinktreeModal from "./CreateLinktreeModal/index.tsx";
-import MoreOptionsMenu from "./LinktreeCard/MoreOptionsMenu.tsx";
+import LinktreeCard from "./LinktreeCard/index.tsx";
+
+type LinktreeListEntry = {
+  readonly id: string;
+  readonly name: string;
+  readonly shortUrlId: string;
+  readonly createdAt: string | Date;
+  readonly visitorsCount: number;
+  readonly isPublished: boolean;
+};
 
 function LinktreeDashboard() {
+  const [isCreateLinktreeModalOpen, setIsCreateLinktreeModalOpen] = useState(false);
+  const [sortOption, setSortOption] = useState("latest");
+  const [search, setSearch] = useState("");
+
   const searchParams = useSearch({ strict: false });
   const action = searchParams.action;
-
-  const [isCreateLinktreeModalOpen, createLinktreeModalHandlers] = useDisclosure(
-    action === "create",
-  );
-  const queryClient = useQueryClient();
-  const { data, isPending, isError } = useLinktrees();
-  const [linktrees, setLinktrees] = useState([]);
-  const [sortOption, setSortOption] = useState("latest");
+  const debouncedSearch = useDebounce(search.trim(), 200);
   const { t: translations } = useTranslation();
-  const [searchTerm, setSearchTerm] = useState("");
+
+  const queryClient = useQueryClient();
+  const { data: linktrees = [], isPending, isError } = useLinktrees();
   const shareUrl = `${import.meta.env.VITE_FRONTEND_URL}/lt`;
-  const baseURL = "/dashboard/quickAccessLinks";
 
-  useEffect(() => {
-    if (data) {
-      setLinktrees(data);
-    }
-  }, [data]);
+  const linktreeInfos = useMemo(() => {
+    return linktrees.map((lt) => ({
+      id: lt.id,
+      name: lt.name,
+      shortUrlId: lt.shortUrlId,
+      createdAt: lt.createdAt,
+      visitorsCount: lt.visitorsCount,
+      isPublished: lt.isPublished,
+    })) as LinktreeListEntry[];
+  }, [linktrees]);
 
-  const handleSortChange = (value) => {
-    setSortOption(value);
+  const filteredLinktrees = useMemo(() => {
+    const searchValue = debouncedSearch.toLowerCase();
+
+    const filtered = linktreeInfos.filter((lt) => {
+      return !searchValue || lt.name.toLowerCase().includes(searchValue);
+    });
+
+    return sortData(filtered, sortOption) as LinktreeListEntry[];
+  }, [linktreeInfos, debouncedSearch, sortOption]);
+
+  const handleCreateLinktree = () => {
+    setIsCreateLinktreeModalOpen(true);
   };
-
-  const searchedLinktrees = linktrees.filter((e) =>
-    e.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
-  const sortedLinktrees = sortData(
-    searchedLinktrees.map((s) => ({ ...s, data: { name: s.name } })),
-    sortOption,
-  );
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["linktrees"] });
   };
 
-  let componentToBeRendered = null;
-
-  if (isPending) {
-    componentToBeRendered = (
-      <div className="flex w-full h-screen items-center justify-center">
-        <Loader />
-      </div>
-    );
-  } else if (isError) {
-    componentToBeRendered = (
-      <div className="flex w-full h-screen items-center justify-center">
-        <p>{translations("Unable to get data, please try again later.")}</p>
-      </div>
-    );
-  } else if (!isPending && !isError && !linktrees.length) {
-    componentToBeRendered = (
-      <div className="flex w-full h-screen items-center justify-center">
-        <NothingFound text={translations("No Landing Pages Found.")} />;
-      </div>
-    );
-  } else {
-    componentToBeRendered = (
-      <LCard
-        sortedValue={sortedLinktrees}
-        shareURL={shareUrl}
-        baseURL={baseURL}
-        MoreOptions={MoreOptionsMenu}
-      />
-    );
-  }
-
   return (
-    <div className="w-full flex flex-col gap-4">
-      <div className="border-b px-6 py-4 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold">{translations("Access Links")}</h1>
-            <p className="text-sm text-gray-600">
-              {translations(
-                "Create and manage quick access links for surveys, landing pages, and QR codes",
-              )}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleRefresh}
-              className="h-9 w-9"
-              title="Refresh"
-            >
-              <RefreshCw className="w-4 h-4" />
+    <>
+      <ListPage>
+        <ListPageHeader>
+          <ListPageHeaderSection className="gap-3">
+            <Button onClick={handleCreateLinktree}>
+              <Plus className="w-4 h-4 mr-2" />
+              {translations("Create Access Link")}
             </Button>
-          </div>
-        </div>
+            <RefreshButton queryKeys={["linktrees"]} />
+          </ListPageHeaderSection>
 
-        {/* Search and Filter Bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
-          <Button className="flex-none bg-primary" onClick={createLinktreeModalHandlers.open}>
-            <Plus className="w-4 h-4 mr-2" />
-            {translations("Create Access Link")}
-          </Button>
-
-          <div className="flex-1 min-w-0 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              type="text"
-              placeholder={translations("Search access links")}
-              className="w-full pl-10 h-10 border rounded-md min-w-0"
+          <ListPageHeaderSection>
+            <ListPageSearchInput
+              placeholder={translations("Search access links...")}
+              value={search}
+              onChange={setSearch}
             />
-          </div>
+            <ListPageSortDropdown value={sortOption} onChange={setSortOption} />
+          </ListPageHeaderSection>
+        </ListPageHeader>
 
-          <div className="flex-none">
-            <SortDropdown onSortChange={handleSortChange} defaultSortOption={sortOption} />
-          </div>
-        </div>
-      </div>
-      <div>{componentToBeRendered}</div>
-      {isCreateLinktreeModalOpen && (
-        <CreateLinktreeModal
-          opened={isCreateLinktreeModalOpen}
-          onClose={createLinktreeModalHandlers.close}
-          mode="create"
-          shortUrlId={""}
-          initialName={""}
-        />
-      )}
-    </div>
+        <ListPageContent
+          isLoading={isPending}
+          isError={Boolean(isError)}
+          isEmpty={!isPending && !isError && filteredLinktrees.length === 0}
+          emptyTitle={translations("No access links found")}
+          emptyDescription={translations("Create a new access link to get started.")}
+          onRetry={handleRefresh}
+        >
+          <CardGrid
+            items={filteredLinktrees}
+            getKey={(lt) => lt.id}
+            renderItem={(lt) => (
+              <LinktreeCard
+                id={lt.id}
+                name={lt.name}
+                shortUrlId={lt.shortUrlId}
+                createdAt={lt.createdAt}
+                visitorsCount={lt.visitorsCount}
+                isPublished={lt.isPublished}
+                shareUrl={shareUrl}
+              />
+            )}
+          />
+        </ListPageContent>
+      </ListPage>
+
+      <Dialog
+        open={isCreateLinktreeModalOpen || action === "create"}
+        onOpenChange={(open) => {
+          setIsCreateLinktreeModalOpen(open);
+        }}
+      >
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader className="hidden">
+            <DialogTitle>{translations("Create Access Link")}</DialogTitle>
+            <DialogDescription>{translations("Create a new access link")}</DialogDescription>
+          </DialogHeader>
+
+          <CreateLinktreeModal
+            opened={isCreateLinktreeModalOpen || action === "create"}
+            onClose={() => setIsCreateLinktreeModalOpen(false)}
+            mode="create"
+            shortUrlId={""}
+            initialName={""}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

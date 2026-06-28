@@ -29,6 +29,7 @@ import WaInboxDocument from "./document/index.tsx";
 import WaInboxImage from "./image/index.tsx";
 import WaInboxInteractive from "./interactive/index.tsx";
 import WaInboxLocation from "./location/index.tsx";
+import WaInboxOrder from "./order/index.tsx";
 import WaInboxTemplate from "./template/index.tsx";
 import WaInboxText from "./text/index.tsx";
 import WaInboxVideo from "./video/index.tsx";
@@ -58,7 +59,7 @@ const IgCommentBubble = ({
 
 export const SingleMessage = ({ message }) => {
   const { t: translations } = useTranslation();
-  const { messageContent, messageType, template, interactive } = parseWaMessage(message);
+  const { messageContent, messageType, template, interactive, timeStamp } = parseWaMessage(message);
   switch (messageType) {
     case "text":
     case "quickreply":
@@ -88,6 +89,8 @@ export const SingleMessage = ({ message }) => {
       return <WaInboxLocation messageContent={messageContent} />;
     case "attachments":
       return <WaInboxAttachments messageContent={messageContent} />;
+    case "order":
+      return <WaInboxOrder messageContent={messageContent} timestamp={timeStamp} />;
     default:
       return (
         <Text fz={"xs"} c={"red"}>
