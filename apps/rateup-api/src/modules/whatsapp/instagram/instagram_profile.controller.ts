@@ -13,9 +13,9 @@ import {
   setInstagramPersistentMenu,
 } from "./instagram_messaging.service.js";
 
-type InstagramProfileParams = {
+interface InstagramProfileParams {
   whatsappSettingsId: string;
-};
+}
 
 function normalizeIceBreakers(data: any) {
   if (Array.isArray(data)) return data;

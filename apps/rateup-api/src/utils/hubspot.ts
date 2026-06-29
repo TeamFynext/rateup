@@ -10,13 +10,13 @@ export const hubApiClient = axios.create({
   },
 });
 
-type hubSpotContact = {
+interface hubSpotContact {
   email: string;
   firstname: string;
   phone?: string;
   company: string;
   joined_date: Date;
-};
+}
 
 export async function createHubSpotContact(_data: hubSpotContact, _hubSpotCompanyId: string) {
   try {
@@ -26,11 +26,11 @@ export async function createHubSpotContact(_data: hubSpotContact, _hubSpotCompan
   }
 }
 
-type hubSpotCompany = {
+interface hubSpotCompany {
   name: string;
   joined_date: Date;
   owner_email: string;
-};
+}
 
 export async function createHubSpotCompany(data: hubSpotCompany) {
   try {

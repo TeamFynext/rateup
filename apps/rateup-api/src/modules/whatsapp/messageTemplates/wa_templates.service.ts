@@ -103,7 +103,7 @@ export async function getTemplatesByOrgIdAndTemplateType(
   return templates as WaTemplateWithTypes[];
 }
 
-export type templateData = {
+export interface templateData {
   id: string;
   createdAt: Date;
   data: {
@@ -132,7 +132,7 @@ export type templateData = {
     tax: number;
   } | null;
   whatsappSettingsPhoneId: string | null;
-};
+}
 export async function getTemplateByIdAndOrgId(id: string, orgId: string) {
   const template = await prisma.waTemplate.findFirst({
     where: {

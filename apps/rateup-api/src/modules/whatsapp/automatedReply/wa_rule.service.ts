@@ -4,11 +4,11 @@ import { CreateRuleInput, UpdateRuleInput } from "./wa_rule.schema.js";
 
 const MESSAGE_BODY_FIELD = "MESSAGE_BODY";
 
-type MessageBodyCandidate = {
+interface MessageBodyCandidate {
   value: string;
   businessHourId: string | null;
   platform: string;
-};
+}
 
 function extractMessageBodyCandidates(
   groups?: CreateRuleInput["groups"],

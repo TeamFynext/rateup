@@ -1,6 +1,5 @@
 function getSampleSubscriptionFeatures(count: number): SubscriptionFeatures {
   return {
-    menu: { count: { max: count, monthlyViewLimit: 1000 }, active: true },
     team: {
       count: { max: count },
       teamMember: { count: { max: count }, active: true },

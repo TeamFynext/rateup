@@ -15,17 +15,6 @@ const getShareSettings = async (resourceName, id, req) => {
       });
       break;
     }
-    case "menu": {
-      shareSettings = await prisma.menu.findFirst({
-        where: {
-          id,
-        },
-        select: {
-          shareSettings: true,
-        },
-      });
-      break;
-    }
     case "generateQr": {
       shareSettings = await prisma.generateQr.findFirst({
         where: {
@@ -55,19 +44,6 @@ const saveShareSettings = async (resourceName, id, settingsObj, req) => {
         },
       });
       break;
-    }
-    case "menu": {
-      updatedSettings = await prisma.menu.update({
-        where: {
-          id,
-        },
-        data: {
-          shareSettings: settingsObj,
-        },
-        select: {
-          shareSettings: true,
-        },
-      });
     }
     case "generateQr": {
       updatedSettings = await prisma.generateQr.update({

@@ -9,7 +9,7 @@ import {
 } from "./enums.js";
 
 // TODO: find if there is an official type for this
-export type WaMessageBody = {
+export interface WaMessageBody {
   object: string;
   entry: [
     {
@@ -22,7 +22,7 @@ export type WaMessageBody = {
       ];
     },
   ];
-};
+}
 export interface WaReceiveMessageBody {
   messaging_product: "whatsapp";
   metadata: {
@@ -328,14 +328,14 @@ export interface WaSendMessageBody {
     address?: string;
   };
 }
-type WaButton = {
+interface WaButton {
   type: "reply";
   reply: {
     title: string; // max 20 chars
     id: string;
   };
-};
-type WaSection = {
+}
+interface WaSection {
   title?: string; // max 24 chars
   rows?: Array<{
     title: string; // max 24 chars
@@ -345,8 +345,8 @@ type WaSection = {
   product_items?: Array<{
     product_retailer_id: string;
   }>;
-};
-type WaInteractiveMessageAction = {
+}
+interface WaInteractiveMessageAction {
   name?: string;
   button?: string; // max 20 chars
   sections?: Array<WaSection>;
@@ -365,7 +365,7 @@ type WaInteractiveMessageAction = {
     mode?: WaFlowStatus.DRAFT | WaFlowStatus.PUBLISHED;
     thumbnail_product_retailer_id?: string;
   };
-};
+}
 
 export enum WaMessageTypes {
   text = "text",
@@ -394,22 +394,22 @@ export enum WaTemplateSupportedParameters {
 }
 
 // component type used while sending a template
-export type WaTemplateSendComponent = {
+export interface WaTemplateSendComponent {
   type: WaTemplateComponentType;
   sub_type?: "quick_reply" | "list_reply" | "button_reply" | "nfm_reply";
   index?: number;
   parameters: WaTemplateParameter[];
-};
+}
 // component type used when creating a template
-export type WaTemplateComponent = {
+export interface WaTemplateComponent {
   type: WaTemplateComponentTypeUpperCase;
   format?: WaTemplateSupportedFormats;
   text?: string;
   example?: any;
   buttons?: WaTemplateButton[];
-};
+}
 
-export type WaTemplateButton = {
+export interface WaTemplateButton {
   type: WHATSAPP_BUTTON_TYPE;
   text: string;
   phone_number?: string;
@@ -418,7 +418,7 @@ export type WaTemplateButton = {
   flow_action?: "navigate" | "data_exchange";
   navigate_screen?: string;
   example?: any;
-};
+}
 
 export enum WHATSAPP_BUTTON_TYPE {
   QUICK_REPLY = "QUICK_REPLY",
@@ -432,7 +432,7 @@ export enum WHATSAPP_BUTTON_TYPE {
   ORDER_DETAILS = "ORDER_DETAILS",
 }
 
-type WaTemplateParameter = {
+interface WaTemplateParameter {
   type: WaTemplateSupportedParameters;
   text?: string;
   currency?: Currency;
@@ -441,34 +441,34 @@ type WaTemplateParameter = {
   location?: Location;
   image?: Image;
   document?: Document;
-};
+}
 
-type Currency = {
+interface Currency {
   fallback_value: string;
   code: string;
   amount_1000: number;
-};
+}
 
-type DateTime = {
+interface DateTime {
   fallback_value: string;
-};
+}
 
-type Location = {
+interface Location {
   latitude: string;
   longitude: string;
   name: string;
   address: string;
-};
-type Image = {
+}
+interface Image {
   link: string;
-};
+}
 
-type Document = {
+interface Document {
   link: string;
-};
+}
 
 //types for adding waTemplates to waCloud starts here
-export type WaTemplateFetchComponents = {
+export interface WaTemplateFetchComponents {
   type: WaTemplateComponentTypeUpperCase;
   format?: "IMAGE" | "TEXT" | "LOCATION" | "DOCUMENT" | "VIDEO";
   text?: string;
@@ -479,12 +479,12 @@ export type WaTemplateFetchComponents = {
     type: WaButtonType.QUICK_REPLY;
     text: string;
   }[];
-};
-export type WaTemplateFetchBody = {
+}
+export interface WaTemplateFetchBody {
   id: string;
   name: string;
   language: string;
   status: WaTemplateStatus;
   category: WaTemplateCategory;
   components: WaTemplateFetchComponents[];
-};
+}

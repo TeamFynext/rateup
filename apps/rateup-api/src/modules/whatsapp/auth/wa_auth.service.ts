@@ -29,7 +29,7 @@ export async function debug_token(tokenToDebug: string, accessToken: string) {
   return res.data as DebugTokenResponse;
 }
 
-type DebugTokenResponse = {
+interface DebugTokenResponse {
   data: {
     app_id: string;
     type: string;
@@ -45,7 +45,7 @@ type DebugTokenResponse = {
       target_ids?: string[];
     }[];
   };
-};
+}
 
 export async function getSharedWABAs(businessId: string, accessToken: string) {
   let url = `/${businessId}/client_whatsapp_business_accounts`;
@@ -66,14 +66,14 @@ export async function getPhoneNumbersFromWABA(
   return res.data;
 }
 
-type WABAPhoneNumbersResponse = {
+interface WABAPhoneNumbersResponse {
   data: {
     display_phone_number: string;
     verified_name: string;
     id: string;
     status: string;
   }[];
-};
+}
 
 export async function subscribeWABAToWebhook(wabaId: string, accessToken: string) {
   let url = `/${wabaId}/subscribed_apps`;
@@ -95,7 +95,7 @@ export async function registerPhoneNumber(wa_phone_id: string, accessToken: stri
   return res.data;
 }
 
-type WaPhoneDetailsRes = {
+interface WaPhoneDetailsRes {
   verified_name: string;
   code_verification_status: string;
   display_phone_number: string;
@@ -105,7 +105,7 @@ type WaPhoneDetailsRes = {
     level: string;
   };
   id: string;
-};
+}
 export async function getPhoneDetails(phoneId: string, accessToken: string) {
   const url = `/${phoneId}`;
   const res = await callMetaApi(url, "GET", accessToken);
