@@ -485,84 +485,6 @@ declare global {
     action: LogicAction;
   }
 
-  interface Menu {
-    id: string;
-    createdAt: string;
-    name: string;
-    displayName: string;
-    locationUrl?: string;
-    locationText?: string;
-    teamId: string;
-    logo?: string;
-    backgroundImage?: string;
-    isPublished?: boolean;
-    team?: {
-      code?: string;
-    };
-    expiry?: string;
-    menu?: {
-      id?: string;
-    };
-    currency?: string;
-  }
-
-  interface MenuCategory {
-    id: string;
-    createdAt: string;
-    name: string;
-    menuId: string;
-    itemOrder?: number;
-    scheduleEnabled?: boolean;
-    startTime?: string;
-    endTime?: string;
-  }
-
-  interface MenuItem {
-    id: string;
-    createdAt: string;
-    name: string;
-    description: string;
-    images: Array<string | File>;
-    videoUrl: string | null;
-    price: {
-      type: MenuItemPriceType;
-      price?: number | string;
-      variants?: Array<{
-        price: number | string;
-        name: string;
-      }>;
-    };
-    categoryId: string;
-    itemOrder?: number;
-    disabled?: boolean;
-    foodLabels?: Array<string>;
-    unsplashImage?: Array<string>;
-  }
-
-  interface MenuBanner {
-    id: string;
-    createdAt: string;
-    name: string;
-    description: string;
-    image?: string;
-    videoUrl: string | null;
-    price: {
-      type: MenuItemPriceType;
-      price?: string;
-      variants?: Array<{
-        price: string;
-        name: string;
-      }>;
-    };
-    menuId: string;
-  }
-  interface FullCategory extends MenuCategory {
-    items: MenuItem[];
-  }
-  interface FullMenu extends Menu {
-    categories: FullCategory[];
-  }
-
   interface WaCustomer {
     id: string;
     createdAt: Date;
@@ -705,12 +627,6 @@ declare global {
   type subscriptionWithActiveAndCount = subscriptionCountRestriction & subscriptionActiveField;
   interface SubscriptionFeatures {
     // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
-    [sfpn.Menu]: subscriptionCountRestriction &
-      subscriptionActiveField & {
-        count: {
-          monthlyViewLimit: number;
-        };
-      };
     [sfpn.Team]: {
       teamMember: subscriptionCountRestriction & subscriptionActiveField;
     } & subscriptionActiveField &

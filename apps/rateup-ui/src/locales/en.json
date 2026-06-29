@@ -678,7 +678,6 @@
     "Detailed performance breakdown for each team member": "Detailed performance breakdown for each team member",
     "Details": "Details",
     "Device Preview": "Device Preview",
-    "Digitl Menu": "Digitl Menu",
     "Disable All": "Disable All",
     "Disabled": "Disabled",
     "Discard": "Discard",
@@ -2472,6 +2471,9 @@
       }
     }
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
+  },
   "campaign.resend": {
     "Cancel": "Cancel",
     "Choose when to send and which participants to resend to": "Choose when to send and which participants to resend to",
@@ -2590,9 +2592,6 @@
     "Selected": "Selected",
     "You have not selected any participant": "You have not selected any participant"
   },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
-  },
   "apianalytics": {
     "All": "All",
     "Avg Delivery Time": "Avg Delivery Time",
@@ -2694,46 +2693,6 @@
     "Tier-Based Earning Rates": "Tier-Based Earning Rates",
     "tiers": "tiers"
   },
-  "campaign.details": {
-    "Add Participant": "Add Participant",
-    "Are you sure you want to delete {count} selected participants? This action cannot be undone._one": "Are you sure you want to delete {count} selected participants? This action cannot be undone.",
-    "Are you sure you want to delete {count} selected participants? This action cannot be undone._other": "Are you sure you want to delete {count} selected participants? This action cannot be undone.",
-    "Are you sure you want to delete this campaign? This action cannot be undone.": "Are you sure you want to delete this campaign? This action cannot be undone.",
-    "Back to Campaigns": "Back to Campaigns",
-    "Campaign data refreshed": "Campaign data refreshed",
-    "Campaign ID: #{id}": "Campaign ID: #{id}",
-    "Cancel": "Cancel",
-    "Consent": "Consent",
-    "Delete": "Delete",
-    "Delete Campaign": "Delete Campaign",
-    "Delete Contacts ({count})_one": "Delete Contacts ({count})",
-    "Delete Contacts ({count})_other": "Delete Contacts ({count})",
-    "Delete Participants": "Delete Participants",
-    "Delivery Report": "Delivery Report",
-    "Drip campaign paused": "Drip campaign paused",
-    "Drip campaign started": "Drip campaign started",
-    "Edit": "Edit",
-    "Failed to refresh campaign data": "Failed to refresh campaign data",
-    "Failed to update drip campaign status": "Failed to update drip campaign status",
-    "Generating...": "Generating...",
-    "messages": {
-      "campaignStopError": "messages.campaignStopError",
-      "campaignStopped": "messages.campaignStopped"
-    },
-    "Name": "Name",
-    "Overview": "Overview",
-    "Participants": "Participants",
-    "Pause Drip": "Pause Drip",
-    "Phone": "Phone",
-    "Resend": "Resend",
-    "Reset": "Reset",
-    "Search by name or phone...": "Search by name or phone...",
-    "Send": "Send",
-    "Start Drip": "Start Drip",
-    "Status": "Status",
-    "Total Participants": "Total Participants",
-    "We couldn't load this campaign.": "We couldn't load this campaign."
-  },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "Add Lifecycle Stage",
     "Add Lost Stage": "Add Lost Stage",
@@ -2814,6 +2773,46 @@
     "Visualize how contacts progress through your customer journey": "Visualize how contacts progress through your customer journey",
     "Won stage": "Won stage",
     "You have disabled lifecycle stages visibility view. Go into Setup to show it again.": "You have disabled lifecycle stages visibility view. Go into Setup to show it again."
+  },
+  "campaign.details": {
+    "Add Participant": "Add Participant",
+    "Are you sure you want to delete {count} selected participants? This action cannot be undone._one": "Are you sure you want to delete {count} selected participants? This action cannot be undone.",
+    "Are you sure you want to delete {count} selected participants? This action cannot be undone._other": "Are you sure you want to delete {count} selected participants? This action cannot be undone.",
+    "Are you sure you want to delete this campaign? This action cannot be undone.": "Are you sure you want to delete this campaign? This action cannot be undone.",
+    "Back to Campaigns": "Back to Campaigns",
+    "Campaign data refreshed": "Campaign data refreshed",
+    "Campaign ID: #{id}": "Campaign ID: #{id}",
+    "Cancel": "Cancel",
+    "Consent": "Consent",
+    "Delete": "Delete",
+    "Delete Campaign": "Delete Campaign",
+    "Delete Contacts ({count})_one": "Delete Contacts ({count})",
+    "Delete Contacts ({count})_other": "Delete Contacts ({count})",
+    "Delete Participants": "Delete Participants",
+    "Delivery Report": "Delivery Report",
+    "Drip campaign paused": "Drip campaign paused",
+    "Drip campaign started": "Drip campaign started",
+    "Edit": "Edit",
+    "Failed to refresh campaign data": "Failed to refresh campaign data",
+    "Failed to update drip campaign status": "Failed to update drip campaign status",
+    "Generating...": "Generating...",
+    "messages": {
+      "campaignStopError": "messages.campaignStopError",
+      "campaignStopped": "messages.campaignStopped"
+    },
+    "Name": "Name",
+    "Overview": "Overview",
+    "Participants": "Participants",
+    "Pause Drip": "Pause Drip",
+    "Phone": "Phone",
+    "Resend": "Resend",
+    "Reset": "Reset",
+    "Search by name or phone...": "Search by name or phone...",
+    "Send": "Send",
+    "Start Drip": "Start Drip",
+    "Status": "Status",
+    "Total Participants": "Total Participants",
+    "We couldn't load this campaign.": "We couldn't load this campaign."
   },
   "Note": {
     " *": "Note: *",

@@ -18,7 +18,6 @@ import {
   Star,
   Trash,
   Users,
-  Utensils,
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -369,12 +368,6 @@ function OrgById() {
             icon={Users}
             color="green"
           />
-        </StatSection>
-
-        {/* Digital Menu Stats */}
-        <StatSection title={translations("Digitl Menu")} icon={Utensils}>
-          <StatCard title="Menus" count={stats.menu.total} icon={Utensils} color="amber" />
-          <StatCard title="Banners" count={stats.menu.banners} icon={Settings} color="rose" />
         </StatSection>
       </div>
       <div className="space-y-4">

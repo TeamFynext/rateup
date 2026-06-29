@@ -31,7 +31,6 @@ const PROTECTED_ROUTE_FEATURE_MAP: Array<[string, TeamFeature]> = [
   ["/dashboard/whatsapp/templates", TeamFeature.Templates],
   ["/dashboard/qr-studio", TeamFeature.QrStudio],
   ["/dashboard/apps&services", TeamFeature.AppsServices],
-  ["/dashboard/menu", TeamFeature.DigitalMenu],
   ["/dashboard/settings/channels", TeamFeature.Automation],
   ["/dashboard/settings/integrations", TeamFeature.AppsServices],
 ];

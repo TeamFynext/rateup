@@ -9,7 +9,6 @@ import { useCheckSession } from "@/hooks/checkSession.tsx";
 import { MotionTransition } from "../../../animation/MotionTransition.tsx";
 import RateupLoader from "../../../Loaders/RateupLoader.tsx";
 import { CustomSection } from "./Section/CustomSection.tsx";
-import { MenuSection } from "./Section/MenuSection.tsx";
 import { SurveySection } from "./Section/SurveySection.tsx";
 import { WhatsAppSection } from "./Section/WhatsAppSection.tsx";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
@@ -60,13 +59,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
   };
   if (isPending) return <RateupLoader />;
 
-  const freePlan = session
-    ? []
-    : data?.filter(
-        (plan) =>
-          plan?.displayName?.includes("FREE") &&
-          (source === "Digital Menu") === plan?.name?.includes("MENU"),
-      );
+  const freePlan = session ? [] : data?.filter((plan) => plan?.displayName?.includes("FREE"));
 
   const plans = data?.filter((item) => {
     if (item?.paymentPlan) {
@@ -165,14 +158,6 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
       <MotionTransition keyValue={{ id: value }} type="bottomSlideIn">
         {value === "WebSurveys" && (
           <SurveySection
-            largeScreen={largeScreen}
-            handlePlanSelection={handlePlanSelection}
-            freePlan={freePlan}
-            currencySymbol={currencySymbol}
-          />
-        )}
-        {value === "Digital Menu" && (
-          <MenuSection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
             freePlan={freePlan}

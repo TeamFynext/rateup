@@ -678,7 +678,6 @@
     "Detailed performance breakdown for each team member": "Detaillierte Leistungsaufschlüsselung für jedes Teammitglied",
     "Details": "Details",
     "Device Preview": "Gerätevorschau",
-    "Digitl Menu": "Digitales Menü",
     "Disable All": "Alle deaktivieren",
     "Disabled": "Deaktiviert",
     "Discard": "Verwerfen",
@@ -2472,6 +2471,9 @@
       }
     }
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Wählen Sie nur Stufen aus, die zur ausgewählten Pipeline- und Sub-Pipeline-Konfiguration gehören."
+  },
   "campaign.resend": {
     "Cancel": "Abbrechen",
     "Choose when to send and which participants to resend to": "Wählen Sie aus, wann gesendet werden soll und an welche Teilnehmer erneut gesendet werden soll",
@@ -2590,9 +2592,6 @@
     "Selected": "Ausgewählt",
     "You have not selected any participant": "Sie haben keinen Teilnehmer ausgewählt"
   },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Wählen Sie nur Stufen aus, die zur ausgewählten Pipeline- und Sub-Pipeline-Konfiguration gehören."
-  },
   "apianalytics": {
     "All": "Alle",
     "Avg Delivery Time": "Durchschnittliche Lieferzeit",
@@ -2694,47 +2693,6 @@
     "Tier-Based Earning Rates": "Stufenbasierte Verdienstraten",
     "tiers": "Ebenen"
   },
-  "campaign.details": {
-    "Add Participant": "Teilnehmer hinzufügen",
-    "Are you sure you want to delete {count} selected participants? This action cannot be undone": {},
-    "Are you sure you want to delete {count} selected participants? This action cannot be undone._one": "Sind Sie sicher, dass Sie {count} ausgewählte Teilnehmer löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden._one",
-    "Are you sure you want to delete {count} selected participants? This action cannot be undone._other": "Sind Sie sicher, dass Sie {count} ausgewählte Teilnehmer löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden._andere",
-    "Are you sure you want to delete this campaign? This action cannot be undone.": "Möchten Sie diese Kampagne wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
-    "Back to Campaigns": "Zurück zu Kampagnen",
-    "Campaign data refreshed": "Kampagnendaten aktualisiert",
-    "Campaign ID: #{id}": "Kampagnen-ID: #{id}",
-    "Cancel": "Abbrechen",
-    "Consent": "Zustimmung",
-    "Delete": "Löschen",
-    "Delete Campaign": "Kampagne löschen",
-    "Delete Contacts ({count})_one": "Kontakte löschen ({count})_one",
-    "Delete Contacts ({count})_other": "Kontakte löschen ({count})_other",
-    "Delete Participants": "Teilnehmer löschen",
-    "Delivery Report": "Lieferbericht",
-    "Drip campaign paused": "Drip-Kampagne pausiert",
-    "Drip campaign started": "Drip-Kampagne gestartet",
-    "Edit": "Bearbeiten",
-    "Failed to refresh campaign data": "Kampagnendaten konnten nicht aktualisiert werden",
-    "Failed to update drip campaign status": "Der Status der Drip-Kampagne konnte nicht aktualisiert werden",
-    "Generating...": "Generieren...",
-    "messages": {
-      "campaignStopError": "CampaignStopError",
-      "campaignStopped": "Kampagne gestoppt"
-    },
-    "Name": "Name",
-    "Overview": "Übersicht",
-    "Participants": "Teilnehmer",
-    "Pause Drip": "Tropfen anhalten",
-    "Phone": "Telefon",
-    "Resend": "Erneut senden",
-    "Reset": "Zurücksetzen",
-    "Search by name or phone...": "Suche nach Name oder Telefon...",
-    "Send": "Senden",
-    "Start Drip": "Starten Sie Drip",
-    "Status": "Status",
-    "Total Participants": "Gesamtzahl der Teilnehmer",
-    "We couldn't load this campaign.": "Wir konnten diese Kampagne nicht laden."
-  },
   "contacts.lifecycle": {
     "Add Lifecycle Stage": "Lebenszyklusphase hinzufügen",
     "Add Lost Stage": "Verlorene Bühne hinzufügen",
@@ -2815,6 +2773,47 @@
     "Visualize how contacts progress through your customer journey": "Visualisieren Sie, wie Kontakte Ihre Customer Journey durchlaufen",
     "Won stage": "Etappe gewonnen",
     "You have disabled lifecycle stages visibility view. Go into Setup to show it again.": "Sie haben die Sichtbarkeitsansicht der Lebenszyklusphasen deaktiviert. Gehen Sie ins Setup, um es erneut anzuzeigen."
+  },
+  "campaign.details": {
+    "Add Participant": "Teilnehmer hinzufügen",
+    "Are you sure you want to delete {count} selected participants? This action cannot be undone": {},
+    "Are you sure you want to delete {count} selected participants? This action cannot be undone._one": "Sind Sie sicher, dass Sie {count} ausgewählte Teilnehmer löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden._one",
+    "Are you sure you want to delete {count} selected participants? This action cannot be undone._other": "Sind Sie sicher, dass Sie {count} ausgewählte Teilnehmer löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden._andere",
+    "Are you sure you want to delete this campaign? This action cannot be undone.": "Möchten Sie diese Kampagne wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "Back to Campaigns": "Zurück zu Kampagnen",
+    "Campaign data refreshed": "Kampagnendaten aktualisiert",
+    "Campaign ID: #{id}": "Kampagnen-ID: #{id}",
+    "Cancel": "Abbrechen",
+    "Consent": "Zustimmung",
+    "Delete": "Löschen",
+    "Delete Campaign": "Kampagne löschen",
+    "Delete Contacts ({count})_one": "Kontakte löschen ({count})_one",
+    "Delete Contacts ({count})_other": "Kontakte löschen ({count})_other",
+    "Delete Participants": "Teilnehmer löschen",
+    "Delivery Report": "Lieferbericht",
+    "Drip campaign paused": "Drip-Kampagne pausiert",
+    "Drip campaign started": "Drip-Kampagne gestartet",
+    "Edit": "Bearbeiten",
+    "Failed to refresh campaign data": "Kampagnendaten konnten nicht aktualisiert werden",
+    "Failed to update drip campaign status": "Der Status der Drip-Kampagne konnte nicht aktualisiert werden",
+    "Generating...": "Generieren...",
+    "messages": {
+      "campaignStopError": "CampaignStopError",
+      "campaignStopped": "Kampagne gestoppt"
+    },
+    "Name": "Name",
+    "Overview": "Übersicht",
+    "Participants": "Teilnehmer",
+    "Pause Drip": "Tropfen anhalten",
+    "Phone": "Telefon",
+    "Resend": "Erneut senden",
+    "Reset": "Zurücksetzen",
+    "Search by name or phone...": "Suche nach Name oder Telefon...",
+    "Send": "Senden",
+    "Start Drip": "Starten Sie Drip",
+    "Status": "Status",
+    "Total Participants": "Gesamtzahl der Teilnehmer",
+    "We couldn't load this campaign.": "Wir konnten diese Kampagne nicht laden."
   },
   "Note": {
     " *": "Hinweis: *",
