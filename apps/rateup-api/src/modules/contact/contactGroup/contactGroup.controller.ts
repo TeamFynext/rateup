@@ -50,11 +50,8 @@ export async function getContactGroupsHandler(
     } else if (request.query.teamId) {
       // get all contact groups for a specific team
       res = await getContactGroupsByTeamId(request.query.teamId);
-    } else {
-      // get all contact groups for all teams
-      if (verifyRole(request, reply, Role.SUPER_ADMIN)) {
-        res = await getContactGroupsByOrgId(request.user.orgId, request.query.type);
-      }
+    } else if (await verifyRole(request, reply, Role.SUPER_ADMIN)) {
+      res = await getContactGroupsByOrgId(request.user.orgId, request.query.type);
     }
     reply.code(200).send(res);
   } catch (error) {
