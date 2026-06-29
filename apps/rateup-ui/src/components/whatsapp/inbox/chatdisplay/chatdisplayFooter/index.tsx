@@ -629,12 +629,12 @@ export const useTemperoryMessageStore = create<MessageState>((set, get) => ({
     }),
 }));
 
-type WaMedia = {
+interface WaMedia {
   type: string;
   url: string;
   name: string;
   key: string;
-};
+}
 
 interface MediaStore {
   media: WaMedia[];

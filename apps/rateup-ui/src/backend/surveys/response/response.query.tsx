@@ -208,10 +208,10 @@ export const useResponseCount = (surveyId) => {
   });
 };
 
-type FilterAnalytics = {
+interface FilterAnalytics {
   teamMapIds?: string[];
   dateRange?: string[];
-};
+}
 export const useResponseAnalytics = (surveyId, filter: FilterAnalytics) => {
   const filterQuery = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)

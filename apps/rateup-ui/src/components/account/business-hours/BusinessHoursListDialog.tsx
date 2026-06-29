@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 
-type Props = {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   list: IBusinessHour[];
@@ -31,7 +31,7 @@ type Props = {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   canDelete?: boolean;
-};
+}
 
 export function BusinessHoursListDialog({
   open,

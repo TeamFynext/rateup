@@ -190,7 +190,7 @@ export const RateupButtonBlackOutline = ({
   );
 };
 
-type RateupFileUploadButtonProps = {
+interface RateupFileUploadButtonProps {
   resetRef: MutableRefObject<() => void>;
   handleFileChange: (file: File) => Promise<void>;
   clearFile: () => void;
@@ -203,7 +203,7 @@ type RateupFileUploadButtonProps = {
   style?: MantineStyleProp;
   size?: "xs" | "sm" | "md" | "lg";
   rightSection?: React.ReactNode;
-};
+}
 
 export const RateupFileUploadButton = ({
   resetRef,

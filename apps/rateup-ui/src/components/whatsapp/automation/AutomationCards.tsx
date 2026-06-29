@@ -119,11 +119,11 @@ function AutomationCard({ automation, detailsBasePath }: Readonly<WaAutomationCa
   );
 }
 
-type AutomationActionsProps = {
+interface AutomationActionsProps {
   readonly automationId: string;
   readonly automationName: string;
   readonly platform?: string;
-};
+}
 
 function AutomationActions({ automationId, automationName, platform }: AutomationActionsProps) {
   const [deleteDialogOpened, setDeleteDialogOpened] = useState(false);

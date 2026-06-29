@@ -40,13 +40,13 @@ export enum TestimonialTabs {
   Edit = "Edit",
   Share = "Share",
 }
-export type filterType = {
+export interface filterType {
   date: "new" | "old";
   rating: number;
   length: "longest" | "shortest";
   teams: string[];
   surveys: string[];
-};
+}
 
 function CollectionById() {
   const { update } = useRouteParams();

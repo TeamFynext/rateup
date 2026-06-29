@@ -3,21 +3,18 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-type CardGridProps<T> = {
+interface CardGridProps<T> {
   readonly items: readonly T[];
   readonly getKey: (item: T, index: number) => string;
   readonly renderItem: (item: T, index: number) => ReactNode;
   readonly className?: string;
-};
+}
 
 export function CardGrid<T>({ items, getKey, renderItem, className }: Readonly<CardGridProps<T>>) {
   return (
     <motion.div
       layout
-      className={cn(
-        "grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5",
-        className,
-      )}
+      className={cn("grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]", className)}
     >
       <AnimatePresence initial={false}>
         {items.map((item, index) => {

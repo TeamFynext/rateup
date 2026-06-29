@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 
-type TestimonialCollectionCardProps = {
+interface TestimonialCollectionCardProps {
   readonly collection: {
     readonly id: string;
     readonly name: string;
@@ -32,7 +32,7 @@ type TestimonialCollectionCardProps = {
     readonly _count?: { readonly testimonials: number };
     readonly teamId?: string;
   };
-};
+}
 
 function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectionCardProps>) {
   const navigate = useNavigate();

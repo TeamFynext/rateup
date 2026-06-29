@@ -6,18 +6,18 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.tsx";
 import { formatDate } from "@/utils/dateTime.ts";
 
-type OrderProductItem = {
+interface OrderProductItem {
   currency: string;
   quantity: number;
   item_price: number;
   product_retailer_id: string;
-};
+}
 
-type OrderContent = {
+interface OrderContent {
   text?: string;
   catalog_id: string;
   product_items: OrderProductItem[];
-};
+}
 
 const formatPrice = (price: number, currency: string) => {
   try {

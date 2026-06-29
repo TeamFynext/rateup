@@ -516,8 +516,8 @@ export const templateSchema = z
     }
   });
 
-export type WaTemplateDefaultValues = {
+export interface WaTemplateDefaultValues {
   image?: {
     link: string;
   };
-};
+}

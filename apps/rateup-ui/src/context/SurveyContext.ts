@@ -1,6 +1,6 @@
 import { createContext } from "react";
 
-type ISurveyCtx = {
+interface ISurveyCtx {
   surveyId?: string;
   selectedTeamId: string;
   selectedTeamName: string;
@@ -11,7 +11,7 @@ type ISurveyCtx = {
   encryptionpassword: string;
   variables?: Array<SurveyVariable>;
   teams: Array<{ value: string; label: string }>;
-};
+}
 
 const SurveyContext = createContext<ISurveyCtx>({
   surveyId: "",

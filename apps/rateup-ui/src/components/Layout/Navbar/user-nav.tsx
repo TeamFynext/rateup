@@ -78,9 +78,9 @@ const getStatusOption = (presenceMode: UserPresenceMode, status: UserAvailabilit
   }
 };
 
-type NavUserProps = {
+interface NavUserProps {
   user: IUserInfoApiResponse["data"];
-};
+}
 
 export function NavUser({ user }: Readonly<NavUserProps>) {
   const { isMobile } = useSidebar();

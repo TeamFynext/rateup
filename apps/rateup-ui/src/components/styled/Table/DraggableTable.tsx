@@ -7,10 +7,10 @@ import { reorder } from "@/utils/questions.ts";
 
 import classes from "./DraggableTableStyle.module.css";
 
-type TableHeader = {
+interface TableHeader {
   headerKey: string;
   headerValue: string;
-};
+}
 interface IDraggableTableProps {
   headers: TableHeader[];
   items: Array<any>;

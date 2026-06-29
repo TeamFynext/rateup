@@ -81,12 +81,12 @@ export const features = [
   },
 ];
 
-type Step = {
+interface Step {
   title: string;
   description: string;
   icon: React.ElementType;
   color: string;
-};
+}
 
 export const steps: Step[] = [
   {

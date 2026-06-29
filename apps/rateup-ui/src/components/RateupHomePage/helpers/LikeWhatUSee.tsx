@@ -6,12 +6,12 @@ import { RateupStar } from "@/components/integrations/logos";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
-type LikeWhatUSeeProps = {
+interface LikeWhatUSeeProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onBookDemo?: () => void;
   onWhatsapp?: () => void;
-};
+}
 
 export default function LikeWhatUSee({
   open,

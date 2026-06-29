@@ -65,7 +65,7 @@ function formatLabel(value: string) {
     .join(" ");
 }
 
-type TemplateListEntry = {
+interface TemplateListEntry {
   readonly id: string;
   readonly createdAt: string;
   readonly templateType?: string;
@@ -81,7 +81,7 @@ type TemplateListEntry = {
     readonly category?: string;
     readonly status?: string;
   };
-};
+}
 
 const PREDEFINED_TEMPLATES = [
   {
@@ -238,11 +238,11 @@ const CATEGORY_META: Record<string, { label: string; color: string; bg: string }
   Blank: { label: "Blank", color: "text-slate-600", bg: "bg-slate-50 border-slate-200" },
 };
 
-type TemplatePickerProps = {
+interface TemplatePickerProps {
   readonly templates: typeof PREDEFINED_TEMPLATES;
   readonly translations: (key: string) => string;
   readonly onSelect: (tpl: (typeof PREDEFINED_TEMPLATES)[number]) => void;
-};
+}
 
 function TemplatePicker({ templates, translations, onSelect }: Readonly<TemplatePickerProps>) {
   const [search, setSearch] = useState("");
@@ -770,12 +770,12 @@ function Template() {
   );
 }
 
-type TemplateCardProps = {
+interface TemplateCardProps {
   readonly template: TemplateListEntry;
   readonly onClick: () => void;
   readonly toggle: () => void;
   readonly setSelectedTemplate: (value: string) => void;
-};
+}
 
 function TemplateCard({
   template,

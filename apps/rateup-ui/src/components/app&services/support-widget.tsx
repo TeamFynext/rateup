@@ -24,7 +24,7 @@ interface SupportWidgetProps {
   backendUrl?: string;
   webhookUrl?: string;
 }
-type Message = {
+interface Message {
   id: string;
   messageBody: {
     exchangeProcess: "send" | "receive";
@@ -49,7 +49,7 @@ type Message = {
       ];
     } | null;
   };
-};
+}
 
 const supportSchema = z.object({
   name: z.string().min(1, "Name is required"),

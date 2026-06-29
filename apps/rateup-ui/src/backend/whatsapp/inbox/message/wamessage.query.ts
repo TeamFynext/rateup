@@ -273,9 +273,9 @@ export function useGenerateInboxResponse() {
   });
 }
 
-type CreatePrivateMessageVariables = {
+interface CreatePrivateMessageVariables {
   data: any;
-};
+}
 
 export function useCreatePrivateMessage(contactId) {
   return useMutation({

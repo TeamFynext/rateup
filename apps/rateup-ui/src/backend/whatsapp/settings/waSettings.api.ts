@@ -78,7 +78,7 @@ export const updateUserAccessToken = async ({ waSettingId, code }) => {
   return res;
 };
 
-type WaLogsRes = {
+interface WaLogsRes {
   logs: {
     id: string;
     createdAt: string;
@@ -92,7 +92,7 @@ type WaLogsRes = {
     }[];
   };
   totalCount: number;
-};
+}
 export const getWaLogs = async (
   pagination: {
     pageIndex: number;
@@ -202,15 +202,15 @@ export const getVerificationStatus = async () => {
   return (await axiosClient.get(`${SettingsUrl}/verification-status`)).data;
 };
 
-export type ConversationalAutomationCommand = {
+export interface ConversationalAutomationCommand {
   command_name: string;
   command_description: string;
-};
+}
 
-export type ConversationalAutomation = {
+export interface ConversationalAutomation {
   commands: ConversationalAutomationCommand[];
   prompts: string[];
-};
+}
 
 export const getConversationalAutomation = async (phoneId: string) => {
   const res = await axiosClient.get(`${SettingsUrl}/conversational-automation/${phoneId}`);

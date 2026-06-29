@@ -18,11 +18,11 @@ import {
   ContainedSelection,
 } from "../../../../input/ContainedInput/ContainedInput.tsx";
 
-export type MultiGV = {
+export interface MultiGV {
   group: string;
   value: string;
-};
-export type ChatFilter = {
+}
+export interface ChatFilter {
   messageType: "all" | "replied" | "unread" | "usermessages";
   strictFilter: boolean;
   searchTerm?: string;
@@ -39,7 +39,7 @@ export type ChatFilter = {
   category: "conversation" | "campaign" | "automation";
   lifecycle?: string;
   assignedUserIds: string[];
-};
+}
 
 export default function WaInboxChatFilter() {
   const { data, isLoading, error } = useChatFilterData();
@@ -327,7 +327,7 @@ export default function WaInboxChatFilter() {
   );
 }
 
-type ChatFilterStore = {
+interface ChatFilterStore {
   filter: ChatFilter;
   setFilter: (value: ChatFilter) => void;
   clearFilter: () => void;
@@ -336,7 +336,7 @@ type ChatFilterStore = {
     filter: ChatFilter;
   }[];
   setPreviousFilterForTab: (value) => void;
-};
+}
 
 const intialValues: ChatFilter = {
   messageType: "usermessages",

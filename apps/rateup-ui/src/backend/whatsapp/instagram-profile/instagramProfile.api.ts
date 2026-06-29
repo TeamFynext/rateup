@@ -3,27 +3,27 @@ import { axiosClient } from "../../apiClient";
 
 const base = `${WHATSAPP_URL}/instagram-profile`;
 
-export type InstagramIceBreaker = {
+export interface InstagramIceBreaker {
   question: string;
   payload: string;
-};
+}
 
-type InstagramPersistentMenuItem = {
+interface InstagramPersistentMenuItem {
   type: "postback" | "web_url";
   title: string;
   payload?: string;
   url?: string;
-};
+}
 
 export type InstagramPersistentMenu = {
   locale: string;
   call_to_actions: InstagramPersistentMenuItem[];
 }[];
 
-type InstagramProfileData = {
+interface InstagramProfileData {
   iceBreakers: InstagramIceBreaker[];
   persistentMenu: InstagramPersistentMenu;
-};
+}
 
 export async function getInstagramProfile(waSettingsId: string) {
   return (await axiosClient.get(`${base}/${waSettingsId}`)).data as {
@@ -70,7 +70,7 @@ export async function deleteInstagramPersistentMenu(waSettingsId: string) {
   return axiosClient.delete(`${base}/${waSettingsId}/persistent-menu`);
 }
 
-type InstagramMediaItem = {
+interface InstagramMediaItem {
   id: string;
   caption?: string;
   media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM" | "REEL";
@@ -78,14 +78,14 @@ type InstagramMediaItem = {
   thumbnail_url?: string;
   timestamp: string;
   permalink?: string;
-};
+}
 
-type InstagramStoryItem = {
+interface InstagramStoryItem {
   id: string;
   media_type: "IMAGE" | "VIDEO";
   media_url?: string;
   timestamp: string;
-};
+}
 
 export async function getInstagramMediaPosts(ibaId: string) {
   return (await axiosClient.get(`${base}/media/${ibaId}`)).data as {

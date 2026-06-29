@@ -4,20 +4,20 @@ const WEBHOOK_URL = "webhook";
 
 export type WebhookEvent = "message_status";
 
-type WebhookConfig = {
+interface WebhookConfig {
   id: string;
   url: string;
   events: WebhookEvent[];
   verifyToken?: string;
   createdAt: string;
   updatedAt: string;
-};
+}
 
-export type SaveWebhookInput = {
+export interface SaveWebhookInput {
   url: string;
   events: WebhookEvent[];
   verifyToken?: string;
-};
+}
 
 /** Returns the org's single webhook config, or null if not set. */
 export const getWebhook = async () => {

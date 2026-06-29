@@ -1,3 +1,5 @@
 {
-  "rules": {}
+  "rules": {
+    "typescript/consistent-type-definitions": "error"
+  }
 }

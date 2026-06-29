@@ -22,13 +22,9 @@ import { Route as DashboardWhatsappIndexRouteImport } from './routes/dashboard/w
 import { Route as DashboardTicketsIndexRouteImport } from './routes/dashboard/tickets/index'
 import { Route as DashboardTestimonialIndexRouteImport } from './routes/dashboard/testimonial/index'
 import { Route as DashboardSurveysIndexRouteImport } from './routes/dashboard/surveys/index'
-import { Route as DashboardSurveylandinglistIndexRouteImport } from './routes/dashboard/surveylandinglist/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardQuickAccessLinksIndexRouteImport } from './routes/dashboard/quickAccessLinks/index'
 import { Route as DashboardQrCreatorIndexRouteImport } from './routes/dashboard/qrCreator/index'
-import { Route as DashboardPaymentIndexRouteImport } from './routes/dashboard/payment/index'
-import { Route as DashboardMenuIndexRouteImport } from './routes/dashboard/menu/index'
-import { Route as DashboardLandingPagesIndexRouteImport } from './routes/dashboard/landingPages/index'
 import { Route as DashboardInstagramIndexRouteImport } from './routes/dashboard/instagram/index'
 import { Route as DashboardInboxIndexRouteImport } from './routes/dashboard/inbox/index'
 import { Route as DashboardContactsIndexRouteImport } from './routes/dashboard/contacts/index'
@@ -75,7 +71,6 @@ import { Route as DashboardTicketsTicketIdIndexRouteImport } from './routes/dash
 import { Route as DashboardTestimonialCollectionIdIndexRouteImport } from './routes/dashboard/testimonial/$collectionId/index'
 import { Route as DashboardSurveysTemplatesIndexRouteImport } from './routes/dashboard/surveys/templates/index'
 import { Route as DashboardSurveysSurveyIdIndexRouteImport } from './routes/dashboard/surveys/$surveyId/index'
-import { Route as DashboardSurveylandinglistLandingIdIndexRouteImport } from './routes/dashboard/surveylandinglist/$LandingId/index'
 import { Route as DashboardSettingsUsersIndexRouteImport } from './routes/dashboard/settings/users/index'
 import { Route as DashboardSettingsTeamIndexRouteImport } from './routes/dashboard/settings/team/index'
 import { Route as DashboardSettingsSecurityIndexRouteImport } from './routes/dashboard/settings/security/index'
@@ -85,8 +80,6 @@ import { Route as DashboardSettingsBillingIndexRouteImport } from './routes/dash
 import { Route as DashboardSettingsAccountIndexRouteImport } from './routes/dashboard/settings/account/index'
 import { Route as DashboardQuickAccessLinksShortUrlIdIndexRouteImport } from './routes/dashboard/quickAccessLinks/$shortUrlId/index'
 import { Route as DashboardQrCreatorShortUrlIdIndexRouteImport } from './routes/dashboard/qrCreator/$shortUrlId/index'
-import { Route as DashboardPaymentSummaryIndexRouteImport } from './routes/dashboard/payment/summary/index'
-import { Route as DashboardMenuMenuIdIndexRouteImport } from './routes/dashboard/menu/$menuId/index'
 import { Route as DashboardLoyaltyTransactionsIndexRouteImport } from './routes/dashboard/loyalty/transactions/index'
 import { Route as DashboardLoyaltyTemplatesIndexRouteImport } from './routes/dashboard/loyalty/templates/index'
 import { Route as DashboardLoyaltySettingsIndexRouteImport } from './routes/dashboard/loyalty/settings/index'
@@ -97,7 +90,6 @@ import { Route as DashboardLoyaltyCustomersIndexRouteImport } from './routes/das
 import { Route as DashboardLoyaltyCommandIndexRouteImport } from './routes/dashboard/loyalty/command/index'
 import { Route as DashboardLoyaltyCashierIndexRouteImport } from './routes/dashboard/loyalty/cashier/index'
 import { Route as DashboardLoyaltyApprovalsIndexRouteImport } from './routes/dashboard/loyalty/approvals/index'
-import { Route as DashboardLandingPagesShortUrlIdIndexRouteImport } from './routes/dashboard/landingPages/$shortUrlId/index'
 import { Route as DashboardContactsLifecycleIndexRouteImport } from './routes/dashboard/contacts/lifecycle/index'
 import { Route as DashboardContactsLabelsIndexRouteImport } from './routes/dashboard/contacts/labels/index'
 import { Route as DashboardContactsGroupsIndexRouteImport } from './routes/dashboard/contacts/groups/index'
@@ -113,9 +105,7 @@ import { Route as AdminOrgsOrgIdIndexRouteImport } from './routes/admin/orgs/$or
 import { Route as publicFacingWsShortIdIndexRouteImport } from './routes/(public-facing)/ws/$shortId/index'
 import { Route as publicFacingWasShortIdIndexRouteImport } from './routes/(public-facing)/was/$shortId/index'
 import { Route as publicFacingQrShortIdIndexRouteImport } from './routes/(public-facing)/qr/$shortId/index'
-import { Route as publicFacingMShortIdIndexRouteImport } from './routes/(public-facing)/m/$shortId/index'
 import { Route as publicFacingLtShortIdIndexRouteImport } from './routes/(public-facing)/lt/$shortId/index'
-import { Route as publicFacingLpShortIdIndexRouteImport } from './routes/(public-facing)/lp/$shortId/index'
 import { Route as publicFacingloyaltyCashierIndexRouteImport } from './routes/(public-facing)/(loyalty)/cashier/index'
 import { Route as marketingProductsWhatsappSurveyIndexRouteImport } from './routes/(marketing)/products/whatsapp-survey/index'
 import { Route as marketingProductsWhatsappLoyaltyIndexRouteImport } from './routes/(marketing)/products/whatsapp-loyalty/index'
@@ -232,12 +222,6 @@ const DashboardSurveysIndexRoute = DashboardSurveysIndexRouteImport.update({
   path: '/surveys/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardSurveylandinglistIndexRoute =
-  DashboardSurveylandinglistIndexRouteImport.update({
-    id: '/surveylandinglist/',
-    path: '/surveylandinglist/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
 const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
@@ -254,22 +238,6 @@ const DashboardQrCreatorIndexRoute = DashboardQrCreatorIndexRouteImport.update({
   path: '/qrCreator/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardPaymentIndexRoute = DashboardPaymentIndexRouteImport.update({
-  id: '/payment/',
-  path: '/payment/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardMenuIndexRoute = DashboardMenuIndexRouteImport.update({
-  id: '/menu/',
-  path: '/menu/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardLandingPagesIndexRoute =
-  DashboardLandingPagesIndexRouteImport.update({
-    id: '/landingPages/',
-    path: '/landingPages/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
 const DashboardInstagramIndexRoute = DashboardInstagramIndexRouteImport.update({
   id: '/instagram/',
   path: '/instagram/',
@@ -516,12 +484,6 @@ const DashboardSurveysSurveyIdIndexRoute =
     path: '/surveys/$surveyId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardSurveylandinglistLandingIdIndexRoute =
-  DashboardSurveylandinglistLandingIdIndexRouteImport.update({
-    id: '/surveylandinglist/$LandingId/',
-    path: '/surveylandinglist/$LandingId/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
 const DashboardSettingsUsersIndexRoute =
   DashboardSettingsUsersIndexRouteImport.update({
     id: '/settings/users/',
@@ -574,18 +536,6 @@ const DashboardQrCreatorShortUrlIdIndexRoute =
   DashboardQrCreatorShortUrlIdIndexRouteImport.update({
     id: '/qrCreator/$shortUrlId/',
     path: '/qrCreator/$shortUrlId/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardPaymentSummaryIndexRoute =
-  DashboardPaymentSummaryIndexRouteImport.update({
-    id: '/payment/summary/',
-    path: '/payment/summary/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardMenuMenuIdIndexRoute =
-  DashboardMenuMenuIdIndexRouteImport.update({
-    id: '/menu/$menuId/',
-    path: '/menu/$menuId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardLoyaltyTransactionsIndexRoute =
@@ -646,12 +596,6 @@ const DashboardLoyaltyApprovalsIndexRoute =
   DashboardLoyaltyApprovalsIndexRouteImport.update({
     id: '/loyalty/approvals/',
     path: '/loyalty/approvals/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardLandingPagesShortUrlIdIndexRoute =
-  DashboardLandingPagesShortUrlIdIndexRouteImport.update({
-    id: '/landingPages/$shortUrlId/',
-    path: '/landingPages/$shortUrlId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardContactsLifecycleIndexRoute =
@@ -741,22 +685,10 @@ const publicFacingQrShortIdIndexRoute =
     path: '/qr/$shortId/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const publicFacingMShortIdIndexRoute =
-  publicFacingMShortIdIndexRouteImport.update({
-    id: '/(public-facing)/m/$shortId/',
-    path: '/m/$shortId/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const publicFacingLtShortIdIndexRoute =
   publicFacingLtShortIdIndexRouteImport.update({
     id: '/(public-facing)/lt/$shortId/',
     path: '/lt/$shortId/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const publicFacingLpShortIdIndexRoute =
-  publicFacingLpShortIdIndexRouteImport.update({
-    id: '/(public-facing)/lp/$shortId/',
-    path: '/lp/$shortId/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const publicFacingloyaltyCashierIndexRoute =
@@ -1097,13 +1029,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
-  '/dashboard/landingPages/': typeof DashboardLandingPagesIndexRoute
-  '/dashboard/menu/': typeof DashboardMenuIndexRoute
-  '/dashboard/payment/': typeof DashboardPaymentIndexRoute
   '/dashboard/qrCreator/': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks/': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
-  '/dashboard/surveylandinglist/': typeof DashboardSurveylandinglistIndexRoute
   '/dashboard/surveys/': typeof DashboardSurveysIndexRoute
   '/dashboard/testimonial/': typeof DashboardTestimonialIndexRoute
   '/dashboard/tickets/': typeof DashboardTicketsIndexRoute
@@ -1130,9 +1058,7 @@ export interface FileRoutesByFullPath {
   '/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
   '/cashier/': typeof publicFacingloyaltyCashierIndexRoute
-  '/lp/$shortId/': typeof publicFacingLpShortIdIndexRoute
   '/lt/$shortId/': typeof publicFacingLtShortIdIndexRoute
-  '/m/$shortId/': typeof publicFacingMShortIdIndexRoute
   '/qr/$shortId/': typeof publicFacingQrShortIdIndexRoute
   '/was/$shortId/': typeof publicFacingWasShortIdIndexRoute
   '/ws/$shortId/': typeof publicFacingWsShortIdIndexRoute
@@ -1148,7 +1074,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle/': typeof DashboardContactsLifecycleIndexRoute
-  '/dashboard/landingPages/$shortUrlId/': typeof DashboardLandingPagesShortUrlIdIndexRoute
   '/dashboard/loyalty/approvals/': typeof DashboardLoyaltyApprovalsIndexRoute
   '/dashboard/loyalty/cashier/': typeof DashboardLoyaltyCashierIndexRoute
   '/dashboard/loyalty/command/': typeof DashboardLoyaltyCommandIndexRoute
@@ -1159,8 +1084,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/loyalty/settings/': typeof DashboardLoyaltySettingsIndexRoute
   '/dashboard/loyalty/templates/': typeof DashboardLoyaltyTemplatesIndexRoute
   '/dashboard/loyalty/transactions/': typeof DashboardLoyaltyTransactionsIndexRoute
-  '/dashboard/menu/$menuId/': typeof DashboardMenuMenuIdIndexRoute
-  '/dashboard/payment/summary/': typeof DashboardPaymentSummaryIndexRoute
   '/dashboard/qrCreator/$shortUrlId/': typeof DashboardQrCreatorShortUrlIdIndexRoute
   '/dashboard/quickAccessLinks/$shortUrlId/': typeof DashboardQuickAccessLinksShortUrlIdIndexRoute
   '/dashboard/settings/account/': typeof DashboardSettingsAccountIndexRoute
@@ -1170,7 +1093,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team/': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users/': typeof DashboardSettingsUsersIndexRoute
-  '/dashboard/surveylandinglist/$LandingId/': typeof DashboardSurveylandinglistLandingIdIndexRoute
   '/dashboard/surveys/$surveyId/': typeof DashboardSurveysSurveyIdIndexRoute
   '/dashboard/surveys/templates/': typeof DashboardSurveysTemplatesIndexRoute
   '/dashboard/testimonial/$collectionId/': typeof DashboardTestimonialCollectionIdIndexRoute
@@ -1252,13 +1174,9 @@ export interface FileRoutesByTo {
   '/dashboard/contacts': typeof DashboardContactsIndexRoute
   '/dashboard/inbox': typeof DashboardInboxIndexRoute
   '/dashboard/instagram': typeof DashboardInstagramIndexRoute
-  '/dashboard/landingPages': typeof DashboardLandingPagesIndexRoute
-  '/dashboard/menu': typeof DashboardMenuIndexRoute
-  '/dashboard/payment': typeof DashboardPaymentIndexRoute
   '/dashboard/qrCreator': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
-  '/dashboard/surveylandinglist': typeof DashboardSurveylandinglistIndexRoute
   '/dashboard/surveys': typeof DashboardSurveysIndexRoute
   '/dashboard/testimonial': typeof DashboardTestimonialIndexRoute
   '/dashboard/tickets': typeof DashboardTicketsIndexRoute
@@ -1285,9 +1203,7 @@ export interface FileRoutesByTo {
   '/products/whatsapp-loyalty': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey': typeof marketingProductsWhatsappSurveyIndexRoute
   '/cashier': typeof publicFacingloyaltyCashierIndexRoute
-  '/lp/$shortId': typeof publicFacingLpShortIdIndexRoute
   '/lt/$shortId': typeof publicFacingLtShortIdIndexRoute
-  '/m/$shortId': typeof publicFacingMShortIdIndexRoute
   '/qr/$shortId': typeof publicFacingQrShortIdIndexRoute
   '/was/$shortId': typeof publicFacingWasShortIdIndexRoute
   '/ws/$shortId': typeof publicFacingWsShortIdIndexRoute
@@ -1303,7 +1219,6 @@ export interface FileRoutesByTo {
   '/dashboard/contacts/groups': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle': typeof DashboardContactsLifecycleIndexRoute
-  '/dashboard/landingPages/$shortUrlId': typeof DashboardLandingPagesShortUrlIdIndexRoute
   '/dashboard/loyalty/approvals': typeof DashboardLoyaltyApprovalsIndexRoute
   '/dashboard/loyalty/cashier': typeof DashboardLoyaltyCashierIndexRoute
   '/dashboard/loyalty/command': typeof DashboardLoyaltyCommandIndexRoute
@@ -1314,8 +1229,6 @@ export interface FileRoutesByTo {
   '/dashboard/loyalty/settings': typeof DashboardLoyaltySettingsIndexRoute
   '/dashboard/loyalty/templates': typeof DashboardLoyaltyTemplatesIndexRoute
   '/dashboard/loyalty/transactions': typeof DashboardLoyaltyTransactionsIndexRoute
-  '/dashboard/menu/$menuId': typeof DashboardMenuMenuIdIndexRoute
-  '/dashboard/payment/summary': typeof DashboardPaymentSummaryIndexRoute
   '/dashboard/qrCreator/$shortUrlId': typeof DashboardQrCreatorShortUrlIdIndexRoute
   '/dashboard/quickAccessLinks/$shortUrlId': typeof DashboardQuickAccessLinksShortUrlIdIndexRoute
   '/dashboard/settings/account': typeof DashboardSettingsAccountIndexRoute
@@ -1325,7 +1238,6 @@ export interface FileRoutesByTo {
   '/dashboard/settings/security': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users': typeof DashboardSettingsUsersIndexRoute
-  '/dashboard/surveylandinglist/$LandingId': typeof DashboardSurveylandinglistLandingIdIndexRoute
   '/dashboard/surveys/$surveyId': typeof DashboardSurveysSurveyIdIndexRoute
   '/dashboard/surveys/templates': typeof DashboardSurveysTemplatesIndexRoute
   '/dashboard/testimonial/$collectionId': typeof DashboardTestimonialCollectionIdIndexRoute
@@ -1411,13 +1323,9 @@ export interface FileRoutesById {
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
-  '/dashboard/landingPages/': typeof DashboardLandingPagesIndexRoute
-  '/dashboard/menu/': typeof DashboardMenuIndexRoute
-  '/dashboard/payment/': typeof DashboardPaymentIndexRoute
   '/dashboard/qrCreator/': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks/': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
-  '/dashboard/surveylandinglist/': typeof DashboardSurveylandinglistIndexRoute
   '/dashboard/surveys/': typeof DashboardSurveysIndexRoute
   '/dashboard/testimonial/': typeof DashboardTestimonialIndexRoute
   '/dashboard/tickets/': typeof DashboardTicketsIndexRoute
@@ -1444,9 +1352,7 @@ export interface FileRoutesById {
   '/(marketing)/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/(marketing)/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
   '/(public-facing)/(loyalty)/cashier/': typeof publicFacingloyaltyCashierIndexRoute
-  '/(public-facing)/lp/$shortId/': typeof publicFacingLpShortIdIndexRoute
   '/(public-facing)/lt/$shortId/': typeof publicFacingLtShortIdIndexRoute
-  '/(public-facing)/m/$shortId/': typeof publicFacingMShortIdIndexRoute
   '/(public-facing)/qr/$shortId/': typeof publicFacingQrShortIdIndexRoute
   '/(public-facing)/was/$shortId/': typeof publicFacingWasShortIdIndexRoute
   '/(public-facing)/ws/$shortId/': typeof publicFacingWsShortIdIndexRoute
@@ -1462,7 +1368,6 @@ export interface FileRoutesById {
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
   '/dashboard/contacts/lifecycle/': typeof DashboardContactsLifecycleIndexRoute
-  '/dashboard/landingPages/$shortUrlId/': typeof DashboardLandingPagesShortUrlIdIndexRoute
   '/dashboard/loyalty/approvals/': typeof DashboardLoyaltyApprovalsIndexRoute
   '/dashboard/loyalty/cashier/': typeof DashboardLoyaltyCashierIndexRoute
   '/dashboard/loyalty/command/': typeof DashboardLoyaltyCommandIndexRoute
@@ -1473,8 +1378,6 @@ export interface FileRoutesById {
   '/dashboard/loyalty/settings/': typeof DashboardLoyaltySettingsIndexRoute
   '/dashboard/loyalty/templates/': typeof DashboardLoyaltyTemplatesIndexRoute
   '/dashboard/loyalty/transactions/': typeof DashboardLoyaltyTransactionsIndexRoute
-  '/dashboard/menu/$menuId/': typeof DashboardMenuMenuIdIndexRoute
-  '/dashboard/payment/summary/': typeof DashboardPaymentSummaryIndexRoute
   '/dashboard/qrCreator/$shortUrlId/': typeof DashboardQrCreatorShortUrlIdIndexRoute
   '/dashboard/quickAccessLinks/$shortUrlId/': typeof DashboardQuickAccessLinksShortUrlIdIndexRoute
   '/dashboard/settings/account/': typeof DashboardSettingsAccountIndexRoute
@@ -1484,7 +1387,6 @@ export interface FileRoutesById {
   '/dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/dashboard/settings/team/': typeof DashboardSettingsTeamIndexRoute
   '/dashboard/settings/users/': typeof DashboardSettingsUsersIndexRoute
-  '/dashboard/surveylandinglist/$LandingId/': typeof DashboardSurveylandinglistLandingIdIndexRoute
   '/dashboard/surveys/$surveyId/': typeof DashboardSurveysSurveyIdIndexRoute
   '/dashboard/surveys/templates/': typeof DashboardSurveysTemplatesIndexRoute
   '/dashboard/testimonial/$collectionId/': typeof DashboardTestimonialCollectionIdIndexRoute
@@ -1571,13 +1473,9 @@ export interface FileRouteTypes {
     | '/dashboard/contacts/'
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
-    | '/dashboard/landingPages/'
-    | '/dashboard/menu/'
-    | '/dashboard/payment/'
     | '/dashboard/qrCreator/'
     | '/dashboard/quickAccessLinks/'
     | '/dashboard/settings/'
-    | '/dashboard/surveylandinglist/'
     | '/dashboard/surveys/'
     | '/dashboard/testimonial/'
     | '/dashboard/tickets/'
@@ -1604,9 +1502,7 @@ export interface FileRouteTypes {
     | '/products/whatsapp-loyalty/'
     | '/products/whatsapp-survey/'
     | '/cashier/'
-    | '/lp/$shortId/'
     | '/lt/$shortId/'
-    | '/m/$shortId/'
     | '/qr/$shortId/'
     | '/was/$shortId/'
     | '/ws/$shortId/'
@@ -1622,7 +1518,6 @@ export interface FileRouteTypes {
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
     | '/dashboard/contacts/lifecycle/'
-    | '/dashboard/landingPages/$shortUrlId/'
     | '/dashboard/loyalty/approvals/'
     | '/dashboard/loyalty/cashier/'
     | '/dashboard/loyalty/command/'
@@ -1633,8 +1528,6 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/settings/'
     | '/dashboard/loyalty/templates/'
     | '/dashboard/loyalty/transactions/'
-    | '/dashboard/menu/$menuId/'
-    | '/dashboard/payment/summary/'
     | '/dashboard/qrCreator/$shortUrlId/'
     | '/dashboard/quickAccessLinks/$shortUrlId/'
     | '/dashboard/settings/account/'
@@ -1644,7 +1537,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/security/'
     | '/dashboard/settings/team/'
     | '/dashboard/settings/users/'
-    | '/dashboard/surveylandinglist/$LandingId/'
     | '/dashboard/surveys/$surveyId/'
     | '/dashboard/surveys/templates/'
     | '/dashboard/testimonial/$collectionId/'
@@ -1726,13 +1618,9 @@ export interface FileRouteTypes {
     | '/dashboard/contacts'
     | '/dashboard/inbox'
     | '/dashboard/instagram'
-    | '/dashboard/landingPages'
-    | '/dashboard/menu'
-    | '/dashboard/payment'
     | '/dashboard/qrCreator'
     | '/dashboard/quickAccessLinks'
     | '/dashboard/settings'
-    | '/dashboard/surveylandinglist'
     | '/dashboard/surveys'
     | '/dashboard/testimonial'
     | '/dashboard/tickets'
@@ -1759,9 +1647,7 @@ export interface FileRouteTypes {
     | '/products/whatsapp-loyalty'
     | '/products/whatsapp-survey'
     | '/cashier'
-    | '/lp/$shortId'
     | '/lt/$shortId'
-    | '/m/$shortId'
     | '/qr/$shortId'
     | '/was/$shortId'
     | '/ws/$shortId'
@@ -1777,7 +1663,6 @@ export interface FileRouteTypes {
     | '/dashboard/contacts/groups'
     | '/dashboard/contacts/labels'
     | '/dashboard/contacts/lifecycle'
-    | '/dashboard/landingPages/$shortUrlId'
     | '/dashboard/loyalty/approvals'
     | '/dashboard/loyalty/cashier'
     | '/dashboard/loyalty/command'
@@ -1788,8 +1673,6 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/settings'
     | '/dashboard/loyalty/templates'
     | '/dashboard/loyalty/transactions'
-    | '/dashboard/menu/$menuId'
-    | '/dashboard/payment/summary'
     | '/dashboard/qrCreator/$shortUrlId'
     | '/dashboard/quickAccessLinks/$shortUrlId'
     | '/dashboard/settings/account'
@@ -1799,7 +1682,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/security'
     | '/dashboard/settings/team'
     | '/dashboard/settings/users'
-    | '/dashboard/surveylandinglist/$LandingId'
     | '/dashboard/surveys/$surveyId'
     | '/dashboard/surveys/templates'
     | '/dashboard/testimonial/$collectionId'
@@ -1884,13 +1766,9 @@ export interface FileRouteTypes {
     | '/dashboard/contacts/'
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
-    | '/dashboard/landingPages/'
-    | '/dashboard/menu/'
-    | '/dashboard/payment/'
     | '/dashboard/qrCreator/'
     | '/dashboard/quickAccessLinks/'
     | '/dashboard/settings/'
-    | '/dashboard/surveylandinglist/'
     | '/dashboard/surveys/'
     | '/dashboard/testimonial/'
     | '/dashboard/tickets/'
@@ -1917,9 +1795,7 @@ export interface FileRouteTypes {
     | '/(marketing)/products/whatsapp-loyalty/'
     | '/(marketing)/products/whatsapp-survey/'
     | '/(public-facing)/(loyalty)/cashier/'
-    | '/(public-facing)/lp/$shortId/'
     | '/(public-facing)/lt/$shortId/'
-    | '/(public-facing)/m/$shortId/'
     | '/(public-facing)/qr/$shortId/'
     | '/(public-facing)/was/$shortId/'
     | '/(public-facing)/ws/$shortId/'
@@ -1935,7 +1811,6 @@ export interface FileRouteTypes {
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
     | '/dashboard/contacts/lifecycle/'
-    | '/dashboard/landingPages/$shortUrlId/'
     | '/dashboard/loyalty/approvals/'
     | '/dashboard/loyalty/cashier/'
     | '/dashboard/loyalty/command/'
@@ -1946,8 +1821,6 @@ export interface FileRouteTypes {
     | '/dashboard/loyalty/settings/'
     | '/dashboard/loyalty/templates/'
     | '/dashboard/loyalty/transactions/'
-    | '/dashboard/menu/$menuId/'
-    | '/dashboard/payment/summary/'
     | '/dashboard/qrCreator/$shortUrlId/'
     | '/dashboard/quickAccessLinks/$shortUrlId/'
     | '/dashboard/settings/account/'
@@ -1957,7 +1830,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/security/'
     | '/dashboard/settings/team/'
     | '/dashboard/settings/users/'
-    | '/dashboard/surveylandinglist/$LandingId/'
     | '/dashboard/surveys/$surveyId/'
     | '/dashboard/surveys/templates/'
     | '/dashboard/testimonial/$collectionId/'
@@ -2037,9 +1909,7 @@ export interface RootRouteChildren {
   marketingProductsWhatsappLoyaltyIndexRoute: typeof marketingProductsWhatsappLoyaltyIndexRoute
   marketingProductsWhatsappSurveyIndexRoute: typeof marketingProductsWhatsappSurveyIndexRoute
   publicFacingloyaltyCashierIndexRoute: typeof publicFacingloyaltyCashierIndexRoute
-  publicFacingLpShortIdIndexRoute: typeof publicFacingLpShortIdIndexRoute
   publicFacingLtShortIdIndexRoute: typeof publicFacingLtShortIdIndexRoute
-  publicFacingMShortIdIndexRoute: typeof publicFacingMShortIdIndexRoute
   publicFacingQrShortIdIndexRoute: typeof publicFacingQrShortIdIndexRoute
   publicFacingWasShortIdIndexRoute: typeof publicFacingWasShortIdIndexRoute
   publicFacingWsShortIdIndexRoute: typeof publicFacingWsShortIdIndexRoute
@@ -2154,13 +2024,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSurveysIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/surveylandinglist/': {
-      id: '/dashboard/surveylandinglist/'
-      path: '/surveylandinglist'
-      fullPath: '/dashboard/surveylandinglist/'
-      preLoaderRoute: typeof DashboardSurveylandinglistIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
     '/dashboard/settings/': {
       id: '/dashboard/settings/'
       path: '/settings'
@@ -2180,27 +2043,6 @@ declare module '@tanstack/react-router' {
       path: '/qrCreator'
       fullPath: '/dashboard/qrCreator/'
       preLoaderRoute: typeof DashboardQrCreatorIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/payment/': {
-      id: '/dashboard/payment/'
-      path: '/payment'
-      fullPath: '/dashboard/payment/'
-      preLoaderRoute: typeof DashboardPaymentIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/menu/': {
-      id: '/dashboard/menu/'
-      path: '/menu'
-      fullPath: '/dashboard/menu/'
-      preLoaderRoute: typeof DashboardMenuIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/landingPages/': {
-      id: '/dashboard/landingPages/'
-      path: '/landingPages'
-      fullPath: '/dashboard/landingPages/'
-      preLoaderRoute: typeof DashboardLandingPagesIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/instagram/': {
@@ -2525,13 +2367,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSurveysSurveyIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/surveylandinglist/$LandingId/': {
-      id: '/dashboard/surveylandinglist/$LandingId/'
-      path: '/surveylandinglist/$LandingId'
-      fullPath: '/dashboard/surveylandinglist/$LandingId/'
-      preLoaderRoute: typeof DashboardSurveylandinglistLandingIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
     '/dashboard/settings/users/': {
       id: '/dashboard/settings/users/'
       path: '/settings/users'
@@ -2593,20 +2428,6 @@ declare module '@tanstack/react-router' {
       path: '/qrCreator/$shortUrlId'
       fullPath: '/dashboard/qrCreator/$shortUrlId/'
       preLoaderRoute: typeof DashboardQrCreatorShortUrlIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/payment/summary/': {
-      id: '/dashboard/payment/summary/'
-      path: '/payment/summary'
-      fullPath: '/dashboard/payment/summary/'
-      preLoaderRoute: typeof DashboardPaymentSummaryIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/menu/$menuId/': {
-      id: '/dashboard/menu/$menuId/'
-      path: '/menu/$menuId'
-      fullPath: '/dashboard/menu/$menuId/'
-      preLoaderRoute: typeof DashboardMenuMenuIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/loyalty/transactions/': {
@@ -2677,13 +2498,6 @@ declare module '@tanstack/react-router' {
       path: '/loyalty/approvals'
       fullPath: '/dashboard/loyalty/approvals/'
       preLoaderRoute: typeof DashboardLoyaltyApprovalsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/landingPages/$shortUrlId/': {
-      id: '/dashboard/landingPages/$shortUrlId/'
-      path: '/landingPages/$shortUrlId'
-      fullPath: '/dashboard/landingPages/$shortUrlId/'
-      preLoaderRoute: typeof DashboardLandingPagesShortUrlIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/contacts/lifecycle/': {
@@ -2791,25 +2605,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof publicFacingQrShortIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(public-facing)/m/$shortId/': {
-      id: '/(public-facing)/m/$shortId/'
-      path: '/m/$shortId'
-      fullPath: '/m/$shortId/'
-      preLoaderRoute: typeof publicFacingMShortIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/(public-facing)/lt/$shortId/': {
       id: '/(public-facing)/lt/$shortId/'
       path: '/lt/$shortId'
       fullPath: '/lt/$shortId/'
       preLoaderRoute: typeof publicFacingLtShortIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(public-facing)/lp/$shortId/': {
-      id: '/(public-facing)/lp/$shortId/'
-      path: '/lp/$shortId'
-      fullPath: '/lp/$shortId/'
-      preLoaderRoute: typeof publicFacingLpShortIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(public-facing)/(loyalty)/cashier/': {
@@ -3205,13 +3005,9 @@ interface DashboardRouteRouteChildren {
   DashboardContactsIndexRoute: typeof DashboardContactsIndexRoute
   DashboardInboxIndexRoute: typeof DashboardInboxIndexRoute
   DashboardInstagramIndexRoute: typeof DashboardInstagramIndexRoute
-  DashboardLandingPagesIndexRoute: typeof DashboardLandingPagesIndexRoute
-  DashboardMenuIndexRoute: typeof DashboardMenuIndexRoute
-  DashboardPaymentIndexRoute: typeof DashboardPaymentIndexRoute
   DashboardQrCreatorIndexRoute: typeof DashboardQrCreatorIndexRoute
   DashboardQuickAccessLinksIndexRoute: typeof DashboardQuickAccessLinksIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
-  DashboardSurveylandinglistIndexRoute: typeof DashboardSurveylandinglistIndexRoute
   DashboardSurveysIndexRoute: typeof DashboardSurveysIndexRoute
   DashboardTestimonialIndexRoute: typeof DashboardTestimonialIndexRoute
   DashboardTicketsIndexRoute: typeof DashboardTicketsIndexRoute
@@ -3225,7 +3021,6 @@ interface DashboardRouteRouteChildren {
   DashboardContactsGroupsIndexRoute: typeof DashboardContactsGroupsIndexRoute
   DashboardContactsLabelsIndexRoute: typeof DashboardContactsLabelsIndexRoute
   DashboardContactsLifecycleIndexRoute: typeof DashboardContactsLifecycleIndexRoute
-  DashboardLandingPagesShortUrlIdIndexRoute: typeof DashboardLandingPagesShortUrlIdIndexRoute
   DashboardLoyaltyApprovalsIndexRoute: typeof DashboardLoyaltyApprovalsIndexRoute
   DashboardLoyaltyCashierIndexRoute: typeof DashboardLoyaltyCashierIndexRoute
   DashboardLoyaltyCommandIndexRoute: typeof DashboardLoyaltyCommandIndexRoute
@@ -3236,8 +3031,6 @@ interface DashboardRouteRouteChildren {
   DashboardLoyaltySettingsIndexRoute: typeof DashboardLoyaltySettingsIndexRoute
   DashboardLoyaltyTemplatesIndexRoute: typeof DashboardLoyaltyTemplatesIndexRoute
   DashboardLoyaltyTransactionsIndexRoute: typeof DashboardLoyaltyTransactionsIndexRoute
-  DashboardMenuMenuIdIndexRoute: typeof DashboardMenuMenuIdIndexRoute
-  DashboardPaymentSummaryIndexRoute: typeof DashboardPaymentSummaryIndexRoute
   DashboardQrCreatorShortUrlIdIndexRoute: typeof DashboardQrCreatorShortUrlIdIndexRoute
   DashboardQuickAccessLinksShortUrlIdIndexRoute: typeof DashboardQuickAccessLinksShortUrlIdIndexRoute
   DashboardSettingsAccountIndexRoute: typeof DashboardSettingsAccountIndexRoute
@@ -3247,7 +3040,6 @@ interface DashboardRouteRouteChildren {
   DashboardSettingsSecurityIndexRoute: typeof DashboardSettingsSecurityIndexRoute
   DashboardSettingsTeamIndexRoute: typeof DashboardSettingsTeamIndexRoute
   DashboardSettingsUsersIndexRoute: typeof DashboardSettingsUsersIndexRoute
-  DashboardSurveylandinglistLandingIdIndexRoute: typeof DashboardSurveylandinglistLandingIdIndexRoute
   DashboardSurveysSurveyIdIndexRoute: typeof DashboardSurveysSurveyIdIndexRoute
   DashboardSurveysTemplatesIndexRoute: typeof DashboardSurveysTemplatesIndexRoute
   DashboardTestimonialCollectionIdIndexRoute: typeof DashboardTestimonialCollectionIdIndexRoute
@@ -3282,13 +3074,9 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardContactsIndexRoute: DashboardContactsIndexRoute,
   DashboardInboxIndexRoute: DashboardInboxIndexRoute,
   DashboardInstagramIndexRoute: DashboardInstagramIndexRoute,
-  DashboardLandingPagesIndexRoute: DashboardLandingPagesIndexRoute,
-  DashboardMenuIndexRoute: DashboardMenuIndexRoute,
-  DashboardPaymentIndexRoute: DashboardPaymentIndexRoute,
   DashboardQrCreatorIndexRoute: DashboardQrCreatorIndexRoute,
   DashboardQuickAccessLinksIndexRoute: DashboardQuickAccessLinksIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
-  DashboardSurveylandinglistIndexRoute: DashboardSurveylandinglistIndexRoute,
   DashboardSurveysIndexRoute: DashboardSurveysIndexRoute,
   DashboardTestimonialIndexRoute: DashboardTestimonialIndexRoute,
   DashboardTicketsIndexRoute: DashboardTicketsIndexRoute,
@@ -3305,8 +3093,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardContactsGroupsIndexRoute: DashboardContactsGroupsIndexRoute,
   DashboardContactsLabelsIndexRoute: DashboardContactsLabelsIndexRoute,
   DashboardContactsLifecycleIndexRoute: DashboardContactsLifecycleIndexRoute,
-  DashboardLandingPagesShortUrlIdIndexRoute:
-    DashboardLandingPagesShortUrlIdIndexRoute,
   DashboardLoyaltyApprovalsIndexRoute: DashboardLoyaltyApprovalsIndexRoute,
   DashboardLoyaltyCashierIndexRoute: DashboardLoyaltyCashierIndexRoute,
   DashboardLoyaltyCommandIndexRoute: DashboardLoyaltyCommandIndexRoute,
@@ -3319,8 +3105,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardLoyaltyTemplatesIndexRoute: DashboardLoyaltyTemplatesIndexRoute,
   DashboardLoyaltyTransactionsIndexRoute:
     DashboardLoyaltyTransactionsIndexRoute,
-  DashboardMenuMenuIdIndexRoute: DashboardMenuMenuIdIndexRoute,
-  DashboardPaymentSummaryIndexRoute: DashboardPaymentSummaryIndexRoute,
   DashboardQrCreatorShortUrlIdIndexRoute:
     DashboardQrCreatorShortUrlIdIndexRoute,
   DashboardQuickAccessLinksShortUrlIdIndexRoute:
@@ -3333,8 +3117,6 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsSecurityIndexRoute: DashboardSettingsSecurityIndexRoute,
   DashboardSettingsTeamIndexRoute: DashboardSettingsTeamIndexRoute,
   DashboardSettingsUsersIndexRoute: DashboardSettingsUsersIndexRoute,
-  DashboardSurveylandinglistLandingIdIndexRoute:
-    DashboardSurveylandinglistLandingIdIndexRoute,
   DashboardSurveysSurveyIdIndexRoute: DashboardSurveysSurveyIdIndexRoute,
   DashboardSurveysTemplatesIndexRoute: DashboardSurveysTemplatesIndexRoute,
   DashboardTestimonialCollectionIdIndexRoute:
@@ -3447,9 +3229,7 @@ const rootRouteChildren: RootRouteChildren = {
   marketingProductsWhatsappSurveyIndexRoute:
     marketingProductsWhatsappSurveyIndexRoute,
   publicFacingloyaltyCashierIndexRoute: publicFacingloyaltyCashierIndexRoute,
-  publicFacingLpShortIdIndexRoute: publicFacingLpShortIdIndexRoute,
   publicFacingLtShortIdIndexRoute: publicFacingLtShortIdIndexRoute,
-  publicFacingMShortIdIndexRoute: publicFacingMShortIdIndexRoute,
   publicFacingQrShortIdIndexRoute: publicFacingQrShortIdIndexRoute,
   publicFacingWasShortIdIndexRoute: publicFacingWasShortIdIndexRoute,
   publicFacingWsShortIdIndexRoute: publicFacingWsShortIdIndexRoute,

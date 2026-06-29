@@ -36,13 +36,13 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import type { BusinessHoursFormValues, DayKey } from "./schema.ts";
 import { businessHoursFormSchema, days, timeOptions } from "./schema.ts";
 
-type Props = {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialValues: BusinessHoursFormValues;
   onSave: (values: BusinessHoursFormValues) => void;
   editing?: boolean;
-};
+}
 
 function TimeSlotRow({
   slot,

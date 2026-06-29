@@ -92,18 +92,18 @@ export async function createChatbot({ name }: { name: string }) {
   return (await axiosClient.post(`${CHATBOT_BASEURL}/chatbot`, { name })).data;
 }
 
-type IChatbotUpdate = {
+interface IChatbotUpdate {
   publicPageStatus?: ChatbotPublicPageStatus;
   enableWaChat?: boolean;
   waCommand?: string;
   waPrompt?: string;
   enableAllWaChat?: boolean;
-};
+}
 
-type IUpdateChatbotArgs = {
+interface IUpdateChatbotArgs {
   chatbotId: string;
   data: IChatbotUpdate;
-};
+}
 
 export async function updateChatbot({ chatbotId, data }: IUpdateChatbotArgs) {
   return await axiosClient.put(`${CHATBOT_BASEURL}/chatbot/${chatbotId}`, data);

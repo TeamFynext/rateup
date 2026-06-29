@@ -254,11 +254,11 @@ export function getFlowFormElementById(id: string, flowJson: WaFlowJson) {
     }
   }
 }
-type newScreenDataObj = {
+interface newScreenDataObj {
   screenId: string;
   screenTitle: string;
   footerBtnLabel: string;
-};
+}
 
 export const getNewScreenObj = ({
   screenId,

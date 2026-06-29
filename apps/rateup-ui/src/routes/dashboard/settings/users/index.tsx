@@ -80,7 +80,7 @@ export const Route = createFileRoute("/dashboard/settings/users/")({
   component: UsersPage,
 });
 
-type SelectedUser = {
+interface SelectedUser {
   id?: string;
   name?: string;
   email?: string;
@@ -92,13 +92,13 @@ type SelectedUser = {
   profilePhoto?: string;
   isPaused?: boolean;
   lastActive?: string;
-};
+}
 
-type TeamOption = {
+interface TeamOption {
   id: string;
   name: string;
   color?: string;
-};
+}
 
 function UsersPage() {
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);

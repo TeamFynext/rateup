@@ -12,14 +12,14 @@ enum Size {
   lg = "lg",
 }
 
-type CustomColorPickerProps = {
+interface CustomColorPickerProps {
   className?: string;
   value: string;
   onChange: any;
   size?: string;
   elementToBeDisplayed?: React.ReactNode;
   withoutEyedropper?: boolean;
-};
+}
 
 function CustomColorPicker({
   className = "",

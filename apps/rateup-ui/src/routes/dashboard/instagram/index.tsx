@@ -250,7 +250,11 @@ function InstagramDashboard() {
   );
 }
 
-type DraftIceBreaker = { id: string; question: string; payload: string };
+interface DraftIceBreaker {
+  id: string;
+  question: string;
+  payload: string;
+}
 
 function IceBreakersTab({
   waSettingId,
@@ -509,13 +513,13 @@ function IgMeLinksTab({
   );
 }
 
-type DraftMenuItem = {
+interface DraftMenuItem {
   id: string;
   type: "postback" | "web_url";
   title: string;
   payload: string;
   url: string;
-};
+}
 
 function PersistentMenuTab({
   waSettingId,

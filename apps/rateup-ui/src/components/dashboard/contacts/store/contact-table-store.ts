@@ -1,12 +1,12 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-type ContactTableFilter = {
+interface ContactTableFilter {
   searchTerm: string;
   lifecycleId: string;
   source: string;
   labelId: string;
-};
+}
 export const useContactTableStore = create<{
   filter: ContactTableFilter;
   setFilter: (value: ContactTableFilter) => void;

@@ -8,7 +8,7 @@ const api = new GhostContentAPI({
   version: "v6.0",
 });
 
-export type Post = {
+export interface Post {
   slug: string;
   id: string;
   uuid: string;
@@ -89,7 +89,7 @@ export type Post = {
   };
   url: string;
   excerpt: string;
-};
+}
 export async function getPosts(filter?: { tag?: string; author?: string }) {
   let filterStr: string | undefined;
   if (filter?.tag) {
@@ -120,7 +120,7 @@ export async function getSinglePost(postSlug: string) {
   }
 }
 
-export type Author = {
+export interface Author {
   slug: string;
   id: string;
   name: string;
@@ -134,7 +134,7 @@ export type Author = {
   meta_title: string | null;
   meta_description: string | null;
   url: string;
-};
+}
 
 export async function getAuthors() {
   return (await api.authors
@@ -146,7 +146,7 @@ export async function getAuthors() {
     })) as Array<Author>;
 }
 
-export type Tag = {
+export interface Tag {
   slug: string;
   id: string;
   name: string;
@@ -166,7 +166,7 @@ export type Tag = {
   canonical_url: string | null;
   accent_color: string | null;
   url: string;
-};
+}
 export async function getTags() {
   return (await api.tags
     .browse({
