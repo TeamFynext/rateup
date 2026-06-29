@@ -39,13 +39,13 @@ type IssueTicket = {
   reqOptions?: Array<string>;
 } | null;
 
-type TNC = {
+interface TNC {
   title: string;
   urlTitle: string;
   content: string;
-};
+}
 
-type ValidationRules = {
+interface ValidationRules {
   length?: {
     min: string;
     max: string;
@@ -60,13 +60,13 @@ type ValidationRules = {
     type: string;
     errorMessage: string;
   } | null;
-};
+}
 
 declare global {
-  type Choice = {
+  interface Choice {
     value: string;
     weightage?: NPSWeightage;
-  };
+  }
   interface Question {
     title: Zod.RecordType<string, string>;
     description: Zod.RecordType<string, string>;
@@ -110,7 +110,7 @@ declare global {
     };
   }
 
-  type ResponseSummary = {
+  interface ResponseSummary {
     questionId: string;
     all: {
       summary: string;
@@ -121,37 +121,37 @@ declare global {
       summary: string;
       responseIds: string[];
     }[];
-  };
+  }
 
-  type Integration = {
+  interface Integration {
     id: string;
     orgId: string;
     active: boolean;
     name: IntegratedApps;
     createdAt: string;
-  };
+  }
 
-  type GoogleSheetCredential = {
+  interface GoogleSheetCredential {
     accessToken: string;
     refreshToken: string;
     expiryDate: string;
     scopes: string[];
     userEmail: string | null;
-  };
+  }
   type GoogleSheetIntegration = Integration & {
     credential: GoogleSheetCredential;
   };
-  type ShopifyCredential = {
+  interface ShopifyCredential {
     session: Session;
     isWebhookRegistered: boolean;
     shopifySurveys: ShopifySurvey[];
-  };
+  }
 
   type ShopifyIntegration = Integration & {
     credential: ShopifyCredential;
   };
 
-  type petPoojaCredential = {
+  interface petPoojaCredential {
     restaurantId: string;
     orderEvent: {
       waTemplateId: string;
@@ -167,23 +167,23 @@ declare global {
       scheduledAt?: Date;
       createdAt: Date;
     }[];
-  };
+  }
 
   type petPoojaIntegration = Integration & {
     credential: petPoojaCredential;
   };
 
-  export type AmeliaCredential = {
+  export interface AmeliaCredential {
     apiKey: string;
     baseUrl: string;
     serviceId: number;
-  };
+  }
 
   export type AmeliaIntegration = integration & {
     credential: AmeliaCredential;
   };
 
-  export type ShopifySurvey = {
+  export interface ShopifySurvey {
     waTemplateId?: string;
     event: ShopifyEvents;
     isProductSpecific: boolean;
@@ -201,14 +201,14 @@ declare global {
     actionId?: string;
     loyaltyApiFeature?: string;
     variableMapping: { templateParamIndex: number; shopifyPath: string }[];
-  };
+  }
 
-  type ScheduleObj = {
+  interface ScheduleObj {
     createdAt: Date;
     sentAt?: Date;
     scheduledAt: Date;
     status?: string;
-  };
+  }
 
   type ShopifySchedules = ScheduleObj & {
     phone: string;
@@ -239,7 +239,7 @@ declare global {
   }>;
   // This is NOT SurveyResponse. This indicates the response to a single question.
   // SurveyResponse.responses is an array of these.
-  type QuestionResponse = {
+  interface QuestionResponse {
     questionId: string;
     type: QuestionType;
     response: {
@@ -299,13 +299,13 @@ declare global {
         mime_type: string;
       }>;
     };
-  };
-  type LogicJump = {
+  }
+  interface LogicJump {
     condition: LogicCondition;
     response: string | string[]; // for (MSQ and DDMS) or (for conditions like includeAnyOf) it will be an array of indices of selected choices
     action: LogicAction;
-  };
-  type WaTemplateWithTypes = {
+  }
+  interface WaTemplateWithTypes {
     id: string;
     createdAt: Date;
     whatsappSettingsPhoneId?: string;
@@ -320,27 +320,21 @@ declare global {
     acceptButton?: string;
     orgId?: string;
     defaultValues?: WaTemplateDefaultValues;
-  };
+  }
   type WaSessionWithRelations = Awaited<ReturnType<typeof getSession>>;
 
-  type subscriptionCountRestrictionCountType = {
+  interface subscriptionCountRestrictionCountType {
     max: number;
-  };
-  type subscriptionCountRestriction = {
+  }
+  interface subscriptionCountRestriction {
     count: subscriptionCountRestrictionCountType;
-  };
-  type subscriptionActiveField = {
+  }
+  interface subscriptionActiveField {
     active: boolean;
-  };
+  }
   type subscriptionWithActiveAndCount = subscriptionCountRestriction & subscriptionActiveField;
   interface SubscriptionFeatures {
     // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
-    [sfpn.Menu]: subscriptionCountRestriction &
-      subscriptionActiveField & {
-        count: {
-          monthlyViewLimit: number;
-        };
-      };
     [sfpn.Team]: {
       teamMember: subscriptionCountRestriction & subscriptionActiveField;
     } & subscriptionActiveField &
@@ -409,21 +403,21 @@ declare global {
     subscriptionRef?: string;
     shopifyPlanId?: string;
   }
-  type WaFlowWa = {
+  interface WaFlowWa {
     // wa flow type from whatsapp
     name: string;
     id: string;
     status: WaFlowStatus;
     categories?: string[];
-  };
-  type WaFlowJson = {
+  }
+  interface WaFlowJson {
     version: string;
     screens: Array<WaFlowScreen>;
     data_api_version: string;
     routing_model: Json;
-  };
+  }
 
-  type FlowTicket = {
+  interface FlowTicket {
     questionId: string;
     type: QuestionType2;
     selectedColumnId?: string;
@@ -434,28 +428,28 @@ declare global {
       reqOptions?: string[];
       submissionTicket?: boolean;
     };
-  };
+  }
 
-  type WaFlowScreen = {
+  interface WaFlowScreen {
     id: string;
     title: string;
     layout: WaFlowLayout;
     data: any; // add types
     terminal: boolean;
-  };
+  }
 
-  type WaFlowLayout = {
+  interface WaFlowLayout {
     type: WaFlowLayoutType;
     children: Array<WaFlowForm>;
-  };
+  }
 
-  type WaFlowForm = {
+  interface WaFlowForm {
     type: string; // add types
     name: string;
     children: Array<WaFlowFormElement>;
-  };
+  }
 
-  type WaFlowFormElement = {
+  interface WaFlowFormElement {
     id: string; // for internal use only. Should be removed before sending to whatsapp server
     type: WaFlowFormElementType;
     text?: string;
@@ -465,36 +459,39 @@ declare global {
     "input-type"?: string; // add types
     "on-click-action"?: WaFlowOnClickAction;
     "data-source"?: Array<WaFlowFormChoice>;
-  };
+  }
 
-  type WaFlowFormChoice = {
+  interface WaFlowFormChoice {
     id: string;
     title: string;
-  };
+  }
 
-  type WaFlowOnClickAction = {
+  interface WaFlowOnClickAction {
     name: string; // add types
     next?: {
       type: string; // add types
       name: string;
     };
     payload: any;
-  };
-  type WaFlowPreview = { preview_url: string; expires_at: string };
-  type WaFlowTemplateMessage = {
+  }
+  interface WaFlowPreview {
+    preview_url: string;
+    expires_at: string;
+  }
+  interface WaFlowTemplateMessage {
     header?: string;
     headerImage?: string;
     body: string;
     footer?: string;
     cta: string;
-  };
-  type WaAutomatedReplyMatchData = {
+  }
+  interface WaAutomatedReplyMatchData {
     keywords?: Array<string>;
     exactText?: string;
     caseSensitive: boolean;
-  };
+  }
   //--- instagram
-  type InstagramCommentValue = {
+  interface InstagramCommentValue {
     id: string; // comment ID
     text: string;
     from: {
@@ -508,9 +505,9 @@ declare global {
     created_time: number;
     ad_id?: string;
     ad_title?: string;
-  };
+  }
 
-  type InstagramWebhookBody = {
+  interface InstagramWebhookBody {
     object: "instagram";
     entry: [
       {
@@ -616,9 +613,9 @@ declare global {
         ];
       },
     ];
-  };
+  }
 
-  type IgSendMessageBody = {
+  interface IgSendMessageBody {
     recipient: {
       id: string;
     };
@@ -636,10 +633,10 @@ declare global {
       reaction?: string;
       emoji?: string;
     };
-  };
+  }
   type IgReceiveMessageBody = InstagramWebhookBody["entry"][0]["messaging"][0];
 
-  type FacebookWebhookBody = {
+  interface FacebookWebhookBody {
     object: "page";
 
     entry: [
@@ -728,9 +725,9 @@ declare global {
         ];
       },
     ];
-  };
+  }
 
-  type FbSendMessageBody = {
+  interface FbSendMessageBody {
     recipient: {
       id: string;
     };
@@ -755,19 +752,19 @@ declare global {
     };
 
     sender_action?: "typing_on" | "typing_off" | "mark_seen";
-  };
+  }
 
   type FbReceiveMessageBody = FacebookWebhookBody["entry"][0]["messaging"][0];
   //---instagram
 
-  type WaInboxMessageBody = {
+  interface WaInboxMessageBody {
     exchangeProcess: "send" | "receive" | "internal" | "privateNote";
     send?: WaSendMessageBody | IgSendMessageBody | FbSendMessageBody;
     receive?: WaReceiveMessageBody | IgReceiveMessageBody | FbReceiveMessageBody;
     internal?: WaInternalMessageBody;
     privateNote?: WaPrivateMessageBody;
-  };
-  type WaTemplateDefaultValues = {
+  }
+  interface WaTemplateDefaultValues {
     image?: {
       link: string;
     };
@@ -787,27 +784,27 @@ declare global {
         product_retailer_id: string;
       };
     };
-  };
-  type WaFlowStartMessageConfig = {
+  }
+  interface WaFlowStartMessageConfig {
     prefix: string;
     suffix: string;
-  };
-  type WaEncryptionKeys = {
+  }
+  interface WaEncryptionKeys {
     publicKey: string;
     privateKey: string;
     passphrase: string;
-  };
+  }
 
-  type LoyaltyActionMessage = {
+  interface LoyaltyActionMessage {
     message: any;
     forwardMessage?: any;
-  };
-  type CatalogImage = {
+  }
+  interface CatalogImage {
     url: string;
     tag: string[];
-  };
+  }
 
-  type CatalogProductCore = {
+  interface CatalogProductCore {
     type: "PRODUCT_ITEM";
     id: string;
     retailer_id: string;
@@ -845,9 +842,9 @@ declare global {
     disabled_capabilities?: string[];
     additional_image_link?: string[];
     currency?: string;
-  };
+  }
 
-  type CatalogHotel = {
+  interface CatalogHotel {
     type: "HOTEL";
     name: string;
     latitude: string;
@@ -862,9 +859,9 @@ declare global {
     hotel_id: string;
     image: CatalogImage[];
     id?: string;
-  };
+  }
 
-  type CatalogHotelRoom = {
+  interface CatalogHotelRoom {
     type: "HOTEL_ROOM";
     name: string;
     url: string;
@@ -874,19 +871,19 @@ declare global {
     hotel_room_id: string;
     image: CatalogImage[];
     id?: string;
-  };
+  }
 
-  type WhatsappCatalog = {
+  interface WhatsappCatalog {
     catalogId: string;
     orgId: string;
     vertical: string;
     name: string;
     isWhatsappConnected: boolean;
-  };
+  }
 
   type WaCatalogProductItem = CatalogProductCore | CatalogHotel | CatalogHotelRoom;
 
-  type WaCatalogOrder = {
+  interface WaCatalogOrder {
     catalogId: string;
     products: {
       retailerId: string;
@@ -899,7 +896,7 @@ declare global {
     paymentStatus: string;
     status: string;
     transactionId?: string;
-  };
+  }
 
   // PRISMA JSON TYPES
   namespace PrismaJson {
@@ -948,13 +945,13 @@ export interface FlowLogicJump {
   action: LogicAction;
 }
 
-export type orgWsMessage = {
+export interface orgWsMessage {
   type: "inbox";
   inbox?: {
     contact: Contact;
     message: WaMessage;
   };
-};
+}
 
 declare module "fastify" {
   interface FastifyRequest {

@@ -207,26 +207,6 @@ export async function createStats(orgId: string) {
       },
     });
 
-    const menuCount = await prisma.menu.count({
-      where: {
-        team: {
-          orgId: orgId,
-        },
-      },
-    });
-
-    const menuViewsCount = await prisma.menuLanding.aggregate({
-      where: {
-        surveyTeamMap: {
-          team: {
-            orgId: orgId,
-          },
-        },
-      },
-      _sum: {
-        visited: true,
-      },
-    });
     const monthlyMessagesCount = await prisma.waMessage.count({
       where: {
         contact: {
@@ -246,8 +226,6 @@ export async function createStats(orgId: string) {
       surveyCount,
       surveyResponsesCount,
       surveyResponsesCountCurrentMonth,
-      menuCount,
-      menuViewsCount: menuViewsCount._sum.visited,
       monthlyMessagesCount,
       waAutomationCount,
     };
@@ -269,8 +247,6 @@ export async function updateUsageStats(
     surveyCount: number;
     surveyResponsesCount: number;
     surveyResponsesCountCurrentMonth: number;
-    menuCount: number;
-    menuViewsCount: number;
     monthlyMessagesCount: number;
     waAutomationCount: number;
   },
@@ -283,8 +259,8 @@ export async function updateUsageStats(
       surveysCount: stats?.surveyCount || 0,
       surveyResponsesCount: stats?.surveyResponsesCount || 0,
       monthlySurveyResponses: stats?.surveyResponsesCountCurrentMonth || 0,
-      menusCount: stats?.menuCount || 0,
-      menuViewsCount: stats?.menuViewsCount || 0,
+      menusCount: 0,
+      menuViewsCount: 0,
       monthlyMessagesCount: stats?.monthlyMessagesCount || 0,
       waAutomationCount: stats?.waAutomationCount || 0,
     },
@@ -294,8 +270,8 @@ export async function updateUsageStats(
       surveysCount: stats?.surveyCount || 0,
       surveyResponsesCount: stats?.surveyResponsesCount || 0,
       monthlySurveyResponses: stats?.surveyResponsesCountCurrentMonth || 0,
-      menusCount: stats?.menuCount || 0,
-      menuViewsCount: stats?.menuViewsCount || 0,
+      menusCount: 0,
+      menuViewsCount: 0,
       monthlyMessagesCount: stats?.monthlyMessagesCount || 0,
       orgId,
     },

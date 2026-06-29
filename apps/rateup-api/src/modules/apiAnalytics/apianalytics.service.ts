@@ -2,7 +2,7 @@ import { Prisma } from "../../../generated/prisma/client.js";
 import { WaTemplateCategory } from "../../types/enums.js";
 import prisma from "../../utils/prisma.js";
 
-type WaMessageOverview = {
+interface WaMessageOverview {
   totalMessages: number;
   totalMessagesChange: number;
   deliveredMessages: number;
@@ -11,27 +11,27 @@ type WaMessageOverview = {
   failedPercentage: number;
   avgDeliveryTimeSeconds: number | null;
   avgDeliveryTimeChange: number | null;
-};
+}
 
-type MessageDeliveryTrendPoint = {
+interface MessageDeliveryTrendPoint {
   time: string;
   totalMessages: number;
   deliveredMessages: number;
   failedMessages: number;
-};
+}
 
-type TemplateCategoryStat = {
+interface TemplateCategoryStat {
   category: string;
   count: number;
   percentage: number;
-};
+}
 
-type TemplateCategoryOverview = {
+interface TemplateCategoryOverview {
   totalTemplates: number;
   byCategory: TemplateCategoryStat[];
-};
+}
 
-type TemplatePerformanceStat = {
+interface TemplatePerformanceStat {
   templateName: string;
   totalSent: number;
   deliveredCount: number;
@@ -39,9 +39,9 @@ type TemplatePerformanceStat = {
   successPercentage: number;
   failurePercentage: number;
   avgDeliveryTimeSeconds: number | null;
-};
+}
 
-type TeamPerformanceStat = {
+interface TeamPerformanceStat {
   teamId: string;
   teamName: string;
   teamColor: string;
@@ -49,7 +49,7 @@ type TeamPerformanceStat = {
   deliveredCount: number;
   failedCount: number;
   successPercentage: number;
-};
+}
 
 export async function getWaMessageOverviewByTeamAndOrg(
   teamId: string,

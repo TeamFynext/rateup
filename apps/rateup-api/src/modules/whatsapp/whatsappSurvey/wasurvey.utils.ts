@@ -676,7 +676,7 @@ export function getMessageObject(data: WaMessageBody) {
 export function getUserName(data: WaMessageBody) {
   return (data.entry[0].changes[0].value as WaReceiveMessageBody).contacts[0].profile.name;
 }
-export type WaParsedMessage = {
+export interface WaParsedMessage {
   from: string;
   userName: string;
   timestamp: string;
@@ -686,7 +686,7 @@ export type WaParsedMessage = {
   completeMessageObject: any;
   buttonId: string;
   buttonPayload: string;
-};
+}
 export function parseMessage(data: WaMessageBody): WaParsedMessage {
   if (!getMessageObject(data)) {
     throw new Error("No messages found");
@@ -1705,11 +1705,11 @@ export function parseWaJoinMessage(message: string) {
   };
 }
 
-type WaLinkOptions = {
+interface WaLinkOptions {
   waNumber: string;
   referralCode?: string;
   source?: string;
-};
+}
 
 export function generateWhatsAppJoinLink({
   waNumber,

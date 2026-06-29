@@ -644,7 +644,7 @@ export async function sendInstagramFile(
   }
 }
 
-export type InstagramMediaItem = {
+export interface InstagramMediaItem {
   id: string;
   caption?: string;
   media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM" | "REEL";
@@ -652,14 +652,14 @@ export type InstagramMediaItem = {
   thumbnail_url?: string;
   timestamp: string;
   permalink?: string;
-};
+}
 
-export type InstagramStoryItem = {
+export interface InstagramStoryItem {
   id: string;
   media_type: "IMAGE" | "VIDEO";
   media_url?: string;
   timestamp: string;
-};
+}
 
 export async function getInstagramMediaPosts(ibaId: string): Promise<InstagramMediaItem[]> {
   const waSettings = await getWaSettingsByIbaId(ibaId);

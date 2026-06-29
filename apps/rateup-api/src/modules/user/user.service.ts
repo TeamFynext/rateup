@@ -15,7 +15,7 @@ import supertokens from "supertokens-node";
 import { log } from "../../utils/logger.js";
 import { createFreePlanSubscription } from "../subscription/subscription.service.js";
 import { cloneSurvey } from "../survey/survey.service.js";
-import { cloneMenu } from "../menu/menu.service.js";
+
 import { defaultTheme } from "../surveyTheme/defaultTheme.js";
 import { updateReferral } from "../referrals/referrals.service.js";
 import { deleteSuperTokenUserForId, getUserInfo } from "../../utils/supertoken/supertoken.js";
@@ -136,30 +136,14 @@ export async function createUserSignup({
       //create an initial default survey
       let teamIds = [team.id];
       let surveyId = process.env.INITIAL_SAMPLE_SURVEY_ID;
-      let menuId = process.env.INITIAL_SAMPLE_MENU_ID;
-      let cloneNewSurvey;
-
       try {
         if (surveyId) {
-          cloneNewSurvey = await cloneSurvey(surveyId, teamMember.userId, teamIds, true);
+          await cloneSurvey(surveyId, teamMember.userId, teamIds, true);
         } else {
           log.error("Initial Survey creation failed...surveyId...missing");
         }
-        //create an initial default menu
-        if (
-          menuId &&
-          typeof cloneNewSurvey === "object" &&
-          cloneNewSurvey?.teams &&
-          cloneNewSurvey?.teams?.length > 0
-        ) {
-          if (cloneNewSurvey.teams[0].id) {
-            await cloneMenu(menuId, team.id, cloneNewSurvey.teams[0].id);
-          }
-        } else {
-          log.error("Initial Menu creation failed..." + cloneNewSurvey);
-        }
       } catch (e) {
-        log.error("Initial Survey/Menu Creations failed..." + e);
+        log.error("Initial Survey creation failed..." + e);
       }
     }
 
