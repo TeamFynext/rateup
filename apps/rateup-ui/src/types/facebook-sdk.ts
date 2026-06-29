@@ -36,7 +36,7 @@ type GetLoginStatusCallback = (response: {
 }) => void;
 
 type GetLoginStatus = (callback: GetLoginStatusCallback, force?: boolean) => void;
-type FBLoginResponse = {
+interface FBLoginResponse {
   status: "connected" | "not_authorized" | "unknown";
   authResponse?: {
     accessToken: string;
@@ -45,12 +45,12 @@ type FBLoginResponse = {
     userID: string;
     code: string;
   };
-};
+}
 
 // Type for FB.login
 type LoginCallback = (response: FBLoginResponse) => void;
 
-type FBLoginOptions = {
+interface FBLoginOptions {
   config_id: string;
   response_type: string;
   override_default_response_type: boolean;
@@ -63,6 +63,6 @@ type FBLoginOptions = {
   return_scopes?: boolean;
   enable_profile_selector?: boolean;
   profile_selector_ids?: string;
-};
+}
 
 type FBLogin = (callback: LoginCallback, options?: FBLoginOptions) => void;

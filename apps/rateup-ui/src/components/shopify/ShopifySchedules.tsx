@@ -16,7 +16,7 @@ import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 import RefreshButton from "../Button/RefreshButton.tsx";
 
-type ScheduleRowData = {
+interface ScheduleRowData {
   id: string;
   phone: string;
   scheduleTime: string;
@@ -27,7 +27,7 @@ type ScheduleRowData = {
   createdAt: string;
   history: ShopifySchedule;
   event_details: ShopifySurvey;
-};
+}
 
 interface EventDetailsCellProps {
   eventDetails: ShopifySurvey | undefined;

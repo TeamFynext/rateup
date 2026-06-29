@@ -51,10 +51,10 @@ export async function deleteResponse(id: string, surveyTeamMapId: string) {
   const res = await axiosClient.delete(`${RESPONSE_URL}/${surveyTeamMapId}/delete/${id}`);
   return res.data;
 }
-type generateResponseType = {
+interface generateResponseType {
   surveyTeamMapId: string;
   batchSize: number;
-};
+}
 export async function generateResponse(data: generateResponseType) {
   return (await axiosClient.post(`${RESPONSE_URL}/generate`, data))?.data;
 }
@@ -68,7 +68,7 @@ export async function syncResponseToGoogleSheet({ surveyId }) {
   return res?.data;
 }
 
-export type downloadExcelResponseType = {
+export interface downloadExcelResponseType {
   surveyId: string;
   defaultLanguage: string;
   visibleColumn: string[];
@@ -83,7 +83,7 @@ export type downloadExcelResponseType = {
     endDate?: Date;
     key?: string;
   };
-};
+}
 
 export async function downloadExcelResponse(data: downloadExcelResponseType) {
   const response = await axiosClient.post(`${RESPONSE_URL}/download-response`, data, {

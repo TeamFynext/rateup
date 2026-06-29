@@ -319,7 +319,7 @@ export interface WhatsappProductSet {
 }
 
 // Map of node types to their data types
-export type NodeTypeMap = {
+export interface NodeTypeMap {
   textNode: TextNodeData;
   quickReplyNode: QuickReplyNodeData;
   documentNode: DocumentNodeData;
@@ -360,7 +360,7 @@ export type NodeTypeMap = {
   instagramStoryReplyNode: InstagramStoryReplyNodeData;
   instagramProductTemplateNode: InstagramProductTemplateNodeData;
   instagramIceBreakerNode: InstagramIceBreakerNodeData;
-};
+}
 
 // Node type strings as a union type
 export type NodeType = keyof NodeTypeMap;

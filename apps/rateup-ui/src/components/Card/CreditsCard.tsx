@@ -1,14 +1,14 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-type CreditsCardProps = {
+interface CreditsCardProps {
   enableCredits: boolean;
   url?: string | File | null;
   children: React.ReactNode;
   sx?: React.CSSProperties;
   fz?: number | string;
   pl?: number | string;
-};
+}
 
 export const CreditsCard = ({
   enableCredits,

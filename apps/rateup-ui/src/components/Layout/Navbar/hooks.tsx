@@ -541,17 +541,6 @@ export function useNavMain({
             },
           ]
         : []),
-      // ...(hasFeature(subscription, sfpn.Menu) &&
-      // hasTeamFeature(TeamFeature.DigitalMenu)
-      //   ? [
-      //       {
-      //         title: t("Digital Menu"),
-      //         url: "/dashboard/menu",
-      //         icon: IconFileDescription,
-      //         items: [],
-      //       },
-      //     ]
-      //   : []),
       {
         title: t("Settings"),
         url: "/dashboard/settings",

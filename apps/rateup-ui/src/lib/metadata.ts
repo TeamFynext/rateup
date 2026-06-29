@@ -1,4 +1,4 @@
-type PageMetadata = {
+interface PageMetadata {
   title: string;
   description: string;
   openGraph?: {
@@ -12,7 +12,7 @@ type PageMetadata = {
     index?: boolean;
     follow?: boolean;
   };
-};
+}
 
 const pageMetadata: Record<string, PageMetadata> = {
   "/terms-of-service": {

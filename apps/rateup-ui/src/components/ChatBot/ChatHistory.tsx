@@ -47,7 +47,7 @@ const ChatHistory = ({ enableApi, selectedChatbotId }) => {
   );
 };
 
-type UserChat = {
+interface UserChat {
   userId: string;
   user: {
     name: string;
@@ -57,7 +57,7 @@ type UserChat = {
   message: string;
   createdAt: string;
   source: string;
-};
+}
 
 const AIChatSelect = ({ userChats, setSelectedChat, isLoading }) => {
   return (

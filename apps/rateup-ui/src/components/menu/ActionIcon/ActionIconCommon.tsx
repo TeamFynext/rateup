@@ -3,12 +3,12 @@ import type { JSX } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
-type ActionIconCommonProps = {
+interface ActionIconCommonProps {
   handleClick: (e: any) => void;
   disabled?: boolean;
   label: string;
   children: JSX.Element;
-};
+}
 export const ActionIconCommon = ({
   handleClick,
   label,

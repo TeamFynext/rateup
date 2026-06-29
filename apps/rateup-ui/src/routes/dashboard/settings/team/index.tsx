@@ -95,11 +95,6 @@ const FEATURES_WITH_SUBSCRIPTION: {
     requiredSubscriptions: [sfpn.AI],
   },
   { feature: TeamFeature.AppsServices, label: "Apps & Services" },
-  {
-    feature: TeamFeature.DigitalMenu,
-    label: "Digital Menu",
-    requiredSubscriptions: [sfpn.Menu],
-  },
   { feature: TeamFeature.Settings, label: "Settings" },
 ];
 

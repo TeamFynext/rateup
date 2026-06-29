@@ -45,15 +45,15 @@ export async function disconnectCatalogFromWaba(data) {
 
 // ─── Catalog Settings ──────────────────────────────────────────────────────
 
-export type DeliveryOption = {
+export interface DeliveryOption {
   id: string;
   name: string;
   charge: number;
   days?: string;
   enabled: boolean;
-};
+}
 
-export type CatalogSettings = {
+export interface CatalogSettings {
   catalogId: string;
   storeType: "standard" | "shopify";
   paymentMethod?: string;
@@ -67,7 +67,7 @@ export type CatalogSettings = {
   addressFlowStatus: "idle" | "submitting" | "review" | "approved" | "rejected";
   addressFlowFields?: any[];
   deliveryOptions: DeliveryOption[];
-};
+}
 
 export async function getCatalogSettings(catalogId: string): Promise<CatalogSettings> {
   return (await axiosClient.get(`${waCatalogUrl}/${catalogId}/settings`)).data;

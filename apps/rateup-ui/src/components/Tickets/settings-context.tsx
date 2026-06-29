@@ -3,12 +3,12 @@ import { createContext } from "react";
 import type { TFields, TSettings } from "./settings.ts";
 import { fields } from "./settings.ts";
 
-export type TSettingsContext = {
+export interface TSettingsContext {
   fields: TFields;
   settings: TSettings;
   update: (args: Partial<TSettings>) => void;
   reset: () => void;
-};
+}
 
 const defaultSettings: TSettings = {
   isBoardMoreObvious: false,

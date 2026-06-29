@@ -6,9 +6,9 @@ import ThirdPartyReact from "supertokens-auth-react/recipe/thirdparty";
 
 import { appInfo } from "./appInfo.ts";
 
-type RouterAdapter = {
+interface RouterAdapter {
   push: (url: string) => void;
-};
+}
 
 const routerInfo: { router?: RouterAdapter; pathName?: string } = {};
 

@@ -26,14 +26,14 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 
 type CustomFieldType = "multivalue" | "number" | "text" | "email";
 
-type CustomFieldFormValues = {
+interface CustomFieldFormValues {
   name: string;
   slug: string;
   description?: string;
   type: CustomFieldType;
   visibility: boolean;
   listValues: string[];
-};
+}
 
 type CustomFieldFormProps = Readonly<{
   data?: any;

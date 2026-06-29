@@ -139,7 +139,7 @@ export const updateLifecycleofMultipleContacts = async (data: {
   );
   return res.data;
 };
-export type CustomFieldData = {
+export interface CustomFieldData {
   id: string;
   orgId: string;
   slug: string;
@@ -150,7 +150,7 @@ export type CustomFieldData = {
   createdAt: string;
   values: string;
   listValues?: string[];
-};
+}
 
 export const getCustomField = async () => {
   const res = await axiosClient.get(`${CONTACT_BASE_URL}/custom-fields`);

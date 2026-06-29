@@ -293,7 +293,6 @@ export enum TeamFeature {
   QrStudio = "qr_studio",
   AiChatbot = "ai_chatbot",
   AppsServices = "apps_services",
-  DigitalMenu = "digital_menu",
   Settings = "settings",
 }
 

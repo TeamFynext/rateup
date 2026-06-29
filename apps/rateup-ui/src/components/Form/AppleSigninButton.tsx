@@ -5,10 +5,10 @@ import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-
 
 import { Button } from "@/components/ui/button.tsx";
 
-type AppleSignInButtonProps = {
+interface AppleSignInButtonProps {
   className?: string;
   buttonText: string;
-};
+}
 
 export default function AppleSignInButton({ buttonText, className }: AppleSignInButtonProps) {
   const { t: translations } = useTranslation();

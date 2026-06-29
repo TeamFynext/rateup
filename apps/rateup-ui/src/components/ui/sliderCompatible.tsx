@@ -2,7 +2,7 @@ import { Slider } from "./slider.tsx";
 
 // If your Slider wrapper uses a different prop name for change, adjust below.
 
-type Props = {
+interface Props {
   value?: number | number[];
   defaultValue?: number | number[];
   min?: number;
@@ -14,7 +14,7 @@ type Props = {
   onValueChange?: (value: number[]) => void; // Radix-style
   // pass-through any other props
   [key: string]: any;
-};
+}
 
 export default function SliderCompatible({
   value,

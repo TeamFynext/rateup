@@ -26,7 +26,7 @@ import { Button } from "./button.tsx";
 
 export type PhonePlatform = "instagram" | "whatsapp" | "facebook";
 
-type PhonePreviewState = {
+interface PhonePreviewState {
   open: boolean;
   screen: "home" | PhonePlatform;
   appContent: ReactNode | null;
@@ -36,7 +36,7 @@ type PhonePreviewState = {
   goHome: () => void;
   openApp: (platform: PhonePlatform) => void;
   updateContent: (content: ReactNode) => void;
-};
+}
 
 const PhonePreviewContext = createContext<PhonePreviewState>({
   open: false,

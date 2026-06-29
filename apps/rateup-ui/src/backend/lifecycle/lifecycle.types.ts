@@ -1,4 +1,4 @@
-export type GetLabelsRes = {
+export interface GetLabelsRes {
   id: string;
   orgId: string;
   name: string;
@@ -10,4 +10,4 @@ export type GetLabelsRes = {
   isWon: boolean;
   createdAt: string;
   updatedAt: string;
-};
+}

@@ -1,9 +1,9 @@
 import { createContext } from "react";
 
-type ISelectedLangCtx = {
+interface ISelectedLangCtx {
   selectedLanguage: string;
   defaultLanguage: string;
-};
+}
 const SelectedLanguageContext = createContext<ISelectedLangCtx>({
   selectedLanguage: "",
   defaultLanguage: "",

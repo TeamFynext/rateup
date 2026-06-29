@@ -6,7 +6,7 @@ import { axiosClient } from "../../../apiClient";
 
 const WA_CONTACT_BASE_PATH = `${WA_INBOX_BASE_PATH}/message`;
 
-export type WaGetMessagesBody = {
+export interface WaGetMessagesBody {
   id: string;
   waContctId: string;
   createdAt: string;
@@ -31,13 +31,13 @@ export type WaGetMessagesBody = {
   };
   sourcePlatform: MessagePlatform;
   sourceIdentifier: string;
-};
+}
 
-type WaMessagePage = {
+interface WaMessagePage {
   messages: WaGetMessagesBody[];
   nextCursor: string;
   hasNextPage: boolean;
-};
+}
 
 export async function getMessagesByContactId(
   contactId: string,
@@ -73,10 +73,10 @@ export type ContactsWithLastMessage = ContactsData & {
   assignedUsers: { id: string; name: string; teamId: string }[];
   messages: Partial<WaGetMessagesBody>[];
 };
-type ContactsWithLastMessageResponse = {
+interface ContactsWithLastMessageResponse {
   rows: ContactsWithLastMessage[];
   nextOffset: number | null;
-};
+}
 
 export async function getChatFilterData() {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/filterdata`)).data;
@@ -92,19 +92,19 @@ export async function getFilteredContacts(filterData: string, page: number) {
     )
   ).data as ContactsWithLastMessageResponse;
 }
-type assignedTo = {
+interface assignedTo {
   name: string;
   recipeName: string | null;
   phone: string | null;
-};
-type comments = {
+}
+interface comments {
   id: string;
   text: string;
   createdById: string;
   createdAt: string;
   ticketId: string;
-};
-export type _tickets = {
+}
+export interface _tickets {
   id: string;
   number: number;
   title: string;
@@ -121,7 +121,7 @@ export type _tickets = {
   surveyResponseId: string;
   comments: comments[];
   assignedTo: assignedTo;
-};
+}
 
 export async function exportWaChats({
   constraints,

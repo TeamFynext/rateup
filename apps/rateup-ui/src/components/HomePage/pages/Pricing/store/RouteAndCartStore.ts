@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type Cart = {
+interface Cart {
   id: string;
   name: string;
   currency: string;
@@ -12,16 +12,16 @@ type Cart = {
   planId: string;
   priceId: string;
   trialDays?: number;
-};
-export type Store = {
+}
+export interface Store {
   route: string;
   cart: Cart;
-};
+}
 
-type Actions = {
+interface Actions {
   updateRouteAndCart: (newRoute: string, cart: Cart) => void;
   reset: () => void;
-};
+}
 const initialState = {
   route: "/dashboard",
   cart: {
@@ -46,14 +46,14 @@ export const useRouteAndCartStore = create<Store & Actions>((set) => ({
   },
 }));
 
-type ImageStore = {
+interface ImageStore {
   imageToDelete: object[];
-};
+}
 
-type ImageActions = {
+interface ImageActions {
   updateImageArray: (image: object) => void;
   resetImage: () => void;
-};
+}
 const initalImageData = {
   imageToDelete: [],
 };

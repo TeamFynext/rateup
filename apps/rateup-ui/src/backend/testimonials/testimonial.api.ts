@@ -29,14 +29,14 @@ export async function getAllTestimonialCollections() {
   return collections;
 }
 
-type TestiomonialCollection = {
+interface TestiomonialCollection {
   id: string;
   createdAt: string;
   name: string;
   teamId: string;
   theme: TestimonialStyleType;
   testimonials: Omit<Testimonial & { responseId: string }, "teamId" | "survey">[];
-};
+}
 export async function getAllTestimonialsByCollection(collectionId: string) {
   const collection = (await axiosClient.get(`/public/testimonials/${collectionId}`)).data;
 

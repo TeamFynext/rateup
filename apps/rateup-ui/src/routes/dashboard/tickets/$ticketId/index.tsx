@@ -1089,8 +1089,16 @@ function TicketTopHeader({
   );
 }
 
-type ChecklistItem = { id: string; text: string; done: boolean };
-type Checklist = { id: string; name: string; items: ChecklistItem[] };
+interface ChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
+}
+interface Checklist {
+  id: string;
+  name: string;
+  items: ChecklistItem[];
+}
 
 function SectionLabel({ label, icon: Icon }: { label: string; icon?: React.ElementType }) {
   return (

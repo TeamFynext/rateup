@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-type WheelComponentProps = {
+interface WheelComponentProps {
   segments: string[]; // Array of segment labels
   segColors: string[]; // Array of colors for each segment
   winningSegment?: string; // Optional winning segment
@@ -20,7 +20,7 @@ type WheelComponentProps = {
   outerCircleWidth?: number; // Optional width of outer circle
   imageSrc?: string; // Optional background image src
   disable: boolean;
-};
+}
 
 const WheelComponent = ({
   segments,

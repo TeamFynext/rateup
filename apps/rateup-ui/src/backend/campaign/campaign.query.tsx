@@ -107,14 +107,14 @@ export const useDeleteCampaignMutation = (teamId, type) => {
     },
   });
 };
-type sendCampaignProps = {
+interface sendCampaignProps {
   campaignSentAt?: Date;
   statuses: CampaignParticipantStatus[];
   sentCampaignChoice: string;
   participantId?: string;
   status?: CampaignStatus;
   type?: string;
-};
+}
 
 export const useSendCampaign = (campaignId: string, teamId: string) => {
   const queryClient = useQueryClient();

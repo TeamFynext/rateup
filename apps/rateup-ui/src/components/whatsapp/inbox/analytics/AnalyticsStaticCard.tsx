@@ -57,12 +57,12 @@ export function AnalyticsStatCard({
   );
 }
 
-type PageHeaderCardProps = {
+interface PageHeaderCardProps {
   title: string;
   description: string;
   icon?: ReactNode;
   actions?: ReactNode;
-};
+}
 
 export function PageHeaderCard({ title, description, icon, actions }: PageHeaderCardProps) {
   return (

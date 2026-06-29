@@ -61,7 +61,7 @@ export const Route = createFileRoute("/dashboard/tickets/")({
   component: Page,
 });
 
-type BoardListEntry = {
+interface BoardListEntry {
   readonly id: string;
   readonly title: string;
   readonly description?: string | null;
@@ -70,19 +70,19 @@ type BoardListEntry = {
   readonly columnStats: Array<{ title: string; count: number }>;
   readonly teamIds: string[];
   readonly teamNames: string[];
-};
+}
 
-type BoardFormState = {
+interface BoardFormState {
   readonly id?: string;
   readonly title: string;
   readonly description: string;
   readonly teamIds: string[];
-};
+}
 
-type TeamOption = {
+interface TeamOption {
   readonly value: string;
   readonly label: string;
-};
+}
 
 const EMPTY_BOARD_FORM: BoardFormState = {
   title: "",
@@ -367,12 +367,12 @@ function Page() {
   );
 }
 
-type BoardTeamFilterProps = {
+interface BoardTeamFilterProps {
   readonly disabled: boolean;
   readonly teamOptions: TeamOption[];
   readonly value: string;
   readonly onChange: (value: string) => void;
-};
+}
 
 function BoardTeamFilter({
   disabled,
@@ -406,7 +406,7 @@ function BoardTeamFilter({
   );
 }
 
-type BoardFormDialogProps = {
+interface BoardFormDialogProps {
   readonly open: boolean;
   readonly title: string;
   readonly description: string;
@@ -416,7 +416,7 @@ type BoardFormDialogProps = {
   readonly onOpenChange: (open: boolean) => void;
   readonly onChange: (value: BoardFormState) => void;
   readonly onSubmit: () => void;
-};
+}
 
 function BoardFormDialog({
   open,

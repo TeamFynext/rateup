@@ -56,16 +56,16 @@ type RuleValue =
       ruleType?: string;
     };
 
-type Rule = {
+interface Rule {
   min?: string;
   max?: string;
   errorMessage: string;
   type?: string;
   ruleType: string;
-};
-type FormValues = {
+}
+interface FormValues {
   [ruleType: string]: RuleValue;
-};
+}
 
 const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTab }: IProps) => {
   const params = useParams({

@@ -120,6 +120,7 @@ export function SubscriptionEditorModal({
           >
             {subscription?.features &&
               Object.keys(subscription.features).map((feature: SubscriptionFeaturePathName) => {
+                if (feature === "menu") return null;
                 return (
                   <FeatureCard
                     key={feature}

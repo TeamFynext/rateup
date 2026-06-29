@@ -10,10 +10,10 @@ import { UserRole } from "@/utils/enums/index.ts";
  */
 
 type AllowedFeatures = Set<string> | null;
-type TeamFeaturesContextValue = {
+interface TeamFeaturesContextValue {
   allowedFeatures: AllowedFeatures;
   isPending: boolean;
-};
+}
 
 const TeamFeaturesContext = createContext<TeamFeaturesContextValue | undefined>(undefined);
 
