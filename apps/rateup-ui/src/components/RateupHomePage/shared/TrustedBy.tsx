@@ -124,7 +124,7 @@ export default function TrustedBy() {
                     width={100}
                     height={100}
                     alt={`Client Logo ${i + 1}`}
-                    className="h-[40px] sm:h-[50px] lg:h-[70px] w-auto object-contain grayscale brightness-0 invert"
+                    className="h-[40px] sm:h-[50px] lg:h-[70px] w-auto object-contain grayscale brightness-0 opacity-40 hover:opacity-75 transition-opacity"
                   />
                 </span>
               ))}
@@ -137,7 +137,7 @@ export default function TrustedBy() {
                     width={100}
                     height={100}
                     alt={`Client Logo ${i + 1}`}
-                    className="h-[40px] sm:h-[50px] lg:h-[70px] w-auto object-contain grayscale brightness-0 invert"
+                    className="h-[40px] sm:h-[50px] lg:h-[70px] w-auto object-contain grayscale brightness-0 opacity-40 hover:opacity-75 transition-opacity"
                   />
                 </span>
               ))}
