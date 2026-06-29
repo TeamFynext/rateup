@@ -77,6 +77,11 @@ export default function WaInboxChatDisplayHeader({
   const updateGroupsMutation = useUpdateContactGroupsForContactMutation(contact.id);
   const activeGroupIds = contactgroups?.map((g) => g.id) ?? [];
 
+  const hasTicketFeature = useMemo(
+    () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+    [subscription],
+  );
+
   const hasAIFeature = useMemo(
     () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
     [subscription],
@@ -173,6 +178,8 @@ export default function WaInboxChatDisplayHeader({
 
   const isSessionExpired = isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
   const { updateContactById } = useContactsStore();
+  const [openedCreateTicket, { open: openCreateTicket, close: closeCreateTicket }] =
+    useDisclosure(false);
 
   function handleLifecycleChange(value, lifecycleObj) {
     editContactMutation.mutate(
@@ -481,10 +488,27 @@ export default function WaInboxChatDisplayHeader({
             </Popover>
           )}
           <WaInboxCountdownTimer timeStamp={contact?.lastReceivedMessageTimeStamp} />
+          {hasTicketFeature && (
+            <CustomTooltip
+              content="Create ticket"
+              trigger={
+                <Button variant="ghost" size="icon" onClick={openCreateTicket}>
+                  <Ticket className="w-4 h-4" />
+                </Button>
+              }
+            />
+          )}
           <AssignUser contactId={contact?.id} />
           <ChatHeaderMenu contact={contact} />
         </div>
       </div>
+      <CreateTicketCard
+        close={closeCreateTicket}
+        opened={openedCreateTicket}
+        type={TicketType.CUSTOM}
+        hasTicketFeature={hasTicketFeature}
+        contactId={contact?.id}
+      />
     </div>
   );
 }
@@ -494,15 +518,8 @@ const ChatHeaderMenu = ({ contact }) => {
   const messagesStore = useMessagesStore();
   const { user } = useUser();
   const { updateContactById, setSelectedContact } = useContactsStore();
-  const [openedCreateTicket, { open: openCreateTicket, close: closeCreateTicket }] =
-    useDisclosure(false);
-  const { data: subscription } = useSubscription();
   const [openedConfirmation, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
   const blockmut = useBlockWhatsAppUser();
-  const hasTicketFeature = useMemo(
-    () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
-    [subscription],
-  );
   const isChatClosed = [
     WaMessageAssignStatus.CLOSED,
     WaMessageAssignStatus.RESOLVED,
@@ -657,12 +674,6 @@ const ChatHeaderMenu = ({ contact }) => {
             content={<p>All the assignees will be removed as closed,resolved and spam</p>}
           />
         </DropdownMenuItem>
-        {hasTicketFeature && (
-          <DropdownMenuItem onClick={openCreateTicket}>
-            <Ticket className="w-4 h-4 mr-2" />
-            Create Ticket
-          </DropdownMenuItem>
-        )}
         {!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) &&
           !contact?.blockedOnWhatsApp && (
             <>
@@ -684,13 +695,6 @@ const ChatHeaderMenu = ({ contact }) => {
         deleteQuotion="The blocked user cannot message you and you cannot message the user"
         forDeleteFunctionality
         headerLabel="Are you sure to block this user?"
-      />
-      <CreateTicketCard
-        close={closeCreateTicket}
-        opened={openedCreateTicket}
-        type={TicketType.CUSTOM}
-        hasTicketFeature={hasTicketFeature}
-        contactId={contact?.id}
       />
     </DropdownMenu>
   );
