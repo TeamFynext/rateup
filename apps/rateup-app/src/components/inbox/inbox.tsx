@@ -3,7 +3,7 @@ import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/api/inbox/type
 import { useFilteredContacts } from "@/api/inbox/contacts/contacts.query";
 import { useRouter } from "expo-router";
 import dayjs from "dayjs";
-import { useChatFilterStore } from "@/utils/store";
+import { useChatFilterStore, useSelectedContactStore } from "@/utils/store";
 import {
   parseWaMessage_,
   returnMessageContentBasedOnParsedMessage,
@@ -26,7 +26,8 @@ export default function Inbox({
   searchTerm,
   waMessageAssignStatus,
 }: InboxProps) {
-  const { filter } = useChatFilterStore();
+  const filter = useChatFilterStore((state) => state.filter);
+  const setSelectedContact = useSelectedContactStore((state) => state.setSelectedContact);
   const router = useRouter();
   const queryClient = useQueryClient();
   const [updatedContacts, setUpdatedContacts] = useState<
@@ -54,7 +55,10 @@ export default function Inbox({
 
   const contacts = data?.pages.flatMap((page) => page.rows) ?? [];
 
-  useEffect(() => {
+  const [prevWsData, setPrevWsData] = useState(wsData);
+
+  if (wsData !== prevWsData) {
+    setPrevWsData(wsData);
     if (wsData?.type === "inbox" && wsData?.inbox?.contact?.id) {
       const contactId = wsData.inbox.contact.id;
 
@@ -81,11 +85,16 @@ export default function Inbox({
             : baseContact.unReadMessageCount ?? 0,
         };
         const filtered = prev.filter((c) => c.id !== contactId);
-        queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
         return [updatedContact, ...filtered];
       });
     }
-  }, [wsData]);
+  }
+
+  useEffect(() => {
+    if (wsData?.type === "inbox" && wsData?.inbox?.contact?.id) {
+      queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
+    }
+  }, [wsData, queryClient]);
 
   const displayedContacts = contacts.map((contact) => {
     const updated = updatedContacts.find((u) => u.id === contact.id);
@@ -95,15 +104,15 @@ export default function Inbox({
   const finalContacts =
     waMessageAssignStatus === "Addressed"
       ? displayedContacts.filter((c) =>
-          WaMessageClosedStatus.includes(c.waMessageAssignStatus as WaMessageAssignStatus)
-        )
+        WaMessageClosedStatus.includes(c.waMessageAssignStatus as WaMessageAssignStatus)
+      )
       : displayedContacts;
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
     let ChatBoxComponent = ChatBox;
 
     if (!ChatBoxComponent) return null;
-    
+
     const parsedMessage = parseWaMessage_(item.lastMessage);
 
     const messagePreview = returnMessageContentBasedOnParsedMessage(
@@ -131,20 +140,16 @@ export default function Inbox({
         waMessageAssignStatus={item.waMessageAssignStatus}
         assignedUsers={item.assignedUsers}
         lifecycleId={item.lifecycleId}
-        onPress={() =>
+        onPress={() => {
+          setSelectedContact({
+            ...item,
+            sessionActive: isSessionActive,
+          });
           router.push({
             //@ts-ignore
             pathname: `/protected/chat/${item.id}`,
-            params: {
-              name: item.name ? item.name : item.whatsappUserName,
-              phone: item.phone,
-              waAssignStatus: item.waMessageAssignStatus,
-              lastReceivedMessageTimeStamp: item.lastReceivedMessageTimeStamp,
-              // @ts-ignore
-              sessionActive: isSessionActive,
-            },
-          })
-        }
+          });
+        }}
         lastMessageTimeStamp={dayjs
           .utc(item.lastMessage?.waCreatedAt)
           .fromNow()}

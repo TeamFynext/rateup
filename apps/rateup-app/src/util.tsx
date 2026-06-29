@@ -176,6 +176,11 @@ export function getSoucePlatformIconAndColor(
         icon: <FontAwesome name="instagram" color={"white"} size={16} />,
         bgColor: "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500",
       };
+    case MessagePlatform.FACEBOOK:
+      return {
+        icon: <FontAwesome name="facebook" color={"white"} size={16} />,
+        bgColor: "bg-gradient-to-br from-blue-600 via-blue-500 to-sky-400",
+      };
     case MessagePlatform.WEBCHAT:
       return {
         icon: <MessageCircle color={"white"} size={16} />,

@@ -1,14 +1,18 @@
 import { create } from "zustand";
-import { WaMessageAssignStatus } from "../api/inbox/types";
+import { WaMessageAssignStatus, ContactsWithLastMessage } from "../api/inbox/types";
 import { deleteUploadedFiles } from "./fileUpload";
 
 type ChatState = {
   waAssignStatus: string;
   setWaAssignStatus: (status: string) => void;
 };
+type SelectedContactData = ContactsWithLastMessage & {
+  sessionActive: boolean;
+};
+
 type SelectedContactState = {
-  selectedContactId: string | null;
-  setSelectedContactId: (contactId: string) => void;
+  selectedContact: SelectedContactData | null;
+  setSelectedContact: (contact: SelectedContactData | null) => void;
 };
 type SessionState = {
   isSessionActive: boolean;
@@ -30,10 +34,10 @@ export const useSelectedTabStore = create<SelectedTabState>((set: any) => ({
   setSelectedTab: (tab: string) => set({ selectedTab: tab }),
 }));
 
-export const useContactIdStore = create<SelectedContactState>((set: any) => ({
-  selectedContactId: null,
-  setSelectedContactId: (contactId: string) =>
-    set({ selectedContactId: contactId }),
+export const useSelectedContactStore = create<SelectedContactState>((set: any) => ({
+  selectedContact: null,
+  setSelectedContact: (contact: SelectedContactData | null) =>
+    set({ selectedContact: contact }),
 }));
 
 export const useSessionActiveStore = create<SessionState>((set: any) => ({

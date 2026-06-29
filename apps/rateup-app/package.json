@@ -54,6 +54,7 @@
     "react-native-circular-progress": "^1.4.1",
     "react-native-edge-to-edge": "1.8.1",
     "react-native-gifted-charts": "^1.4.76",
+    "react-native-keyboard-controller": "1.21.6",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-pager-view": "8.0.1",
     "react-native-paper": "^5.15.0",

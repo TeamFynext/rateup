@@ -15,7 +15,7 @@ import {
 } from "../../utils/chatbox_utils";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useChatAssignStatusStore } from "@/utils/store";
+import { useChatAssignStatusStore, useSelectedContactStore } from "@/utils/store";
 import AssignToUser from "./chatFooter/AssignToUser";
 import LinearGradient from "react-native-linear-gradient";
 import {
@@ -27,6 +27,8 @@ import {
 } from "lucide-react-native";
 import { Colors } from "@/constants/colors";
 import { getClosedIcon } from "@/util";
+import { MessagePlatform } from "@/constants/enums";
+import { FontAwesome } from "@expo/vector-icons";
 import { useEditContactMutation } from "@/api/inbox/contacts/contacts.query";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 
@@ -285,6 +287,20 @@ const ChatHeader = ({
   const now = dayjs();
   const diffInMinutes = sessionExpiry.diff(now, "minute");
   const isSessionActive = diffInMinutes > 0;
+  const selectedContact = useSelectedContactStore((state) => state.selectedContact);
+  const platform = selectedContact?.sourcePlatform || selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+
+  const renderPlatformIcon = () => {
+    switch (platform) {
+      case MessagePlatform.INSTAGRAM:
+        return <FontAwesome name="instagram" size={14} color="#E1306C" />;
+      case MessagePlatform.FACEBOOK:
+        return <FontAwesome name="facebook-square" size={14} color="#1877F2" />;
+      case MessagePlatform.WHATSAPP:
+      default:
+        return <FontAwesome name="whatsapp" size={14} color="#25D366" />;
+    }
+  };
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const hoursLeft = Math.floor(diffInMinutes / 60);
@@ -334,17 +350,21 @@ const ChatHeader = ({
         </LinearGradient>
 
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontSize: 15,
-              fontFamily: "Nunito_700Bold",
-              color: "#fff",
-              letterSpacing: -0.1,
-            }}
-          >
-            {formatName(name) || phone}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Text
+              numberOfLines={1}
+              style={{
+                fontSize: 15,
+                fontFamily: "Nunito_700Bold",
+                color: "#fff",
+                letterSpacing: -0.1,
+                flexShrink: 1,
+              }}
+            >
+              {formatName(name) || phone}
+            </Text>
+            {renderPlatformIcon()}
+          </View>
           <View
             style={{
               flexDirection: "row",

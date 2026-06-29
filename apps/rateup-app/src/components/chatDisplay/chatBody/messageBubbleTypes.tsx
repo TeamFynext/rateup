@@ -283,12 +283,13 @@ export function WaInboxAudio({
   const isDark = colorScheme === "dark";
   const { mutate, isPending } = useGetMediaFile();
   const [localPath, setLocalPath] = useState<string | null>(null);
-  const [id, caption] = messageContent.split("_caption_");
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [id, caption] = messageContent.split("_caption_");
+  const safeId = id.replace(/[^a-zA-Z0-9-]/g, "_");
   const appFolderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
-  const downloadPath = `${appFolderPath}/${id}.mp3`;
+  const downloadPath = `${appFolderPath}/${safeId}.mp3`;
   const link = id.startsWith("http") ? id : null;
   const source = localPath || link || null;
   const player = useAudioPlayer(source ? { uri: source } : null);

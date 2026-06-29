@@ -1,18 +1,16 @@
+import { useMemo } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
-  Modal,
-  Pressable,
-  FlatList,
   useColorScheme,
 } from "react-native";
-import React, { useState } from "react";
 import NotAssigned from "./chatFooter/NotAssigned";
 import MessageSendPanel from "./chatFooter/MessageSendPanel";
 import { useAuth } from "@/context/AuthContext";
-import { useChatAssignStatusStore } from "@/utils/store";
-import { Info, UserCheck } from "lucide-react-native";
+import { useChatAssignStatusStore, useSelectedContactStore } from "@/utils/store";
+import { Info } from "lucide-react-native";
+import { MessagePlatform } from "@/constants/enums";
+import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { useGetAssignedUserForContact } from "@/api/inbox/messages/message.query";
@@ -28,12 +26,30 @@ const ChatFooter = ({ id }: { id: string }) => {
   );
   const { data: assignedUsers } = useGetAssignedUserForContact(id);
   const { userId } = useAuth();
-  const [isModalVisible, setModalVisible] = useState(false);
   let currentUserAssignment = assignedUsers?.find(
     (entry: any) => entry.assignedUserId == userId,
   );
   const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
-  const toggleModal = () => setModalVisible(!isModalVisible);
+
+  const selectedContact = useSelectedContactStore((s) => s.selectedContact);
+  const platform = selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const { data: waSettings } = useWaSettings();
+
+  const whatsappSettingsPhoneId = useMemo(() => {
+    if (
+      platform === MessagePlatform.INSTAGRAM ||
+      platform === MessagePlatform.FACEBOOK ||
+      platform === MessagePlatform.WEBCHAT
+    ) {
+      return selectedContact?.lastMessage?.sourceIdentifier;
+    }
+    // WhatsApp default
+    return (
+      waSettings?.find(
+        (s: any) => s?.phone === selectedContact?.lastMessage?.sourceIdentifier
+      )?.phoneId || ""
+    );
+  }, [waSettings, platform, selectedContact]);
 
   if (
     !hasAssignedUsers ||
@@ -102,7 +118,13 @@ const ChatFooter = ({ id }: { id: string }) => {
         </View>
       )}
 
-      {currentUserAssignment && <MessageSendPanel />}
+      {currentUserAssignment && (
+        <MessageSendPanel
+          platform={platform}
+          whatsappSettingsPhoneId={whatsappSettingsPhoneId}
+          teamId={currentUserAssignment?.teamId || null}
+        />
+      )}
 
     </View>
   );

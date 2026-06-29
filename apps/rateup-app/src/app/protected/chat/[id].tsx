@@ -1,12 +1,13 @@
 import React, { useEffect } from "react";
-import { KeyboardAvoidingView, Platform, View, useColorScheme } from "react-native";
+import { Platform, View, useColorScheme } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useLocalSearchParams } from "expo-router";
 import ChatHeader from "@/components/chatDisplay/ChatHeader";
 import ChatFooter from "@/components/chatDisplay/ChatFooter";
 import ChatBody from "@/components/chatDisplay/ChatBody";
 import {
   useChatAssignStatusStore,
-  useContactIdStore,
+  useSelectedContactStore,
   useSessionActiveStore,
 } from "@/utils/store";
 import { Colors } from "@/constants/colors";
@@ -14,20 +15,18 @@ import { Colors } from "@/constants/colors";
 const ChatDisplay = () => {
   const params = useLocalSearchParams();
 
-  // Normalize parameters from useLocalSearchParams (which are typed as string | string[] | undefined)
-  const id = Array.isArray(params.id) ? params.id[0] : params.id || "";
-  const name = Array.isArray(params.name) ? params.name[0] : params.name || "";
-  const phone = Number(Array.isArray(params.phone) ? params.phone[0] : params.phone || 0);
-  const initialStatus = Array.isArray(params.waAssignStatus) ? params.waAssignStatus[0] : params.waAssignStatus || "";
-  const lastReceivedMessageTimeStamp = Array.isArray(params.lastReceivedMessageTimeStamp) ? params.lastReceivedMessageTimeStamp[0] : params.lastReceivedMessageTimeStamp || "";
-  const sessionActive = (Array.isArray(params.sessionActive) ? params.sessionActive[0] : params.sessionActive) === "true";
+  // Pull all details from the global selected contact store instead of URL params
+  const selectedContact = useSelectedContactStore((state) => state.selectedContact);
+
+  const id = Array.isArray(params.id) ? params.id[0] : params.id || selectedContact?.id || "";
+  const name = selectedContact?.name || selectedContact?.whatsappUserName || "";
+  const phone = Number(selectedContact?.phone) || 0;
+  const initialStatus = selectedContact?.waMessageAssignStatus || "";
+  const lastReceivedMessageTimeStamp = selectedContact?.lastReceivedMessageTimeStamp || "";
+  const sessionActive = selectedContact?.sessionActive || false;
 
   const setWaAssignStatus = useChatAssignStatusStore(
     (state) => state.setWaAssignStatus,
-  );
-
-  const setSelectedContactId = useContactIdStore(
-    (state) => state.setSelectedContactId,
   );
 
   const setIsSessionActive = useSessionActiveStore(
@@ -37,11 +36,10 @@ const ChatDisplay = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  // Set contactId and session state immediately
+  // Set session state immediately
   useEffect(() => {
-    setSelectedContactId(id);
     setIsSessionActive(sessionActive);
-  }, [id, sessionActive]);
+  }, [sessionActive]);
 
   useEffect(() => {
     if (id) {
@@ -57,8 +55,8 @@ const ChatDisplay = () => {
       }}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+        behavior={"padding"}
+        keyboardVerticalOffset={20}
         style={{ flex: 1 }}
       >
         <ChatHeader

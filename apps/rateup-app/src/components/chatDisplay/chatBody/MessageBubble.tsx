@@ -123,7 +123,11 @@ const MessageBubble = ({
           />
         );
       default:
-        return <Text style={{ color: textColor, fontSize: 14 }}>{messageContent}</Text>;
+        let displayContent = messageContent;
+        if (typeof messageContent === "object" && messageContent !== null) {
+          displayContent = JSON.stringify(messageContent);
+        }
+        return <Text style={{ color: textColor, fontSize: 14 }}>{displayContent}</Text>;
     }
   }, [messageContent, messageType, timestamp]);
 

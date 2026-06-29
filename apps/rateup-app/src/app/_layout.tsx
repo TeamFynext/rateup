@@ -1,7 +1,7 @@
 import React from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { colors } from "@/constants/constants";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Stack } from "expo-router";
 import { StatusBar, useColorScheme, Text, TextInput } from "react-native";
 import { Colors } from "@/constants/colors";
@@ -93,18 +93,20 @@ export default function LayoutWrapper() {
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
-        <RootLayout />
-        <ToastManager
-          icons={{
-            success: <CheckCircle size={18} color="green" />,
-            error: <XCircle size={18} color="red" />,
-            info: <Info size={18} color="blue" />,
-            warn: <AlertTriangle size={18} color="orange" />,
-            default: <Info size={18} color="gray" />,
-          }}
-          closeIcon={<XCircle size={18} color="gray" />}
-          textStyle={{ fontSize: 11 }}
-        />
+        <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+          <RootLayout />
+          <ToastManager
+            icons={{
+              success: <CheckCircle size={18} color="green" />,
+              error: <XCircle size={18} color="red" />,
+              info: <Info size={18} color="blue" />,
+              warn: <AlertTriangle size={18} color="orange" />,
+              default: <Info size={18} color="gray" />,
+            }}
+            closeIcon={<XCircle size={18} color="gray" />}
+            textStyle={{ fontSize: 11 }}
+          />
+        </KeyboardProvider>
       </SafeAreaProvider>
     </QueryClientProvider>
   );

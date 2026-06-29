@@ -16,7 +16,7 @@ import { Colors } from "@/constants/colors";
 import { useForm } from "react-hook-form";
 import * as DocumentPicker from "expo-document-picker";
 import {
-  useContactIdStore,
+  useSelectedContactStore,
   useMediaStore,
   useSessionActiveStore,
   useVoiceRecordStore,
@@ -45,7 +45,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { MessagePlatform } from "@/constants/enums";
 
 type FormValues = {
   type: "text" | "media" | "contact" | "location";
@@ -60,18 +60,29 @@ type FormValues = {
   location: any | null;
 };
 
-const MessageSendPanel = () => {
+const MessageSendPanel = ({
+  platform,
+  whatsappSettingsPhoneId,
+  teamId,
+}: {
+  platform: string;
+  whatsappSettingsPhoneId: string;
+  teamId: string | null;
+}) => {
 
   const colorScheme = useColorScheme();
-  const insets = useSafeAreaInsets();
   const isDark = colorScheme === "dark";
   const iconColor = isDark ? "white" : "black";
-  const selectedContactId = useContactIdStore((s) => s.selectedContactId);
+  const selectedContactId = useSelectedContactStore((s) => s.selectedContact?.id);
   const { media, resetMedia, addMedia, removeMedia } = useMediaStore();
   const { audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody } = useMessageBodyStore();
-  //@ts-ignore
-  const sendnewWaMessage = useSendNewWaMessage(selectedContactId);
+  const sendnewWaMessage = useSendNewWaMessage(
+    selectedContactId as string,
+    teamId,
+    whatsappSettingsPhoneId,
+    platform as MessagePlatform
+  );
   const createPrivateMessage = useCreatePrivateMessage(selectedContactId);
   let { isSessionActive } = useSessionActiveStore();
   const form = useForm<FormValues>({
