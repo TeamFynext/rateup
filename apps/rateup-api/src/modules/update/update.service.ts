@@ -442,15 +442,14 @@ export async function migrateTicketLabels() {
   });
 
   for (const board of boards) {
-    if (board.labels.length === 0) {
-      log.info(`Creating default labels for board ${board.id}`);
-      await prisma.ticketBoardLabel.createMany({
-        data: defaultTicketLabels.map((label) => ({
-          ...label,
-          ticketBoardId: board.id,
-        })),
-      });
-    }
+    log.info(`Ensuring default labels for board ${board.id}`);
+    await prisma.ticketBoardLabel.createMany({
+      data: defaultTicketLabels.map((label) => ({
+        ...label,
+        ticketBoardId: board.id,
+      })),
+      skipDuplicates: true,
+    });
   }
 
   log.info("Labels ensured for all boards.");
