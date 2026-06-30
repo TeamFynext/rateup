@@ -20,7 +20,6 @@ import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDispla
 import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
-import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
@@ -178,8 +177,6 @@ export default function WaInboxChatDisplayHeader({
 
   const isSessionExpired = isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
   const { updateContactById } = useContactsStore();
-  const [openedCreateTicket, { open: openCreateTicket, close: closeCreateTicket }] =
-    useDisclosure(false);
 
   function handleLifecycleChange(value, lifecycleObj) {
     editContactMutation.mutate(
@@ -488,27 +485,10 @@ export default function WaInboxChatDisplayHeader({
             </Popover>
           )}
           <WaInboxCountdownTimer timeStamp={contact?.lastReceivedMessageTimeStamp} />
-          {hasTicketFeature && (
-            <CustomTooltip
-              content="Create ticket"
-              trigger={
-                <Button variant="ghost" size="icon" onClick={openCreateTicket}>
-                  <Ticket className="w-4 h-4" />
-                </Button>
-              }
-            />
-          )}
           <AssignUser contactId={contact?.id} />
           <ChatHeaderMenu contact={contact} />
         </div>
       </div>
-      <CreateTicketCard
-        close={closeCreateTicket}
-        opened={openedCreateTicket}
-        type={TicketType.CUSTOM}
-        hasTicketFeature={hasTicketFeature}
-        contactId={contact?.id}
-      />
     </div>
   );
 }

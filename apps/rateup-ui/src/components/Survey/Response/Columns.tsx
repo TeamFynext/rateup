@@ -345,7 +345,7 @@ export function ActionMenu({
                   window.open(url, "_blank");
                 } else {
                   setSelectedResponseId(resId);
-                  setResponseTeamId(resTeamId);
+                  setResponseTeamId?.(resTeamId);
                 }
               }}
             >

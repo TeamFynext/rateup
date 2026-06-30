@@ -4,9 +4,10 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
-  migrateLoyaltyTierPriority,
   migrateWaTemplateToWhatsappPhoneId,
   syncTeamFeatures,
+  migrateTicketLabels,
+  migrateLoyaltyTierPriority,
 } from "./update.api";
 
 export const useMigrateWaTemplateToWhatsappPhoneId = () => {
@@ -41,6 +42,18 @@ export const useMigrateLoyaltyTierPriority = () => {
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to migrate loyalty tier priorities");
+    },
+  });
+};
+
+export const useMigrateTicketLabels = () => {
+  return useMutation({
+    mutationFn: migrateTicketLabels,
+    onSuccess: () => {
+      toast.success("Ticket labels migrated successfully");
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to migrate ticket labels");
     },
   });
 };

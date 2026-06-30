@@ -2,6 +2,14 @@
 
 import type { TicketType } from "@/utils/enums/ticket.ts";
 
+export interface Label {
+  id: string;
+  name: string;
+  color: string;
+  ticketBoardId: string;
+  createdAt?: string | Date;
+}
+
 // Base ticket types
 interface User {
   id: string;
@@ -58,6 +66,8 @@ export interface Card {
   category?: string | null;
   status?: string | null;
   type?: TicketType;
+  labelId?: string | null;
+  label?: Label | null;
   createdAt?: string | Date;
   columnId?: string;
   ticketColumnId?: string;
