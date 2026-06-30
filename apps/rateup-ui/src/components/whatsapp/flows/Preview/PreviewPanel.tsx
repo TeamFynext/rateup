@@ -1,70 +1,31 @@
-import { Box, Flex, Transition } from "@mantine/core";
-import { useContext, useEffect, useState } from "react";
-
+import { WhatsAppChatHeader } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import type { WaFlowScreen } from "@/types/global";
-import { getFlowJsonWithTitleAndDescription } from "@/utils/whatsapp/flow.utils";
 
-import useFlowStore from "../../flow-v2/utils/store.ts";
-import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext.ts";
 import { FlowChatPreview } from "./FlowChatPreview.tsx";
 
-interface PreviewProps {
-  previewOpened: boolean;
-  version?: number;
-}
-export function PreviewPanel({ previewOpened, version = 1 }: PreviewProps) {
-  const { survey, map, flowJson, screenNumber } = useContext(EditFlowContext);
-
-  const [currentScreen, setCurrentScreen] = useState<WaFlowScreen>();
-  const { getCurrentScreen, currentScreenId, screens } = useFlowStore();
-  useEffect(() => {
-    if (version === 2) {
-      setCurrentScreen(getCurrentScreen() as any);
-    } else {
-      if (!flowJson || !flowJson.screens || flowJson.screens?.length === 0) return;
-
-      const json = getFlowJsonWithTitleAndDescription(flowJson, map, survey);
-      if (typeof screenNumber === "number") setCurrentScreen(json.screens?.[screenNumber ?? 0]);
-    }
-  }, [flowJson, map, screenNumber, survey, currentScreenId, screens]);
-
-  if (!currentScreen) return null;
-
+/**
+ * Live phone-preview content for the global phone simulator, reusing the shared WhatsApp
+ * header. The simulator's panel is mounted outside the flow editor's React tree (in the
+ * app shell), so `currentScreen` must be computed by the caller (where EditFlowContext is
+ * actually in scope) and passed in as a prop rather than read via useContext here.
+ */
+export function FlowPreviewPhoneContent({
+  currentScreen,
+  version = 1,
+}: Readonly<{ currentScreen: WaFlowScreen | undefined; version?: number }>) {
   return (
-    <Transition mounted={previewOpened} transition={"slide-left"} duration={100}>
-      {(ts) => (
-        <Box
-          style={{
-            minWidth: "fit-content",
-            ...ts,
-          }}
-        >
-          <Flex
-            direction={"column"}
-            style={{
-              borderRadius: "8px",
-              height: "100%",
-            }}
-          >
-            <Box
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-                minHeight: "500px",
-                maxHeight: "600px",
-                flex: 1,
-                borderRadius: "16px",
-                width: "300px",
-                position: "relative",
-              }}
-              className="border border-primary"
-            >
-              <FlowChatPreview currentScreen={currentScreen} version={version} />
-            </Box>
-          </Flex>
-        </Box>
+    <div className="relative flex h-full flex-col">
+      <WhatsAppChatHeader />
+
+      {/* Chat background */}
+      <div className="flex-1 bg-[#efeae2] dark:bg-[#0b141a]" />
+
+      {/* Flow Sheet — bottom sheet overlay */}
+      {currentScreen && (
+        <div className="absolute bottom-0 left-0 right-0 h-[calc(100%-9px)] bg-background rounded-t-2xl flex flex-col shadow-[0_-4px_20px_rgba(0,0,0,0.12)]">
+          <FlowChatPreview currentScreen={currentScreen} version={version} />
+        </div>
       )}
-    </Transition>
+    </div>
   );
 }

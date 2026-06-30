@@ -73,17 +73,19 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
               />
             )}
 
-            <div
-              className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-ink-25 dark:bg-[#121212] relative`}
-            >
-              <LifecycleContext value={lifecycles || []}>
-                <CustomFieldsProvider initialFields={customFieldData || []}>
-                  <RouteAccessGuard>{children}</RouteAccessGuard>
-                </CustomFieldsProvider>
-              </LifecycleContext>
-            </div>
+            <div className="flex h-dvh w-full overflow-hidden">
+              <div
+                className={`min-w-0 flex-1 ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-ink-25 dark:bg-[#121212] relative`}
+              >
+                <LifecycleContext value={lifecycles || []}>
+                  <CustomFieldsProvider initialFields={customFieldData || []}>
+                    <RouteAccessGuard>{children}</RouteAccessGuard>
+                  </CustomFieldsProvider>
+                </LifecycleContext>
+              </div>
 
-            <PhonePreviewPanel />
+              <PhonePreviewPanel />
+            </div>
           </SidebarProvider>
         </PhonePreviewProvider>
       </TeamFeaturesProvider>

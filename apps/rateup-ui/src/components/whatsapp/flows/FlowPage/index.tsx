@@ -12,11 +12,12 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { QuestionType, WaFlowStatus } from "@/types/enums.ts";
-import type { WaFlowJson, WaFlowMap } from "@/types/global";
+import type { WaFlowJson, WaFlowMap, WaFlowScreen } from "@/types/global";
 import { UserRole } from "@/utils/enums/index.ts";
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
 import {
   getFlowElementJsonFromQuestion,
+  getFlowJsonWithTitleAndDescription,
   getNewScreenObj,
   getQuestionFromFlowFormElementName,
   getScreenObjById,
@@ -29,6 +30,7 @@ import Result from "../../../Survey/Result/Result.tsx";
 import ResultComparison from "../../../Survey/Result/ResultComparison.tsx";
 import SurveySettings from "../../../Survey/Settings/index.tsx";
 import { ShareFlow } from "../../../Survey/ShareSurvey/ShareFlow.tsx";
+import { FlowPreviewPhoneContent } from "../Preview/PreviewPanel.tsx";
 import EditFlow from "./EditFlow/EditFlow.tsx";
 import { EditFlowContext } from "./EditFlow/EditFlowContext.ts";
 import FlowPageHeader, { FlowTabEnum } from "./FlowPageHeader/index.tsx";
@@ -54,7 +56,6 @@ function FlowPage() {
   const [selectedScreenId, setSelectedScreenId] = useState<string>(undefined); // if no screen is selected, then show screens list in the left side
   const [selectedLang] = useState("en");
   const [tab, setTab] = useState(FlowTabEnum.Edit);
-  const [previewOpened, setPreviewOpened] = useState(true);
   const { update } = useRouteParams();
 
   // initial data
@@ -200,6 +201,12 @@ function FlowPage() {
 
   if (isPending || !flow || !flowJson || !survey) return <RateupLoader />;
 
+  let currentPreviewScreen: WaFlowScreen | undefined;
+  if (flowJson.screens?.length) {
+    const json = getFlowJsonWithTitleAndDescription(flowJson, map, survey);
+    currentPreviewScreen = json.screens?.[screenNumber ?? 0];
+  }
+
   return (
     <EditFlowContext.Provider
       value={{
@@ -238,8 +245,9 @@ function FlowPage() {
                 name={flow.name}
                 tab={tab}
                 setTabState={setTab}
-                previewOpened={previewOpened}
-                setPreviewOpened={setPreviewOpened}
+                phonePreview={
+                  <FlowPreviewPhoneContent currentScreen={currentPreviewScreen} version={1} />
+                }
               />
               <StyledTabs
                 className="flex-1 overflow-hidden"
@@ -248,7 +256,7 @@ function FlowPage() {
                 h={"100%"}
               >
                 <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
-                  <EditFlow previewOpened={previewOpened} setPreviewOpened={setPreviewOpened} />
+                  <EditFlow />
                 </Tabs.Panel>
                 <Tabs.Panel value={FlowTabEnum.Settings}>
                   <SurveySettings

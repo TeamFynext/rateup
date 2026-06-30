@@ -6,15 +6,10 @@ import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 
 import ElementsList from "./ElementsList/index.tsx";
-import WhatsAppPreview from "./Preview/WhatsAppPreview.tsx";
 import ScreensList from "./ScreensList/index.tsx";
 import useFlowStoreV3 from "./utils/store.ts";
 
-interface EditFlowV3Props {
-  previewOpened?: boolean;
-}
-
-function EditFlowV3({ previewOpened = true }: EditFlowV3Props = {}) {
+function EditFlowV3() {
   const params = useParams({
     strict: false,
   });
@@ -110,7 +105,7 @@ function EditFlowV3({ previewOpened = true }: EditFlowV3Props = {}) {
     <div
       className="grid h-full overflow-hidden relative"
       style={{
-        gridTemplateColumns: previewOpened ? "280px 1fr 400px" : "280px 1fr",
+        gridTemplateColumns: "280px 1fr",
       }}
     >
       {/* Column 1: Screens List */}
@@ -122,13 +117,6 @@ function EditFlowV3({ previewOpened = true }: EditFlowV3Props = {}) {
       <div className="border-r border-border overflow-y-auto">
         <ElementsList />
       </div>
-
-      {/* Column 3: WhatsApp Preview */}
-      {previewOpened && (
-        <div className="overflow-y-auto">
-          <WhatsAppPreview />
-        </div>
-      )}
     </div>
   );
 }

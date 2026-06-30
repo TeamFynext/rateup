@@ -1,5 +1,3 @@
-import { ActionIcon, Tooltip } from "@mantine/core";
-import { IconEye, IconEyeClosed } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { useContext, useState } from "react";
 import { toast } from "sonner";
@@ -30,7 +28,6 @@ import {
 } from "@/utils/whatsapp/flow.utils";
 
 import { QuestionTypeSelection } from "../../../../Survey/Question/QuestionTypeSelection.tsx";
-import { PreviewPanel } from "../../Preview/PreviewPanel.tsx";
 import FlowScreensList from "../FlowScreensList/index.tsx";
 import { EditFlowContext } from "./EditFlowContext.ts";
 import { FlowNonQuestionDetailedView } from "./FlowNonQuestionDetailedView.tsx";
@@ -40,11 +37,8 @@ enum EditFlowRightPanel {
   ElementEditor = "element-editor",
   TypeSelection = "type-selection",
 }
-interface EditFlowProps {
-  previewOpened: boolean;
-  setPreviewOpened: (opened: boolean) => void;
-}
-function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
+
+function EditFlow() {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [blankQuestion, setBlankQuestion] = useState<Question>(null);
   const [activeEditor, setActiveEditor] = useState<EditFlowRightPanel>(null);
@@ -259,28 +253,6 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
           selectedNonQuestion && <FlowNonQuestionDetailedView key={selectedFormElementId} />
         )}
       </div>
-      {/* Right sidebar containing preview */}
-      {previewOpened && <PreviewPanel previewOpened={previewOpened} />}
-      <Tooltip label={"Open Preview"}>
-        <ActionIcon
-          style={{
-            position: "absolute",
-            right: "10px",
-            top: "0",
-            borderRadius: "100px",
-            height: "50px",
-            width: "50px",
-            zIndex: 2,
-          }}
-          onClick={() => setPreviewOpened(!previewOpened)}
-        >
-          {!previewOpened ? (
-            <IconEyeClosed style={{ width: "60%", height: "60%" }} stroke={2} />
-          ) : (
-            <IconEye style={{ width: "70%", height: "70%" }} stroke={2} />
-          )}
-        </ActionIcon>
-      </Tooltip>
     </div>
   );
 }

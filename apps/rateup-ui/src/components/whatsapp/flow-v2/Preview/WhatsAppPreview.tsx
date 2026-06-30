@@ -1,4 +1,3 @@
-import { MoreVertical, Smartphone, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -17,11 +16,16 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import {
+  FlowSheetShell,
+  WhatsAppChatHeader,
+} from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import { QuestionType2 } from "@/types/enums.ts";
 
 import useFlowStoreV3 from "../utils/store.ts";
 
-function WhatsAppPreview() {
+/** Renders just the flow-sheet bottom-sheet content (header/elements/footer) for a screen, with no outer phone chrome. Reused by both the embedded mockup and the global phone simulator. */
+export function FlowScreenSheet() {
   const { t: translations } = useTranslation();
   const { getCurrentScreen } = useFlowStoreV3();
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -35,19 +39,8 @@ function WhatsAppPreview() {
 
   if (!screen) {
     return (
-      <div className="flex flex-col h-full bg-muted">
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-0.5">
-            <Smartphone className="w-4 h-4" />
-            <h2 className="text-base font-semibold">{translations("Preview")}</h2>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {translations("See how your flow looks on mobile")}
-          </p>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">{translations("No screen selected")}</p>
-        </div>
+      <div className="flex flex-1 items-center justify-center">
+        <p className="text-sm text-muted-foreground">{translations("No screen selected")}</p>
       </div>
     );
   }
@@ -279,82 +272,18 @@ function WhatsAppPreview() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-muted">
-      {/* Panel Header */}
-      <div className="p-4 border-b bg-card">
-        <div className="flex items-center gap-2 mb-0.5">
-          <Smartphone className="w-4 h-4" />
-          <h2 className="text-base font-semibold">{translations("Preview")}</h2>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          {translations("See how your flow looks on mobile")}
-        </p>
-      </div>
-      {/* Phone Mockup */}
-      <div className="flex-1 flex items-start justify-center p-4 overflow-auto">
-        <div className="w-[320px] h-145 bg-foreground rounded-[28px] p-2 shadow-[0_10px_30px_rgba(0,0,0,0.2)] relative my-5 shrink-0">
-          {/* Phone Screen */}
-          <div className="w-full h-full rounded-[20px] overflow-hidden flex flex-col relative">
-            {/* WhatsApp Header */}
-            <div className="bg-[#09b838] px-4 py-5 flex flex-col gap-0.5 shrink-0">
-              {/* when the flow sheet becomes draggable then original business name and other details should be displayed */}
-              {/* <div className="text-white font-semibold text-sm">
-                {translations("Business Name")}
-              </div>
-              <div className="text-white/80" style={{ fontSize: "10px" }}>
-                {translations("Online")}
-              </div> */}
-            </div>
+    <div className="relative flex h-full flex-col">
+      <WhatsAppChatHeader />
 
-            {/* Chat background */}
-            <div className="flex-1 bg-[#e5ddd5]" />
+      {/* Chat background */}
+      <div className="flex-1 bg-[#efeae2] dark:bg-[#0b141a]" />
 
-            {/* Flow Sheet — bottom sheet overlay */}
-            <div className="absolute bottom-0 left-0 right-0 h-[calc(100%-25px)] bg-background rounded-t-2xl flex flex-col shadow-[0_-4px_20px_rgba(0,0,0,0.12)]">
-              {/* Drag handle */}
-              <div className="flex justify-center pt-2 pb-1 shrink-0">
-                <div className="w-8 h-1 rounded-full bg-border" />
-              </div>
-
-              {/* Flow Header: × | Title | ⋮ */}
-              <div className="flex items-center justify-between px-2 shrink-0">
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
-                  <X size={18} />
-                </Button>
-                <span className="text-[13px] font-semibold text-foreground flex-1 text-center overflow-hidden text-ellipsis whitespace-nowrap">
-                  {screen.title || translations("Screen")}
-                </span>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
-                  <MoreVertical size={18} />
-                </Button>
-              </div>
-              <div className="h-px bg-border shrink-0" />
-
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto px-3 min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full [&:hover::-webkit-scrollbar-thumb]:bg-muted-foreground/40">
-                <div className="space-y-0">
-                  {elements.map((element, index) => renderElement(element, index))}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="px-3 pt-2 pb-2.5 bg-background flex flex-col items-center gap-1.5 shrink-0">
-                <Button className="bg-[#25d366] hover:bg-[#1da851] text-white rounded-3xl font-semibold text-[13px] py-2.5 w-full h-auto">
-                  {footerElement?.label || translations("Continue")}
-                </Button>
-                <p className="text-[9px] text-muted-foreground text-center m-0">
-                  {translations("Managed by the business.")}{" "}
-                  <span className="text-[#25d366] cursor-pointer">
-                    {translations("Learn more")}
-                  </span>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Flow Sheet — bottom sheet overlay */}
+      <div className="absolute bottom-0 left-0 right-0 h-[calc(100%-9px)] bg-background rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.12)]">
+        <FlowSheetShell title={screen.title} footerLabel={footerElement?.label}>
+          {elements.map((element, index) => renderElement(element, index))}
+        </FlowSheetShell>
       </div>
     </div>
   );
 }
-
-export default WhatsAppPreview;

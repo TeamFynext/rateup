@@ -25,7 +25,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
 
   const rateupPlans = useMemo(
     () =>
-      plans
+      Array.isArray(plans)
         ? plans
             .filter(
               (plan) =>
