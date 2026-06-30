@@ -41,7 +41,6 @@ enum TeamFeature {
   qr_studio
   ai_chatbot
   apps_services
-  digital_menu
   settings
 }
 
@@ -128,7 +127,6 @@ model User {
   TicketComment               TicketComment[]
   linktree                    Linktree[]
   generateQr                  GenerateQr[]
-  landingPage                 LandingPage[]
   WaMessage                   WaMessage[]
   waInboxAssign               WaInboxAssign[]
   ticketActivity              TicketActivity[]
@@ -185,7 +183,6 @@ model Org {
   Survey                   Survey[]
   WaAccountSettings        WaAccountSettings?
   generateQr               GenerateQr[]
-  landingPage              LandingPage[]
   Integration              Integration[]
   waMessageSchedule        WaMessageSchedule[]
   WaLogs                   WaLogs[]
@@ -477,7 +474,7 @@ model Team {
   surveys                SurveyTeamMap[]
   invitations            Invitation[]
   contactGroups          ContactGroup[]
-  menu                   Menu[]
+
   campaigns              Campaign[]
   reviewSuggestions      ReviewSuggestion[]
   Review                 Review[]
@@ -594,7 +591,7 @@ model SurveyTeamMap {
   responses         SurveyResponse[]
   sessions          WaSession[]
   surveyStats       SurveyStats?
-  menuLanding       MenuLanding[]
+
   waMessageSchedule WaMessageSchedule[]
 
   @@unique([surveyId, teamId], name: "survey_team_unique")
@@ -999,54 +996,6 @@ model WebSurveyTheme {
   @@unique([orgId, name])
 }
 
-model Menu {
-  id                      String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt               DateTime       @default(now())
-  name                    String // name of the menu
-  displayName             String // name displayed to clients (eg: Restaurant's Name)
-  locationText            String? // location of the restaurant
-  locationUrl             String? // google maps url
-  isPublished             Boolean        @default(false)
-  categories              MenuCategory[]
-  team                    Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId                  String         @db.Uuid
-  menuLanding             MenuLanding?
-  currency                String         @default("0")
-  menuBanner              MenuBanner[]
-  shareSettings           Json?
-  hideUnavailableCategory Boolean        @default(false)
-  shortUrlId              String?        @unique
-}
-
-model MenuCategory {
-  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt       DateTime   @default(now())
-  name            String
-  itemOrder       Int        @default(0)
-  menu            Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  menuId          String     @db.Uuid
-  items           MenuItem[]
-  image           String?
-  scheduleEnabled Boolean    @default(false)
-  startTime       DateTime?
-  endTime         DateTime?
-}
-
-model MenuItem {
-  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt     DateTime     @default(now())
-  name          String
-  description   String
-  images        String[]
-  videoUrl      String?
-  price         Json
-  itemOrder     Int          @default(0)
-  disabled      Boolean      @default(false)
-  category      MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  categoryId    String       @db.Uuid
-  foodLabels    String[]     @default([])
-  unsplashImage String[]     @default([])
-}
 
 //homepage contact form
 model ContactForm {
@@ -1080,22 +1029,6 @@ model WaTemplate {
   eventTriggers           LoyaltyEventTrigger[]
 }
 
-model MenuLanding {
-  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime?      @updatedAt
-  backgroundImage       String?
-  mobileBackgroundImage String?
-  logo                  String?
-  visited               Int            @default(0)
-  menu                  Menu           @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  menuId                String         @unique @db.Uuid
-  surveyTeamMap         SurveyTeamMap? @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
-  surveyTeamMapId       String?        @db.Uuid
-  unsplashImage         Json?
-  menuButtons           Json[]         @default([])
-  colors                Json?
-}
 
 model ReviewSuggestion {
   id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -1144,18 +1077,7 @@ model NLP_Cache {
   result Json
 }
 
-model MenuBanner {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt   DateTime @default(now())
-  name        String
-  description String
-  image       String?
-  videoUrl    String?
-  price       Json
-  menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  menuId      String   @db.Uuid
-  foodLabels  String[] @default([])
-}
+
 
 model Subscription {
   org                  Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -1721,20 +1643,6 @@ model GenerateQr {
   noOfScans     Int      @default(0)
 }
 
-model LandingPage {
-  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                String
-  createdAt           DateTime @default(now())
-  createdById         String   @db.Uuid
-  ownerOrgId          String   @db.Uuid
-  shortUrlId          String   @unique
-  tiptapEditorContent String
-  visitorsCount       Int      @default(0)
-  shareSettings       Json?
-  isPublished         Boolean  @default(false)
-  owner               Org      @relation(fields: [ownerOrgId], references: [id], onDelete: Cascade)
-  createdBy           User     @relation(fields: [createdById], references: [id])
-}
 
 model Integration {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

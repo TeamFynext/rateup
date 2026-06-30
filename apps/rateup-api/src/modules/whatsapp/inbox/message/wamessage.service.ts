@@ -1149,11 +1149,11 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
   };
 }
 
-export type WaMedia = {
+export interface WaMedia {
   type?: "audio" | "image" | "document" | "video";
   url?: string;
   name?: string;
-};
+}
 
 export async function sendMediaMessages(
   media: WaMedia[],
@@ -1671,14 +1671,14 @@ function getStatusLabel(status: string): string | null {
   return map[status] ?? null;
 }
 
-type CreateWaMessageOrgTeamMapInput = {
+interface CreateWaMessageOrgTeamMapInput {
   teamId: string;
   messageId: string;
   orgId: string;
   isAutomedMessage?: boolean;
   type: "INBOX" | "TEMPLATE" | "CAMPAIGN" | "AUTOMATED" | "FLOW";
   externalApi: boolean;
-};
+}
 
 export async function createWaMessageOrgTeamMap(data: CreateWaMessageOrgTeamMapInput) {
   return prisma.waMessageOrgTeamMap.create({

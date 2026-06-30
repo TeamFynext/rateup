@@ -1810,7 +1810,7 @@ export function updateButtonText(array, newText) {
     }) ?? []
   );
 }
-type _campaign = {
+interface _campaign {
   id: string;
   team: {
     id: string;
@@ -1827,7 +1827,7 @@ type _campaign = {
     };
   })[];
   useUserConsent: boolean;
-};
+}
 // TODO: use batch sending
 async function _sendCampaignToParticipants(
   campaign: _campaign,

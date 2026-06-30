@@ -637,27 +637,6 @@ export async function getOrgStats(orgId: string) {
     },
   });
 
-  const menuCount = await prisma.menu.count({
-    where: {
-      team: {
-        id: {
-          in: teamIds,
-        },
-      },
-    },
-  });
-  const menuBannerCount = await prisma.menuBanner.count({
-    where: {
-      menu: {
-        team: {
-          id: {
-            in: teamIds,
-          },
-        },
-      },
-    },
-  });
-
   const stats = {
     members: org._count.members,
     invitations: org._count.invitations,
@@ -686,10 +665,6 @@ export async function getOrgStats(orgId: string) {
     campaigns: {
       campaigns,
       participants: campaignParticipants,
-    },
-    menu: {
-      total: menuCount,
-      banners: menuBannerCount,
     },
   };
 

@@ -298,7 +298,7 @@ export interface CatalogNodeData extends BaseNodeData {
 }
 
 // Map of node types to their data types
-export type NodeTypeMap = {
+export interface NodeTypeMap {
   textNode: TextNodeData;
   quickReplyNode: QuickReplyNodeData;
   imageNode: ImageNodeData;
@@ -332,7 +332,7 @@ export type NodeTypeMap = {
   assignNode: AssignNodeData;
   leadgenNode: LeadgenNodeData;
   catalogNode: CatalogNodeData;
-};
+}
 
 // Node type strings as a union type
 export type NodeType = keyof NodeTypeMap;

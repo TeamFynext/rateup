@@ -49,7 +49,7 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrAfter);
 
-export type automationProps = {
+export interface automationProps {
   commands: string[];
   businessHour: {
     id: string;
@@ -101,7 +101,7 @@ export type automationProps = {
   whatsappSettingsPhoneIds: string[];
   isEnabled: boolean;
   sendOnceIn24Hours: boolean;
-};
+}
 // Helper to check substring match while preserving optional case sensitivity
 export function includesWholePhrase(text, phrase, caseSensitive = false) {
   const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
@@ -442,7 +442,7 @@ export function selectAutomationByBusinessHours<T extends { businessHour: any }>
   return selectedAutomation;
 }
 
-export type RuleWithConditions = {
+export interface RuleWithConditions {
   id: string;
   name: string;
   platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK";
@@ -479,7 +479,7 @@ export type RuleWithConditions = {
     type: string;
     value: any;
   }>;
-};
+}
 
 /**
  * Validates a single rule condition

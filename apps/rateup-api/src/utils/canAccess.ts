@@ -18,7 +18,7 @@ export const subscriptionGates: Record<TeamFeature, string | null> = {
   [TeamFeature.web_forms]: sfpn.WebSurvey,
   [TeamFeature.tickets]: sfpn.Ticket,
   [TeamFeature.ai_chatbot]: sfpn.AI,
-  [TeamFeature.digital_menu]: sfpn.Menu,
+
   [TeamFeature.analytics]: null,
   [TeamFeature.contacts]: null,
   [TeamFeature.qr_studio]: null,

@@ -10,19 +10,12 @@ import { surveyRoutes } from "./modules/survey/survey.route.js";
 import { teamRoutes } from "./modules/team/team.route.js";
 import { userRoutes } from "./modules/user/user.route.js";
 import { fileUploadPublicRoutes } from "./modules/fileUpload/fileUpload.public.route.js";
-import { menuRoutes } from "./modules/menu/menu.route.js";
-import { menuCategoryRoutes } from "./modules/menu/category/category.route.js";
-import { menuItemRoutes } from "./modules/menu/item/item.route.js";
-import { menuPublicRoutes } from "./modules/menu/menu.public.route.js";
-import { contactFormPublicRoutes } from "./modules/contactForm/contact.public.route.js";
 import { whatsappRoutes } from "./modules/whatsapp/wa_routes.js";
 import { contactRoutes } from "./modules/contact/contact.route.js";
 import { campaignRoutes } from "./modules/campaign/campaign.route.js";
 import { reviewSuggestionRoutes } from "./modules/reviewSuggestion/reviewSuggestion.route.js";
 import { userPublicRoutes } from "./modules/user/user.public.routes.js";
 import shareSettingsRoutes from "./modules/shareSettings/shareSettings.route.js";
-import { menuBannerRoutes } from "./modules/menu/banner/banner.route.js";
-import { menuBannerPublicRoutes } from "./modules/menu/banner/banner.public.route.js";
 import { subscriptionRoutes } from "./modules/subscription/subscription.route.js";
 import { unsplashRoutes } from "./modules/unsplash/unsplash.route.js";
 import { surveyThemeRoutes } from "./modules/surveyTheme/surveyTheme.routes.js";
@@ -33,7 +26,6 @@ import { testimonialCollectionRoutes } from "./modules/testimonial/testimonialCo
 import { ticketRoutes } from "./modules/ticket/ticket.route.js";
 import { testimonialPublicRoutes } from "./modules/testimonial/testimonialPublic.route.js";
 import { loyaltyRoutes } from "./modules/loyalty/loyalty.routes.js";
-import landingPageRoutes from "./modules/landingPage/landingPage.routes.js";
 import linktreeRoutes from "./modules/linktree/linktree.routes.js";
 import { statsRoutes } from "./modules/stats/stats.route.js";
 import { chatbotRoutes } from "./modules/chatbot/chatbot.rout.js";
@@ -74,9 +66,6 @@ const routeConfigs = [
   { plugin: surveyPublicRoutes, prefix: "/api/public/survey" },
   { plugin: responsePublicRoutes, prefix: "/api/public/response" },
   { plugin: fileUploadPublicRoutes, prefix: "/api/public/upload" },
-  { plugin: menuPublicRoutes, prefix: "/api/public/menu" },
-  { plugin: menuBannerPublicRoutes, prefix: "/api/public/mbanner" },
-  { plugin: contactFormPublicRoutes, prefix: "/api/public/contact" },
   { plugin: paymentPublicRoutes, prefix: "/api/public/payment" },
   { plugin: stripePublicRoutes, prefix: "/api/public/payment/stripe" },
   { plugin: testimonialPublicRoutes, prefix: "/api/public/testimonials" },
@@ -97,10 +86,6 @@ const routeConfigs = [
   { plugin: teamRoutes, prefix: "/api/team" },
   { plugin: responseRoutes, prefix: "/api/response" },
   { plugin: whatsappRoutes, prefix: "/api/wa" },
-  { plugin: menuRoutes, prefix: "/api/menu" },
-  { plugin: menuCategoryRoutes, prefix: "/api/mcategory" },
-  { plugin: menuItemRoutes, prefix: "/api/mitem" },
-  { plugin: menuBannerRoutes, prefix: "/api/mbanner" },
   { plugin: unsplashRoutes, prefix: "/api/unsplash" },
   { plugin: contactRoutes, prefix: "/api/contact" },
   { plugin: campaignRoutes, prefix: "/api/campaign" },
@@ -116,7 +101,6 @@ const routeConfigs = [
   },
   { plugin: ticketRoutes, prefix: "/api/tickets" },
   { plugin: loyaltyRoutes, prefix: "/api/loyalty" },
-  { plugin: landingPageRoutes, prefix: "/api/landingPages" },
   { plugin: linktreeRoutes, prefix: "/api/linktrees" },
   { plugin: statsRoutes, prefix: "/api/stats" },
   { plugin: chatbotRoutes, prefix: "/api/chatbot" },

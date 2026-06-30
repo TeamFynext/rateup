@@ -28,7 +28,7 @@ const lifecycleReorderSchema = z.object({
 });
 
 export type LifecycleIdParamSchema = z.infer<typeof lifecycleIdParamSchema>;
-export type LifecycleBodySchema = {
+export interface LifecycleBodySchema {
   name: string;
   ordering: number;
   isDefault: boolean;
@@ -37,7 +37,7 @@ export type LifecycleBodySchema = {
   description: string;
   category: StageCategory;
   color: string;
-};
+}
 export type LifecycleReorderSchema = z.infer<typeof lifecycleReorderSchema>;
 
 // Auto-exported after fastify-zod migration
