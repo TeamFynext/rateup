@@ -977,7 +977,9 @@ export function WhatsappTemplateById({
                                 WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
                                 WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO,
                               ]
-                            : Object.values(WHATSAPP_TEMPLATE_BROADCAST_TYPE)
+                            : Object.values(WHATSAPP_TEMPLATE_BROADCAST_TYPE)?.filter(
+                                (data) => data !== WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT,
+                              )
                       }
                       allowDeselect={false}
                       disabled={spmBtn || catalogBtn || mpmBtn}

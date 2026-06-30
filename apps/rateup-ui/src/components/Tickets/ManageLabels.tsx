@@ -50,7 +50,7 @@ const parseColor = (c: string) => {
     const parsed = JSON.parse(c);
     if (parsed && parsed.bgcolor && parsed.textcolor) return parsed;
     return { bgcolor: c, textcolor: "#171717" };
-  } catch (e) {
+  } catch {
     return { bgcolor: c, textcolor: "#171717" };
   }
 };
