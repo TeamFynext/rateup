@@ -37,7 +37,10 @@ import { sendInstagramTextMessage } from "../instagram/instagram_messaging.servi
 import { startInstagramAutomationFlow } from "./instagram_automation.service.js";
 import { getInstagramAutomatedReplyById } from "./instagram_automatedReply.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
-import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.service.js";
+import {
+  resolveShopifyPathValue,
+  getShopifyProductImage,
+} from "../../integrations/shopify/shopify.service.js";
 import axios from "axios";
 import { integrationTriggerQueue } from "../../../utils/redisConnection.js";
 import { triggerConversionsApiForContact } from "../../integrations/meta/conversions.service.js";
@@ -1226,15 +1229,17 @@ async function executeSendTemplateAction(
     | {
         templateId: string;
         variableMapping?: { templateParamIndex: number; shopifyPath: string }[];
+        useProductImageAsHeader?: boolean;
       },
   context: any,
 ): Promise<boolean> {
-  const { templateId, variableMapping } =
+  const { templateId, variableMapping, useProductImageAsHeader } =
     typeof templateValue === "string"
-      ? { templateId: templateValue, variableMapping: [] }
+      ? { templateId: templateValue, variableMapping: [], useProductImageAsHeader: false }
       : {
           templateId: templateValue?.templateId,
           variableMapping: templateValue?.variableMapping ?? [],
+          useProductImageAsHeader: templateValue?.useProductImageAsHeader ?? false,
         };
 
   if (!context.phone || !templateId || !context.orgId) return false;
@@ -1249,6 +1254,25 @@ async function executeSendTemplateAction(
     context.shopifyBody,
     contactData,
   );
+
+  if (useProductImageAsHeader) {
+    const productId =
+      context.shopifyBody?.line_items?.[0]?.product_id ?? context.shopifyProductIds?.[0];
+    const imageUrl = productId
+      ? await getShopifyProductImage(context.orgId, String(productId))
+      : null;
+    if (imageUrl) {
+      parameterData.push({
+        type: "header",
+        parameters: [{ type: "image", image: { link: imageUrl } }],
+      });
+    } else {
+      log.warn(
+        `Could not resolve Shopify product image for header; falling back to template default (productId: %s)`,
+        productId,
+      );
+    }
+  }
 
   await sendTemplateToUserCore(
     context.orgId,

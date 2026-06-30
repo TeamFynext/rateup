@@ -596,11 +596,10 @@ export async function registerTemplatesInDb(dbTemplates: Array<any>, orgId: stri
 
 export async function uploadFileToWaTemplate(file: MultipartFile, size: number, orgId: string) {
   const waSettings = await getWaSettings(orgId);
-  const { accessToken } = waSettings;
-  const appId = process.env.wa_app_id;
+  const { accessToken, appId } = waSettings;
 
   if (!accessToken || !appId) {
-    throw Error("AccessToken and AppId should be present in whatsapp settings");
+    throw new Error("AccessToken and AppId should be present in whatsapp settings");
   }
   const sessionRes = await callMetaApi(
     `/${appId}/uploads`,

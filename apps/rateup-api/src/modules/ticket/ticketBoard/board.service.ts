@@ -14,6 +14,19 @@ export async function createBoard(data: CreateBoardRequestSchema & { userId: str
           })),
         },
       },
+      labels: {
+        createMany: {
+          data: [
+            { name: "LOW", color: JSON.stringify({ bgcolor: "#f0fdf4", textcolor: "#22c55e" }) },
+            { name: "MEDIUM", color: JSON.stringify({ bgcolor: "#fefce8", textcolor: "#eab308" }) },
+            { name: "HIGH", color: JSON.stringify({ bgcolor: "#fff7ed", textcolor: "#f97316" }) },
+            {
+              name: "CRITICAL",
+              color: JSON.stringify({ bgcolor: "#fef2f2", textcolor: "#ef4444" }),
+            },
+          ],
+        },
+      },
     },
   });
 }
@@ -49,6 +62,7 @@ export async function getBoards(userId: string) {
         },
       },
       teams: true,
+      labels: true,
     },
     orderBy: {
       title: "asc",
@@ -89,6 +103,7 @@ export async function getBoardById(id: string) {
                   },
                 },
               },
+              label: true,
             },
           },
         },
@@ -103,6 +118,7 @@ export async function getBoardById(id: string) {
           userId: true,
         },
       },
+      labels: true,
     },
   });
 }

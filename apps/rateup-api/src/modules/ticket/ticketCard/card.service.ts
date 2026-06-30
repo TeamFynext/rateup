@@ -28,6 +28,7 @@ export interface CardInput {
   surveyResponseId?: string;
   contactId?: string;
   priority?: TicketPriority;
+  labelId?: string | null;
   deadline?: string | Date | null;
 }
 
@@ -43,6 +44,30 @@ export async function createCard(data: CardInput) {
 
   const order = data.order ?? (highestOrderCard ? highestOrderCard.order + 1 : 0);
 
+  const column = await prisma.ticketColumn.findUnique({
+    where: { id: data.ticketColumnId },
+    select: { ticketBoardId: true, title: true },
+  });
+  if (!column) return;
+
+  const boardId = column.ticketBoardId;
+  let finalLabelId = data.labelId;
+
+  if (finalLabelId) {
+    const label = await prisma.ticketBoardLabel.findUnique({
+      where: { id: finalLabelId },
+    });
+    if (!label || label.ticketBoardId !== boardId) {
+      throw new Error("Invalid labelId for this board");
+    }
+  } else {
+    const fallbackName = data.priority || "MEDIUM";
+    const defaultLabel = await prisma.ticketBoardLabel.findUnique({
+      where: { ticketBoardId_name: { ticketBoardId: boardId, name: fallbackName } },
+    });
+    if (defaultLabel) finalLabelId = defaultLabel.id;
+  }
+
   const card = await prisma.ticketCard.create({
     data: {
       ...otherData,
@@ -50,6 +75,7 @@ export async function createCard(data: CardInput) {
       order,
       ticketId: getShortUrlId(),
       priority: data.priority || "MEDIUM",
+      labelId: finalLabelId,
     },
     include: {
       ticketColumn: {
@@ -57,6 +83,7 @@ export async function createCard(data: CardInput) {
           title: true,
         },
       },
+      label: true,
     },
   });
 
@@ -73,11 +100,7 @@ export async function createCard(data: CardInput) {
       },
     },
   });
-  const column = await prisma.ticketColumn.findUnique({
-    where: { id: data.ticketColumnId },
-    select: { ticketBoardId: true, title: true },
-  });
-  if (!column) return;
+  // column was already fetched above
 
   const board = await prisma.ticketBoard.findFirst({
     where: {
@@ -147,6 +170,7 @@ export async function getCards(ticketColumnId: string) {
   return prisma.ticketCard.findMany({
     where: { ticketColumnId },
     orderBy: { order: "asc" },
+    include: { label: true },
   });
 }
 
@@ -154,6 +178,8 @@ export async function getCardById(id: string) {
   const ticketCard = await prisma.ticketCard.findUnique({
     where: { id },
     include: {
+      ticketColumn: true,
+      label: true,
       assignees: {
         select: {
           assigneeId: true,
@@ -276,10 +302,31 @@ export async function updateCard(
       title: true,
       description: true,
       priority: true,
+      labelId: true,
       deadline: true,
       checklists: true,
+      ticketColumn: { select: { ticketBoardId: true } },
     },
   });
+
+  const boardId = previousCard?.ticketColumn.ticketBoardId;
+  let finalLabelId = data.labelId;
+
+  if (finalLabelId !== undefined) {
+    if (finalLabelId !== null) {
+      const label = await prisma.ticketBoardLabel.findUnique({
+        where: { id: finalLabelId },
+      });
+      if (!label || label.ticketBoardId !== boardId) {
+        throw new Error("Invalid labelId for this board");
+      }
+    }
+  } else if (data.priority !== undefined && data.priority !== null) {
+    const defaultLabel = await prisma.ticketBoardLabel.findUnique({
+      where: { ticketBoardId_name: { ticketBoardId: boardId!, name: data.priority } },
+    });
+    if (defaultLabel) finalLabelId = defaultLabel.id;
+  }
   const newAssignees = data.assignedToIds?.filter(
     (assigneeId) =>
       !previousCard?.assignees?.some((assignee) => assignee.assigneeId === assigneeId),
@@ -298,6 +345,7 @@ export async function updateCard(
       title: data.title !== undefined ? data.title : undefined,
       description: data.description !== undefined ? data.description : undefined,
       priority: data.priority !== undefined ? data.priority : undefined,
+      labelId: finalLabelId !== undefined ? finalLabelId : undefined,
       deadline: data.deadline !== undefined ? data.deadline : undefined,
       contactId: data.contactId !== undefined ? data.contactId : undefined,
       checklists: data.checklists !== undefined ? data.checklists : undefined,
@@ -360,6 +408,30 @@ export async function updateCard(
         details: {
           fromPriority: previousCard?.priority,
           toPriority: data.priority,
+        },
+      },
+    });
+  }
+
+  // Log CHANGED_LABEL
+  if (finalLabelId !== undefined && finalLabelId !== previousCard?.labelId) {
+    const oldLabel = previousCard?.labelId
+      ? await prisma.ticketBoardLabel.findUnique({ where: { id: previousCard.labelId } })
+      : null;
+    const newLabel = finalLabelId
+      ? await prisma.ticketBoardLabel.findUnique({ where: { id: finalLabelId } })
+      : null;
+
+    await prisma.ticketActivity.create({
+      data: {
+        type: "CHANGED_LABEL",
+        userId,
+        ticketCardId: id,
+        details: {
+          fromLabelId: previousCard?.labelId || null,
+          fromLabelName: oldLabel?.name || null,
+          toLabelId: finalLabelId || null,
+          toLabelName: newLabel?.name || null,
         },
       },
     });

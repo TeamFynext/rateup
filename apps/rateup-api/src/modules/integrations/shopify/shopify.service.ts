@@ -2285,6 +2285,37 @@ export async function getOrderIdFromDraftOrder(
   }
 }
 
+// Fetch the primary image URL for a Shopify product
+export async function getShopifyProductImage(
+  orgId: string,
+  productId: string,
+): Promise<string | null> {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    log.warn(`Shopify integration not active for organization: ${orgId}`);
+    return null;
+  }
+
+  const restClient = new shopify.clients.Rest({
+    session: shopifyInfo.credential.session,
+  });
+
+  try {
+    const response: any = await restClient.get({
+      path: `products/${productId}`,
+    });
+    console.log("🚀 ~ getShopifyProductImage ~ response:", response);
+    return response.body?.product?.image?.src ?? null;
+  } catch (error: any) {
+    log.error(
+      "Failed to fetch Shopify product image for product %s => %o",
+      productId,
+      error.response?.body || error,
+    );
+    return null;
+  }
+}
+
 // Retrieve fulfillment orders for an order
 export async function getFulfillmentOrders(orgId: string, waCatalogOrderId: string) {
   const waCatalogOrder = await prisma.waCatalogOrder.findUnique({

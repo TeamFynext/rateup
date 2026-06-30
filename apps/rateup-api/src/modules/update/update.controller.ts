@@ -10,6 +10,7 @@ import {
   updateUsageStatsAutomation,
   updateUsageStatsTemplateMessageCount,
   syncTeamFeaturesFromSubscription,
+  migrateTicketLabels,
 } from "./update.service.js";
 import prisma from "../../utils/prisma.js";
 import { StageCategory } from "../../../generated/prisma/enums.js";
@@ -316,5 +317,15 @@ export async function syncTeamFeaturesHandler(
   } catch (error) {
     log.error(error);
     res.code(500).send("Error syncing team features");
+  }
+}
+
+export async function migrateTicketLabelsHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    await migrateTicketLabels();
+    reply.code(200).send("Ticket labels migrated successfully");
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
   }
 }
