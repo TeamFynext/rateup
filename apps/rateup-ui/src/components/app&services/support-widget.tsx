@@ -287,7 +287,7 @@ export default function SupportWidget({
               onValueChange={(value) => setActiveTab(value as any)}
               className="w-full h-full px-4"
             >
-              <TabsContent value="contact" className="flex flex-col">
+              <TabsContent value="contact" className="flex flex-col text-black">
                 {currentStep === 1 && !contactId && (
                   <div className="px-4 py-6 space-y-6 animate-fade-in">
                     <h2 className="text-lg font-bold text-foreground mb-1">Welcome!</h2>

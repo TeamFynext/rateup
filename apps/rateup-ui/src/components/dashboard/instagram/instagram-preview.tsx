@@ -1,12 +1,22 @@
-import { IconMenu2, IconSend } from "@tabler/icons-react";
+import { IconMenu2, IconPhone, IconSend, IconVideo } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-function DmHeader({ name }: Readonly<{ name: string }>) {
+function DmHeader({
+  name,
+  showActions = false,
+}: Readonly<{ name: string; showActions?: boolean }>) {
   return (
     <div className="flex items-center gap-2 border-b px-3 py-2">
       <span className="text-xs text-muted-foreground">←</span>
       <div className="size-5 rounded-full bg-linear-to-br from-purple-400 to-pink-400" />
-      <span className="text-xs font-semibold">{name}</span>
+      <span className="flex-1 text-xs font-semibold">{name}</span>
+      {showActions && (
+        <div className="flex items-center gap-2.5 text-muted-foreground">
+          <IconPhone className="size-3.5" />
+          <IconVideo className="size-3.5" />
+          <IconMenu2 className="size-3.5" />
+        </div>
+      )}
     </div>
   );
 }
@@ -66,54 +76,80 @@ export function PersistentMenuPhone({
   items,
   businessName,
 }: Readonly<{
-  items: { title: string; type: string }[];
+  items: { title: string; type: string; url?: string }[];
   businessName: string;
 }>) {
   const { t } = useTranslation();
-  const displayItems = items.filter((i) => i.title.trim());
+  const name = businessName || "Your Business";
+  const suggestions = items.filter((i) => i.type !== "web_url" && i.title.trim());
+  const websiteItem = items.find((i) => i.type === "web_url" && i.title.trim());
 
   return (
-    <>
-      <DmHeader name={businessName || "Your Business"} />
-      <div className="flex-1 px-3 py-3">
-        <div className="w-fit max-w-[80%] rounded-2xl rounded-bl-sm bg-muted px-3 py-1.5 text-[10px]">
-          {t("Hi! How can I help you?")}
+    <div className="relative flex h-full flex-col">
+      <DmHeader name={name} showActions />
+
+      {/* Dimmed chat behind the sheet */}
+      <div className="flex-1 space-y-2 overflow-hidden px-3 py-3">
+        <p className="text-center text-[9px] text-muted-foreground">10:32 AM</p>
+        <div className="ml-auto w-fit max-w-[75%] rounded-2xl rounded-br-sm bg-[#0a84ff] px-3 py-1.5 text-[10px] text-white">
+          {t("Live chat with a person")}
+        </div>
+        <p className="text-center text-[9px] text-muted-foreground">{t("Shane joined the chat")}</p>
+        <div className="flex items-end gap-1.5">
+          <div className="size-5 shrink-0 rounded-full bg-linear-to-br from-amber-300 to-orange-400" />
+          <div className="w-fit max-w-[75%] rounded-2xl rounded-bl-sm bg-muted px-3 py-1.5 text-[10px]">
+            {t(
+              "Hi! My name is Shane! I'm a customer support rep with {name}, how can I help you?",
+              {
+                name,
+              },
+            )}
+          </div>
         </div>
       </div>
-      <div className="border-t">
-        <div className="flex items-center gap-1.5 border-b bg-muted/30 px-3 py-1.5">
-          <IconMenu2 className="size-3 text-muted-foreground" />
-          <span className="text-[10px] font-medium text-muted-foreground">{t("Menu")}</span>
-        </div>
-        <div className="divide-y">
-          {displayItems.length > 0 ? (
-            displayItems.map((item, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-2 text-[10px]">
-                <span>{item.type === "web_url" ? "🌐" : "💬"}</span>
-                <span className="line-clamp-1">{item.title}</span>
+
+      {/* Dim overlay + bottom sheet */}
+      <div className="absolute inset-0 bg-black/40">
+        <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-background pb-2 shadow-[0_-4px_20px_rgba(0,0,0,0.12)]">
+          <div className="flex justify-center pb-1 pt-2">
+            <div className="h-1 w-8 rounded-full bg-border" />
+          </div>
+          <p className="px-3 text-center text-[12px] font-semibold text-foreground">
+            {t("More options")}
+          </p>
+          <p className="px-3 pb-2 text-center text-[9px] text-muted-foreground">
+            {t("Tap to send a suggestion from {name}", { name })}
+          </p>
+          <div className="space-y-1.5 px-4 pb-2">
+            {(suggestions.length > 0
+              ? suggestions
+              : [{ title: t("Nearby locations") }, { title: t("Refund policy") }]
+            ).map((item, i) => (
+              <div
+                key={i}
+                className="rounded-full bg-muted px-3 py-1.5 text-center text-[10px] font-medium text-[#0a84ff]"
+              >
+                {item.title}
               </div>
-            ))
-          ) : (
+            ))}
+          </div>
+          {websiteItem && (
             <>
-              <div className="flex items-center gap-2 px-3 py-2 text-[10px] text-muted-foreground">
-                <span>💬</span>
-                <span>{t("Menu item here...")}</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-2 text-[10px] text-muted-foreground">
-                <span>🌐</span>
-                <span>{t("Another item...")}</span>
+              <div className="h-px bg-border" />
+              <div className="px-3 pt-2 text-center">
+                <p className="text-[11px] font-semibold text-foreground">
+                  {t("Visit the website")}
+                </p>
+                <p className="truncate text-[9px] text-muted-foreground">{websiteItem.url}</p>
               </div>
             </>
           )}
+          <div className="flex justify-center pt-2">
+            <div className="h-1 w-25 rounded-full bg-foreground/60" />
+          </div>
         </div>
       </div>
-      <div className="flex items-center gap-2 border-t px-3 py-2">
-        <div className="flex-1 rounded-full border bg-muted/30 px-3 py-1.5 text-[10px] text-muted-foreground">
-          {t("Message...")}
-        </div>
-        <IconMenu2 className="size-3.5 text-primary" />
-      </div>
-    </>
+    </div>
   );
 }
 

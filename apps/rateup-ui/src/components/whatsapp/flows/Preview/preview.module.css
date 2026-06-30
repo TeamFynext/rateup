@@ -94,3 +94,19 @@
   white-space: pre-wrap;
   overflow-wrap: break-word;
 }
+
+:global(.dark) .TextHeading,
+:global(.dark) .TextSubHeading,
+:global(.dark) .TextBody {
+  color: rgb(233, 237, 239);
+}
+
+:global(.dark) .TextCaption,
+:global(.dark) .inputLabel {
+  color: rgb(134, 150, 160) !important;
+}
+
+:global(.dark) .textInput {
+  border-bottom-color: #3b4a54;
+  color: rgb(233, 237, 239);
+}

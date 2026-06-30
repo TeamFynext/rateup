@@ -1,10 +1,8 @@
 import {
-  ActionIcon,
   Box,
-  Button,
+  Button as MantineButton,
   Checkbox,
   Chip,
-  Divider,
   Group,
   Image,
   Radio,
@@ -14,14 +12,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import {
-  IconCalendar,
-  IconCamera,
-  IconChevronRight,
-  IconDotsVertical,
-  IconFileText,
-  IconX,
-} from "@tabler/icons-react";
+import { IconCalendar, IconCamera, IconChevronRight, IconFileText } from "@tabler/icons-react";
 
 import {
   Carousel,
@@ -30,6 +21,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel.tsx";
+import { FlowSheetShell } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import type { WaFlowFormNonInputElementType } from "@/types/enums.ts";
 import { WaFlowFormElementType } from "@/types/enums.ts";
 import type { WaFlowFormElement } from "@/types/global";
@@ -113,14 +105,14 @@ function FlowFileInputPreview({
     <Box>
       <Text>{label}</Text>
       <Text fz={"sm"}>automated description</Text>
-      <Button
+      <MantineButton
         variant="outline"
         leftSection={type === "photo" ? <IconCamera /> : <IconFileText />}
         fullWidth
         radius={"xl"}
       >
         {type === "photo" ? "Take photo" : "Upload Document"}
-      </Button>
+      </MantineButton>
     </Box>
   );
 }
@@ -282,67 +274,21 @@ function FlowImageCarouselPreview({ label = "Label", fe }: { label?: string; fe:
     </Box>
   );
 }
-/**
- * The popup that appears when you click on the "Open" button in the FlowChatPreview.
- * @param param0
- * @returns
- */
-export function FlowPreviewContainer({ children, footerLabel }) {
+/** Renders v1 flow form elements inside the shared bottom-sheet shell (same chrome as v2). */
+export function FlowPreviewContainer({
+  children,
+  title,
+  footerLabel,
+}: Readonly<{ children: React.ReactNode; title?: string; footerLabel?: string }>) {
   return (
-    <Stack
-      style={{
-        backgroundColor: "white",
-        borderRadius: "12px 12px 0px 0px",
-        padding: "0px 4px 8px 4px",
-        height: "90%",
-      }}
-      gap={0}
-    >
-      {FlowContainerHeader(() => {})}
-      <Divider />
-      <Stack
-        style={{
-          flex: 1,
-          overflowY: "scroll",
-        }}
-        pb={"sm"}
-        gap={0}
-      >
-        <Stack px={"sm"} pt={"sm"}>
-          {children}
-        </Stack>
-      </Stack>
-      <Button
-        radius={"xl"}
-        mx={4}
-        style={{
-          justifySelf: "end",
-        }}
-      >
-        {footerLabel ?? "Next"}
-      </Button>
-    </Stack>
+    <FlowSheetShell title={title} footerLabel={footerLabel}>
+      {children}
+    </FlowSheetShell>
   );
 }
 
 interface FlowFormElementPreviewProps {
   fe: WaFlowFormElement;
-}
-
-/**
- * Contains close button and the 3 dots icon.
- * @param onClose
- * @returns
- */
-function FlowContainerHeader(onClose: any) {
-  return (
-    <Group justify="space-between" m={0} p={0}>
-      <ActionIcon variant="transparent" color="gray" onClick={onClose} my={8}>
-        <IconX />
-      </ActionIcon>
-      <IconDotsVertical scale={0.8} />
-    </Group>
-  );
 }
 
 export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {

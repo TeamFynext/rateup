@@ -6,6 +6,7 @@ import { PricingPlanReview } from "@/components/HomePage/pages/Pricing/PricingPl
 import PricingSection from "@/components/HomePage/pages/Pricing/PricingSection.tsx";
 import { ClientLogoSectionNew } from "@/components/products/ReviewWithAiComponents/shared/ReviewTestimonials.tsx";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
+import { buildPageHead } from "@/lib/metadata";
 
 import { buildPricingMarkdown } from "../../../markdown/pricing";
 import { createMarkdownMiddleware } from "../../../markdown/serveMarkdown";
@@ -59,6 +60,7 @@ export const Route = createFileRoute("/(marketing)/pricing/")({
   component: Pricing,
   loader: getAllRateupPaymentPlans,
   head: () => ({
+    ...buildPageHead("/pricing"),
     scripts: [
       {
         type: "application/ld+json",

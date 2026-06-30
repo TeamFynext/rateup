@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
 import { useUpdateWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import type { WaAutomatedReply } from "@/types/global";
 
 import { validateNodeData } from "../types/node-types.ts";
@@ -30,6 +31,7 @@ import { getLayoutedElements } from "../utils/auto-layout.ts";
 import { HistoryManager } from "../utils/history.ts";
 import ComponentSidebar from "./component-sidebar.tsx";
 import CustomEdge from "./CustomEdge.tsx";
+import { FlowbotPreviewPlayground } from "./flowbot-phone-preview.tsx";
 import { initialEdges, initialNodes, leadAutomationinitialNodes } from "./initial-data.ts";
 import NodeEditor from "./node-editor.tsx";
 import { nodeTypes } from "./nodes/index.tsx";
@@ -497,6 +499,18 @@ function FlowEditorContent({
               refetch={refetch}
               isPending={updateWaAutomatedReplyMutation.isPending}
             />
+          </Panel>
+          <Panel position="top-right">
+            <PhonePreviewButton
+              platform={waAutomationData.platform === "instagram" ? "instagram" : "whatsapp"}
+              label="Preview"
+            >
+              <FlowbotPreviewPlayground
+                nodes={nodes as unknown as TypedNode[]}
+                edges={edges}
+                platform={waAutomationData.platform === "instagram" ? "instagram" : "whatsapp"}
+              />
+            </PhonePreviewButton>
           </Panel>
         </ReactFlow>
       </div>
