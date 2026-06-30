@@ -10,9 +10,7 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
       },
       update: {
         monthlySurveyResponses: stat === "survey" ? { increment: 1 } : undefined,
-        monthlyMenuViews: stat === "menu" ? { increment: 1 } : undefined,
         surveyResponsesCount: stat === "survey" ? { increment: 1 } : undefined,
-        menuViewsCount: stat === "menu" ? { increment: 1 } : undefined,
         monthlyMessagesCount:
           stat === SubscriptionFeaturePathName.Whatsapp ? { increment: 1 } : undefined,
         messagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? { increment: 1 } : undefined,
@@ -43,10 +41,7 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
       create: {
         orgId: orgId,
         monthlySurveyResponses: stat === "survey" ? 1 : 0,
-        monthlyMenuViews: stat === "menu" ? 1 : 0,
-
         surveyResponsesCount: stat === "survey" ? 1 : 0,
-        menuViewsCount: stat === "menu" ? 1 : 0,
         monthlyMessagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
         messagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
         waSurveysCount: stat === SubscriptionFeaturePathName.WhatsAppSurvey ? 1 : 0,
@@ -101,7 +96,6 @@ export async function resetMonthlyCounts() {
         },
       },
       data: {
-        monthlyMenuViews: 0,
         monthlySurveyResponses: 0,
         monthlyMessagesCount: 0,
         monthlyAutomationTriggerCount: 0,
@@ -259,8 +253,6 @@ export async function updateUsageStats(
       surveysCount: stats?.surveyCount || 0,
       surveyResponsesCount: stats?.surveyResponsesCount || 0,
       monthlySurveyResponses: stats?.surveyResponsesCountCurrentMonth || 0,
-      menusCount: 0,
-      menuViewsCount: 0,
       monthlyMessagesCount: stats?.monthlyMessagesCount || 0,
       waAutomationCount: stats?.waAutomationCount || 0,
     },
@@ -270,8 +262,6 @@ export async function updateUsageStats(
       surveysCount: stats?.surveyCount || 0,
       surveyResponsesCount: stats?.surveyResponsesCount || 0,
       monthlySurveyResponses: stats?.surveyResponsesCountCurrentMonth || 0,
-      menusCount: 0,
-      menuViewsCount: 0,
       monthlyMessagesCount: stats?.monthlyMessagesCount || 0,
       orgId,
     },

@@ -223,8 +223,6 @@ model UsageStats {
   surveyResponsesCount    Int @default(0)
   waSurveysCount          Int @default(0)
   waSurveyResponsesCount  Int @default(0)
-  menusCount              Int @default(0)
-  menuViewsCount          Int @default(0)
   messagesCount           Int @default(0)
   aiPromptTokensCount     Int @default(0)
   aiCompletionTokensCount Int @default(0)
@@ -236,7 +234,6 @@ model UsageStats {
   annualMessageCount       Int @default(0)
   monthlySurveyResponses   Int @default(0)
   monthlyWaSurveyResponses Int @default(0)
-  monthlyMenuViews         Int @default(0)
   monthlyMessagesCount     Int @default(0)
 
   subscriptionStartDate DateTime?
@@ -246,8 +243,6 @@ model UsageStats {
   allowedTeamMembers     Int @default(0)
   allowedSurveys         Int @default(0)
   allowedSurveyResponses Int @default(0)
-  allowedMenus           Int @default(0)
-  allowedMenuViews       Int @default(0)
   allowedMessagesCount   Int @default(0)
 
   annualTemplateMessageCount  Int @default(0)
