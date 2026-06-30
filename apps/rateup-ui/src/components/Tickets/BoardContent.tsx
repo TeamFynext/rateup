@@ -3,7 +3,7 @@ import { ChevronLeft, Columns3, LayoutPanelTop, List, Search, Settings } from "l
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useBoard, useBoardTeamMembersById } from "@/backend/tickets/tickets.query";
+import { useBoard, useBoardTeamMembersById, useLabels } from "@/backend/tickets/tickets.query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 
 import { Board } from "./board.tsx";
 import TicketSettings from "./boardSettings.tsx";
-import { PRIORITY_CONFIG } from "./card.tsx";
 import { ManageColumnsDialog } from "./ManageColumnsDialog.tsx";
 import { ManageLabels } from "./ManageLabels.tsx";
 import { TicketListView } from "./TicketListView.tsx";
@@ -34,7 +33,7 @@ export function BoardContent({
   } = useBoard(selectedBoardId || "");
   const { t } = useTranslation();
 
-  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
+  const [labelFilter, setLabelFilter] = useState<string | null>(null);
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -44,6 +43,8 @@ export function BoardContent({
   });
 
   const navigate = useNavigate();
+
+  const { labels } = useLabels(selectedBoardId);
 
   const stats = useMemo(() => {
     let openCount = 0;
@@ -119,13 +120,6 @@ export function BoardContent({
     for (let i = 0; i < id.length; i++) hash += id.charCodeAt(i);
     return avatarColors[hash % avatarColors.length];
   };
-
-  const priorities = [
-    { value: "CRITICAL", label: t("Critical") },
-    { value: "HIGH", label: t("High") },
-    { value: "MEDIUM", label: t("Medium") },
-    { value: "LOW", label: t("Low") },
-  ];
 
   const handleViewChange = (v: string) => {
     setViewPref(v);
@@ -250,41 +244,52 @@ export function BoardContent({
 
             <div className="w-px h-5 bg-border hidden md:block" />
 
-            <div className="hidden md:flex gap-1 items-center">
-              <span className="font-body text-[11px] font-semibold text-muted-foreground tracking-wider uppercase mr-1">
-                {t("Priority")}
+            <div
+              className="hidden md:flex gap-1 items-center overflow-x-auto max-w-[250px] lg:max-w-[400px] xl:max-w-[500px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              onWheel={(e) => {
+                if (e.deltaY !== 0) {
+                  e.currentTarget.scrollLeft += e.deltaY;
+                }
+              }}
+            >
+              <span className="shrink-0 font-body text-[11px] font-semibold text-muted-foreground tracking-wider uppercase mr-1">
+                {t("Labels")}
               </span>
               <button
-                onClick={() => setPriorityFilter(null)}
-                className="rounded-full font-body text-[11px] font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center leading-none"
+                onClick={() => setLabelFilter(null)}
+                className="shrink-0 rounded-full font-body text-[11px] font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center leading-none"
                 style={{
                   padding: "2px 8px",
                   border:
-                    priorityFilter === null
-                      ? "1.5px solid currentColor"
-                      : "1.5px solid transparent",
-                  background: priorityFilter === null ? "#EEF4FB" : "transparent",
-                  color: priorityFilter === null ? "#1C518E" : "#8B8E8A",
+                    labelFilter === null ? "1.5px solid currentColor" : "1.5px solid transparent",
+                  background: labelFilter === null ? "#EEF4FB" : "transparent",
+                  color: labelFilter === null ? "#1C518E" : "#8B8E8A",
                 }}
               >
                 {t("All")}
               </button>
-              {priorities.map((p) => {
-                const on = priorityFilter === p.value;
-                const pConf = PRIORITY_CONFIG[p.value.toLowerCase()];
+              {labels?.map((label) => {
+                const on = labelFilter === label.id;
+                let parsedColor;
+                try {
+                  parsedColor = JSON.parse(label.color);
+                  if (!parsedColor.bgcolor) throw new Error();
+                } catch {
+                  parsedColor = { bgcolor: label.color, textcolor: "#171717" };
+                }
                 return (
                   <button
-                    key={p.value}
-                    onClick={() => setPriorityFilter(p.value)}
-                    className="rounded-full font-body text-[11px] font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center leading-none"
+                    key={label.id}
+                    onClick={() => setLabelFilter(label.id)}
+                    className="shrink-0 rounded-full font-body text-[11px] font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center leading-none"
                     style={{
                       padding: "2px 8px",
                       border: on ? "1.5px solid currentColor" : "1.5px solid transparent",
-                      background: on ? pConf?.bg : "transparent",
-                      color: on ? pConf?.color : "#8B8E8A",
+                      background: on ? parsedColor.bgcolor : "transparent",
+                      color: on ? parsedColor.textcolor : "#8B8E8A",
                     }}
                   >
-                    {p.label}
+                    {label.name}
                   </button>
                 );
               })}
@@ -341,7 +346,7 @@ export function BoardContent({
         <TabsContent value="board" className="flex-1 mt-0 h-full min-h-0">
           <Board
             initial={selectedBoard}
-            priorityFilter={priorityFilter}
+            labelFilter={labelFilter}
             searchQuery={searchQuery}
             assigneeFilter={assigneeFilter}
           />
@@ -349,7 +354,7 @@ export function BoardContent({
         <TabsContent value="list" className="flex-1 mt-0 min-h-0 overflow-y-auto">
           <TicketListView
             board={selectedBoard}
-            priorityFilter={priorityFilter}
+            labelFilter={labelFilter}
             searchQuery={searchQuery}
             assigneeFilter={assigneeFilter}
             boardMembers={assignees}

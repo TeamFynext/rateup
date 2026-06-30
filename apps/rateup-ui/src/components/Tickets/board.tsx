@@ -35,12 +35,12 @@ import {
 
 export function Board({
   initial,
-  priorityFilter,
+  labelFilter,
   searchQuery,
   assigneeFilter,
 }: Readonly<{
   initial: BoardType;
-  priorityFilter: string | null;
+  labelFilter: string | null;
   searchQuery?: string;
   assigneeFilter?: string | null;
 }>) {
@@ -314,7 +314,7 @@ export function Board({
                 ...column,
                 ticketCards: column.ticketCards.filter((card) => {
                   let matches = true;
-                  if (priorityFilter && card.priority !== priorityFilter) {
+                  if (labelFilter && card.labelId !== labelFilter) {
                     matches = false;
                   }
                   if (searchQuery) {

@@ -207,6 +207,7 @@
     "Are you sure you want to sign out from the synced account?": "Êtes-vous sûr de vouloir vous déconnecter du compte synchronisé ?",
     "Are you sure, you want to delete it?": "Êtes-vous sûr de vouloir le supprimer ?",
     "Are you sure, you want to discard unsaved changes?": "Etes-vous sûr de vouloir ignorer les modifications non enregistrées ?",
+    "Are you sure?": "Es-tu sûr?",
     "Assign Bigin Owner": "Attribuer un propriétaire Bigin",
     "Assign Chats": "Attribuer des discussions",
     "Assign Reward": "Attribuer une récompense",
@@ -523,6 +524,7 @@
     "Create a custom field to store additional information about your contacts.": "Créez un champ personnalisé pour stocker des informations supplémentaires sur vos contacts.",
     "Create a new access link": "Créer un nouveau lien d'accès",
     "Create a new access link to get started.": "Créez un nouveau lien d'accès pour commencer.",
+    "Create a new label": "Créer une nouvelle étiquette",
     "Create a new QR": "Créer un nouveau QR",
     "Create a new QR code": "Créer un nouveau code QR",
     "Create a new QR code to get started.": "Créez un nouveau code QR pour commencer.",
@@ -546,6 +548,7 @@
     "Create Draft from Predefined Template": "Créer un brouillon à partir d'un modèle prédéfini",
     "Create Flow": "Créer un flux",
     "Create Group": "Créer un groupe",
+    "Create Label": "Créer une étiquette",
     "Create Link": "Créer un lien",
     "Create New Board": "Créer un nouveau tableau",
     "Create New Screen": "Créer un nouvel écran",
@@ -637,6 +640,7 @@
     "Delete Flow": "Supprimer le flux",
     "Delete Flow?": "Supprimer le flux ?",
     "Delete Invite": "Supprimer l'invitation",
+    "Delete Label": "Supprimer l'étiquette",
     "Delete List": "Supprimer la liste",
     "Delete Loyalty Program": "Supprimer le programme de fidélité",
     "Delete Organization": "Supprimer l'organisation",
@@ -651,6 +655,7 @@
     "Delete Rule": "Supprimer la règle",
     "Delete Screen": "Supprimer l'écran",
     "Delete Screen?": "Supprimer l'écran ?",
+    "Delete Selected Labels": "Supprimer les étiquettes sélectionnées",
     "Delete Stripe Product": "Supprimer le produit Stripe",
     "Delete Survey": "Supprimer l'enquête",
     "Delete Survey?": "Supprimer l'enquête ?",
@@ -737,6 +742,7 @@
     "Edit Display Name": "Modifier le nom d'affichage",
     "Edit Display Text": "Modifier le texte affiché",
     "Edit Email ID": "Modifier l'identifiant de messagerie",
+    "Edit Label": "Modifier l'étiquette",
     "Edit Password": "Modifier le mot de passe",
     "Edit Profile": "Modifier le profil",
     "Edit Question": "Modifier la question",
@@ -1030,7 +1036,6 @@
     "Height": "Hauteur",
     "here or click to select files": "ici ou cliquez pour sélectionner les fichiers",
     "Hi! How can I help you?": "Salut ! Comment puis-je t'aider?",
-    "High": "Élevé",
     "Highlight your brand here, use images or videos, to stand out": "Mettez en avant votre marque ici, utilisez des images ou des vidéos, pour vous démarquer",
     "Hold on, changing your organization Logo": "Attendez, vous changez votre organisation Logo",
     "Hold on, changing your organization photo": "Attendez, je change la photo de votre organisation",
@@ -1181,7 +1186,9 @@
     "key not found": "clé introuvable",
     "Kindly enter the OTP we have sent via SMS to authenticate your phone number.": "Veuillez saisir l'OTP que nous avons envoyé par SMS pour authentifier votre numéro de téléphone.",
     "Kiosk Mode": "Mode kiosque",
+    "Label": "Étiquette",
     "Label is required": "L'étiquette est obligatoire",
+    "Label name": "Nom de l'étiquette",
     "Labels": "Étiquettes",
     "Landing Pages": "Pages de destination",
     "Language": "Langue",
@@ -1241,7 +1248,6 @@
     "Logs": "Journaux",
     "longest": "le plus long",
     "Longitude": "Longitude",
-    "Low": "Faible",
     "Lower-case letters and underscores only": "Lettres minuscules et traits de soulignement uniquement",
     "Loyalty": "Fidélité",
     "Loyalty program performance and insights": "Performances et informations du programme de fidélité",
@@ -1252,6 +1258,7 @@
     "Manage Automations": "Gérer les automatisations",
     "Manage automations, menus, and engagement tools": "Gérer les automatisations, les menus et les outils d'engagement",
     "Manage Columns": "Gérer les colonnes",
+    "Manage Labels": "Gérer les étiquettes",
     "Manage multiple business hours for different channels and timezones": "Gérez plusieurs heures de travail pour différents canaux et fuseaux horaires",
     "Manage Razorpay Plans": "Gérer les forfaits Razorpay",
     "Manage Subscription": "Gérer l'abonnement",
@@ -1285,7 +1292,6 @@
     "maximum number of photos that can be uploaded": "nombre maximum de photos pouvant être téléchargées",
     "Maximum of 2 ImageCarousel components allowed per screen": "Maximum de 2 composants ImageCarousel autorisés par écran",
     "Maximum of 3 ImageCarousel components allowed per flow": "Maximum de 3 composants ImageCarousel autorisés par flux",
-    "Medium": "Moyen",
     "member": "membre",
     "Member Distribution by Tier": "Répartition des membres par niveau",
     "Member Growth": "Croissance des membres",
@@ -1394,6 +1400,8 @@
     "No group found": "Aucun groupe trouvé",
     "No groups found": "Aucun groupe trouvé",
     "No Instagram accounts connected": "Aucun compte Instagram connecté",
+    "No Label": "Aucune étiquette",
+    "No labels found": "Aucune étiquette trouvée",
     "No logic jumps configured for this element": "Aucun saut logique configuré pour cet élément",
     "No Loyalty Program Found": "Aucun programme de fidélité trouvé",
     "No members found": "Aucun membre trouvé",
@@ -1858,6 +1866,7 @@
     "Search contact...": "Rechercher un contact...",
     "Search flows...": "Flux de recherche...",
     "search for a valid phone number or contact name": "rechercher un numéro de téléphone ou un nom de contact valide",
+    "Search labels...": "Rechercher des étiquettes...",
     "Search phone or message": "Rechercher un téléphone ou un message",
     "Search QR codes...": "Rechercher des codes QR...",
     "Search surveys...": "Rechercher des enquêtes...",
@@ -1935,6 +1944,7 @@
     "Select operator": "Sélectionnez l'opérateur",
     "Select Page": "Sélectionner une page",
     "Select Photo Source": "Sélectionnez la source de la photo",
+    "Select Priority": "Sélectionnez la priorité",
     "Select question": "Sélectionnez une question",
     "Select rating until which Ticket should be created:": "Sélectionnez la note jusqu'à laquelle le billet doit être créé :",
     "Select Redemption": "Sélectionnez le rachat",
@@ -2181,6 +2191,7 @@
     "This PhoneNumber is not in your contact list": "Ce numéro de téléphone n'est pas dans votre liste de contacts",
     "this user": "cet utilisateur",
     "this user?": "cet utilisateur ?",
+    "This will delete the selected label(s) and remove them from all associated cards. This action cannot be undone.": "Cela supprimera les étiquettes sélectionnées et les supprimera de toutes les cartes associées. Cette action ne peut pas être annulée.",
     "This will permanently delete your account": "Cela supprimera définitivement votre compte",
     "This will permanently remove the webhook endpoint. This action cannot be undone.": "Cela supprimera définitivement le point de terminaison du webhook. Cette action ne peut pas être annulée.",
     "Thread is marked closed. Agents can reopen at any time.": "Le sujet est marqué fermé. Les agents peuvent rouvrir à tout moment.",
@@ -2466,16 +2477,6 @@
   "Example": {
     " /points": "Exemple : /points"
   },
-  "Eg": {
-    "https://www": {
-      "example": {
-        "com": "Par exemple:https://www.example.com"
-      }
-    }
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Sélectionnez uniquement les étapes qui appartiennent à la configuration de pipeline et de sous-pipeline sélectionnée."
-  },
   "campaign.resend": {
     "Cancel": "Annuler",
     "Choose when to send and which participants to resend to": "Choisissez quand envoyer et à quels participants renvoyer",
@@ -2598,6 +2599,9 @@
     "Selected": "Sélectionné",
     "You have not selected any participant": "Vous n'avez sélectionné aucun participant"
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Sélectionnez uniquement les étapes qui appartiennent à la configuration de pipeline et de sous-pipeline sélectionnée."
+  },
   "apianalytics": {
     "All": "Tout",
     "Avg Delivery Time": "Délai de livraison moyen",
@@ -2623,6 +2627,13 @@
     "Total Messages Sent": "Total des messages envoyés",
     "WhatsApp Messages Analytics": "Analyse des messages WhatsApp",
     "WhatsApp Template Analytics": "Analyse des modèles WhatsApp"
+  },
+  "Eg": {
+    "https://www": {
+      "example": {
+        "com": "Par exemple:https://www.example.com"
+      }
+    }
   },
   "campaign.list": {
     "Active": "Actif",

@@ -205,6 +205,7 @@
     "Are you sure you want to sign out from the synced account?": "Are you sure you want to sign out from the synced account?",
     "Are you sure, you want to delete it?": "Are you sure, you want to delete it?",
     "Are you sure, you want to discard unsaved changes?": "Are you sure, you want to discard unsaved changes?",
+    "Are you sure?": "Are you sure?",
     "Assign Bigin Owner": "Assign Bigin Owner",
     "Assign Chats": "Assign Chats",
     "Assign Reward": "Assign Reward",
@@ -521,6 +522,7 @@
     "Create a custom field to store additional information about your contacts.": "Create a custom field to store additional information about your contacts.",
     "Create a new access link": "Create a new access link",
     "Create a new access link to get started.": "Create a new access link to get started.",
+    "Create a new label": "Create a new label",
     "Create a new QR": "Create a new QR",
     "Create a new QR code": "Create a new QR code",
     "Create a new QR code to get started.": "Create a new QR code to get started.",
@@ -544,6 +546,7 @@
     "Create Draft from Predefined Template": "Create Draft from Predefined Template",
     "Create Flow": "Create Flow",
     "Create Group": "Create Group",
+    "Create Label": "Create Label",
     "Create Link": "Create Link",
     "Create New Board": "Create New Board",
     "Create New Screen": "Create New Screen",
@@ -635,6 +638,7 @@
     "Delete Flow": "Delete Flow",
     "Delete Flow?": "Delete Flow?",
     "Delete Invite": "Delete Invite",
+    "Delete Label": "Delete Label",
     "Delete List": "Delete List",
     "Delete Loyalty Program": "Delete Loyalty Program",
     "Delete Organization": "Delete Organization",
@@ -649,6 +653,7 @@
     "Delete Rule": "Delete Rule",
     "Delete Screen": "Delete Screen",
     "Delete Screen?": "Delete Screen?",
+    "Delete Selected Labels": "Delete Selected Labels",
     "Delete Stripe Product": "Delete Stripe Product",
     "Delete Survey": "Delete Survey",
     "Delete Survey?": "Delete Survey?",
@@ -735,6 +740,7 @@
     "Edit Display Name": "Edit Display Name",
     "Edit Display Text": "Edit Display Text",
     "Edit Email ID": "Edit Email ID",
+    "Edit Label": "Edit Label",
     "Edit Password": "Edit Password",
     "Edit Profile": "Edit Profile",
     "Edit Question": "Edit Question",
@@ -1028,7 +1034,6 @@
     "Height": "Height",
     "here or click to select files": "here or click to select files",
     "Hi! How can I help you?": "Hi! How can I help you?",
-    "High": "High",
     "Highlight your brand here, use images or videos, to stand out": "Highlight your brand here, use images or videos, to stand out",
     "Hold on, changing your organization Logo": "Hold on, changing your organization Logo",
     "Hold on, changing your organization photo": "Hold on, changing your organization photo",
@@ -1179,7 +1184,9 @@
     "key not found": "key not found",
     "Kindly enter the OTP we have sent via SMS to authenticate your phone number.": "Kindly enter the OTP we have sent via SMS to authenticate your phone number.",
     "Kiosk Mode": "Kiosk Mode",
+    "Label": "Label",
     "Label is required": "Label is required",
+    "Label name": "Label name",
     "Labels": "Labels",
     "Landing Pages": "Landing Pages",
     "Language": "Language",
@@ -1239,7 +1246,6 @@
     "Logs": "Logs",
     "longest": "longest",
     "Longitude": "Longitude",
-    "Low": "Low",
     "Lower-case letters and underscores only": "Lower-case letters and underscores only",
     "Loyalty": "Loyalty",
     "Loyalty program performance and insights": "Loyalty program performance and insights",
@@ -1250,6 +1256,7 @@
     "Manage Automations": "Manage Automations",
     "Manage automations, menus, and engagement tools": "Manage automations, menus, and engagement tools",
     "Manage Columns": "Manage Columns",
+    "Manage Labels": "Manage Labels",
     "Manage multiple business hours for different channels and timezones": "Manage multiple business hours for different channels and timezones",
     "Manage Razorpay Plans": "Manage Razorpay Plans",
     "Manage Subscription": "Manage Subscription",
@@ -1283,7 +1290,6 @@
     "maximum number of photos that can be uploaded": "maximum number of photos that can be uploaded",
     "Maximum of 2 ImageCarousel components allowed per screen": "Maximum of 2 ImageCarousel components allowed per screen",
     "Maximum of 3 ImageCarousel components allowed per flow": "Maximum of 3 ImageCarousel components allowed per flow",
-    "Medium": "Medium",
     "member": "member",
     "Member Distribution by Tier": "Member Distribution by Tier",
     "Member Growth": "Member Growth",
@@ -1392,6 +1398,8 @@
     "No group found": "No group found",
     "No groups found": "No groups found",
     "No Instagram accounts connected": "No Instagram accounts connected",
+    "No Label": "No Label",
+    "No labels found": "No labels found",
     "No logic jumps configured for this element": "No logic jumps configured for this element",
     "No Loyalty Program Found": "No Loyalty Program Found",
     "No members found": "No members found",
@@ -1856,6 +1864,7 @@
     "Search contact...": "Search contact...",
     "Search flows...": "Search flows...",
     "search for a valid phone number or contact name": "search for a valid phone number or contact name",
+    "Search labels...": "Search labels...",
     "Search phone or message": "Search phone or message",
     "Search QR codes...": "Search QR codes...",
     "Search surveys...": "Search surveys...",
@@ -1933,6 +1942,7 @@
     "Select operator": "Select operator",
     "Select Page": "Select Page",
     "Select Photo Source": "Select Photo Source",
+    "Select Priority": "Select Priority",
     "Select question": "Select question",
     "Select rating until which Ticket should be created:": "Select rating until which Ticket should be created:",
     "Select Redemption": "Select Redemption",
@@ -2179,6 +2189,7 @@
     "This PhoneNumber is not in your contact list": "This PhoneNumber is not in your contact list",
     "this user": "this user",
     "this user?": "this user?",
+    "This will delete the selected label(s) and remove them from all associated cards. This action cannot be undone.": "This will delete the selected label(s) and remove them from all associated cards. This action cannot be undone.",
     "This will permanently delete your account": "This will permanently delete your account",
     "This will permanently remove the webhook endpoint. This action cannot be undone.": "This will permanently remove the webhook endpoint. This action cannot be undone.",
     "Thread is marked closed. Agents can reopen at any time.": "Thread is marked closed. Agents can reopen at any time.",
@@ -2464,16 +2475,6 @@
   "Example": {
     " /points": "Example: /points"
   },
-  "Eg": {
-    "https://www": {
-      "example": {
-        "com": "Eg:https://www.example.com"
-      }
-    }
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
-  },
   "campaign.resend": {
     "Cancel": "Cancel",
     "Choose when to send and which participants to resend to": "Choose when to send and which participants to resend to",
@@ -2592,6 +2593,9 @@
     "Selected": "Selected",
     "You have not selected any participant": "You have not selected any participant"
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
+  },
   "apianalytics": {
     "All": "All",
     "Avg Delivery Time": "Avg Delivery Time",
@@ -2617,6 +2621,13 @@
     "Total Messages Sent": "Total Messages Sent",
     "WhatsApp Messages Analytics": "WhatsApp Messages Analytics",
     "WhatsApp Template Analytics": "WhatsApp Template Analytics"
+  },
+  "Eg": {
+    "https://www": {
+      "example": {
+        "com": "Eg:https://www.example.com"
+      }
+    }
   },
   "campaign.list": {
     "Active": "Active",

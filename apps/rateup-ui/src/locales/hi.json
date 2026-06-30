@@ -205,6 +205,7 @@
     "Are you sure you want to sign out from the synced account?": "क्या आप वाकई सिंक किए गए खाते से साइन आउट करना चाहते हैं?",
     "Are you sure, you want to delete it?": "क्या आप इसे मिटाना चाहते हैं?",
     "Are you sure, you want to discard unsaved changes?": "क्या आप निश्चित हैं, आप सहेजे न गए परिवर्तनों को त्यागना चाहते हैं?",
+    "Are you sure?": "क्या आपको यकीन है?",
     "Assign Bigin Owner": "बिगिन स्वामी को नियुक्त करें",
     "Assign Chats": "चैट असाइन करें",
     "Assign Reward": "पुरस्कार सौंपें",
@@ -521,6 +522,7 @@
     "Create a custom field to store additional information about your contacts.": "अपने संपर्कों के बारे में अतिरिक्त जानकारी संग्रहीत करने के लिए एक कस्टम फ़ील्ड बनाएं।",
     "Create a new access link": "एक नया एक्सेस लिंक बनाएं",
     "Create a new access link to get started.": "आरंभ करने के लिए एक नया एक्सेस लिंक बनाएं.",
+    "Create a new label": "एक नया लेबल बनाएं",
     "Create a new QR": "एक नया क्यूआर बनाएं",
     "Create a new QR code": "एक नया QR कोड बनाएं",
     "Create a new QR code to get started.": "आरंभ करने के लिए एक नया QR कोड बनाएं.",
@@ -544,6 +546,7 @@
     "Create Draft from Predefined Template": "पूर्वनिर्धारित टेम्पलेट से ड्राफ्ट बनाएं",
     "Create Flow": "प्रवाह बनाएँ",
     "Create Group": "समूह बनाना",
+    "Create Label": "लेबल बनाएं",
     "Create Link": "लिंक बनाएं",
     "Create New Board": "नया बोर्ड बनाएं",
     "Create New Screen": "नई स्क्रीन बनाएं",
@@ -635,6 +638,7 @@
     "Delete Flow": "प्रवाह हटाएँ",
     "Delete Flow?": "प्रवाह हटाएँ?",
     "Delete Invite": "आमंत्रण हटाएं",
+    "Delete Label": "लेबल हटाएँ",
     "Delete List": "सूची हटाएँ",
     "Delete Loyalty Program": "लॉयल्टी प्रोग्राम हटाएँ",
     "Delete Organization": "संगठन हटाएँ",
@@ -649,6 +653,7 @@
     "Delete Rule": "नियम हटाएँ",
     "Delete Screen": "स्क्रीन हटाएँ",
     "Delete Screen?": "स्क्रीन हटाएं?",
+    "Delete Selected Labels": "चयनित लेबल हटाएँ",
     "Delete Stripe Product": "स्ट्राइप उत्पाद हटाएँ",
     "Delete Survey": "सर्वेक्षण हटाएँ",
     "Delete Survey?": "सर्वेक्षण हटाएं?",
@@ -735,6 +740,7 @@
     "Edit Display Name": "प्रदर्शन नाम संपादित करें",
     "Edit Display Text": "प्रदर्शन पाठ संपादित करें",
     "Edit Email ID": "ईमेल आईडी संपादित करें",
+    "Edit Label": "लेबल संपादित करें",
     "Edit Password": "पासवर्ड संपादित करें",
     "Edit Profile": "प्रोफ़ाइल संपादित करें",
     "Edit Question": "प्रश्न संपादित करें",
@@ -1028,7 +1034,6 @@
     "Height": "ऊंचाई",
     "here or click to select files": "यहां या फ़ाइलों का चयन करने के लिए क्लिक करें",
     "Hi! How can I help you?": "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?",
-    "High": "उच्च",
     "Highlight your brand here, use images or videos, to stand out": "यहां अपने ब्रांड को हाइलाइट करें, अलग दिखने के लिए छवियों या वीडियो का उपयोग करें",
     "Hold on, changing your organization Logo": "रुको, अपने संगठन का लोगो बदल रहा हूँ",
     "Hold on, changing your organization photo": "रुको, अपने संगठन की फ़ोटो बदल रहा हूँ",
@@ -1179,7 +1184,9 @@
     "key not found": "कुंजी प्राप्त नहीं हुई",
     "Kindly enter the OTP we have sent via SMS to authenticate your phone number.": "कृपया अपने फ़ोन नंबर को प्रमाणित करने के लिए हमारे द्वारा एसएमएस के माध्यम से भेजा गया ओटीपी दर्ज करें।",
     "Kiosk Mode": "कियॉस्क मोड",
+    "Label": "लेबल",
     "Label is required": "लेबल आवश्यक है",
+    "Label name": "लेबल का नाम",
     "Labels": "लेबल",
     "Landing Pages": "लैंडिंग पृष्ठ",
     "Language": "भाषा",
@@ -1239,7 +1246,6 @@
     "Logs": "लॉग्स",
     "longest": "सबसे लंबे समय तक",
     "Longitude": "देशान्तर",
-    "Low": "कम",
     "Lower-case letters and underscores only": "केवल छोटे अक्षर और अंडरस्कोर",
     "Loyalty": "निष्ठा",
     "Loyalty program performance and insights": "वफादारी कार्यक्रम का प्रदर्शन और अंतर्दृष्टि",
@@ -1250,6 +1256,7 @@
     "Manage Automations": "स्वचालन प्रबंधित करें",
     "Manage automations, menus, and engagement tools": "ऑटोमेशन, मेनू और सहभागिता उपकरण प्रबंधित करें",
     "Manage Columns": "कॉलम प्रबंधित करें",
+    "Manage Labels": "लेबल प्रबंधित करें",
     "Manage multiple business hours for different channels and timezones": "विभिन्न चैनलों और समयक्षेत्रों के लिए एकाधिक व्यावसायिक घंटे प्रबंधित करें",
     "Manage Razorpay Plans": "रेज़रपे योजनाएँ प्रबंधित करें",
     "Manage Subscription": "सदस्यता प्रबंधित करें",
@@ -1283,7 +1290,6 @@
     "maximum number of photos that can be uploaded": "अपलोड की जा सकने वाली फ़ोटो की अधिकतम संख्या",
     "Maximum of 2 ImageCarousel components allowed per screen": "प्रति स्क्रीन अधिकतम 2 ImageCarousel घटकों की अनुमति है",
     "Maximum of 3 ImageCarousel components allowed per flow": "प्रति प्रवाह अधिकतम 3 ImageCarousel घटकों की अनुमति है",
-    "Medium": "मध्यम",
     "member": "सदस्य",
     "Member Distribution by Tier": "टियर द्वारा सदस्य वितरण",
     "Member Growth": "सदस्य वृद्धि",
@@ -1392,6 +1398,8 @@
     "No group found": "कोई समूह नहीं मिला",
     "No groups found": "कोई समूह नहीं मिला",
     "No Instagram accounts connected": "कोई इंस्टाग्राम अकाउंट कनेक्ट नहीं है",
+    "No Label": "लेबल नहीं",
+    "No labels found": "कोई लेबल नहीं मिला",
     "No logic jumps configured for this element": "इस तत्व के लिए कोई लॉजिक जंप कॉन्फ़िगर नहीं किया गया है",
     "No Loyalty Program Found": "कोई लॉयल्टी प्रोग्राम नहीं मिला",
     "No members found": "कोई सदस्य नहीं मिला",
@@ -1856,6 +1864,7 @@
     "Search contact...": "संपर्क खोजें...",
     "Search flows...": "खोज प्रवाह...",
     "search for a valid phone number or contact name": "वैध फ़ोन नंबर या संपर्क नाम खोजें",
+    "Search labels...": "लेबल खोजें...",
     "Search phone or message": "फ़ोन या संदेश खोजें",
     "Search QR codes...": "QR कोड खोजें...",
     "Search surveys...": "सर्वेक्षण खोजें...",
@@ -1933,6 +1942,7 @@
     "Select operator": "ऑपरेटर का चयन करें",
     "Select Page": "पेज चुनें",
     "Select Photo Source": "फोटो स्रोत का चयन करें",
+    "Select Priority": "प्राथमिकता चुनें",
     "Select question": "प्रश्न चुनें",
     "Select rating until which Ticket should be created:": "रेटिंग का चयन करें जब तक कि टिकट नहीं बनाया जाना चाहिए:",
     "Select Redemption": "मोचन का चयन करें",
@@ -2179,6 +2189,7 @@
     "This PhoneNumber is not in your contact list": "यह फ़ोन नंबर आपकी संपर्क सूची में नहीं है",
     "this user": "यह उपयोगकर्ता",
     "this user?": "यह उपयोगकर्ता?",
+    "This will delete the selected label(s) and remove them from all associated cards. This action cannot be undone.": "यह चयनित लेबल को हटा देगा और उन्हें सभी संबद्ध कार्डों से हटा देगा। इस एक्शन को वापस नहीं किया जा सकता।",
     "This will permanently delete your account": "इससे आपका खाता स्थायी रूप से हटा दिया जाएगा",
     "This will permanently remove the webhook endpoint. This action cannot be undone.": "यह वेबहुक एंडपॉइंट को स्थायी रूप से हटा देगा। इस एक्शन को वापस नहीं किया जा सकता।",
     "Thread is marked closed. Agents can reopen at any time.": "थ्रेड को बंद के रूप में चिह्नित किया गया है. एजेंट किसी भी समय पुनः खोल सकते हैं।",
@@ -2464,16 +2475,6 @@
   "Example": {
     " /points": "उदाहरण: /अंक"
   },
-  "Eg": {
-    "https://www": {
-      "example": {
-        "com": "जैसे:https://www.example.com"
-      }
-    }
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "केवल उन चरणों का चयन करें जो चयनित पाइपलाइन और उप पाइपलाइन कॉन्फ़िगरेशन से संबंधित हैं।"
-  },
   "campaign.resend": {
     "Cancel": "रद्द करना",
     "Choose when to send and which participants to resend to": "चुनें कि कब भेजना है और किन प्रतिभागियों को दोबारा भेजना है",
@@ -2592,6 +2593,9 @@
     "Selected": "चयनित",
     "You have not selected any participant": "आपने किसी भी प्रतिभागी का चयन नहीं किया है"
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "केवल उन चरणों का चयन करें जो चयनित पाइपलाइन और उप पाइपलाइन कॉन्फ़िगरेशन से संबंधित हैं।"
+  },
   "apianalytics": {
     "All": "सभी",
     "Avg Delivery Time": "औसत डिलिवरी समय",
@@ -2617,6 +2621,13 @@
     "Total Messages Sent": "भेजे गए कुल संदेश",
     "WhatsApp Messages Analytics": "व्हाट्सएप संदेश विश्लेषण",
     "WhatsApp Template Analytics": "व्हाट्सएप टेम्पलेट एनालिटिक्स"
+  },
+  "Eg": {
+    "https://www": {
+      "example": {
+        "com": "जैसे:https://www.example.com"
+      }
+    }
   },
   "campaign.list": {
     "Active": "सक्रिय",

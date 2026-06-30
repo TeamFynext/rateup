@@ -213,6 +213,7 @@
     "Are you sure you want to sign out from the synced account?": "هل أنت متأكد أنك تريد تسجيل الخروج من الحساب المتزامن؟",
     "Are you sure, you want to delete it?": "هل أنت متأكد أنك تريد حذفه؟",
     "Are you sure, you want to discard unsaved changes?": "هل أنت متأكد أنك تريد تجاهل التغييرات غير المحفوظة؟",
+    "Are you sure?": "هل أنت متأكد؟",
     "Assign Bigin Owner": "تعيين مالك Bigin",
     "Assign Chats": "تعيين الدردشات",
     "Assign Reward": "تعيين مكافأة",
@@ -529,6 +530,7 @@
     "Create a custom field to store additional information about your contacts.": "قم بإنشاء حقل مخصص لتخزين معلومات إضافية حول جهات الاتصال الخاصة بك.",
     "Create a new access link": "إنشاء رابط وصول جديد",
     "Create a new access link to get started.": "قم بإنشاء رابط وصول جديد للبدء.",
+    "Create a new label": "إنشاء تسمية جديدة",
     "Create a new QR": "إنشاء QR جديد",
     "Create a new QR code": "إنشاء رمز QR جديد",
     "Create a new QR code to get started.": "قم بإنشاء رمز QR جديد للبدء.",
@@ -552,6 +554,7 @@
     "Create Draft from Predefined Template": "إنشاء مسودة من قالب محدد مسبقًا",
     "Create Flow": "إنشاء التدفق",
     "Create Group": "إنشاء مجموعة",
+    "Create Label": "إنشاء تسمية",
     "Create Link": "إنشاء رابط",
     "Create New Board": "إنشاء مجلس جديد",
     "Create New Screen": "إنشاء شاشة جديدة",
@@ -643,6 +646,7 @@
     "Delete Flow": "حذف التدفق",
     "Delete Flow?": "هل تريد حذف التدفق؟",
     "Delete Invite": "حذف الدعوة",
+    "Delete Label": "حذف التسمية",
     "Delete List": "حذف القائمة",
     "Delete Loyalty Program": "حذف برنامج الولاء",
     "Delete Organization": "حذف المنظمة",
@@ -657,6 +661,7 @@
     "Delete Rule": "حذف القاعدة",
     "Delete Screen": "حذف الشاشة",
     "Delete Screen?": "هل تريد حذف الشاشة؟",
+    "Delete Selected Labels": "حذف التسميات المحددة",
     "Delete Stripe Product": "حذف منتج الشريط",
     "Delete Survey": "حذف الاستطلاع",
     "Delete Survey?": "هل تريد حذف الاستطلاع؟",
@@ -743,6 +748,7 @@
     "Edit Display Name": "تحرير اسم العرض",
     "Edit Display Text": "تحرير نص العرض",
     "Edit Email ID": "تحرير معرف البريد الإلكتروني",
+    "Edit Label": "تحرير التسمية",
     "Edit Password": "تحرير كلمة المرور",
     "Edit Profile": "تحرير الملف الشخصي",
     "Edit Question": "تحرير السؤال",
@@ -1036,7 +1042,6 @@
     "Height": "ارتفاع",
     "here or click to select files": "هنا أو انقر لتحديد الملفات",
     "Hi! How can I help you?": "أهلاً! كيف يمكنني مساعدك؟",
-    "High": "عالي",
     "Highlight your brand here, use images or videos, to stand out": "قم بتسليط الضوء على علامتك التجارية هنا، واستخدم الصور أو مقاطع الفيديو للتميز",
     "Hold on, changing your organization Logo": "انتظر، قم بتغيير شعار مؤسستك",
     "Hold on, changing your organization photo": "انتظر، قم بتغيير صورة مؤسستك",
@@ -1187,7 +1192,9 @@
     "key not found": "لم يتم العثور على المفتاح",
     "Kindly enter the OTP we have sent via SMS to authenticate your phone number.": "يرجى إدخال كلمة المرور لمرة واحدة (OTP) التي أرسلناها عبر الرسائل النصية القصيرة (SMS) للتحقق من رقم هاتفك.",
     "Kiosk Mode": "وضع الكشك",
+    "Label": "ملصق",
     "Label is required": "التسمية مطلوبة",
+    "Label name": "اسم التسمية",
     "Labels": "التسميات",
     "Landing Pages": "الصفحات المقصودة",
     "Language": "لغة",
@@ -1247,7 +1254,6 @@
     "Logs": "سجلات",
     "longest": "الأطول",
     "Longitude": "خط الطول",
-    "Low": "قليل",
     "Lower-case letters and underscores only": "الحروف الصغيرة والشرطات السفلية فقط",
     "Loyalty": "وفاء",
     "Loyalty program performance and insights": "أداء برنامج الولاء والرؤى",
@@ -1258,6 +1264,7 @@
     "Manage Automations": "إدارة الأتمتة",
     "Manage automations, menus, and engagement tools": "إدارة عمليات التشغيل الآلي والقوائم وأدوات المشاركة",
     "Manage Columns": "إدارة الأعمدة",
+    "Manage Labels": "إدارة التسميات",
     "Manage multiple business hours for different channels and timezones": "إدارة ساعات عمل متعددة لقنوات ومناطق زمنية مختلفة",
     "Manage Razorpay Plans": "إدارة خطط Razorpay",
     "Manage Subscription": "إدارة الاشتراك",
@@ -1291,7 +1298,6 @@
     "maximum number of photos that can be uploaded": "الحد الأقصى لعدد الصور التي يمكن تحميلها",
     "Maximum of 2 ImageCarousel components allowed per screen": "الحد الأقصى المسموح به هو مكونان ImageCarousel لكل شاشة",
     "Maximum of 3 ImageCarousel components allowed per flow": "الحد الأقصى المسموح به هو 3 مكونات ImageCarousel لكل تدفق",
-    "Medium": "واسطة",
     "member": "عضو",
     "Member Distribution by Tier": "توزيع الأعضاء حسب الطبقة",
     "Member Growth": "نمو الأعضاء",
@@ -1400,6 +1406,8 @@
     "No group found": "لم يتم العثور على مجموعة",
     "No groups found": "لم يتم العثور على مجموعات",
     "No Instagram accounts connected": "لا توجد حسابات Instagram متصلة",
+    "No Label": "لا التسمية",
+    "No labels found": "لم يتم العثور على أي تصنيفات",
     "No logic jumps configured for this element": "لم يتم تكوين أي قفزات منطقية لهذا العنصر",
     "No Loyalty Program Found": "لم يتم العثور على برنامج الولاء",
     "No members found": "لم يتم العثور على أعضاء",
@@ -1864,6 +1872,7 @@
     "Search contact...": "بحث عن جهة اتصال...",
     "Search flows...": "تدفقات البحث...",
     "search for a valid phone number or contact name": "ابحث عن رقم هاتف أو اسم جهة اتصال صالح",
+    "Search labels...": "تسميات البحث...",
     "Search phone or message": "البحث عن الهاتف أو الرسالة",
     "Search QR codes...": "البحث في رموز QR...",
     "Search surveys...": "استطلاعات البحث...",
@@ -1941,6 +1950,7 @@
     "Select operator": "حدد المشغل",
     "Select Page": "حدد الصفحة",
     "Select Photo Source": "حدد مصدر الصورة",
+    "Select Priority": "حدد الأولوية",
     "Select question": "اختر السؤال",
     "Select rating until which Ticket should be created:": "حدد التصنيف الذي يجب إنشاء التذكرة حتى الوصول إليه:",
     "Select Redemption": "حدد الاسترداد",
@@ -2187,6 +2197,7 @@
     "This PhoneNumber is not in your contact list": "رقم الهاتف هذا غير موجود في قائمة جهات الاتصال الخاصة بك",
     "this user": "هذا المستخدم",
     "this user?": "هذا المستخدم؟",
+    "This will delete the selected label(s) and remove them from all associated cards. This action cannot be undone.": "سيؤدي هذا إلى حذف التصنيف (التصنيفات) المحدد وإزالتها من جميع البطاقات المرتبطة. لا يمكن التراجع عن هذا الإجراء.",
     "This will permanently delete your account": "سيؤدي هذا إلى حذف حسابك نهائيًا",
     "This will permanently remove the webhook endpoint. This action cannot be undone.": "سيؤدي هذا إلى إزالة نقطة نهاية webhook بشكل دائم. لا يمكن التراجع عن هذا الإجراء.",
     "Thread is marked closed. Agents can reopen at any time.": "تم وضع علامة على الموضوع مغلق. يمكن إعادة فتح الوكلاء في أي وقت.",
@@ -2472,16 +2483,6 @@
   "Example": {
     " /points": "مثال: / نقطة"
   },
-  "Eg": {
-    "https://www": {
-      "example": {
-        "com": "على سبيل المثال:https://www.example.com"
-      }
-    }
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "حدد فقط المراحل التي تنتمي إلى خط الأنابيب المحدد وتكوين خط الأنابيب الفرعي."
-  },
   "campaign.resend": {
     "Cancel": "يلغي",
     "Choose when to send and which participants to resend to": "اختر وقت الإرسال والمشاركين الذين تريد إعادة الإرسال إليهم",
@@ -2616,6 +2617,9 @@
     "Selected": "مختارة",
     "You have not selected any participant": "لم تقم باختيار أي مشارك"
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "حدد فقط المراحل التي تنتمي إلى خط الأنابيب المحدد وتكوين خط الأنابيب الفرعي."
+  },
   "apianalytics": {
     "All": "الجميع",
     "Avg Delivery Time": "متوسط ​​وقت التسليم",
@@ -2641,6 +2645,13 @@
     "Total Messages Sent": "إجمالي الرسائل المرسلة",
     "WhatsApp Messages Analytics": "تحليل رسائل الواتس اب",
     "WhatsApp Template Analytics": "تحليلات قالب الواتساب"
+  },
+  "Eg": {
+    "https://www": {
+      "example": {
+        "com": "على سبيل المثال:https://www.example.com"
+      }
+    }
   },
   "campaign.list": {
     "Active": "نشيط",
