@@ -426,3 +426,66 @@ export async function syncTeamFeaturesFromSubscription(orgId?: string) {
 
   return results;
 }
+
+export async function migrateTicketLabels() {
+  log.info("Starting ticket priority to label migration...");
+  const defaultTicketLabels = [
+    { name: "LOW", color: JSON.stringify({ bgcolor: "#f0fdf4", textcolor: "#22c55e" }) },
+    { name: "MEDIUM", color: JSON.stringify({ bgcolor: "#fefce8", textcolor: "#eab308" }) },
+    { name: "HIGH", color: JSON.stringify({ bgcolor: "#fff7ed", textcolor: "#f97316" }) },
+    { name: "CRITICAL", color: JSON.stringify({ bgcolor: "#fef2f2", textcolor: "#ef4444" }) },
+  ];
+
+  // 1. Create labels for all boards
+  const boards = await prisma.ticketBoard.findMany({
+    include: { labels: true },
+  });
+
+  for (const board of boards) {
+    if (board.labels.length === 0) {
+      log.info(`Creating default labels for board ${board.id}`);
+      await prisma.ticketBoardLabel.createMany({
+        data: defaultTicketLabels.map((label) => ({
+          ...label,
+          ticketBoardId: board.id,
+        })),
+      });
+    }
+  }
+
+  log.info("Labels ensured for all boards.");
+
+  // 2. Map existing ticket cards priority to labelId
+  const cards = await prisma.ticketCard.findMany({
+    where: { labelId: null, priority: { not: null } },
+    include: { ticketColumn: true },
+  });
+
+  log.info(`Found ${cards.length} cards needing label assignment.`);
+
+  for (const card of cards) {
+    // Find board id from column
+    const boardId = card.ticketColumn.ticketBoardId;
+
+    // Find corresponding label in the DB
+    const labelName = card.priority;
+    if (labelName) {
+      const label = await prisma.ticketBoardLabel.findUnique({
+        where: { ticketBoardId_name: { ticketBoardId: boardId, name: labelName } },
+      });
+
+      if (label) {
+        await prisma.ticketCard.update({
+          where: { id: card.id },
+          data: { labelId: label.id },
+        });
+        log.info(`Updated card ${card.id} with label ${label.name}`);
+      } else {
+        log.warn(`Label ${labelName} not found for board ${boardId}`);
+      }
+    }
+  }
+
+  log.info("Migration completed.");
+  return { success: true };
+}
