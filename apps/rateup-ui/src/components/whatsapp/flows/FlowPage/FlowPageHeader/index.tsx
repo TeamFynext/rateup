@@ -11,14 +11,13 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import { useRouter } from "@tanstack/react-router";
-import { useContext } from "react";
+import type { ReactNode } from "react";
 
 import { usePushToWaMutation } from "@/backend/whatsapp/flow/flow.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-
-import { EditFlowContext } from "../EditFlow/EditFlowContext.ts";
 
 import styles from "./FlowPageHeader.module.css";
 
@@ -38,6 +37,7 @@ interface FlowPageHeaderProps {
   previewOpened?: boolean;
   setPreviewOpened?: (opened: boolean) => void;
   flowDbId?: string;
+  phonePreview?: ReactNode;
 }
 
 const tabIcons = {
@@ -56,8 +56,8 @@ function FlowPageHeader({
   previewOpened = false,
   setPreviewOpened,
   flowDbId,
+  phonePreview,
 }: Readonly<FlowPageHeaderProps>) {
-  const { survey } = useContext(EditFlowContext);
   const { history } = useRouter();
   const pushToWaMutation = usePushToWaMutation();
 
@@ -67,7 +67,6 @@ function FlowPageHeader({
     }
   };
 
-  const subtitle = survey?.description || "Customer Engagement";
   const isActive = true; // You can make this dynamic based on flow state
 
   return (
@@ -84,7 +83,6 @@ function FlowPageHeader({
             <h1 className={styles["flow-title"]}>{name}</h1>
             {isActive && <Badge className={styles["status-badge"]}>Active</Badge>}
           </div>
-          <p className={styles["flow-subtitle"]}>{subtitle}</p>
         </div>
 
         {/* Action Buttons */}
@@ -96,7 +94,13 @@ function FlowPageHeader({
               {pushToWaMutation.isPending ? "Syncing..." : "Save to WhatsApp"}
             </Button>
           )}
-          {/* Preview Button - Only show in Edit tab */}
+          {/* Device Preview Button - Only show in Edit tab */}
+          {tab === FlowTabEnum.Edit && phonePreview && (
+            <PhonePreviewButton platform="whatsapp" label="Preview">
+              {phonePreview}
+            </PhonePreviewButton>
+          )}
+          {/* Legacy Preview Button - Only show in Edit tab */}
           {tab === FlowTabEnum.Edit && setPreviewOpened && (
             <Button variant="outline" onClick={() => setPreviewOpened(!previewOpened)}>
               {previewOpened ? (

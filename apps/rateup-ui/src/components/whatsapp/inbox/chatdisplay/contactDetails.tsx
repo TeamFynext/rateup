@@ -1,5 +1,6 @@
 import { MultiSelect, NumberInput, Paper, Select, Stack, TextInput } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import {
@@ -18,8 +19,10 @@ import {
   UserCheck,
   X,
 } from "lucide-react";
+import { Ticket } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
@@ -29,9 +32,11 @@ import {
   useContactLabels,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
+import { useSubscription } from "@/backend/subscription/subscription.query";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
+import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal.tsx";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,6 +58,9 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { MessagePlatform } from "@/types/enums.ts";
+import { SubscriptionFeaturePathName } from "@/types/enums.ts";
+import { TicketType } from "@/utils/enums/ticket.ts";
+import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 interface WaInboxContactDetailsProps {
   contact: any;
@@ -96,6 +104,13 @@ export default function WaInboxContactDetails({
   const deleteContactMutation = useContactDeleteMutation(groupId);
   const [editable, setEditable] = useState(false);
   const platform = contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const { data: subscription } = useSubscription();
+  const hasTicketFeature = useMemo(
+    () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+    [subscription],
+  );
+  const [openedCreateTicket, { open: openCreateTicket, close: closeCreateTicket }] =
+    useDisclosure(false);
   const labels = contact?.contactLabels?.map((label) => label?.id);
   const form = useForm<ContactFormValues>({
     validate: schemaResolver(contactSchema, {
@@ -260,37 +275,58 @@ export default function WaInboxContactDetails({
   // Icon-only view when closed
   if (!isOpen) {
     return (
-      <Paper
-        p="xs"
-        style={{
-          borderLeft: "1px solid #e9ecef",
-        }}
-        className="hidden"
-      >
-        <Stack gap="md" align="center" style={{ flex: 1 }} mt={6}>
-          <CustomTooltip
+      <>
+        <Paper
+          p="xs"
+          style={{
+            borderLeft: "1px solid #e9ecef",
+          }}
+          className="hidden"
+        >
+          <Stack gap="md" align="center" style={{ flex: 1 }} mt={6}>
+            <CustomTooltip
+              trigger={
+                <Button variant="ghost" onClick={handleToggle}>
+                  <User />
+                </Button>
+              }
+              content={<p>{t("Open Contact Details")}</p>}
+              side="bottom"
+            />
+
+            {hasTicketFeature && (
+              <CustomTooltip
+                trigger={
+                  <Button variant="ghost" onClick={openCreateTicket}>
+                    <Ticket />
+                  </Button>
+                }
+                content={<p>{t("Create Ticket")}</p>}
+                side="bottom"
+              />
+            )}
+
+            {/* <CustomTooltip
             trigger={
-              <Button variant="ghost" onClick={handleToggle}>
-                <User />
+              <Button variant="ghost" disabled>
+                <Zap />
               </Button>
             }
-            content={<p>{t("Open Contact Details")}</p>}
+            content={
+              <p>{t("Recent Activity")}</p>
+            }
             side="bottom"
-          />
-
-          {/* <CustomTooltip
-          trigger={
-            <Button variant="ghost" disabled>
-              <Zap />
-            </Button>
-          }
-          content={
-            <p>{t("Recent Activity")}</p>
-          }
-          side="bottom"
-         /> */}
-        </Stack>
-      </Paper>
+           /> */}
+          </Stack>
+        </Paper>
+        <CreateTicketCard
+          close={closeCreateTicket}
+          opened={openedCreateTicket}
+          type={TicketType.CUSTOM}
+          hasTicketFeature={hasTicketFeature}
+          contactId={contact?.id}
+        />
+      </>
     );
   }
 
@@ -547,6 +583,21 @@ export default function WaInboxContactDetails({
       >
         <h3 className="text-sm text-center flex-1">Contact Details</h3>
         <div className="flex items-center gap-2">
+          {hasTicketFeature && (
+            <CustomTooltip
+              content="Create ticket"
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={openCreateTicket}
+                >
+                  <Ticket className="w-3.5 h-3.5" />
+                </Button>
+              }
+            />
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleToggle}>
@@ -885,6 +936,13 @@ export default function WaInboxContactDetails({
           </motion.div>
         </div>
       </ScrollArea>
+      <CreateTicketCard
+        close={closeCreateTicket}
+        opened={openedCreateTicket}
+        type={TicketType.CUSTOM}
+        hasTicketFeature={hasTicketFeature}
+        contactId={contact?.id}
+      />
     </motion.div>
   );
 }

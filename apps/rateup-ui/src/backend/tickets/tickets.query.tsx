@@ -8,17 +8,21 @@ import {
   createCard,
   createColumn,
   createComment,
+  createLabel,
   createTicket,
   deleteBoard,
   deleteCard,
   deleteColumn,
   deleteComment,
+  deleteLabel,
+  deleteLabels,
   deleteTicket,
   fetchBoard,
   fetchBoards,
   fetchBoardTeamMemberById,
   fetchCardById,
   fetchCardTeamMemberById,
+  fetchLabels,
   getTicket,
   getTickets,
   moveCard,
@@ -28,6 +32,7 @@ import {
   updateBoard,
   updateCard,
   updateColumn,
+  updateLabel,
   updateTicket,
   updateTicketStatus,
 } from "./tickets.api";
@@ -629,4 +634,72 @@ export function useDeleteCommentMutation(cardId: string) {
       });
     },
   });
+}
+
+// Hooks for Labels
+export function useLabels(boardId: string) {
+  const queryClient = useQueryClient();
+
+  const labelsQuery = useQuery({
+    queryKey: ["labels", boardId],
+    queryFn: () => fetchLabels(boardId),
+    enabled: !!boardId,
+  });
+
+  const createLabelMutation = useMutation({
+    mutationFn: (data: { name: string; color: string }) => createLabel(boardId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["labels", boardId] });
+      toast.success("Label created successfully!");
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to create label.");
+    },
+  });
+
+  const updateLabelMutation = useMutation({
+    mutationFn: (data: { id: string; label: { name?: string; color?: string } }) =>
+      updateLabel(data.id, data.label),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["labels", boardId] });
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      toast.success("Label updated successfully!");
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to update label.");
+    },
+  });
+
+  const deleteLabelMutation = useMutation({
+    mutationFn: deleteLabel,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["labels", boardId] });
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      toast.success("Label deleted successfully!");
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to delete label.");
+    },
+  });
+
+  const deleteLabelsMutation = useMutation({
+    mutationFn: (labelIds: string[]) => deleteLabels(boardId, labelIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["labels", boardId] });
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      toast.success("Labels deleted successfully!");
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to delete labels.");
+    },
+  });
+
+  return {
+    labels: labelsQuery.data || [],
+    isLoading: labelsQuery.isLoading,
+    createLabel: createLabelMutation.mutate,
+    updateLabel: updateLabelMutation.mutate,
+    deleteLabel: deleteLabelMutation.mutate,
+    deleteLabels: deleteLabelsMutation.mutate,
+  };
 }

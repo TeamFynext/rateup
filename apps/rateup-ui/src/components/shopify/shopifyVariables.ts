@@ -1,7 +1,6 @@
 export const shopifyVariablePresets = [
   { label: "Order Name", value: "name" },
-  { label: "Order Number", value: "order_number" },
-  { label: "Order ID", value: "id" },
+  // { label: "Order Number", value: "order_number" },
   { label: "Customer First Name", value: "customer.first_name" },
   { label: "Customer Last Name", value: "customer.last_name" },
   { label: "Customer Email", value: "customer.email" },

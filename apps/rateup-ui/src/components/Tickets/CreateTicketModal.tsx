@@ -1,8 +1,8 @@
-import { Calendar, List, NotebookTabs, Sparkles, Ticket, Type } from "lucide-react";
+import { Calendar, Flag, List, NotebookTabs, Sparkles, Ticket, Type } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useBoard, useBoardQueries } from "@/backend/tickets/tickets.query";
+import { useBoard, useBoardQueries, useLabels } from "@/backend/tickets/tickets.query";
 
 import Loading from "../Page/Loading.tsx";
 import { Button } from "../ui/button.tsx";
@@ -33,6 +33,7 @@ const CreateTicketModal = ({
   // Alternatively, the caller could pass it down, but default to true if it isn't passed for backwards compatibility.
   const { boards, isLoading: isBoardsLoading } = useBoardQueries(true);
   const { createCard, board, isLoading } = useBoard(selectedBoardId);
+  const { labels } = useLabels(selectedBoardId);
 
   const { t } = useTranslation();
 
@@ -47,6 +48,7 @@ const CreateTicketModal = ({
     description: "",
     deadline: "",
     type,
+    labelId: "",
     reviewId: rid,
     surveyResponseId: surveyResponseId,
   });
@@ -66,6 +68,16 @@ const CreateTicketModal = ({
       title: type === "SURVEY_RESPONSE" && !prev.title ? t("Survey Response Ticket") : prev.title,
     }));
   }, [surveyResponseId, type, t]);
+
+  useEffect(() => {
+    setFormData((prev) => {
+      const newLabelId = labels?.length > 0 ? labels[0].id : "";
+      if (prev.labelId !== newLabelId) {
+        return { ...prev, labelId: newLabelId };
+      }
+      return prev;
+    });
+  }, [labels]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -87,6 +99,9 @@ const CreateTicketModal = ({
     if (!payload.deadline) {
       delete payload.deadline;
     }
+    if (!payload.labelId) {
+      delete payload.labelId;
+    }
 
     createCard(payload, {
       onSuccess: () => {
@@ -106,6 +121,7 @@ const CreateTicketModal = ({
       description: "",
       deadline: "",
       type,
+      labelId: "",
       reviewId: rid,
       surveyResponseId: surveyResponseId,
     });
@@ -166,38 +182,41 @@ const CreateTicketModal = ({
             </div>
 
             {/* Select List */}
-            <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-blue-100 text-blue-600 p-1 rounded-sm">
-                  <Sparkles size={14} />
-                </div>
-                <div>
-                  {t("Select List")}
-                  <span className="text-red-500">*</span>
-                </div>
-              </Label>
+            {type !== "SURVEY_RESPONSE" && (
+              <div className="space-y-1">
+                <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <div className="bg-blue-100 text-blue-600 p-1 rounded-sm">
+                    <Sparkles size={14} />
+                  </div>
+                  <div>
+                    {t("Select List")}
+                    <span className="text-red-500">*</span>
+                  </div>
+                </Label>
 
-              <Select
-                value={formData.ticketColumnId}
-                onValueChange={(val) => setFormData({ ...formData, ticketColumnId: val })}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("Select List")} />
-                </SelectTrigger>
+                <Select
+                  value={formData.ticketColumnId}
+                  onValueChange={(val) => setFormData({ ...formData, ticketColumnId: val })}
+                  disabled={!selectedBoardId}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("Select List")} />
+                  </SelectTrigger>
 
-                <SelectContent>
-                  {board?.ticketColumns?.map((column) => (
-                    <SelectItem key={column.id} value={column.id}>
-                      {column.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <SelectContent>
+                    {board?.ticketColumns?.map((column) => (
+                      <SelectItem key={column.id} value={column.id}>
+                        {column.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              {errors.ticketColumnId && (
-                <p className="text-xs text-red-500 mt-1">{errors.ticketColumnId}</p>
-              )}
-            </div>
+                {errors.ticketColumnId && (
+                  <p className="text-xs text-red-500 mt-1">{errors.ticketColumnId}</p>
+                )}
+              </div>
+            )}
 
             {/* Title */}
             <div className="space-y-1">
@@ -234,23 +253,53 @@ const CreateTicketModal = ({
               />
             </div>
 
-            {/* Due Date */}
+            {/* Priority */}
             <div className="space-y-1">
               <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-red-100 text-red-600 p-1 rounded-sm">
-                  <Calendar size={14} />
+                <div className="bg-yellow-100 text-yellow-600 p-1 rounded-sm">
+                  <Flag size={14} />
                 </div>
-                <div>{t("Due Date")}</div>
+                <div>{t("Priority")}</div>
               </Label>
 
-              <Input
-                type="date"
-                value={formData.deadline}
-                onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                min={new Date().toISOString().split("T")[0]}
-                onClick={(e) => "showPicker" in e.target && (e.target as any).showPicker()}
-              />
+              <Select
+                value={formData.labelId}
+                onValueChange={(val) => setFormData({ ...formData, labelId: val })}
+                disabled={!selectedBoardId}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("Select Priority")} />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {labels?.map((label: any) => (
+                    <SelectItem key={label.id} value={label.id}>
+                      {label.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Due Date */}
+            {type !== "SURVEY_RESPONSE" && (
+              <div className="space-y-1">
+                <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <div className="bg-red-100 text-red-600 p-1 rounded-sm">
+                    <Calendar size={14} />
+                  </div>
+                  <div>{t("Due Date")}</div>
+                </Label>
+
+                <Input
+                  type="date"
+                  value={formData.deadline}
+                  onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                  min={new Date().toISOString().split("T")[0]}
+                  onClick={(e) => "showPicker" in e.target && (e.target as any).showPicker()}
+                />
+              </div>
+            )}
 
             <div className="w-full flex justify-end items-center gap-4 mt-2">
               <Button type="button" onClick={cancel} variant="outline">
@@ -272,6 +321,7 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
   const [selectedBoardId, setSelectedBoardId] = useState("");
   const { boards, isLoading: isBoardsLoading } = useBoardQueries(hasTicketFeature);
   const { createCard, board, isLoading } = useBoard(selectedBoardId);
+  const { labels } = useLabels(selectedBoardId);
 
   const { t } = useTranslation();
 
@@ -281,15 +331,28 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
     description: "",
     deadline: "",
     type,
+    labelId: "",
   });
 
   useEffect(() => {
-    if (board?.ticketColumns?.length > 0) {
-      setFormData((prev) => ({ ...prev, ticketColumnId: board.ticketColumns[0].id }));
-    } else {
-      setFormData((prev) => ({ ...prev, ticketColumnId: "" }));
-    }
+    setFormData((prev) => {
+      const newColId = board?.ticketColumns?.length > 0 ? board.ticketColumns[0].id : "";
+      if (prev.ticketColumnId !== newColId) {
+        return { ...prev, ticketColumnId: newColId };
+      }
+      return prev;
+    });
   }, [board]);
+
+  useEffect(() => {
+    setFormData((prev) => {
+      const newLabelId = labels?.length > 0 ? labels[0].id : "";
+      if (prev.labelId !== newLabelId) {
+        return { ...prev, labelId: newLabelId };
+      }
+      return prev;
+    });
+  }, [labels]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -311,6 +374,9 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
     if (!payload.deadline) {
       delete payload.deadline;
     }
+    if (!payload.labelId) {
+      delete payload.labelId;
+    }
 
     createCard(payload, {
       onSuccess: () => {
@@ -327,6 +393,7 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
       description: "",
       deadline: "",
       type,
+      labelId: "",
     });
     setErrors({});
     close();
@@ -417,6 +484,34 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
+            </div>
+
+            {/* Priority */}
+            <div className="space-y-1">
+              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <div className="bg-yellow-100 text-yellow-600 p-1 rounded-sm">
+                  <Flag size={14} />
+                </div>
+                <div>{t("Priority")}</div>
+              </Label>
+
+              <Select
+                value={formData.labelId}
+                onValueChange={(val) => setFormData({ ...formData, labelId: val })}
+                disabled={!selectedBoardId}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("Select Priority")} />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {labels?.map((label: any) => (
+                    <SelectItem key={label.id} value={label.id}>
+                      {label.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="w-full flex justify-end items-center gap-4 mt-2">

@@ -116,6 +116,16 @@ export const PRIORITY_CONFIG: Record<
   }, // fallback
 };
 
+export const parseColor = (c: string) => {
+  try {
+    const parsed = JSON.parse(c);
+    if (parsed && parsed.bgcolor && parsed.textcolor) return parsed;
+    return { bgcolor: c, textcolor: "#171717" };
+  } catch {
+    return { bgcolor: c, textcolor: "#171717" };
+  }
+};
+
 const TAG_COLORS = [
   "bg-blue-50 text-blue-600",
   "bg-red-50 text-red-600",
@@ -172,9 +182,6 @@ function CardDisplay({
   const handleMenuClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
-
-  const priorityKey = card.priority?.toLowerCase() || "na";
-  const priorityStyle = PRIORITY_CONFIG[priorityKey] || PRIORITY_CONFIG.na;
 
   const getAnimationClass = () => {
     if (state.type === "is-dragging") return "opacity-40";
@@ -297,19 +304,29 @@ function CardDisplay({
 
         {/* Footer */}
         <div className="flex items-center justify-between gap-2">
-          {/* Priority Badge */}
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider"
-            style={{
-              padding: "2px 9px",
-              background: priorityStyle.bg,
-              color: priorityStyle.color,
-              border: `1px solid ${priorityStyle.border}`,
-            }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: priorityStyle.dot }} />
-            {t(priorityStyle.label)}
-          </span>
+          {/* Label Badge (Replacing Priority) */}
+          {card.label ? (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider capitalize"
+              style={{
+                padding: "2px 9px",
+                backgroundColor: parseColor(card.label.color).bgcolor,
+                color: parseColor(card.label.color).textcolor,
+                border: `1px solid ${parseColor(card.label.color).textcolor}`,
+              }}
+            >
+              {card.label.name}
+            </span>
+          ) : (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider capitalize text-muted-foreground bg-muted border border-border"
+              style={{
+                padding: "2px 9px",
+              }}
+            >
+              {t("No Label")}
+            </span>
+          )}
 
           <div className="flex items-center gap-[9px]">
             {dateFormatted && (

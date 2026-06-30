@@ -173,6 +173,7 @@ const sendTemplateActionValueSchema = z.object({
       }),
     )
     .default([]),
+  useProductImageAsHeader: z.boolean().optional(),
 });
 
 const sendTemplateActionSchema = z.object({

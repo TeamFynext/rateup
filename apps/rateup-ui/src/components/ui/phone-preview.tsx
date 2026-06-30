@@ -116,17 +116,23 @@ export function PhonePreviewPanel() {
   return (
     <div
       className={cn(
-        "fixed right-0 top-0 z-40 h-dvh border-l bg-background transition-all duration-300 ease-in-out overflow-hidden",
+        "h-dvh shrink-0 border-l bg-background transition-all duration-300 ease-in-out overflow-hidden",
         open ? "w-90" : "w-0 border-l-0",
       )}
     >
       <div className="flex h-full w-90 flex-col">
-        <div className="flex items-center justify-between border-b px-4 py-3">
+        <div className="flex items-center justify-between border-b px-4 py-3.5">
           <div className="flex items-center gap-2">
             <IconDeviceMobile className="size-4 text-muted-foreground" />
             <span className="text-sm font-medium">{t("Device Preview")}</span>
           </div>
-          <Button variant="ghost" size="icon" className="size-7" onClick={closePreview}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={closePreview}
+          >
             <IconX className="size-4" />
           </Button>
         </div>
@@ -169,9 +175,10 @@ export function PhonePreviewButton({
 
   return (
     <Button
-      variant="ghost"
+      type="button"
+      variant="outline"
       size="sm"
-      className={cn("gap-1.5 text-muted-foreground", isActive && "text-primary")}
+      className={cn("gap-1.5", isActive && "text-primary")}
       onClick={() => {
         if (isActive) {
           closePreview();
@@ -192,7 +199,7 @@ export function PhonePreviewButton({
 
 export function PhoneFrame({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <div className="relative mx-auto h-150 w-73 rounded-[3rem] border-[3px] border-muted-foreground/30 bg-black p-2.5 shadow-xl">
+    <div className="relative mx-auto h-150 w-73 rounded-[3rem] border-[3px] border-muted-foreground/30 bg-black p-2 shadow-xl">
       <div className="absolute left-1/2 top-4.5 z-10 h-5.5 w-22.5 -translate-x-1/2 rounded-full bg-black" />
       <div className="flex h-full flex-col overflow-hidden rounded-[2.25rem] bg-background">
         {children}
@@ -308,6 +315,7 @@ function HomeScreen({
               const hasContent = id === platform;
               return (
                 <button
+                  type="button"
                   key={id}
                   className={cn(
                     "flex flex-col items-center gap-1.5 transition-transform active:scale-90",
@@ -362,6 +370,7 @@ function AppScreen({
       {/* Home bar */}
       <div className="flex justify-center pb-1 pt-1.5">
         <button
+          type="button"
           className="h-1 w-25 rounded-full bg-muted-foreground/30 transition-colors hover:bg-muted-foreground/50 active:bg-muted-foreground/70"
           onClick={onGoHome}
         />

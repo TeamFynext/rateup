@@ -1,7 +1,6 @@
 import {
   Alert,
   Box,
-  Card,
   Divider,
   Flex,
   Grid,
@@ -13,6 +12,7 @@ import {
   Text,
   Textarea,
   Title,
+  useComputedColorScheme,
 } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { getHotkeyHandler, useToggle } from "@mantine/hooks";
@@ -43,6 +43,7 @@ import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import { LinkCopyElement } from "@/components/input/LinkCopyElement.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import {
   QuickReplyButton,
   ResponseMessageContainer,
@@ -61,8 +62,8 @@ import {
   configSchema,
   templateSchema,
 } from "@/components/whatsapp/templates/Schema/templateSchema.ts";
-import WaChatPreview from "@/components/whatsapp/templates/WaChatPreview.tsx";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge.tsx";
+import { WhatsAppChatShell } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import {
   OrderType,
@@ -150,6 +151,8 @@ export function WhatsappTemplateById({
     }),
   });
   const isOrderCreate = form.values.templateType === TemplateType.ORDER_DETAILS;
+  const colorScheme = useComputedColorScheme("light");
+  const bubbleBg = colorScheme === "dark" ? "#202c33" : "#fff";
 
   useEffect(() => {
     if (editingItem) {
@@ -662,6 +665,114 @@ export function WhatsappTemplateById({
     return null;
   }
 
+  const messageContent = (
+    <Stack miw="200px" gap={3} p={"md"}>
+      <ResponseMessageContainer backgroundColor={bubbleBg}>
+        <Box bg={"var(--light-grey-color-2)"} display={isOrderCreate ? "block" : "none"}>
+          <Text fz={"xs"}>
+            {translations("ORDER")} #{"{{Order number}}"}
+          </Text>
+          <Divider variant="dashed" color={"black"} />
+
+          <Group>
+            <IconImageInPicture height={50} size={32} />
+            <Box>
+              <Text fz={"xs"}>{"{{Product name}}"}</Text>
+              <Text fz={"xs"}>
+                {translations("Quantity")} {"{{#}}"}
+              </Text>
+            </Box>
+          </Group>
+          <Divider variant="dashed" color={"black"} />
+          <Group justify="space-between">
+            <Text fz={"xs"}>{translations("Total")}</Text>
+            <Text fz={"xs"}>${"{{}}"}</Text>
+          </Group>
+        </Box>
+        {HeaderWithFormatting(form.values?.header, form.values?.format)}
+        <Text
+          fz={"0.95rem"}
+          style={{
+            wordBreak: "break-all",
+            whiteSpace: "pre-wrap",
+            fontFamily: "inherit",
+          }}
+          component="pre"
+        >
+          {TextWithFormatting(form.values?.body, form.values?.example, form?.values?.category)}
+        </Text>
+        <Text
+          c="dimmed"
+          fz={"0.7rem"}
+          style={{
+            wordBreak: "break-all",
+          }}
+          display={
+            form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION ? "block" : "none"
+          }
+        >
+          {form.values?.category === WaTemplateCategory.AUTHENTICATION
+            ? form.values?.code_expiration_minutes
+              ? `Expires in ${form.values?.code_expiration_minutes} minutes.`
+              : ""
+            : form.values.footer}
+        </Text>
+      </ResponseMessageContainer>
+      {form.values?.buttons?.slice(0, 2).map((data) => (
+        <QuickReplyButton
+          text={data?.text}
+          key={data?.text}
+          type={data.type}
+          style={{ backgroundColor: bubbleBg }}
+        />
+      ))}
+      {form.values?.buttons?.length > 2 && (
+        <QuickReplyButton
+          text={translations("See all options")}
+          style={{ backgroundColor: bubbleBg }}
+        />
+      )}
+      <ScrollAreaAutosize maw={"220px"}>
+        <Box
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap: 8,
+            width: "fit-content",
+            padding: 4,
+          }}
+        >
+          {form.values.mediaCarousel?.map((card, index) => (
+            <Stack w={"180px"} bg={bubbleBg} key={index} gap={1} style={{ borderRadius: "10px" }}>
+              {HeaderWithFormatting(card?.header, card?.format)}
+              <Text
+                fz={"0.95rem"}
+                style={{
+                  wordBreak: "break-all",
+                  whiteSpace: "pre-wrap",
+                  fontFamily: "inherit",
+                }}
+                component="pre"
+                p={"xs"}
+              >
+                {TextWithFormatting(card?.body, card?.example, form?.values?.category)}
+              </Text>
+              {card?.buttons.map((data) => (
+                <QuickReplyButton
+                  text={data?.text}
+                  key={data?.text}
+                  type={data?.type}
+                  style={{ backgroundColor: bubbleBg }}
+                />
+              ))}
+            </Stack>
+          ))}
+          <ProductCardCarouselPreview form={form} catalog={catalog} />
+        </Box>
+      </ScrollAreaAutosize>
+    </Stack>
+  );
+
   return (
     <form>
       <Box
@@ -682,6 +793,9 @@ export function WhatsappTemplateById({
             {editingItem ? editingItem?.data?.name : translations("Create Template")}
           </Title>
           <Flex mih={50} gap="xs" justify="flex-start" align="center" direction="row" wrap="wrap">
+            <PhonePreviewButton platform="whatsapp" label={translations("Preview")}>
+              <WhatsAppChatShell>{messageContent}</WhatsAppChatShell>
+            </PhonePreviewButton>
             {editingItem?.data?.id && value ? (
               <RateupButtonPrimary title={translations("Edit")} onClick={toggle} />
             ) : (
@@ -704,513 +818,381 @@ export function WhatsappTemplateById({
             )}
           </Flex>
         </Flex>
-        <Grid>
-          <Grid.Col span={{ xs: 12, sm: 7, xl: 9 }} pos={"relative"}>
-            <PaperLayout className={styles["template-content-container"]} h={"85dvh"}>
-              <Stack gap={"xs"}>
-                <Alert
-                  variant="filled"
-                  color="red"
-                  icon={<IconInfoCircle />}
-                  display={
-                    createTemplateMutation.isError ||
-                    saveTemplateAsDraftMutation.isError ||
-                    updateTemplateMutation.isError
-                      ? "block"
-                      : "none"
-                  }
-                >
-                  {updateTemplateMutation.error?.message ||
-                    saveTemplateAsDraftMutation?.error?.message ||
-                    createTemplateMutation?.error?.message ||
-                    "Error Saving Changes"}
-                </Alert>
-                <Group justify="space-between" pos={"relative"}>
-                  <WaTemplateStatusBadge status={form.values.status} />
-                  {editingItem?.data?.id && (
-                    <LinkCopyElement
-                      link={editingItem?.data?.id}
-                      value={editingItem?.data?.id}
-                      label={translations("Template ID")}
-                      style={{
-                        zIndex: 11,
-                      }}
-                    />
-                  )}
-                  <ReadonlyOverlay />
-                </Group>
-                <SimpleGrid cols={2} pos={"relative"}>
-                  <ReadonlyOverlay />
-                  <ContainedTextField
-                    label={
-                      <Group gap={4} wrap="nowrap">
-                        <Text fz={14} fw={500}>
-                          {translations("Template Name")}
-                        </Text>
-                        {requiredIcon}
-                        <Text c="blue" size="xs">
-                          ({translations("Lower-case letters and underscores only")})
-                        </Text>
-                      </Group>
-                    }
-                    placeholder={translations("Name")}
-                    {...form.getInputProps("name")}
-                    rightSection={
-                      <LengthTracker length={form?.values?.name?.length} maxValue={512} atStart />
-                    }
-                    disabled={!!editingItem?.data?.id}
-                  />
+        <PaperLayout className={styles["template-content-container"]} h={"85dvh"}>
+          <Stack gap={"xs"}>
+            <Alert
+              variant="filled"
+              color="red"
+              icon={<IconInfoCircle />}
+              display={
+                createTemplateMutation.isError ||
+                saveTemplateAsDraftMutation.isError ||
+                updateTemplateMutation.isError
+                  ? "block"
+                  : "none"
+              }
+            >
+              {updateTemplateMutation.error?.message ||
+                saveTemplateAsDraftMutation?.error?.message ||
+                createTemplateMutation?.error?.message ||
+                "Error Saving Changes"}
+            </Alert>
+            <Group justify="space-between" pos={"relative"}>
+              <WaTemplateStatusBadge status={form.values.status} />
+              {editingItem?.data?.id && (
+                <LinkCopyElement
+                  link={editingItem?.data?.id}
+                  value={editingItem?.data?.id}
+                  label={translations("Template ID")}
+                  style={{
+                    zIndex: 11,
+                  }}
+                />
+              )}
+              <ReadonlyOverlay />
+            </Group>
+            <SimpleGrid cols={2} pos={"relative"}>
+              <ReadonlyOverlay />
+              <ContainedTextField
+                label={
+                  <Group gap={4} wrap="nowrap">
+                    <Text fz={14} fw={500}>
+                      {translations("Template Name")}
+                    </Text>
+                    {requiredIcon}
+                    <Text c="blue" size="xs">
+                      ({translations("Lower-case letters and underscores only")})
+                    </Text>
+                  </Group>
+                }
+                placeholder={translations("Name")}
+                {...form.getInputProps("name")}
+                rightSection={
+                  <LengthTracker length={form?.values?.name?.length} maxValue={512} atStart />
+                }
+                disabled={!!editingItem?.data?.id}
+              />
+              <ContainedSelection
+                label={
+                  <Group gap={4} wrap="nowrap">
+                    <Text fz={14} fw={500}>
+                      TemplateType
+                    </Text>
+                    {requiredIcon}
+                  </Group>
+                }
+                placeholder={translations("TemplateType")}
+                {...form.getInputProps("templateType")}
+                data={templateTypes}
+                allowDeselect={false}
+              />
+              {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
+                form.getValues().templateType !== TemplateType.CAROUSEL && (
                   <ContainedSelection
                     label={
                       <Group gap={4} wrap="nowrap">
                         <Text fz={14} fw={500}>
-                          TemplateType
+                          Category
                         </Text>
                         {requiredIcon}
                       </Group>
                     }
-                    placeholder={translations("TemplateType")}
-                    {...form.getInputProps("templateType")}
-                    data={templateTypes}
+                    placeholder={translations("Category")}
+                    {...form.getInputProps("category")}
+                    data={WHATSAPP_TEMPLATE_CATEGORY}
                     allowDeselect={false}
+                    disabled={isOrderCreate || catalogBtn || spmBtn || mpmBtn || checkoutBtn}
                   />
-                  {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
-                    form.getValues().templateType !== TemplateType.CAROUSEL && (
-                      <ContainedSelection
-                        label={
+                )}
+
+              <ContainedSelection
+                label={
+                  <Group gap={4} wrap="nowrap">
+                    <Text fz={14} fw={500}>
+                      {translations("Language")}
+                    </Text>
+                    {requiredIcon}
+                  </Group>
+                }
+                placeholder={translations("Language")}
+                {...form.getInputProps("language")}
+                searchable
+                data={WHATSAPP_TEMPLATE_LANGUAGE}
+                allowDeselect={false}
+              />
+              <div>
+                <AccountSelector
+                  value={form.values.whatsappSettingsPhoneId}
+                  onChange={(value) => {
+                    form.setFieldValue("whatsappSettingsPhoneId", value ?? "");
+                    form.setFieldValue("defaultValues.whatsappSettingsPhoneId", value ?? "");
+                  }}
+                  label={translations("Account")}
+                  className="h-10"
+                />
+              </div>
+            </SimpleGrid>
+            {form.values?.category !== WaTemplateCategory.AUTHENTICATION &&
+              form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
+              form.getValues().templateType !== TemplateType.CAROUSEL && (
+                <Grid pos={"relative"}>
+                  <ReadonlyOverlay />
+                  <Grid.Col span={6}>
+                    <ContainedSelection
+                      label={
+                        <>
                           <Group gap={4} wrap="nowrap">
-                            <Text fz={14} fw={500}>
-                              Category
+                            <Text fz={14} fw={500} w={"max-content"}>
+                              {translations("Broadcast header")}{" "}
                             </Text>
                             {requiredIcon}
                           </Group>
+                          <Text fz={13}>
+                            {translations(
+                              "Highlight your brand here, use images or videos, to stand out",
+                            )}
+                          </Text>
+                        </>
+                      }
+                      placeholder={translations("Broadcast Type")}
+                      onChange={(e) => {
+                        const currentHeader = form.values.header;
+                        if (currentHeader) {
+                          const isFile = currentHeader instanceof File;
+                          if (e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT || isFile) {
+                            form.setFieldValue("header", null);
+                          }
                         }
-                        placeholder={translations("Category")}
-                        {...form.getInputProps("category")}
-                        data={WHATSAPP_TEMPLATE_CATEGORY}
-                        allowDeselect={false}
-                        disabled={isOrderCreate || catalogBtn || spmBtn || mpmBtn || checkoutBtn}
-                      />
-                    )}
-
-                  <ContainedSelection
-                    label={
-                      <Group gap={4} wrap="nowrap">
-                        <Text fz={14} fw={500}>
-                          {translations("Language")}
-                        </Text>
-                        {requiredIcon}
-                      </Group>
-                    }
-                    placeholder={translations("Language")}
-                    {...form.getInputProps("language")}
-                    searchable
-                    data={WHATSAPP_TEMPLATE_LANGUAGE}
-                    allowDeselect={false}
-                  />
-                  <div>
-                    <AccountSelector
-                      value={form.values.whatsappSettingsPhoneId}
-                      onChange={(value) => {
-                        form.setFieldValue("whatsappSettingsPhoneId", value ?? "");
-                        form.setFieldValue("defaultValues.whatsappSettingsPhoneId", value ?? "");
+                        form.setFieldValue("format", e);
                       }}
-                      label={translations("Account")}
-                      className="h-10"
+                      value={form.values.format}
+                      data={
+                        isOrderCreate
+                          ? [
+                              WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT,
+                              WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
+                            ]
+                          : checkoutBtn
+                            ? [
+                                WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
+                                WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO,
+                              ]
+                            : Object.values(WHATSAPP_TEMPLATE_BROADCAST_TYPE)?.filter(
+                                (data) => data !== WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT,
+                              )
+                      }
+                      allowDeselect={false}
+                      disabled={spmBtn || catalogBtn || mpmBtn}
                     />
-                  </div>
-                </SimpleGrid>
-                {form.values?.category !== WaTemplateCategory.AUTHENTICATION &&
-                  form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
-                  form.getValues().templateType !== TemplateType.CAROUSEL && (
-                    <Grid pos={"relative"}>
-                      <ReadonlyOverlay />
-                      <Grid.Col span={6}>
-                        <ContainedSelection
-                          label={
-                            <>
-                              <Group gap={4} wrap="nowrap">
-                                <Text fz={14} fw={500} w={"max-content"}>
-                                  {translations("Broadcast header")}{" "}
-                                </Text>
-                                {requiredIcon}
-                              </Group>
-                              <Text fz={13}>
-                                {translations(
-                                  "Highlight your brand here, use images or videos, to stand out",
-                                )}
-                              </Text>
-                            </>
-                          }
-                          placeholder={translations("Broadcast Type")}
-                          onChange={(e) => {
-                            const currentHeader = form.values.header;
-                            if (currentHeader) {
-                              const isFile = currentHeader instanceof File;
-                              if (e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT || isFile) {
-                                form.setFieldValue("header", null);
-                              }
-                            }
-                            form.setFieldValue("format", e);
-                          }}
-                          value={form.values.format}
-                          data={
-                            isOrderCreate
-                              ? [
-                                  WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT,
-                                  WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
-                                ]
-                              : checkoutBtn
-                                ? [
-                                    WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
-                                    WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO,
-                                  ]
-                                : Object.values(WHATSAPP_TEMPLATE_BROADCAST_TYPE)
-                          }
-                          allowDeselect={false}
-                          disabled={spmBtn || catalogBtn || mpmBtn}
-                        />
-                      </Grid.Col>
-                      <Grid.Col span={"auto"}>
-                        <Stack
-                          h={"100%"}
-                          justify="center"
-                          w={form.values?.format === "TEXT" ? "100%" : 300}
-                        >
-                          <BroadCastTypeValue form={form} type={form.values?.format} />
-                        </Stack>
-                      </Grid.Col>
-                    </Grid>
-                  )}
+                  </Grid.Col>
+                  <Grid.Col span={"auto"}>
+                    <Stack
+                      h={"100%"}
+                      justify="center"
+                      w={form.values?.format === "TEXT" ? "100%" : 300}
+                    >
+                      <BroadCastTypeValue form={form} type={form.values?.format} />
+                    </Stack>
+                  </Grid.Col>
+                </Grid>
+              )}
 
-                <Stack gap={0} pos={"relative"}>
-                  <ReadonlyOverlay />
-                  {form.values?.category !== WaTemplateCategory.AUTHENTICATION && (
-                    <>
-                      <Group gap={4} wrap="nowrap">
-                        <Text fz={14} fw={500}>
-                          {translations("Body")}
-                        </Text>
-                        {requiredIcon}
-                      </Group>
-                      <Text fz={13}>
-                        {translations(
-                          "Make your messages personal using variables and get more replies!",
-                        )}
-                      </Text>
-                      <TextFormateToolBar
-                        applyFormatting={applyFormatting}
-                        insertValue={insertValue}
-                        undo={undo}
-                        dynamicVariables={dynamicVariables}
-                      />
-                      <Textarea
-                        ref={inputRef}
-                        styles={{
-                          input: {
-                            borderRadius: "0px 0px 12px 12px",
-                            paddingRight: 90,
-                          },
-                          section: {
-                            width: "fit-content",
-                          },
-                        }}
-                        placeholder={translations("Enter the text")}
-                        autosize
-                        minRows={3}
-                        onSelect={handleSelect}
-                        {...form.getInputProps("body")}
+            <Stack gap={0} pos={"relative"}>
+              <ReadonlyOverlay />
+              {form.values?.category !== WaTemplateCategory.AUTHENTICATION && (
+                <>
+                  <Group gap={4} wrap="nowrap">
+                    <Text fz={14} fw={500}>
+                      {translations("Body")}
+                    </Text>
+                    {requiredIcon}
+                  </Group>
+                  <Text fz={13}>
+                    {translations(
+                      "Make your messages personal using variables and get more replies!",
+                    )}
+                  </Text>
+                  <TextFormateToolBar
+                    applyFormatting={applyFormatting}
+                    insertValue={insertValue}
+                    undo={undo}
+                    dynamicVariables={dynamicVariables}
+                  />
+                  <Textarea
+                    ref={inputRef}
+                    styles={{
+                      input: {
+                        borderRadius: "0px 0px 12px 12px",
+                        paddingRight: 90,
+                      },
+                      section: {
+                        width: "fit-content",
+                      },
+                    }}
+                    placeholder={translations("Enter the text")}
+                    autosize
+                    minRows={3}
+                    onSelect={handleSelect}
+                    {...form.getInputProps("body")}
+                    rightSection={
+                      <LengthTracker length={form?.values?.body?.length} maxValue={1024} atStart />
+                    }
+                  />
+                </>
+              )}
+            </Stack>
+            <Stack gap={0} pos={"relative"}>
+              <ReadonlyOverlay />
+              {form.values?.category !== WaTemplateCategory.AUTHENTICATION &&
+                dynamicVariables?.map((data, index) => (
+                  <ContainedTextField
+                    key={data}
+                    placeholder={`${translations("Enter the content for")} {{${data}}}`}
+                    {...form.getInputProps(`example.${index}`)}
+                  />
+                ))}
+
+              {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
+                form.getValues().templateType !== TemplateType.CAROUSEL && (
+                  <>
+                    {form.values?.category !== WaTemplateCategory.AUTHENTICATION ? (
+                      <ContainedTextField
+                        label={
+                          <>
+                            <Text fz={14} fw={500}>
+                              {translations("Footer (Optional)")}
+                            </Text>
+                            <Text fz={13}>
+                              {translations(
+                                "Footers are great to add any disclaimers or to add a thoughtful PS",
+                              )}
+                            </Text>
+                          </>
+                        }
+                        placeholder={translations("Footer")}
+                        {...form.getInputProps("footer")}
                         rightSection={
                           <LengthTracker
-                            length={form?.values?.body?.length}
-                            maxValue={1024}
+                            length={form?.values?.footer?.length}
+                            maxValue={60}
                             atStart
                           />
                         }
                       />
-                    </>
-                  )}
-                </Stack>
-                <Stack gap={0} pos={"relative"}>
-                  <ReadonlyOverlay />
-                  {form.values?.category !== WaTemplateCategory.AUTHENTICATION &&
-                    dynamicVariables?.map((data, index) => (
-                      <ContainedTextField
-                        key={data}
-                        placeholder={`${translations("Enter the content for")} {{${data}}}`}
-                        {...form.getInputProps(`example.${index}`)}
+                    ) : (
+                      <ContainedNumberInput
+                        label={
+                          <Text fz={14} fw={500}>
+                            {translations("Code Expiration (minutes)")}
+                          </Text>
+                        }
+                        placeholder={translations("Expiration time")}
+                        min={1}
+                        max={90}
+                        {...form.getInputProps("code_expiration_minutes")}
                       />
-                    ))}
+                    )}
 
-                  {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
-                    form.getValues().templateType !== TemplateType.CAROUSEL && (
+                    <ButtonSelection
+                      handleMenuSelection={handleMenuSelection}
+                      flowBtn={flowBtn}
+                      mpmBtn={mpmBtn}
+                      checkoutBtn={checkoutBtn}
+                      catalogBtn={catalogBtn}
+                      spmBtn={spmBtn}
+                      btnLen={form?.values?.buttons?.length}
+                      disabled={isOrderCreate}
+                      category={form.values?.category as any}
+                    />
+                    {form.values?.buttons?.length > 0 && (
                       <>
-                        {form.values?.category !== WaTemplateCategory.AUTHENTICATION ? (
-                          <ContainedTextField
-                            label={
-                              <>
-                                <Text fz={14} fw={500}>
-                                  {translations("Footer (Optional)")}
-                                </Text>
-                                <Text fz={13}>
-                                  {translations(
-                                    "Footers are great to add any disclaimers or to add a thoughtful PS",
-                                  )}
-                                </Text>
-                              </>
-                            }
-                            placeholder={translations("Footer")}
-                            {...form.getInputProps("footer")}
-                            rightSection={
-                              <LengthTracker
-                                length={form?.values?.footer?.length}
-                                maxValue={60}
-                                atStart
-                              />
-                            }
-                          />
-                        ) : (
-                          <ContainedNumberInput
-                            label={
-                              <Text fz={14} fw={500}>
-                                {translations("Code Expiration (minutes)")}
-                              </Text>
-                            }
-                            placeholder={translations("Expiration time")}
-                            min={1}
-                            max={90}
-                            {...form.getInputProps("code_expiration_minutes")}
-                          />
-                        )}
-
-                        <ButtonSelection
-                          handleMenuSelection={handleMenuSelection}
-                          flowBtn={flowBtn}
-                          mpmBtn={mpmBtn}
-                          checkoutBtn={checkoutBtn}
-                          catalogBtn={catalogBtn}
-                          spmBtn={spmBtn}
-                          btnLen={form?.values?.buttons?.length}
-                          disabled={isOrderCreate}
-                          category={form.values?.category as any}
-                        />
-                        {form.values?.buttons?.length > 0 && (
-                          <>
-                            {form.values?.buttons?.map((data, index) => (
-                              <Group className={buttonInputStyles.buttonBox} key={index}>
-                                <ButtonInput
-                                  form={form}
-                                  deleteButton={deleteButton}
-                                  index={index}
-                                  data={data}
-                                  catalog={catalog}
-                                  productRetailerIds={productRetailerIds}
-                                />
-                              </Group>
-                            ))}
-                          </>
-                        )}
-                        {isOrderCreate && (
-                          <>
+                        {form.values?.buttons?.map((data, index) => (
+                          <Group className={buttonInputStyles.buttonBox} key={index}>
+                            <ButtonInput
+                              form={form}
+                              deleteButton={deleteButton}
+                              index={index}
+                              data={data}
+                              catalog={catalog}
+                              productRetailerIds={productRetailerIds}
+                            />
+                          </Group>
+                        ))}
+                      </>
+                    )}
+                    {isOrderCreate && (
+                      <>
+                        <Group gap={4} wrap="nowrap">
+                          <Text fz={14} fw={500}>
+                            {translations("Config")}
+                          </Text>
+                          {requiredIcon}
+                        </Group>
+                        <ContainedTextField
+                          label={
                             <Group gap={4} wrap="nowrap">
                               <Text fz={14} fw={500}>
-                                {translations("Config")}
+                                {translations("Name")}
                               </Text>
                               {requiredIcon}
                             </Group>
-                            <ContainedTextField
-                              label={
-                                <Group gap={4} wrap="nowrap">
-                                  <Text fz={14} fw={500}>
-                                    {translations("Name")}
-                                  </Text>
-                                  {requiredIcon}
-                                </Group>
-                              }
-                              placeholder={"name"}
-                              {...configForm.getInputProps("name")}
-                            />
-                            <ContainedNumberInput
-                              label={
-                                <Group gap={4} wrap="nowrap">
-                                  <Text fz={14} fw={500}>
-                                    {translations("Price")}
-                                  </Text>
-                                  {requiredIcon}
-                                </Group>
-                              }
-                              placeholder={translations("price")}
-                              min={0}
-                              {...configForm.getInputProps("price")}
-                            />
-                            <ContainedNumberInput
-                              label={
-                                <Group gap={4} wrap="nowrap">
-                                  <Text fz={14} fw={500}>
-                                    {translations("Tax")}
-                                  </Text>
-                                  {requiredIcon}
-                                </Group>
-                              }
-                              placeholder={translations("tax")}
-                              min={0}
-                              {...configForm.getInputProps("tax")}
-                            />
-                            <ContainedSelection
-                              label={
-                                <Text fz={14} fw={500}>
-                                  {translations("OrderType")}
-                                </Text>
-                              }
-                              placeholder={translations("order type")}
-                              data={Object.values(OrderType)}
-                              description={
-                                'When this field is passed in we hide the "Review and Pay" button and only show the "Pay Now" button in the order details bubble'
-                              }
-                              {...configForm.getInputProps("orderType")}
-                            />
-                          </>
-                        )}
+                          }
+                          placeholder={"name"}
+                          {...configForm.getInputProps("name")}
+                        />
+                        <ContainedNumberInput
+                          label={
+                            <Group gap={4} wrap="nowrap">
+                              <Text fz={14} fw={500}>
+                                {translations("Price")}
+                              </Text>
+                              {requiredIcon}
+                            </Group>
+                          }
+                          placeholder={translations("price")}
+                          min={0}
+                          {...configForm.getInputProps("price")}
+                        />
+                        <ContainedNumberInput
+                          label={
+                            <Group gap={4} wrap="nowrap">
+                              <Text fz={14} fw={500}>
+                                {translations("Tax")}
+                              </Text>
+                              {requiredIcon}
+                            </Group>
+                          }
+                          placeholder={translations("tax")}
+                          min={0}
+                          {...configForm.getInputProps("tax")}
+                        />
+                        <ContainedSelection
+                          label={
+                            <Text fz={14} fw={500}>
+                              {translations("OrderType")}
+                            </Text>
+                          }
+                          placeholder={translations("order type")}
+                          data={Object.values(OrderType)}
+                          description={
+                            'When this field is passed in we hide the "Review and Pay" button and only show the "Pay Now" button in the order details bubble'
+                          }
+                          {...configForm.getInputProps("orderType")}
+                        />
                       </>
                     )}
-                  {form.getValues().templateType === TemplateType.CAROUSEL && (
-                    <CardCarousel
-                      form={form}
-                      catalog={catalog}
-                      productRetailerIds={productRetailerIds}
-                    />
-                  )}
-                </Stack>
-              </Stack>
-            </PaperLayout>
-          </Grid.Col>
-          <Grid.Col span={{ xs: 12, sm: 5, xl: 3 }}>
-            <Card withBorder h={"min(80dvh,660px)"} radius={"lg"}>
-              <Stack h={"100%"} align="center" gap={0}>
-                <Text fz="24px" fw={500}>
-                  {translations("Preview")}
-                </Text>
-                <WaChatPreview>
-                  <Stack miw="200px" gap={3} p={"md"}>
-                    <ResponseMessageContainer>
-                      <Box
-                        bg={"var(--light-grey-color-2)"}
-                        display={isOrderCreate ? "block" : "none"}
-                      >
-                        <Text fz={"xs"}>
-                          {translations("ORDER")} #{"{{Order number}}"}
-                        </Text>
-                        <Divider variant="dashed" color={"black"} />
-
-                        <Group>
-                          <IconImageInPicture height={50} size={32} />
-                          <Box>
-                            <Text fz={"xs"}>{"{{Product name}}"}</Text>
-                            <Text fz={"xs"}>
-                              {translations("Quantity")} {"{{#}}"}
-                            </Text>
-                          </Box>
-                        </Group>
-                        <Divider variant="dashed" color={"black"} />
-                        <Group justify="space-between">
-                          <Text fz={"xs"}>{translations("Total")}</Text>
-                          <Text fz={"xs"}>${"{{}}"}</Text>
-                        </Group>
-                      </Box>
-                      {HeaderWithFormatting(form.values?.header, form.values?.format)}
-                      <Text
-                        fz={"0.95rem"}
-                        style={{
-                          wordBreak: "break-all",
-                          whiteSpace: "pre-wrap",
-                          fontFamily: "inherit",
-                        }}
-                        component="pre"
-                      >
-                        {TextWithFormatting(
-                          form.values?.body,
-                          form.values?.example,
-                          form?.values?.category,
-                        )}
-                      </Text>
-                      <Text
-                        c="dimmed"
-                        fz={"0.7rem"}
-                        style={{
-                          wordBreak: "break-all",
-                        }}
-                        display={
-                          form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION
-                            ? "block"
-                            : "none"
-                        }
-                      >
-                        {form.values?.category === WaTemplateCategory.AUTHENTICATION
-                          ? form.values?.code_expiration_minutes
-                            ? `Expires in ${form.values?.code_expiration_minutes} minutes.`
-                            : ""
-                          : form.values.footer}
-                      </Text>
-                    </ResponseMessageContainer>
-                    {form.values?.buttons?.slice(0, 2).map((data) => (
-                      <QuickReplyButton text={data?.text} key={data?.text} type={data.type} />
-                    ))}
-                    {form.values?.buttons?.length > 2 && (
-                      <QuickReplyButton text={translations("See all options")} />
-                    )}
-                    <ScrollAreaAutosize maw={"220px"}>
-                      <Box
-                        style={{
-                          display: "flex",
-                          flexDirection: "row",
-                          gap: 8,
-                          width: "fit-content",
-                          padding: 4,
-                        }}
-                      >
-                        {form.values.mediaCarousel?.map((card, index) => (
-                          <Stack
-                            w={"180px"}
-                            bg={"white"}
-                            key={index}
-                            gap={1}
-                            style={{ borderRadius: "10px" }}
-                          >
-                            {HeaderWithFormatting(card?.header, card?.format)}
-                            <Text
-                              fz={"0.95rem"}
-                              style={{
-                                wordBreak: "break-all",
-                                whiteSpace: "pre-wrap",
-                                fontFamily: "inherit",
-                              }}
-                              component="pre"
-                              p={"xs"}
-                            >
-                              {TextWithFormatting(
-                                card?.body,
-                                card?.example,
-                                form?.values?.category,
-                              )}
-                            </Text>
-                            {card?.buttons.map((data) => (
-                              <QuickReplyButton
-                                text={data?.text}
-                                key={data?.text}
-                                type={data?.type}
-                              />
-                            ))}
-                          </Stack>
-                        ))}
-                        <ProductCardCarouselPreview form={form} catalog={catalog} />
-                      </Box>
-                    </ScrollAreaAutosize>
-                  </Stack>
-                </WaChatPreview>
-              </Stack>
-            </Card>
-          </Grid.Col>
-        </Grid>
+                  </>
+                )}
+              {form.getValues().templateType === TemplateType.CAROUSEL && (
+                <CardCarousel
+                  form={form}
+                  catalog={catalog}
+                  productRetailerIds={productRetailerIds}
+                />
+              )}
+            </Stack>
+          </Stack>
+        </PaperLayout>
       </Box>
     </form>
   );

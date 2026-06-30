@@ -192,10 +192,10 @@ function InstagramDashboard() {
             <IconMessageDots className="mr-1.5 size-4" />
             {t("Ice Breakers")}
           </TabsTrigger>
-          <TabsTrigger value="ig-me-links">
+          {/* <TabsTrigger value="ig-me-links">
             <IconLink className="mr-1.5 size-4" />
             {t("ig.me Links")}
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger value="persistent-menu">
             <IconMenu2 className="mr-1.5 size-4" />
             {t("Persistent Menu")}
@@ -747,7 +747,7 @@ function ChatbotsTab() {
   const isEmpty = !igPending && !igError && filteredData.length === 0;
 
   return (
-    <Card>
+    <Card className="bg-ink-25 dark:bg-card">
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-950">
@@ -859,7 +859,7 @@ function CommentsTab() {
   );
 
   return (
-    <Card>
+    <Card className="bg-ink-25 dark:bg-card">
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-950">
@@ -942,7 +942,7 @@ function StoriesTab() {
   );
 
   return (
-    <Card>
+    <Card className="bg-ink-25 dark:bg-card">
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-950">

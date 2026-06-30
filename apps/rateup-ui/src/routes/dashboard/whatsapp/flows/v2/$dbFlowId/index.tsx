@@ -8,6 +8,7 @@ import Result from "@/components/Survey/Result/Result.tsx";
 import ResultComparison from "@/components/Survey/Result/ResultComparison.tsx";
 import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
 import EditFlow from "@/components/whatsapp/flow-v2/EditFlow.tsx";
+import { FlowScreenSheet } from "@/components/whatsapp/flow-v2/Preview/WhatsAppPreview.tsx";
 import { EditFlowContext } from "@/components/whatsapp/flows/FlowPage/EditFlow/EditFlowContext.ts";
 import FlowPageHeader, {
   FlowTabEnum,
@@ -29,7 +30,6 @@ const ResultsOverviewWebForm = lazy(
 
 function Flow() {
   const [tab, setTab] = useState(FlowTabEnum.Edit);
-  const [previewOpened, setPreviewOpened] = useState(false);
 
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
@@ -136,9 +136,8 @@ function Flow() {
               name={flow.name}
               tab={tab}
               setTabState={setTab}
-              previewOpened={previewOpened}
-              setPreviewOpened={setPreviewOpened}
               flowDbId={flow.dbFlowId}
+              phonePreview={<FlowScreenSheet />}
             />
             <Tabs
               value={tab}
@@ -146,7 +145,7 @@ function Flow() {
               className={styles["flow-page-panels-container"]}
             >
               <TabsContent value={FlowTabEnum.Edit} className="h-full mt-0">
-                <EditFlow previewOpened={previewOpened} />
+                <EditFlow />
               </TabsContent>
               <TabsContent value={FlowTabEnum.Settings} className="h-full overflow-y-auto mt-0">
                 <FlowSettings

@@ -35,11 +35,12 @@ import {
   useCreateCommentMutation,
   useDeleteCommentMutation,
   useUpdateCardMutation,
+  useLabels,
 } from "@/backend/tickets/tickets.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import TicketTextEditor from "@/components/RichTextEditor/TicketTextEditor.tsx";
 import { getCellData } from "@/components/Survey/Response/WaResponses.tsx";
-import { PRIORITY_CONFIG } from "@/components/Tickets/card.tsx";
+import { parseColor } from "@/components/Tickets/card.tsx";
 import SurveyResponsesView from "@/components/Tickets/SingleTicket/SurveyResponsesView.tsx";
 import type { Activity, Card, TicketComment } from "@/components/Tickets/types.ts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -513,8 +514,13 @@ function RightSidebar({
 
   const dueDateColor = isOverdue ? "#DC2626" : isCloseToDueDate ? "#D97706" : undefined;
 
-  const handlePriorityChange = (priority: string) => {
-    mutate({ id: ticketId, priority });
+  const currentBoard = (boards || []).find((b) =>
+    b.ticketColumns?.some((c: any) => c.id === ticket.ticketColumnId),
+  );
+  const { labels } = useLabels(currentBoard?.id);
+
+  const handleLabelChange = (labelId: string | null) => {
+    mutate({ id: ticketId, labelId });
   };
 
   const handleToggleMember = (userId: string) => {
@@ -529,9 +535,6 @@ function RightSidebar({
   const assignedMembers = ticket.assignees?.map((a) => a.assigneeId) || [];
 
   // Get columns only from the current board
-  const currentBoard = (boards || []).find((b) =>
-    b.ticketColumns?.some((c: any) => c.id === ticket.ticketColumnId),
-  );
   const boardColumns = currentBoard?.ticketColumns || [];
 
   // Get creator from first ADDED_CARD activity
@@ -577,30 +580,30 @@ function RightSidebar({
           )}
 
           <div>
-            <MetaLabel>{t("Priority")}</MetaLabel>
+            <MetaLabel>{t("Label")}</MetaLabel>
             <div className="flex gap-[5px] flex-wrap">
-              {Object.entries(PRIORITY_CONFIG)
-                .filter(([k]) => k !== "na")
-                .map(([k, v]) => {
-                  const priorityKey = ticket.priority?.toLowerCase() || "medium";
-                  const isSelected = priorityKey === k;
-                  return (
-                    <button
-                      key={k}
-                      onClick={() => handlePriorityChange(k.toUpperCase())}
-                      className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
-                      style={{
-                        padding: "4px 10px",
-                        border: isSelected ? `2px solid ${v.dot}` : `2px solid ${v.bg}`,
-                        background: v.bg,
-                        color: v.color,
-                        boxShadow: isSelected ? `0 0 0 2px ${v.dot}22` : "none",
-                      }}
-                    >
-                      {t(v.label)}
-                    </button>
-                  );
-                })}
+              {labels?.map((label) => {
+                const isSelected = ticket.labelId === label.id;
+                const pColor = parseColor(label.color);
+                return (
+                  <button
+                    key={label.id}
+                    onClick={() => handleLabelChange(isSelected ? null : label.id)}
+                    className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
+                    style={{
+                      padding: "4px 10px",
+                      border: isSelected
+                        ? `2px solid ${pColor.textcolor}`
+                        : `2px solid ${pColor.bgcolor}`,
+                      background: pColor.bgcolor,
+                      color: pColor.textcolor,
+                      boxShadow: isSelected ? `0 0 0 2px ${pColor.textcolor}22` : "none",
+                    }}
+                  >
+                    {label.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -963,9 +966,12 @@ function TicketTopHeader({
     return null;
   }, [boards, ticket.ticketColumnId]);
 
+  const { labels } = useLabels(currentCol?.ticketBoardId);
+
   const isOverdue = !!(ticket.deadline && new Date(ticket.deadline) < new Date());
-  const priorityKey = ticket.priority?.toLowerCase() || "na";
-  const priorityInfo = PRIORITY_CONFIG[priorityKey] || PRIORITY_CONFIG.na;
+
+  const ticketLabel = labels?.find((l) => l.id === ticket.labelId);
+  const labelColor = ticketLabel ? parseColor(ticketLabel.color) : null;
 
   useEffect(() => {
     if (debouncedTitle !== ticket.title) {
@@ -1004,18 +1010,19 @@ function TicketTopHeader({
               {currentCol.title}
             </span>
           )}
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold uppercase tracking-wider"
-            style={{
-              padding: "2px 9px",
-              background: priorityInfo.bg,
-              color: priorityInfo.color,
-              border: `1px solid ${priorityInfo.border}`,
-            }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: priorityInfo.dot }} />
-            {t(priorityInfo.label)}
-          </span>
+          {ticketLabel ? (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider capitalize"
+              style={{
+                padding: "2px 9px",
+                background: labelColor?.bgcolor,
+                color: labelColor?.textcolor,
+                border: `1px solid ${labelColor?.bgcolor}`,
+              }}
+            >
+              {ticketLabel.name}
+            </span>
+          ) : null}
           {isOverdue && (
             <span
               className="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-700 font-body text-[11px] font-bold border border-red-200"

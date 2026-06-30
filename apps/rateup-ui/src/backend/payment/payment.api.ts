@@ -12,7 +12,7 @@ export const getAllRateupPaymentPlans = async () => {
     return (await axiosClient.get(`${PAYMENT_PUBLIC_URL}rateup-plans`)).data;
   } catch (error) {
     console.error("Error fetching Rateup payment plans:", error);
-    return { error: "Failed to fetch Rateup payment plans" }; // Return an error object instead of throwing
+    return [];
   }
 };
 

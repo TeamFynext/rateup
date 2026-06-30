@@ -13,8 +13,10 @@ import { useAllInstagramAutomations } from "@/backend/whatsapp/instagram-automat
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import VariableMapping from "@/components/shopify/VariableMapping.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Field, FieldError } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -80,12 +82,14 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
       return {
         templateId: valueField.value,
         variableMapping: [],
+        useProductImageAsHeader: false,
       };
     }
 
     return {
       templateId: valueField.value?.templateId ?? "",
       variableMapping: valueField.value?.variableMapping ?? [],
+      useProductImageAsHeader: valueField.value?.useProductImageAsHeader ?? false,
     };
   };
 
@@ -199,6 +203,14 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
   if (actionType === "SEND_TEMPLATE") {
     const templateValue = getTemplateValue();
 
+    const selectedTemplate = templatesData?.find(
+      (template) => String(template.id) === templateValue.templateId,
+    );
+    const headerFormat = selectedTemplate?.data?.components?.find(
+      (c: any) => c.type === "HEADER" || c.type === "header",
+    )?.format;
+    const canUseProductImage = triggerEvent === "SHOPIFY_EVENT" && headerFormat === "IMAGE";
+
     return (
       <div className="space-y-3 w-full">
         <Select
@@ -206,6 +218,7 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
             valueField.onChange({
               ...templateValue,
               templateId,
+              useProductImageAsHeader: false,
             })
           }
           value={templateValue.templateId || ""}
@@ -230,6 +243,30 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
             )}
           </SelectContent>
         </Select>
+
+        {canUseProductImage && (
+          <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/50">
+            <Checkbox
+              checked={templateValue.useProductImageAsHeader}
+              onCheckedChange={(checked) =>
+                valueField.onChange({
+                  ...templateValue,
+                  useProductImageAsHeader: checked === true,
+                })
+              }
+              id={`use-product-image-${index}`}
+            />
+            <div>
+              <Label htmlFor={`use-product-image-${index}`} className="cursor-pointer font-medium">
+                Use Shopify product image as header
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Replaces the template's default header image with the product image from the
+                triggering Shopify order.
+              </p>
+            </div>
+          </div>
+        )}
 
         {templateValue.templateId && (
           <VariableMapping

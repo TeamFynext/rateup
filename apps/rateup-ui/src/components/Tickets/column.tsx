@@ -14,7 +14,7 @@ import { memo, useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import invariant from "tiny-invariant";
 
-import { useBoard } from "@/backend/tickets/tickets.query";
+import { useBoard, useLabels } from "@/backend/tickets/tickets.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import {
@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import { TicketType } from "@/utils/enums/ticket.ts";
 
 import { Input } from "../ui/input.tsx";
-import { Card, CardShadow, PRIORITY_CONFIG } from "./card.tsx";
+import { Card, CardShadow, parseColor } from "./card.tsx";
 import { blockBoardPanningAttr } from "./data-attributes.ts";
 import { isShallowEqual } from "./is-shallow-equal.ts";
 import { SettingsContext } from "./settings-context.tsx";
@@ -99,10 +99,15 @@ export function Column({
   const [state, setState] = useState<TColumnState>(idle);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [newCard, setNewCard] = useState({
+  const [newCard, setNewCard] = useState<{
+    title: string;
+    description: string;
+    labelId: string | null;
+    deadline: string;
+  }>({
     title: "",
     description: "",
-    priority: "MEDIUM",
+    labelId: null,
     deadline: "",
   });
   const openEditModal = () => setIsEditModalOpen(true);
@@ -120,6 +125,8 @@ export function Column({
   };
 
   const { createCard, deleteCard } = useBoard(currentBoardId || "");
+  const { labels } = useLabels(currentBoardId || "");
+  console.log(labels);
 
   const handleOpenAddCardModal = () => {
     openAddCardModal();
@@ -161,11 +168,14 @@ export function Column({
 
     const payload: any = {
       title: newCard.title,
-      description: newCard.description || "",
+      description: newCard.description,
       ticketColumnId: column.id,
       type: TicketType.CUSTOM,
-      priority: newCard.priority as any,
     };
+
+    if (newCard.labelId) {
+      payload.labelId = newCard.labelId;
+    }
 
     if (newCard.deadline) {
       payload.deadline = newCard.deadline;
@@ -177,7 +187,7 @@ export function Column({
     setNewCard({
       title: "",
       description: "",
-      priority: "MEDIUM",
+      labelId: null,
       deadline: "",
     });
     closeAddCardModal();
@@ -516,36 +526,36 @@ export function Column({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label className="text-sm font-semibold">{t("Priority")}</Label>
+              <Label className="text-sm font-semibold">{t("Label")}</Label>
               <div className="flex gap-2 flex-wrap">
-                {Object.entries(PRIORITY_CONFIG)
-                  .filter(([k]) => k !== "na")
-                  .map(([k, v]) => {
-                    const priorityKey = newCard.priority.toLowerCase();
-                    const isSelected = priorityKey === k;
-                    return (
-                      <button
-                        key={k}
-                        type="button"
-                        onClick={() =>
-                          setNewCard((prev) => ({
-                            ...prev,
-                            priority: k.toUpperCase(),
-                          }))
-                        }
-                        className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
-                        style={{
-                          padding: "4px 10px",
-                          border: isSelected ? `2px solid ${v.dot}` : `2px solid ${v.bg}`,
-                          background: v.bg,
-                          color: v.color,
-                          boxShadow: isSelected ? `0 0 0 2px ${v.dot}22` : "none",
-                        }}
-                      >
-                        {t(v.label)}
-                      </button>
-                    );
-                  })}
+                {labels?.map((label) => {
+                  const isSelected = newCard.labelId === label.id;
+                  const pColor = parseColor(label.color);
+                  return (
+                    <button
+                      key={label.id}
+                      type="button"
+                      onClick={() =>
+                        setNewCard((prev) => ({
+                          ...prev,
+                          labelId: isSelected ? null : label.id,
+                        }))
+                      }
+                      className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
+                      style={{
+                        padding: "4px 10px",
+                        border: isSelected
+                          ? `2px solid ${pColor.textcolor}`
+                          : `2px solid ${pColor.bgcolor}`,
+                        background: pColor.bgcolor,
+                        color: pColor.textcolor,
+                        boxShadow: isSelected ? `0 0 0 2px ${pColor.textcolor}22` : "none",
+                      }}
+                    >
+                      {label.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
