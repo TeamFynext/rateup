@@ -14,6 +14,7 @@ import { Board } from "./board.tsx";
 import TicketSettings from "./boardSettings.tsx";
 import { PRIORITY_CONFIG } from "./card.tsx";
 import { ManageColumnsDialog } from "./ManageColumnsDialog.tsx";
+import { ManageLabels } from "./ManageLabels.tsx";
 import { TicketListView } from "./TicketListView.tsx";
 
 export function BoardContent({
@@ -215,6 +216,8 @@ export function BoardContent({
                   <Columns3 className="w-4 h-4 sm:mr-2 text-primary" />
                   <span className="hidden sm:inline text-primary">{t("Manage Columns")}</span>
                 </Button>
+
+                <ManageLabels boardId={selectedBoardId} />
 
                 <Button
                   variant="outline"

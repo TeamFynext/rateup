@@ -1,5 +1,5 @@
 import type { NotificationFormValues } from "@/components/Tickets/boardSettings.tsx";
-import type { Board, Card, Column, MemberData } from "@/components/Tickets/types.ts";
+import type { Board, Card, Column, Label, MemberData } from "@/components/Tickets/types.ts";
 import type { TicketType } from "@/utils/enums/ticket.ts";
 
 import { axiosClient } from "../apiClient";
@@ -211,4 +211,34 @@ export const fetchCardTeamMemberById = async (cardId: string): Promise<Array<Mem
 export const fetchBoardTeamMemberById = async (cardId: string): Promise<Array<MemberData>> => {
   const { data } = await axiosClient.get(`/tickets/boards/${cardId}/team-members`);
   return data;
+};
+
+// Labels
+export const fetchLabels = async (boardId: string): Promise<Label[]> => {
+  const { data } = await axiosClient.get(`/tickets/boards/${boardId}/labels`);
+  return data;
+};
+
+export const createLabel = async (
+  boardId: string,
+  label: { name: string; color: string },
+): Promise<Label> => {
+  const { data } = await axiosClient.post(`/tickets/boards/${boardId}/labels`, label);
+  return data;
+};
+
+export const updateLabel = async (
+  labelId: string,
+  label: { name?: string; color?: string },
+): Promise<Label> => {
+  const { data } = await axiosClient.put(`/tickets/labels/${labelId}`, label);
+  return data;
+};
+
+export const deleteLabel = async (labelId: string): Promise<void> => {
+  await axiosClient.delete(`/tickets/labels/${labelId}`);
+};
+
+export const deleteLabels = async (boardId: string, labelIds: string[]): Promise<void> => {
+  await axiosClient.delete(`/tickets/boards/${boardId}/labels`, { data: { labelIds } });
 };
