@@ -1,6 +1,6 @@
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconChevronDown, IconTags } from "@tabler/icons-react";
-import { ArrowLeft, Ban, BellOff, Bot, CircleCheckBig, FolderClosed, Ticket } from "lucide-react";
+import { ArrowLeft, Ban, BellOff, Bot, CircleCheckBig, FolderClosed } from "lucide-react";
 import { useMemo } from "react";
 
 import {
@@ -43,7 +43,6 @@ import {
   SubscriptionFeaturePathName,
   WaMessageAssignStatus,
 } from "@/types/enums.ts";
-import { TicketType } from "@/utils/enums/ticket.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
@@ -75,11 +74,6 @@ export default function WaInboxChatDisplayHeader({
   const { data: groups, isLoading: groupsLoading } = useContactGroup();
   const updateGroupsMutation = useUpdateContactGroupsForContactMutation(contact.id);
   const activeGroupIds = contactgroups?.map((g) => g.id) ?? [];
-
-  const hasTicketFeature = useMemo(
-    () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
-    [subscription],
-  );
 
   const hasAIFeature = useMemo(
     () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
