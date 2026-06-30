@@ -132,7 +132,7 @@ export async function webHookHandler(
       console.log(`Unhandled event type :  ${event.type}`);
   }
 
-  reply.status(200);
+  reply.status(200).send();
 }
 
 export async function getStripeProductsHandler(request: FastifyRequest, reply: FastifyReply) {

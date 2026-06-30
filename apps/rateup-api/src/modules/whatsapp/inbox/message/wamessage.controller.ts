@@ -644,9 +644,9 @@ export async function generateInboxResponseHandler(
   try {
     const { orgId, userId } = request.user;
 
-    await generateInboxResponse(request.body, orgId, userId);
+    const result = await generateInboxResponse(request.body, orgId, userId);
 
-    // Generate response logic here
+    reply.status(200).send(result);
   } catch (error) {
     log.error("Error in generateInboxResponseHandler: %o", error);
     reply.status(500).send("Internal Server Error");

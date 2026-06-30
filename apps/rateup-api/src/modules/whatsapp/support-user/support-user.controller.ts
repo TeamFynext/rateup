@@ -17,7 +17,9 @@ export async function supportUserWebhookEventHandler(request: FastifyRequest, re
     await handleSupportUserWebhook(data);
   } catch (e) {
     log.error(e);
-    reply.code(500).send();
+    if (!reply.sent) {
+      reply.code(500).send();
+    }
   }
 }
 
