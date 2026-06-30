@@ -8,11 +8,13 @@ import { requireFeature, TeamFeature } from "../../utils/permissions.js";
 import { columnRoutes } from "./ticketColumn/column.route.js";
 import { cardRoutes } from "./ticketCard/card.route.js";
 import { boardRoutes } from "./ticketBoard/board.route.js";
+import labelRoutes from "./ticketBoardLabel/ticketlabel.route.js";
 
 export async function ticketRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeaturePathName.Ticket]));
   server.addHook("preHandler", requireFeature(TeamFeature.tickets));
+  server.register(labelRoutes);
   server.register(boardRoutes, {
     prefix: "boards",
   });

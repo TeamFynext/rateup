@@ -37,6 +37,9 @@ export async function getColumns(ticketBoardId: string) {
         orderBy: {
           createdAt: "asc",
         },
+        include: {
+          label: true,
+        },
       },
     },
   });
@@ -46,7 +49,11 @@ export async function getColumnById(id: string) {
   return prisma.ticketColumn.findUnique({
     where: { id },
     include: {
-      ticketCards: true,
+      ticketCards: {
+        include: {
+          label: true,
+        },
+      },
     },
   });
 }
