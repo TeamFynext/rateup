@@ -31,17 +31,17 @@ const DEFAULT_SORT_OPTIONS = [
   { value: "z-a", label: "Name (Z-A)" },
 ] as const;
 
-type SortOption = {
+interface SortOption {
   readonly value: string;
   readonly label: string;
-};
+}
 
-type ListPageSearchInputProps = {
+interface ListPageSearchInputProps {
   readonly value?: string;
   readonly placeholder?: string;
   readonly onChange?: (value: string) => void;
   readonly className?: string;
-};
+}
 
 export function ListPageSearchInput({
   value,
@@ -63,12 +63,12 @@ export function ListPageSearchInput({
   );
 }
 
-type ListPageSortDropdownProps = {
+interface ListPageSortDropdownProps {
   readonly options?: readonly SortOption[];
   readonly value?: string;
   readonly onChange?: (value: string) => void;
   readonly className?: string;
-};
+}
 
 export function ListPageSortDropdown({
   options = DEFAULT_SORT_OPTIONS,
@@ -108,10 +108,10 @@ export function ListPageSortDropdown({
   );
 }
 
-type ListPageLoadingProps = {
+interface ListPageLoadingProps {
   readonly count?: number;
   readonly className?: string;
-};
+}
 
 export function ListPageLoading({
   count = LIST_SKELETON_COUNT,
@@ -120,7 +120,7 @@ export function ListPageLoading({
   return (
     <div
       className={cn(
-        "min-h-65 grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5",
+        "min-h-65 grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]",
         className,
       )}
     >
@@ -149,11 +149,11 @@ export function ListPageLoading({
   );
 }
 
-type ListPageEmptyProps = {
+interface ListPageEmptyProps {
   readonly title?: string;
   readonly description?: string;
   readonly children?: ReactNode;
-};
+}
 
 export function ListPageEmpty({
   title = "No data yet",
@@ -174,9 +174,9 @@ export function ListPageEmpty({
   );
 }
 
-type ListPageErrorProps = {
+interface ListPageErrorProps {
   readonly onRetry?: () => void;
-};
+}
 
 export function ListPageError({ onRetry }: Readonly<ListPageErrorProps>) {
   return (
@@ -199,7 +199,7 @@ export function ListPageError({ onRetry }: Readonly<ListPageErrorProps>) {
   );
 }
 
-type ListPageContentProps = {
+interface ListPageContentProps {
   readonly isLoading?: boolean;
   readonly isError?: boolean;
   readonly isEmpty?: boolean;
@@ -208,7 +208,7 @@ type ListPageContentProps = {
   readonly emptyDescription?: string;
   readonly onRetry?: () => void;
   readonly children?: ReactNode;
-};
+}
 
 export function ListPageContent({
   isLoading = false,
@@ -239,19 +239,19 @@ export function ListPageContent({
   return children ?? null;
 }
 
-type ListPageProps = {
+interface ListPageProps {
   readonly children?: ReactNode;
   readonly className?: string;
-};
+}
 
 export function ListPage({ children, className }: Readonly<ListPageProps>) {
   return <div className={cn("flex flex-col gap-4", className)}>{children}</div>;
 }
 
-type ListPageHeaderProps = {
+interface ListPageHeaderProps {
   readonly children?: ReactNode;
   readonly className?: string;
-};
+}
 
 export function ListPageHeader({ children, className }: Readonly<ListPageHeaderProps>) {
   return (
@@ -266,10 +266,10 @@ export function ListPageHeader({ children, className }: Readonly<ListPageHeaderP
   );
 }
 
-type ListPageHeaderSectionProps = {
+interface ListPageHeaderSectionProps {
   readonly children?: ReactNode;
   readonly className?: string;
-};
+}
 
 export function ListPageHeaderSection({
   children,

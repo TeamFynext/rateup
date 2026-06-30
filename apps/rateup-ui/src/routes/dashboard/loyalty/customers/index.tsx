@@ -42,7 +42,7 @@ export const Route = createFileRoute("/dashboard/loyalty/customers/")({
   component: CustomerPage,
 });
 
-type CustomerDetails = {
+interface CustomerDetails {
   id: string;
   programId: string;
   contactId: string;
@@ -107,7 +107,7 @@ type CustomerDetails = {
     accountId: string;
     assignedAt: string;
   }[];
-};
+}
 
 function CustomerPage() {
   const { t } = useTranslation();

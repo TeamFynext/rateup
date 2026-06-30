@@ -360,14 +360,14 @@ export const getValidationSchema = (type: QuestionType2) => {
   });
 };
 
-type InitialValues = {
+interface InitialValues {
   [key: string]: {
     type: string;
     value: string | number | boolean | string[] | { id: string; title: string }[];
     extra?: any;
     metaType?: string;
   };
-};
+}
 
 export const getInitialValues = (type: QuestionType2) => {
   let initialValues: InitialValues = {};

@@ -30,13 +30,13 @@ export const Route = createFileRoute("/dashboard/settings/integrations/")({
 
 type IntegrationStatus = "connected" | "disconnected";
 
-type IntegrationConfig = {
+interface IntegrationConfig {
   id: string;
   name: string;
   icon: ComponentType<{ className?: string }>;
   description: string;
   scope: "external" | "internal";
-};
+}
 
 const INTEGRATIONS_CONFIG: Record<string, IntegrationConfig> = {
   shopify: {

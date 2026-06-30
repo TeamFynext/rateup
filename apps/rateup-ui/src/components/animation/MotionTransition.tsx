@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import React from "react";
 
-type MotionTransitionProps = {
+interface MotionTransitionProps {
   keyValue: any;
   type?: "fade" | "leftSlideIn" | "rightSlideIn" | "bottomSlideIn" | "bottomSlideOut";
   apEnable?: boolean;
@@ -9,7 +9,7 @@ type MotionTransitionProps = {
   layout?: boolean;
   children: React.ReactNode;
   style?: React.CSSProperties;
-};
+}
 
 export const MotionTransition = ({
   keyValue,

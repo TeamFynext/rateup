@@ -6,7 +6,7 @@ import { axiosClient } from "../apiClient";
 const TEMPLATES_URL = `${WHATSAPP_URL}/templates`;
 const REDIRECT_URL = `${WHATSAPP_URL}/redirect`;
 
-export type WaTemplate = {
+export interface WaTemplate {
   id: string;
   createdAt: Date;
   whatsappSettingsPhoneId?: string;
@@ -24,11 +24,11 @@ export type WaTemplate = {
   acceptButton: string;
   orgId: string;
   templateType?: TemplateType;
-};
+}
 
-export type SyncTemplatesInput = {
+export interface SyncTemplatesInput {
   whatsappSettingsPhoneIds?: string[];
-};
+}
 
 /**
  * Fetches whatsapp templates using orgId user belongs to.
@@ -73,10 +73,10 @@ export async function _tokenizeIp() {
   return (await axiosClient.post(`${REDIRECT_URL}`)).data;
 }
 
-type imageResponse = {
+interface imageResponse {
   id: string;
   uploadSessionId: string;
-};
+}
 export async function uploadTemplateMedia(file: File) {
   const formData = new FormData();
   formData.append("size", file.size?.toString());

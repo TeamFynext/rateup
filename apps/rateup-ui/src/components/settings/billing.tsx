@@ -2,7 +2,6 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   AlertCircle,
   Bot,
-  Boxes,
   Calendar,
   CheckCircle2,
   ClipboardList,
@@ -54,7 +53,6 @@ export function UsageCard({ subscription }) {
       <div className="flex flex-col justify-center gap-4">
         <TeamStats stats={stats} subscription={subscription} />
         <SurveyStats stats={stats} subscription={subscription} />
-        <MenuStats stats={stats} subscription={subscription} />
         <WhatsappStats stats={stats} subscription={subscription} />
         <AIStats stats={stats} subscription={subscription} />
         <LoyaltyStats stats={stats} subscription={subscription} />
@@ -668,75 +666,6 @@ const TeamStats = ({ stats, subscription }) => {
                 {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
                 {translations("remaining")}
               </p>
-            </div>
-          );
-        })}
-      </div>
-    </Card>
-  );
-};
-
-const MenuStats = ({ stats, subscription }) => {
-  const { t: translations } = useTranslation();
-  const isActive = subscription?.features?.menu?.active;
-  if (!isActive) return null;
-
-  const statsArray = [
-    {
-      count: stats?.menusCount,
-      totalCount: subscription?.features?.menu?.count?.max,
-      stats: "Menus",
-    },
-    {
-      count: stats?.monthlyMenuViews,
-      totalCount: subscription?.features?.menu?.count?.monthlyViewLimit,
-      stats: "Monthly Menu view",
-    },
-    {
-      count: stats?.menuViewsCount,
-      stats: "Total Menu view",
-    },
-  ];
-
-  return (
-    <Card className="p-6">
-      <h3 className="flex items-center gap-1">
-        <Boxes className="w-4 h-4" />
-        {translations("Menu")}
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
-        {statsArray.map((item, index) => {
-          const count = item.count || 0;
-          const totalCount = item.totalCount || 0;
-          const percentage = totalCount > 0 ? (count / totalCount) * 100 : 0;
-          const remaining = totalCount - count;
-
-          return (
-            <div key={index} className="flex flex-col justify-center gap-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{item.stats}</span>
-                {totalCount > 0 ? (
-                  <span>
-                    {count.toLocaleString()} / {totalCount.toLocaleString()}
-                  </span>
-                ) : (
-                  <span>{count.toLocaleString()}</span>
-                )}
-              </div>
-              {totalCount > 0 && (
-                <>
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                    <div
-                      className="bg-primary h-3 rounded-full transition-all"
-                      style={{ width: `${Math.min(percentage, 100)}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
-                    {translations("remaining")}
-                  </p>
-                </>
-              )}
             </div>
           );
         })}

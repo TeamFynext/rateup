@@ -10,10 +10,10 @@ import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
 import classes from "../TakeSurvey.module.css";
 
-type CustomInputFields = {
+interface CustomInputFields {
   fieldKey: string;
   placeholderText: string;
-};
+}
 const MultiTextInputForm = ({ features }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);

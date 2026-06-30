@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils";
 
-type ActionCardProps = {
+interface ActionCardProps {
   readonly title: ReactNode;
   readonly titleTooltip?: string;
   readonly subtitle?: ReactNode;
@@ -28,7 +28,7 @@ type ActionCardProps = {
   readonly showSwitch?: boolean;
   readonly switchChecked?: boolean;
   readonly onSwitchChange?: (checked: boolean) => void;
-};
+}
 
 export function ActionCard({
   title,

@@ -9,7 +9,8 @@ function HeroSectionNew() {
     <>
       {" "}
       <header className={styles.hero} id="top">
-        <div className={styles["hero-bg"]} />
+        <div className={styles["hero-bg"]} />{" "}
+        <div className="absolute top-[-60px] left-1/2 -translate-x-1/2 w-[90px] h-[360px] z-[1] bg-gradient-to-b from-white/80 to-transparent blur-[28px] opacity-45 [mask-image:linear-gradient(to_bottom,#000,transparent)]" />
         <div className={styles.page}>
           <div className={styles["hero-grid"]}>
             {/* Left: copy */}
@@ -30,10 +31,26 @@ function HeroSectionNew() {
                 </span>
                 Loyalty + Referrals, fully automated on WhatsApp
               </div>
-              <h1>
-                Engage Customers
+              <h1 className="leading-tight">
+                Engage with your
                 <br />
-                Everywhere They <span className={styles["grad-cyan"]}>Already Are</span>
+                Customer on
+                <br />
+                <span className="inline-flex items-center gap-3 mt-2">
+                  <svg
+                    className="w-16 h-16 sm:w-[68px] sm:h-[68px] shrink-0 align-middle"
+                    viewBox="0 0 36 36"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle cx="18" cy="18" r="16" fill="#4769fa" />
+                    <path
+                      d="M18 7.5C11.92 7.5 7 11.98 7 17.5C7 20.66 8.58 23.47 11.04 25.26V29.5L14.73 27.48C15.77 27.77 16.87 27.92 18 27.92C24.08 27.92 29 23.44 29 17.92C29 12.4 24.08 7.5 18 7.5ZM19.19 20.91L16.38 17.91L10.9 20.91L16.92 14.5L19.76 17.5L25.2 14.5L19.19 20.91Z"
+                      fill="#FFFFFF"
+                    />
+                  </svg>
+                  <span style={{ color: "#4769fa" }}>Messenger</span>
+                </span>
               </h1>
               <p className={styles.lead}>
                 Most customers buy once and disappear. RateUp fixes that.

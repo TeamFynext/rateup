@@ -1,16 +1,16 @@
-export type TSelectField<T = string> = {
+export interface TSelectField<T = string> {
   type: "select";
   title: string;
   description: string;
   options: T[];
-};
+}
 
-export type TBooleanField = {
+export interface TBooleanField {
   type: "boolean";
   title: string;
   description: string;
   // children?: Record<string, TBooleanField | TSelectField>
-};
+}
 
 export const fields = {
   isBoardMoreObvious: {

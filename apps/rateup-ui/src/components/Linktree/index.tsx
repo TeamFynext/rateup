@@ -29,14 +29,14 @@ import {
 import CreateLinktreeModal from "./CreateLinktreeModal/index.tsx";
 import LinktreeCard from "./LinktreeCard/index.tsx";
 
-type LinktreeListEntry = {
+interface LinktreeListEntry {
   readonly id: string;
   readonly name: string;
   readonly shortUrlId: string;
   readonly createdAt: string | Date;
   readonly visitorsCount: number;
   readonly isPublished: boolean;
-};
+}
 
 function LinktreeDashboard() {
   const [isCreateLinktreeModalOpen, setIsCreateLinktreeModalOpen] = useState(false);

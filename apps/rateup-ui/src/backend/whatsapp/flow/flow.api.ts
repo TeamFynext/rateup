@@ -60,21 +60,21 @@ export async function cloneAndDeprecateFlows(flowId: string) {
   return res.data;
 }
 
-export type cloneFlowsProps = {
+export interface cloneFlowsProps {
   flowId: string;
   teamId: string;
-};
+}
 export async function cloneFlows({ flowId, teamId }: cloneFlowsProps) {
   const res = await axiosClient.put(`${BASE}/clone/${flowId}`, {
     teamId: teamId,
   });
   return res.data;
 }
-export type createFlowInput = {
+export interface createFlowInput {
   name: string;
   teamIds: string[];
   categories: string[];
-};
+}
 export async function createFlow(data: createFlowInput) {
   return (await axiosClient.post(`${BASE}`, data))?.data;
 }

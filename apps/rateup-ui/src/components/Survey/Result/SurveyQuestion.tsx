@@ -17,7 +17,7 @@ import { getResponseArrayByQuestionType } from "@/utils/response.ts";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util.tsx";
 import SurveyResultByType from "./SurveySummaryNewWebForm.tsx";
 
-type SurveyQuestionProps = {
+interface SurveyQuestionProps {
   choiceWise: any;
   NPS: any;
   version?: number;
@@ -25,7 +25,7 @@ type SurveyQuestionProps = {
   questions?: any[];
   surveyId: string;
   defaultLanguage: string;
-};
+}
 
 const SurveyQuestion = ({
   choiceWise,

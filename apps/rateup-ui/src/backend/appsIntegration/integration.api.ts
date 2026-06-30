@@ -14,16 +14,16 @@ export const getIntegrationByType = async (type: IntegratedApps) => {
   return response.data;
 };
 
-type integrationSchemaProps = {
+interface integrationSchemaProps {
   id?: string;
   credential: AmeliaCredential | petpoojaCredential;
   name: string;
-};
+}
 
-export type updateIntegrationSchema = {
+export interface updateIntegrationSchema {
   credential: any;
   updateKey?: boolean;
-};
+}
 
 export const createIntegration = async (data: integrationSchemaProps) => {
   const response = await axiosClient.post(`${ROUTE_URL}`, data);

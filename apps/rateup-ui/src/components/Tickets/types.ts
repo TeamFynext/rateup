@@ -116,7 +116,7 @@ export interface MemberData {
   name: string;
   profilePhoto?: string;
 }
-type WaAutomatedReplyMessage = {
+interface WaAutomatedReplyMessage {
   id: string;
   createdAt: string;
   response: {
@@ -136,7 +136,7 @@ type WaAutomatedReplyMessage = {
     phone: string;
     lastReceivedMessageTimeStamp: string;
   };
-};
+}
 
 export interface Activity {
   id: string;
@@ -186,7 +186,7 @@ export interface TicketComment {
 
 // Drag and drop specific types
 const cardKey = Symbol("card");
-export type CardData = {
+export type CardData = Record<string | symbol, unknown> & {
   [cardKey]: true;
   card: Card;
   columnId: string;
@@ -197,7 +197,11 @@ export function getCardData({
   card,
   rect,
   columnId,
-}: Omit<CardData, typeof cardKey> & { columnId: string }): CardData {
+}: {
+  card: Card;
+  rect: DOMRect;
+  columnId: string;
+}): CardData {
   return {
     [cardKey]: true,
     rect,
@@ -219,7 +223,7 @@ export function isDraggingACard({
 }
 
 const cardDropTargetKey = Symbol("card-drop-target");
-export type CardDropTargetData = {
+export type CardDropTargetData = Record<string | symbol, unknown> & {
   [cardDropTargetKey]: true;
   card: Card;
   columnId: string;
@@ -234,7 +238,8 @@ export function isCardDropTargetData(
 export function getCardDropTargetData({
   card,
   columnId,
-}: Omit<CardDropTargetData, typeof cardDropTargetKey> & {
+}: {
+  card: Card;
   columnId: string;
 }): CardDropTargetData {
   return {
@@ -245,12 +250,12 @@ export function getCardDropTargetData({
 }
 
 const columnKey = Symbol("column");
-export type ColumnData = {
+export type ColumnData = Record<string | symbol, unknown> & {
   [columnKey]: true;
   ticketColumn: Column;
 };
 
-export function getColumnData({ ticketColumn }: Omit<ColumnData, typeof columnKey>): ColumnData {
+export function getColumnData({ ticketColumn }: { ticketColumn: Column }): ColumnData {
   return {
     [columnKey]: true,
     ticketColumn,

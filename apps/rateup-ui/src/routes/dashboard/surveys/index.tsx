@@ -35,10 +35,10 @@ export const Route = createFileRoute("/dashboard/surveys/")({
   component: Page,
 });
 
-type TeamOption = {
+interface TeamOption {
   readonly value: string;
   readonly label: string;
-};
+}
 
 function Page() {
   const navigate = useNavigate();
@@ -168,14 +168,14 @@ function Page() {
   );
 }
 
-type SurveysPageFilterProps = {
+interface SurveysPageFilterProps {
   readonly filterParam: string;
   readonly setFilterParam: (value: string) => void;
   readonly selectedTeamId: string;
   readonly setSelectedTeamId: (value: string) => void;
   readonly teamOptions: TeamOption[];
   readonly disabled: boolean;
-};
+}
 
 function SurveysPageFilter({
   filterParam,

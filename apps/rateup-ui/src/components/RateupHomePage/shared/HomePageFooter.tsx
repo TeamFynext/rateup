@@ -8,6 +8,7 @@ import {
   IconBrandYoutube,
 } from "@tabler/icons-react";
 
+import { imagesPath } from "@/components/HomePage/constants";
 import { RateupStar } from "@/components/integrations/logos";
 
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
@@ -125,6 +126,50 @@ export default function HomePageFooter() {
             <a href="#">WhatsApp API</a>
             <a href="#">Integrations</a>
             <a href="#">Status</a>
+          </div>
+
+          <div className={styles["foot-col"]}>
+            <h3>Download App</h3>
+
+            <div className={styles["foot-dl"]}>
+              <a
+                href="https://apps.apple.com/in/app/rateup/id6761990608"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles["foot-dl-btn"]}
+                aria-label="Download on the App Store"
+              >
+                <img
+                  src={`${imagesPath}/landing/logos/apple.png`}
+                  alt=""
+                  aria-hidden="true"
+                  className={styles["foot-dl-icon"]}
+                />
+                <div className={styles["foot-dl-text"]}>
+                  <span className={styles["foot-dl-sub"]}>Download on the</span>
+                  <span className={styles["foot-dl-name"]}>App Store</span>
+                </div>
+              </a>
+
+              <a
+                href="https://play.google.com/store/apps/details?id=com.rateupapp.rateup&pcampaignid=web_share"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles["foot-dl-btn"]}
+                aria-label="Get it on Google Play"
+              >
+                <img
+                  src={`${imagesPath}/landing/logos/ico-playstore.png`}
+                  alt=""
+                  aria-hidden="true"
+                  className={styles["foot-dl-icon"]}
+                />
+                <div className={styles["foot-dl-text"]}>
+                  <span className={styles["foot-dl-sub"]}>Get it on</span>
+                  <span className={styles["foot-dl-name"]}>Google Play</span>
+                </div>
+              </a>
+            </div>
           </div>
         </div>
 

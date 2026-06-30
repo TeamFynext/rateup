@@ -5,10 +5,10 @@ import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import { RateupButtonPrimary } from "../Button/RateupButtons.tsx";
 
-type ErrorComponentProps = {
+interface ErrorComponentProps {
   refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<any, Error>>;
   isRefetching?: boolean;
-};
+}
 const ErrorComponent = ({ refetch, isRefetching }: ErrorComponentProps) => {
   return (
     <Container

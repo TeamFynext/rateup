@@ -17,9 +17,9 @@ import { BusinessHoursListDialog } from "./BusinessHoursListDialog.tsx";
 import type { BusinessHoursFormValues } from "./schema.ts";
 import { buildDefaultSchedule, formatDaySchedule } from "./schema.ts";
 
-type Props = {
+interface Props {
   canManage: boolean;
-};
+}
 
 export function BusinessHoursSection({ canManage }: Readonly<Props>) {
   const { t } = useTranslation();

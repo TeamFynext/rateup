@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 
 import { cn } from "@/lib/utils.ts";
 
-type TestimonialCardProps = {
+interface TestimonialCardProps {
   quote: string;
   author: string;
   role: string;
@@ -11,7 +11,7 @@ type TestimonialCardProps = {
   rating?: number;
   channel?: "email" | "whatsapp" | "linkedin";
   verified?: boolean;
-};
+}
 
 export default function TestimonialCard({
   quote,

@@ -27,13 +27,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 
-type QrListEntry = {
+interface QrListEntry {
   readonly id: string;
   readonly name: string;
   readonly shortUrlId: string;
   readonly createdAt: string | Date;
   readonly noOfScans: number;
-};
+}
 export const Route = createFileRoute("/dashboard/qrCreator/")({
   component: GenerateQr,
 });

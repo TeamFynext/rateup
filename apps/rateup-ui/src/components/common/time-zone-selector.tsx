@@ -16,10 +16,10 @@ import {
 } from "../ui/command.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover.tsx";
 
-type TimezoneOption = {
+interface TimezoneOption {
   label: string;
   tzCode: string;
-};
+}
 
 const timezoneList: TimezoneOption[] = (() => {
   if (Array.isArray(timezones)) {

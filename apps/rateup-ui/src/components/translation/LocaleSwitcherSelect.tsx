@@ -6,11 +6,11 @@ import i18n from "@/i18n.ts";
 
 type Locale = "en" | "ar" | "de" | "fr" | "hi";
 
-type Props = {
+interface Props {
   defaultValue: string;
   items: Array<{ value: string; label: string }>;
   label: string;
-};
+}
 
 export default function LocaleSwitcherSelect({ defaultValue, items, label }: Readonly<Props>) {
   const [isPending, startTransition] = useTransition();

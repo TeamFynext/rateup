@@ -19,13 +19,13 @@ import { WaMessageClosedStatus } from "../constants.ts";
 
 dayjs.extend(utc);
 
-export type ParsedWaMessageReturn = {
+export interface ParsedWaMessageReturn {
   timeStamp: string;
   messageType: string;
   messageContent: any;
   template?: WaTemplateFetchBody;
   interactive?: WaSendMessageBody["interactive"];
-};
+}
 export function parseWaMessage(message: Partial<WaGetMessagesBody>): ParsedWaMessageReturn {
   const { messageBody, waCreatedAt } = message;
 

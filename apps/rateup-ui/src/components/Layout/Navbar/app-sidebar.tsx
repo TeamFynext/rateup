@@ -101,12 +101,12 @@ function useChatFilter() {
 // ---------------------------------------------------------------------------
 type RouteGuard = (route?: string) => boolean;
 
-type ParsedRoute = {
+interface ParsedRoute {
   path: string;
   queryString: string;
   hasQuery: boolean;
   key: string;
-};
+}
 
 function parseRoute(route?: string): ParsedRoute {
   const safeRoute = route?.trim() ?? "";

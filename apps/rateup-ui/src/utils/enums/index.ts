@@ -150,10 +150,6 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "Google Review";
     case sfpn.WebSurvey + ".htmlCodePage":
       return "HTML Code Page";
-    case sfpn.Menu:
-      return "Menu";
-    case sfpn.Menu + ".monthlyViewLimit":
-      return "Menu MonthlyViewLimit";
     case sfpn.ReputationManagement:
       return "Reputation Management";
     case sfpn.Team:
@@ -192,6 +188,8 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "Webhook";
     case sfpn.LeadAdAutomation:
       return "Lead Ad Automation";
+    case sfpn.Menu:
+      return "Digital Menu";
     default:
       throw new Error("Invalid Subscription Feature" + feature);
   }

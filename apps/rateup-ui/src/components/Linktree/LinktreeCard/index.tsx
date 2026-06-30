@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button.tsx";
 
 import MoreOptionsMenu from "./MoreOptionsMenu.tsx";
 
-type LinktreeCardProps = {
+interface LinktreeCardProps {
   readonly id: string;
   readonly name: string;
   readonly shortUrlId: string;
@@ -16,7 +16,7 @@ type LinktreeCardProps = {
   readonly visitorsCount: number;
   readonly isPublished: boolean;
   readonly shareUrl: string;
-};
+}
 
 function LinktreeCard({
   id,

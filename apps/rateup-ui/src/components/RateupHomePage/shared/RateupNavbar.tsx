@@ -90,8 +90,8 @@ export default function RateupNavbar() {
             <button
               onClick={() => navigate({ to: "/login" })}
               style={{
-                borderColor: "var(--nav-btn-ghost-border)",
-                color: "var(--nav-btn-ghost-text)",
+                borderColor: "var(--nav-btn-border, var(--nav-btn-ghost-border))",
+                color: "var(--nav-btn-text, var(--nav-btn-ghost-text))",
               }}
               className="bg-transparent font-extrabold text-[15px] border py-2.5 px-5 rounded-2xl hover:border-(--nav-link-hover) hover:text-(--nav-link-hover) transition-colors cursor-pointer whitespace-nowrap"
             >

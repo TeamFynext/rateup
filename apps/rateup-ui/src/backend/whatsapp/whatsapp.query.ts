@@ -51,11 +51,11 @@ export const useSaveTemplateAsDraftMutation = (id, onSuccess, onError) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: (templateData: any) => saveTemplateAsDraft(templateData),
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Template Saved as Draft Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       queryClient.invalidateQueries({ queryKey: ["watemplate", id] });
-      onSuccess();
+      onSuccess(data);
     },
     onError: (error) => {
       toast.error(error?.message || "Error saving as draft template!");

@@ -188,11 +188,11 @@ export const useCreateSurveyMutation = () => {
 };
 
 // --------------create survey landing page query-----------------
-type LandingProps = {
+interface LandingProps {
   close: () => void;
   resetForm: () => void;
   setIsCreating: React.Dispatch<React.SetStateAction<boolean>>;
-};
+}
 
 export const useCreateSurveyLandingPageMutation = ({
   close,
@@ -224,11 +224,11 @@ export const useCreateSurveyLandingPageMutation = ({
 
 // -------update landinf page -------------
 
-type UpdateLandingProps = {
+interface UpdateLandingProps {
   close: () => void;
   resetForm: () => void;
   setIsCreating: React.Dispatch<React.SetStateAction<boolean>>;
-};
+}
 export const useUpdateSurveyLandingPageMutation = ({
   close,
   resetForm,
@@ -257,10 +257,10 @@ export const useUpdateSurveyLandingPageMutation = ({
   return updateMutation;
 };
 
-type CloneProps = {
+interface CloneProps {
   close: () => void;
   selectedTeamId: string;
-};
+}
 
 export function useCloneSurveyMutation({ close, selectedTeamId }: CloneProps) {
   const queryClient = useQueryClient();

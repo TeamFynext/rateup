@@ -283,6 +283,14 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
     type,
   });
 
+  useEffect(() => {
+    if (board?.ticketColumns?.length > 0) {
+      setFormData((prev) => ({ ...prev, ticketColumnId: board.ticketColumns[0].id }));
+    } else {
+      setFormData((prev) => ({ ...prev, ticketColumnId: "" }));
+    }
+  }, [board]);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = () => {
@@ -376,40 +384,6 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
               </Select>
             </div>
 
-            {/* Select List */}
-            <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-blue-100 text-blue-600 p-1 rounded-sm">
-                  <Sparkles size={14} />
-                </div>
-                <div>
-                  {t("Select List")}
-                  <span className="text-red-500">*</span>
-                </div>
-              </Label>
-
-              <Select
-                value={formData.ticketColumnId}
-                onValueChange={(val) => setFormData({ ...formData, ticketColumnId: val })}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("Select List")} />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {board?.ticketColumns?.map((column) => (
-                    <SelectItem key={column.id} value={column.id}>
-                      {column.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {errors.ticketColumnId && (
-                <p className="text-xs text-red-500 mt-1">{errors.ticketColumnId}</p>
-              )}
-            </div>
-
             {/* Title */}
             <div className="space-y-1">
               <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
@@ -435,10 +409,7 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
                 <div className="bg-green-100 text-green-600 p-1 rounded-sm">
                   <NotebookTabs size={14} />
                 </div>
-                <div>
-                  {t("Description")}
-                  <span className="text-red-500">*</span>
-                </div>
+                <div>{t("Description")}</div>
               </Label>
 
               <Textarea
@@ -448,25 +419,7 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
               />
             </div>
 
-            {/* Due Date */}
-            <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-red-100 text-red-600 p-1 rounded-sm">
-                  <Calendar size={14} />
-                </div>
-                <div>{t("Due Date")}</div>
-              </Label>
-
-              <Input
-                type="date"
-                value={formData.deadline}
-                onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                min={new Date().toISOString().split("T")[0]}
-                onClick={(e) => "showPicker" in e.target && (e.target as any).showPicker()}
-              />
-            </div>
-
-            <div className="w-full flex justify-end items-center gap-4">
+            <div className="w-full flex justify-end items-center gap-4 mt-2">
               <Button type="button" onClick={cancel} variant="outline">
                 {t("Cancel")}
               </Button>

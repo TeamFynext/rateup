@@ -1,7 +1,6 @@
 import { SubscriptionFeaturePathName as sfpn } from "@/types/enums.ts";
 
 export const subscriptionColorMap = {
-  [sfpn.Menu]: "gray",
   [sfpn.Team]: "red",
   [sfpn.ReputationManagement]: "grape",
   [sfpn.WebSurvey]: "blue",

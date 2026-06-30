@@ -2,13 +2,13 @@ import type { QRCodeErrorCorrectionLevel } from "qrcode";
 import QRCode from "qrcode";
 import { useCallback, useEffect, useState } from "react";
 
-type CustomQRCodeProps = {
+interface CustomQRCodeProps {
   textToBeEmbedded: string;
   version?: number;
   errorCorrectionLevel: QRCodeErrorCorrectionLevel;
   className?: string;
   qrColor?: string;
-};
+}
 
 function CustomQRCode({
   textToBeEmbedded,

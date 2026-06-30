@@ -48,7 +48,7 @@ import ConfirmationModal from "../Modal/ConfirmationModal.tsx";
 import WaTextEditor from "../RichTextEditor/waTextEditor.tsx";
 import { DataTable } from "../Table/data-table.tsx";
 
-type LoyaltyTemplateConfig = {
+interface LoyaltyTemplateConfig {
   id?: string;
   type: string;
   requestMessage: string;
@@ -57,16 +57,16 @@ type LoyaltyTemplateConfig = {
   content?: string | null;
   whatsappSettingsPhoneId?: string;
   [key: string]: any;
-};
+}
 
-type LoyaltyTemplateFormValues = {
+interface LoyaltyTemplateFormValues {
   type: LoyaltyTemplateTypes;
   waTemplateId: string;
   requestMessage: string;
   content: any;
   responseType: WaAutomatedReplyResponseType;
   whatsappSettingsPhoneId: string;
-};
+}
 
 const LoyaltySettings = () => {
   const { data: templateConfigs, isPending } = useGetAllLoyaltyTemplates();
@@ -474,12 +474,12 @@ function useLoyaltyTemplateLabel() {
   );
 }
 
-type LoyaltyTemplate = {
+interface LoyaltyTemplate {
   type: string;
   requestMessage: string;
   responseType: string;
   id?: string;
-};
+}
 function useLoyaltyTemplateColumns(
   setSelectedConfig: (value: LoyaltyTemplateConfig | null) => void,
   open: () => void,

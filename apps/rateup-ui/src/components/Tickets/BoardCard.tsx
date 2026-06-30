@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 
-type BoardCardProps = {
+interface BoardCardProps {
   readonly board: {
     readonly id: string;
     readonly title: string;
@@ -22,7 +22,7 @@ type BoardCardProps = {
   readonly onSelect: (boardId: string) => void;
   readonly onEdit: (boardId: string) => void;
   readonly onDelete: (boardId: string) => void;
-};
+}
 
 export function BoardCard({ board, onSelect, onEdit, onDelete }: Readonly<BoardCardProps>) {
   const { t: translations } = useTranslation();
