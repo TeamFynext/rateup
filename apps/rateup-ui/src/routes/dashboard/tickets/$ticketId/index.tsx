@@ -519,8 +519,15 @@ function RightSidebar({
   );
   const { labels } = useLabels(currentBoard?.id);
 
-  const handleLabelChange = (labelId: string | null) => {
-    mutate({ id: ticketId, labelId });
+  const handleLabelChange = (clickedLabelId: string) => {
+    const currentLabelIds = ticket.labels?.map((l: any) => l.id) || [];
+    const isSelected = currentLabelIds.includes(clickedLabelId);
+
+    const newLabelIds = isSelected
+      ? currentLabelIds.filter((id: string) => id !== clickedLabelId)
+      : [...currentLabelIds, clickedLabelId];
+
+    mutate({ id: ticketId, labelIds: newLabelIds });
   };
 
   const handleToggleMember = (userId: string) => {
@@ -580,15 +587,15 @@ function RightSidebar({
           )}
 
           <div>
-            <MetaLabel>{t("Label")}</MetaLabel>
+            <MetaLabel>{t("Labels")}</MetaLabel>
             <div className="flex gap-[5px] flex-wrap">
               {labels?.map((label) => {
-                const isSelected = ticket.labelId === label.id;
+                const isSelected = ticket.labels?.some((l: any) => l.id === label.id) || false;
                 const pColor = parseColor(label.color);
                 return (
                   <button
                     key={label.id}
-                    onClick={() => handleLabelChange(isSelected ? null : label.id)}
+                    onClick={() => handleLabelChange(label.id)}
                     className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
                     style={{
                       padding: "4px 10px",

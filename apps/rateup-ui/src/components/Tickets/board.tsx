@@ -35,12 +35,12 @@ import {
 
 export function Board({
   initial,
-  labelFilter,
+  labelFilters,
   searchQuery,
   assigneeFilter,
 }: Readonly<{
   initial: BoardType;
-  labelFilter: string | null;
+  labelFilters: string[];
   searchQuery?: string;
   assigneeFilter?: string | null;
 }>) {
@@ -314,8 +314,10 @@ export function Board({
                 ...column,
                 ticketCards: column.ticketCards.filter((card) => {
                   let matches = true;
-                  if (labelFilter && card.labelId !== labelFilter) {
-                    matches = false;
+                  if (labelFilters && labelFilters.length > 0) {
+                    if (!card.labels?.some((l: any) => labelFilters.includes(l.id))) {
+                      matches = false;
+                    }
                   }
                   if (searchQuery) {
                     const query = searchQuery.toLowerCase();

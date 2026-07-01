@@ -68,6 +68,7 @@ export interface Card {
   type?: TicketType;
   labelId?: string | null;
   label?: Label | null;
+  labels?: Label[];
   createdAt?: string | Date;
   columnId?: string;
   ticketColumnId?: string;
