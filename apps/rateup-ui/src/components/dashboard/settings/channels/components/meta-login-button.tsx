@@ -62,11 +62,13 @@ export function MetaLoginButton({
           } else if (data.event === "CANCEL") {
             setWaData({ phone_number_id: "", waba_id: "" });
             setCode("");
-            toast.warning(`Meta login cancelled at ${data.data?.current_step}`);
+            toast.warning(`Meta login cancelled at ${data.data?.current_step}`, {
+              id: "meta-login-status",
+            });
           } else if (data.event === "ERROR") {
             setWaData({ phone_number_id: "", waba_id: "" });
             setCode("");
-            toast.error(JSON.stringify(data.data?.error_message));
+            toast.error(JSON.stringify(data.data?.error_message), { id: "meta-login-status" });
           }
         }
       } catch {
@@ -86,11 +88,11 @@ export function MetaLoginButton({
     }
 
     if (response.status === "not_authorized") {
-      toast.error("Not authorized");
+      toast.error("Not authorized", { id: "meta-login-status" });
       return;
     }
 
-    toast.error("Error in meta login, Try again later");
+    toast.error("Error in meta login, Try again later", { id: "meta-login-status" });
   }
 
   return (

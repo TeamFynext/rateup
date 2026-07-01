@@ -2,7 +2,6 @@
 
 import { wrapMiddlewaresWithSentry } from "@sentry/tanstackstart-react";
 import { createMiddleware } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
 
 type MarkdownSource =
   | string
@@ -16,13 +15,12 @@ type MarkdownSource =
 export function createMarkdownMiddleware(markdownSource: MarkdownSource) {
   return wrapMiddlewaresWithSentry({
     markdownMiddleware: createMiddleware().server(async ({ next, request }) => {
-      const accept = getRequestHeaders().get("accept") ?? "";
+      const accept = request.headers.get("accept") ?? "";
       const acceptsMarkdown = /text\/markdown/.test(accept);
 
       if (!acceptsMarkdown) {
         return next();
       }
-
       const markdown =
         typeof markdownSource === "function" ? await markdownSource({ request }) : markdownSource;
 
@@ -38,5 +36,3 @@ export function createMarkdownMiddleware(markdownSource: MarkdownSource) {
     }),
   });
 }
-
-// Backward-compatible alias for older imports.

@@ -1,54 +1,28 @@
-import type { SuperTokensConfig } from "supertokens-auth-react/lib/build/types";
 import EmailPasswordReact from "supertokens-auth-react/recipe/emailpassword";
 import EmailVerificationReact from "supertokens-auth-react/recipe/emailverification";
 import Session from "supertokens-auth-react/recipe/session";
-import ThirdPartyReact from "supertokens-auth-react/recipe/thirdparty";
+import ThirdParty from "supertokens-auth-react/recipe/thirdparty";
 
 import { appInfo } from "./appInfo.ts";
 
-interface RouterAdapter {
-  push: (url: string) => void;
-}
-
-const routerInfo: { router?: RouterAdapter; pathName?: string } = {};
-
-export const frontendConfig = (): SuperTokensConfig => {
-  return {
-    appInfo,
-    clientType: "web",
-    recipeList: [
-      EmailPasswordReact.init(),
-      ThirdPartyReact.init({
-        signInAndUpFeature: {
-          providers: [ThirdPartyReact.Google.init(), ThirdPartyReact.Apple.init()],
-        },
-      }),
-      EmailVerificationReact.init(),
-      // Passwordless.init(),
-      Session.init(),
-    ],
-    windowHandler: (orig) => {
-      return {
-        ...orig,
-        location: {
-          ...orig.location,
-          getPathName: () => routerInfo.pathName ?? orig.location.getPathName(),
-          assign: (url) => {
-            if (routerInfo.router) {
-              routerInfo.router.push(url.toString());
-              return;
-            }
-            orig.location.assign(url);
-          },
-          setHref: (url) => {
-            if (routerInfo.router) {
-              routerInfo.router.push(url.toString());
-              return;
-            }
-            orig.location.setHref(url);
-          },
-        },
-      };
-    },
-  };
+export const SuperTokensConfig = {
+  appInfo,
+  clientType: "web",
+  recipeList: [
+    EmailPasswordReact.init(),
+    ThirdParty.init({
+      signInAndUpFeature: {
+        providers: [ThirdParty.Google.init(), ThirdParty.Apple.init()],
+      },
+    }),
+    EmailVerificationReact.init(),
+    // Passwordless.init(),
+    Session.init(),
+  ],
+  getRedirectionURL: async (context: any) => {
+    if (context.action === "SUCCESS") {
+      return "/dashboard";
+    }
+    return undefined;
+  },
 };

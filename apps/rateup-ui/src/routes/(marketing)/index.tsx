@@ -1,5 +1,6 @@
+import { wrapMiddlewaresWithSentry } from "@sentry/tanstackstart-react";
 import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
+import { createMiddleware } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
 import { useEffect, useRef } from "react";
 import { z } from "zod";
@@ -22,11 +23,12 @@ import { createMarkdownMiddleware } from "../../markdown/serveMarkdown";
 
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
-const setApiCatalogHeader = createServerFn().handler(async () => {
+const apiCatalogMiddleware = createMiddleware().server(async ({ next }) => {
   setResponseHeader(
     "Link",
     '</.well-known/api-catalog>; rel="api-catalog", <https://docs.rateup.app>; rel="service-doc"',
   );
+  return next();
 });
 
 const homePageJsonLd = {
@@ -73,13 +75,12 @@ const marketingSearchSchema = z.object({
 export const Route = createFileRoute("/(marketing)/")({
   validateSearch: (search) => marketingSearchSchema.parse(search),
   server: {
-    middleware: createMarkdownMiddleware(homepageMarkdown),
+    middleware: [
+      ...createMarkdownMiddleware(homepageMarkdown),
+      ...wrapMiddlewaresWithSentry({ apiCatalogMiddleware }),
+    ],
   },
   component: RouteComponent,
-  loader: async () => {
-    await setApiCatalogHeader();
-    return null;
-  },
   head: () => ({
     ...buildPageHead("/"),
     scripts: [
