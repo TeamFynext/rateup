@@ -8,8 +8,15 @@ import { MetaLoginAssets } from "@/types/enums.ts";
 
 import { MetaLoginButton } from "./meta-login-button.tsx";
 
+const FB_SDK_SCRIPT_ID = "facebook-jssdk";
+
 const initFacebookSdk = () => {
   return new Promise<void>((resolve) => {
+    if (globalThis.FB) {
+      resolve();
+      return;
+    }
+
     globalThis.fbAsyncInit = function () {
       globalThis.FB.init({
         appId: import.meta.env.VITE_META_APP_ID,
@@ -19,6 +26,16 @@ const initFacebookSdk = () => {
       });
       resolve();
     };
+
+    if (document.getElementById(FB_SDK_SCRIPT_ID)) return;
+
+    const script = document.createElement("script");
+    script.id = FB_SDK_SCRIPT_ID;
+    script.src = "https://connect.facebook.net/en_US/sdk.js";
+    script.async = true;
+    script.defer = true;
+    script.crossOrigin = "anonymous";
+    document.head.appendChild(script);
   });
 };
 

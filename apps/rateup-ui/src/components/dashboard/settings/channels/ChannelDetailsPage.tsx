@@ -1,6 +1,5 @@
 import { IconArrowLeft } from "@tabler/icons-react";
 import { Link, useParams } from "@tanstack/react-router";
-import { useEffect } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button.tsx";
@@ -19,22 +18,6 @@ export function ChannelDetailsPage() {
   const isWhatsapp = channel === "whatsapp";
   const isInstagram = channel === "instagram";
   const isFacebook = channel === "facebook";
-
-  // Load Facebook SDK on component mount
-  useEffect(() => {
-    const loadFacebookSDK = async () => {
-      if (typeof window !== "undefined") {
-        const script = document.createElement("script");
-        script.src = "https://connect.facebook.net/en_US/sdk.js";
-        script.async = true;
-        script.defer = true;
-        script.crossOrigin = "anonymous";
-        script.integrity = ""; // Add SRI if available
-        document.head.appendChild(script);
-      }
-    };
-    void loadFacebookSDK();
-  }, []);
 
   if (!isWhatsapp && !isInstagram && !isFacebook) {
     return (

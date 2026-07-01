@@ -1,5 +1,5 @@
 import { Button as MantineButton } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -31,22 +31,25 @@ export function MetaLoginButton({
 }>) {
   const [waData, setWaData] = useState({ phone_number_id: "", waba_id: "" });
   const [code, setCode] = useState("");
+  const submittedCodeRef = useRef("");
   const registerMutation = useRegisterBusinessClientMutation(() => {
     setWaData({ phone_number_id: "", waba_id: "" });
     setCode("");
   });
   const { t: translations } = useTranslation();
+  const { mutate: registerBusinessClient } = registerMutation;
 
   useEffect(() => {
-    if (waData.waba_id && code) {
-      registerMutation.mutate({
+    if (waData.waba_id && code && submittedCodeRef.current !== code) {
+      submittedCodeRef.current = code;
+      registerBusinessClient({
         code,
         phone_number_id: waData.phone_number_id,
         waba_id: waData.waba_id,
         assets: selectedAssets,
       });
     }
-  }, [code, registerMutation, selectedAssets, waData]);
+  }, [code, registerBusinessClient, selectedAssets, waData]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -62,11 +65,13 @@ export function MetaLoginButton({
           } else if (data.event === "CANCEL") {
             setWaData({ phone_number_id: "", waba_id: "" });
             setCode("");
-            toast.warning(`Meta login cancelled at ${data.data?.current_step}`);
+            toast.warning(`Meta login cancelled at ${data.data?.current_step}`, {
+              id: "meta-login-status",
+            });
           } else if (data.event === "ERROR") {
             setWaData({ phone_number_id: "", waba_id: "" });
             setCode("");
-            toast.error(JSON.stringify(data.data?.error_message));
+            toast.error(JSON.stringify(data.data?.error_message), { id: "meta-login-status" });
           }
         }
       } catch {
@@ -86,11 +91,11 @@ export function MetaLoginButton({
     }
 
     if (response.status === "not_authorized") {
-      toast.error("Not authorized");
+      toast.error("Not authorized", { id: "meta-login-status" });
       return;
     }
 
-    toast.error("Error in meta login, Try again later");
+    toast.error("Error in meta login, Try again later", { id: "meta-login-status" });
   }
 
   return (
