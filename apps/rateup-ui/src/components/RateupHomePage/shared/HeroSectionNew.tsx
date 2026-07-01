@@ -1,8 +1,77 @@
+import { useEffect, useState } from "react";
+
 import { RateupStar } from "@/components/integrations/logos";
+import { imagesPath } from "@/utils/constants";
 
 import { BookDemoModal } from "../helper/BookDemoModal";
 
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
+
+const whatsapp = `${imagesPath}/landing/logos/wp-logo.png`;
+const instagram = `${imagesPath}/landing/logos/inst-logo.png`;
+const messenger = `${imagesPath}/landing/logos/messenger-logo.png`;
+
+const BRANDS = [
+  {
+    name: "WhatsApp",
+    color: "#25D366",
+    logo: (
+      <img src={whatsapp} alt="WhatsApp" className="w-[60px] h-[60px] shrink-0 object-contain" />
+    ),
+  },
+  {
+    name: "Instagram",
+    color: "url(#ig-grad)",
+    logo: (
+      <img src={instagram} alt="Instagram" className="w-[60px] h-[60px] shrink-0 object-contain" />
+    ),
+  },
+  {
+    name: "Messenger",
+    color: "#0099FF",
+    logo: (
+      <img src={messenger} alt="Messenger" className="w-[60px] h-[60px] shrink-0 object-contain" />
+    ),
+  },
+] as const;
+
+function RotatingBrand() {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex((prev) => (prev + 1) % BRANDS.length);
+        setVisible(true);
+      }, 350);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, []);
+
+  const brand = BRANDS[index];
+
+  return (
+    <span
+      className={`inline-flex items-center gap-3 mt-2 transition-[opacity,transform] duration-[350ms] ease-in-out ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+      }`}
+    >
+      {brand.logo}
+      <span
+        className={
+          brand.color === "url(#ig-grad)"
+            ? "font-bold bg-[linear-gradient(135deg,#fd5949_0%,#d6249f_50%,#285AEB_100%)] bg-clip-text [color:transparent] [-webkit-text-fill-color:transparent]"
+            : "font-bold"
+        }
+        style={brand.color === "url(#ig-grad)" ? undefined : { color: brand.color }}
+      >
+        {brand.name}
+      </span>
+    </span>
+  );
+}
 
 function HeroSectionNew() {
   return (
@@ -17,16 +86,7 @@ function HeroSectionNew() {
             <div className={`${styles.reveal} ${styles["in"]}`}>
               <div className={styles["hero-pill"]}>
                 <span className={styles.tagdot}>
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      background: "var(--cyan)",
-                      boxShadow: "0 0 10px var(--cyan)",
-                      display: "inline-block",
-                    }}
-                  />
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cyan)] shadow-[0_0_10px_var(--cyan)]" />
                   New
                 </span>
                 Loyalty + Referrals, fully automated on WhatsApp
@@ -34,23 +94,9 @@ function HeroSectionNew() {
               <h1 className="leading-tight">
                 Engage with your
                 <br />
-                Customer on
+                Customers on
                 <br />
-                <span className="inline-flex items-center gap-3 mt-2">
-                  <svg
-                    className="w-16 h-16 sm:w-[68px] sm:h-[68px] shrink-0 align-middle"
-                    viewBox="0 0 36 36"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle cx="18" cy="18" r="16" fill="#4769fa" />
-                    <path
-                      d="M18 7.5C11.92 7.5 7 11.98 7 17.5C7 20.66 8.58 23.47 11.04 25.26V29.5L14.73 27.48C15.77 27.77 16.87 27.92 18 27.92C24.08 27.92 29 23.44 29 17.92C29 12.4 24.08 7.5 18 7.5ZM19.19 20.91L16.38 17.91L10.9 20.91L16.92 14.5L19.76 17.5L25.2 14.5L19.19 20.91Z"
-                      fill="#FFFFFF"
-                    />
-                  </svg>
-                  <span style={{ color: "#4769fa" }}>Messenger</span>
-                </span>
+                <RotatingBrand />
               </h1>
               <p className={styles.lead}>
                 Most customers buy once and disappear. RateUp fixes that.
@@ -147,14 +193,14 @@ function HeroSectionNew() {
                     Web Chat
                   </span>
                   <span className={styles.chip}>
-                    <span className={styles.ci} style={{ background: "#95BF47" }}>
-                      <b style={{ fontSize: 12, color: "#fff", fontWeight: 800 }}>S</b>
+                    <span className={`${styles.ci} bg-[#95BF47]`}>
+                      <b className="text-[12px] text-white font-extrabold">S</b>
                     </span>
                     Shopify
                   </span>
                   <span className={styles.chip}>
-                    <span className={styles.ci} style={{ background: "#7F54B3" }}>
-                      <b style={{ fontSize: 11, color: "#fff", fontWeight: 800 }}>W</b>
+                    <span className={`${styles.ci} bg-[#7F54B3]`}>
+                      <b className="text-[11px] text-white font-extrabold">W</b>
                     </span>
                     WooCommerce
                   </span>
