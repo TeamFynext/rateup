@@ -23,6 +23,8 @@ export async function facebookWebhookEventHandler(request: FastifyRequest, reply
     await handleFacebookWebhook(data);
   } catch (e) {
     log.error("[Facebook] Error in webhook event handler: %o", e);
-    reply.code(500).send();
+    if (!reply.sent) {
+      reply.code(500).send();
+    }
   }
 }

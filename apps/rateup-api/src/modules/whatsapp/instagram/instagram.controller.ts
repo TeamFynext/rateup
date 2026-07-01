@@ -14,6 +14,8 @@ export async function instagramWebhookEventHandler(request: FastifyRequest, repl
     await handleInstagramWebhook(data);
   } catch (e) {
     log.error(e);
-    reply.code(500).send();
+    if (!reply.sent) {
+      reply.code(500).send();
+    }
   }
 }

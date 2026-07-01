@@ -29,8 +29,7 @@ import {
   getContactGroupsByContactId,
   updateContactGroupsForContact,
 } from "./contactGroup.service.js";
-import { verifyRole } from "../../../utils/auth.js";
-import { Prisma, Role } from "../../../../generated/prisma/client.js";
+import { Prisma } from "../../../../generated/prisma/client.js";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema.js";
 import { createMultipleContacts, importCSVContacts } from "../contact.service.js";
 import { PaginationQuery } from "../contact.schema.js";
@@ -41,22 +40,32 @@ export async function getContactGroupsHandler(
   }>,
   reply: FastifyReply,
 ) {
-  // TODO: auth
   try {
-    let res = null;
     if (request.query.contactGroupId) {
-      // get individual contact group by id
-      res = await getContactGroupById(request.query.contactGroupId);
-    } else if (request.query.teamId) {
-      // get all contact groups for a specific team
-      res = await getContactGroupsByTeamId(request.query.teamId);
-    } else if (await verifyRole(request, reply, Role.SUPER_ADMIN)) {
-      res = await getContactGroupsByOrgId(request.user.orgId, request.query.type);
+      const res = await getContactGroupById(request.query.contactGroupId);
+      return reply.code(200).send(res);
     }
-    reply.code(200).send(res);
+
+    if (request.query.teamId) {
+      const res = await getContactGroupsByTeamId(request.query.teamId);
+      return reply.code(200).send(res);
+    }
+
+    if (!request?.user?.orgId) {
+      return reply.code(403).send({
+        message: "Not authorized",
+      });
+    }
+
+    const res = await getContactGroupsByOrgId(request.user.orgId, request.query.type);
+
+    return reply.code(200).send(res);
   } catch (error) {
     log.error(error);
-    reply.code(500).send({ error: "Something went wrong" });
+
+    return reply.code(500).send({
+      error: "Something went wrong",
+    });
   }
 }
 

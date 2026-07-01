@@ -70,26 +70,23 @@ export async function hasAccessOfTeamAdmin(teamId: string, userId: string) {
       },
     });
 
-    if (!superAdmin) {
-      return false;
-    } else {
+    if (superAdmin) {
       return true;
+    } else {
+      return false;
     }
   }
 
   return false;
 }
 
-export async function verifyRole(request: FastifyRequest, reply: FastifyReply, role: Role) {
+export function verifyRole(request: FastifyRequest, role: Role): boolean {
   try {
-    if (request.user.role !== role) {
-      reply.code(403).send({ message: "Not authorized" });
-    } else {
-      return true;
-    }
+    return request.user.role === role;
   } catch (err) {
     log.fatal({ err, user: request.user }, "Error verifying role\n%o\nrequest.user => %o");
-    reply.code(403).send({ message: "Not authorized" });
+
+    return false;
   }
 }
 
