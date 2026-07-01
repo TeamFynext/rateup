@@ -33,7 +33,7 @@ export function BoardContent({
   } = useBoard(selectedBoardId || "");
   const { t } = useTranslation();
 
-  const [labelFilter, setLabelFilter] = useState<string | null>(null);
+  const [labelFilters, setLabelFilters] = useState<string[]>([]);
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -256,20 +256,22 @@ export function BoardContent({
                 {t("Labels")}
               </span>
               <button
-                onClick={() => setLabelFilter(null)}
+                onClick={() => setLabelFilters([])}
                 className="shrink-0 rounded-full font-body text-[11px] font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center leading-none"
                 style={{
                   padding: "2px 8px",
                   border:
-                    labelFilter === null ? "1.5px solid currentColor" : "1.5px solid transparent",
-                  background: labelFilter === null ? "#EEF4FB" : "transparent",
-                  color: labelFilter === null ? "#1C518E" : "#8B8E8A",
+                    labelFilters.length === 0
+                      ? "1.5px solid currentColor"
+                      : "1.5px solid transparent",
+                  background: labelFilters.length === 0 ? "#EEF4FB" : "transparent",
+                  color: labelFilters.length === 0 ? "#1C518E" : "#8B8E8A",
                 }}
               >
                 {t("All")}
               </button>
               {labels?.map((label) => {
-                const on = labelFilter === label.id;
+                const on = labelFilters.includes(label.id);
                 let parsedColor;
                 try {
                   parsedColor = JSON.parse(label.color);
@@ -280,7 +282,10 @@ export function BoardContent({
                 return (
                   <button
                     key={label.id}
-                    onClick={() => setLabelFilter(label.id)}
+                    onClick={() => {
+                      if (on) setLabelFilters((prev) => prev.filter((id) => id !== label.id));
+                      else setLabelFilters((prev) => [...prev, label.id]);
+                    }}
                     className="shrink-0 rounded-full font-body text-[11px] font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center leading-none"
                     style={{
                       padding: "2px 8px",
@@ -346,7 +351,7 @@ export function BoardContent({
         <TabsContent value="board" className="flex-1 mt-0 h-full min-h-0">
           <Board
             initial={selectedBoard}
-            labelFilter={labelFilter}
+            labelFilters={labelFilters}
             searchQuery={searchQuery}
             assigneeFilter={assigneeFilter}
           />
@@ -354,7 +359,7 @@ export function BoardContent({
         <TabsContent value="list" className="flex-1 mt-0 min-h-0 overflow-y-auto">
           <TicketListView
             board={selectedBoard}
-            labelFilter={labelFilter}
+            labelFilters={labelFilters}
             searchQuery={searchQuery}
             assigneeFilter={assigneeFilter}
             boardMembers={assignees}

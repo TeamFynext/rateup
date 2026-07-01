@@ -305,28 +305,57 @@ function CardDisplay({
         {/* Footer */}
         <div className="flex items-center justify-between gap-2">
           {/* Label Badge (Replacing Priority) */}
-          {card.label ? (
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider capitalize"
-              style={{
-                padding: "2px 9px",
-                backgroundColor: parseColor(card.label.color).bgcolor,
-                color: parseColor(card.label.color).textcolor,
-                border: `1px solid ${parseColor(card.label.color).textcolor}`,
-              }}
-            >
-              {card.label.name}
-            </span>
-          ) : (
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider capitalize text-muted-foreground bg-muted border border-border"
-              style={{
-                padding: "2px 9px",
-              }}
-            >
-              {t("No Label")}
-            </span>
-          )}
+          <div className="flex gap-1 flex-wrap">
+            {card.labels && card.labels.length > 0 ? (
+              <>
+                {card.labels.slice(0, 2).map((lbl: any) => (
+                  <span
+                    key={lbl.id}
+                    className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider capitalize"
+                    style={{
+                      padding: "2px 9px",
+                      backgroundColor: parseColor(lbl.color).bgcolor,
+                      color: parseColor(lbl.color).textcolor,
+                      border: `1px solid ${parseColor(lbl.color).textcolor}`,
+                    }}
+                  >
+                    {lbl.name}
+                  </span>
+                ))}
+                {card.labels.length > 2 && (
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider text-muted-foreground bg-muted border border-border"
+                    style={{
+                      padding: "2px 9px",
+                    }}
+                  >
+                    +{card.labels.length - 2}
+                  </span>
+                )}
+              </>
+            ) : card.label ? (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider capitalize"
+                style={{
+                  padding: "2px 9px",
+                  backgroundColor: parseColor(card.label.color).bgcolor,
+                  color: parseColor(card.label.color).textcolor,
+                  border: `1px solid ${parseColor(card.label.color).textcolor}`,
+                }}
+              >
+                {card.label.name}
+              </span>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider capitalize text-muted-foreground bg-muted border border-border"
+                style={{
+                  padding: "2px 9px",
+                }}
+              >
+                {t("No Label")}
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-[9px]">
             {dateFormatted && (

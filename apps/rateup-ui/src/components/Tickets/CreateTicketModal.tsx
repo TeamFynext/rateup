@@ -1,4 +1,4 @@
-import { Calendar, Flag, List, NotebookTabs, Sparkles, Ticket, Type } from "lucide-react";
+import { Calendar, Tag, List, NotebookTabs, Sparkles, Ticket, Type } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -9,6 +9,7 @@ import { Button } from "../ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog.tsx";
 import { Input } from "../ui/input.tsx";
 import { Label } from "../ui/label.tsx";
+import { MultiSelect } from "../ui/multi-select.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 
@@ -48,7 +49,7 @@ const CreateTicketModal = ({
     description: "",
     deadline: "",
     type,
-    labelId: "",
+    labelIds: [] as string[],
     reviewId: rid,
     surveyResponseId: surveyResponseId,
   });
@@ -71,9 +72,9 @@ const CreateTicketModal = ({
 
   useEffect(() => {
     setFormData((prev) => {
-      const newLabelId = labels?.length > 0 ? labels[0].id : "";
-      if (prev.labelId !== newLabelId) {
-        return { ...prev, labelId: newLabelId };
+      const newLabelIds = labels?.length > 0 && prev.labelIds.length === 0 ? [] : prev.labelIds;
+      if (prev.labelIds !== newLabelIds) {
+        return { ...prev, labelIds: newLabelIds };
       }
       return prev;
     });
@@ -99,8 +100,8 @@ const CreateTicketModal = ({
     if (!payload.deadline) {
       delete payload.deadline;
     }
-    if (!payload.labelId) {
-      delete payload.labelId;
+    if (!payload.labelIds || payload.labelIds.length === 0) {
+      delete payload.labelIds;
     }
 
     createCard(payload, {
@@ -121,7 +122,7 @@ const CreateTicketModal = ({
       description: "",
       deadline: "",
       type,
-      labelId: "",
+      labelIds: [],
       reviewId: rid,
       surveyResponseId: surveyResponseId,
     });
@@ -253,32 +254,25 @@ const CreateTicketModal = ({
               />
             </div>
 
-            {/* Priority */}
+            {/* Labels */}
             <div className="space-y-1">
               <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <div className="bg-yellow-100 text-yellow-600 p-1 rounded-sm">
-                  <Flag size={14} />
+                  <Tag size={14} />
                 </div>
-                <div>{t("Priority")}</div>
+                <div>{t("Labels")}</div>
               </Label>
 
-              <Select
-                value={formData.labelId}
-                onValueChange={(val) => setFormData({ ...formData, labelId: val })}
+              <MultiSelect
+                options={
+                  labels?.map((label: any) => ({ label: label.name, value: label.id })) || []
+                }
+                onValueChange={(val) => setFormData({ ...formData, labelIds: val })}
+                defaultValue={formData.labelIds}
+                placeholder={t("Select Labels")}
                 disabled={!selectedBoardId}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("Select Priority")} />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {labels?.map((label: any) => (
-                    <SelectItem key={label.id} value={label.id}>
-                      {label.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                maxCount={3}
+              />
             </div>
 
             {/* Due Date */}
@@ -331,7 +325,7 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
     description: "",
     deadline: "",
     type,
-    labelId: "",
+    labelIds: [] as string[],
   });
 
   useEffect(() => {
@@ -346,9 +340,9 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
 
   useEffect(() => {
     setFormData((prev) => {
-      const newLabelId = labels?.length > 0 ? labels[0].id : "";
-      if (prev.labelId !== newLabelId) {
-        return { ...prev, labelId: newLabelId };
+      const newLabelIds = labels?.length > 0 && prev.labelIds.length === 0 ? [] : prev.labelIds;
+      if (prev.labelIds !== newLabelIds) {
+        return { ...prev, labelIds: newLabelIds };
       }
       return prev;
     });
@@ -374,8 +368,8 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
     if (!payload.deadline) {
       delete payload.deadline;
     }
-    if (!payload.labelId) {
-      delete payload.labelId;
+    if (!payload.labelIds || payload.labelIds.length === 0) {
+      delete payload.labelIds;
     }
 
     createCard(payload, {
@@ -393,7 +387,7 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
       description: "",
       deadline: "",
       type,
-      labelId: "",
+      labelIds: [],
     });
     setErrors({});
     close();
@@ -486,32 +480,25 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contac
               />
             </div>
 
-            {/* Priority */}
+            {/* Labels */}
             <div className="space-y-1">
               <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <div className="bg-yellow-100 text-yellow-600 p-1 rounded-sm">
-                  <Flag size={14} />
+                  <Tag size={14} />
                 </div>
-                <div>{t("Priority")}</div>
+                <div>{t("Labels")}</div>
               </Label>
 
-              <Select
-                value={formData.labelId}
-                onValueChange={(val) => setFormData({ ...formData, labelId: val })}
+              <MultiSelect
+                options={
+                  labels?.map((label: any) => ({ label: label.name, value: label.id })) || []
+                }
+                onValueChange={(val) => setFormData({ ...formData, labelIds: val })}
+                defaultValue={formData.labelIds}
+                placeholder={t("Select Labels")}
                 disabled={!selectedBoardId}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("Select Priority")} />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {labels?.map((label: any) => (
-                    <SelectItem key={label.id} value={label.id}>
-                      {label.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                maxCount={3}
+              />
             </div>
 
             <div className="w-full flex justify-end items-center gap-4 mt-2">
