@@ -1,3 +1,4 @@
+import { Image } from "@unpic/react";
 import { useEffect, useState } from "react";
 
 import { RateupStar } from "@/components/integrations/logos";
@@ -12,27 +13,9 @@ const instagram = `${imagesPath}/landing/logos/inst-logo.png`;
 const messenger = `${imagesPath}/landing/logos/messenger-logo.png`;
 
 const BRANDS = [
-  {
-    name: "WhatsApp",
-    color: "#25D366",
-    logo: (
-      <img src={whatsapp} alt="WhatsApp" className="w-[60px] h-[60px] shrink-0 object-contain" />
-    ),
-  },
-  {
-    name: "Instagram",
-    color: "url(#ig-grad)",
-    logo: (
-      <img src={instagram} alt="Instagram" className="w-[60px] h-[60px] shrink-0 object-contain" />
-    ),
-  },
-  {
-    name: "Messenger",
-    color: "#0099FF",
-    logo: (
-      <img src={messenger} alt="Messenger" className="w-[60px] h-[60px] shrink-0 object-contain" />
-    ),
-  },
+  { name: "WhatsApp", color: "#25D366", src: whatsapp },
+  { name: "Instagram", color: "url(#ig-grad)", src: instagram },
+  { name: "Messenger", color: "#0099FF", src: messenger },
 ] as const;
 
 function RotatingBrand() {
@@ -50,25 +33,40 @@ function RotatingBrand() {
     return () => clearInterval(interval);
   }, []);
 
-  const brand = BRANDS[index];
-
   return (
-    <span
-      className={`inline-flex items-center gap-3 mt-2 transition-[opacity,transform] duration-[350ms] ease-in-out ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
-      }`}
-    >
-      {brand.logo}
-      <span
-        className={
-          brand.color === "url(#ig-grad)"
-            ? "font-bold bg-[linear-gradient(135deg,#fd5949_0%,#d6249f_50%,#285AEB_100%)] bg-clip-text [color:transparent] [-webkit-text-fill-color:transparent]"
-            : "font-bold"
-        }
-        style={brand.color === "url(#ig-grad)" ? undefined : { color: brand.color }}
-      >
-        {brand.name}
-      </span>
+    <span className="inline-grid mt-2">
+      {BRANDS.map((brand, i) => {
+        const active = i === index;
+        return (
+          <span
+            key={brand.name}
+            style={{ gridArea: "1 / 1" }}
+            className={`inline-flex items-center gap-3 transition-[opacity,transform] duration-[350ms] ease-in-out ${
+              active && visible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-3 pointer-events-none"
+            }`}
+          >
+            <Image
+              src={brand.src}
+              alt={brand.name}
+              width={60}
+              height={60}
+              className="w-[60px] h-[60px] shrink-0 object-contain"
+            />
+            <span
+              className={
+                brand.color === "url(#ig-grad)"
+                  ? "font-bold bg-[linear-gradient(135deg,#fd5949_0%,#d6249f_50%,#285AEB_100%)] bg-clip-text [color:transparent] [-webkit-text-fill-color:transparent]"
+                  : "font-bold"
+              }
+              style={brand.color === "url(#ig-grad)" ? undefined : { color: brand.color }}
+            >
+              {brand.name}
+            </span>
+          </span>
+        );
+      })}
     </span>
   );
 }
