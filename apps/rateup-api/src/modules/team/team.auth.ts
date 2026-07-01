@@ -1,8 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { hasAccessOfTeamAdmin, hasAccessToTeam } from "../../utils/auth.js";
 import { CreateTeamInput, EditTeamInput, IdParamInput, InviteMemberInput } from "./team.schema.js";
-import prisma from "../../utils/prisma.js";
-import { SubscriptionFeaturePathName } from "../../types/enums.js";
+// import prisma from "../../utils/prisma.js";
+// import { SubscriptionFeaturePathName } from "../../types/enums.js";
 
 export async function verifyTeamAdminAccess(
   request: FastifyRequest<{
@@ -53,20 +53,21 @@ export async function verifyTeamMaxCountRestriction(
   }>,
   reply: FastifyReply,
 ) {
-  const orgId = request.user.orgId;
-
-  const count = await prisma.team.count({
-    where: {
-      orgId: orgId,
-    },
-  });
-
-  if (count >= request.subscription.features[SubscriptionFeaturePathName.Team].count.max) {
-    reply.code(403).send({
-      message: "You have reached the maximum limit of teams",
-      displayMessageInClient: true,
-    });
-  }
+  // TODO: re-check
+  // const orgId = request.user.orgId;
+  //
+  // const count = await prisma.team.count({
+  //   where: {
+  //     orgId: orgId,
+  //   },
+  // });
+  //
+  // if (count >= request.subscription.features[SubscriptionFeaturePathName.Team].count.max) {
+  //   reply.code(403).send({
+  //     message: "You have reached the maximum limit of teams",
+  //     displayMessageInClient: true,
+  //   });
+  // }
 }
 
 export async function verifyTeamMemberMaxCountRestriction(
@@ -75,25 +76,25 @@ export async function verifyTeamMemberMaxCountRestriction(
   }>,
   reply: FastifyReply,
 ) {
-  const member = await prisma.teamMember.count({
-    where: {
-      teamId: request.body.teamId,
-    },
-  });
-  const invitationCount = await prisma.invitation.count({
-    where: {
-      teamId: request.body.teamId,
-    },
-  });
-
-  const count = member + invitationCount;
-
-  if (
-    count >= request.subscription.features[SubscriptionFeaturePathName.Team].teamMember.count.max
-  ) {
-    reply.code(403).send({
-      message: "You have reached the maximum limit of team-members",
-      displayMessageInClient: true,
-    });
-  }
+  // const member = await prisma.teamMember.count({
+  //   where: {
+  //     teamId: request.body.teamId,
+  //   },
+  // });
+  // const invitationCount = await prisma.invitation.count({
+  //   where: {
+  //     teamId: request.body.teamId,
+  //   },
+  // });
+  //
+  // const count = member + invitationCount;
+  //
+  // if (
+  //   count >= request.subscription.features[SubscriptionFeaturePathName.Team].teamMember.count.max
+  // ) {
+  //   reply.code(403).send({
+  //     message: "You have reached the maximum limit of team-members",
+  //     displayMessageInClient: true,
+  //   });
+  // }
 }

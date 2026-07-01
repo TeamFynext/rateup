@@ -15,19 +15,20 @@ export async function verifyLCustomerMaxCountRestrictionHandler(
   request: FastifyRequest<{ Body: { orgId?: string } & ContactCore }>,
   reply: FastifyReply,
 ) {
-  try {
-    if (request.body.source !== ContactGroupType.LOYALTY) return;
-    const orgId = request.body.orgId ?? request.user.orgId;
-    if (!(await verifyLCustomerMaxCountRestriction(orgId, request.subscription))) {
-      return reply.code(403).send({
-        message: "Registration limit reached",
-        displayMessageInClient: true,
-      });
-    }
-  } catch (e) {
-    log.error(e);
-    return reply.code(500).send(e);
-  }
+  // TODO: re-check
+  // try {
+  //   if (request.body.source !== ContactGroupType.LOYALTY) return;
+  //   const orgId = request.body.orgId ?? request.user.orgId;
+  //   if (!(await verifyLCustomerMaxCountRestriction(orgId, request.subscription))) {
+  //     return reply.code(403).send({
+  //       message: "Registration limit reached",
+  //       displayMessageInClient: true,
+  //     });
+  //   }
+  // } catch (e) {
+  //   log.error(e);
+  //   return reply.code(500).send(e);
+  // }
 }
 export async function verifyLCustomerMaxCountRestriction(orgId, subscription) {
   if (!subscription) {
