@@ -28,13 +28,13 @@ export interface CardInput {
   surveyResponseId?: string;
   contactId?: string;
   priority?: TicketPriority;
-  labelId?: string | null;
+  labelIds?: string[] | null;
   deadline?: string | Date | null;
 }
 
 //used in zapier also
 export async function createCard(data: CardInput) {
-  const { title, userId, orgId, ...otherData } = data;
+  const { title, userId, orgId, labelIds, ...otherData } = data;
   // Get the highest order in the column to place new card at the end
   const highestOrderCard = await prisma.ticketCard.findFirst({
     where: { ticketColumnId: data.ticketColumnId },
@@ -51,21 +51,16 @@ export async function createCard(data: CardInput) {
   if (!column) return;
 
   const boardId = column.ticketBoardId;
-  let finalLabelId = data.labelId;
+  let finalLabelIds: string[] = [];
 
-  if (finalLabelId) {
-    const label = await prisma.ticketBoardLabel.findUnique({
-      where: { id: finalLabelId },
+  if (data.labelIds && data.labelIds.length > 0) {
+    const labels = await prisma.ticketBoardLabel.findMany({
+      where: { id: { in: data.labelIds } },
     });
-    if (!label || label.ticketBoardId !== boardId) {
-      throw new Error("Invalid labelId for this board");
+    if (labels.length !== data.labelIds.length || labels.some((l) => l.ticketBoardId !== boardId)) {
+      throw new Error("Invalid labelIds for this board");
     }
-  } else {
-    const fallbackName = data.priority || "MEDIUM";
-    const defaultLabel = await prisma.ticketBoardLabel.findUnique({
-      where: { ticketBoardId_name: { ticketBoardId: boardId, name: fallbackName } },
-    });
-    if (defaultLabel) finalLabelId = defaultLabel.id;
+    finalLabelIds = data.labelIds;
   }
 
   const card = await prisma.ticketCard.create({
@@ -75,7 +70,9 @@ export async function createCard(data: CardInput) {
       order,
       ticketId: getShortUrlId(),
       priority: data.priority || "MEDIUM",
-      labelId: finalLabelId,
+      ...(finalLabelIds.length > 0
+        ? { labels: { create: finalLabelIds.map((id) => ({ labelId: id })) } }
+        : {}),
     },
     include: {
       ticketColumn: {
@@ -83,9 +80,11 @@ export async function createCard(data: CardInput) {
           title: true,
         },
       },
-      label: true,
+      labels: { include: { label: true } },
     },
   });
+
+  (card as any).labels = (card as any).labels?.map((l: any) => l.label) || [];
 
   // Log activity for card creation
   await prisma.ticketActivity.create({
@@ -167,11 +166,15 @@ export async function createCard(data: CardInput) {
 }
 
 export async function getCards(ticketColumnId: string) {
-  return prisma.ticketCard.findMany({
+  const cards = await prisma.ticketCard.findMany({
     where: { ticketColumnId },
     orderBy: { order: "asc" },
-    include: { label: true },
+    include: { labels: { include: { label: true } } },
   });
+  return cards.map((c) => ({
+    ...c,
+    labels: (c as any).labels?.map((l: any) => l.label) || [],
+  }));
 }
 
 export async function getCardById(id: string) {
@@ -179,7 +182,7 @@ export async function getCardById(id: string) {
     where: { id },
     include: {
       ticketColumn: true,
-      label: true,
+      labels: { include: { label: true } },
       assignees: {
         select: {
           assigneeId: true,
@@ -272,6 +275,7 @@ export async function getCardById(id: string) {
     });
     (ticketCard.waAutomatedReplyMessage as any).contact = contact;
   }
+  (ticketCard as any).labels = (ticketCard as any).labels?.map((l: any) => l.label) || [];
   return ticketCard;
 }
 export async function getCardTeamMembersById(id: string) {
@@ -302,7 +306,7 @@ export async function updateCard(
       title: true,
       description: true,
       priority: true,
-      labelId: true,
+      labels: { include: { label: { select: { id: true, name: true } } } },
       deadline: true,
       checklists: true,
       ticketColumn: { select: { ticketBoardId: true } },
@@ -310,22 +314,20 @@ export async function updateCard(
   });
 
   const boardId = previousCard?.ticketColumn.ticketBoardId;
-  let finalLabelId = data.labelId;
+  let finalLabelIds = data.labelIds;
 
-  if (finalLabelId !== undefined) {
-    if (finalLabelId !== null) {
-      const label = await prisma.ticketBoardLabel.findUnique({
-        where: { id: finalLabelId },
+  if (finalLabelIds !== undefined) {
+    if (finalLabelIds !== null && finalLabelIds.length > 0) {
+      const labels = await prisma.ticketBoardLabel.findMany({
+        where: { id: { in: finalLabelIds } },
       });
-      if (!label || label.ticketBoardId !== boardId) {
-        throw new Error("Invalid labelId for this board");
+      if (
+        labels.length !== finalLabelIds.length ||
+        labels.some((l) => l.ticketBoardId !== boardId)
+      ) {
+        throw new Error("Invalid labelIds for this board");
       }
     }
-  } else if (data.priority !== undefined && data.priority !== null) {
-    const defaultLabel = await prisma.ticketBoardLabel.findUnique({
-      where: { ticketBoardId_name: { ticketBoardId: boardId!, name: data.priority } },
-    });
-    if (defaultLabel) finalLabelId = defaultLabel.id;
   }
   const newAssignees = data.assignedToIds?.filter(
     (assigneeId) =>
@@ -345,7 +347,14 @@ export async function updateCard(
       title: data.title !== undefined ? data.title : undefined,
       description: data.description !== undefined ? data.description : undefined,
       priority: data.priority !== undefined ? data.priority : undefined,
-      labelId: finalLabelId !== undefined ? finalLabelId : undefined,
+      ...(finalLabelIds !== undefined
+        ? {
+            labels:
+              finalLabelIds === null
+                ? { deleteMany: {} }
+                : { deleteMany: {}, create: finalLabelIds.map((id) => ({ labelId: id })) },
+          }
+        : {}),
       deadline: data.deadline !== undefined ? data.deadline : undefined,
       contactId: data.contactId !== undefined ? data.contactId : undefined,
       checklists: data.checklists !== undefined ? data.checklists : undefined,
@@ -413,29 +422,7 @@ export async function updateCard(
     });
   }
 
-  // Log CHANGED_LABEL
-  if (finalLabelId !== undefined && finalLabelId !== previousCard?.labelId) {
-    const oldLabel = previousCard?.labelId
-      ? await prisma.ticketBoardLabel.findUnique({ where: { id: previousCard.labelId } })
-      : null;
-    const newLabel = finalLabelId
-      ? await prisma.ticketBoardLabel.findUnique({ where: { id: finalLabelId } })
-      : null;
-
-    await prisma.ticketActivity.create({
-      data: {
-        type: "CHANGED_LABEL",
-        userId,
-        ticketCardId: id,
-        details: {
-          fromLabelId: previousCard?.labelId || null,
-          fromLabelName: oldLabel?.name || null,
-          toLabelId: finalLabelId || null,
-          toLabelName: newLabel?.name || null,
-        },
-      },
-    });
-  }
+  // CHANGED_LABELS activity logging can be implemented here if needed.
 
   // Log ADDED_ATTACHMENT for each newly added file key (with uploader info)
   if (data.attachments !== undefined) {

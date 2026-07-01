@@ -30,7 +30,7 @@ export async function createColumn(data: ColumnInput) {
 }
 
 export async function getColumns(ticketBoardId: string) {
-  return prisma.ticketColumn.findMany({
+  const columns = await prisma.ticketColumn.findMany({
     where: { ticketBoardId },
     include: {
       ticketCards: {
@@ -38,24 +38,40 @@ export async function getColumns(ticketBoardId: string) {
           createdAt: "asc",
         },
         include: {
-          label: true,
+          labels: { include: { label: true } },
         },
       },
     },
   });
+
+  return columns.map((col) => ({
+    ...col,
+    ticketCards: col.ticketCards.map((card) => ({
+      ...card,
+      labels: (card as any).labels?.map((l: any) => l.label) || [],
+    })),
+  }));
 }
 
 export async function getColumnById(id: string) {
-  return prisma.ticketColumn.findUnique({
+  const column = await prisma.ticketColumn.findUnique({
     where: { id },
     include: {
       ticketCards: {
         include: {
-          label: true,
+          labels: { include: { label: true } },
         },
       },
     },
   });
+
+  if (column) {
+    column.ticketCards = column.ticketCards.map((card) => ({
+      ...card,
+      labels: (card as any).labels?.map((l: any) => l.label) || [],
+    })) as any;
+  }
+  return column;
 }
 
 export async function updateColumn(id: string, data: ColumnUpdateInput) {
