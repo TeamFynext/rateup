@@ -22,7 +22,7 @@ const config = defineConfig({
       output: {
         minify: {
           compress: {
-            dropConsole: true,
+            // dropConsole: true,
           },
         },
       },
