@@ -24,7 +24,7 @@ export async function createCardHandler(
       surveyResponseId?: string;
       reviewId?: string;
       priority?: TicketPriority;
-      labelId?: string | null;
+      labelIds?: string[] | null;
       deadline?: string | Date | null;
     };
   }>,
@@ -40,7 +40,7 @@ export async function createCardHandler(
       surveyResponseId,
       reviewId,
       priority,
-      labelId,
+      labelIds,
       deadline,
     } = request.body;
     const userId = request.userId;
@@ -54,7 +54,7 @@ export async function createCardHandler(
       surveyResponseId,
       reviewId,
       priority,
-      labelId,
+      labelIds,
       deadline,
       orgId: request.user.orgId,
     });

@@ -1374,11 +1374,21 @@ model TicketBoardLabel {
   color         String
   ticketBoardId String       @db.Uuid
   ticketBoard   TicketBoard  @relation(fields: [ticketBoardId], references: [id], onDelete: Cascade)
-  ticketCards   TicketCard[]
+  ticketCards   TicketLabelMap[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
   @@unique([ticketBoardId, name])
+}
+
+model TicketLabelMap {
+  card       TicketCard       @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId     String           @db.Uuid
+  label      TicketBoardLabel @relation(fields: [labelId], references: [id], onDelete: Cascade)
+  labelId    String           @db.Uuid
+  createdAt  DateTime         @default(now())
+
+  @@id([cardId, labelId])
 }
 
 model TicketBoardNotification {
@@ -1435,8 +1445,7 @@ model TicketCard {
   ticketActivities          TicketActivity[]
   ticketComments            TicketComment[]
   assignees                 TicketCardAssignee[]
-  labelId                   String?                  @db.Uuid
-  label                     TicketBoardLabel?        @relation(fields: [labelId], references: [id], onDelete: SetNull)
+  labels                    TicketLabelMap[]
 }
 
 model TicketCardAssignee {
