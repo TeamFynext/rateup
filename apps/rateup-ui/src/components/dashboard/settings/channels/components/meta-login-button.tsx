@@ -40,13 +40,6 @@ export function MetaLoginButton({
   const { mutate: registerBusinessClient } = registerMutation;
 
   useEffect(() => {
-    console.log("🚀 ~ MetaLoginButton ~ waData.waba_id:", waData.waba_id);
-    console.log("🚀 ~ MetaLoginButton ~ code:", code);
-    console.log("🚀 ~ MetaLoginButton ~ submittedCodeRef.current:", submittedCodeRef.current);
-    console.log(
-      "🚀 ~ MetaLoginButton ~ waData.waba_id && code && submittedCodeRef.current !== code:",
-      waData.waba_id && code && submittedCodeRef.current !== code,
-    );
     if (waData.waba_id && code && submittedCodeRef.current !== code) {
       submittedCodeRef.current = code;
       registerBusinessClient({
