@@ -1,5 +1,5 @@
 // oxlint-disable-next-line no-unused-vars
-interface Window {
+export interface Window {
   fbAsyncInit: FbAsyncInit;
   FB: {
     init: FBInit;
