@@ -92,7 +92,7 @@ function ImageCheckbox({
       data-checked={
         (titleTypeString ? selectedValue === title : selectedValue === title?.value) || undefined
       }
-      className={cx(classes.button, titleTypeString && classes.buttonWithOutImage)}
+      className={cx("p-4!", classes.button, titleTypeString && classes.buttonWithOutImage)}
       data-value={dataValue}
     >
       <Checkbox
