@@ -1,15 +1,21 @@
-import { Calendar, Tag, List, NotebookTabs, Sparkles, Ticket, Type } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useBoard, useBoardQueries, useLabels } from "@/backend/tickets/tickets.query";
+import {
+  useBoard,
+  useBoardQueries,
+  useLabels,
+  useBoardTeamMembersById,
+} from "@/backend/tickets/tickets.query";
+import { cn } from "@/lib/utils";
 
 import Loading from "../Page/Loading.tsx";
 import { Button } from "../ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog.tsx";
+import { CreativeAvatar } from "../ui/creative-avatar.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog.tsx";
 import { Input } from "../ui/input.tsx";
 import { Label } from "../ui/label.tsx";
-import { MultiSelect } from "../ui/multi-select.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 
@@ -19,6 +25,8 @@ interface CreateTicketProps {
   type: string;
   surveyResponseId?: string;
   rid?: string;
+  hasTicketFeature?: boolean;
+  contactId?: string;
 }
 
 const CreateTicketModal = ({
@@ -27,16 +35,16 @@ const CreateTicketModal = ({
   type,
   rid,
   surveyResponseId,
+  hasTicketFeature = true,
+  contactId,
 }: CreateTicketProps) => {
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState("");
-  // Pass true to hasTicketFeature since we are directly showing the modal in parts of the app that assume feature access.
-  // Alternatively, the caller could pass it down, but default to true if it isn't passed for backwards compatibility.
-  const { boards, isLoading: isBoardsLoading } = useBoardQueries(true);
+  const { boards, isLoading: isBoardsLoading } = useBoardQueries(hasTicketFeature);
   const { createCard, board, isLoading } = useBoard(selectedBoardId);
   const { labels } = useLabels(selectedBoardId);
-
-  const { t } = useTranslation();
+  const { data: members = [] } = useBoardTeamMembersById(selectedBoardId);
 
   const [formData, setFormData] = useState({
     ticketColumnId: "",
@@ -50,9 +58,28 @@ const CreateTicketModal = ({
     deadline: "",
     type,
     labelIds: [] as string[],
+    assigneeId: null as string | null,
     reviewId: rid,
     surveyResponseId: surveyResponseId,
   });
+
+  // Keep first board selected if none is
+  useEffect(() => {
+    if (boards && boards.length > 0 && !selectedBoardId) {
+      setSelectedBoardId(boards[0].id);
+    }
+  }, [boards, selectedBoardId]);
+
+  // Keep first column selected if none is selected
+  useEffect(() => {
+    setFormData((prev) => {
+      const newColId = board?.ticketColumns?.length > 0 ? board.ticketColumns[0].id : "";
+      if (prev.ticketColumnId !== newColId && newColId) {
+        return { ...prev, ticketColumnId: newColId };
+      }
+      return prev;
+    });
+  }, [board]);
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -82,27 +109,45 @@ const CreateTicketModal = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const canSubmit = Boolean(selectedBoardId && formData.title.trim() && formData.ticketColumnId);
+
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.ticketColumnId) newErrors.ticketColumnId = t("Cannot be empty");
-    if (!formData.title) newErrors.title = t("Cannot be empty");
+    if (!formData.title.trim()) newErrors.title = t("Cannot be empty");
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const toggleLabel = (labelId: string) =>
+    setFormData((prev) => ({
+      ...prev,
+      labelIds: prev.labelIds.includes(labelId)
+        ? prev.labelIds.filter((id) => id !== labelId)
+        : [...prev.labelIds, labelId],
+    }));
+
+  async function handleSubmit(e?: React.FormEvent) {
+    if (e) e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
 
-    const payload: any = { ...formData };
+    const payload: any = {
+      ...formData,
+      title: formData.title.trim(),
+      contactId,
+    };
     if (!payload.deadline) {
       delete payload.deadline;
     }
     if (!payload.labelIds || payload.labelIds.length === 0) {
       delete payload.labelIds;
     }
+    if (payload.assigneeId) {
+      payload.assignees = [{ assigneeId: payload.assigneeId }];
+    }
+    delete payload.assigneeId;
 
     createCard(payload, {
       onSuccess: () => {
@@ -123,6 +168,7 @@ const CreateTicketModal = ({
       deadline: "",
       type,
       labelIds: [],
+      assigneeId: null,
       reviewId: rid,
       surveyResponseId: surveyResponseId,
     });
@@ -130,50 +176,40 @@ const CreateTicketModal = ({
     closeTicketModal();
   }
 
+  const assignedMember = members.find((m: any) => m.id === formData.assigneeId);
+
   return (
-    <Dialog open={createTicketOpened} onOpenChange={cancel}>
-      <DialogContent className="p-0">
-        <DialogHeader className="p-0">
-          <DialogTitle className="p-0">
-            <div className="flex items-center justify-start gap-2 bg-primary rounded-t-lg py-6 px-4">
-              <div className="bg-white/40 p-2 rounded-md text-white">
-                <Ticket />
-              </div>
-              <h1 className="text-xl font-semibold text-white">{t("Create Ticket")}</h1>
+    <Dialog open={createTicketOpened} onOpenChange={(val) => !val && cancel()}>
+      <DialogContent className="p-0 gap-0">
+        <DialogHeader>
+          <div className="flex items-center gap-2 p-5 pb-0">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
+              <LayoutDashboard className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
             </div>
-          </DialogTitle>
+            <DialogTitle className="font-bold text-base">{t("Create Ticket")}</DialogTitle>
+          </div>
         </DialogHeader>
 
         {isBoardsLoading || isLoading ? (
-          <div className="min-h-[60vh] w-full">
+          <div className="min-h-[60vh] w-full flex items-center justify-center">
             <Loading />
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="w-full p-4 flex flex-col gap-4 justify-center">
-            {/* Select Board */}
+          <div className="flex flex-col gap-4 px-5 py-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+            {/* Board */}
             <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-orange-100 text-orange-600 p-1 rounded-sm">
-                  <List size={14} />
-                </div>
-                <div>
-                  {t("Select Board")}
-                  <span className="text-red-500">*</span>
-                </div>
-              </Label>
-
-              <Select
-                value={selectedBoardId}
-                onValueChange={(val) => {
-                  setSelectedBoardId(val);
-                }}
+              <Label
+                htmlFor="ticket-board"
+                className="text-xs font-medium uppercase text-muted-foreground"
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("Select Board")} />
+                {t("Board")} <span className="text-destructive">*</span>
+              </Label>
+              <Select value={selectedBoardId} onValueChange={(val) => setSelectedBoardId(val)}>
+                <SelectTrigger id="ticket-board" className="cursor-pointer h-9 w-full">
+                  <SelectValue placeholder={t("Select a board")} />
                 </SelectTrigger>
-
                 <SelectContent>
-                  {boards?.map((b) => (
+                  {boards?.map((b: any) => (
                     <SelectItem key={b.id} value={b.id}>
                       {b.title}
                     </SelectItem>
@@ -182,337 +218,153 @@ const CreateTicketModal = ({
               </Select>
             </div>
 
-            {/* Select List */}
-            {type !== "SURVEY_RESPONSE" && (
-              <div className="space-y-1">
-                <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <div className="bg-blue-100 text-blue-600 p-1 rounded-sm">
-                    <Sparkles size={14} />
-                  </div>
-                  <div>
-                    {t("Select List")}
-                    <span className="text-red-500">*</span>
-                  </div>
-                </Label>
-
-                <Select
-                  value={formData.ticketColumnId}
-                  onValueChange={(val) => setFormData({ ...formData, ticketColumnId: val })}
-                  disabled={!selectedBoardId}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("Select List")} />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {board?.ticketColumns?.map((column) => (
-                      <SelectItem key={column.id} value={column.id}>
-                        {column.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {errors.ticketColumnId && (
-                  <p className="text-xs text-red-500 mt-1">{errors.ticketColumnId}</p>
-                )}
-              </div>
-            )}
-
             {/* Title */}
             <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-purple-100 text-purple-600 p-1 rounded-sm">
-                  <Type size={14} />
-                </div>
-                <div>
-                  {t("Title")} <span className="text-red-500">*</span>
-                </div>
+              <Label
+                htmlFor="ticket-title"
+                className="text-xs font-medium uppercase text-muted-foreground"
+              >
+                {t("Title")} <span className="text-destructive normal-case">*</span>
               </Label>
-
               <Input
-                placeholder={t("Enter ticket title")}
+                id="ticket-title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder={t("Short description of the issue…")}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                className="h-9"
               />
               {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
             </div>
 
             {/* Description */}
             <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-green-100 text-green-600 p-1 rounded-sm">
-                  <NotebookTabs size={14} />
-                </div>
-                <div>{t("Description")}</div>
+              <Label
+                htmlFor="ticket-description"
+                className="text-xs font-medium uppercase text-muted-foreground"
+              >
+                {t("Description")}
               </Label>
-
               <Textarea
-                placeholder={t("Provide detailed information about the ticket")}
+                id="ticket-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder={t("Add more context…")}
+                rows={3}
+                className="resize-none"
               />
+            </div>
+
+            {/* Assignee */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium uppercase text-muted-foreground">
+                {t("Assignee")}
+              </Label>
+              <div className="flex flex-wrap items-center gap-2">
+                {members.map((s: any) => {
+                  const on = formData.assigneeId === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      title={s.name}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFormData({ ...formData, assigneeId: on ? null : s.id });
+                      }}
+                      className="cursor-pointer rounded-full p-0 outline-offset-2 transition-[outline-color] duration-150"
+                      style={{
+                        outline: `3px solid ${on ? "#3b82f6" : "transparent"}`,
+                      }}
+                    >
+                      <CreativeAvatar name={s.name} src={s.profilePhoto} size="sm" />
+                    </button>
+                  );
+                })}
+                {assignedMember && (
+                  <span className="text-muted-foreground text-xs">{assignedMember.name}</span>
+                )}
+              </div>
             </div>
 
             {/* Labels */}
-            <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-yellow-100 text-yellow-600 p-1 rounded-sm">
-                  <Tag size={14} />
-                </div>
-                <div>{t("Labels")}</div>
-              </Label>
-
-              <MultiSelect
-                options={
-                  labels?.map((label: any) => ({ label: label.name, value: label.id })) || []
-                }
-                onValueChange={(val) => setFormData({ ...formData, labelIds: val })}
-                defaultValue={formData.labelIds}
-                placeholder={t("Select Labels")}
-                disabled={!selectedBoardId}
-                maxCount={3}
-              />
-            </div>
-
-            {/* Due Date */}
-            {type !== "SURVEY_RESPONSE" && (
-              <div className="space-y-1">
-                <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <div className="bg-red-100 text-red-600 p-1 rounded-sm">
-                    <Calendar size={14} />
-                  </div>
-                  <div>{t("Due Date")}</div>
+            {labels && labels.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs font-medium uppercase text-muted-foreground">
+                  {t("Labels")}
                 </Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {labels.map((l: any) => {
+                    const on = formData.labelIds.includes(l.id);
+                    let tc = { bg: "#f3f4f6", textcolor: "#374151" };
+                    try {
+                      const parsed = JSON.parse(l.color);
+                      if (parsed && parsed.bgcolor)
+                        tc = { bg: parsed.bgcolor, textcolor: parsed.textcolor };
+                    } catch {
+                      tc = { bg: l.color, textcolor: "#171717" };
+                    }
 
-                <Input
-                  type="date"
-                  value={formData.deadline}
-                  onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                  min={new Date().toISOString().split("T")[0]}
-                  onClick={(e) => "showPicker" in e.target && (e.target as any).showPicker()}
-                />
+                    return (
+                      <button
+                        key={l.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toggleLabel(l.id);
+                        }}
+                        className={cn(
+                          "cursor-pointer rounded-full px-2.5 py-[3px] text-[11px] font-semibold transition-all duration-150",
+                          !on &&
+                            "bg-muted text-foreground border-[1.5px] border-transparent opacity-60",
+                        )}
+                        style={
+                          on
+                            ? {
+                                background: tc.bg,
+                                color: tc.textcolor,
+                                border: `1.5px solid ${tc.textcolor}44`,
+                              }
+                            : undefined
+                        }
+                      >
+                        {l.name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
-
-            <div className="w-full flex justify-end items-center gap-4 mt-2">
-              <Button type="button" onClick={cancel} variant="outline">
-                {t("Cancel")}
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? t("Creating") : t("Create Ticket")}
-              </Button>
-            </div>
-          </form>
+          </div>
         )}
+
+        <DialogFooter className="p-4 border-t">
+          <Button variant="ghost" size="sm" onClick={cancel}>
+            {t("Cancel")}
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleSubmit}
+            disabled={!canSubmit || submitting}
+          >
+            {submitting ? t("Creating") : t("Create Ticket")}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
 
 export const CreateTicketCard = ({ opened, close, type, hasTicketFeature, contactId }: any) => {
-  const [submitting, setSubmitting] = useState(false);
-  const [selectedBoardId, setSelectedBoardId] = useState("");
-  const { boards, isLoading: isBoardsLoading } = useBoardQueries(hasTicketFeature);
-  const { createCard, board, isLoading } = useBoard(selectedBoardId);
-  const { labels } = useLabels(selectedBoardId);
-
-  const { t } = useTranslation();
-
-  const [formData, setFormData] = useState({
-    ticketColumnId: "",
-    title: "",
-    description: "",
-    deadline: "",
-    type,
-    labelIds: [] as string[],
-  });
-
-  useEffect(() => {
-    setFormData((prev) => {
-      const newColId = board?.ticketColumns?.length > 0 ? board.ticketColumns[0].id : "";
-      if (prev.ticketColumnId !== newColId) {
-        return { ...prev, ticketColumnId: newColId };
-      }
-      return prev;
-    });
-  }, [board]);
-
-  useEffect(() => {
-    setFormData((prev) => {
-      const newLabelIds = labels?.length > 0 && prev.labelIds.length === 0 ? [] : prev.labelIds;
-      if (prev.labelIds !== newLabelIds) {
-        return { ...prev, labelIds: newLabelIds };
-      }
-      return prev;
-    });
-  }, [labels]);
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.ticketColumnId) newErrors.ticketColumnId = "required";
-    if (!formData.title) newErrors.title = "required";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!validate()) return;
-    setSubmitting(true);
-
-    const payload: any = { ...formData, contactId };
-    if (!payload.deadline) {
-      delete payload.deadline;
-    }
-    if (!payload.labelIds || payload.labelIds.length === 0) {
-      delete payload.labelIds;
-    }
-
-    createCard(payload, {
-      onSuccess: () => {
-        setSubmitting(false);
-        cancel();
-      },
-    });
-  }
-
-  function cancel() {
-    setFormData({
-      ticketColumnId: "",
-      title: "",
-      description: "",
-      deadline: "",
-      type,
-      labelIds: [],
-    });
-    setErrors({});
-    close();
-  }
-
   return (
-    <Dialog open={opened} onOpenChange={cancel}>
-      <DialogContent className="p-0">
-        <DialogHeader className="p-0">
-          <DialogTitle className="p-0">
-            <div className="flex items-center justify-start gap-2 bg-primary rounded-t-lg py-6 px-4">
-              <div className="bg-white/40 p-2 rounded-md text-white">
-                <Ticket />
-              </div>
-              <h1 className="text-xl font-semibold text-white">Create Ticket</h1>
-            </div>
-          </DialogTitle>
-        </DialogHeader>
-
-        {isBoardsLoading || isLoading ? (
-          <div className="min-h-[60vh] w-full">
-            <Loading />
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="w-full p-4 flex flex-col gap-4 justify-center">
-            {/* Select Board */}
-            <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-orange-100 text-orange-600 p-1 rounded-sm">
-                  <List size={14} />
-                </div>
-                <div>
-                  {t("Select Board")}
-                  <span className="text-red-500">*</span>
-                </div>
-              </Label>
-
-              <Select
-                value={selectedBoardId}
-                onValueChange={(val) => {
-                  setSelectedBoardId(val);
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("Select Board")} />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {boards?.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>
-                      {b.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Title */}
-            <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-purple-100 text-purple-600 p-1 rounded-sm">
-                  <Type size={14} />
-                </div>
-                <div>
-                  {t("Title")} <span className="text-red-500">*</span>
-                </div>
-              </Label>
-
-              <Input
-                placeholder={t("Enter ticket title")}
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              />
-              {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
-            </div>
-
-            {/* Description */}
-            <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-green-100 text-green-600 p-1 rounded-sm">
-                  <NotebookTabs size={14} />
-                </div>
-                <div>{t("Description")}</div>
-              </Label>
-
-              <Textarea
-                placeholder={t("Provide detailed information about the ticket")}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
-
-            {/* Labels */}
-            <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <div className="bg-yellow-100 text-yellow-600 p-1 rounded-sm">
-                  <Tag size={14} />
-                </div>
-                <div>{t("Labels")}</div>
-              </Label>
-
-              <MultiSelect
-                options={
-                  labels?.map((label: any) => ({ label: label.name, value: label.id })) || []
-                }
-                onValueChange={(val) => setFormData({ ...formData, labelIds: val })}
-                defaultValue={formData.labelIds}
-                placeholder={t("Select Labels")}
-                disabled={!selectedBoardId}
-                maxCount={3}
-              />
-            </div>
-
-            <div className="w-full flex justify-end items-center gap-4 mt-2">
-              <Button type="button" onClick={cancel} variant="outline">
-                {t("Cancel")}
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? t("Creating") : t("Create Ticket")}
-              </Button>
-            </div>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
+    <CreateTicketModal
+      createTicketOpened={opened}
+      closeTicketModal={close}
+      type={type}
+      hasTicketFeature={hasTicketFeature}
+      contactId={contactId}
+    />
   );
 };
 
