@@ -21,9 +21,3 @@ export async function migrateLoyaltyTierPriority() {
     timeout: 60000,
   });
 }
-
-export async function migrateTicketLabels() {
-  return await axiosClient.put(`${baseUrl}/migrate-ticket-labels`, null, {
-    timeout: 60000,
-  });
-}

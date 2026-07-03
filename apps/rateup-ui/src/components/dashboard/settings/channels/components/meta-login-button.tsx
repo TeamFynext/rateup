@@ -5,7 +5,18 @@ import { toast } from "sonner";
 
 import { useRegisterBusinessClientMutation } from "@/backend/whatsapp/settings/waSettings.query";
 
-const fbLogin = (configId: string | null = null): Promise<FBLoginResponse> => {
+const fbLogin = (
+  configId: string | null = null,
+): Promise<{
+  status: "connected" | "not_authorized" | "unknown";
+  authResponse?: {
+    accessToken: string;
+    expiresIn: string;
+    signedRequest: string;
+    userID: string;
+    code: string;
+  };
+}> => {
   return new Promise((resolve) => {
     globalThis.FB.login((response) => resolve(response), {
       config_id: configId ?? import.meta.env.VITE_META_CONFIG_ID,

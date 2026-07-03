@@ -361,17 +361,6 @@
     @apply border-border outline-ring/50;
   }
 
-  /* Focus styles for shadcn components */
-  button:not(:disabled),
-  input:not(:disabled),
-  select:not(:disabled),
-  textarea:not(:disabled),
-  [role="button"]:not(:disabled),
-  [role="tab"]:not(:disabled),
-  [role="menuitem"]:not(:disabled) {
-    @apply focus-visible:ring-1!;
-  }
-
   body {
     @apply bg-background text-foreground;
   }

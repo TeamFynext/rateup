@@ -11,13 +11,13 @@ import type { Board as BoardType, Card, Column as ColumnType } from "./types.ts"
 
 export function TicketListView({
   board,
-  labelFilter,
+  labelFilters,
   searchQuery,
   assigneeFilter,
   boardMembers = [],
 }: {
   board: BoardType;
-  labelFilter: string | null;
+  labelFilters: string[];
   searchQuery: string;
   assigneeFilter: string | null;
   boardMembers?: any[];
@@ -38,7 +38,11 @@ export function TicketListView({
 
   const filtered = tickets.filter(({ card }) => {
     let matches = true;
-    if (labelFilter && card.labelId !== labelFilter) matches = false;
+    if (labelFilters && labelFilters.length > 0) {
+      if (!card.labels?.some((l: any) => labelFilters.includes(l.id))) {
+        matches = false;
+      }
+    }
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       if (

@@ -4,6 +4,9 @@ import { useTranslation } from "react-i18next";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 
+import "react-date-range/dist/styles.css"; // main style file
+import "react-date-range/dist/theme/default.css";
+
 const DateRangePicker = lazy(() =>
   import("react-date-range").then((m) => ({ default: m.DateRangePicker })),
 );

@@ -14,6 +14,7 @@ import {
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import axios from "axios";
+import { Suspense } from "react";
 import Session from "supertokens-auth-react/recipe/session";
 
 import { allModalManagerModalsObj } from "@/components/Modal/ModalManagerModals/allModalManagerModalsObj.tsx";
@@ -83,14 +84,19 @@ export default function Providers({ children }) {
   return (
     <SuperTokensProvider>
       <QueryClientProvider client={queryClient}>
-        <ModalsProvider modals={allModalManagerModalsObj}>
-          <UserProvider>
-            <RouteChangeHandler />
-            <HydrationBoundary state={dehydrate(queryClient)}>
-              <TooltipProvider>{children}</TooltipProvider>
-            </HydrationBoundary>
-          </UserProvider>
-        </ModalsProvider>
+        {/* Modal components are lazy-loaded; fallback is null since they only
+            suspend when a modal is actually opened (near-instant, small chunk),
+            not during normal page rendering. */}
+        <Suspense fallback={null}>
+          <ModalsProvider modals={allModalManagerModalsObj}>
+            <UserProvider>
+              <RouteChangeHandler />
+              <HydrationBoundary state={dehydrate(queryClient)}>
+                <TooltipProvider>{children}</TooltipProvider>
+              </HydrationBoundary>
+            </UserProvider>
+          </ModalsProvider>
+        </Suspense>
         <TanStackDevtools
           config={{
             position: "bottom-right",

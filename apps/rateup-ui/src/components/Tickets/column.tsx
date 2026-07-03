@@ -102,12 +102,12 @@ export function Column({
   const [newCard, setNewCard] = useState<{
     title: string;
     description: string;
-    labelId: string | null;
+    labelIds: string[];
     deadline: string;
   }>({
     title: "",
     description: "",
-    labelId: null,
+    labelIds: [],
     deadline: "",
   });
   const openEditModal = () => setIsEditModalOpen(true);
@@ -126,7 +126,6 @@ export function Column({
 
   const { createCard, deleteCard } = useBoard(currentBoardId || "");
   const { labels } = useLabels(currentBoardId || "");
-  console.log(labels);
 
   const handleOpenAddCardModal = () => {
     openAddCardModal();
@@ -173,8 +172,8 @@ export function Column({
       type: TicketType.CUSTOM,
     };
 
-    if (newCard.labelId) {
-      payload.labelId = newCard.labelId;
+    if (newCard.labelIds && newCard.labelIds.length > 0) {
+      payload.labelIds = newCard.labelIds;
     }
 
     if (newCard.deadline) {
@@ -187,7 +186,7 @@ export function Column({
     setNewCard({
       title: "",
       description: "",
-      labelId: null,
+      labelIds: [],
       deadline: "",
     });
     closeAddCardModal();
@@ -529,7 +528,7 @@ export function Column({
               <Label className="text-sm font-semibold">{t("Label")}</Label>
               <div className="flex gap-2 flex-wrap">
                 {labels?.map((label) => {
-                  const isSelected = newCard.labelId === label.id;
+                  const isSelected = newCard.labelIds.includes(label.id);
                   const pColor = parseColor(label.color);
                   return (
                     <button
@@ -538,7 +537,9 @@ export function Column({
                       onClick={() =>
                         setNewCard((prev) => ({
                           ...prev,
-                          labelId: isSelected ? null : label.id,
+                          labelIds: isSelected
+                            ? prev.labelIds.filter((id) => id !== label.id)
+                            : [...prev.labelIds, label.id],
                         }))
                       }
                       className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
