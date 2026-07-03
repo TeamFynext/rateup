@@ -482,15 +482,15 @@ export function useNavMain({
                   url: "/dashboard/surveys/templates",
                   icon: IconTemplate,
                 },
-                ...(hiddenModules.includes("testimonial")
-                  ? []
-                  : [
-                      {
-                        title: t("Testimonial"),
-                        url: "/dashboard/testimonial",
-                        icon: IconMessageChatbot,
-                      },
-                    ]),
+                // ...(hiddenModules.includes("testimonial")
+                //   ? []
+                //   : [
+                //       {
+                //         title: t("Testimonial"),
+                //         url: "/dashboard/testimonial",
+                //         icon: IconMessageChatbot,
+                //       },
+                //     ]),
               ],
             },
           ]
