@@ -6,6 +6,8 @@ import { updateUserAvailablityStatus } from "../modules/user/user.service.js";
 import { UserAvailabilityStatus } from "../modules/user/user.schema.js";
 import { log } from "../utils/logger.js";
 
+const workerConnection = baseRedis.duplicate();
+
 export const userAvailabilityWorker = new Worker(
   "user-availability",
   async (job: Job) => {
@@ -26,7 +28,11 @@ export const userAvailabilityWorker = new Worker(
     }
   },
   {
-    connection: baseRedis,
+    connection: workerConnection,
     removeOnComplete: { count: 1 },
   },
 );
+
+userAvailabilityWorker.on("error", (err) => {
+  log.error("User availability worker error: %s", err);
+});

@@ -3,11 +3,13 @@ import baseRedis from "../utils/redisConnection.js";
 import { processNotification } from "../modules/notification/notification.service.js";
 import { log } from "../utils/logger.js";
 
-new Worker(
+const workerConnection = baseRedis.duplicate();
+
+const notificationWorker = new Worker(
   "notificationQueue",
   async (job) => {
     if (!job?.data) {
-      console.log("no data in notification");
+      log.warn("no data in notification");
       return;
     }
     try {
@@ -18,11 +20,16 @@ new Worker(
     }
   },
   {
-    connection: baseRedis,
+    connection: workerConnection,
+    concurrency: 5,
     removeOnComplete: {
       count: 1,
     },
   },
 );
+
+notificationWorker.on("error", (err) => {
+  log.error("Notification worker error: %s", err);
+});
 
 log.info("Notification system initialized");
