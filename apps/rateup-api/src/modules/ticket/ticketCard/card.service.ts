@@ -30,11 +30,12 @@ export interface CardInput {
   priority?: TicketPriority;
   labelIds?: string[] | null;
   deadline?: string | Date | null;
+  assignees?: { assigneeId: string }[];
 }
 
 //used in zapier also
 export async function createCard(data: CardInput) {
-  const { title, userId, orgId, labelIds, ...otherData } = data;
+  const { title, userId, orgId, labelIds, assignees, ...otherData } = data;
   // Get the highest order in the column to place new card at the end
   const highestOrderCard = await prisma.ticketCard.findFirst({
     where: { ticketColumnId: data.ticketColumnId },
@@ -72,6 +73,9 @@ export async function createCard(data: CardInput) {
       priority: data.priority || "MEDIUM",
       ...(finalLabelIds.length > 0
         ? { labels: { create: finalLabelIds.map((id) => ({ labelId: id })) } }
+        : {}),
+      ...(assignees && assignees.length > 0
+        ? { assignees: { create: assignees.map((a) => ({ assigneeId: a.assigneeId })) } }
         : {}),
     },
     include: {
