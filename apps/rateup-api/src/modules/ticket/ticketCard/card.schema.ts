@@ -13,7 +13,7 @@ const cardCore = {
   surveyResponseId: z.string().optional(),
   reviewId: z.string().optional(),
   priority: z.enum(TicketPriority).optional(),
-  labelId: z.string().uuid().optional().nullable(),
+  labelIds: z.array(z.string().uuid()).optional().nullable(),
   deadline: z.coerce.date().optional().nullable(),
 };
 
@@ -35,7 +35,7 @@ const updateCardRequestSchema = z.object({
   title: z.string().min(1, "Title is required").optional(),
   assignedToIds: z.array(z.uuid()).optional(),
   priority: z.enum(TicketPriority).optional().nullable(),
-  labelId: z.string().uuid().optional().nullable(),
+  labelIds: z.array(z.string().uuid()).optional().nullable(),
   deadline: z.coerce.date().optional().nullable(),
   description: z.string().optional(),
   contactId: z.string().uuid().optional().nullable(),

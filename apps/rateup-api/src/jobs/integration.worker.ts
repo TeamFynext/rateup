@@ -3,7 +3,9 @@ import baseRedis from "../utils/redisConnection.js";
 import { log } from "../utils/logger.js";
 import { processIntegration } from "../modules/integrations/external/zoho/zoho.service.js";
 
-new Worker(
+const workerConnection = baseRedis.duplicate();
+
+const integrationWorker = new Worker(
   "integrationTriggerQueue",
   async (job) => {
     if (!job?.data) {
@@ -18,11 +20,16 @@ new Worker(
     }
   },
   {
-    connection: baseRedis,
+    connection: workerConnection,
+    concurrency: 5,
     removeOnComplete: {
       count: 1,
     },
   },
 );
+
+integrationWorker.on("error", (err) => {
+  log.error("Integration worker error: %s", err);
+});
 
 log.info("Integration system initialized");

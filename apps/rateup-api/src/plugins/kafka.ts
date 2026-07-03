@@ -15,12 +15,23 @@ export const producer: Producer = kafka.producer({
   createPartitioner: Partitioners.DefaultPartitioner,
 });
 
-export async function registerKafka(server: FastifyInstance) {
-  try {
-    await producer.connect();
-  } catch (error) {
-    log.error("Failed to connect Kafka producer: %o", error);
+async function connectWithRetry(retries = 5, delayMs = 5000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await producer.connect();
+      return;
+    } catch (error) {
+      log.error(error, `Failed to connect Kafka producer (attempt ${attempt}/${retries})`);
+      if (attempt < retries) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
   }
+  log.error("Kafka producer failed to connect after all retries; continuing without it");
+}
+
+export async function registerKafka(server: FastifyInstance) {
+  await connectWithRetry();
 
   server.decorate("kafka", { producer });
 
