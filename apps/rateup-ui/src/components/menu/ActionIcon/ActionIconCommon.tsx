@@ -17,16 +17,18 @@ export const ActionIconCommon = ({
 }: ActionIconCommonProps) => {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          className="rounded-full bg-white"
-          onClick={handleClick}
-          disabled={disabled}
-        >
-          {children}
-        </Button>
+      <TooltipTrigger
+        render={
+          <Button
+            variant="outline"
+            size="icon-sm"
+            className="rounded-full bg-white"
+            onClick={handleClick}
+            disabled={disabled}
+          />
+        }
+      >
+        {children}
       </TooltipTrigger>
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>

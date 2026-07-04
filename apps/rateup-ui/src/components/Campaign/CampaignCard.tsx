@@ -7,17 +7,6 @@ import {
   useUpdateCampaignMutation,
 } from "@/backend/campaign/campaign.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -27,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import { Separator } from "../ui/separator.tsx";
 
@@ -72,6 +62,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
     campaign.type,
   );
   const { t } = useTranslation("campaign.card");
+  const confirm = useConfirm();
   const deleteCampaignMutation = useDeleteCampaignMutation(campaign.teamId, campaign.type);
   const handleStatusChange = async (campaign: Campaign, checked: boolean) => {
     const newStatus = checked ? "ACTIVE" : "INACTIVE";
@@ -87,8 +78,17 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
       toast.error(t("toast.statusUpdateError"));
     }
   };
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDelete = async () => {
+    const shouldDelete = await confirm({
+      title: t("Delete Campaign"),
+      description: t('Are you sure you want to delete "{name}"? This action cannot be undone.', {
+        name: campaign.name,
+      }),
+      confirmText: t("Delete"),
+      cancelText: t("Cancel"),
+    });
+
+    if (!shouldDelete) return;
 
     try {
       await deleteCampaignMutation.mutateAsync(campaign.id);
@@ -100,14 +100,17 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
 
   const actions = (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild onClick={(event) => event.stopPropagation()}>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 shrink-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-        >
-          <MoreVertical className="h-4 w-4" />
-        </Button>
+      <DropdownMenuTrigger
+        onClick={(event) => event.stopPropagation()}
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+          />
+        }
+      >
+        <MoreVertical className="h-4 w-4" />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
@@ -130,39 +133,16 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
           {t("Edit")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <DropdownMenuItem
-              onSelect={(e) => e.preventDefault()}
-              className="text-destructive dark:text-red-400 focus:text-destructive dark:focus:text-red-400"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              {t("Delete")}
-            </DropdownMenuItem>
-          </AlertDialogTrigger>
-
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t("Delete Campaign")}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {t('Are you sure you want to delete "{name}"? This action cannot be undone.', {
-                  name: campaign.name,
-                })}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
-
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive text-white hover:bg-destructive/90"
-              >
-                {t("Delete")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <DropdownMenuItem
+          variant="destructive"
+          onClick={(event) => {
+            event.stopPropagation();
+            handleDelete();
+          }}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          {t("Delete")}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

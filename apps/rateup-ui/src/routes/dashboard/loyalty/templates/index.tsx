@@ -332,18 +332,20 @@ function LoyaltyTemplateListPage() {
                   optional={false}
                 />
                 <DialogFooter>
-                  <DialogClose asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setShowModal(false);
-                        setSelectedPredefined(null);
-                        setStep("pick");
-                      }}
-                    >
-                      Back
-                    </Button>
+                  <DialogClose
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setShowModal(false);
+                          setSelectedPredefined(null);
+                          setStep("pick");
+                        }}
+                      />
+                    }
+                  >
+                    Back
                   </DialogClose>
                   <Button
                     type="button"

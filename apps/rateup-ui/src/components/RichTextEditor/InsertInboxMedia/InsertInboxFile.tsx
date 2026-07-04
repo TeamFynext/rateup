@@ -55,31 +55,30 @@ const InsertInboxFile = () => {
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <RichTextEditor.Control
-          aria-label="Insert File"
-          title="Insert File"
-          disabled={isUploadingFile || media.length > 0}
-        >
-          <IconFile size={16} />
-        </RichTextEditor.Control>
+      <PopoverTrigger
+        render={
+          <RichTextEditor.Control
+            aria-label="Insert File"
+            title="Insert File"
+            disabled={isUploadingFile || media.length > 0}
+          />
+        }
+      >
+        <IconFile size={16} />
       </PopoverTrigger>
-
       <PopoverContent className="w-64 flex flex-col gap-2">
-        <Button variant="outline" size="sm" asChild>
-          <label className="cursor-pointer">
-            <div className="flex items-center justify-center gap-1">
-              <IconFile size={16} />
-              Select Files
-            </div>
-            <input
-              type="file"
-              multiple
-              accept="text/plain,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-              className="hidden"
-              onChange={handleSelect}
-            />
-          </label>
+        <Button variant="outline" size="sm" render={<label className="cursor-pointer" />}>
+          <div className="flex items-center justify-center gap-1">
+            <IconFile size={16} />
+            Select Files
+          </div>
+          <input
+            type="file"
+            multiple
+            accept="text/plain,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+            className="hidden"
+            onChange={handleSelect}
+          />
         </Button>
 
         {/* File list */}

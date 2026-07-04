@@ -15,21 +15,21 @@ const LabelSelector = ({ value, onChange, className = "", allowMultiSelect = fal
     );
   }
   if (allowMultiSelect) {
+    const labelOptions = labels?.map((label) => ({ value: label.id, label: label.name })) ?? [];
     return (
       <MultiSelect
+        options={labelOptions}
+        value={value}
         onValueChange={onChange}
-        options={labels?.map((label) => ({
-          value: label.id,
-          label: label.name,
-        }))}
-        className={`${className}`}
         placeholder="Select labels"
-        defaultValue={value}
+        emptyIndicator="No labels found."
+        className={`${className}`}
       />
     );
   }
+  const labelItems = labels?.map((label) => ({ value: label.id, label: label.name })) ?? [];
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange} items={labelItems}>
       <SelectTrigger className={`${className}`}>
         <SelectValue placeholder={"Select a label"} />
       </SelectTrigger>

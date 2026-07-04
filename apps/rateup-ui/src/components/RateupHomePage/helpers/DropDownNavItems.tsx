@@ -51,7 +51,7 @@ export default function DropDownNavItems({
   const defaultColor = hasColor ? "" : "text-white";
 
   return (
-    <NavigationMenu viewport={false} className="relative">
+    <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
           <NavigationMenuTrigger
@@ -96,16 +96,14 @@ function ListItem({
 }) {
   return (
     <li {...props}>
-      <NavigationMenuLink asChild>
-        <Link to={to}>
-          <div className="flex items-start gap-4">
-            <div>{icon}</div>
-            <div className="flex flex-col gap-1 text-sm">
-              <div className="leading-none font-medium">{title}</div>
-              <div className="line-clamp-2 text-muted-foreground">{children}</div>
-            </div>
+      <NavigationMenuLink render={<Link to={to} />}>
+        <div className="flex items-start gap-4">
+          <div>{icon}</div>
+          <div className="flex flex-col gap-1 text-sm">
+            <div className="leading-none font-medium">{title}</div>
+            <div className="line-clamp-2 text-muted-foreground">{children}</div>
           </div>
-        </Link>
+        </div>
       </NavigationMenuLink>
     </li>
   );

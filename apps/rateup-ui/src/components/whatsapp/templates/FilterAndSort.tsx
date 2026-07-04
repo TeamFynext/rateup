@@ -108,19 +108,21 @@ export function TemplateFilterSort({ filters, setFilters, templateTypeOptions = 
   return (
     <div className="flex items-center gap-2">
       <Popover open={filterOpen} onOpenChange={handleFilterOpenChange}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn(
-              "gap-1.5 px-3 text-sm font-medium transition-all",
-              activeFilterCount > 0 && "border-primary/50 text-primary",
-            )}
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Filter
-            <ActiveBadge count={activeFilterCount} />
-          </Button>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "gap-1.5 px-3 text-sm font-medium transition-all",
+                activeFilterCount > 0 && "border-primary/50 text-primary",
+              )}
+            />
+          }
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          Filter
+          <ActiveBadge count={activeFilterCount} />
         </PopoverTrigger>
 
         <PopoverContent align="start" sideOffset={6} className="w-52 p-1.5">

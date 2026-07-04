@@ -204,73 +204,75 @@ export default function OnboardingWizard() {
                 return (
                   <React.Fragment key={step.id}>
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <motion.button
-                          onClick={() => goToStep(step.id)}
-                          disabled={!isAccessible}
-                          whileHover={isAccessible ? { scale: 1.05 } : {}}
-                          whileTap={isAccessible ? { scale: 0.95 } : {}}
-                          className={`flex-1 flex flex-col items-center space-y-1.5 p-2 rounded-xl border-2 transition-all duration-300 ${
+                      <TooltipTrigger
+                        render={
+                          <motion.button
+                            onClick={() => goToStep(step.id)}
+                            disabled={!isAccessible}
+                            whileHover={isAccessible ? { scale: 1.05 } : {}}
+                            whileTap={isAccessible ? { scale: 0.95 } : {}}
+                            className={`flex-1 flex flex-col items-center space-y-1.5 p-2 rounded-xl border-2 transition-all duration-300 ${
+                              isActive
+                                ? "bg-linear-to-br from-blue-100 to-indigo-100 border-blue-400 shadow-lg shadow-blue-200/60"
+                                : isCompleted
+                                  ? "bg-linear-to-br from-green-50 to-emerald-50 border-green-400/60 hover:border-green-500 cursor-pointer"
+                                  : isAccessible
+                                    ? "bg-white/80 backdrop-blur-sm border-gray-300 hover:border-gray-400 cursor-pointer shadow-sm"
+                                    : "bg-gray-100/50 border-gray-300 opacity-60 cursor-not-allowed"
+                            }`}
+                          />
+                        }
+                      >
+                        <div
+                          className={`relative w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
                             isActive
-                              ? "bg-linear-to-br from-blue-100 to-indigo-100 border-blue-400 shadow-lg shadow-blue-200/60"
+                              ? "bg-linear-to-r from-blue-500 to-indigo-600 shadow-lg"
                               : isCompleted
-                                ? "bg-linear-to-br from-green-50 to-emerald-50 border-green-400/60 hover:border-green-500 cursor-pointer"
-                                : isAccessible
-                                  ? "bg-white/80 backdrop-blur-sm border-gray-300 hover:border-gray-400 cursor-pointer shadow-sm"
-                                  : "bg-gray-100/50 border-gray-300 opacity-60 cursor-not-allowed"
+                                ? "bg-linear-to-r from-green-500 to-emerald-500 shadow-md"
+                                : "bg-linear-to-br from-gray-300 to-gray-400"
                           }`}
                         >
-                          <div
-                            className={`relative w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                          {isCompleted ? (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 500,
+                                damping: 25,
+                              }}
+                            >
+                              <Check className="w-4 h-4 text-white" />
+                            </motion.div>
+                          ) : (
+                            <step.icon
+                              className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-400"}`}
+                            />
+                          )}
+                          {isActive && (
+                            <motion.div
+                              className="absolute inset-0 rounded-xl bg-blue-400/30"
+                              animate={{
+                                scale: [1, 1.2, 1],
+                                opacity: [0.5, 0, 0.5],
+                              }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                          )}
+                        </div>
+                        <div className="text-center">
+                          <p
+                            className={`transition-colors duration-300 text-sm ${
                               isActive
-                                ? "bg-linear-to-r from-blue-500 to-indigo-600 shadow-lg"
+                                ? "text-gray-900"
                                 : isCompleted
-                                  ? "bg-linear-to-r from-green-500 to-emerald-500 shadow-md"
-                                  : "bg-linear-to-br from-gray-300 to-gray-400"
+                                  ? "text-green-600"
+                                  : "text-gray-600"
                             }`}
                           >
-                            {isCompleted ? (
-                              <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{
-                                  type: "spring",
-                                  stiffness: 500,
-                                  damping: 25,
-                                }}
-                              >
-                                <Check className="w-4 h-4 text-white" />
-                              </motion.div>
-                            ) : (
-                              <step.icon
-                                className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-400"}`}
-                              />
-                            )}
-                            {isActive && (
-                              <motion.div
-                                className="absolute inset-0 rounded-xl bg-blue-400/30"
-                                animate={{
-                                  scale: [1, 1.2, 1],
-                                  opacity: [0.5, 0, 0.5],
-                                }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                              />
-                            )}
-                          </div>
-                          <div className="text-center">
-                            <p
-                              className={`transition-colors duration-300 text-sm ${
-                                isActive
-                                  ? "text-gray-900"
-                                  : isCompleted
-                                    ? "text-green-600"
-                                    : "text-gray-600"
-                              }`}
-                            >
-                              {step.title}
-                            </p>
-                          </div>
-                        </motion.button>
+                            {step.title}
+                          </p>
+                        </div>
                       </TooltipTrigger>
                       <TooltipContent
                         side="bottom"

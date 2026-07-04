@@ -258,19 +258,7 @@ function WaTextEditor({
           updatePhoneId(phoneId);
         }}
         value={whatsappSettingsPhoneId}
-        w={150}
-        size="xs"
-        styles={{
-          input: {
-            background: "var(--mantine-primary-color-light)",
-            color: "var(--mantine-primary-color-filled)",
-            borderRadius: "5px",
-            fontWeight: "400",
-          },
-          label: {
-            display: "none",
-          },
-        }}
+        className="w-[150px] bg-primary/10 text-primary rounded-[5px] font-normal"
         platform={platform}
         disabled={platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK}
         hideLabel={true}

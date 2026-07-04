@@ -288,67 +288,67 @@ const AssignUser = ({
 
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button variant={variant} size="sm" className="h-8 px-2 gap-1.5">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center gap-1">
-              <div className="flex -space-x-1 relative">
-                {assignedStaff.slice(0, 3).map((a) => {
-                  const staff = staffMembers.find((s) => s.id === a.userId);
-                  return (
-                    <div key={a.userId} className="relative">
-                      <CreativeAvatar
-                        name={staff?.name}
-                        showOnlineStatus
-                        isOnline={staff?.status === "online"}
-                        size="xs"
-                      />
-                    </div>
-                  );
-                })}
-                {assignedStaff.length > 3 && (
-                  <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white">
-                    +{assignedStaff.length - 3}
+      <DropdownMenuTrigger
+        render={<Button variant={variant} size="sm" className="h-8 px-2 gap-1.5" />}
+      >
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-1">
+            <div className="flex -space-x-1 relative">
+              {assignedStaff.slice(0, 3).map((a) => {
+                const staff = staffMembers.find((s) => s.id === a.userId);
+                return (
+                  <div key={a.userId} className="relative">
+                    <CreativeAvatar
+                      name={staff?.name}
+                      showOnlineStatus
+                      isOnline={staff?.status === "online"}
+                      size="xs"
+                    />
                   </div>
-                )}
-              </div>
-              <div className="flex items-center justify-center">
-                {assignedStaff.slice(0, 1).map((a) => {
-                  const staff = staffMembers.find((s) => s.id === a.userId);
-                  return (
-                    <div key={a.userId} className="relative">
-                      <p className="text-sm font-semibold">
-                        {staff?.name?.length > 10 ? staff?.name?.slice(0, 10) : staff?.name}
-                      </p>
-                    </div>
-                  );
-                })}
-                {assignedStaff.length > 1 && <p className="text-sm font-semibold">...</p>}
-              </div>
+                );
+              })}
+              {assignedStaff.length > 3 && (
+                <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white">
+                  +{assignedStaff.length - 3}
+                </div>
+              )}
             </div>
-
-            <CustomTooltip
-              trigger={
-                !assignedStaff.length ? (
-                  <div className="flex items-center gap-1">
-                    <UserRoundCheck className={`w-4 h-4 ${isDefault ? "" : "text-primary"}`} />
-                    <span className={`${isDefault ? "" : "text-primary"} pr-2`}>Assign</span>
+            <div className="flex items-center justify-center">
+              {assignedStaff.slice(0, 1).map((a) => {
+                const staff = staffMembers.find((s) => s.id === a.userId);
+                return (
+                  <div key={a.userId} className="relative">
+                    <p className="text-sm font-semibold">
+                      {staff?.name?.length > 10 ? staff?.name?.slice(0, 10) : staff?.name}
+                    </p>
                   </div>
-                ) : (
-                  <ChevronDown className={`w-3 h-3 ${isDefault ? "" : "text-muted-foreground"}`} />
-                )
-              }
-              side="bottom"
-              content={
-                <span className="text-xs max-w-[90px] truncate">
-                  {assignedStaff.length
-                    ? `Assigned ${assignedStaff.length} staff`
-                    : "Assign staff / team"}
-                </span>
-              }
-            />
+                );
+              })}
+              {assignedStaff.length > 1 && <p className="text-sm font-semibold">...</p>}
+            </div>
           </div>
-        </Button>
+
+          <CustomTooltip
+            trigger={
+              !assignedStaff.length ? (
+                <div className="flex items-center gap-1">
+                  <UserRoundCheck className={`w-4 h-4 ${isDefault ? "" : "text-primary"}`} />
+                  <span className={`${isDefault ? "" : "text-primary"} pr-2`}>Assign</span>
+                </div>
+              ) : (
+                <ChevronDown className={`w-3 h-3 ${isDefault ? "" : "text-muted-foreground"}`} />
+              )
+            }
+            side="bottom"
+            content={
+              <span className="text-xs max-w-[90px] truncate">
+                {assignedStaff.length
+                  ? `Assigned ${assignedStaff.length} staff`
+                  : "Assign staff / team"}
+              </span>
+            }
+          />
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72 max-h-80 overflow-y-auto">
         <div className="px-2 py-1.5 text-xs text-muted-foreground">
@@ -368,6 +368,7 @@ const AssignUser = ({
           return (
             <div key={team.id}>
               <DropdownMenuItem
+                closeOnClick={false}
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => toggleTeamOpen(team.id)}
                 className="gap-2 items-center justify-between cursor-pointer"
@@ -391,6 +392,7 @@ const AssignUser = ({
               {openTeams.includes(team.id) && (
                 <div className="ml-5 mt-1 mb-1 border-l pl-2 space-y-1">
                   <DropdownMenuItem
+                    closeOnClick={false}
                     onSelect={(e) => e.preventDefault()}
                     onClick={() => handleSelectTeam(team)}
                     className="text-xs text-muted-foreground cursor-pointer"
@@ -411,6 +413,7 @@ const AssignUser = ({
 
                     return (
                       <DropdownMenuItem
+                        closeOnClick={false}
                         onSelect={(e) => e.preventDefault()}
                         key={staff.id}
                         onClick={() => updateStaffAssignment(staff, team.id)}

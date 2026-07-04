@@ -795,7 +795,11 @@ export function Step2({ formData, handleBack, handleNext }) {
             name="industry"
             control={formData.control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                items={industries.map((industry) => ({ value: industry, label: industry }))}
+              >
                 <SelectTrigger className="h-8 w-full text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white">
                   <SelectValue placeholder="Select Industry" />
                 </SelectTrigger>

@@ -32,8 +32,8 @@ import { toast } from "sonner";
 import { useReplaceQuestionsMutation } from "@/backend/surveys/questions/questions.query";
 import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { FlowMaxElementsPerScreen, FlowMaxScreens } from "@/components/whatsapp/whatsappConfig.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { QuestionType } from "@/types/enums.ts";
 import { WaFlowFormElementType, WaFlowStatus } from "@/types/enums.ts";
 import type { WaFlowFormElement, WaFlowScreen } from "@/types/global";
@@ -97,7 +97,7 @@ function ScreenListItem({
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const replaceQuestionsMutation = useReplaceQuestionsMutation(survey.id);
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
-  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const confirm = useConfirm();
   const [isOpen, { open, close }] = useDisclosure(false);
   const screenTitleInputRef = useRef(null);
   const footerLabelInputRef = useRef(null);
@@ -123,8 +123,19 @@ function ScreenListItem({
     setScreenTitleInputState(screen?.title);
   }, [screen]);
 
-  const handleDeleteScreen = () => {
+  const handleDeleteScreen = async () => {
     if (!flowEditable) return;
+
+    const shouldDelete = await confirm({
+      title: translations("Delete Screen?"),
+      description: translations(
+        "Are you sure you want to delete this Screen? It will also delete all the elements in this screen.",
+      ),
+      confirmText: translations("Delete"),
+    });
+
+    if (!shouldDelete) return;
+
     setSelectedFormElementId(null);
     updateFlowJson((draft) => {
       const questions = getQuestionsFromScreen(screen, survey, map);
@@ -251,17 +262,6 @@ function ScreenListItem({
         <>
           <Box mah={"85%"}>
             {/* <Text w={"100%"}></Text> */}
-            <ConfirmationModal
-              forDeleteFunctionality
-              opened={dialogOpened}
-              onClose={closeDialog}
-              headerLabel={translations(
-                "Are you sure you want to delete this Screen? It will also delete all the elements in this screen.",
-              )}
-              headerTitle={translations("Delete Screen?")}
-              confirmLabel={translations("Delete")}
-              onConfirm={handleDeleteScreen}
-            />
             <Group gap={5} className={styles["screen-title-input-and-chevrons-container"]}>
               <Tooltip label={translations("Previous Screen")}>
                 <ActionIcon
@@ -342,7 +342,7 @@ function ScreenListItem({
                 {flowEditable && (
                   <>
                     <Tooltip label={translations("Delete Screen")}>
-                      <ActionIcon onClick={toggle} variant="subtle">
+                      <ActionIcon onClick={handleDeleteScreen} variant="subtle">
                         <IconTrash size={20} />
                       </ActionIcon>
                     </Tooltip>

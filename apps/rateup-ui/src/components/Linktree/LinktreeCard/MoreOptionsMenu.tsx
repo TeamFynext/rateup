@@ -4,15 +4,6 @@ import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useDeleteLinktreeMutation } from "@/backend/linktree/linktree.query";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import CreateLinktreeModal from "../CreateLinktreeModal/index.tsx";
 
@@ -33,14 +25,14 @@ interface MoreOptionsMenuProps {
 function MoreOptionsMenu({ shortUrlId, id, name, onModalOpen }: Readonly<MoreOptionsMenuProps>) {
   const navigate = useNavigate();
   const [isEditLinktreeModalOpen, setIsEditLinktreeModalOpen] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const deleteLinktreeMutation = useDeleteLinktreeMutation(id);
   const { t: translations } = useTranslation();
+  const confirm = useConfirm();
 
   useEffect(() => {
-    onModalOpen?.(isEditLinktreeModalOpen || isDeleteConfirmOpen);
-  }, [isEditLinktreeModalOpen, isDeleteConfirmOpen, onModalOpen]);
+    onModalOpen?.(isEditLinktreeModalOpen);
+  }, [isEditLinktreeModalOpen, onModalOpen]);
 
   const handleShareClick = useCallback(() => {
     navigate({
@@ -48,31 +40,37 @@ function MoreOptionsMenu({ shortUrlId, id, name, onModalOpen }: Readonly<MoreOpt
     });
   }, [navigate, shortUrlId]);
 
-  const handleDeleteClick = useCallback(() => {
-    setIsDeleteConfirmOpen(true);
-  }, []);
+  const handleDeleteClick = useCallback(async () => {
+    const shouldDelete = await confirm({
+      title: translations("Delete Quick Access Link?"),
+      description: translations("Are you sure to delete this Quick Access Link?"),
+      confirmText: translations("Delete"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
+    deleteLinktreeMutation.mutateAsync();
+  }, [confirm, deleteLinktreeMutation, translations]);
 
   const handleRenameClick = useCallback(() => {
     setIsEditLinktreeModalOpen(true);
   }, []);
 
-  const handleConfirmDelete = useCallback(() => {
-    deleteLinktreeMutation.mutateAsync();
-    setIsDeleteConfirmOpen(false);
-  }, [deleteLinktreeMutation]);
-
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => e.stopPropagation()}
-            className="h-8 w-8 p-0"
-          >
-            <IconDots size={16} />
-          </Button>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+              className="h-8 w-8 p-0"
+            />
+          }
+        >
+          <IconDots size={16} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
           <DropdownMenuItem onClick={handleRenameClick}>
@@ -89,27 +87,6 @@ function MoreOptionsMenu({ shortUrlId, id, name, onModalOpen }: Readonly<MoreOpt
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{translations("Delete Quick Access Link?")}</AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogDescription>
-            {translations("Are you sure to delete this Quick Access Link?")}
-          </AlertDialogDescription>
-          <div className="flex justify-end gap-2">
-            <AlertDialogCancel>{translations("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {translations("Delete")}
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {isEditLinktreeModalOpen && (
         <CreateLinktreeModal
           opened={isEditLinktreeModalOpen}

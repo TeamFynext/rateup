@@ -1,11 +1,10 @@
 import { Loader2, Save } from "lucide-react";
-import type { UseFormReturn } from "react-hook-form";
+import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import type { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { FormField } from "@/components/ui/form.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
@@ -44,7 +43,7 @@ export function EventTriggerItem({
 
   return (
     <div className="border rounded-lg p-4 bg-card hover:bg-muted/20 transition-colors">
-      <FormField
+      <Controller
         control={form.control}
         name={`${eventType}.enabled`}
         render={({ field }) => (
@@ -63,7 +62,7 @@ export function EventTriggerItem({
       />
       {form.watch(`${eventType}.enabled`) && (
         <div className="space-y-3 pt-2 border-t border-border mt-2">
-          <FormField
+          <Controller
             control={form.control}
             name={`${eventType}.waTemplateId`}
             render={({ field }) => (

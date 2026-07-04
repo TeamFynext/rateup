@@ -209,7 +209,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
           {translations("Show or hide components based on conditions")}
         </p>
       </div>
-      <Accordion type="multiple" className="w-full">
+      <Accordion multiple className="w-full">
         {blocks.map((block, index) => (
           <AccordionItem value={`block-${index}`} key={index}>
             <AccordionTrigger>
@@ -247,6 +247,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                               onValueChange={(value) => {
                                 updateCondition(index, condIndex, "field", value);
                               }}
+                              items={questions}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder={translations("Select question")} />
@@ -267,6 +268,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                               onValueChange={(value) => {
                                 updateCondition(index, condIndex, "operator", value);
                               }}
+                              items={getOperators(condition.field)}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder={translations("Select operator")} />
@@ -288,6 +290,9 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                                 onValueChange={(value) => {
                                   updateCondition(index, condIndex, "value", value);
                                 }}
+                                items={operatorData.map((item: any) =>
+                                  typeof item === "string" ? { value: item, label: item } : item,
+                                )}
                               >
                                 <SelectTrigger>
                                   <SelectValue placeholder={translations("Select value")} />
@@ -326,6 +331,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                                 onValueChange={(value) => {
                                   updateCondition(index, condIndex, "logic", value);
                                 }}
+                                items={logicalOperators}
                               >
                                 <SelectTrigger>
                                   <SelectValue placeholder={translations("Select logic")} />
@@ -371,6 +377,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                       <Select
                         value={block.value}
                         onValueChange={(value) => updateSwitchValue(index, value)}
+                        items={questions}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={translations("Select question")} />
@@ -415,15 +422,16 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                         <div className="space-y-1.5">
                           <Label className="text-xs">{translations("Add Components")}</Label>
                           <MultiSelect
-                            placeholder={translations("Select component")}
                             options={componentsList.map((item) => ({
                               label: item.label,
                               value: item.value,
                             }))}
-                            defaultValue={block.cases[caseKey].map((comp: any) => comp.type)}
+                            value={block.cases[caseKey].map((comp: any) => comp.type)}
                             onValueChange={(value: string[]) =>
                               updateSwitchCaseComponents(index, caseKey, value)
                             }
+                            placeholder={translations("Select component")}
+                            emptyIndicator="No items found."
                           />
                         </div>
                       </div>
@@ -452,7 +460,6 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                       <div className="space-y-1.5">
                         <Label className="text-xs">{translations("Add Then Component")}</Label>
                         <MultiSelect
-                          placeholder={translations("Select component")}
                           options={componentsList
                             ?.map((d) => ({
                               label: d.label ?? d.value,
@@ -465,8 +472,10 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                               );
                               return !isInElse && !isInConditions;
                             })}
-                          defaultValue={block.then || []}
+                          value={block.then || []}
                           onValueChange={(value: string[]) => addComponent(index, "then", value)}
+                          placeholder={translations("Select component")}
+                          emptyIndicator="No items found."
                         />
                       </div>
                     </div>
@@ -476,7 +485,6 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                       <div className="space-y-1.5">
                         <Label className="text-xs">{translations("Add Else Component")}</Label>
                         <MultiSelect
-                          placeholder={translations("Select component")}
                           options={componentsList
                             ?.map((d) => ({
                               label: d?.label ?? d.value,
@@ -489,8 +497,10 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                               );
                               return !isInThen && !isInConditions;
                             })}
-                          defaultValue={block.else || []}
+                          value={block.else || []}
                           onValueChange={(value: string[]) => addComponent(index, "else", value)}
+                          placeholder={translations("Select component")}
+                          emptyIndicator="No items found."
                         />
                       </div>
                     </div>

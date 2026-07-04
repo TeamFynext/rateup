@@ -235,6 +235,10 @@ export function ResponseTableToolbar<TData>({
         <Select
           value={searchTerm || "__none__"}
           onValueChange={(value) => form.setValue("searchTerm", value === "__none__" ? "" : value)}
+          items={[
+            { value: "__none__", label: translations("Select value") },
+            ...numericOptions.map((option) => ({ value: option, label: option })),
+          ]}
         >
           <SelectTrigger className="h-9 w-full pr-9">
             <SelectValue placeholder={translations("Select value")} />
@@ -324,6 +328,7 @@ export function ResponseTableToolbar<TData>({
                 form.setValue("searchBy", value);
                 form.setValue("searchTerm", "");
               }}
+              items={filterableColumns.map((column) => ({ value: column.id, label: column.label }))}
             >
               <SelectTrigger className="h-9 w-45">
                 <SelectValue placeholder={translations("Column")} />
@@ -384,11 +389,11 @@ export function ResponseTableToolbar<TData>({
 
           {!survey?.isEncrypted && (
             <DropdownMenu open={openedExport} onOpenChange={setOpenedExport}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="default" size="sm" className="gap-2">
-                  <IconTableExport className="h-3.5 w-3.5" />
-                  {translations("Export")}
-                </Button>
+              <DropdownMenuTrigger
+                render={<Button variant="default" size="sm" className="gap-2" />}
+              >
+                <IconTableExport className="h-3.5 w-3.5" />
+                {translations("Export")}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem

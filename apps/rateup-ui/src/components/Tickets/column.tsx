@@ -383,13 +383,15 @@ export function Column({
             </span>
 
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="w-[22px] h-[22px] rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted"
-                  aria-label="More actions"
-                >
-                  <IconDots size={16} />
-                </button>
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    className="w-[22px] h-[22px] rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted"
+                    aria-label="More actions"
+                  />
+                }
+              >
+                <IconDots size={16} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[150px]">
                 <DropdownMenuItem onSelect={openEditModal}>
@@ -453,7 +455,6 @@ export function Column({
           )}
         </div>
       </div>
-
       <Dialog open={isEditModalOpen} onOpenChange={(open) => !open && closeEditModal()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -479,7 +480,6 @@ export function Column({
           </div>
         </DialogContent>
       </Dialog>
-
       <Dialog open={isAddCardModalOpen} onOpenChange={(open) => !open && closeAddCardModal()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

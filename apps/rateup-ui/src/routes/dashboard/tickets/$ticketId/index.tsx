@@ -297,13 +297,15 @@ function AssignContact({ ticketId }: Readonly<{ ticketId: string }>) {
     <div>
       <MetaLabel>{t("Customer")}</MetaLabel>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full text-xs border-dashed flex gap-2 justify-start font-normal text-muted-foreground h-10"
-          >
-            <UserPlus className="h-4 w-4" /> {t("Add Contact")}
-          </Button>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="outline"
+              className="w-full text-xs border-dashed flex gap-2 justify-start font-normal text-muted-foreground h-10"
+            />
+          }
+        >
+          <UserPlus className="h-4 w-4" /> {t("Add Contact")}
         </PopoverTrigger>
         <PopoverContent className="w-72 p-1" align="start">
           <div className="p-2 border-b">
@@ -571,6 +573,7 @@ function RightSidebar({
                 value={ticket.ticketColumnId || ""}
                 onValueChange={handleColumnChange}
                 disabled={moveColMutation.isPending}
+                items={boardColumns.map((col: any) => ({ value: col.id, label: col.title }))}
               >
                 <SelectTrigger className="w-full h-9 text-[13px] font-body">
                   <SelectValue placeholder={t("Select column")} />
@@ -622,14 +625,16 @@ function RightSidebar({
                 if (!user) return null;
                 return (
                   <Tooltip key={user.id}>
-                    <TooltipTrigger asChild>
-                      <Avatar
-                        className="h-8 w-8 border hover:opacity-80 transition cursor-pointer"
-                        onClick={() => handleToggleMember(user.id)}
-                      >
-                        <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} />
-                        <AvatarFallback>{user.name?.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
+                    <TooltipTrigger
+                      render={
+                        <Avatar
+                          className="h-8 w-8 border hover:opacity-80 transition cursor-pointer"
+                          onClick={() => handleToggleMember(user.id)}
+                        />
+                      }
+                    >
+                      <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} />
+                      <AvatarFallback>{user.name?.charAt(0).toUpperCase()}</AvatarFallback>
                     </TooltipTrigger>
                     <TooltipContent>{user.name}</TooltipContent>
                   </Tooltip>
@@ -637,10 +642,12 @@ function RightSidebar({
               })}
 
               <Popover>
-                <PopoverTrigger asChild>
-                  <button className="h-8 w-8 rounded-full border-2 border-dashed flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors">
-                    <Plus className="h-4 w-4" />
-                  </button>
+                <PopoverTrigger
+                  render={
+                    <button className="h-8 w-8 rounded-full border-2 border-dashed flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors" />
+                  }
+                >
+                  <Plus className="h-4 w-4" />
                 </PopoverTrigger>
                 <PopoverContent className="w-56 p-1" align="start">
                   <div
@@ -856,7 +863,6 @@ function RightSidebar({
           </div>
         </div>
       </TooltipProvider>
-
       {/* Delete confirmation dialog */}
       {confirmDelete && (
         <div
@@ -887,7 +893,6 @@ function RightSidebar({
           </div>
         </div>
       )}
-
       {/* Lightbox */}
       {lightboxImage && (
         <div
@@ -908,7 +913,6 @@ function RightSidebar({
           />
         </div>
       )}
-
       {/* Delete Confirmation */}
       {attachmentToDelete && (
         <div

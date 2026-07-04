@@ -102,10 +102,13 @@ export const PopoverEmojiPicker = ({
     <Popover>
       <CustomTooltip
         trigger={
-          <PopoverTrigger asChild>
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted cursor-pointer">
-              {showIcon ?? <Smile className="w-5 h-5" />}
-            </span>
+          <PopoverTrigger
+            nativeButton={false}
+            render={
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted cursor-pointer" />
+            }
+          >
+            {showIcon ?? <Smile className="w-5 h-5" />}
           </PopoverTrigger>
         }
         content={<span>{translations("Insert an emoji")}</span>}

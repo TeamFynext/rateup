@@ -50,11 +50,15 @@ const config = defineConfig({
     }),
     tailwindcss(),
     tanstackStart(),
-    sentryTanstackStart({
-      org: "rateup",
-      project: "tanstackstart-ui",
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-    }),
+    ...(process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryTanstackStart({
+            org: "rateup",
+            project: "tanstackstart-ui",
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+          }),
+        ]
+      : []),
     viteReact(),
   ],
 });

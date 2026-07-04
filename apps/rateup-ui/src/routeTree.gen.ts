@@ -25,10 +25,10 @@ import { Route as DashboardSurveysIndexRouteImport } from './routes/dashboard/su
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardQuickAccessLinksIndexRouteImport } from './routes/dashboard/quickAccessLinks/index'
 import { Route as DashboardQrCreatorIndexRouteImport } from './routes/dashboard/qrCreator/index'
+import { Route as DashboardMetaAgentIndexRouteImport } from './routes/dashboard/meta-agent/index'
 import { Route as DashboardInstagramIndexRouteImport } from './routes/dashboard/instagram/index'
 import { Route as DashboardInboxIndexRouteImport } from './routes/dashboard/inbox/index'
 import { Route as DashboardContactsIndexRouteImport } from './routes/dashboard/contacts/index'
-import { Route as DashboardChatbotIndexRouteImport } from './routes/dashboard/chatbot/index'
 import { Route as DashboardCampaignIndexRouteImport } from './routes/dashboard/campaign/index'
 import { Route as DashboardAutomationIndexRouteImport } from './routes/dashboard/automation/index'
 import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard/analytics/index'
@@ -142,7 +142,6 @@ import { Route as publicFacingWsShortIdEndIndexRouteImport } from './routes/(pub
 import { Route as publicFacingPublicTestimonialCollectionIdIndexRouteImport } from './routes/(public-facing)/public/testimonial/$collectionId/index'
 import { Route as publicFacingPublicSurveyCsIndexRouteImport } from './routes/(public-facing)/public/survey/cs/index'
 import { Route as publicFacingPublicSurveySurveyIdIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/index'
-import { Route as publicFacingPublicChatbotChatbotIdIndexRouteImport } from './routes/(public-facing)/public/chatbot/$chatbotId/index'
 import { Route as marketingBlogTagSlugIndexRouteImport } from './routes/(marketing)/blog/tag/$slug/index'
 import { Route as marketingBlogAuthorSlugIndexRouteImport } from './routes/(marketing)/blog/author/$slug/index'
 import { Route as authLoginCallbackPausedIndexRouteImport } from './routes/(auth)/login/callback/paused/index'
@@ -238,6 +237,11 @@ const DashboardQrCreatorIndexRoute = DashboardQrCreatorIndexRouteImport.update({
   path: '/qrCreator/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardMetaAgentIndexRoute = DashboardMetaAgentIndexRouteImport.update({
+  id: '/meta-agent/',
+  path: '/meta-agent/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardInstagramIndexRoute = DashboardInstagramIndexRouteImport.update({
   id: '/instagram/',
   path: '/instagram/',
@@ -251,11 +255,6 @@ const DashboardInboxIndexRoute = DashboardInboxIndexRouteImport.update({
 const DashboardContactsIndexRoute = DashboardContactsIndexRouteImport.update({
   id: '/contacts/',
   path: '/contacts/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardChatbotIndexRoute = DashboardChatbotIndexRouteImport.update({
-  id: '/chatbot/',
-  path: '/chatbot/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardCampaignIndexRoute = DashboardCampaignIndexRouteImport.update({
@@ -905,12 +904,6 @@ const publicFacingPublicSurveySurveyIdIndexRoute =
     path: '/public/survey/$surveyId/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const publicFacingPublicChatbotChatbotIdIndexRoute =
-  publicFacingPublicChatbotChatbotIdIndexRouteImport.update({
-    id: '/(public-facing)/public/chatbot/$chatbotId/',
-    path: '/public/chatbot/$chatbotId/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const marketingBlogTagSlugIndexRoute =
   marketingBlogTagSlugIndexRouteImport.update({
     id: '/tag/$slug/',
@@ -1025,10 +1018,10 @@ export interface FileRoutesByFullPath {
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation/': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign/': typeof DashboardCampaignIndexRoute
-  '/dashboard/chatbot/': typeof DashboardChatbotIndexRoute
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
+  '/dashboard/meta-agent/': typeof DashboardMetaAgentIndexRoute
   '/dashboard/qrCreator/': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks/': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
@@ -1109,7 +1102,6 @@ export interface FileRoutesByFullPath {
   '/login/callback/paused/': typeof authLoginCallbackPausedIndexRoute
   '/blog/author/$slug/': typeof marketingBlogAuthorSlugIndexRoute
   '/blog/tag/$slug/': typeof marketingBlogTagSlugIndexRoute
-  '/public/chatbot/$chatbotId/': typeof publicFacingPublicChatbotChatbotIdIndexRoute
   '/public/survey/$surveyId/': typeof publicFacingPublicSurveySurveyIdIndexRoute
   '/public/survey/cs/': typeof publicFacingPublicSurveyCsIndexRoute
   '/public/testimonial/$collectionId/': typeof publicFacingPublicTestimonialCollectionIdIndexRoute
@@ -1170,10 +1162,10 @@ export interface FileRoutesByTo {
   '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign': typeof DashboardCampaignIndexRoute
-  '/dashboard/chatbot': typeof DashboardChatbotIndexRoute
   '/dashboard/contacts': typeof DashboardContactsIndexRoute
   '/dashboard/inbox': typeof DashboardInboxIndexRoute
   '/dashboard/instagram': typeof DashboardInstagramIndexRoute
+  '/dashboard/meta-agent': typeof DashboardMetaAgentIndexRoute
   '/dashboard/qrCreator': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
@@ -1254,7 +1246,6 @@ export interface FileRoutesByTo {
   '/login/callback/paused': typeof authLoginCallbackPausedIndexRoute
   '/blog/author/$slug': typeof marketingBlogAuthorSlugIndexRoute
   '/blog/tag/$slug': typeof marketingBlogTagSlugIndexRoute
-  '/public/chatbot/$chatbotId': typeof publicFacingPublicChatbotChatbotIdIndexRoute
   '/public/survey/$surveyId': typeof publicFacingPublicSurveySurveyIdIndexRoute
   '/public/survey/cs': typeof publicFacingPublicSurveyCsIndexRoute
   '/public/testimonial/$collectionId': typeof publicFacingPublicTestimonialCollectionIdIndexRoute
@@ -1319,10 +1310,10 @@ export interface FileRoutesById {
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation/': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign/': typeof DashboardCampaignIndexRoute
-  '/dashboard/chatbot/': typeof DashboardChatbotIndexRoute
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
+  '/dashboard/meta-agent/': typeof DashboardMetaAgentIndexRoute
   '/dashboard/qrCreator/': typeof DashboardQrCreatorIndexRoute
   '/dashboard/quickAccessLinks/': typeof DashboardQuickAccessLinksIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
@@ -1403,7 +1394,6 @@ export interface FileRoutesById {
   '/(auth)/login/callback/paused/': typeof authLoginCallbackPausedIndexRoute
   '/(marketing)/blog/author/$slug/': typeof marketingBlogAuthorSlugIndexRoute
   '/(marketing)/blog/tag/$slug/': typeof marketingBlogTagSlugIndexRoute
-  '/(public-facing)/public/chatbot/$chatbotId/': typeof publicFacingPublicChatbotChatbotIdIndexRoute
   '/(public-facing)/public/survey/$surveyId/': typeof publicFacingPublicSurveySurveyIdIndexRoute
   '/(public-facing)/public/survey/cs/': typeof publicFacingPublicSurveyCsIndexRoute
   '/(public-facing)/public/testimonial/$collectionId/': typeof publicFacingPublicTestimonialCollectionIdIndexRoute
@@ -1469,10 +1459,10 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/'
     | '/dashboard/automation/'
     | '/dashboard/campaign/'
-    | '/dashboard/chatbot/'
     | '/dashboard/contacts/'
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
+    | '/dashboard/meta-agent/'
     | '/dashboard/qrCreator/'
     | '/dashboard/quickAccessLinks/'
     | '/dashboard/settings/'
@@ -1553,7 +1543,6 @@ export interface FileRouteTypes {
     | '/login/callback/paused/'
     | '/blog/author/$slug/'
     | '/blog/tag/$slug/'
-    | '/public/chatbot/$chatbotId/'
     | '/public/survey/$surveyId/'
     | '/public/survey/cs/'
     | '/public/testimonial/$collectionId/'
@@ -1614,10 +1603,10 @@ export interface FileRouteTypes {
     | '/dashboard/analytics'
     | '/dashboard/automation'
     | '/dashboard/campaign'
-    | '/dashboard/chatbot'
     | '/dashboard/contacts'
     | '/dashboard/inbox'
     | '/dashboard/instagram'
+    | '/dashboard/meta-agent'
     | '/dashboard/qrCreator'
     | '/dashboard/quickAccessLinks'
     | '/dashboard/settings'
@@ -1698,7 +1687,6 @@ export interface FileRouteTypes {
     | '/login/callback/paused'
     | '/blog/author/$slug'
     | '/blog/tag/$slug'
-    | '/public/chatbot/$chatbotId'
     | '/public/survey/$surveyId'
     | '/public/survey/cs'
     | '/public/testimonial/$collectionId'
@@ -1762,10 +1750,10 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/'
     | '/dashboard/automation/'
     | '/dashboard/campaign/'
-    | '/dashboard/chatbot/'
     | '/dashboard/contacts/'
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
+    | '/dashboard/meta-agent/'
     | '/dashboard/qrCreator/'
     | '/dashboard/quickAccessLinks/'
     | '/dashboard/settings/'
@@ -1846,7 +1834,6 @@ export interface FileRouteTypes {
     | '/(auth)/login/callback/paused/'
     | '/(marketing)/blog/author/$slug/'
     | '/(marketing)/blog/tag/$slug/'
-    | '/(public-facing)/public/chatbot/$chatbotId/'
     | '/(public-facing)/public/survey/$surveyId/'
     | '/(public-facing)/public/survey/cs/'
     | '/(public-facing)/public/testimonial/$collectionId/'
@@ -1919,7 +1906,6 @@ export interface RootRouteChildren {
   authLoginCallbackAppleIndexRoute: typeof authLoginCallbackAppleIndexRoute
   authLoginCallbackGoogleIndexRoute: typeof authLoginCallbackGoogleIndexRoute
   authLoginCallbackPausedIndexRoute: typeof authLoginCallbackPausedIndexRoute
-  publicFacingPublicChatbotChatbotIdIndexRoute: typeof publicFacingPublicChatbotChatbotIdIndexRoute
   publicFacingPublicSurveySurveyIdIndexRoute: typeof publicFacingPublicSurveySurveyIdIndexRoute
   publicFacingPublicSurveyCsIndexRoute: typeof publicFacingPublicSurveyCsIndexRoute
   publicFacingPublicTestimonialCollectionIdIndexRoute: typeof publicFacingPublicTestimonialCollectionIdIndexRoute
@@ -2045,6 +2031,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardQrCreatorIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/meta-agent/': {
+      id: '/dashboard/meta-agent/'
+      path: '/meta-agent'
+      fullPath: '/dashboard/meta-agent/'
+      preLoaderRoute: typeof DashboardMetaAgentIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/instagram/': {
       id: '/dashboard/instagram/'
       path: '/instagram'
@@ -2064,13 +2057,6 @@ declare module '@tanstack/react-router' {
       path: '/contacts'
       fullPath: '/dashboard/contacts/'
       preLoaderRoute: typeof DashboardContactsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/chatbot/': {
-      id: '/dashboard/chatbot/'
-      path: '/chatbot'
-      fullPath: '/dashboard/chatbot/'
-      preLoaderRoute: typeof DashboardChatbotIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/campaign/': {
@@ -2864,13 +2850,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof publicFacingPublicSurveySurveyIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(public-facing)/public/chatbot/$chatbotId/': {
-      id: '/(public-facing)/public/chatbot/$chatbotId/'
-      path: '/public/chatbot/$chatbotId'
-      fullPath: '/public/chatbot/$chatbotId/'
-      preLoaderRoute: typeof publicFacingPublicChatbotChatbotIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/(marketing)/blog/tag/$slug/': {
       id: '/(marketing)/blog/tag/$slug/'
       path: '/tag/$slug'
@@ -3001,10 +2980,10 @@ interface DashboardRouteRouteChildren {
   DashboardAnalyticsIndexRoute: typeof DashboardAnalyticsIndexRoute
   DashboardAutomationIndexRoute: typeof DashboardAutomationIndexRoute
   DashboardCampaignIndexRoute: typeof DashboardCampaignIndexRoute
-  DashboardChatbotIndexRoute: typeof DashboardChatbotIndexRoute
   DashboardContactsIndexRoute: typeof DashboardContactsIndexRoute
   DashboardInboxIndexRoute: typeof DashboardInboxIndexRoute
   DashboardInstagramIndexRoute: typeof DashboardInstagramIndexRoute
+  DashboardMetaAgentIndexRoute: typeof DashboardMetaAgentIndexRoute
   DashboardQrCreatorIndexRoute: typeof DashboardQrCreatorIndexRoute
   DashboardQuickAccessLinksIndexRoute: typeof DashboardQuickAccessLinksIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
@@ -3070,10 +3049,10 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardAnalyticsIndexRoute: DashboardAnalyticsIndexRoute,
   DashboardAutomationIndexRoute: DashboardAutomationIndexRoute,
   DashboardCampaignIndexRoute: DashboardCampaignIndexRoute,
-  DashboardChatbotIndexRoute: DashboardChatbotIndexRoute,
   DashboardContactsIndexRoute: DashboardContactsIndexRoute,
   DashboardInboxIndexRoute: DashboardInboxIndexRoute,
   DashboardInstagramIndexRoute: DashboardInstagramIndexRoute,
+  DashboardMetaAgentIndexRoute: DashboardMetaAgentIndexRoute,
   DashboardQrCreatorIndexRoute: DashboardQrCreatorIndexRoute,
   DashboardQuickAccessLinksIndexRoute: DashboardQuickAccessLinksIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
@@ -3239,8 +3218,6 @@ const rootRouteChildren: RootRouteChildren = {
   authLoginCallbackAppleIndexRoute: authLoginCallbackAppleIndexRoute,
   authLoginCallbackGoogleIndexRoute: authLoginCallbackGoogleIndexRoute,
   authLoginCallbackPausedIndexRoute: authLoginCallbackPausedIndexRoute,
-  publicFacingPublicChatbotChatbotIdIndexRoute:
-    publicFacingPublicChatbotChatbotIdIndexRoute,
   publicFacingPublicSurveySurveyIdIndexRoute:
     publicFacingPublicSurveySurveyIdIndexRoute,
   publicFacingPublicSurveyCsIndexRoute: publicFacingPublicSurveyCsIndexRoute,

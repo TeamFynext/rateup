@@ -26,9 +26,8 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-
-import ConfirmationModal from "../Modal/ConfirmationModal.tsx";
 
 export default function ApiAccessKeyPage() {
   const { data } = useLoyaltyApiKey();
@@ -172,41 +171,37 @@ interface ApiRegenerateButtonProps {
 function ApiRegenerateButton({ onRegenerate }: Readonly<ApiRegenerateButtonProps>) {
   const regenerateMutation = useRegenerateLoyaltyApiKey();
   const { t: translations } = useTranslation();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const confirm = useConfirm();
 
-  function handleRegenerate() {
+  async function handleRegenerate() {
+    const shouldRegenerate = await confirm({
+      title: translations("Confirm API Key Regeneration"),
+      description: translations(
+        "Are you sure you want to regenerate the API key? The old key will be immediately invalidated and all applications using it will stop working.",
+      ),
+      confirmText: translations("Regenerate"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldRegenerate) return;
+
     regenerateMutation.mutate(undefined, {
       onSuccess: (data) => {
         onRegenerate(data.apiKey);
-        setIsModalOpen(false);
       },
     });
   }
 
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
-        onClick={() => setIsModalOpen(true)}
-        title={translations("Regenerate")}
-      >
-        <IconReload size={16} />
-      </Button>
-      <ConfirmationModal
-        opened={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        confirmLabel={translations("Regenerate")}
-        headerTitle={translations("Confirm API Key Regeneration")}
-        onConfirm={handleRegenerate}
-        headerLabel={translations(
-          "Are you sure you want to regenerate the API key? The old key will be immediately invalidated and all applications using it will stop working.",
-        )}
-        closeLabel={translations("Cancel")}
-        forDeleteFunctionality
-      />
-    </>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8"
+      onClick={handleRegenerate}
+      title={translations("Regenerate")}
+    >
+      <IconReload size={16} />
+    </Button>
   );
 }
 
@@ -217,40 +212,36 @@ interface ApiDeleteButtonProps {
 function ApiDeleteButton({ onDelete }: Readonly<ApiDeleteButtonProps>) {
   const deleteMutation = useDeleteLoyaltyApiKey();
   const { t: translations } = useTranslation();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const confirm = useConfirm();
 
-  function handleDelete() {
+  async function handleDelete() {
+    const shouldDelete = await confirm({
+      title: translations("Confirm API Key Deletion"),
+      description: translations(
+        "Are you sure you want to delete the API key? All applications using this key will immediately stop working.",
+      ),
+      confirmText: translations("Delete"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
     deleteMutation.mutate(undefined, {
       onSuccess: () => {
         onDelete();
-        setIsModalOpen(false);
       },
     });
   }
 
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-        onClick={() => setIsModalOpen(true)}
-        title={translations("Delete")}
-      >
-        <IconTrash size={16} />
-      </Button>
-      <ConfirmationModal
-        opened={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        confirmLabel={translations("Delete")}
-        headerTitle={translations("Confirm API Key Deletion")}
-        onConfirm={handleDelete}
-        headerLabel={translations(
-          "Are you sure you want to delete the API key? All applications using this key will immediately stop working.",
-        )}
-        closeLabel={translations("Cancel")}
-        forDeleteFunctionality
-      />
-    </>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+      onClick={handleDelete}
+      title={translations("Delete")}
+    >
+      <IconTrash size={16} />
+    </Button>
   );
 }

@@ -283,10 +283,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                       id="select-all"
                       checked={isSelectedAll}
                       disabled={disableSelectAllIndividual}
-                      onCheckedChange={(checked) => {
-                        if (checked === "indeterminate") return;
-                        handleSelectAll(checked);
-                      }}
+                      onCheckedChange={handleSelectAll}
                     />
 
                     <Label htmlFor="select-all" className="text-sm font-normal cursor-pointer">
@@ -312,6 +309,10 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                         <Select
                           value={selectedStatus[0] || ""}
                           onValueChange={(value) => setSelectedStatus([value])}
+                          items={Object.values(CampaignParticipantAddStatus).map((status) => ({
+                            value: status,
+                            label: status,
+                          }))}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder={t("Pick status")} />

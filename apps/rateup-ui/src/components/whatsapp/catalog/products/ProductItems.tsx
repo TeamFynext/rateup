@@ -119,27 +119,31 @@ const ProductItems = ({ catalogId }) => {
                     {/* Hover action overlay */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="icon-sm"
-                            variant="secondary"
-                            onClick={() => handleOpenEdit(product)}
-                          >
-                            <IconEdit size={15} />
-                          </Button>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              size="icon-sm"
+                              variant="secondary"
+                              onClick={() => handleOpenEdit(product)}
+                            />
+                          }
+                        >
+                          <IconEdit size={15} />
                         </TooltipTrigger>
                         <TooltipContent>Edit</TooltipContent>
                       </Tooltip>
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="icon-sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(product)}
-                            disabled={deleteProducts.isPending}
-                          >
-                            <IconTrash size={15} />
-                          </Button>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              size="icon-sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(product)}
+                              disabled={deleteProducts.isPending}
+                            />
+                          }
+                        >
+                          <IconTrash size={15} />
                         </TooltipTrigger>
                         <TooltipContent>Delete</TooltipContent>
                       </Tooltip>
@@ -211,7 +215,6 @@ const ProductItems = ({ catalogId }) => {
           );
         })}
       </div>
-
       <AddCatalogProductModal
         catalogData={{ catalogId, vertical }}
         opened={opened}

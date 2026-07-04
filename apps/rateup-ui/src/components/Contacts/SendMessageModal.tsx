@@ -51,7 +51,14 @@ const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
         <div className="space-y-4 py-4">
           <div className="space-y-2 w-full">
             <Label htmlFor="message-channel">Select Channel</Label>
-            <Select value={platform} onValueChange={setPlatform}>
+            <Select
+              value={platform}
+              onValueChange={setPlatform}
+              items={[
+                { value: MessagePlatform.WHATSAPP, label: "WhatsApp" },
+                { value: MessagePlatform.INSTAGRAM, label: "Instagram" },
+              ]}
+            >
               <SelectTrigger id="message-channel" className="w-full">
                 <SelectValue />
               </SelectTrigger>

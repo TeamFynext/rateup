@@ -21,7 +21,7 @@ export function ApiSelector({ value, onChange, className }: ApiSelectorProps) {
   const Icon = selectedOption?.icon || Globe;
 
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange} items={apiOptions}>
       <SelectTrigger className={`${className || ""}`}>
         <Icon className="w-4 h-4 mr-2 text-primary" />
         <SelectValue placeholder="Select API" />

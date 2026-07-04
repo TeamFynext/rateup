@@ -144,20 +144,22 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton className="w-8 mx-auto data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:h-8 md:p-0 rounded-lg">
-              <Avatar className="h-8 w-8 rounded-lg text-accent-foreground">
-                <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} alt={user.userName} />
-                <AvatarFallback className="rounded-lg uppercase">
-                  {user.userName?.slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.userName}</span>
-                <span className="truncate text-xs">{user.email}</span>
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton className="w-8 mx-auto data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:h-8 md:p-0 rounded-lg" />
+            }
+          >
+            <Avatar className="h-8 w-8 rounded-lg text-accent-foreground">
+              <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} alt={user.userName} />
+              <AvatarFallback className="rounded-lg uppercase">
+                {user.userName?.slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">{user.userName}</span>
+              <span className="truncate text-xs">{user.email}</span>
+            </div>
+            <ChevronsUpDown className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
@@ -165,23 +167,25 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className={`h-8 w-8 rounded-lg ${statusRing}`}>
-                  <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} alt={user.userName} />
-                  <AvatarFallback className="rounded-lg uppercase">
-                    {user.userName?.slice(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.userName}</span>
-                  <span className="truncate text-xs">{user.email}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {user.orgName} · {user.role}
-                  </span>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="p-0 font-normal">
+                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                  <Avatar className={`h-8 w-8 rounded-lg ${statusRing}`}>
+                    <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} alt={user.userName} />
+                    <AvatarFallback className="rounded-lg uppercase">
+                      {user.userName?.slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-medium">{user.userName}</span>
+                    <span className="truncate text-xs">{user.email}</span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {user.orgName} · {user.role}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </DropdownMenuLabel>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               {/* Status selection submenu */}

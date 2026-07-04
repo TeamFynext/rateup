@@ -1,20 +1,20 @@
 // data
 import { countries } from "country-data-list";
 // assets
-import { CheckIcon, ChevronDown, Globe } from "lucide-react";
+import { CheckIcon, Globe } from "lucide-react";
 import React, { forwardRef, useCallback, useEffect, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 
 // shadcn
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+  Combobox,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxTrigger,
+} from "@/components/ui/combobox.tsx";
 // utils
 import { cn } from "@/lib/utils.ts";
 
@@ -75,14 +75,18 @@ const CountryDropdownComponent = (
     }
   }, [defaultValue, options]);
 
+  const namedOptions = options.filter((x) => x.name);
+  const items = namedOptions.map((country) => ({ value: country.alpha3, label: country.name }));
+
   const handleSelect = useCallback(
-    (country: Country) => {
-      console.log("🌍 CountryDropdown value: ", country);
+    (alpha3: string | null) => {
+      const country = namedOptions.find((c) => c.alpha3 === alpha3);
+      if (!country) return;
       setSelectedCountry(country);
       onChange?.(country);
       setOpen(false);
     },
-    [onChange],
+    [onChange, namedOptions],
   );
 
   const triggerClasses = cn(
@@ -91,8 +95,15 @@ const CountryDropdownComponent = (
   );
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger ref={ref} className={triggerClasses} disabled={disabled} {...props}>
+    <Combobox
+      items={items}
+      value={selectedCountry?.alpha3 ?? null}
+      onValueChange={handleSelect}
+      open={open}
+      onOpenChange={setOpen}
+      disabled={disabled}
+    >
+      <ComboboxTrigger ref={ref} className={triggerClasses} {...props}>
         {selectedCountry ? (
           <div className="flex items-center grow w-0 gap-2 overflow-hidden">
             <div className="inline-flex items-center justify-center w-5 h-5 shrink-0 overflow-hidden rounded-full">
@@ -105,56 +116,46 @@ const CountryDropdownComponent = (
             )}
           </div>
         ) : (
-          <span>
-            {slim === false ? placeholder || setSelectedCountry.name : <Globe size={20} />}
-          </span>
+          <span>{slim === false ? placeholder : <Globe size={20} />}</span>
         )}
-        <ChevronDown size={16} />
-      </PopoverTrigger>
-      <PopoverContent
-        collisionPadding={10}
-        side="bottom"
-        className="min-w-[--radix-popper-anchor-width] p-0"
-      >
+      </ComboboxTrigger>
+      <ComboboxContent className="p-0">
         <div className="flex flex-col w-full max-h-[250px] sm:max-h-[330px]">
-          <Command className="w-full flex flex-col">
-            <CommandInput
-              placeholder="Search country..."
-              className="border-0 border-b rounded-none flex-shrink-0"
-            />
-            <CommandList className="flex-1 overflow-y-auto">
-              <CommandEmpty>No country found.</CommandEmpty>
-              <CommandGroup>
-                {options
-                  .filter((x) => x.name)
-                  .map((option, key: number) => (
-                    <CommandItem
-                      className="flex items-center w-full gap-2"
-                      key={key}
-                      onSelect={() => handleSelect(option)}
-                    >
-                      <div className="flex grow w-0 space-x-2 overflow-hidden">
-                        <div className="inline-flex items-center justify-center w-5 h-5 shrink-0 overflow-hidden rounded-full">
-                          <CircleFlag countryCode={option.alpha2.toLowerCase()} height={20} />
-                        </div>
-                        <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-                          {option.name}
-                        </span>
-                      </div>
-                      <CheckIcon
-                        className={cn(
-                          "ml-auto h-4 w-4 shrink-0",
-                          option.name === selectedCountry?.name ? "opacity-100" : "opacity-0",
-                        )}
-                      />
-                    </CommandItem>
-                  ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
+          <ComboboxChipsInput
+            placeholder="Search country..."
+            className="w-full border-0 border-b rounded-none px-3 h-9 flex-shrink-0"
+          />
+          <ComboboxEmpty>No country found.</ComboboxEmpty>
+          <ComboboxList className="flex-1 overflow-y-auto">
+            {(item: { value: string; label: string }) => {
+              const country = namedOptions.find((c) => c.alpha3 === item.value);
+              return (
+                <ComboboxItem
+                  key={item.value}
+                  value={item.value}
+                  className="flex items-center w-full gap-2"
+                >
+                  <div className="flex grow w-0 space-x-2 overflow-hidden">
+                    <div className="inline-flex items-center justify-center w-5 h-5 shrink-0 overflow-hidden rounded-full">
+                      <CircleFlag countryCode={country?.alpha2.toLowerCase()} height={20} />
+                    </div>
+                    <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+                      {item.label}
+                    </span>
+                  </div>
+                  <CheckIcon
+                    className={cn(
+                      "ml-auto h-4 w-4 shrink-0",
+                      item.value === selectedCountry?.alpha3 ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                </ComboboxItem>
+              );
+            }}
+          </ComboboxList>
         </div>
-      </PopoverContent>
-    </Popover>
+      </ComboboxContent>
+    </Combobox>
   );
 };
 

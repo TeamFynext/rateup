@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import type { UseFormReturn } from "react-hook-form";
+import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
@@ -8,14 +8,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { CountryDropdown } from "@/components/ui/country-dropdown.tsx";
 import { CurrencySelect } from "@/components/ui/currency-select.tsx";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
 import type { BasicSettingsSchema } from "./schemas.ts";
@@ -55,96 +48,106 @@ export function BasicSettings({
         <CardTitle className="text-base">{t("Basic Settings")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSave)} className="space-y-3">
-            <FormField
-              control={form.control}
-              name="programName"
-              render={({ field }) => (
-                <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs">{t("Program Name")}</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., VIP Rewards" className="h-9" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <form onSubmit={form.handleSubmit(onSave)} className="space-y-3">
+          <Controller
+            control={form.control}
+            name="programName"
+            render={({ field, fieldState }) => (
+              <Field className="space-y-1.5" data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name} className="text-xs">
+                  {t("Program Name")}
+                </FieldLabel>
+                <Input
+                  id={field.name}
+                  placeholder="e.g., VIP Rewards"
+                  className="h-9"
+                  aria-invalid={fieldState.invalid}
+                  {...field}
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="pointsCurrency"
-              render={({ field }) => (
-                <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs">{t("Points Currency")}</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Points" className="h-9" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <Controller
+            control={form.control}
+            name="pointsCurrency"
+            render={({ field, fieldState }) => (
+              <Field className="space-y-1.5" data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name} className="text-xs">
+                  {t("Points Currency")}
+                </FieldLabel>
+                <Input
+                  id={field.name}
+                  placeholder="Points"
+                  className="h-9"
+                  aria-invalid={fieldState.invalid}
+                  {...field}
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="moneyCurrency"
-              render={({ field }) => (
-                <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs">{t("Money Currency")}</FormLabel>
-                  <FormControl>
-                    <CurrencySelect
-                      name={field.name}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      placeholder={t("Select Currency")}
-                      currencies="all"
-                      variant="default"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <Controller
+            control={form.control}
+            name="moneyCurrency"
+            render={({ field, fieldState }) => (
+              <Field className="space-y-1.5" data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name} className="text-xs">
+                  {t("Money Currency")}
+                </FieldLabel>
+                <CurrencySelect
+                  name={field.name}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder={t("Select Currency")}
+                  currencies="all"
+                  variant="default"
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="defaultCountryCode"
-              render={({ field }) => (
-                <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs">{t("Default Country")}</FormLabel>
-                  <FormControl>
-                    <CountryDropdown
-                      placeholder={t("Select Country")}
-                      defaultValue={field.value}
-                      onChange={(country) => {
-                        field.onChange(country.alpha2);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <Controller
+            control={form.control}
+            name="defaultCountryCode"
+            render={({ field, fieldState }) => (
+              <Field className="space-y-1.5" data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name} className="text-xs">
+                  {t("Default Country")}
+                </FieldLabel>
+                <CountryDropdown
+                  placeholder={t("Select Country")}
+                  defaultValue={field.value}
+                  onChange={(country) => {
+                    field.onChange(country.alpha2);
+                  }}
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="whatsappSettingsId"
-              render={({ field }) => (
-                <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs">{t("WhatsApp Account")}</FormLabel>
-                  <FormControl>
-                    <AccountSelector value={field.value} onChange={field.onChange} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <Controller
+            control={form.control}
+            name="whatsappSettingsId"
+            render={({ field, fieldState }) => (
+              <Field className="space-y-1.5" data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name} className="text-xs">
+                  {t("WhatsApp Account")}
+                </FieldLabel>
+                <AccountSelector value={field.value} onChange={field.onChange} />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
 
-            <Button size="sm" className="w-full mt-2" type="submit" disabled={isPending}>
-              {buttonLabel}
-            </Button>
-          </form>
-        </Form>
+          <Button size="sm" className="w-full mt-2" type="submit" disabled={isPending}>
+            {buttonLabel}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );

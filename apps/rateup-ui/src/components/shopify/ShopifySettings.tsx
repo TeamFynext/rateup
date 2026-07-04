@@ -39,17 +39,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps, ShopifyEvents } from "@/types/enums.ts";
 import type { ShopifyIntegration } from "@/types/global";
 import { shopifyEventData } from "@/utils/constants.ts";
 
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput.tsx";
-import ConfirmationModal from "../Modal/ConfirmationModal.tsx";
 
 const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) => {
-  const [openedConfirm, setOpenedConfirm] = useState(false);
+  const confirm = useConfirm();
   const [showEvents, setShowEvents] = useState(false);
-  const [deleteCase, setDeleteCase] = useState(null);
   const [isWebhookEnabled, setIsWebhookEnabled] = useState(
     shopifyInfo?.credential?.isWebhookRegistered,
   );
@@ -94,12 +93,27 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
     });
   };
 
+  async function confirmAndRun(deletionCase, confirmFunc, confirmFuncArgs?, data?) {
+    const deleteCase = getLabelsforConfirmModal(deletionCase, confirmFunc, confirmFuncArgs, data);
+    const shouldProceed = await confirm({
+      title: deleteCase?.headerTitle,
+      description: deleteCase?.headerLabel,
+      warning: deleteCase?.deleteQuotion,
+      confirmText: translations(deleteCase?.confirmLabel || "Delete"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldProceed) return;
+
+    if (confirmFuncArgs) confirmFunc(...confirmFuncArgs);
+    else confirmFunc();
+  }
+
   const handleWebhookRegistration = (isEnabled) => {
     if (isEnabled) {
       registerWebhooks();
     } else {
-      setDeleteCase(getLabelsforConfirmModal("webhooks", handleDeleteWehooks));
-      setOpenedConfirm(true);
+      confirmAndRun("webhooks", handleDeleteWehooks);
     }
   };
 
@@ -136,12 +150,9 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
       });
       registerWebhookByTopicMt.mutate({ topic: event.value });
     } else {
-      setDeleteCase(
-        getLabelsforConfirmModal("ShopifyWebhookTopic", handleDeleteWebhookByTopic, [event.value], {
-          event: event.label,
-        }),
-      );
-      setOpenedConfirm(true);
+      confirmAndRun("ShopifyWebhookTopic", handleDeleteWebhookByTopic, [event.value], {
+        event: event.label,
+      });
     }
   };
 
@@ -170,10 +181,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => {
-                setDeleteCase(getLabelsforConfirmModal("session", handleDeleteSession));
-                setOpenedConfirm(true);
-              }}
+              onClick={() => confirmAndRun("session", handleDeleteSession)}
             >
               <IconTrash data-icon="inline-start" />
               {translations("Delete connection")}
@@ -181,7 +189,6 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
           </div>
         </CardContent>
       </Card>
-
       {/* Webhooks */}
       <Card>
         <CardHeader>
@@ -192,19 +199,21 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
             </div>
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={() => setShowEvents((v) => !v)}
-                    className="text-muted-foreground transition-colors hover:text-foreground"
-                    aria-label={translations("Show Events")}
-                  >
-                    {showEvents ? (
-                      <IconChevronUp className="size-4" />
-                    ) : (
-                      <IconChevronDown className="size-4" />
-                    )}
-                  </button>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      onClick={() => setShowEvents((v) => !v)}
+                      className="text-muted-foreground transition-colors hover:text-foreground"
+                      aria-label={translations("Show Events")}
+                    />
+                  }
+                >
+                  {showEvents ? (
+                    <IconChevronUp className="size-4" />
+                  ) : (
+                    <IconChevronDown className="size-4" />
+                  )}
                 </TooltipTrigger>
                 <TooltipContent>{translations("Show Events")}</TooltipContent>
               </Tooltip>
@@ -261,7 +270,6 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
           )}
         </CardContent>
       </Card>
-
       {/* Danger Zone */}
       <Alert variant="destructive" className="border-destructive/50">
         <IconAlertTriangle className="size-4" />
@@ -272,12 +280,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
               variant="destructive"
               size="sm"
               disabled={updateIntegration.isPending}
-              onClick={() => {
-                setDeleteCase(
-                  getLabelsforConfirmModal("ShopifySurveyAll", handleDeleteAllShopifySurveys),
-                );
-                setOpenedConfirm(true);
-              }}
+              onClick={() => confirmAndRun("ShopifySurveyAll", handleDeleteAllShopifySurveys)}
             >
               <IconTrash data-icon="inline-start" />
               {translations("Delete All Survey Delivery Settings")}
@@ -286,10 +289,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
               variant="destructive"
               size="sm"
               disabled={updateIntegration.isPending}
-              onClick={() => {
-                setDeleteCase(getLabelsforConfirmModal("Schedules", handleDeleteAllSchedules));
-                setOpenedConfirm(true);
-              }}
+              onClick={() => confirmAndRun("Schedules", handleDeleteAllSchedules)}
             >
               <IconTrash data-icon="inline-start" />
               {translations("Delete All Schedules")}
@@ -297,22 +297,6 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
           </div>
         </AlertDescription>
       </Alert>
-
-      <ConfirmationModal
-        confirmLabel={deleteCase?.confirmLabel || translations("Delete")}
-        headerTitle={deleteCase?.headerTitle}
-        headerLabel={deleteCase?.headerLabel}
-        onClose={() => setOpenedConfirm(false)}
-        opened={openedConfirm}
-        onConfirm={() => {
-          const funcArgs = deleteCase?.confirmFuncArgs;
-          if (funcArgs) deleteCase?.confirmFunction(...funcArgs);
-          else deleteCase?.confirmFunction();
-        }}
-        closeLabel={translations("Cancel")}
-        forDeleteFunctionality
-        deleteQuotion={deleteCase?.deleteQuotion}
-      />
     </div>
   );
 };

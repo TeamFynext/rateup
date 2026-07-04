@@ -1,12 +1,11 @@
 import { AlertTriangle, Info, Loader2, Save } from "lucide-react";
-import type { UseFormReturn } from "react-hook-form";
+import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { FormField } from "@/components/ui/form.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
@@ -52,7 +51,7 @@ export function PointsExpirySettings({
       <CardContent className="space-y-6">
         {/* Expiry Alert - 14 days before */}
         <div className="space-y-4">
-          <FormField
+          <Controller
             control={form.control}
             name={`${LoyaltyEventType.POINTS_EXPIRY_ALERT}.enabled`}
             render={({ field }) => (
@@ -78,7 +77,7 @@ export function PointsExpirySettings({
 
           {form.watch(`${LoyaltyEventType.POINTS_EXPIRY_ALERT}.enabled`) && (
             <>
-              <FormField
+              <Controller
                 control={form.control}
                 name={`${LoyaltyEventType.POINTS_EXPIRY_ALERT}.waTemplateId`}
                 render={({ field }) => (
@@ -124,7 +123,7 @@ export function PointsExpirySettings({
         </div>
 
         <div className="border-t pt-4 space-y-4">
-          <FormField
+          <Controller
             control={form.control}
             name={`${LoyaltyEventType.POINTS_EXPIRED}.enabled`}
             render={({ field }) => (
@@ -150,7 +149,7 @@ export function PointsExpirySettings({
 
           {form.watch(`${LoyaltyEventType.POINTS_EXPIRED}.enabled`) && (
             <>
-              <FormField
+              <Controller
                 control={form.control}
                 name={`${LoyaltyEventType.POINTS_EXPIRED}.waTemplateId`}
                 render={({ field }) => (

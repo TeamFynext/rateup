@@ -299,15 +299,13 @@ function CustomerPage() {
             </div>{" "}
             <div className="flex items-start justify-between gap-2">
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button disabled={exportMutation.isPending}>
-                    {exportMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Download className="w-4 h-4 mr-2" />
-                    )}
-                    {t("Export Data")}
-                  </Button>
+                <DropdownMenuTrigger render={<Button disabled={exportMutation.isPending} />}>
+                  {exportMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  {t("Export Data")}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => exportMutation.mutate("csv")}>

@@ -31,7 +31,7 @@ export function WhatsAppSurveyFaq() {
           </p>
         </motion.div>
 
-        <Accordion type="single" collapsible className="space-y-4">
+        <Accordion className="space-y-4">
           {faqs.map((faq, index) => (
             <motion.div
               key={index}

@@ -186,12 +186,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     }
 
     return (
-      <TooltipProvider delayDuration={200}>
+      <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger asChild>
-            <button className={buttonClass} ref={ref} aria-label={ariaLabel} {...props}>
-              {children}
-            </button>
+          <TooltipTrigger
+            delay={200}
+            render={<button className={buttonClass} ref={ref} aria-label={ariaLabel} {...props} />}
+          >
+            {children}
           </TooltipTrigger>
           <TooltipContent className="flex flex-col items-center gap-1">
             <span>{tooltip}</span>

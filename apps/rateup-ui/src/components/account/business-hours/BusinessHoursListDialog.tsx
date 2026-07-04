@@ -1,18 +1,7 @@
 import { Edit, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { IBusinessHour } from "@/backend/org/business-hours/business-hours.api";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -22,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
 interface Props {
   open: boolean;
@@ -43,28 +33,19 @@ export function BusinessHoursListDialog({
   canDelete: _canDelete,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+  const confirm = useConfirm();
 
-  const handleDeleteClick = (id: string, name: string) => {
-    setItemToDelete({ id, name });
-    setDeleteDialogOpen(true);
-  };
+  const handleDeleteClick = async (id: string, name: string) => {
+    const shouldDelete = await confirm({
+      title: t("Delete Business Hours"),
+      description: `${t("Are you sure you want to delete")} "${name}"? ${t("This action cannot be undone")}`,
+      confirmText: t("Delete"),
+      cancelText: t("Cancel"),
+    });
 
-  const handleConfirmDelete = () => {
-    if (itemToDelete) {
-      onDelete(itemToDelete.id);
-      setDeleteDialogOpen(false);
-      setItemToDelete(null);
-    }
-  };
+    if (!shouldDelete) return;
 
-  const handleCancelDelete = () => {
-    setDeleteDialogOpen(false);
-    setItemToDelete(null);
+    onDelete(id);
   };
 
   return (
@@ -140,26 +121,6 @@ export function BusinessHoursListDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("Delete Business Hours")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("Are you sure you want to delete")} <strong>"{itemToDelete?.name}"</strong>?{" "}
-              {t("This action cannot be undone")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelDelete}>{t("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {t("Delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

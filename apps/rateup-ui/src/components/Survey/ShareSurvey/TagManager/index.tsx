@@ -138,15 +138,17 @@ function TagManager({
   return (
     <>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            disabled={!isPublished}
-            onClick={() => setTagManagerOpened(true)}
-            variant="outline"
-            size="icon"
-          >
-            <Tags className="h-4 w-4" />
-          </Button>
+        <TooltipTrigger
+          render={
+            <Button
+              disabled={!isPublished}
+              onClick={() => setTagManagerOpened(true)}
+              variant="outline"
+              size="icon"
+            />
+          }
+        >
+          <Tags className="h-4 w-4" />
         </TooltipTrigger>
         <TooltipContent side="right">
           <p>{translations("Manage URL Tags")}</p>

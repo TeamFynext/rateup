@@ -24,16 +24,6 @@ import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
 import { BoardCard } from "@/components/Tickets/BoardCard.tsx";
 import { BoardContent } from "@/components/Tickets/BoardContent.tsx";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -53,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
 dayjs.extend(relativeTime);
@@ -93,10 +84,8 @@ const EMPTY_BOARD_FORM: BoardFormState = {
 function Page() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [newBoardData, setNewBoardData] = useState<BoardFormState>(EMPTY_BOARD_FORM);
   const [editBoardData, setEditBoardData] = useState<BoardFormState>(EMPTY_BOARD_FORM);
-  const [boardIdToDelete, setBoardIdToDelete] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState("latest");
   const [search, setSearch] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
@@ -106,6 +95,7 @@ function Page() {
   const selectedBoardId = searchParams.b ?? "";
   const debouncedSearch = useDebounce(search.trim(), 200);
   const { t: translations } = useTranslation();
+  const confirm = useConfirm();
 
   const { data: userRes } = useUserInfo() as { data: { data: UserData } };
   const role = userRes?.data?.role;
@@ -217,29 +207,30 @@ function Page() {
     setIsEditDialogOpen(false);
   };
 
-  const handleDeleteBoard = (boardId: string) => {
-    setBoardIdToDelete(boardId);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmDeleteBoard = () => {
+  const handleDeleteBoard = async (boardId: string) => {
     if (!isAdmin) {
       toast.warning(translations("Only admin or super admin can delete a board."));
       return;
     }
 
-    if (boardIdToDelete) {
-      deleteBoard(boardIdToDelete);
+    const shouldDelete = await confirm({
+      title: translations("Delete board?"),
+      description: translations(
+        "This action cannot be undone. The board and its current setup will be removed.",
+      ),
+      confirmText: translations("Delete"),
+      cancelText: translations("Cancel"),
+    });
 
-      if (boardIdToDelete === selectedBoardId) {
-        navigate({
-          to: "/dashboard/tickets",
-        });
-      }
+    if (!shouldDelete) return;
+
+    deleteBoard(boardId);
+
+    if (boardId === selectedBoardId) {
+      navigate({
+        to: "/dashboard/tickets",
+      });
     }
-
-    setIsDeleteDialogOpen(false);
-    setBoardIdToDelete(null);
   };
 
   const handleBoardSelect = (boardId: string) => {
@@ -336,33 +327,6 @@ function Page() {
         onChange={setEditBoardData}
         onSubmit={handleSaveEditBoard}
       />
-
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={(open) => {
-          setIsDeleteDialogOpen(open);
-          if (!open) {
-            setBoardIdToDelete(null);
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{translations("Delete board?")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {translations(
-                "This action cannot be undone. The board and its current setup will be removed.",
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{translations("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmDeleteBoard}>
-              {translations("Delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
@@ -383,7 +347,12 @@ function BoardTeamFilter({
   const { t } = useTranslation();
 
   return (
-    <Select value={value} onValueChange={onChange} disabled={disabled}>
+    <Select
+      value={value}
+      onValueChange={onChange}
+      disabled={disabled}
+      items={[{ value: "all", label: t("All Teams") }, ...teamOptions]}
+    >
       <SelectTrigger className="min-w-42">
         <div className="flex items-center gap-2 truncate">
           <div className="flex size-7 items-center justify-center rounded-md bg-muted">
@@ -493,18 +462,17 @@ function BoardFormDialog({
               {t("Teams")}
             </div>
             <MultiSelect
-              placeholder={t("Select teams")}
               options={teamOptions}
-              value={value.teamIds}
+              value={value.teamIds ?? []}
               onValueChange={(teamIds) =>
                 onChange({
                   ...value,
                   teamIds,
                 })
               }
-              searchable
               className="w-full text-sm shadow-none"
-              emptyIndicator={<p className="text-center text-sm">{t("No teams found")}</p>}
+              placeholder={t("Select teams")}
+              emptyIndicator={t("No teams found")}
             />
             <div className="text-xs text-muted-foreground mt-2">
               {t("Choose the teams that can work inside this board.")}

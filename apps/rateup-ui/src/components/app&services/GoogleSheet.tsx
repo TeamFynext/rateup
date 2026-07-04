@@ -1,5 +1,4 @@
 import { Center, Flex, Image, Stack, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconBrandGoogleDrive } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,12 +11,12 @@ import {
 } from "@/backend/appsIntegration/integration.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
 
 export function GoogleSheet() {
-  const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] = useDisclosure(false);
+  const confirm = useConfirm();
 
   const { data: googleAccessToken } = useIntegrationByType(IntegratedApps.googlesheet);
 
@@ -40,7 +39,15 @@ export function GoogleSheet() {
     } catch {}
   };
 
-  const handleSignOutGoogleSync = () => {
+  const handleSignOutGoogleSync = async () => {
+    const shouldSignOut = await confirm({
+      title: translations("Sign out"),
+      description: translations("Are you sure you want to sign out from the synced account?"),
+      confirmText: translations("Yes"),
+    });
+
+    if (!shouldSignOut) return;
+
     toast.loading(translations("Hold on, Signing out from google sheet.."), {
       id: "integration-delete",
     });
@@ -80,17 +87,9 @@ export function GoogleSheet() {
           )}
           <RateupButtonPrimary
             title={translations("Sign out of google synced account")}
-            onClick={alertModalOpen}
+            onClick={handleSignOutGoogleSync}
           />
         </Flex>
-        <ConfirmationModal
-          opened={alertModalOpened}
-          onClose={alertModalClose}
-          headerTitle={translations("Sign out")}
-          headerLabel={translations("Are you sure you want to sign out from the synced account?")}
-          confirmLabel={translations("Yes")}
-          onConfirm={handleSignOutGoogleSync}
-        />
       </PaperLayout>
     </Stack>
   );

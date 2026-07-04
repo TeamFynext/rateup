@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import { Controller, useFieldArray, useWatch } from "react-hook-form";
+import { Controller, FormProvider, useFieldArray, useWatch } from "react-hook-form";
 
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
 import {
@@ -25,7 +25,6 @@ import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { Form } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import {
@@ -181,7 +180,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   };
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
         {/* ── Top bar: Platform + Name ── */}
         <div className={cn("rounded-2xl border bg-card p-5 shadow-sm", pColor.glow)}>
@@ -477,7 +476,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
           </div>
         </div>
       </form>
-    </Form>
+    </FormProvider>
   );
 };
 
@@ -525,6 +524,7 @@ const TriggerPanel: React.FC<{
               }
             }}
             value={field.value}
+            items={filteredTriggerEvents}
           >
             <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
               <SelectValue placeholder="Select event" />
@@ -549,7 +549,7 @@ const TriggerPanel: React.FC<{
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel>Shopify Trigger Condition</FieldLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
+            <Select onValueChange={field.onChange} value={field.value} items={shopifyEventData}>
               <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
                 <SelectValue placeholder="Select Shopify event" />
               </SelectTrigger>
@@ -686,14 +686,15 @@ const ConditionsPanel: React.FC<{
                         </FieldLabel>
                         <MultiSelect
                           options={mediaOptions}
+                          value={field.value ?? []}
                           onValueChange={field.onChange}
-                          defaultValue={field.value ?? []}
+                          disabled={mediaLoading || storiesLoading}
                           placeholder={
                             mediaLoading || storiesLoading
                               ? "Loading…"
                               : `Select ${isInstagramCommentTrigger ? "posts" : "stories"}…`
                           }
-                          disabled={mediaLoading || storiesLoading}
+                          emptyIndicator="No items found."
                         />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
@@ -729,7 +730,11 @@ const ConditionsPanel: React.FC<{
                   render={({ field, fieldState }) => (
                     <Field className="flex-1" data-invalid={fieldState.invalid}>
                       <FieldLabel>Product {index + 1}</FieldLabel>
-                      <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value ?? ""}
+                        items={productData}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select Product" />
                         </SelectTrigger>

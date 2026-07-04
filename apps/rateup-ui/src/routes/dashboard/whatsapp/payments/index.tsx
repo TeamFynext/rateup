@@ -86,7 +86,14 @@ function PaymentsPage() {
             <Label htmlFor="wa-selector" className="text-sm whitespace-nowrap">
               WhatsApp Number
             </Label>
-            <Select value={currentSettingId} onValueChange={setCurrentSettingId}>
+            <Select
+              value={currentSettingId}
+              onValueChange={setCurrentSettingId}
+              items={waSettings.map((s) => ({
+                value: s.id,
+                label: s.phoneDisplayName || s.phone || "Unknown",
+              }))}
+            >
               <SelectTrigger id="wa-selector" className="w-[220px]">
                 <SelectValue placeholder="Select number" />
               </SelectTrigger>

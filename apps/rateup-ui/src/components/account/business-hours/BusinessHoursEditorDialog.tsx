@@ -60,6 +60,7 @@ function TimeSlotRow({
         <Select
           value={slot.openTime}
           onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "openTime", val)}
+          items={timeOptions.map((time) => ({ value: time, label: time }))}
         >
           <SelectTrigger className="w-24">
             <SelectValue />
@@ -78,6 +79,7 @@ function TimeSlotRow({
         <Select
           value={slot.closeTime}
           onValueChange={(val) => handleTimeSlotChange(day, slotIndex, "closeTime", val)}
+          items={timeOptions.map((time) => ({ value: time, label: time }))}
         >
           <SelectTrigger className="w-24">
             <SelectValue />

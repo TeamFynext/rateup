@@ -1,28 +1,21 @@
-import { ActionIcon, Box, Button, Group } from "@mantine/core";
-import { modals } from "@mantine/modals";
+import { ActionIcon, Box, Button, Group, Modal } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+
+import ImageSourceSelectorModal from "../Modal/ModalManagerModals/ImageSourceSelectorModal/index.tsx";
 
 import mmCommonStyles from "../Modal/ModalManagerModals/mmCommonStyles.module.css";
 import styles from "./LocalOrUnsplashImagePicker.module.css";
 
 function LocalOrUnsplashImagePicker({ value, label, forDevice, onImageSelected }) {
   const { t: translations } = useTranslation();
+  const [uploadModalOpened, { open: openUploadModal, close: closeUploadModal }] =
+    useDisclosure(false);
   const handleUploadBtnClick = useCallback(() => {
-    modals.openContextModal({
-      modal: "imageSourceSelectorModal",
-      title: translations("Select Upload Method"),
-      className: mmCommonStyles["mm-modal"],
-      classNames: { header: "img-src-sel-modal-header" },
-      size: "auto",
-      centered: true,
-      innerProps: {
-        onImageSelected,
-        forDevice,
-      },
-    });
-  }, []);
+    openUploadModal();
+  }, [openUploadModal]);
 
   return (
     <Box
@@ -50,6 +43,21 @@ function LocalOrUnsplashImagePicker({ value, label, forDevice, onImageSelected }
           </ActionIcon>
         </Box>
       </Group>
+      <Modal
+        opened={uploadModalOpened}
+        onClose={closeUploadModal}
+        title={translations("Select Upload Method")}
+        className={mmCommonStyles["mm-modal"]}
+        classNames={{ header: "img-src-sel-modal-header" }}
+        size="auto"
+        centered
+      >
+        <ImageSourceSelectorModal
+          context={{ closeModal: closeUploadModal }}
+          id="imageSourceSelectorModal"
+          innerProps={{ onImageSelected, forDevice }}
+        />
+      </Modal>
     </Box>
   );
 }

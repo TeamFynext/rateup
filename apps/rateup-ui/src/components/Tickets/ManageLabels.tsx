@@ -3,16 +3,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLabels } from "@/backend/tickets/tickets.query.tsx";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import {
@@ -23,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import type { Label } from "./types.ts";
 
@@ -66,7 +57,7 @@ export function ManageLabels({ boardId }: { boardId: string }) {
   const [editingLabel, setEditingLabel] = useState<Label | null>(null);
 
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const confirm = useConfirm();
 
   const [name, setName] = useState("");
   const [color, setColor] = useState(PRESET_COLORS[0]);
@@ -86,6 +77,22 @@ export function ManageLabels({ boardId }: { boardId: string }) {
     setView("list");
   };
 
+  const handleDeleteSelectedLabels = async () => {
+    const shouldDelete = await confirm({
+      title: t("Are you sure?"),
+      description: t(
+        "This will delete the selected label(s) and remove them from all associated cards. This action cannot be undone.",
+      ),
+      confirmText: t("Delete"),
+      cancelText: t("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
+    deleteLabels(selectedLabels);
+    setSelectedLabels([]);
+  };
+
   return (
     <>
       <Dialog
@@ -95,20 +102,11 @@ export function ManageLabels({ boardId }: { boardId: string }) {
           }
         }}
       >
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="h-9 shrink-0">
-            <Tag className="w-4 h-4 sm:mr-2 text-muted-foreground" />
-            <span className="hidden sm:inline">{t("Manage Labels")}</span>
-          </Button>
+        <DialogTrigger render={<Button variant="outline" size="sm" className="h-9 shrink-0" />}>
+          <Tag className="w-4 h-4 sm:mr-2 text-muted-foreground" />
+          <span className="hidden sm:inline">{t("Manage Labels")}</span>
         </DialogTrigger>
-        <DialogContent
-          className="sm:max-w-[360px] p-0"
-          onInteractOutside={(e) => {
-            if (showConfirmDelete) {
-              e.preventDefault();
-            }
-          }}
-        >
+        <DialogContent className="sm:max-w-[360px] p-0">
           <DialogHeader className="p-4 border-b">
             <DialogTitle className="text-center font-semibold">
               {view === "list" && t("Labels")}
@@ -191,7 +189,7 @@ export function ManageLabels({ boardId }: { boardId: string }) {
                   <Button
                     variant="destructive"
                     className="w-full mt-2"
-                    onClick={() => setShowConfirmDelete(true)}
+                    onClick={handleDeleteSelectedLabels}
                   >
                     {t("Delete Selected Labels")} ({selectedLabels.length})
                   </Button>
@@ -263,33 +261,6 @@ export function ManageLabels({ boardId }: { boardId: string }) {
           </div>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("Are you sure?")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t(
-                "This will delete the selected label(s) and remove them from all associated cards. This action cannot be undone.",
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={(e) => {
-                e.preventDefault();
-                deleteLabels(selectedLabels);
-                setSelectedLabels([]);
-                setShowConfirmDelete(false);
-              }}
-            >
-              {t("Delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

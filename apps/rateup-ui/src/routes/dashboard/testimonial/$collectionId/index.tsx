@@ -16,18 +16,10 @@ import TestimonialSelect from "@/components/testimonial/TestimonialSelect.tsx";
 import TestimonialShare, {
   TestimonialShareModal,
 } from "@/components/testimonial/TestimonialShare.tsx";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 
@@ -206,9 +198,9 @@ function UtilityComponent({
   const deletedTestimonialsMutation = useDeleteMultipleTestimonialsFromCollection(collectionId);
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
   const savedTestimonialIds = collection?.testimonials?.map((t) => t.id);
-  const [dialogOpened, setDialogOpened] = useState(false);
   const [openedShare, setOpenedShare] = useState(false);
   const { t: translations } = useTranslation();
+  const confirm = useConfirm();
 
   const handleSave = () => {
     addMultipleTestimonials.mutate(selectedTestimonialIds, {
@@ -219,7 +211,16 @@ function UtilityComponent({
     });
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    const shouldDelete = await confirm({
+      title: translations("Delete testimonials?"),
+      description: translations("Are you sure to delete these testimonials?"),
+      confirmText: translations("Delete"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
     deletedTestimonialsMutation.mutate(selectedTestimonialIds, {
       onSuccess: () => {
         toggleDelete();
@@ -281,7 +282,7 @@ function UtilityComponent({
           <Button
             size="sm"
             variant={isDelete ? "destructive" : "outline"}
-            onClick={!isDelete ? toggleDelete : () => setDialogOpened(true)}
+            onClick={!isDelete ? toggleDelete : handleDelete}
             disabled={!filteredTestimonialIds?.length}
             className="w-full justify-start"
           >
@@ -343,29 +344,6 @@ function UtilityComponent({
         onClose={() => setOpenedShare(false)}
         collectionId={collectionId}
       />
-
-      <AlertDialog open={dialogOpened} onOpenChange={setDialogOpened}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{translations("Delete testimonials?")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {translations("Are you sure to delete these testimonials?")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex justify-end gap-2">
-            <AlertDialogCancel>{translations("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                handleDelete();
-                setDialogOpened(false);
-              }}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {translations("Delete")}
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

@@ -518,6 +518,7 @@ function Account() {
                   <Select
                     defaultValue={user?.onboarding?.industry || "E-commerce"}
                     onValueChange={(val) => orgForm.setFieldValue("industry", val)}
+                    items={industries.map((industry) => ({ value: industry, label: industry }))}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue />
@@ -681,6 +682,11 @@ function Account() {
                 value={profileForm.values.title}
                 onValueChange={(value) => profileForm.setFieldValue("title", value)}
                 required
+                items={[
+                  { value: "MALE", label: "Mr" },
+                  { value: "FEMALE", label: "Mrs" },
+                  { value: "OTHER", label: "Mx" },
+                ]}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select title" />

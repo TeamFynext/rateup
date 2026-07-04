@@ -289,7 +289,19 @@ function Step2({
     <div className="space-y-5">
       <SectionHeading>Business details</SectionHeading>
       <FormField label="Business type" error={errors.businessType}>
-        <Select value={data.businessType} onValueChange={(v) => set("businessType", v)}>
+        <Select
+          value={data.businessType}
+          onValueChange={(v) => set("businessType", v)}
+          items={[
+            "Digital Agency",
+            "Marketing Agency",
+            "Consultant",
+            "SaaS Reseller",
+            "Freelancer",
+            "System Integrator",
+            "Other",
+          ].map((t) => ({ value: t, label: t }))}
+        >
           <SelectTrigger className={errors.businessType ? "border-red-500" : ""}>
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
@@ -312,7 +324,11 @@ function Step2({
       </FormField>
       <FieldGroup className="grid-cols-2">
         <FormField label="Company size" error={errors.companySize}>
-          <Select value={data.companySize} onValueChange={(v) => set("companySize", v)}>
+          <Select
+            value={data.companySize}
+            onValueChange={(v) => set("companySize", v)}
+            items={["Just me", "2–10", "11–50", "50+"].map((s) => ({ value: s, label: s }))}
+          >
             <SelectTrigger className={errors.companySize ? "border-red-500" : ""}>
               <SelectValue placeholder="Select size" />
             </SelectTrigger>
@@ -326,7 +342,14 @@ function Step2({
           </Select>
         </FormField>
         <FormField label="Years in business" error={errors.yearsInBusiness}>
-          <Select value={data.yearsInBusiness} onValueChange={(v) => set("yearsInBusiness", v)}>
+          <Select
+            value={data.yearsInBusiness}
+            onValueChange={(v) => set("yearsInBusiness", v)}
+            items={["Less than 1 year", "1–3 years", "3–5 years", "5+ years"].map((y) => ({
+              value: y,
+              label: y,
+            }))}
+          >
             <SelectTrigger className={errors.yearsInBusiness ? "border-red-500" : ""}>
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
@@ -397,7 +420,11 @@ function Step3({
 
       <FieldGroup className="grid-cols-2">
         <FormField label="Clients you can refer per month" error={errors.referralVolume}>
-          <Select value={data.referralVolume} onValueChange={(v) => set("referralVolume", v)}>
+          <Select
+            value={data.referralVolume}
+            onValueChange={(v) => set("referralVolume", v)}
+            items={["1–5", "5–20", "20+"].map((r) => ({ value: r, label: r }))}
+          >
             <SelectTrigger className={errors.referralVolume ? "border-red-500" : ""}>
               <SelectValue placeholder="Select range" />
             </SelectTrigger>

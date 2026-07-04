@@ -50,7 +50,11 @@ const ConditionValueInput = ({
 
   if (fieldType === "CONTACT_GROUP") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value}
+        items={contactGroups?.map((g) => ({ value: g.id, label: g.name })) ?? []}
+      >
         <SelectTrigger>
           <SelectValue placeholder="Select group" />
         </SelectTrigger>
@@ -66,7 +70,11 @@ const ConditionValueInput = ({
   }
   if (fieldType === "CONTACT_LABEL") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value}
+        items={labels?.map((l) => ({ value: l?.id, label: l?.name })) ?? []}
+      >
         <SelectTrigger>
           <SelectValue placeholder="Select label" />
         </SelectTrigger>
@@ -82,7 +90,14 @@ const ConditionValueInput = ({
   }
   if (fieldType === "CONTACT_LIFECYCLE") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value}
+        items={lifecycles.map((l) => ({
+          value: l?.id,
+          label: `${l?.emoji ?? ""} ${l?.name ?? ""}`,
+        }))}
+      >
         <SelectTrigger>
           <SelectValue placeholder="Select lifecycle" />
         </SelectTrigger>
@@ -98,7 +113,11 @@ const ConditionValueInput = ({
   }
   if (fieldType === "BUSINESS_HOURS") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value}
+        items={businessHours?.map((opt) => ({ value: opt.id, label: opt.name })) ?? []}
+      >
         <SelectTrigger>
           <SelectValue placeholder="Business Hours" />
         </SelectTrigger>
@@ -115,7 +134,14 @@ const ConditionValueInput = ({
 
   if (fieldType === "SEND_ONCE_PER_24H") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value}
+        items={[
+          { value: "true", label: "Enabled" },
+          { value: "false", label: "Disabled" },
+        ]}
+      >
         <SelectTrigger>
           <SelectValue placeholder="Enable" />
         </SelectTrigger>
@@ -148,6 +174,10 @@ const ConditionValueInput = ({
             }
           }}
           value={selectValue}
+          items={[
+            { value: "*", label: "All Messages" },
+            { value: "custom", label: "Custom keyword" },
+          ]}
         >
           <SelectTrigger className="w-full bg-background">
             <SelectValue placeholder="Select or enter keyword" />
@@ -218,6 +248,11 @@ const ConditionRow = ({
               }}
               defaultValue={field.value as string}
               value={field.value as string}
+              items={
+                allowedFields
+                  ? CONDITION_FIELDS.filter((opt) => allowedFields.includes(opt.value))
+                  : CONDITION_FIELDS
+              }
             >
               <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
                 <SelectValue placeholder="Field" />
@@ -248,6 +283,7 @@ const ConditionRow = ({
                 onValueChange={field.onChange}
                 defaultValue={field.value as string}
                 value={field.value as string}
+                items={availableOperators}
               >
                 <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
                   <SelectValue placeholder="Operator" />

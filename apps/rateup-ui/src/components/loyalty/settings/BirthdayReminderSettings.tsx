@@ -1,5 +1,5 @@
 import { Cake, Info, Loader2, Save } from "lucide-react";
-import type { UseFormReturn } from "react-hook-form";
+import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
@@ -7,7 +7,6 @@ import { useLoyaltyRewards } from "@/backend/loyalty/reward.query";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { FormField } from "@/components/ui/form.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
@@ -76,7 +75,7 @@ export function BirthdayReminderSettings({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <FormField
+        <Controller
           control={form.control}
           name={`${LoyaltyEventType.BIRTHDAY}.enabled`}
           render={({ field }) => (
@@ -103,7 +102,7 @@ export function BirthdayReminderSettings({
         {form.watch(`${LoyaltyEventType.BIRTHDAY}.enabled`) && (
           <>
             <div className="space-y-2">
-              <FormField
+              <Controller
                 control={form.control}
                 name={`${LoyaltyEventType.BIRTHDAY}.rewardId`}
                 render={({ field }) => (
@@ -122,6 +121,12 @@ export function BirthdayReminderSettings({
                             }
                       }
                       disabled={disabled}
+                      items={
+                        rewards?.map((reward) => ({
+                          value: reward.id,
+                          label: `${reward.name} ${reward.pointsCost > 0 ? `(${reward.pointsCost} pts)` : ""}`,
+                        })) ?? []
+                      }
                     >
                       <SelectTrigger id="birthday-gift" className="h-10">
                         <SelectValue placeholder={t("Select a gift")} />
@@ -137,7 +142,7 @@ export function BirthdayReminderSettings({
             </div>
 
             <div className="space-y-2">
-              <FormField
+              <Controller
                 control={form.control}
                 name={`${LoyaltyEventType.BIRTHDAY}.waTemplateId`}
                 render={({ field }) => (

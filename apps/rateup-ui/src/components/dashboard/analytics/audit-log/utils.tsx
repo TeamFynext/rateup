@@ -107,13 +107,14 @@ const UserCell = ({ user }: { user?: { name?: string } }) => (
 const RequestBodyCell = ({ body }: { body: any }) => (
   <div className="flex items-center gap-2">
     <Popover>
-      <PopoverTrigger asChild>
-        <div className="flex items-center gap-2 cursor-pointer">
-          <Code className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="text-xs text-muted-foreground max-w-[100px] truncate">
-            {body ? JSON.stringify(body) : "Empty"}
-          </span>
-        </div>
+      <PopoverTrigger
+        nativeButton={false}
+        render={<div className="flex items-center gap-2 cursor-pointer" />}
+      >
+        <Code className="h-4 w-4 text-muted-foreground shrink-0" />
+        <span className="text-xs text-muted-foreground max-w-[100px] truncate">
+          {body ? JSON.stringify(body) : "Empty"}
+        </span>
       </PopoverTrigger>
 
       <PopoverContent className="w-[500px] p-3">

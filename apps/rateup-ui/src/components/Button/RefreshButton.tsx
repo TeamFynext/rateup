@@ -42,16 +42,18 @@ const RefreshButton = ({
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          aria-label="Refresh"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
-          <IconRefresh className={isRefreshing ? "animate-spin" : ""} />
-        </Button>
+      <TooltipTrigger
+        render={
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="Refresh"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          />
+        }
+      >
+        <IconRefresh className={isRefreshing ? "animate-spin" : ""} />
       </TooltipTrigger>
       <TooltipContent side="top">{translations("Refresh data")}</TooltipContent>
     </Tooltip>

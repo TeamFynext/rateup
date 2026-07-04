@@ -114,6 +114,7 @@ const ContactForm = ({ form, customFields, type }) => {
               onValueChange={(value) => {
                 updateCustomField(fieldId, value || "", customField);
               }}
+              items={options}
             >
               <SelectTrigger className="bg-accent border-none placeholder:text-sm">
                 <SelectValue placeholder={commonProps.placeholder} />
@@ -188,14 +189,12 @@ const ContactForm = ({ form, customFields, type }) => {
           <Field className="flex flex-col gap-1">
             <FieldLabel>{translations("Labels")}</FieldLabel>
             <MultiSelect
+              options={labels?.map((label) => ({ value: label.id, label: label.name })) ?? []}
+              value={form.values.labels ?? []}
               onValueChange={(values) => form.setFieldValue("labels", values)}
-              options={labels?.map((label) => ({
-                value: label.id,
-                label: label.name,
-              }))}
-              defaultValue={form.values.labels}
-              className="bg-accent hover:bg-accent border-none placeholder:text-sm min-h-9"
               placeholder="Select labels"
+              emptyIndicator="No labels found."
+              className="bg-accent hover:bg-accent border-none placeholder:text-sm min-h-9"
             />
           </Field>
           <Field className="flex flex-col gap-1">
@@ -228,15 +227,17 @@ const ContactForm = ({ form, customFields, type }) => {
           <Field className="flex flex-col gap-1">
             <FieldLabel>{translations("Date of Birth")}</FieldLabel>
             <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  id="date"
-                  className="w-48 justify-between font-normal bg-accent border-none"
-                >
-                  {form.values.dob || "Select date"}
-                  <ChevronDownIcon />
-                </Button>
+              <PopoverTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    id="date"
+                    className="w-48 justify-between font-normal bg-accent border-none"
+                  />
+                }
+              >
+                {form.values.dob || "Select date"}
+                <ChevronDownIcon />
               </PopoverTrigger>
               <PopoverContent className="w-auto overflow-hidden p-0" align="start">
                 <Calendar

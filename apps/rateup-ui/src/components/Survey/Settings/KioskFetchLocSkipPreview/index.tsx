@@ -112,7 +112,7 @@ function KioskFetchLocSkipPreview({
                 <TooltipTrigger>
                   <Switch
                     id="preview"
-                    onChange={() => updateSkipPreview(setPreview, editSurvey)}
+                    onCheckedChange={() => updateSkipPreview(setPreview, editSurvey)}
                     checked={preview}
                   />
                 </TooltipTrigger>
@@ -145,7 +145,7 @@ function KioskFetchLocSkipPreview({
                 <Switch
                   id="webSurveyAutoTransitionToNextQues"
                   checked={webSurveyAutoTransitionToNextQues}
-                  onChange={() =>
+                  onCheckedChange={() =>
                     updatewebSurveyAutoTransitionToNextQues(
                       setwebSurveyAutoTransitionToNextQues,
                       editSurvey,

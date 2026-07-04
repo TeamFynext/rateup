@@ -47,7 +47,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx"
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import CustomAlertDialog from "@/components/ui/custom/CustomAlertDialog.tsx";
 import {
   Dialog,
   DialogContent,
@@ -72,6 +71,7 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { UserRole } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { getOrgIdRole, getUserID } from "@/utils/userInfo.ts";
@@ -271,11 +271,11 @@ function UsersPage() {
               }
             }}
           >
-            <DialogTrigger asChild>
-              <Button className="bg-[#2E5BFF] hover:bg-[#2549d8] h-10 shrink-0">
-                <Plus className="w-4 h-4 mr-2" />
-                {translations("Add New User")}
-              </Button>
+            <DialogTrigger
+              render={<Button className="bg-[#2E5BFF] hover:bg-[#2549d8] h-10 shrink-0" />}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {translations("Add New User")}
             </DialogTrigger>
 
             <DialogContent className="sm:max-w-175">
@@ -391,7 +391,14 @@ function UsersPage() {
                         <Label htmlFor="new-role" className="text-xs">
                           {translations("User Role")} <span className="text-red-500">*</span>
                         </Label>
-                        <Select defaultValue={UserRole.MEMBER}>
+                        <Select
+                          defaultValue={UserRole.MEMBER}
+                          items={[
+                            { value: UserRole.SUPADM, label: translations("Super Admin") },
+                            { value: UserRole.ADM, label: translations("Admin") },
+                            { value: UserRole.MEMBER, label: translations("Staff") },
+                          ]}
+                        >
                           <SelectTrigger id="new-role" className="h-9">
                             <SelectValue />
                           </SelectTrigger>
@@ -437,6 +444,13 @@ function UsersPage() {
                           <Select
                             value={userForm.values.team}
                             onValueChange={(value) => userForm.setFieldValue("team", value)}
+                            items={[
+                              { value: "none", label: translations("No Team") },
+                              ...(teamsDataUser?.data?.map((team: TeamOption) => ({
+                                value: team.id,
+                                label: team.name,
+                              })) ?? []),
+                            ]}
                           >
                             <SelectTrigger id="new-team" className="h-9 w-full">
                               <SelectValue placeholder={translations("Select team")} />
@@ -554,18 +568,18 @@ function UsersPage() {
                       <Users className="w-3 h-3" />
 
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1 cursor-default">
-                            <span className="line-clamp-1">
-                              {member?.teams.length === 0
-                                ? "Not in any team"
-                                : member.teams
-                                    .slice(0, 2)
-                                    .map((t: any) => t.team_name)
-                                    .join(", ")}
-                              {member.teams.length > 2 ? "..." : ""}
-                            </span>
-                          </div>
+                        <TooltipTrigger
+                          render={<div className="flex items-center gap-1 cursor-default" />}
+                        >
+                          <span className="line-clamp-1">
+                            {member?.teams.length === 0
+                              ? "Not in any team"
+                              : member.teams
+                                  .slice(0, 2)
+                                  .map((t: any) => t.team_name)
+                                  .join(", ")}
+                            {member.teams.length > 2 ? "..." : ""}
+                          </span>
                         </TooltipTrigger>
 
                         <TooltipContent className="border shadow-md rounded-lg p-2 text-xs max-w-52">
@@ -722,7 +736,7 @@ function EditMember({
   const [editableGender, setEditableGender] = useState("");
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [isUpdatingTeams, setIsUpdatingTeams] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const confirm = useConfirm();
 
   useEffect(() => {
     if (!selectedUser) return;
@@ -780,8 +794,17 @@ function EditMember({
     );
   };
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (!selectedUser?.id) return;
+
+    const shouldDelete = await confirm({
+      title: translations("Delete User Account"),
+      description: `${translations("Are you sure you want to delete")} ${selectedUser?.name || translations("this user")}? ${translations("This action cannot be undone.")}`,
+      confirmText: translations("Delete User"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldDelete) return;
 
     toast.loading(translations("Deleting user account"), {
       id: "delete-user",
@@ -1031,6 +1054,11 @@ function EditMember({
                       value={editableGender}
                       onValueChange={setEditableGender}
                       disabled={!canEditNameAndPhone}
+                      items={[
+                        { value: "MALE", label: "Mr" },
+                        { value: "FEMALE", label: "Mrs" },
+                        { value: "OTHER", label: "Mx" },
+                      ]}
                     >
                       <SelectTrigger id="edit-gender" className="h-9">
                         <SelectValue placeholder={translations("Select title")} />
@@ -1132,6 +1160,11 @@ function EditMember({
                   <Select
                     value={role}
                     disabled={!canEditAll}
+                    items={[
+                      { value: UserRole.SUPADM, label: translations("Super Admin") },
+                      { value: UserRole.ADM, label: translations("Admin") },
+                      { value: UserRole.MEMBER, label: translations("Staff") },
+                    ]}
                     onValueChange={(nextRole) => {
                       if (!canEditAll) return;
                       if (!selectedUser.id) return;
@@ -1180,12 +1213,12 @@ function EditMember({
                   </Label>
                   <MultiSelect
                     options={teamOptions}
-                    defaultValue={selectedTeamIds}
+                    value={selectedTeamIds}
                     onValueChange={handleTeamAssignmentChange}
-                    placeholder={translations("Select teams")}
                     disabled={!canEditAll || isUpdatingTeams}
-                    searchable
                     className="w-full"
+                    placeholder={translations("Select teams")}
+                    emptyIndicator={translations("No teams found")}
                   />
                 </div>
 
@@ -1302,22 +1335,13 @@ function EditMember({
                       variant="destructive"
                       size="sm"
                       disabled={updateActiveStatus.isPending}
-                      onClick={() => setIsDeleteConfirmOpen(true)}
+                      onClick={handleDeleteUser}
                     >
                       <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                       {updateActiveStatus.isPending
                         ? translations("Deleting")
                         : translations("Delete User")}
                     </Button>
-                    <CustomAlertDialog
-                      opened={isDeleteConfirmOpen}
-                      setOpened={setIsDeleteConfirmOpen}
-                      title={translations("Delete User Account")}
-                      description={`${translations("Are you sure you want to delete")} ${selectedUser?.name || translations("this user")}? ${translations("This action cannot be undone.")}`}
-                      buttonTitle={translations("Delete User")}
-                      buttonColor="bg-destructive hover:bg-destructive/90 text-white"
-                      onAction={handleDeleteUser}
-                    />
                   </div>
                 </div>
               </div>

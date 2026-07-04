@@ -336,6 +336,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                           <Select
                             value={font.fontWeight}
                             onValueChange={(value) => handleFontWeightChange(value, font.name)}
+                            items={FontWeights}
                           >
                             <SelectTrigger className="h-9">
                               <SelectValue />
@@ -379,7 +380,14 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                     <label className="text-sm font-medium mb-1.5 block">
                       {translations("Layout")}
                     </label>
-                    <Select value={currentStyle?.layout} onValueChange={handleLayout}>
+                    <Select
+                      value={currentStyle?.layout}
+                      onValueChange={handleLayout}
+                      items={[
+                        { value: "layout1", label: "Layout 1" },
+                        { value: "layout2", label: "Layout 2" },
+                      ]}
+                    >
                       <SelectTrigger className="h-9">
                         <SelectValue />
                       </SelectTrigger>
@@ -400,6 +408,10 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                           if (draft.ratingBlock) draft.ratingBlock.ratingType = value;
                         })
                       }
+                      items={[
+                        { value: "star", label: "Star" },
+                        { value: "number", label: "Number" },
+                      ]}
                     >
                       <SelectTrigger className="h-9">
                         <SelectValue />

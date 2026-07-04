@@ -139,9 +139,7 @@ function InstagramDashboard() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button asChild>
-            <Link to="/dashboard/settings">{t("Go to Settings")}</Link>
-          </Button>
+          <Button render={<Link to="/dashboard/settings" />}>{t("Go to Settings")}</Button>
         </EmptyContent>
       </Empty>
     );
@@ -163,7 +161,14 @@ function InstagramDashboard() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Select value={selectedSetting?.id ?? ""} onValueChange={(v) => setSelectedId(v)}>
+          <Select
+            value={selectedSetting?.id ?? ""}
+            onValueChange={(v) => setSelectedId(v)}
+            items={connectedSettings.map((s) => ({
+              value: s.id,
+              label: s.igDisplayName || s.igUserName || s.phoneDisplayName || s.phone,
+            }))}
+          >
             <SelectTrigger className="w-56">
               <SelectValue placeholder={t("Select account")} />
             </SelectTrigger>
@@ -324,16 +329,18 @@ function IceBreakersTab({
                 {t("Question {number}", { number: index + 1 })}
               </span>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-muted-foreground hover:text-destructive"
-                    onClick={() => setItems(items.filter((_, i) => i !== index))}
-                  >
-                    <IconTrash className="size-4" />
-                  </Button>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setItems(items.filter((_, i) => i !== index))}
+                    />
+                  }
+                >
+                  <IconTrash className="size-4" />
                 </TooltipTrigger>
                 <TooltipContent>{t("Remove question")}</TooltipContent>
               </Tooltip>
@@ -501,11 +508,14 @@ function IgMeLinksTab({
             )}
             {copied ? t("Copied!") : t("Copy link")}
           </Button>
-          <Button asChild variant="outline" size="sm" disabled={!link}>
-            <a href={link} target="_blank" rel="noreferrer">
-              <IconExternalLink className="mr-1.5 size-4" />
-              {t("Open in browser")}
-            </a>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!link}
+            render={<a href={link} target="_blank" rel="noreferrer" />}
+          >
+            <IconExternalLink className="mr-1.5 size-4" />
+            {t("Open in browser")}
           </Button>
         </div>
       </CardContent>
@@ -607,17 +617,19 @@ function PersistentMenuTab({
                 </span>
               </div>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-muted-foreground hover:text-destructive"
-                    onClick={() => setItems(items.filter((_, i) => i !== index))}
-                    disabled={items.length <= 1}
-                  >
-                    <IconTrash className="size-4" />
-                  </Button>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setItems(items.filter((_, i) => i !== index))}
+                      disabled={items.length <= 1}
+                    />
+                  }
+                >
+                  <IconTrash className="size-4" />
                 </TooltipTrigger>
                 <TooltipContent>{t("Remove item")}</TooltipContent>
               </Tooltip>
@@ -629,6 +641,10 @@ function PersistentMenuTab({
                 <Select
                   value={item.type}
                   onValueChange={(v: "postback" | "web_url") => updateItem(index, { type: v })}
+                  items={[
+                    { value: "postback", label: t("Postback") },
+                    { value: "web_url", label: t("Web URL") },
+                  ]}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -871,11 +887,14 @@ function CommentsTab() {
               {t("Automatically send private replies when someone comments on your posts.")}
             </CardDescription>
           </div>
-          <Button asChild size="sm">
-            <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_COMMENT">
-              <IconPlus className="mr-1.5 size-4" />
-              {t("Create")}
-            </Link>
+          <Button
+            size="sm"
+            render={
+              <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_COMMENT" />
+            }
+          >
+            <IconPlus className="mr-1.5 size-4" />
+            {t("Create")}
           </Button>
         </div>
       </CardHeader>
@@ -892,11 +911,14 @@ function CommentsTab() {
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Button asChild size="sm">
-                <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_COMMENT">
-                  <IconPlus className="mr-1.5 size-4" />
-                  {t("Create automation")}
-                </Link>
+              <Button
+                size="sm"
+                render={
+                  <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_COMMENT" />
+                }
+              >
+                <IconPlus className="mr-1.5 size-4" />
+                {t("Create automation")}
               </Button>
             </EmptyContent>
           </Empty>
@@ -954,11 +976,14 @@ function StoriesTab() {
               {t("Triggered when someone mentions your account in their Instagram story.")}
             </CardDescription>
           </div>
-          <Button asChild size="sm">
-            <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_STORY_MENTION">
-              <IconPlus className="mr-1.5 size-4" />
-              {t("Create")}
-            </Link>
+          <Button
+            size="sm"
+            render={
+              <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_STORY_MENTION" />
+            }
+          >
+            <IconPlus className="mr-1.5 size-4" />
+            {t("Create")}
           </Button>
         </div>
       </CardHeader>
@@ -977,11 +1002,14 @@ function StoriesTab() {
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Button asChild size="sm">
-                <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_STORY_MENTION">
-                  <IconPlus className="mr-1.5 size-4" />
-                  {t("Create automation")}
-                </Link>
+              <Button
+                size="sm"
+                render={
+                  <Link to="/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_STORY_MENTION" />
+                }
+              >
+                <IconPlus className="mr-1.5 size-4" />
+                {t("Create automation")}
               </Button>
             </EmptyContent>
           </Empty>

@@ -1,6 +1,5 @@
 import { IconDots } from "@tabler/icons-react";
 import { Trash2 } from "lucide-react";
-import type { MouseEvent } from "react";
 
 import { ActionCard } from "@/components/common/action-card.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -23,18 +22,20 @@ interface RuleCardProps {
 export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardProps>) {
   const menu = (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-          }}
-        >
-          <IconDots size={20} />
-        </Button>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+          />
+        }
+      >
+        <IconDots size={20} />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
@@ -80,9 +81,7 @@ export function RuleCard({ item, onToggleActive, onDelete }: Readonly<RuleCardPr
           </Badge>
           <Switch
             checked={item.isActive}
-            onClick={(event: MouseEvent<HTMLButtonElement>) => {
-              event.preventDefault();
-              event.stopPropagation();
+            onCheckedChange={() => {
               onToggleActive(!item.isActive);
             }}
           />
