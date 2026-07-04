@@ -161,7 +161,7 @@ model Org {
 
   showLifecycle Boolean @default(true)
 
-  isConversionApiActive Boolean @default(false)
+  isConversionApiActive        Boolean @default(false)
   onboardingChecklist          Json?
   onboardingChecklistCompleted Boolean @default(false)
 
@@ -195,6 +195,7 @@ model Org {
   loyaltyApiSettings       LoyaltyApiSettings[]
   expoPushTokens           ExpoPushToken[]
   WhatsappSettings         WhatsappSettings[]
+  metaBusinessAgents       MetaBusinessAgent[]
   WaCatalog                WhatsappCatalog[]
   productSets              WhatsappProductSet[]
   UserAssignedCount        UserAssignedCount[]
@@ -285,38 +286,177 @@ model WhatsappSettings {
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId String @db.Uuid
 
-  accessToken      String // encrypted
-  accessToken_iv   String?
-  wabaId           String? // WhatsApp Business Account ID
-  phoneId          String? @unique
-  phone            String? @unique
-  appId            String
-  webhookPassword  String?
-  fbPageId         String? @unique //Facebook Page ID
-  ibaId            String? @unique //Instagram Business Account ID
-  pageAccessToken  String? //Facebook Page access token
-  igUserName       String?
-  igDisplayName    String?
-  instagramIceBreakers   Json?
-  instagramPersistentMenu Json?
+  accessToken              String // encrypted
+  accessToken_iv           String?
+  wabaId                   String? // WhatsApp Business Account ID
+  phoneId                  String? @unique
+  phone                    String? @unique
+  appId                    String
+  webhookPassword          String?
+  fbPageId                 String? @unique //Facebook Page ID
+  ibaId                    String? @unique //Instagram Business Account ID
+  pageAccessToken          String? //Facebook Page access token
+  igUserName               String?
+  igDisplayName            String?
+  instagramIceBreakers     Json?
+  instagramPersistentMenu  Json?
   conversationalAutomation Json?
-  phoneDisplayName String?
+  phoneDisplayName         String?
 
-  fbUserName       String?
+  fbUserName String?
 
-  type             String // enums.ts: WaConfigType
-  status           String             @default("ACTIVE")
-  createdAt        DateTime           @default(now())
+  type                    String // enums.ts: WaConfigType
+  status                  String             @default("ACTIVE")
+  createdAt               DateTime           @default(now())
   /// [PWaEncryptionKeys]
-  encryption       Json? // for flow {publicKey: string, privateKey: string}
-  WaTemplate       WaTemplate[]
-  LoyaltyWaCommand LoyaltyWaCommand[]
-  metaAssets       MetaAssets[]
-  catalog          CatalogPhoneIdMap?
-  assets           String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
+  encryption              Json? // for flow {publicKey: string, privateKey: string}
+  WaTemplate              WaTemplate[]
+  LoyaltyWaCommand        LoyaltyWaCommand[]
+  metaAssets              MetaAssets[]
+  catalog                 CatalogPhoneIdMap?
+  assets                  String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
   conversionsApiDatasetId String?
-  conversionData   Json?
-  paymentMethod    String             @default("NATIVE") // NATIVE, SHOPIFY_LINK
+  conversionData          Json?
+  paymentMethod           String             @default("NATIVE") // NATIVE, SHOPIFY_LINK
+  metaBusinessAgent       MetaBusinessAgent?
+}
+
+model MetaBusinessAgent {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId String @db.Uuid
+
+  whatsappSettings   WhatsappSettings @relation(fields: [whatsappSettingsId], references: [id], onDelete: Cascade)
+  whatsappSettingsId String           @unique @db.Uuid
+
+  agentId              String? // Meta-assigned agent id, returned by agent_onboarding
+  channel              String    @default("whatsapp")
+  isEligible           Boolean?
+  eligibilityCheckedAt DateTime?
+  status               String    @default("NOT_ONBOARDED") // NOT_ONBOARDED, ONBOARDED, DISABLED
+
+  // agent_config/settings, cached locally, pushed to Meta on save
+  rolloutEnabled          Boolean?
+  handoffEnabled          Boolean?
+  handoffMessage          String?
+  followupEnabled         Boolean?
+  followupIntervalSeconds Int?
+  followupMessage         String?
+  aiAudience              String? // EVERYONE, ALLOWLISTED_ONLY
+  settingsSyncedAt        DateTime?
+
+  // agent_config/business_info, cached locally
+  businessInfo         Json?
+  businessInfoSyncedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  allowlist  MetaAgentAllowlistEntry[]
+  faqs       MetaAgentFaq[]
+  files      MetaAgentFile[]
+  websites   MetaAgentWebsite[]
+  skills     MetaAgentSkill[]
+  connectors MetaAgentConnector[]
+}
+
+model MetaAgentAllowlistEntry {
+  id      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agent   MetaBusinessAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId String            @db.Uuid
+
+  metaId              String? // id returned by Meta, null until synced
+  consumerPhoneNumber String
+
+  createdAt DateTime @default(now())
+}
+
+model MetaAgentFaq {
+  id      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agent   MetaBusinessAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId String            @db.Uuid
+
+  metaId   String?
+  question String
+  answer   String
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MetaAgentFile {
+  id      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agent   MetaBusinessAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId String            @db.Uuid
+
+  metaId   String?
+  fileName String
+
+  createdAt DateTime @default(now())
+}
+
+model MetaAgentWebsite {
+  id      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agent   MetaBusinessAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId String            @db.Uuid
+
+  metaId        String?
+  url           String
+  crawlStatus   String?
+  pagesCrawled  Int?
+  lastCrawledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MetaAgentSkill {
+  id      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agent   MetaBusinessAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId String            @db.Uuid
+
+  metaId      String?
+  title       String
+  description String
+  skill       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MetaAgentConnector {
+  id      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agent   MetaBusinessAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId String            @db.Uuid
+
+  metaId              String?
+  name                String
+  description         String
+  baseUrl             String
+  authType            String // OAUTH2_CLIENT_CREDENTIALS, API_KEY, NONE
+  requiresCertificate Boolean @default(false)
+  connectionStatus    String  @default("PENDING_OAUTH") // PENDING_OAUTH, ACTIVE, EXPIRED, ERROR
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tools MetaAgentConnectorTool[]
+}
+
+model MetaAgentConnectorTool {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  connector   MetaAgentConnector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  connectorId String             @db.Uuid
+
+  metaId            String?
+  name              String
+  description       String
+  requestDefinition Json
+  userAuthRequired  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Rule {
@@ -463,12 +603,12 @@ model Team {
   reviewPageLinks Json?
   tags            String[] @default([])
 
-  org                    Org                               @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                  String                            @db.Uuid
-  members                TeamMember[]
-  surveys                SurveyTeamMap[]
-  invitations            Invitation[]
-  contactGroups          ContactGroup[]
+  org           Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId         String          @db.Uuid
+  members       TeamMember[]
+  surveys       SurveyTeamMap[]
+  invitations   Invitation[]
+  contactGroups ContactGroup[]
 
   campaigns              Campaign[]
   reviewSuggestions      ReviewSuggestion[]
@@ -577,15 +717,15 @@ model Survey {
 }
 
 model SurveyTeamMap {
-  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  surveyId          String              @db.Uuid
-  teamId            String              @db.Uuid
-  shortUrlId        String?             @unique
-  survey            Survey              @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  team              Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  responses         SurveyResponse[]
-  sessions          WaSession[]
-  surveyStats       SurveyStats?
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  surveyId    String           @db.Uuid
+  teamId      String           @db.Uuid
+  shortUrlId  String?          @unique
+  survey      Survey           @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  responses   SurveyResponse[]
+  sessions    WaSession[]
+  surveyStats SurveyStats?
 
   waMessageSchedule WaMessageSchedule[]
 
@@ -991,7 +1131,6 @@ model WebSurveyTheme {
   @@unique([orgId, name])
 }
 
-
 //homepage contact form
 model ContactForm {
   id        String   @id @default(uuid()) @db.Uuid
@@ -1023,7 +1162,6 @@ model WaTemplate {
   loyaltyRewards          LoyaltyReward[]
   eventTriggers           LoyaltyEventTrigger[]
 }
-
 
 model ReviewSuggestion {
   id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -1071,8 +1209,6 @@ model NLP_Cache {
   text   String @unique
   result Json
 }
-
-
 
 model Subscription {
   org                  Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -1369,24 +1505,24 @@ model TicketBoard {
 }
 
 model TicketBoardLabel {
-  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name          String
   color         String
-  ticketBoardId String       @db.Uuid
-  ticketBoard   TicketBoard  @relation(fields: [ticketBoardId], references: [id], onDelete: Cascade)
+  ticketBoardId String           @db.Uuid
+  ticketBoard   TicketBoard      @relation(fields: [ticketBoardId], references: [id], onDelete: Cascade)
   ticketCards   TicketLabelMap[]
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   @@unique([ticketBoardId, name])
 }
 
 model TicketLabelMap {
-  card       TicketCard       @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  cardId     String           @db.Uuid
-  label      TicketBoardLabel @relation(fields: [labelId], references: [id], onDelete: Cascade)
-  labelId    String           @db.Uuid
-  createdAt  DateTime         @default(now())
+  card      TicketCard       @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId    String           @db.Uuid
+  label     TicketBoardLabel @relation(fields: [labelId], references: [id], onDelete: Cascade)
+  labelId   String           @db.Uuid
+  createdAt DateTime         @default(now())
 
   @@id([cardId, labelId])
 }
@@ -1433,7 +1569,7 @@ model TicketCard {
   ticketColumnId            String                   @db.Uuid
   ticketColumn              TicketColumn             @relation(fields: [ticketColumnId], references: [id], onDelete: Cascade)
   checklists                Json?
-  attachments               String[]  @default([])
+  attachments               String[]                 @default([])
   reviewId                  String?                  @db.Uuid
   surveyResponseId          String?                  @db.Uuid
   review                    Review?                  @relation(fields: [reviewId], references: [id])
@@ -1543,14 +1679,14 @@ enum AssignType {
 }
 
 model WaAutomatedReply {
-  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                     String
-  createdAt                DateTime @default(now())
-  matchData                Json
-  orgId                    String?  @db.Uuid
-  org                      Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  whatsappSettingsPhoneId  String?
-  platform                 String   @default("WHATSAPP") // enums.ts: AutomationPlatform (WHATSAPP | INSTAGRAM)
+  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String
+  createdAt               DateTime @default(now())
+  matchData               Json
+  orgId                   String?  @db.Uuid
+  org                     Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  whatsappSettingsPhoneId String?
+  platform                String   @default("WHATSAPP") // enums.ts: AutomationPlatform (WHATSAPP | INSTAGRAM)
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]
@@ -1663,7 +1799,6 @@ model GenerateQr {
   noOfScans     Int      @default(0)
 }
 
-
 model Integration {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name       String
@@ -1740,14 +1875,14 @@ model LoyaltyProgram {
   whatsappSettingsId String?
 
   // Settings
-  pointsActivityAlerts    Boolean @default(true)
-  autoApproveAdjustments  Boolean @default(false)
-  emailNotifications      Boolean @default(true)
-  whatsappNotifications   Boolean @default(true)
+  pointsActivityAlerts     Boolean @default(true)
+  autoApproveAdjustments   Boolean @default(false)
+  emailNotifications       Boolean @default(true)
+  whatsappNotifications    Boolean @default(true)
   enableShopifyOrderPoints Boolean @default(false)
-  enablePointsExpiration  Boolean @default(false)
-  pointsExpirationMonths  Int     @default(12)
-  referralMessageTemplate Json    @default("[{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"🎉 Welcome {{1}}!\\nYou are now registered in our Loyalty Program.\\n🔗 Your referral code: {{2}}\\nShare & earn rewards\"}]}]")
+  enablePointsExpiration   Boolean @default(false)
+  pointsExpirationMonths   Int     @default(12)
+  referralMessageTemplate  Json    @default("[{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"🎉 Welcome {{1}}!\\nYou are now registered in our Loyalty Program.\\n🔗 Your referral code: {{2}}\\nShare & earn rewards\"}]}]")
 
   // Metadata
   createdAt DateTime @default(now())
@@ -2269,19 +2404,19 @@ model WhatsappCatalog {
   autoCheckoutEnabled Boolean @default(false)
   checkoutMessage     String?
 
-  storeType             String?  @default("standard")
+  storeType             String? @default("standard")
   paymentMethod         String?
   standardPaymentConfig Json?
   standardPaymentMethod String?
-  collectAddress  Boolean @default(false)
-  collectDelivery Boolean @default(false)
-  fixedDeliveryCharge Boolean @default(false)
-  fixedDeliveryAmount Float?
-  addressFlowId     String?
-  addressFlowDbId   String?
-  addressFlowStatus String? @default("idle")
-  addressFlowFields Json?
-  deliveryOptions Json?
+  collectAddress        Boolean @default(false)
+  collectDelivery       Boolean @default(false)
+  fixedDeliveryCharge   Boolean @default(false)
+  fixedDeliveryAmount   Float?
+  addressFlowId         String?
+  addressFlowDbId       String?
+  addressFlowStatus     String? @default("idle")
+  addressFlowFields     Json?
+  deliveryOptions       Json?
 
   @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
 }
@@ -2350,13 +2485,12 @@ model WaCatalogOrder {
   storeType       String?
   shippingAddress Json?
   deliveryOption  Json?
-  orderStage      String?  @default("PENDING_ADDRESS")
+  orderStage      String? @default("PENDING_ADDRESS")
 
   @@index([catalogId, createdAt(sort: Desc)])
   @@index([contactId])
   @@index([orderStage])
 }
-
 
 model MetaAssets {
   whatsappSettings   WhatsappSettings @relation(fields: [whatsappSettingsId], references: [id], onDelete: Cascade)
@@ -2525,15 +2659,15 @@ enum InboxAutomationCondition {
 }
 
 model InboxAutomation {
-  id          String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt   DateTime                 @default(now())
+  id              String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime                  @default(now())
   closeAfterHours Int?
-  active      Boolean                  @default(true)
-  action      InboxAutomationAction?
-  condition   InboxAutomationCondition?
+  active          Boolean                   @default(true)
+  action          InboxAutomationAction?
+  condition       InboxAutomationCondition?
 
-  orgId       String                   @db.Uuid
-  org         Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId String @db.Uuid
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@unique([orgId, condition], name: "orgId_condition_unique")
 }
