@@ -65,6 +65,7 @@ export default function OnboardingStep2({
           <Select
             onValueChange={(value) => handleInputChange("industry", value)}
             value={data.industry}
+            items={industries.map((industry) => ({ value: industry, label: industry }))}
           >
             <SelectTrigger className="h-11 border-2 border-gray-300 focus:border-orange-400 bg-white text-gray-900 shadow-sm w-full">
               <SelectValue placeholder="Choose your industry..." />

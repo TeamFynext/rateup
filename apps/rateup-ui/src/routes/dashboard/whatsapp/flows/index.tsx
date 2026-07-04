@@ -80,9 +80,7 @@ function Flows() {
             </Button>
             {!hasWaSettings && (
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <div />
-                </TooltipTrigger>
+                <TooltipTrigger render={<div />}></TooltipTrigger>
                 <TooltipContent>
                   <p>{translations("Connect a WhatsApp number in settings to create a Flow")}</p>
                 </TooltipContent>
@@ -111,10 +109,8 @@ function Flows() {
                 <SyncFlowsButton disabled={isLoading} />
               ) : (
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <SyncFlowsButton disabled />
-                    </div>
+                  <TooltipTrigger render={<div />}>
+                    <SyncFlowsButton disabled />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{translations("Connect a WhatsApp number in settings to sync a Flow")}</p>

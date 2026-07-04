@@ -457,11 +457,9 @@ export function AddMembers({ selectedTeam }) {
         </div>
 
         <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="w-4 h-4 mr-2" />
-              {translations("Add Member")}
-            </Button>
+          <DialogTrigger render={<Button />}>
+            <UserPlus className="w-4 h-4 mr-2" />
+            {translations("Add Member")}
           </DialogTrigger>
 
           {/* Dialog content unchanged */}
@@ -481,7 +479,6 @@ export function AddMembers({ selectedTeam }) {
           </DialogContent>
         </Dialog>
       </div>
-
       {/* Members Grid */}
       <ScrollArea className="h-[calc(100vh-275px)] min-h-64 p-1">
         <div className="p-2">

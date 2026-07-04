@@ -37,7 +37,6 @@ import { DataTableViewOptions } from "@/components/Table/data-table-view-option.
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import CustomAlertDialog from "@/components/ui/custom/CustomAlertDialog.tsx";
 import {
   Dialog,
   DialogClose,
@@ -64,6 +63,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
@@ -83,7 +83,11 @@ const SourceSelector = ({ value, onChange }) => {
     { label: "Imported", value: "csv import", icon: Upload },
   ];
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select
+      value={value}
+      onValueChange={onChange}
+      items={ContactSources.map((source) => ({ value: source.value, label: source.label }))}
+    >
       <SelectTrigger className="w-37.5 bg-gray-100 border-none">
         <span className="text-sm ">
           <SelectValue placeholder="Select Source" />
@@ -128,7 +132,11 @@ const LabelSelector = ({ value, onChange, includeAll = false, includeStatus = fa
   }
 
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select
+      value={value}
+      onValueChange={onChange}
+      items={labels.map((label) => ({ value: label.id, label: label.name }))}
+    >
       <SelectTrigger className="w-37.5 bg-gray-100 border-none">
         <span className="text-sm ">
           <SelectValue placeholder="Select Label" />
@@ -155,13 +163,25 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
 
   const [isOpenedAddContactModal, setIsOpenedAddContactModal] = useState(false);
 
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openAddtoGroupModal, setOpenAddtoGroupModal] = useState(false);
   const [openLabelContactModal, setOpenLabelContactModal] = useState(false);
   const [openLifecycleContactModal, setOpenLifecycleContactModal] = useState(false);
   const [openImportModal, setOpenImportModal] = useState(false);
   const deleteManyContactsMutation = useDeleteManyContactsMutation();
-  function handleDeleteContacts() {
+  const confirm = useConfirm();
+  async function handleDeleteContacts() {
+    const shouldDelete = await confirm({
+      title: t("Delete contact"),
+      description: t("Are you sure to delete these selected contacts?"),
+      confirmText: t("Delete"),
+      cancelText: t("Cancel"),
+    });
+
+    if (!shouldDelete) {
+      table.setRowSelection({});
+      return;
+    }
+
     const selectedIds = Object.keys(table.getState().rowSelection);
     deleteManyContactsMutation?.mutate(selectedIds, {
       onSuccess: () => {
@@ -268,11 +288,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
               <Activity />
               <span>{t("Update Lifecycle Stage")}</span>
             </Button>
-            <Button
-              variant="outline"
-              className="hover:text-red-500"
-              onClick={() => setOpenDeleteModal(true)}
-            >
+            <Button variant="outline" className="hover:text-red-500" onClick={handleDeleteContacts}>
               <Trash />
               <span>{t("Delete")}</span>
             </Button>
@@ -282,18 +298,6 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
       <CreateOrEditContactModal
         opened={isOpenedAddContactModal}
         setOpened={setIsOpenedAddContactModal}
-      />
-      <CustomAlertDialog
-        buttonTitle="Delete"
-        title={"Delete contact"}
-        description="Are you sure to delete these selected contacts?"
-        onAction={handleDeleteContacts}
-        buttonColor="bg-red-500"
-        onCancel={() => {
-          table.setRowSelection({});
-        }}
-        opened={openDeleteModal}
-        setOpened={setOpenDeleteModal}
       />
       <AddToGroupModal
         opened={openAddtoGroupModal}
@@ -337,11 +341,9 @@ const ExportContacts = ({ table }) => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Download className="w-4 h-4 mr-2" />
-          <span className="font-medium text-sm">Export</span>
-        </Button>
+      <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
+        <Download className="w-4 h-4 mr-2" />
+        <span className="font-medium text-sm">Export</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem onClick={() => handleExport("csv")}>Download as CSV</DropdownMenuItem>
@@ -483,10 +485,8 @@ const ImportContactModal = ({ opened, setOpened }) => {
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <div className="flex justify-end gap-2 mt-6 text-sm">
-            <DialogClose asChild>
-              <Button variant="secondary" onClick={reset}>
-                {t("Cancel")}
-              </Button>
+            <DialogClose render={<Button variant="secondary" onClick={reset} />}>
+              {t("Cancel")}
             </DialogClose>
 
             <Button onClick={handleImportContacts}>

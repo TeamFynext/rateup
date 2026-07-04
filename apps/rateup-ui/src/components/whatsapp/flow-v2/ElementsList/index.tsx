@@ -9,11 +9,11 @@ import {
 import { useEffect, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { cn } from "@/lib/utils.ts";
 import { QuestionType2 } from "@/types/enums.ts";
 import { reorder } from "@/utils/questions.ts";
@@ -157,7 +157,7 @@ interface ElementCardProps {
 
 function ElementCard({ element, index, isExpanded, onToggle, onDelete }: ElementCardProps) {
   const { t: translations } = useTranslation();
-  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  const confirm = useConfirm();
 
   const getElementLabel = () => {
     return (
@@ -169,9 +169,16 @@ function ElementCard({ element, index, isExpanded, onToggle, onDelete }: Element
     );
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    const shouldDelete = await confirm({
+      title: translations("Delete Element?"),
+      description: translations("Are you sure you want to delete this element?"),
+      confirmText: translations("Delete"),
+    });
+
+    if (!shouldDelete) return;
+
     onDelete();
-    setDeleteModalOpened(false);
   };
 
   return (
@@ -217,7 +224,7 @@ function ElementCard({ element, index, isExpanded, onToggle, onDelete }: Element
                   className="h-8 w-8"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setDeleteModalOpened(true);
+                    handleDelete();
                   }}
                 >
                   <IconTrash size={14} className="text-destructive" />
@@ -237,15 +244,6 @@ function ElementCard({ element, index, isExpanded, onToggle, onDelete }: Element
           </div>
         )}
       </Draggable>
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={deleteModalOpened}
-        onClose={() => setDeleteModalOpened(false)}
-        headerLabel={translations("Are you sure you want to delete this element?")}
-        headerTitle={translations("Delete Element?")}
-        confirmLabel={translations("Delete")}
-        onConfirm={handleDelete}
-      />
     </>
   );
 }

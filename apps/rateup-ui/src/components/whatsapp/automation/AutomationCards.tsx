@@ -18,7 +18,6 @@ import {
 import { useDeleteInstagramAutomationMutation } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
 import { CardGrid } from "@/components/common/generic-card.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
@@ -29,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { WaAutomatedReply } from "@/types/global";
 
 interface WaAutomationCardsProps {
@@ -126,7 +126,6 @@ interface AutomationActionsProps {
 }
 
 function AutomationActions({ automationId, automationName, platform }: AutomationActionsProps) {
-  const [deleteDialogOpened, setDeleteDialogOpened] = useState(false);
   const [cloneDialogOpened, setCloneDialogOpened] = useState(false);
   const [cloneName, setCloneName] = useState("");
 
@@ -135,6 +134,7 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
   const updateWaMutation = useUpdateWaAutomatedReplyMutation();
   const deleteIgMutation = useDeleteInstagramAutomationMutation();
   const { t: translations } = useTranslation();
+  const confirm = useConfirm();
 
   const isInstagram = platform === "instagram";
   const isClonePending = cloneWaMutation.isPending || updateWaMutation.isPending;
@@ -166,33 +166,40 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
     );
   }
 
-  function handleDelete() {
+  async function handleDelete() {
+    const shouldDelete = await confirm({
+      title: translations("Delete Automated Reply"),
+      description: translations("Are you sure you want to delete this Automated Reply?"),
+      confirmText: translations("Delete"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
     if (isInstagram) {
-      deleteIgMutation.mutate(automationId, {
-        onSuccess: () => setDeleteDialogOpened(false),
-      });
+      deleteIgMutation.mutate(automationId);
     } else {
-      deleteWaMutation.mutate(automationId, {
-        onSuccess: () => setDeleteDialogOpened(false),
-      });
+      deleteWaMutation.mutate(automationId);
     }
   }
 
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          >
-            <IconDots className="size-4 text-muted-foreground" />
-          </Button>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            />
+          }
+        >
+          <IconDots className="size-4 text-muted-foreground" />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
@@ -220,7 +227,7 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setDeleteDialogOpened(true);
+              handleDelete();
             }}
           >
             <IconTrash className="mr-2 size-3.5" />
@@ -228,15 +235,6 @@ function AutomationActions({ automationId, automationName, platform }: Automatio
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={deleteDialogOpened}
-        onClose={() => setDeleteDialogOpened(false)}
-        headerLabel={translations("Are you sure you want to delete this Automated Reply?")}
-        headerTitle={translations("Delete Automated Reply")}
-        confirmLabel={translations("Delete")}
-        onConfirm={handleDelete}
-      />
       <Dialog open={cloneDialogOpened} onOpenChange={setCloneDialogOpened}>
         <DialogContent className="sm:max-w-112.5">
           <DialogHeader>

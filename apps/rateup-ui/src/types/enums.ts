@@ -410,22 +410,6 @@ export enum WaConfigType {
   Chatbot = "Chatbot",
 }
 
-export enum ChatBotDataSourceType {
-  WEB = "WEB",
-  FILE = "FILE",
-  // API = "API"
-}
-
-export enum ChatBotSource {
-  HUMAN = "HUMAN",
-  AI = "AI",
-}
-
-export enum ChatbotPublicPageStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-}
-
 export enum StripeProductType {
   one_time = "one_time",
   recurring = "recurring",

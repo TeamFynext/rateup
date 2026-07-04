@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { useGetConversationAccountDistribution } from "@/backend/conversation/conversation.query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Progress } from "@/components/ui/progress.tsx";
+import { Progress, ProgressIndicator } from "@/components/ui/progress.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { MessagePlatform } from "@/types/enums.ts";
 
@@ -82,11 +82,9 @@ const ConversationAccountDistribution = ({ dateRange }) => {
                     </div>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <Progress
-                      value={percentage}
-                      className={`transition-all duration-500`}
-                      indicatorColor={color}
-                    />
+                    <Progress value={percentage} className={`transition-all duration-500`}>
+                      <ProgressIndicator style={{ backgroundColor: color }} />
+                    </Progress>
                   </div>
                 </div>
               );

@@ -13,7 +13,6 @@ import {
 } from "@/backend/whatsapp/flow/flow.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -24,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { WaFlowStatus } from "@/types/enums.ts";
 
 import styles from "./FlowCard.module.css";
@@ -50,8 +50,7 @@ function FlowCard({
   responseCount = 0,
 }: Readonly<FlowCardProps>) {
   const navigate = useNavigate();
-  const [dialogOpened, setDialogOpened] = useState(false);
-  const [cloneAandRenewOpened, setCloneAandRenewOpened] = useState(false);
+  const confirm = useConfirm();
   const [cloneDialogOpened, setCloneDialogOpened] = useState(false);
   const [teamId, setTeamId] = useState("");
   const [teamIdError, setTeamIdError] = useState("");
@@ -85,34 +84,70 @@ function FlowCard({
     });
   };
 
+  const handleDelete = async () => {
+    const shouldDelete = await confirm({
+      title: translations("Delete Flow?"),
+      description: translations("Are you sure to delete this Flow?"),
+      confirmText: translations("Delete"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
+    if (status === WaFlowStatus.DRAFT) {
+      deleteMutation.mutate(dbFlowId);
+    } else if (status !== WaFlowStatus.DEPRECATED) {
+      deprecateFlowMutation.mutate(dbFlowId);
+    }
+  };
+
+  const handleCopyAndRenew = async () => {
+    const shouldCopy = await confirm({
+      title: translations("Copy & Renew Flow"),
+      description: translations(
+        "Attention! Copying and renewing this workflow will permanently disable the original one. A new, identical copy will be created, but you won't be able to use the old one anymore. Think carefully before confirming!",
+      ),
+      confirmText: translations("Copy & Renew Flow"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldCopy) return;
+
+    toast.loading(translations("Copy & Renew whatapp flow"), {
+      id: "copy-renew",
+      description: translations("Hold.. your flow data is getting Coping & Renew..."),
+    });
+    cloneAndDeprecateFlowsMutation.mutate(dbFlowId);
+  };
+
   const menu = (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <IconDots size={20} />
-        </Button>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={(e) => e.stopPropagation()}
+          />
+        }
+      >
+        <IconDots size={20} />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
         <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDialogOpened(true);
-                }}
-                className="text-red-600 focus:text-red-600"
-              >
-                <IconTrash size={16} className="mr-2" />
-                {translations("Delete")}
-              </DropdownMenuItem>
-            </div>
+          <TooltipTrigger render={<div />}>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete();
+              }}
+              className="text-red-600 focus:text-red-600"
+            >
+              <IconTrash size={16} className="mr-2" />
+              {translations("Delete")}
+            </DropdownMenuItem>
           </TooltipTrigger>
           <TooltipContent>
             <p>
@@ -124,19 +159,17 @@ function FlowCard({
         </Tooltip>
 
         <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCloneDialogOpened(true);
-                }}
-                disabled={status === WaFlowStatus.DEPRECATED}
-              >
-                <IconCopy size={16} className="mr-2" />
-                {translations("Clone")}
-              </DropdownMenuItem>
-            </div>
+          <TooltipTrigger render={<div />}>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                setCloneDialogOpened(true);
+              }}
+              disabled={status === WaFlowStatus.DEPRECATED}
+            >
+              <IconCopy size={16} className="mr-2" />
+              {translations("Clone")}
+            </DropdownMenuItem>
           </TooltipTrigger>
           <TooltipContent>
             <p>clone-flow</p>
@@ -144,19 +177,17 @@ function FlowCard({
         </Tooltip>
 
         <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCloneAandRenewOpened(true);
-                }}
-                disabled={status !== WaFlowStatus.PUBLISHED}
-              >
-                <IconCopy size={16} className="mr-2" />
-                {translations("Copy & Renew Flow")}
-              </DropdownMenuItem>
-            </div>
+          <TooltipTrigger render={<div />}>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCopyAndRenew();
+              }}
+              disabled={status !== WaFlowStatus.PUBLISHED}
+            >
+              <IconCopy size={16} className="mr-2" />
+              {translations("Copy & Renew Flow")}
+            </DropdownMenuItem>
           </TooltipTrigger>
           <TooltipContent>
             <p>
@@ -195,40 +226,6 @@ function FlowCard({
             }`,
           })
         }
-      />
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={dialogOpened}
-        onClose={() => setDialogOpened(false)}
-        headerLabel={translations("Are you sure to delete this Flow?")}
-        headerTitle={translations("Delete Flow?")}
-        confirmLabel={translations("Delete")}
-        onConfirm={(_e) => {
-          if (status === WaFlowStatus.DRAFT) {
-            deleteMutation.mutate(dbFlowId);
-          } else if (status !== WaFlowStatus.DEPRECATED) {
-            deprecateFlowMutation.mutate(dbFlowId);
-          }
-          setDialogOpened(false);
-        }}
-      />
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={cloneAandRenewOpened}
-        onClose={() => setCloneAandRenewOpened(false)}
-        headerLabel={translations(
-          "Attention! Copying and renewing this workflow will permanently disable the original one. A new, identical copy will be created, but you won't be able to use the old one anymore. Think carefully before confirming!",
-        )}
-        headerTitle={translations("Copy & Renew Flow")}
-        confirmLabel={translations("Copy & Renew Flow")}
-        onConfirm={(_e) => {
-          toast.loading(translations("Copy & Renew whatapp flow"), {
-            id: "copy-renew",
-            description: translations("Hold.. your flow data is getting Coping & Renew..."),
-          });
-          cloneAndDeprecateFlowsMutation.mutate(dbFlowId);
-          setCloneAandRenewOpened(false);
-        }}
       />
       <FormModalLayout
         opened={cloneDialogOpened}

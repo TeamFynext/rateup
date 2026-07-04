@@ -72,7 +72,7 @@ const InboxFaq = () => {
         </div>
 
         <div className="space-y-6">
-          <Accordion type="single" collapsible className="w-full text-white">
+          <Accordion className="w-full text-white">
             {faqs.map((faq, index) => (
               <motion.div
                 key={index}

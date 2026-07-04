@@ -429,14 +429,16 @@ const WaInboxChatSelect = () => {
                   {tab !== "Assigned" && tab !== "mine" && (
                     <TooltipProvider>
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => setShowBulkAssignDialog(true)}
-                          >
-                            <UserCheck className="w-4 h-4" />
-                          </Button>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => setShowBulkAssignDialog(true)}
+                            />
+                          }
+                        >
+                          <UserCheck className="w-4 h-4" />
                         </TooltipTrigger>
 
                         <TooltipContent>
@@ -449,15 +451,17 @@ const WaInboxChatSelect = () => {
                   {tab !== "Addressed" && (
                     <TooltipProvider>
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 w-8 p-0"
-                            onClick={() => setOpenConfirmHandleClose(true)}
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                          </Button>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0"
+                              onClick={() => setOpenConfirmHandleClose(true)}
+                            />
+                          }
+                        >
+                          <CheckCircle className="w-4 h-4" />
                         </TooltipTrigger>
 
                         <TooltipContent>

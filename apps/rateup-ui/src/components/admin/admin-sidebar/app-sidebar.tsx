@@ -110,16 +110,14 @@ export function AppSidebar({ data: propData, ...props }: Readonly<AppSidebarProp
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link to="#">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Rateup</span>
-                  <span className="truncate text-xs">Enterprise</span>
-                </div>
-              </Link>
+            <SidebarMenuButton size="lg" render={<Link to="#" />}>
+              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                <Command className="size-4" />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">Rateup</span>
+                <span className="truncate text-xs">Enterprise</span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -130,11 +128,12 @@ export function AppSidebar({ data: propData, ...props }: Readonly<AppSidebarProp
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild variant="outline">
-              <Link to="/dashboard" className="text-foreground justify-between">
-                <div className="group-data-[collapsible=icon]:hidden">Go to Dashboard</div>
-                <IconHome />
-              </Link>
+            <SidebarMenuButton
+              variant="outline"
+              render={<Link to="/dashboard" className="text-foreground justify-between" />}
+            >
+              <div className="group-data-[collapsible=icon]:hidden">Go to Dashboard</div>
+              <IconHome />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

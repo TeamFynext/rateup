@@ -75,7 +75,11 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
           <div className="space-y-2">
             <Label>Select Keyword</Label>
             <div className="max-w-md">
-              <Select value={validKeyword} onValueChange={setShareKeyword}>
+              <Select
+                value={validKeyword}
+                onValueChange={setShareKeyword}
+                items={keywordOptions.map((k) => ({ value: k, label: k }))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select keyword" />
                 </SelectTrigger>

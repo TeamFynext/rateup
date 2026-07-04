@@ -81,19 +81,21 @@ export function ListPageSortDropdown({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(
-            "gap-1.5 px-3 text-sm font-medium transition-all",
-            value !== defaultValue && "border-primary/50 text-primary",
-            className,
-          )}
-        >
-          <ArrowUpDown className="h-3.5 w-3.5" />
-          {currentLabel}
-        </Button>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "gap-1.5 px-3 text-sm font-medium transition-all",
+              value !== defaultValue && "border-primary/50 text-primary",
+              className,
+            )}
+          />
+        }
+      >
+        <ArrowUpDown className="h-3.5 w-3.5" />
+        {currentLabel}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-44 p-1.5">
         <DropdownMenuRadioGroup value={value ?? ""} onValueChange={(val) => onChange?.(val)}>

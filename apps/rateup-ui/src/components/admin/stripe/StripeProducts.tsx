@@ -1,8 +1,6 @@
-import { useDisclosure } from "@mantine/hooks";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Calendar, Clock, CreditCard, DollarSign, Package, Trash2, Type } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -13,12 +11,12 @@ import {
   useUpdateStripeProduct,
 } from "@/backend/payment/stripe/stripe.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { PaymentPlanStatus } from "@/types/enums.ts";
 
 import { ProductsDataTableToolbar } from "./products-data-table-toolbar.tsx";
@@ -44,12 +42,19 @@ const StripeProducts = () => {
   const updateProductMutate = useUpdateStripeProduct();
   const deleteStripeProduct = useDeleteStripeProduct();
   const { data: rateupPlans } = useRateupPaymentsPlans();
-  const [openedDeleteModal, { open: openDeleteModal, close: closeDeleteModal }] =
-    useDisclosure(false);
-  const [productId, setProductId] = useState("");
   const { t: translations } = useTranslation();
+  const confirm = useConfirm();
 
-  const handleDeleteProduct = () => {
+  const handleDeleteProduct = async (productId: string) => {
+    const shouldDelete = await confirm({
+      title: translations("Delete Stripe Product"),
+      description: translations("Are you sure to delete this stripe product?"),
+      confirmText: translations("Delete"),
+      cancelText: translations("cancel"),
+    });
+
+    if (!shouldDelete) return;
+
     const product = products && products?.find((prod) => prod.productId == productId);
     const productInRateupPlan =
       rateupPlans && rateupPlans?.find((plan) => plan?.stripeId === product?.id);
@@ -59,6 +64,9 @@ const StripeProducts = () => {
       });
       return;
     }
+    toast.loading(translations("Hold on..Stripe Product is getting deleted"), {
+      id: "stripe",
+    });
     deleteStripeProduct.mutate(productId);
   };
 
@@ -190,6 +198,12 @@ const StripeProducts = () => {
         return (
           <Select
             value={status}
+            items={[
+              { value: PaymentPlanStatus.NULL, label: "NULL" },
+              { value: PaymentPlanStatus.LIVE, label: "LIVE" },
+              { value: PaymentPlanStatus.ACTIVE, label: "ACTIVE" },
+              { value: PaymentPlanStatus.INACTIVE, label: "INACTIVE" },
+            ]}
             onValueChange={(value) => {
               updateProductMutate.mutate({
                 productId: row.original.id,
@@ -231,8 +245,7 @@ const StripeProducts = () => {
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            setProductId(row.original.id);
-            openDeleteModal();
+            handleDeleteProduct(row.original.id);
           }}
           disabled={!row.original.canDelete}
           className="h-8 w-8 p-0"
@@ -331,21 +344,6 @@ const StripeProducts = () => {
         </Card>
       </div>
       <DataTable columns={columns} data={tableData} DataTableToolbar={ProductsDataTableToolbar} />
-      <ConfirmationModal
-        opened={openedDeleteModal}
-        onClose={closeDeleteModal}
-        forDeleteFunctionality
-        confirmLabel={translations("Delete")}
-        headerTitle={translations("Delete Stripe Product")}
-        onConfirm={() => {
-          toast.loading(translations("Hold on..Stripe Product is getting deleted"), {
-            id: "stripe",
-          });
-          handleDeleteProduct();
-        }}
-        headerLabel={translations("Are you sure to delete this stripe product?")}
-        closeLabel={translations("cancel")}
-      />
     </div>
   );
 };

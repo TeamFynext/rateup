@@ -99,7 +99,7 @@ const notificationFeatures = [
 const NotificationSettings = () => {
   return (
     <div className="px-4">
-      <Accordion type="single" collapsible defaultValue={notificationFeatures[0].value}>
+      <Accordion defaultValue={[notificationFeatures[0].value]}>
         {notificationFeatures.map((item) => (
           <AccordionItem key={item.value} value={item.value}>
             <AccordionTrigger className="py-3 hover:no-underline">

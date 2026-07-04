@@ -164,7 +164,6 @@ export default function InboxAutomation() {
           </p>
         </div>
       </div>
-
       {/* Rules list container */}
       <div className="bg-white dark:bg-card border border-border rounded-2xl shadow-sm divide-y divide-border overflow-hidden">
         {/* Row 1: New / Unassigned Chats */}
@@ -277,7 +276,6 @@ export default function InboxAutomation() {
           </div>
         </div>
       </div>
-
       {/* Edit Dialog */}
       <Dialog
         open={editingRule !== null}
@@ -424,10 +422,12 @@ export default function InboxAutomation() {
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 mt-3">
-            <DialogClose asChild>
-              <Button variant="secondary" size="sm" className="text-xs font-semibold px-4">
-                {t("Cancel")}
-              </Button>
+            <DialogClose
+              render={
+                <Button variant="secondary" size="sm" className="text-xs font-semibold px-4" />
+              }
+            >
+              {t("Cancel")}
             </DialogClose>
             <Button
               type="submit"

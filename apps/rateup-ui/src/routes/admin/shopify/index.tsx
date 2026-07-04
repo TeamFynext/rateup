@@ -1,8 +1,6 @@
-import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Building2, Calendar, ShoppingBag, Store, Trash2 } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -10,10 +8,10 @@ import { useGetAllIntegrations } from "@/backend/appsIntegration/integration.que
 import { useDeleteShopifyIntegrationByShop } from "@/backend/appsIntegration/shopify/shopify.query";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
@@ -33,10 +31,9 @@ interface ShopifyTableData {
 
 function Shopify() {
   const { data: integrations } = useGetAllIntegrations();
-  const [selectedShop, setSelectedShop] = useState("");
-  const [opened, { open: openConfirmModal, close }] = useDisclosure(false);
   const deleteIntegration = useDeleteShopifyIntegrationByShop();
   const { t: translations } = useTranslation();
+  const confirm = useConfirm();
 
   const columns: ColumnDef<ShopifyTableData>[] = [
     {
@@ -100,10 +97,18 @@ function Shopify() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
-            setSelectedShop(row.original.shop);
-            openConfirmModal();
+            const shouldDelete = await confirm({
+              title: translations("Delete"),
+              description: translations("Are you sure, you want to delete it?"),
+              confirmText: translations("Yes"),
+              cancelText: "No",
+            });
+
+            if (!shouldDelete) return;
+
+            handleDelete(row.original.shop);
           }}
           className="h-8 w-8 p-0"
         >
@@ -126,11 +131,11 @@ function Shopify() {
         }))
     : [];
 
-  const handleDelete = () => {
+  const handleDelete = (shop: string) => {
     toast.loading("Deleting...", {
       id: "integration",
     });
-    deleteIntegration.mutate({ shop: selectedShop });
+    deleteIntegration.mutate({ shop });
   };
 
   // Calculate stats
@@ -175,16 +180,6 @@ function Shopify() {
       <div>
         <DataTable columns={columns} data={tableData} DataTableToolbar={DataTableToolbar} />
       </div>
-      <ConfirmationModal
-        confirmLabel={translations("Yes")}
-        headerLabel={translations("Are you sure, you want to delete it?")}
-        headerTitle={translations("Delete")}
-        onClose={close}
-        onConfirm={handleDelete}
-        forDeleteFunctionality
-        opened={opened}
-        closeLabel="No"
-      />
     </div>
   );
 }

@@ -106,7 +106,11 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
   }
   if (actionType === "ATTACH_LABEL") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value || ""}
+        items={labelsData?.map((l) => ({ value: l?.id, label: l?.name })) ?? []}
+      >
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select label" />
         </SelectTrigger>
@@ -122,7 +126,11 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
   }
   if (actionType === "ASSIGN_USER") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value || ""}
+        items={teamMembers?.data?.map((u) => ({ value: u.id, label: u.name })) ?? []}
+      >
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select user" />
         </SelectTrigger>
@@ -138,7 +146,11 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
   }
   if (actionType === "ASSIGN_TEAM") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value || ""}
+        items={teamsData?.data?.map((t) => ({ value: t.id, label: t.name })) ?? []}
+      >
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select team" />
         </SelectTrigger>
@@ -154,7 +166,11 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
   }
   if (actionType === "SEND_FLOW") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value || ""}
+        items={flowsData?.map((t) => ({ value: t.dbFlowId, label: t.name })) ?? []}
+      >
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select flow" />
         </SelectTrigger>
@@ -170,7 +186,11 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
   }
   if (actionType === "TRIGGER_CHATBOT") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value || ""}
+        items={filteredAutomations?.map((t) => ({ value: t.id, label: t.name })) ?? []}
+      >
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select automation" />
         </SelectTrigger>
@@ -186,7 +206,11 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
   }
   if (actionType === "SEND_WEB_SURVEY") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value || ""}
+        items={webSurveyOptions}
+      >
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select web survey" />
         </SelectTrigger>
@@ -223,6 +247,12 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
           }
           value={templateValue.templateId || ""}
           disabled={isTemplatesLoading}
+          items={
+            templatesData?.map((template) => ({
+              value: String(template.id),
+              label: template?.data?.name,
+            })) ?? []
+          }
         >
           <SelectTrigger className="w-full bg-background">
             <SelectValue
@@ -297,7 +327,11 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
   }
   if (actionType === "ASSIGN_LIFECYCLE") {
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value || ""}
+        items={lifecyclesData?.map((t) => ({ value: t.id, label: t.name })) ?? []}
+      >
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select lifecycle" />
         </SelectTrigger>
@@ -319,7 +353,11 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
       { value: WaMessageAssignStatus.UNRESOLVED, label: "Unresolved" },
     ];
     return (
-      <Select onValueChange={valueField.onChange} value={valueField.value || ""}>
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value || ""}
+        items={statusOptions}
+      >
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select close status" />
         </SelectTrigger>
@@ -406,6 +444,7 @@ const ActionList: React.FC = () => {
                   }}
                   defaultValue={field.value}
                   value={field.value}
+                  items={filteredActionTypes}
                 >
                   <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
                     <SelectValue placeholder="Action Type" />

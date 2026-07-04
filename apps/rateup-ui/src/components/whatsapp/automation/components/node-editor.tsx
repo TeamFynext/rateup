@@ -34,7 +34,6 @@ import { toast } from "sonner";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { useImmer } from "use-immer";
 
-import { useAllChatbots } from "@/backend/chatbot/chatbot.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
@@ -100,11 +99,8 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
   const { data: templates, isLoading } = useWaTemplates();
   const { data: flows, isPending } = useWaFlowsFromDb();
   const { data: subscription } = useSubscription();
-  const [hasTicketFeature, hasAIFeature] = useMemo(
-    () => [
-      hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
-      hasFeature(subscription, SubscriptionFeaturePathName.AI),
-    ],
+  const [hasTicketFeature] = useMemo(
+    () => [hasFeature(subscription, SubscriptionFeaturePathName.Ticket)],
     [subscription],
   );
   const { data: boardData, isLoading: isBoardsPending } = useBoardsQueries(hasTicketFeature);
@@ -114,7 +110,6 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
   };
 
   const [nodeData, setNodeData] = useState<NodeData>(node.data);
-  const { data: allChatbots } = useAllChatbots(hasAIFeature);
 
   // Update local state when node changes
   useEffect(() => {
@@ -266,14 +261,6 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
             nodeData={nodeData as NodeTypeMap["flowNode"]}
             handleInputChange={handleInputChange}
             flows={flows}
-          />
-        );
-      case "aibotNode":
-        return (
-          <AibotNodeEditor
-            nodeData={nodeData as NodeTypeMap["aibotNode"]}
-            handleInputChange={handleInputChange}
-            allChatbots={allChatbots}
           />
         );
       case "leadgenNode":
@@ -2088,48 +2075,6 @@ const FlowNodeEditor: React.FC<NodeComponentProps<"flowNode"> & { flows: any }> 
           w={"100%"}
         />
       )}
-    </Stack>
-  );
-};
-
-const AibotNodeEditor: React.FC<NodeComponentProps<"aibotNode"> & { allChatbots: any }> = ({
-  nodeData,
-  handleInputChange,
-  allChatbots,
-}) => {
-  const typedData = nodeData;
-  return (
-    <Stack>
-      <WaTextEditor
-        content={typedData.body || ""}
-        handleInputChange={(e) => handleInputChange("body", e)}
-        label="Start Message"
-        placeholder="Enter your message text here..."
-        required
-      />
-      <Text fz="xs" ta="right">
-        {typedData.body?.length || 0}/4096 characters
-      </Text>
-
-      <ContainedSelection
-        data={
-          allChatbots?.map((bot) => ({
-            label: bot.name,
-            value: bot.id,
-          })) ?? []
-        }
-        label="Select Chatbot"
-        allowDeselect={false}
-        placeholder="Select a chatbot"
-        value={typedData?.chatbot?.id || ""}
-        onChange={(value, selected) => {
-          handleInputChange("chatbot", {
-            id: value,
-            name: selected?.label,
-          });
-        }}
-        flex={1}
-      />
     </Stack>
   );
 };

@@ -188,6 +188,11 @@ const ZohoAuthentication = ({ integration }) => {
             <Select
               value={connectionMode || ""}
               onValueChange={(value: any) => setConnectionMode(value)}
+              items={[
+                { value: "crm", label: "Zoho CRM Only" },
+                { value: "bigin", label: "Zoho Bigin Only" },
+                { value: "both", label: "Zoho CRM + Bigin" },
+              ]}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={t("Select integration")} />
@@ -529,6 +534,10 @@ const ZohoTriggerList = ({
                 value={selectedBiginOwnerId}
                 onValueChange={(value) => setSelectedBiginOwnerId(String(value))}
                 disabled={zohoUsersLoading}
+                items={zohoUsers.map((owner: any) => ({
+                  value: owner.id,
+                  label: `${owner.name} ${owner.email ? `(${owner.email})` : ""}`,
+                }))}
               >
                 <SelectTrigger className="h-11 rounded-xl w-full">
                   <SelectValue
@@ -609,6 +618,10 @@ const ZohoTriggerList = ({
                   onValueChange={(value) => {
                     setSelectedPipelineId(String(value));
                   }}
+                  items={pipelines.map((pipeline: any) => ({
+                    value: String(pipeline.id),
+                    label: pipeline.name,
+                  }))}
                 >
                   <SelectTrigger className="h-11 rounded-xl w-full">
                     <SelectValue placeholder="Select pipeline" />
@@ -638,6 +651,10 @@ const ZohoTriggerList = ({
                   onValueChange={(value) => {
                     setSelectedSubPipelineId(String(value));
                   }}
+                  items={subPipelines.map((pipeline: any) => ({
+                    value: String(pipeline.id),
+                    label: pipeline.name,
+                  }))}
                 >
                   <SelectTrigger className="h-11 rounded-xl w-full">
                     <SelectValue placeholder="Select sub pipeline" />
@@ -802,6 +819,10 @@ const ZohoTriggerList = ({
                     };
                     setLifecycleMappings(updated);
                   }}
+                  items={stages.map((stage: any) => ({
+                    value: String(stage.id),
+                    label: stage.name,
+                  }))}
                 >
                   <SelectTrigger className="w-[240px]">
                     <SelectValue placeholder="Select stage" />
@@ -1056,6 +1077,12 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
 
                       setLeadStatusMappings(updated);
                     }}
+                    items={
+                      lifecycles?.map((lifecycle) => ({
+                        value: String(lifecycle.id),
+                        label: lifecycle.name,
+                      })) ?? []
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder={t("Select lifecycle")} />

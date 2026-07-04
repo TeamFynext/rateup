@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
 
@@ -13,14 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
 import useFlowStoreV3 from "../utils/store.ts";
@@ -65,29 +58,31 @@ function CreateScreenModal({ opened, close }: CreateScreenModalProps) {
           <DialogTitle>{translations("Create New Screen")}</DialogTitle>
           <DialogDescription>{translations("Add a new screen to your flow")}</DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{translations("Screen Title")}</FormLabel>
-                  <FormControl>
-                    <Input placeholder={translations("Enter screen title")} {...field} autoFocus />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={close}>
-                {translations("Cancel")}
-              </Button>
-              <Button type="submit">{translations("Create Screen")}</Button>
-            </DialogFooter>
-          </form>
-        </Form>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <Controller
+            control={form.control}
+            name="title"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>{translations("Screen Title")}</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  aria-invalid={fieldState.invalid}
+                  placeholder={translations("Enter screen title")}
+                  autoFocus
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={close}>
+              {translations("Cancel")}
+            </Button>
+            <Button type="submit">{translations("Create Screen")}</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

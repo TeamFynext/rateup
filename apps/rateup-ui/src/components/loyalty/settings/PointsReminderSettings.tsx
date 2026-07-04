@@ -1,12 +1,11 @@
 import { Clock, Info, Loader2, Save } from "lucide-react";
-import type { UseFormReturn } from "react-hook-form";
+import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { FormField } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
@@ -45,7 +44,7 @@ export function PointsReminderSettings({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <FormField
+        <Controller
           control={form.control}
           name={`${LoyaltyEventType.INACTIVITY_REMINDER}.enabled`}
           render={({ field }) => (
@@ -72,7 +71,7 @@ export function PointsReminderSettings({
         {form.watch(`${LoyaltyEventType.INACTIVITY_REMINDER}.enabled`) && (
           <>
             <div className="space-y-2">
-              <FormField
+              <Controller
                 control={form.control}
                 name={`${LoyaltyEventType.INACTIVITY_REMINDER}.triggerDays`}
                 render={({ field }) => (
@@ -106,7 +105,7 @@ export function PointsReminderSettings({
             </div>
 
             <div className="space-y-2">
-              <FormField
+              <Controller
                 control={form.control}
                 name={`${LoyaltyEventType.INACTIVITY_REMINDER}.waTemplateId`}
                 render={({ field }) => (

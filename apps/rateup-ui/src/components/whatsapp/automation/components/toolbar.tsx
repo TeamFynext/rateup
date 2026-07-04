@@ -52,47 +52,47 @@ export default function Toolbar({
   return (
     <div className={styles.toolbar}>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className={styles.toolbarButton}
-            onClick={onSave}
-            disabled={saveDisabled}
-          >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
-          </Button>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={onSave}
+              disabled={saveDisabled}
+            />
+          }
+        >
+          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
         </TooltipTrigger>
         <TooltipContent>Save</TooltipContent>
       </Tooltip>
-
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className={styles.toolbarButton}
-            onClick={() => validateFlow(false)}
-          >
-            <CheckCheck className="h-4 w-4" />
-          </Button>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={() => validateFlow(false)}
+            />
+          }
+        >
+          <CheckCheck className="h-4 w-4" />
         </TooltipTrigger>
         <TooltipContent>Validate</TooltipContent>
       </Tooltip>
-
       <DropdownMenu>
         <Tooltip>
-          <TooltipTrigger asChild>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className={styles.toolbarButton}>
-                <Table className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-          </TooltipTrigger>
+          <DropdownMenuTrigger
+            render={
+              <TooltipTrigger
+                render={<Button variant="outline" size="icon" className={styles.toolbarButton} />}
+              />
+            }
+          >
+            <Table className="h-4 w-4" />
+          </DropdownMenuTrigger>
           <TooltipContent>Layout</TooltipContent>
         </Tooltip>
 
@@ -107,54 +107,56 @@ export default function Toolbar({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className={styles.toolbarButton}
-            onClick={onUndo}
-            disabled={!canUndo}
-          >
-            <Undo2 className="h-4 w-4" />
-          </Button>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={onUndo}
+              disabled={!canUndo}
+            />
+          }
+        >
+          <Undo2 className="h-4 w-4" />
         </TooltipTrigger>
         <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
       </Tooltip>
-
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className={styles.toolbarButton}
-            onClick={onRedo}
-            disabled={!canRedo}
-          >
-            <Redo2 className="h-4 w-4" />
-          </Button>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={onRedo}
+              disabled={!canRedo}
+            />
+          }
+        >
+          <Redo2 className="h-4 w-4" />
         </TooltipTrigger>
         <TooltipContent>Redo (Ctrl+Y or Ctrl+Shift+Z)</TooltipContent>
       </Tooltip>
-
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className={styles.toolbarButton}
-            onClick={() => {
-              refetch?.();
-              handleTabSwitch("settings");
-            }}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={() => {
+                refetch?.();
+                handleTabSwitch("settings");
+              }}
+            />
+          }
+        >
+          <Settings className="h-4 w-4" />
         </TooltipTrigger>
         <TooltipContent>Settings</TooltipContent>
       </Tooltip>
-
       {/* <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -168,17 +170,18 @@ export default function Toolbar({
           </TooltipTrigger>
           <TooltipContent>Share</TooltipContent>
         </Tooltip> */}
-
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className={styles.toolbarButton}
-            onClick={() => handleTabSwitch("response")}
-          >
-            <FileText className="h-4 w-4" />
-          </Button>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={() => handleTabSwitch("response")}
+            />
+          }
+        >
+          <FileText className="h-4 w-4" />
         </TooltipTrigger>
         <TooltipContent>Response</TooltipContent>
       </Tooltip>

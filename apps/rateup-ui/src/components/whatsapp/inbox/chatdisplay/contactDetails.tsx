@@ -37,17 +37,6 @@ import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
 import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal.tsx";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
@@ -56,6 +45,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { MessagePlatform } from "@/types/enums.ts";
 import { SubscriptionFeaturePathName } from "@/types/enums.ts";
@@ -349,15 +339,17 @@ export default function WaInboxContactDetails({
           <h3 className="text-sm text-center flex-1">{t("Edit Contact")}</h3>
           <div className="flex items-center gap-2">
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0"
-                  onClick={() => setEditable(false)}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </Button>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => setEditable(false)}
+                  />
+                }
+              >
+                <X className="w-3.5 h-3.5" />
               </TooltipTrigger>
               <TooltipContent side="bottom">
                 <p>{t("Cancel")}</p>
@@ -599,10 +591,12 @@ export default function WaInboxContactDetails({
             />
           )}
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleToggle}>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Button>
+            <TooltipTrigger
+              render={
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleToggle} />
+              }
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <p>{t("Collapse Panel")}</p>
@@ -949,53 +943,44 @@ export default function WaInboxContactDetails({
 
 function DeleteContactButton({ contact, deleteContactMutation, handleToggle }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
+
+  const handleDelete = async () => {
+    const shouldDelete = await confirm({
+      title: t("Delete contact"),
+      description: t("Are you sure you want to delete this contact?"),
+      confirmText: t("Delete contact"),
+      cancelText: t("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
+    deleteContactMutation.mutate(contact.id, {
+      onSuccess: handleToggle,
+    });
+  };
+
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-start text-xs h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
+    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full justify-start text-xs h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+        onClick={handleDelete}
+        disabled={deleteContactMutation.isPending}
+      >
+        {deleteContactMutation.isPending ? (
+          <>
+            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+            {t("Deleting")}...
+          </>
+        ) : (
+          <>
             <Trash2 className="w-3.5 h-3.5 mr-1.5" />
             {t("Delete contact")}
-          </Button>
-        </motion.div>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("Delete contact")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("Are you sure you want to delete this contact?")}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={() => {
-              deleteContactMutation.mutate(contact.id, {
-                onSuccess: handleToggle,
-              });
-            }}
-            disabled={deleteContactMutation.isPending}
-          >
-            {deleteContactMutation.isPending ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                {t("Deleting")}...
-              </>
-            ) : (
-              <>
-                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                {t("Delete contact")}
-              </>
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </>
+        )}
+      </Button>
+    </motion.div>
   );
 }

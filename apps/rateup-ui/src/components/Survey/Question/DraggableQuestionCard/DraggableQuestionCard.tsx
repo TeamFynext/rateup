@@ -1,6 +1,6 @@
 import { Draggable } from "@hello-pangea/dnd";
 import { ActionIcon, Badge, Box, Flex, Group, Image, Text } from "@mantine/core";
-import { useDisclosure, useHover } from "@mantine/hooks";
+import { useHover } from "@mantine/hooks";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import cx from "clsx";
@@ -8,7 +8,7 @@ import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { PageType } from "@/types/enums.ts";
 import { extractText } from "@/utils/index.ts";
@@ -44,7 +44,7 @@ export function DraggableQuestionCard({
   });
   const surveyId = params.surveyId as string;
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const confirm = useConfirm();
 
   const questionTitle =
     getReplacedTitleFromVariable({
@@ -58,9 +58,17 @@ export function DraggableQuestionCard({
     onDelete(qId);
   });
 
-  const handleDelete = (e, qId) => {
+  const handleDelete = async (e) => {
     e?.stopPropagation();
-    questionDeleteMutation.mutate(qId);
+    const shouldDelete = await confirm({
+      title: ` ${translations("Delete")} ${question.type in PageType ? translations("page") : translations("question")}?`,
+      description: ` ${translations("Are you sure to delete this")} ${question.type in PageType ? translations("page") : translations("question")}?`,
+      confirmText: translations("Delete"),
+    });
+
+    if (!shouldDelete) return;
+
+    questionDeleteMutation.mutate(question.id);
   };
 
   const nonDeletablePagetypeStrs = ["Language", "GoogleReview"];
@@ -68,17 +76,6 @@ export function DraggableQuestionCard({
   const { t: translations } = useTranslation();
   return (
     <>
-      <ConfirmationModal
-        forDeleteFunctionality
-        confirmLabel={translations("Delete")}
-        headerLabel={` ${translations("Are you sure to delete this")} ${question.type in PageType ? translations("page") : translations("question")}?`}
-        headerTitle={` ${translations("Delete")} ${question.type in PageType ? translations("page") : translations("question")}?`}
-        opened={dialogOpened}
-        onClose={closeDialog}
-        onConfirm={(e) => {
-          handleDelete(e, question.id);
-        }}
-      />
       <Draggable
         key={question.id}
         index={index}
@@ -155,9 +152,7 @@ export function DraggableQuestionCard({
                 {!nonDeletablePagetypeStrs.includes(question.type) && (
                   <ActionIcon
                     onClick={(e) => {
-                      e.stopPropagation();
-                      closeDialog();
-                      toggle();
+                      handleDelete(e);
                     }}
                     variant="subtle"
                     color="gray"

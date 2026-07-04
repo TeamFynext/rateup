@@ -22,7 +22,16 @@ const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
   return (
     <div className={"flex items-center w-full gap-1"}>
       <p className="text-gray-600 text-xs w-14">{translations("SORT BY")}:</p>
-      <Select onValueChange={handleSortChange} defaultValue={sortOption}>
+      <Select
+        onValueChange={handleSortChange}
+        defaultValue={sortOption}
+        items={[
+          { value: "latest", label: translations("Latest First") },
+          { value: "oldest", label: translations("Old First") },
+          { value: "a-z", label: translations("A - Z") },
+          { value: "z-a", label: translations("Z - A") },
+        ]}
+      >
         <SelectTrigger className="w-28 rounded-sm">
           <SelectValue placeholder={translations("sort by")} />
         </SelectTrigger>

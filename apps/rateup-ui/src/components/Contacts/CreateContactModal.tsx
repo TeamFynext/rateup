@@ -332,16 +332,15 @@ export const UserSelector = ({
     );
   }
   if (allowMultiSelect) {
+    const userOptions = users?.data?.map((user) => ({ value: user.id, label: user.name })) ?? [];
     return (
       <MultiSelect
+        options={userOptions}
+        value={value}
         onValueChange={onChange}
-        options={users?.data?.map((user) => ({
-          value: user.id,
-          label: user.name,
-        }))}
-        className={`${className}`}
         placeholder="Select staff"
-        defaultValue={value}
+        emptyIndicator="No staff found."
+        className={`${className}`}
       />
     );
   }
@@ -354,8 +353,9 @@ export const UserSelector = ({
   function onValueChange(value) {
     onChange(value === "all" ? users.data.map((u) => u.id) : value, value === "all");
   }
+  const userSelectItems = userData?.map((user) => ({ value: user.id, label: user.name })) ?? [];
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select value={value} onValueChange={onValueChange} items={userSelectItems}>
       <SelectTrigger className={`${className}`}>
         <div>
           <User className="size-4 text-muted-foreground" />

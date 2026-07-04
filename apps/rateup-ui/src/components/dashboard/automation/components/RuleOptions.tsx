@@ -93,7 +93,11 @@ const RuleOptions: React.FC = () => {
                       <FieldLabel className="text-xs font-semibold mb-2">
                         Select Business Hours
                       </FieldLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                        items={businessHours?.map((bh) => ({ value: bh.id, label: bh.name })) ?? []}
+                      >
                         <SelectTrigger aria-invalid={fieldState.invalid}>
                           <SelectValue placeholder="Select business hours" />
                         </SelectTrigger>

@@ -1,6 +1,5 @@
 import { Flex, Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
@@ -22,11 +21,11 @@ import useContactStore, {
   useMessagesStore,
 } from "@/components/dashboard/inbox/store.ts";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import WaTextEditor, { parseToWhatsAppFormat } from "@/components/RichTextEditor/waTextEditor.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
@@ -539,9 +538,18 @@ export const WaInboxAssignUserFooter = ({
 export const WaInboxBlockedContactFooter = ({ contact }) => {
   const { filterData } = useContactStore();
   const { setSelectedContact } = useContactsStore();
-  const [opened, { open, close }] = useDisclosure(false);
+  const confirm = useConfirm();
   const unblockMut = useUnBlockWhatsAppUser(filterData);
-  function handleUnblock() {
+  async function handleUnblock() {
+    const shouldUnblock = await confirm({
+      title: `Unblock ${contact?.name ?? contact?.phone}`,
+      description: "Are you sure to unblock this contact?",
+      confirmText: "Unblock",
+      cancelText: "cancel",
+    });
+
+    if (!shouldUnblock) return;
+
     unblockMut.mutate(
       { phoneNumbersList: [contact.phone] },
       {
@@ -558,17 +566,13 @@ export const WaInboxBlockedContactFooter = ({ contact }) => {
         <Text size="xs">This contact has been blocked by you.</Text>
       </Group>
       <Group justify={"center"} gap={"xs"}>
-        <RateupButtonPrimary title="Unblock contact" onClick={open} size="xs" radius={"md"} />
+        <RateupButtonPrimary
+          title="Unblock contact"
+          onClick={handleUnblock}
+          size="xs"
+          radius={"md"}
+        />
       </Group>
-      <ConfirmationModal
-        confirmLabel="Unblock"
-        headerLabel="Are you sure to unblock this contact?"
-        headerTitle={`Unblock ${contact?.name ?? contact?.phone}`}
-        onClose={close}
-        onConfirm={handleUnblock}
-        opened={opened}
-        closeLabel="cancel"
-      />
     </Stack>
   );
 };

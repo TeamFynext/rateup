@@ -13,7 +13,9 @@ const CustomTooltip = ({
 }) => {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+      <TooltipTrigger render={<span className="inline-flex items-center" />}>
+        {trigger}
+      </TooltipTrigger>
       <TooltipContent side={side}>{content}</TooltipContent>
     </Tooltip>
   );

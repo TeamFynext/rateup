@@ -31,16 +31,6 @@ import invariant from "tiny-invariant";
 
 import { useCardTeamMembersById } from "@/backend/tickets/tickets.query";
 import { useUserInfo } from "@/backend/user/user.query";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
   DropdownMenu,
@@ -48,6 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import { getCardData, getCardDropTargetData, isCardData, isDraggingACard } from "./data.ts";
@@ -208,7 +199,6 @@ function CardDisplay({
       {state.type === "is-over" && state.closestEdge === "top" ? (
         <CardShadow dragging={state.dragging} />
       ) : null}
-
       <div
         ref={innerRef}
         onClick={state.type === "idle" ? onClick : undefined}
@@ -229,13 +219,15 @@ function CardDisplay({
           </div>
           {state.type === "idle" && (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  onClick={handleMenuClick}
-                  className="shrink-0 w-[22px] h-[22px] -mt-0.5 rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted opacity-0 group-hover/card:opacity-100"
-                >
-                  <MoreHorizontal size={16} strokeWidth={2} />
-                </button>
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    onClick={handleMenuClick}
+                    className="shrink-0 w-[22px] h-[22px] -mt-0.5 rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted opacity-0 group-hover/card:opacity-100"
+                  />
+                }
+              >
+                <MoreHorizontal size={16} strokeWidth={2} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
@@ -400,7 +392,6 @@ function CardDisplay({
           </div>
         </div>
       </div>
-
       {state.type === "is-over" && state.closestEdge === "bottom" ? (
         <CardShadow dragging={state.dragging} />
       ) : null}
@@ -422,19 +413,29 @@ export function Card({
   const innerRef = useRef<HTMLDivElement | null>(null);
   const [state, setState] = useState<TCardState>(idle);
   const navigate = useNavigate();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const confirm = useConfirm();
   const { data: userRes } = useUserInfo() as {
     data: { data: { role: string } };
   };
   const role = userRes?.data?.role;
   const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
-  const handleDeleteClick = () => {
+  const handleDeleteClick = async () => {
     if (!isAdmin) {
       toast.warning(t("Only admin or super admin can delete this ticket."));
       return;
     }
-    setIsDeleteDialogOpen(true);
+
+    const shouldDelete = await confirm({
+      title: t("Delete ticket?"),
+      description: t("Are you sure you want to delete this ticket? This action cannot be undone."),
+      confirmText: t("Delete"),
+      cancelText: t("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
+    if (onDelete) onDelete(card.id);
   };
 
   useEffect(() => {
@@ -548,29 +549,6 @@ export function Card({
       {state.type === "preview"
         ? createPortal(<CardDisplay state={state} card={card} />, state.container)
         : null}
-
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("Delete ticket?")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("Are you sure you want to delete this ticket? This action cannot be undone.")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={() => {
-                if (onDelete) onDelete(card.id);
-                setIsDeleteDialogOpen(false);
-              }}
-            >
-              {t("Delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

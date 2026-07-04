@@ -1,5 +1,4 @@
 import { Box, Button, Group, LoadingOverlay, NumberInput } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -79,7 +78,7 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
         file: null,
       });
 
-      modals.closeAll();
+      context.closeModal(thisModalId);
     } else {
       getCroppedCanvas().then((croppedCanvas) => {
         croppedCanvas?.toBlob((blob) => {
@@ -97,11 +96,20 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
 
           setTimeout(() => URL.revokeObjectURL(imageUrl), 100);
 
-          modals.closeAll();
+          context.closeModal(thisModalId);
         }, mimeTypesForImage[fileExtension]);
       });
     }
-  }, [imageName, fileExtension, imageUrl, isUnsplashImage, onSaveClick, getCroppedCanvas]);
+  }, [
+    imageName,
+    fileExtension,
+    imageUrl,
+    isUnsplashImage,
+    onSaveClick,
+    getCroppedCanvas,
+    context,
+    thisModalId,
+  ]);
 
   return (
     <>

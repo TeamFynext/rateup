@@ -25,19 +25,20 @@ export const CalenderIconDateRangePicker = ({
   return (
     <>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant={getButtonVariant(variant)}
-            size="icon-sm"
-            onClick={open}
-            aria-label={label}
-          >
-            <IconCalendar className="h-4 w-4" />
-          </Button>
+        <TooltipTrigger
+          render={
+            <Button
+              variant={getButtonVariant(variant)}
+              size="icon-sm"
+              onClick={open}
+              aria-label={label}
+            />
+          }
+        >
+          <IconCalendar className="h-4 w-4" />
         </TooltipTrigger>
         <TooltipContent side="top">{label}</TooltipContent>
       </Tooltip>
-
       <DateRangePickerModal
         opened={opened}
         ranges={ranges}

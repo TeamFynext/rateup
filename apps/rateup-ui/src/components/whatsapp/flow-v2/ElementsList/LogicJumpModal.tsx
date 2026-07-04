@@ -265,11 +265,9 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
             </p>
           ) : (
             <Accordion
-              type="single"
-              collapsible
               className="w-full space-y-3"
-              value={openedAccordion}
-              onValueChange={setOpenedAccordion}
+              value={[openedAccordion]}
+              onValueChange={(value) => setOpenedAccordion(value?.[0])}
             >
               {localJumps.map((jump, jumpIndex) => (
                 <AccordionItem
@@ -317,6 +315,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                 </Label>
                                 <Select
                                   value={condition.questionId}
+                                  items={questions}
                                   onValueChange={(value) =>
                                     handleUpdateCondition(jumpIndex, condIndex, "questionId", value)
                                   }
@@ -341,6 +340,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                 </Label>
                                 <Select
                                   value={condition.condition}
+                                  items={getConditions(condition.questionId)}
                                   onValueChange={(value) =>
                                     handleUpdateCondition(jumpIndex, condIndex, "condition", value)
                                   }
@@ -366,6 +366,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                   </Label>
                                   <Select
                                     value={condition.response}
+                                    items={getResponseOptions(condition.questionId)}
                                     onValueChange={(value) =>
                                       handleUpdateCondition(jumpIndex, condIndex, "response", value)
                                     }
@@ -414,6 +415,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                           </Label>
                           <Select
                             value={typeof jump.action === "string" ? jump.action : ""}
+                            items={screenOptions}
                             onValueChange={(value) => handleUpdateAction(jumpIndex, value)}
                           >
                             <SelectTrigger className="w-full truncate">

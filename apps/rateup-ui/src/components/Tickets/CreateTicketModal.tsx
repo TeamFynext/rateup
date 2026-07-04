@@ -204,7 +204,11 @@ const CreateTicketModal = ({
               >
                 {t("Board")} <span className="text-destructive">*</span>
               </Label>
-              <Select value={selectedBoardId} onValueChange={(val) => setSelectedBoardId(val)}>
+              <Select
+                value={selectedBoardId}
+                onValueChange={(val) => setSelectedBoardId(val)}
+                items={boards?.map((b: any) => ({ value: b.id, label: b.title })) ?? []}
+              >
                 <SelectTrigger id="ticket-board" className="cursor-pointer h-9 w-full">
                   <SelectValue placeholder={t("Select a board")} />
                 </SelectTrigger>

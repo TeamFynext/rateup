@@ -132,9 +132,8 @@ export const ResendCampaignModal = ({
             <Label className="font-semibold">{t("When to send")}</Label>
             <div className="inline-flex rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60 p-0.5">
               <ToggleGroup
-                type="single"
-                value={sendMode}
-                onValueChange={(v) => v && setSendMode(v as any)}
+                value={[sendMode]}
+                onValueChange={(v) => v && setSendMode(v?.[0] as any)}
                 className="gap-0"
               >
                 <ToggleGroupItem
@@ -158,17 +157,19 @@ export const ResendCampaignModal = ({
               <div className="flex items-center gap-2 p-1 bg-muted rounded-xl w-fit">
                 {/* DATE PICKER */}
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-background hover:shadow-sm transition-all"
-                    >
-                      <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">
-                        {scheduleDate ? dayjs(scheduleDate).format("MMMM D, YYYY") : t("Date")}
-                      </span>
-                      <ChevronDownIcon className="w-4 h-4" />
-                    </Button>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-background hover:shadow-sm transition-all"
+                      />
+                    }
+                  >
+                    <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">
+                      {scheduleDate ? dayjs(scheduleDate).format("MMMM D, YYYY") : t("Date")}
+                    </span>
+                    <ChevronDownIcon className="w-4 h-4" />
                   </PopoverTrigger>
 
                   <PopoverContent className="w-auto p-0" align="start">

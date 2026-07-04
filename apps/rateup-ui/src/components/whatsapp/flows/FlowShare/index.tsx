@@ -151,7 +151,11 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
               <div className="flex flex-1 gap-4">
                 <div className="flex-1">
                   <Label className="text-xs text-gray-500 dark:text-gray-400">Select Team</Label>
-                  <Select value={selectedTeam} onValueChange={(value) => setSelectedTeam(value)}>
+                  <Select
+                    value={selectedTeam}
+                    onValueChange={(value) => setSelectedTeam(value)}
+                    items={teamOptions}
+                  >
                     <SelectTrigger className="h-9 text-sm w-full">
                       <SelectValue placeholder="Team" />
                     </SelectTrigger>
@@ -166,7 +170,11 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                 </div>
                 <div className="flex-1">
                   <Label className="text-xs text-gray-500 dark:text-gray-400">Select Tag</Label>
-                  <Select value={selectedTag} onValueChange={(value) => setSelectedTag(value)}>
+                  <Select
+                    value={selectedTag}
+                    onValueChange={(value) => setSelectedTag(value)}
+                    items={tagOptions}
+                  >
                     <SelectTrigger className="h-9 text-sm w-full">
                       <SelectValue placeholder="Optional" />
                     </SelectTrigger>

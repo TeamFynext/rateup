@@ -6,9 +6,9 @@ import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useDeregisterBusinessClientMutation } from "@/backend/whatsapp/settings/waSettings.query";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import { ConnectMetaAccountButton } from "./connect-meta-account-button.tsx";
 import { WaSettingEditModal } from "./wa-setting-edit-modal.tsx";
@@ -17,16 +17,22 @@ type WaSetting = WaSettings[number];
 
 export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettings }>) {
   const deRegisterMutation = useDeregisterBusinessClientMutation();
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
-  const [openDeleteConfirmation, { open, close }] = useDisclosure(false);
   const [selectedWaSettings, setSelectedWaSettings] = useState<WaSetting | null>(null);
   const [openedEdit, { open: openEdit, close: closeEdit }] = useDisclosure(false);
   const { t: translations } = useTranslation();
+  const confirm = useConfirm();
 
-  function handleDeRegister() {
-    if (!selectedAccountId) return;
-    deRegisterMutation.mutate(selectedAccountId);
-    close();
+  async function handleDeRegister(accountId: string) {
+    const shouldDeRegister = await confirm({
+      title: translations("Confirmation Dialog"),
+      description: translations("DeRegister WhatsApp Business Account"),
+      warning: translations("Are you sure you want to DeRegister this WhatsApp Business Account?"),
+      confirmText: translations("DeRegister"),
+    });
+
+    if (!shouldDeRegister) return;
+
+    deRegisterMutation.mutate(accountId);
   }
 
   if (!waSettings?.length) {
@@ -93,10 +99,7 @@ export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettin
                           variant="subtle"
                           color="red"
                           size="lg"
-                          onClick={() => {
-                            setSelectedAccountId(setting.phoneId);
-                            open();
-                          }}
+                          onClick={() => handleDeRegister(setting.phoneId)}
                         >
                           <IconLogout size={18} />
                         </ActionIcon>
@@ -139,18 +142,6 @@ export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettin
           );
         })}
       </div>
-      <ConfirmationModal
-        forDeleteFunctionality
-        deleteQuotion={translations(
-          "Are you sure you want to DeRegister this WhatsApp Business Account?",
-        )}
-        opened={openDeleteConfirmation}
-        onClose={close}
-        onConfirm={handleDeRegister}
-        confirmLabel={translations("DeRegister")}
-        headerLabel={translations("DeRegister WhatsApp Business Account")}
-        headerTitle={translations("Confirmation Dialog")}
-      />
       <WaSettingEditModal opened={openedEdit} close={closeEdit} waSetting={selectedWaSettings} />
     </div>
   );

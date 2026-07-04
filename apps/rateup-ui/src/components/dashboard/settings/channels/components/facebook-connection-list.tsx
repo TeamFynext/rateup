@@ -4,17 +4,6 @@ import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useUpsertWaSettingsMutation } from "@/backend/whatsapp/settings/waSettings.query";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -24,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import { FacebookConfigModal } from "./facebook-config-modal.tsx";
 
@@ -38,6 +28,7 @@ export function FacebookConnectionsList({
   const [selectedWaSettings, setSelectedWaSettings] = useState<WaSetting | null>(null);
   const [openedFacebookModal, setOpenedFacebookModal] = useState(false);
   const upsertMutation = useUpsertWaSettingsMutation();
+  const confirm = useConfirm();
 
   const openFacebookModal = (setting: WaSetting) => {
     setSelectedWaSettings(setting);
@@ -57,6 +48,21 @@ export function FacebookConnectionsList({
     });
   };
 
+  const handleDisconnectFacebook = async (setting: WaSetting) => {
+    const shouldDisconnect = await confirm({
+      title: translations("Disconnect Facebook Page and Instagram?"),
+      description: translations(
+        "Disconnecting this Facebook Page will also disconnect the linked Instagram account from this channel.",
+      ),
+      confirmText: translations("Disconnect"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldDisconnect) return;
+
+    disconnectFacebook(setting);
+  };
+
   if (!waSettings?.length) {
     return null;
   }
@@ -69,7 +75,6 @@ export function FacebookConnectionsList({
           {translations("Connect Facebook Pages (Messenger) to your WhatsApp channels")}
         </p>
       </div>
-
       <div className="grid gap-4">
         {waSettings.map((setting) => {
           const isConnected = Boolean(setting.fbPageId?.length);
@@ -112,42 +117,14 @@ export function FacebookConnectionsList({
                         : translations("Connect Facebook Page")}
                     </Button>
                     {isConnected && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            disabled={upsertMutation.isPending}
-                          >
-                            {translations("Disconnect")}
-                          </Button>
-                        </AlertDialogTrigger>
-
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-red-500">
-                              {translations("Disconnect Facebook Page and Instagram?")}
-                            </AlertDialogTitle>
-
-                            <AlertDialogDescription>
-                              {translations(
-                                "Disconnecting this Facebook Page will also disconnect the linked Instagram account from this channel.",
-                              )}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>{translations("Cancel")}</AlertDialogCancel>
-
-                            <AlertDialogAction
-                              onClick={() => disconnectFacebook(setting)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              {translations("Disconnect")}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={upsertMutation.isPending}
+                        onClick={() => handleDisconnectFacebook(setting)}
+                      >
+                        {translations("Disconnect")}
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -172,7 +149,6 @@ export function FacebookConnectionsList({
           );
         })}
       </div>
-
       <FacebookConfigModal
         opened={openedFacebookModal}
         close={() => setOpenedFacebookModal(false)}

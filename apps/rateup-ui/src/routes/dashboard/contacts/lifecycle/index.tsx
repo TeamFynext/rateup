@@ -50,7 +50,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { useConfirm } from "@/context/confirm-provider";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/contacts/lifecycle/")({
@@ -204,7 +204,7 @@ const getProgressToneStyle = (color: string, isLost: boolean): React.CSSProperti
 function ContactSettings() {
   const { t } = useTranslation("contacts.lifecycle");
   const { data: lifecycles, isLoading } = useLifecyclesWithContactCount();
-  const { confirm, ConfirmDialog } = useConfirmDialog();
+  const confirm = useConfirm();
   const { data: userInfo } = useUserInfo();
 
   const { data: waSettingsData } = useWaSettings();
@@ -300,7 +300,6 @@ function ContactSettings() {
   const updateLifecycle = useUpdateLifeCycleMutation();
   const deleteLifecycle = useDeleteLifeCycleMutation();
   const reorderLifecycle = useReorderLifeCycleMutation();
-  console.log(userInfo);
 
   const activeStages = useMemo(() => {
     if (!lifecycles) return [];
@@ -429,8 +428,8 @@ function ContactSettings() {
         'This will permanently delete the stage "{name}". This action cannot be undone.',
         { name: stage.name },
       ),
-      confirmLabel: t("Delete"),
-      cancelLabel: t("Cancel"),
+      confirmText: t("Delete"),
+      cancelText: t("Cancel"),
     });
 
     if (!shouldDelete) return;
@@ -478,7 +477,6 @@ function ContactSettings() {
   if (isLoading) {
     return (
       <>
-        <ConfirmDialog />
         <div className="flex h-full items-center justify-center">
           <Spinner />
         </div>
@@ -488,174 +486,166 @@ function ContactSettings() {
 
   if ((!lifecycles || lifecycles.length === 0) && !isSettingUp) {
     return (
-      <>
-        <ConfirmDialog />
-        <div className="grid h-full place-content-center py-12">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <Activity className="size-12 text-muted-foreground" />
-            <div className="flex flex-col gap-1">
-              <h3 className="text-lg font-medium text-foreground">
-                {t("No lifecycle stages yet")}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  "Create your first lifecycle stage to start tracking and managing customer journey.",
-                )}
-              </p>
-            </div>
-            <Button onClick={() => setIsSettingUp(true)}>
-              <Plus data-icon="inline-start" />
-              {t("Create Lifecycle Stage")}
-            </Button>
+      <div className="grid h-full place-content-center py-12">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <Activity className="size-12 text-muted-foreground" />
+          <div className="flex flex-col gap-1">
+            <h3 className="text-lg font-medium text-foreground">{t("No lifecycle stages yet")}</h3>
+            <p className="text-sm text-muted-foreground">
+              {t(
+                "Create your first lifecycle stage to start tracking and managing customer journey.",
+              )}
+            </p>
           </div>
+          <Button onClick={() => setIsSettingUp(true)}>
+            <Plus data-icon="inline-start" />
+            {t("Create Lifecycle Stage")}
+          </Button>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <ConfirmDialog />
-      <ScrollArea className="h-full">
-        <div className="flex flex-col gap-8 p-6 pb-12">
-          {!isSettingUp ? (
-            <>
-              <Card className="flex flex-col justify-between gap-4 p-6 md:flex-row md:items-center">
-                <div>
-                  <h1 className="text-[17px] font-bold leading-snug tracking-tight text-foreground">
-                    {t("Lifecycle Management")}
-                  </h1>
-                  <p className="mt-1 text-xs font-medium text-muted-foreground">
-                    {t("Track and manage customer journey across different lifecycle stages")}
-                  </p>
-                </div>
-                <Button
-                  onClick={() => setIsSettingUp(true)}
-                  className="rounded-xl px-4 py-2 text-xs font-bold"
-                >
-                  <Settings data-icon="inline-start" />
-                  {t("Setup")}
-                </Button>
-              </Card>
+    <ScrollArea className="h-full">
+      <div className="flex flex-col gap-8 p-6 pb-12">
+        {!isSettingUp ? (
+          <>
+            <Card className="flex flex-col justify-between gap-4 p-6 md:flex-row md:items-center">
+              <div>
+                <h1 className="text-[17px] font-bold leading-snug tracking-tight text-foreground">
+                  {t("Lifecycle Management")}
+                </h1>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
+                  {t("Track and manage customer journey across different lifecycle stages")}
+                </p>
+              </div>
+              <Button
+                onClick={() => setIsSettingUp(true)}
+                className="rounded-xl px-4 py-2 text-xs font-bold"
+              >
+                <Settings data-icon="inline-start" />
+                {t("Setup")}
+              </Button>
+            </Card>
 
-              {!showStagesGlobal ? (
-                <Alert className="rounded-2xl border-border bg-muted/30">
-                  <AlertTriangle className="size-5 text-muted-foreground" />
-                  <AlertDescription className="flex flex-col gap-3 text-center sm:text-left">
-                    <div>
-                      <h3 className="text-sm font-bold text-foreground">
-                        {t("Lifecycle Display is Hidden")}
-                      </h3>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {t(
-                          "You have disabled lifecycle stages visibility view. Go into Setup to show it again.",
-                        )}
-                      </p>
-                    </div>
-                    <Button
-                      variant="default"
-                      onClick={() => setIsSettingUp(true)}
-                      className="w-fit rounded-lg px-4 py-1.5 text-xs font-bold"
-                    >
-                      {t("Configure Setup")}
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <>
-                  <section className="space-y-3">
-                    <div>
-                      <h2 className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground">
-                        {t("Lifecycle Stages")}
-                      </h2>
-                      <p className="text-[11px] font-medium text-muted-foreground">
-                        {t("Distribution of contacts across active journey stages")}
-                      </p>
-                    </div>
+            {!showStagesGlobal ? (
+              <Alert className="rounded-2xl border-border bg-muted/30">
+                <AlertTriangle className="size-5 text-muted-foreground" />
+                <AlertDescription className="flex flex-col gap-3 text-center sm:text-left">
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">
+                      {t("Lifecycle Display is Hidden")}
+                    </h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t(
+                        "You have disabled lifecycle stages visibility view. Go into Setup to show it again.",
+                      )}
+                    </p>
+                  </div>
+                  <Button
+                    variant="default"
+                    onClick={() => setIsSettingUp(true)}
+                    className="w-fit rounded-lg px-4 py-1.5 text-xs font-bold"
+                  >
+                    {t("Configure Setup")}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <section className="space-y-3">
+                  <div>
+                    <h2 className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground">
+                      {t("Lifecycle Stages")}
+                    </h2>
+                    <p className="text-[11px] font-medium text-muted-foreground">
+                      {t("Distribution of contacts across active journey stages")}
+                    </p>
+                  </div>
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                      {uiStages.map((stage) => (
-                        <LifecycleStageCard
-                          key={stage.id}
-                          stage={stage}
-                          pct={getPercentage(stage.count)}
-                          onAdjustCount={handleAdjustCount}
-                          isLost={false}
-                        />
-                      ))}
-                    </div>
-                  </section>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    {uiStages.map((stage) => (
+                      <LifecycleStageCard
+                        key={stage.id}
+                        stage={stage}
+                        pct={getPercentage(stage.count)}
+                        onAdjustCount={handleAdjustCount}
+                        isLost={false}
+                      />
+                    ))}
+                  </div>
+                </section>
 
-                  <section className="space-y-3">
-                    <div>
-                      <h2 className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground">
-                        {t("Lost Stages")}
-                      </h2>
-                      <p className="text-[11px] font-medium text-muted-foreground">
-                        {t("Distribution of contacts across different lost stages")}
-                      </p>
-                    </div>
+                <section className="space-y-3">
+                  <div>
+                    <h2 className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground">
+                      {t("Lost Stages")}
+                    </h2>
+                    <p className="text-[11px] font-medium text-muted-foreground">
+                      {t("Distribution of contacts across different lost stages")}
+                    </p>
+                  </div>
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                      {uiLostStages.map((stage) => (
-                        <LifecycleStageCard
-                          key={stage.id}
-                          stage={stage}
-                          pct={getPercentage(stage.count)}
-                          onAdjustCount={handleAdjustCount}
-                          isLost={true}
-                        />
-                      ))}
-                    </div>
-                  </section>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    {uiLostStages.map((stage) => (
+                      <LifecycleStageCard
+                        key={stage.id}
+                        stage={stage}
+                        pct={getPercentage(stage.count)}
+                        onAdjustCount={handleAdjustCount}
+                        isLost={true}
+                      />
+                    ))}
+                  </div>
+                </section>
 
-                  <FunnelVisualization
-                    stages={funnelStages}
-                    totalContacts={totalContacts}
-                    getPercentage={getPercentage}
-                  />
-                </>
-              )}
-            </>
-          ) : (
-            <SetupView
-              backendStages={lifecycles || []}
-              showStagesGlobal={showStagesGlobal}
-              setShowStagesGlobal={setShowStagesGlobal}
-              isConversionApiActive={isConversionApiActive}
-              conversionData={conversionData}
-              handleUpdateConversionApi={handleUpdateConversionApi}
-              hasWhatsAppSettings={
-                userInfo && "data" in userInfo ? userInfo.data.hasWhatsAppSettings : false
-              }
-              showAddActiveForm={showAddActiveForm}
-              setShowAddActiveForm={setShowAddActiveForm}
-              showAddLostForm={showAddLostForm}
-              setShowAddLostForm={setShowAddLostForm}
-              showEmojiPicker={showEmojiPicker}
-              setShowEmojiPicker={setShowEmojiPicker}
-              addName={addName}
-              setAddName={setAddName}
-              addDesc={addDesc}
-              setAddDesc={setAddDesc}
-              addEmoji={addEmoji}
-              setAddEmoji={setAddEmoji}
-              addColor={addColor}
-              setAddColor={setAddColor}
-              handleCreateStage={handleCreateStage}
-              handleRenameStage={handleRenameStage}
-              handleUpdateDescription={handleUpdateDescription}
-              handleUpdateStageCategory={handleUpdateStageCategory}
-              handleDeleteStage={handleDeleteStage}
-              handleMoveStage={handleMoveStage}
-              setIsSettingUp={setIsSettingUp}
-              isCreating={createLifecycle.isPending}
-              isReordering={reorderLifecycle.isPending}
-            />
-          )}
-        </div>
-      </ScrollArea>
-    </>
+                <FunnelVisualization
+                  stages={funnelStages}
+                  totalContacts={totalContacts}
+                  getPercentage={getPercentage}
+                />
+              </>
+            )}
+          </>
+        ) : (
+          <SetupView
+            backendStages={lifecycles || []}
+            showStagesGlobal={showStagesGlobal}
+            setShowStagesGlobal={setShowStagesGlobal}
+            isConversionApiActive={isConversionApiActive}
+            conversionData={conversionData}
+            handleUpdateConversionApi={handleUpdateConversionApi}
+            hasWhatsAppSettings={
+              userInfo && "data" in userInfo ? userInfo.data.hasWhatsAppSettings : false
+            }
+            showAddActiveForm={showAddActiveForm}
+            setShowAddActiveForm={setShowAddActiveForm}
+            showAddLostForm={showAddLostForm}
+            setShowAddLostForm={setShowAddLostForm}
+            showEmojiPicker={showEmojiPicker}
+            setShowEmojiPicker={setShowEmojiPicker}
+            addName={addName}
+            setAddName={setAddName}
+            addDesc={addDesc}
+            setAddDesc={setAddDesc}
+            addEmoji={addEmoji}
+            setAddEmoji={setAddEmoji}
+            addColor={addColor}
+            setAddColor={setAddColor}
+            handleCreateStage={handleCreateStage}
+            handleRenameStage={handleRenameStage}
+            handleUpdateDescription={handleUpdateDescription}
+            handleUpdateStageCategory={handleUpdateStageCategory}
+            handleDeleteStage={handleDeleteStage}
+            handleMoveStage={handleMoveStage}
+            setIsSettingUp={setIsSettingUp}
+            isCreating={createLifecycle.isPending}
+            isReordering={reorderLifecycle.isPending}
+          />
+        )}
+      </div>
+    </ScrollArea>
   );
 }
 
@@ -982,6 +972,10 @@ function SetupView({
                 <Label className="text-xs font-bold text-muted-foreground">{t("Event Name")}</Label>
                 <Select
                   value={conversionData.event_name || "Purchase"}
+                  items={[
+                    { value: "Purchase", label: t("Purchase") },
+                    { value: "Lead", label: t("Lead") },
+                  ]}
                   onValueChange={(val) =>
                     handleUpdateConversionApi(isConversionApiActive, {
                       ...conversionData,
@@ -1003,6 +997,13 @@ function SetupView({
                   <Label className="text-xs font-bold text-muted-foreground">{t("Currency")}</Label>
                   <Select
                     value={conversionData.currency || "INR"}
+                    items={[
+                      { value: "INR", label: t("INR") },
+                      { value: "USD", label: t("USD") },
+                      { value: "EUR", label: t("EUR") },
+                      { value: "GBP", label: t("GBP") },
+                      { value: "AED", label: t("AED") },
+                    ]}
                     onValueChange={(val) =>
                       handleUpdateConversionApi(isConversionApiActive, {
                         ...conversionData,

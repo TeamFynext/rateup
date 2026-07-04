@@ -1,5 +1,4 @@
 import { ActionIcon, Badge, Box, Group, Stack, Text, Tooltip } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconKey } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -9,9 +8,9 @@ import { toast } from "sonner";
 import { useAllResponses } from "@/backend/surveys/response/response.query";
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 
-import ConfirmationModal from "../../../Modal/ConfirmationModal.tsx";
 import { updateEndToEndEncryption } from "../updateSettings.ts";
 
 // end to end encryption settings module
@@ -24,10 +23,10 @@ export default function ETESettings(props: ETESettingsInterface) {
   const navigate = useNavigate();
   const [endtoendencryption, setEndToEndEncryption] = useState(survey?.isEncrypted);
   const { t: translations } = useTranslation();
-  const [alertModalOpened, { open, close }] = useDisclosure(false);
+  const confirm = useConfirm();
   const editSurvey = useEditSurveyMutation(survey?.id);
   const { data: responses } = useAllResponses(survey?.id);
-  function onSwitched(e) {
+  async function onSwitched(e) {
     if (e.target.checked) {
       if (!user?.encryptionKeys) {
         toast.error(
@@ -36,28 +35,26 @@ export default function ETESettings(props: ETESettingsInterface) {
           ),
         );
       } else {
-        open();
+        const shouldEnable = await confirm({
+          title: translations("End-to-End Encryption"),
+          description: translations(
+            "Are you sure you want to enable end-to-end encryption? Once enabled it cannot be disabled.",
+          ),
+          confirmText: translations("Confirm"),
+        });
+
+        if (!shouldEnable) return;
+
+        updateEndToEndEncryption(
+          setEndToEndEncryption,
+          user?.encryptionKeys?.publicKey,
+          editSurvey,
+        );
       }
     }
   }
   return (
     <>
-      <ConfirmationModal
-        opened={alertModalOpened}
-        onClose={close}
-        headerTitle={translations("End-to-End Encryption")}
-        headerLabel={translations(
-          "Are you sure you want to enable end-to-end encryption? Once enabled it cannot be disabled.",
-        )}
-        confirmLabel={translations("Confirm")}
-        onConfirm={() =>
-          updateEndToEndEncryption(
-            setEndToEndEncryption,
-            user?.encryptionKeys?.publicKey,
-            editSurvey,
-          )
-        }
-      />
       <Stack gap={0}>
         <Group justify="space-between">
           <Group>

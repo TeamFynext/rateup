@@ -1,19 +1,12 @@
 import { Loader2 } from "lucide-react";
-import type { UseFormReturn } from "react-hook-form";
+import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form.tsx";
+import { Field, FieldDescription, FieldError } from "@/components/ui/field.tsx";
 
 import { DEFAULT_JOIN_MESSAGE_TEMPLATE } from "./constants.ts";
 import type { BasicSettingsSchema } from "./schemas.ts";
@@ -48,113 +41,103 @@ export function ReferralMessageSettings({
         <CardTitle className="text-base">{t("Join Program Message")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSave)} className="space-y-3">
-            <FormField
-              control={form.control}
-              name="referralMessageTemplate"
-              render={() => (
-                <FormItem className="space-y-2">
-                  <FormDescription className="text-xs">
-                    {t("Use variables")}: {"{{1}}"} {t("for contact name")},{"{{2}}"}{" "}
-                    {t("for referral code")}.{" "}
-                    {t("Both are required and each can be used only once.")}
-                  </FormDescription>
+        <form onSubmit={form.handleSubmit(onSave)} className="space-y-3">
+          <Controller
+            control={form.control}
+            name="referralMessageTemplate"
+            render={({ fieldState }) => (
+              <Field className="space-y-2" data-invalid={fieldState.invalid}>
+                <FieldDescription className="text-xs">
+                  {t("Use variables")}: {"{{1}}"} {t("for contact name")},{"{{2}}"}{" "}
+                  {t("for referral code")}. {t("Both are required and each can be used only once.")}
+                </FieldDescription>
 
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        if (!hasContactNameVariable && !disabled) {
-                          const current = getPlainText(form.getValues("referralMessageTemplate"));
-                          form.setValue("referralMessageTemplate", current + "{{1}}", {
-                            shouldDirty: true,
-                          });
-                        }
-                      }}
-                      disabled={hasContactNameVariable || disabled}
-                    >
-                      {t(`Insert '{{1}}'`)}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        if (!hasReferralCodeVariable && !disabled) {
-                          const current = getPlainText(form.getValues("referralMessageTemplate"));
-                          form.setValue("referralMessageTemplate", current + "{{2}}", {
-                            shouldDirty: true,
-                          });
-                        }
-                      }}
-                      disabled={hasReferralCodeVariable || disabled}
-                    >
-                      {t("Insert '{{2}}'")}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        if (!disabled) {
-                          form.setValue("referralMessageTemplate", DEFAULT_JOIN_MESSAGE_TEMPLATE, {
-                            shouldDirty: true,
-                          });
-                        }
-                      }}
-                      disabled={disabled}
-                    >
-                      {t("Reset to Default")}
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <FormControl>
-                      <WaTextEditor
-                        handleInputChange={(value) => {
-                          if (!disabled) {
-                            form.setValue("referralMessageTemplate", value);
-                          }
-                        }}
-                        content={editorContent}
-                        mah={250}
-                        mih={150}
-                      />
-                    </FormControl>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      if (!hasContactNameVariable && !disabled) {
+                        const current = getPlainText(form.getValues("referralMessageTemplate"));
+                        form.setValue("referralMessageTemplate", current + "{{1}}", {
+                          shouldDirty: true,
+                        });
+                      }
+                    }}
+                    disabled={hasContactNameVariable || disabled}
+                  >
+                    {t(`Insert '{{1}}'`)}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      if (!hasReferralCodeVariable && !disabled) {
+                        const current = getPlainText(form.getValues("referralMessageTemplate"));
+                        form.setValue("referralMessageTemplate", current + "{{2}}", {
+                          shouldDirty: true,
+                        });
+                      }
+                    }}
+                    disabled={hasReferralCodeVariable || disabled}
+                  >
+                    {t("Insert '{{2}}'")}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      if (!disabled) {
+                        form.setValue("referralMessageTemplate", DEFAULT_JOIN_MESSAGE_TEMPLATE, {
+                          shouldDirty: true,
+                        });
+                      }
+                    }}
+                    disabled={disabled}
+                  >
+                    {t("Reset to Default")}
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <WaTextEditor
+                    handleInputChange={(value) => {
+                      if (!disabled) {
+                        form.setValue("referralMessageTemplate", value);
+                      }
+                    }}
+                    content={editorContent}
+                    mah={250}
+                    mih={150}
+                  />
 
-                    <div className="space-y-1.5">
-                      <p className="text-xs font-medium text-muted-foreground">{t("Preview")}</p>
-                      <div className="rounded-md border bg-muted/20 p-3 text-sm whitespace-pre-wrap">
-                        {previewWithSamples}
-                        <div className="text-blue-400">https://wa.me/referral?code=REF-4GB8</div>
-                      </div>
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">{t("Preview")}</p>
+                    <div className="rounded-md border bg-muted/20 p-3 text-sm whitespace-pre-wrap">
+                      {previewWithSamples}
+                      <div className="text-blue-400">https://wa.me/referral?code=REF-4GB8</div>
                     </div>
                   </div>
+                </div>
 
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
 
-            <Button
-              size="sm"
-              className="w-[50%] mt-2"
-              type="submit"
-              disabled={isPending || disabled}
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t("Saving")}
-                </>
-              ) : (
-                t("Save Changes")
-              )}
-            </Button>
-          </form>
-        </Form>
+          <Button size="sm" className="w-[50%] mt-2" type="submit" disabled={isPending || disabled}>
+            {isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {t("Saving")}
+              </>
+            ) : (
+              t("Save Changes")
+            )}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );

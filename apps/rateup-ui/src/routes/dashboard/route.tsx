@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 import NotFoundPage from "@/components/404/NotFound";
 import DashboardError from "@/components/dashboard/error";
 import MainSidebar from "@/components/Layout/Navbar/main-sidebar.tsx";
+import { ConfirmProvider } from "@/context/confirm-provider";
 
 const dashboardSearchSchema = z.looseObject({
   msg: z.string().optional(),
@@ -25,9 +26,11 @@ function DashboardLayout() {
 
   return (
     <SessionAuth>
-      <MainSidebar welcomeMessage={welcomeMessage}>
-        <Outlet />
-      </MainSidebar>
+      <ConfirmProvider>
+        <MainSidebar welcomeMessage={welcomeMessage}>
+          <Outlet />
+        </MainSidebar>
+      </ConfirmProvider>
     </SessionAuth>
   );
 }

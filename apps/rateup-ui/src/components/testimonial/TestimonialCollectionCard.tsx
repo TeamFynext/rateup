@@ -1,21 +1,10 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Edit, Share2, Trash2 } from "lucide-react";
 import { MoreVertical } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useDeleteTestimonialCollection } from "@/backend/testimonials/testimonial.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
@@ -23,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
 interface TestimonialCollectionCardProps {
   readonly collection: {
@@ -37,8 +27,8 @@ interface TestimonialCollectionCardProps {
 function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectionCardProps>) {
   const navigate = useNavigate();
   const deleteCollectionMutation = useDeleteTestimonialCollection();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { t: translations } = useTranslation();
+  const confirm = useConfirm();
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,14 +44,19 @@ function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectio
     });
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsDeleteDialogOpen(true);
-  };
 
-  const confirmDelete = () => {
+    const shouldDelete = await confirm({
+      title: translations("Delete Testimonial Collection?"),
+      description: translations("Are you sure to delete this collection?"),
+      confirmText: translations("Delete"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
     deleteCollectionMutation.mutate(collection.id);
-    setIsDeleteDialogOpen(false);
   };
 
   const handleCardClick = () => {
@@ -72,10 +67,8 @@ function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectio
 
   const actions = (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <MoreVertical className="w-4 h-4" />
-        </Button>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8" />}>
+        <MoreVertical className="w-4 h-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleEdit}>
@@ -103,32 +96,13 @@ function TestimonialCollectionCard({ collection }: Readonly<TestimonialCollectio
   );
 
   return (
-    <>
-      <ActionCard
-        title={collection.name}
-        actions={actions}
-        content={content}
-        createdAt={collection.createdAt}
-        onClick={handleCardClick}
-      />
-
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{translations("Delete Testimonial Collection?")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {translations("Are you sure to delete this collection?")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{translations("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmDelete}>
-              {translations("Delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    <ActionCard
+      title={collection.name}
+      actions={actions}
+      content={content}
+      createdAt={collection.createdAt}
+      onClick={handleCardClick}
+    />
   );
 }
 

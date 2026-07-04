@@ -147,6 +147,10 @@ export function FlowScreenSheet() {
           <Select
             value={formData[element.id] || ""}
             onValueChange={(value) => setFormData({ ...formData, [element.id]: value })}
+            items={(element["data-source"] || []).map((opt: any) => ({
+              value: opt.id,
+              label: opt.title,
+            }))}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={translations("Select an option")} />

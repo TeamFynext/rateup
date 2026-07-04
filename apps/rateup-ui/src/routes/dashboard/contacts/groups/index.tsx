@@ -25,15 +25,16 @@ import useDebounce from "@/components/menu/hook/useDebounce.ts";
 import { Avatar, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import CustomAlertDialog from "@/components/ui/custom/CustomAlertDialog.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { ContactGroupType } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
@@ -60,22 +61,27 @@ function GroupPage() {
   }, [contactGroupData, debouncedSearch, selectedTeamID, sortOption]);
 
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
-  const [isDeleteGroupOpen, setIsDeleteGroupOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const confirm = useConfirm();
 
   function handleEditGroup(group) {
     setSelectedGroup(group);
     setIsCreateGroupOpen(true);
   }
 
-  function handleDeleteGroup(group) {
-    setSelectedGroup(group);
-    setIsDeleteGroupOpen(true);
-  }
-
   const deleteGroupMutation = useDeleteGroupMutation();
-  function onDeleteGroupConfirm(selectedGroup) {
-    deleteGroupMutation.mutate(selectedGroup.id, {
+
+  async function handleDeleteGroup(group) {
+    const shouldDelete = await confirm({
+      title: translations("Delete Group"),
+      description: translations("Are you sure you want to delete this group?"),
+      confirmText: translations("Delete"),
+      cancelText: translations("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
+    deleteGroupMutation.mutate(group.id, {
       onSuccess: () => {
         toast.success("Group deleted successfully");
       },
@@ -145,15 +151,6 @@ function GroupPage() {
         isEdit={!!selectedGroup}
         groupDetails={selectedGroup}
       />
-      <CustomAlertDialog
-        opened={isDeleteGroupOpen}
-        buttonTitle="Delete"
-        description="Are you sure you want to delete this group?"
-        title="Delete Group"
-        setOpened={setIsDeleteGroupOpen}
-        buttonColor="bg-red-500"
-        onAction={() => onDeleteGroupConfirm(selectedGroup)}
-      />
     </>
   );
 }
@@ -218,33 +215,35 @@ function ContactGroupCard({ group, handleEdit, handleDelete }) {
 function GroupCardMenu({ group, handleEdit, handleDelete }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-          <MoreVertical className="w-4 h-4" />
-        </Button>
+      <DropdownMenuTrigger
+        render={<Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()} />}
+      >
+        <MoreVertical className="w-4 h-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={(e) => {
-            e.stopPropagation();
-            handleEdit(group);
-          }}
-        >
-          <Edit className="w-4 h-4 mr-2" />
-          Edit Group
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete(group);
-          }}
-          className="text-red-600"
-        >
-          <Trash2 className="w-4 h-4 mr-2 text-red-500" />
-          Delete Group
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(group);
+            }}
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Group
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(group);
+            }}
+            className="text-red-600"
+          >
+            <Trash2 className="w-4 h-4 mr-2 text-red-500" />
+            Delete Group
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

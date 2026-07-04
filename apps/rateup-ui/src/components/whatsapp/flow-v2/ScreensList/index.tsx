@@ -3,9 +3,9 @@ import { IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { FlowMaxScreens } from "../../whatsappConfig.tsx";
@@ -39,10 +39,12 @@ function ScreensList() {
         <h2 className="text-base font-semibold">{translations("Screens")}</h2>
 
         <Tooltip>
-          <TooltipTrigger asChild>
-            <Button onClick={handleAddScreen} variant="ghost" size="icon" className="h-8 w-8">
-              <IconPlus size={16} />
-            </Button>
+          <TooltipTrigger
+            render={
+              <Button onClick={handleAddScreen} variant="ghost" size="icon" className="h-8 w-8" />
+            }
+          >
+            <IconPlus size={16} />
           </TooltipTrigger>
           <TooltipContent>
             <p>{translations("Add Screen")}</p>
@@ -86,11 +88,20 @@ interface ScreenCardProps {
 
 function ScreenCard({ screen, index, isSelected, onSelect, onDelete }: Readonly<ScreenCardProps>) {
   const { t: translations } = useTranslation();
-  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  const confirm = useConfirm();
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    const shouldDelete = await confirm({
+      title: translations("Delete Screen?"),
+      description: translations(
+        "Are you sure you want to delete this screen? All elements will be deleted.",
+      ),
+      confirmText: translations("Delete"),
+    });
+
+    if (!shouldDelete) return;
+
     onDelete();
-    setDeleteModalOpened(false);
   };
 
   return (
@@ -139,7 +150,7 @@ function ScreenCard({ screen, index, isSelected, onSelect, onDelete }: Readonly<
                 className="h-8 w-8 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setDeleteModalOpened(true);
+                  handleDelete();
                 }}
               >
                 <IconTrash size={14} />
@@ -148,17 +159,6 @@ function ScreenCard({ screen, index, isSelected, onSelect, onDelete }: Readonly<
           </button>
         )}
       </Draggable>
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={deleteModalOpened}
-        onClose={() => setDeleteModalOpened(false)}
-        headerLabel={translations(
-          "Are you sure you want to delete this screen? All elements will be deleted.",
-        )}
-        headerTitle={translations("Delete Screen?")}
-        confirmLabel={translations("Delete")}
-        onConfirm={handleDelete}
-      />
     </>
   );
 }

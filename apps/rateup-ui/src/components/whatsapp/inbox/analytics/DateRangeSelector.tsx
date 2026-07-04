@@ -49,7 +49,11 @@ const DateRangeSelector = ({ value, onChange }) => {
   }
   return (
     <div className="flex gap-1 items-center">
-      <Select value={value.key} onValueChange={handleChange}>
+      <Select
+        value={value.key}
+        onValueChange={handleChange}
+        items={data.map((date) => ({ value: date.key, label: date.label }))}
+      >
         <SelectTrigger className="*:data-[slot=select-value]:text-sm">
           <SelectValue />
         </SelectTrigger>
@@ -63,14 +67,12 @@ const DateRangeSelector = ({ value, onChange }) => {
       </Select>
       <Activity mode={value.key === "custom-range" ? "visible" : "hidden"}>
         <Popover>
-          <PopoverTrigger asChild>
-            <Button id="date-picker" variant="outline" className="group">
-              <CalendarIcon className="size-3.5" />
-              <span className="group-hover:text-blue-600 text-xs">
-                {formatDate(value.range[0])} - {formatDate(value.range[1])}
-              </span>
-              <ChevronDown />
-            </Button>
+          <PopoverTrigger render={<Button id="date-picker" variant="outline" className="group" />}>
+            <CalendarIcon className="size-3.5" />
+            <span className="group-hover:text-blue-600 text-xs">
+              {formatDate(value.range[0])} - {formatDate(value.range[1])}
+            </span>
+            <ChevronDown />
           </PopoverTrigger>
           <PopoverContent align="start" side="bottom" className="w-full">
             <Calendar
@@ -101,7 +103,17 @@ export function DateSelector({ days, setDays }) {
         <Filter className="w-4 h-4" />
         <span>{t("Filter by")}:</span>
       </div>
-      <Select value={String(days)} onValueChange={(value) => setDays(Number(value))}>
+      <Select
+        value={String(days)}
+        onValueChange={(value) => setDays(Number(value))}
+        items={[
+          { value: "1", label: t("Today") },
+          { value: "7", label: t("Last 7 Days") },
+          { value: "14", label: t("Last 14 Days") },
+          { value: "30", label: t("Last 30 Days") },
+          { value: "60", label: t("Last 60 Days") },
+        ]}
+      >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Select range" />
         </SelectTrigger>

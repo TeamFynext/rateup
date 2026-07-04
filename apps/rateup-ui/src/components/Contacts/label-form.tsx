@@ -177,7 +177,12 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="custom-field-type">{t("Type")}</FieldLabel>
-              <Select name={field.name} value={field.value} onValueChange={field.onChange}>
+              <Select
+                name={field.name}
+                value={field.value}
+                onValueChange={field.onChange}
+                items={typeOptions}
+              >
                 <SelectTrigger
                   id="custom-field-type"
                   className="w-full"
@@ -256,10 +261,8 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
         />
 
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="secondary" type="button">
-              <span className="text-sm font-normal">{t("Cancel")}</span>
-            </Button>
+          <DialogClose render={<Button variant="secondary" type="button" />}>
+            <span className="text-sm font-normal">{t("Cancel")}</span>
           </DialogClose>
           <Button type="submit" disabled={isPending}>
             {isPending && <Spinner />}

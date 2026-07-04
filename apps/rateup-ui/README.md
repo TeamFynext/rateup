@@ -9,7 +9,7 @@ The project uses Vite for development/build, Nitro for server output, and Tailwi
 - React 19 + TypeScript
 - Vite 8 + Nitro runtime output
 - Tailwind CSS
-- shadcn/ui (preferred for new UI) + existing Mantine components
+- shadcn/ui built on Base UI (`@base-ui/react`, preferred for new UI) + existing Mantine components
 - Vitest for tests
 - OXC (oxlint + oxfmt) for linting/formatting
 - Husky for pre-commit hooks
@@ -67,6 +67,7 @@ Kill the process running on port 3000 (Windows PowerShell)
 - Prefer existing local patterns in touched areas.
 - For new UI, prefer shadcn/ui composition where practical; avoid broad Mantine-to-shadcn rewrites unless explicitly requested.
 - Use Tailwind utility classes and project tokens; avoid introducing one-off raw color values.
+- shadcn/ui primitives (`src/components/ui/`) are built on `@base-ui/react`, not Radix — there is no direct `@radix-ui/*` dependency in `package.json`. For a multi-select field, use `MultiSelect` (`src/components/ui/multi-select.tsx`), a thin wrapper over `Combobox` (`src/components/ui/combobox.tsx`); don't reintroduce `cmdk`/`Command`-based patterns.
 
 ## Internationalization
 

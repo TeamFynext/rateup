@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Calendar, Clock, CreditCard, DollarSign, Package, Trash2 } from "lucide-react";
@@ -14,7 +13,6 @@ import {
 } from "@/backend/payment/payment.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -26,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { PaymentPlanStatus } from "@/types/enums.ts";
 
 import { PlansDataTableToolbar } from "./plans-data-table-toolbar.tsx";
@@ -49,9 +48,7 @@ const RazorpayPlans = () => {
   const { t: translations } = useTranslation();
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const deletePaymentPlanMutation = useDeletePaymentPlanMutation();
-
-  const [openedDeleteModal, { open: openDeleteModal, close: closeDeleteModal }] =
-    useDisclosure(false);
+  const confirm = useConfirm();
 
   const { data: plans, isLoading, isError } = usePaymentsPlans();
 
@@ -168,6 +165,12 @@ const RazorpayPlans = () => {
         return (
           <Select
             value={status}
+            items={[
+              { value: PaymentPlanStatus.NULL, label: "NULL" },
+              { value: PaymentPlanStatus.LIVE, label: "LIVE" },
+              { value: PaymentPlanStatus.ACTIVE, label: "ACTIVE" },
+              { value: PaymentPlanStatus.INACTIVE, label: "INACTIVE" },
+            ]}
             onValueChange={(value) => {
               const planIdLocal = Array.isArray(plans?.data)
                 ? plans?.data?.find((plan) => plan?.planId == row.original.id)?.id
@@ -210,10 +213,23 @@ const RazorpayPlans = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
             setSelectedPlanId(row.original.id);
-            openDeleteModal();
+
+            const shouldDelete = await confirm({
+              title: translations("Delete RazorPay Plan"),
+              description: translations("Are you sure to delete this plan?"),
+              confirmText: translations("Delete"),
+              cancelText: translations("cancel"),
+            });
+
+            if (!shouldDelete) return;
+
+            toast.loading(translations("Hold on..Plan is getting deleted"), {
+              id: "plan",
+            });
+            handleDeleteClick();
           }}
           disabled={!row.original.canDelete}
           className="h-8 w-8 p-0"
@@ -312,21 +328,6 @@ const RazorpayPlans = () => {
         </Card>
       </div>
       <DataTable columns={columns} data={tableData} DataTableToolbar={PlansDataTableToolbar} />
-      <ConfirmationModal
-        opened={openedDeleteModal}
-        onClose={closeDeleteModal}
-        forDeleteFunctionality
-        confirmLabel={translations("Delete")}
-        headerTitle={translations("Delete RazorPay Plan")}
-        onConfirm={() => {
-          toast.loading(translations("Hold on..Plan is getting deleted"), {
-            id: "plan",
-          });
-          handleDeleteClick();
-        }}
-        headerLabel={translations("Are you sure to delete this plan?")}
-        closeLabel={translations("cancel")}
-      />
     </div>
   );
 };

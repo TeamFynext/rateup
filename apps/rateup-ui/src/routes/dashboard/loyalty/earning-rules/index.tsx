@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -43,15 +43,7 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import {
@@ -63,7 +55,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import { useConfirmDialog } from "@/hooks/useConfirmDialog.tsx";
+import { useConfirm } from "@/context/confirm-provider";
 import { docsPath } from "@/utils/constants.ts";
 import { randomHexColor } from "@/utils/index.ts";
 
@@ -139,7 +131,7 @@ function EarningRulesPage() {
   const [limitedPeriodEnabled, setLimitedPeriodEnabled] = useState(false);
   const [, setWhatsAppTemplate] = useState("");
 
-  const { confirm, ConfirmDialog } = useConfirmDialog();
+  const confirm = useConfirm();
 
   // Fetch tiers from API
   const { data: loyaltyTiers = [], isLoading: tiersLoading } = useLoyaltyTiers();
@@ -260,7 +252,7 @@ function EarningRulesPage() {
             description: t(
               "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.",
             ),
-            confirmLabel: t("Downgrade & Delete"),
+            confirmText: t("Downgrade & Delete"),
           }
         : {
             title: t("Delete {name} tier", { name: tierName }),
@@ -336,7 +328,6 @@ function EarningRulesPage() {
 
   return (
     <div className="space-y-6">
-      <ConfirmDialog />
       {earningRulesViewMode === "list" && (
         <div className="space-y-5">
           {/* Header */}
@@ -489,7 +480,7 @@ function EarningRulesPage() {
             </Button>
           </div>
 
-          <Card className="border shadow-sm bg-white">
+          <Card>
             <CardContent className="p-6">
               <h2 className="mb-2 text-xl font-semibold">Create Additional Earning Rule</h2>
               <p className="mb-6 text-sm text-muted-foreground">
@@ -497,370 +488,392 @@ function EarningRulesPage() {
                 weekend specials
               </p>
 
-              <Form {...ruleForm}>
-                <form onSubmit={ruleForm.handleSubmit(handleCreateSubmit)} className="space-y-5">
-                  {/* Rule Name */}
-                  <FormField
-                    control={ruleForm.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormLabel>{t("Rule Name")}</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder={t(
-                              "e.g., Happy Hour Bonus, Weekend Multiplier, Birthday Bonus",
-                            )}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Description */}
-                  <FormField
-                    control={ruleForm.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormLabel>
-                          {t("Define how customers earn points through purchases and activities")}
-                        </FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            className="min-h-20 resize-none"
-                            placeholder={t("Describe when and how this rule applies...")}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Icon + Rule Type (UI-only, for design parity) */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Icon</Label>
+              <form onSubmit={ruleForm.handleSubmit(handleCreateSubmit)} className="space-y-5">
+                {/* Rule Name */}
+                <Controller
+                  name="name"
+                  control={ruleForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field className="space-y-2" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>{t("Rule Name")}</FieldLabel>
                       <Input
-                        value={ruleIcon}
-                        onChange={(e) => setRuleIcon(e.target.value)}
-                        placeholder="e.g., 🎉, 💰, ⭐, 🎂"
-                        maxLength={2}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Rule Type</Label>
-                      <Select
-                        value={ruleType}
-                        onValueChange={(v) => setRuleType(v as typeof ruleType)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="multiplier">
-                            Points Multiplier (2x, 3x points)
-                          </SelectItem>
-                          <SelectItem value="bonus">Fixed Bonus Points</SelectItem>
-                          <SelectItem value="percentage">Percentage Bonus</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Multiplier + Bonus Points */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={ruleForm.control}
-                      name="multiplier"
-                      render={({ field }) => (
-                        <FormItem className="space-y-2">
-                          <FormLabel>{t("Multiplier")}</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={field.value as number} step="0.1" min="1" />
-                          </FormControl>
-                          <FormDescription>
-                            {t("e.g., 2.0 = Double points, 1.5 = 50% more")}
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={ruleForm.control}
-                      name="bonusPoints"
-                      render={({ field }) => (
-                        <FormItem className="space-y-2">
-                          <FormLabel>{t("Bonus Points")}</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={field.value as number} min="0" />
-                          </FormControl>
-                          <FormDescription>
-                            {t("Additional points on top of standard rate")}
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Schedule Settings */}
-                  <div className="space-y-3 border-t pt-4">
-                    <h3 className="text-base font-medium">When does this rule apply?</h3>
-
-                    <div className="space-y-3">
-                      <div className="space-y-3 rounded-lg border p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">Specific Days/Times</p>
-                            <p className="text-xs text-muted-foreground">
-                              E.g., Weekends, Happy Hours, specific dates
-                            </p>
-                          </div>
-                          <Switch
-                            checked={scheduleEnabled}
-                            onCheckedChange={(checked) => {
-                              setScheduleEnabled(checked);
-                              if (!checked) {
-                                ruleForm.setValue("allowedDays", []);
-                                ruleForm.setValue("timeFrom", "");
-                                ruleForm.setValue("timeTo", "");
-                              }
-                            }}
-                            className="data-[state=checked]:bg-[#1873E8]"
-                          />
-                        </div>
-                        {scheduleEnabled && (
-                          <div className="space-y-3 border-t pt-3">
-                            <FormField
-                              control={ruleForm.control}
-                              name="allowedDays"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs">Available Days</FormLabel>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    {[
-                                      "MONDAY",
-                                      "TUESDAY",
-                                      "WEDNESDAY",
-                                      "THURSDAY",
-                                      "FRIDAY",
-                                      "SATURDAY",
-                                      "SUNDAY",
-                                    ].map((day) => (
-                                      <div key={day} className="flex items-center space-x-2">
-                                        <Checkbox
-                                          id={`create-day-${day}`}
-                                          checked={field.value?.includes(day)}
-                                          onCheckedChange={(checked) => {
-                                            const updated = checked
-                                              ? [...(field.value || []), day]
-                                              : (field.value || []).filter((d) => d !== day);
-                                            field.onChange(updated);
-                                          }}
-                                        />
-                                        <Label
-                                          htmlFor={`create-day-${day}`}
-                                          className="cursor-pointer text-sm font-normal capitalize"
-                                        >
-                                          {day.charAt(0) + day.slice(1).toLowerCase()}
-                                        </Label>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <div className="grid grid-cols-2 gap-4">
-                              <FormField
-                                control={ruleForm.control}
-                                name="timeFrom"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-xs">Start Time</FormLabel>
-                                    <FormControl>
-                                      <Input type="time" {...field} value={field.value ?? ""} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={ruleForm.control}
-                                name="timeTo"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-xs">End Time</FormLabel>
-                                    <FormControl>
-                                      <Input type="time" {...field} value={field.value ?? ""} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          </div>
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        placeholder={t(
+                          "e.g., Happy Hour Bonus, Weekend Multiplier, Birthday Bonus",
                         )}
-                      </div>
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
 
-                      <div className="space-y-3 rounded-lg border p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">Customer Tier Restriction</p>
-                            <p className="text-xs text-muted-foreground">
-                              Apply to specific membership tiers only
-                            </p>
-                          </div>
-                          <Switch
-                            checked={tierRestrictionEnabled}
-                            onCheckedChange={(checked) => {
-                              setTierRestrictionEnabled(checked);
-                              if (!checked) ruleForm.setValue("applicableToTiers", []);
-                            }}
-                            className="data-[state=checked]:bg-[#1873E8]"
-                          />
+                {/* Description */}
+                <Controller
+                  name="description"
+                  control={ruleForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field className="space-y-2" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>
+                        {t("Define how customers earn points through purchases and activities")}
+                      </FieldLabel>
+                      <Textarea
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        className="min-h-20 resize-none"
+                        placeholder={t("Describe when and how this rule applies...")}
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+
+                {/* Icon + Rule Type (UI-only, for design parity) */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Icon</Label>
+                    <Input
+                      value={ruleIcon}
+                      onChange={(e) => setRuleIcon(e.target.value)}
+                      placeholder="e.g., 🎉, 💰, ⭐, 🎂"
+                      maxLength={2}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Rule Type</Label>
+                    <Select
+                      value={ruleType}
+                      onValueChange={(v) => setRuleType(v as typeof ruleType)}
+                      items={[
+                        { value: "multiplier", label: "Points Multiplier (2x, 3x points)" },
+                        { value: "bonus", label: "Fixed Bonus Points" },
+                        { value: "percentage", label: "Percentage Bonus" },
+                      ]}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="multiplier">
+                          Points Multiplier (2x, 3x points)
+                        </SelectItem>
+                        <SelectItem value="bonus">Fixed Bonus Points</SelectItem>
+                        <SelectItem value="percentage">Percentage Bonus</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Multiplier + Bonus Points */}
+                <div className="grid grid-cols-2 gap-4">
+                  <Controller
+                    name="multiplier"
+                    control={ruleForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field className="space-y-2" data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>{t("Multiplier")}</FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
+                          value={field.value as number}
+                          step="0.1"
+                          min="1"
+                        />
+                        <FieldDescription>
+                          {t("e.g., 2.0 = Double points, 1.5 = 50% more")}
+                        </FieldDescription>
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="bonusPoints"
+                    control={ruleForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field className="space-y-2" data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>{t("Bonus Points")}</FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
+                          value={field.value as number}
+                          min="0"
+                        />
+                        <FieldDescription>
+                          {t("Additional points on top of standard rate")}
+                        </FieldDescription>
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                </div>
+
+                {/* Schedule Settings */}
+                <div className="space-y-3 border-t pt-4">
+                  <h3 className="text-base font-medium">When does this rule apply?</h3>
+
+                  <div className="space-y-3">
+                    <div className="space-y-3 rounded-lg border p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">Specific Days/Times</p>
+                          <p className="text-xs text-muted-foreground">
+                            E.g., Weekends, Happy Hours, specific dates
+                          </p>
                         </div>
-                        {tierRestrictionEnabled && (
-                          <FormField
+                        <Switch
+                          checked={scheduleEnabled}
+                          onCheckedChange={(checked) => {
+                            setScheduleEnabled(checked);
+                            if (!checked) {
+                              ruleForm.setValue("allowedDays", []);
+                              ruleForm.setValue("timeFrom", "");
+                              ruleForm.setValue("timeTo", "");
+                            }
+                          }}
+                          className="data-[state=checked]:bg-[#1873E8]"
+                        />
+                      </div>
+                      {scheduleEnabled && (
+                        <div className="space-y-3 border-t pt-3">
+                          <Controller
+                            name="allowedDays"
                             control={ruleForm.control}
-                            name="applicableToTiers"
-                            render={({ field }) => (
-                              <FormItem className="border-t pt-3">
-                                <FormLabel className="text-xs">Applicable Tiers</FormLabel>
-                                <div className="space-y-2">
-                                  {loyaltyTiers.map((tier) => (
-                                    <div key={tier.id} className="flex items-center space-x-2">
+                            render={({ field, fieldState }) => (
+                              <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel className="text-xs">Available Days</FieldLabel>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {[
+                                    "MONDAY",
+                                    "TUESDAY",
+                                    "WEDNESDAY",
+                                    "THURSDAY",
+                                    "FRIDAY",
+                                    "SATURDAY",
+                                    "SUNDAY",
+                                  ].map((day) => (
+                                    <div key={day} className="flex items-center space-x-2">
                                       <Checkbox
-                                        id={`create-tier-${tier.id}`}
-                                        checked={field.value?.includes(tier.id)}
+                                        id={`create-day-${day}`}
+                                        checked={field.value?.includes(day)}
                                         onCheckedChange={(checked) => {
                                           const updated = checked
-                                            ? [...(field.value || []), tier.id]
-                                            : (field.value || []).filter((t) => t !== tier.id);
+                                            ? [...(field.value || []), day]
+                                            : (field.value || []).filter((d) => d !== day);
                                           field.onChange(updated);
                                         }}
                                       />
                                       <Label
-                                        htmlFor={`create-tier-${tier.id}`}
-                                        className="flex cursor-pointer items-center gap-2 text-sm font-normal"
+                                        htmlFor={`create-day-${day}`}
+                                        className="cursor-pointer text-sm font-normal capitalize"
                                       >
-                                        <div
-                                          className="h-3 w-3 rounded-full"
-                                          style={{
-                                            backgroundColor: tier.color,
-                                          }}
-                                        />
-                                        {tier.name}
+                                        {day.charAt(0) + day.slice(1).toLowerCase()}
                                       </Label>
                                     </div>
                                   ))}
                                 </div>
-                                <FormMessage />
-                              </FormItem>
+                                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                              </Field>
                             )}
                           />
-                        )}
-                      </div>
-
-                      <div className="space-y-3 rounded-lg border p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">Limited Time Period</p>
-                            <p className="text-xs text-muted-foreground">
-                              Set start and end dates for this rule
-                            </p>
+                          <div className="grid grid-cols-2 gap-4">
+                            <Controller
+                              name="timeFrom"
+                              control={ruleForm.control}
+                              render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                  <FieldLabel htmlFor={field.name} className="text-xs">
+                                    Start Time
+                                  </FieldLabel>
+                                  <Input
+                                    type="time"
+                                    {...field}
+                                    id={field.name}
+                                    aria-invalid={fieldState.invalid}
+                                    value={field.value ?? ""}
+                                  />
+                                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                                </Field>
+                              )}
+                            />
+                            <Controller
+                              name="timeTo"
+                              control={ruleForm.control}
+                              render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                  <FieldLabel htmlFor={field.name} className="text-xs">
+                                    End Time
+                                  </FieldLabel>
+                                  <Input
+                                    type="time"
+                                    {...field}
+                                    id={field.name}
+                                    aria-invalid={fieldState.invalid}
+                                    value={field.value ?? ""}
+                                  />
+                                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                                </Field>
+                              )}
+                            />
                           </div>
-                          <Switch
-                            checked={limitedPeriodEnabled}
-                            onCheckedChange={(checked) => {
-                              setLimitedPeriodEnabled(checked);
-                              if (!checked) {
-                                ruleForm.setValue("validFrom", null);
-                                ruleForm.setValue("validUntil", null);
-                              }
-                            }}
-                            className="data-[state=checked]:bg-[#1873E8]"
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3 rounded-lg border p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">Customer Tier Restriction</p>
+                          <p className="text-xs text-muted-foreground">
+                            Apply to specific membership tiers only
+                          </p>
+                        </div>
+                        <Switch
+                          checked={tierRestrictionEnabled}
+                          onCheckedChange={(checked) => {
+                            setTierRestrictionEnabled(checked);
+                            if (!checked) ruleForm.setValue("applicableToTiers", []);
+                          }}
+                          className="data-[state=checked]:bg-[#1873E8]"
+                        />
+                      </div>
+                      {tierRestrictionEnabled && (
+                        <Controller
+                          name="applicableToTiers"
+                          control={ruleForm.control}
+                          render={({ field, fieldState }) => (
+                            <Field className="border-t pt-3" data-invalid={fieldState.invalid}>
+                              <FieldLabel className="text-xs">Applicable Tiers</FieldLabel>
+                              <div className="space-y-2">
+                                {loyaltyTiers.map((tier) => (
+                                  <div key={tier.id} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`create-tier-${tier.id}`}
+                                      checked={field.value?.includes(tier.id)}
+                                      onCheckedChange={(checked) => {
+                                        const updated = checked
+                                          ? [...(field.value || []), tier.id]
+                                          : (field.value || []).filter((t) => t !== tier.id);
+                                        field.onChange(updated);
+                                      }}
+                                    />
+                                    <Label
+                                      htmlFor={`create-tier-${tier.id}`}
+                                      className="flex cursor-pointer items-center gap-2 text-sm font-normal"
+                                    >
+                                      <div
+                                        className="h-3 w-3 rounded-full"
+                                        style={{
+                                          backgroundColor: tier.color,
+                                        }}
+                                      />
+                                      {tier.name}
+                                    </Label>
+                                  </div>
+                                ))}
+                              </div>
+                              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                            </Field>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    <div className="space-y-3 rounded-lg border p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">Limited Time Period</p>
+                          <p className="text-xs text-muted-foreground">
+                            Set start and end dates for this rule
+                          </p>
+                        </div>
+                        <Switch
+                          checked={limitedPeriodEnabled}
+                          onCheckedChange={(checked) => {
+                            setLimitedPeriodEnabled(checked);
+                            if (!checked) {
+                              ruleForm.setValue("validFrom", null);
+                              ruleForm.setValue("validUntil", null);
+                            }
+                          }}
+                          className="data-[state=checked]:bg-[#1873E8]"
+                        />
+                      </div>
+                      {limitedPeriodEnabled && (
+                        <div className="grid grid-cols-2 gap-4 border-t pt-3">
+                          <Controller
+                            name="validFrom"
+                            control={ruleForm.control}
+                            render={({ field, fieldState }) => (
+                              <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel className="text-xs">Valid From</FieldLabel>
+                                <Input
+                                  type="date"
+                                  value={field.value ?? ""}
+                                  onChange={(e) => field.onChange(e.target.value || null)}
+                                  aria-invalid={fieldState.invalid}
+                                />
+                                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                              </Field>
+                            )}
+                          />
+                          <Controller
+                            name="validUntil"
+                            control={ruleForm.control}
+                            render={({ field, fieldState }) => (
+                              <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel className="text-xs">Valid To</FieldLabel>
+                                <Input
+                                  type="date"
+                                  value={field.value ?? ""}
+                                  onChange={(e) => field.onChange(e.target.value || null)}
+                                  aria-invalid={fieldState.invalid}
+                                />
+                                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                              </Field>
+                            )}
                           />
                         </div>
-                        {limitedPeriodEnabled && (
-                          <div className="grid grid-cols-2 gap-4 border-t pt-3">
-                            <FormField
-                              control={ruleForm.control}
-                              name="validFrom"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs">Valid From</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      type="date"
-                                      value={field.value ?? ""}
-                                      onChange={(e) => field.onChange(e.target.value || null)}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={ruleForm.control}
-                              name="validUntil"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs">Valid To</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      type="date"
-                                      value={field.value ?? ""}
-                                      onChange={(e) => field.onChange(e.target.value || null)}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
+                </div>
 
-                  {/* Action Buttons */}
-                  <div className="mt-8 flex gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => {
-                        setEarningRulesViewMode("list");
-                        resetCreateForm();
-                      }}
-                    >
-                      {t("Cancel")}
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="flex-1 bg-[#1873E8] hover:bg-[#1873E8]/90"
-                      disabled={createRuleMutation.isPending}
-                    >
-                      {createRuleMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          {t("Creating...")}
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="mr-2 h-4 w-4" />
-                          {t("Create Earning Rule")}
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
+                {/* Action Buttons */}
+                <div className="mt-8 flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setEarningRulesViewMode("list");
+                      resetCreateForm();
+                    }}
+                  >
+                    {t("Cancel")}
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1 bg-[#1873E8] hover:bg-[#1873E8]/90"
+                    disabled={createRuleMutation.isPending}
+                  >
+                    {createRuleMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t("Creating...")}
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="mr-2 h-4 w-4" />
+                        {t("Create Earning Rule")}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </div>
@@ -952,162 +965,175 @@ function TierCard({ tier, index, isEditing, onStartEdit, onCancelEdit, onDelete 
   return (
     <Card>
       <CardContent>
-        <Form {...tierForm}>
-          <form onSubmit={tierForm.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h4 className="text-sm font-semibold">Edit Tier</h4>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    tierForm.reset({
-                      name: tier.name,
-                      color: tier.color,
-                      pointsMultiplier: Number(tier.pointsMultiplier),
-                      threshold: tier.threshold,
-                    });
-                    onCancelEdit();
-                  }}
-                  className="h-8"
-                >
-                  <X className="mr-1 h-3.5 w-3.5" />
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="h-8 bg-[#1873E8] hover:bg-[#1873E8]/90"
-                  disabled={updateTierMutation.isPending}
-                >
-                  {updateTierMutation.isPending ? (
-                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Save className="mr-1 h-3.5 w-3.5" />
-                  )}
-                  Save
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={tierForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">{t("Tier Name")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} className="mt-1 h-9 font-semibold" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={tierForm.control}
-                name="color"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">{t("Color")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="color" className="mt-1 h-9" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={tierForm.control}
-                name="pointsMultiplier"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">{t("Earning Rate")}</FormLabel>
-                    <div className="mt-1 flex items-center gap-1">
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value as number}
-                          className="h-9 font-semibold"
-                          min="0"
-                        />
-                      </FormControl>
-                      <span className="whitespace-nowrap text-xs text-muted-foreground">
-                        pts/{tier?.program?.currencyCode || "currency"}
-                      </span>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={tierForm.control}
-                name="threshold"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">{t("Threshold")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value as number}
-                        className="mt-1 h-9"
-                        min="0"
-                        disabled={tier.threshold === 0}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="px-2 py-1.5 bg-blue-50 rounded border border-blue-200">
-                <p className="text-xs text-muted-foreground">Value per point:</p>
-                <p className="font-semibold text-sm text-[#1873E8]">
-                  1 pt ={" "}
-                  {(() => {
-                    // Use the current form value for pointsMultiplier
-                    const points = Number(tierForm.watch("pointsMultiplier"));
-                    if (!points || points <= 0) return "-";
-                    const currency = 1;
-                    return (currency / points).toFixed(3);
-                  })()}{" "}
-                  {tier?.program?.currencyCode || "currency"}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between border-t pt-3">
-              <div className="text-xs text-muted-foreground">
-                {tier.threshold === 0 ? (
-                  <>
-                    <Info className="mr-1 inline h-3 w-3" />
-                    {t("Base tier - All new customers start here. Cannot be deleted.")}
-                  </>
+        <form onSubmit={tierForm.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h4 className="text-sm font-semibold">Edit Tier</h4>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  tierForm.reset({
+                    name: tier.name,
+                    color: tier.color,
+                    pointsMultiplier: Number(tier.pointsMultiplier),
+                    threshold: tier.threshold,
+                  });
+                  onCancelEdit();
+                }}
+                className="h-8"
+              >
+                <X className="mr-1 h-3.5 w-3.5" />
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                className="h-8 bg-[#1873E8] hover:bg-[#1873E8]/90"
+                disabled={updateTierMutation.isPending}
+              >
+                {updateTierMutation.isPending ? (
+                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  t("Customers reach this tier after earning {points} lifetime points", {
-                    points: tier.threshold.toLocaleString(),
-                  })
+                  <Save className="mr-1 h-3.5 w-3.5" />
                 )}
-              </div>
+                Save
+              </Button>
+            </div>
+          </div>
 
-              {tier.threshold > 0 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-red-600 hover:bg-red-50"
-                  onClick={() => onDelete(tier.id, tierForm.getValues("name"))}
-                >
-                  <Trash2 className="mr-1 h-3.5 w-3.5" />
-                  Delete Tier
-                </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <Controller
+              name="name"
+              control={tierForm.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name} className="text-xs">
+                    {t("Tier Name")}
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    className="mt-1 h-9 font-semibold"
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="color"
+              control={tierForm.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name} className="text-xs">
+                    {t("Color")}
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    type="color"
+                    className="mt-1 h-9"
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="pointsMultiplier"
+              control={tierForm.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name} className="text-xs">
+                    {t("Earning Rate")}
+                  </FieldLabel>
+                  <div className="mt-1 flex items-center gap-1">
+                    <Input
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      value={field.value as number}
+                      className="h-9 font-semibold"
+                      min="0"
+                    />
+                    <span className="whitespace-nowrap text-xs text-muted-foreground">
+                      pts/{tier?.program?.currencyCode || "currency"}
+                    </span>
+                  </div>
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="threshold"
+              control={tierForm.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name} className="text-xs">
+                    {t("Threshold")}
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    value={field.value as number}
+                    className="mt-1 h-9"
+                    min="0"
+                    disabled={tier.threshold === 0}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+            <div className="px-2 py-1.5 bg-blue-50 rounded border border-blue-200">
+              <p className="text-xs text-muted-foreground">Value per point:</p>
+              <p className="font-semibold text-sm text-[#1873E8]">
+                1 pt ={" "}
+                {(() => {
+                  // Use the current form value for pointsMultiplier
+                  const points = Number(tierForm.watch("pointsMultiplier"));
+                  if (!points || points <= 0) return "-";
+                  const currency = 1;
+                  return (currency / points).toFixed(3);
+                })()}{" "}
+                {tier?.program?.currencyCode || "currency"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between border-t pt-3">
+            <div className="text-xs text-muted-foreground">
+              {tier.threshold === 0 ? (
+                <>
+                  <Info className="mr-1 inline h-3 w-3" />
+                  {t("Base tier - All new customers start here. Cannot be deleted.")}
+                </>
+              ) : (
+                t("Customers reach this tier after earning {points} lifetime points", {
+                  points: tier.threshold.toLocaleString(),
+                })
               )}
             </div>
-          </form>
-        </Form>
+
+            {tier.threshold > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 text-red-600 hover:bg-red-50"
+                onClick={() => onDelete(tier.id, tierForm.getValues("name"))}
+              >
+                <Trash2 className="mr-1 h-3.5 w-3.5" />
+                Delete Tier
+              </Button>
+            )}
+          </div>
+        </form>
       </CardContent>
     </Card>
   );
@@ -1268,400 +1294,427 @@ function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDele
   return (
     <Card>
       <CardContent>
-        <Form {...ruleForm}>
-          <form onSubmit={ruleForm.handleSubmit(onSave)} className="space-y-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h4 className="text-sm font-semibold">Edit Rule</h4>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    ruleForm.reset();
-                    onCancelEdit();
-                  }}
-                  className="h-8"
-                >
-                  <X className="mr-1 h-3.5 w-3.5" />
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="h-8 bg-[#1873E8] hover:bg-[#1873E8]/90"
-                  disabled={updateRuleMutation.isPending}
-                >
-                  {updateRuleMutation.isPending ? (
-                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Save className="mr-1 h-3.5 w-3.5" />
-                  )}
-                  Save
-                </Button>
-              </div>
+        <form onSubmit={ruleForm.handleSubmit(onSave)} className="space-y-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h4 className="text-sm font-semibold">Edit Rule</h4>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  ruleForm.reset();
+                  onCancelEdit();
+                }}
+                className="h-8"
+              >
+                <X className="mr-1 h-3.5 w-3.5" />
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                className="h-8 bg-[#1873E8] hover:bg-[#1873E8]/90"
+                disabled={updateRuleMutation.isPending}
+              >
+                {updateRuleMutation.isPending ? (
+                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Save className="mr-1 h-3.5 w-3.5" />
+                )}
+                Save
+              </Button>
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <FormField
-                  control={ruleForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">{t("Rule Name")}</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="mt-1 h-9" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="col-span-2">
-                <FormField
-                  control={ruleForm.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">
-                        {t("Define how customers earn points through purchases and activities")}
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea {...field} className="mt-1 text-sm" rows={2} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <Controller
                 control={ruleForm.control}
-                name="multiplier"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">{t("Multiplier")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value as number}
-                        step="0.1"
-                        className="mt-1 h-9"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={ruleForm.control}
-                name="bonusPoints"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">{t("Bonus Points")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} value={field.value as number} className="mt-1 h-9" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={ruleForm.control}
-                name="validFrom"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Valid From</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value || null)}
-                        className="mt-1 h-9"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={ruleForm.control}
-                name="validUntil"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Valid To</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value || null)}
-                        className="mt-1 h-9"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="space-y-3 border-t pt-3">
-              <div className="space-y-3 rounded-lg border p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">Specific Days/Times</p>
-                    <p className="text-xs text-muted-foreground">E.g., Weekends, Happy Hours</p>
-                  </div>
-                  <Switch
-                    checked={scheduleEnabled}
-                    onCheckedChange={(checked) => {
-                      setScheduleEnabled(checked);
-                      if (!checked) {
-                        ruleForm.setValue("allowedDays", []);
-                        ruleForm.setValue("timeFrom", "");
-                        ruleForm.setValue("timeTo", "");
-                      }
-                    }}
-                    className="data-[state=checked]:bg-[#1873E8]"
-                  />
-                </div>
-                {scheduleEnabled && (
-                  <div className="space-y-3 border-t pt-3">
-                    <FormField
-                      control={ruleForm.control}
-                      name="allowedDays"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Available Days</FormLabel>
-                          <div className="grid grid-cols-2 gap-2">
-                            {[
-                              "MONDAY",
-                              "TUESDAY",
-                              "WEDNESDAY",
-                              "THURSDAY",
-                              "FRIDAY",
-                              "SATURDAY",
-                              "SUNDAY",
-                            ].map((day) => (
-                              <div key={day} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`edit-day-${rule.id}-${day}`}
-                                  checked={field.value?.includes(day)}
-                                  onCheckedChange={(checked) => {
-                                    const updated = checked
-                                      ? [...(field.value || []), day]
-                                      : (field.value || []).filter((d) => d !== day);
-                                    field.onChange(updated);
-                                  }}
-                                />
-                                <Label
-                                  htmlFor={`edit-day-${rule.id}-${day}`}
-                                  className="cursor-pointer text-xs font-normal capitalize"
-                                >
-                                  {day.charAt(0) + day.slice(1).toLowerCase()}
-                                </Label>
-                              </div>
-                            ))}
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                name="name"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name} className="text-xs">
+                      {t("Rule Name")}
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      className="mt-1 h-9"
                     />
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormField
-                        control={ruleForm.control}
-                        name="timeFrom"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs">Start Time</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="time"
-                                {...field}
-                                value={field.value ?? ""}
-                                className="mt-1 h-9"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={ruleForm.control}
-                        name="timeTo"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs">End Time</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="time"
-                                {...field}
-                                value={field.value ?? ""}
-                                className="mt-1 h-9"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
                 )}
-              </div>
+              />
+            </div>
 
-              <div className="space-y-3 rounded-lg border p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">Customer Tier Restriction</p>
-                    <p className="text-xs text-muted-foreground">
-                      Apply to specific membership tiers only
-                    </p>
-                  </div>
-                  <Switch
-                    checked={tierRestrictionEnabled}
-                    onCheckedChange={(checked) => {
-                      setTierRestrictionEnabled(checked);
-                      if (!checked) ruleForm.setValue("applicableToTiers", []);
-                    }}
-                    className="data-[state=checked]:bg-[#1873E8]"
+            <div className="col-span-2">
+              <Controller
+                control={ruleForm.control}
+                name="description"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name} className="text-xs">
+                      {t("Define how customers earn points through purchases and activities")}
+                    </FieldLabel>
+                    <Textarea
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      className="mt-1 text-sm"
+                      rows={2}
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+            </div>
+
+            <Controller
+              control={ruleForm.control}
+              name="multiplier"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name} className="text-xs">
+                    {t("Multiplier")}
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    value={field.value as number}
+                    step="0.1"
+                    className="mt-1 h-9"
                   />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+
+            <Controller
+              control={ruleForm.control}
+              name="bonusPoints"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name} className="text-xs">
+                    {t("Bonus Points")}
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    value={field.value as number}
+                    className="mt-1 h-9"
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+
+            <Controller
+              control={ruleForm.control}
+              name="validFrom"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name} className="text-xs">
+                    Valid From
+                  </FieldLabel>
+                  <Input
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    type="date"
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value || null)}
+                    className="mt-1 h-9"
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+
+            <Controller
+              control={ruleForm.control}
+              name="validUntil"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name} className="text-xs">
+                    Valid To
+                  </FieldLabel>
+                  <Input
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    type="date"
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value || null)}
+                    className="mt-1 h-9"
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+          </div>
+
+          <div className="space-y-3 border-t pt-3">
+            <div className="space-y-3 rounded-lg border p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Specific Days/Times</p>
+                  <p className="text-xs text-muted-foreground">E.g., Weekends, Happy Hours</p>
                 </div>
-                {tierRestrictionEnabled && (
-                  <FormField
+                <Switch
+                  checked={scheduleEnabled}
+                  onCheckedChange={(checked) => {
+                    setScheduleEnabled(checked);
+                    if (!checked) {
+                      ruleForm.setValue("allowedDays", []);
+                      ruleForm.setValue("timeFrom", "");
+                      ruleForm.setValue("timeTo", "");
+                    }
+                  }}
+                  className="data-[state=checked]:bg-[#1873E8]"
+                />
+              </div>
+              {scheduleEnabled && (
+                <div className="space-y-3 border-t pt-3">
+                  <Controller
                     control={ruleForm.control}
-                    name="applicableToTiers"
-                    render={({ field }) => (
-                      <FormItem className="border-t pt-3">
-                        <FormLabel className="text-xs">Applicable Tiers</FormLabel>
-                        <div className="space-y-2">
-                          {loyaltyTiers.map((tier: any) => (
-                            <div key={tier.id} className="flex items-center space-x-2">
+                    name="allowedDays"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel className="text-xs">Available Days</FieldLabel>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            "MONDAY",
+                            "TUESDAY",
+                            "WEDNESDAY",
+                            "THURSDAY",
+                            "FRIDAY",
+                            "SATURDAY",
+                            "SUNDAY",
+                          ].map((day) => (
+                            <div key={day} className="flex items-center space-x-2">
                               <Checkbox
-                                id={`edit-tier-${rule.id}-${tier.id}`}
-                                checked={field.value?.includes(tier.id)}
+                                id={`edit-day-${rule.id}-${day}`}
+                                checked={field.value?.includes(day)}
                                 onCheckedChange={(checked) => {
                                   const updated = checked
-                                    ? [...(field.value || []), tier.id]
-                                    : (field.value || []).filter((t) => t !== tier.id);
+                                    ? [...(field.value || []), day]
+                                    : (field.value || []).filter((d) => d !== day);
                                   field.onChange(updated);
                                 }}
                               />
                               <Label
-                                htmlFor={`edit-tier-${rule.id}-${tier.id}`}
-                                className="flex cursor-pointer items-center gap-2 text-xs font-normal"
+                                htmlFor={`edit-day-${rule.id}-${day}`}
+                                className="cursor-pointer text-xs font-normal capitalize"
                               >
-                                <div
-                                  className="h-3 w-3 rounded-full"
-                                  style={{ backgroundColor: tier.color }}
-                                />
-                                {tier.name}
+                                {day.charAt(0) + day.slice(1).toLowerCase()}
                               </Label>
                             </div>
                           ))}
                         </div>
-                        <FormMessage />
-                      </FormItem>
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
                     )}
                   />
-                )}
-              </div>
-
-              <div className="space-y-3 rounded-lg border p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">Limited Time Period</p>
-                    <p className="text-xs text-muted-foreground">
-                      Set start and end dates for this rule
-                    </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Controller
+                      control={ruleForm.control}
+                      name="timeFrom"
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name} className="text-xs">
+                            Start Time
+                          </FieldLabel>
+                          <Input
+                            id={field.name}
+                            aria-invalid={fieldState.invalid}
+                            type="time"
+                            {...field}
+                            value={field.value ?? ""}
+                            className="mt-1 h-9"
+                          />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      control={ruleForm.control}
+                      name="timeTo"
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name} className="text-xs">
+                            End Time
+                          </FieldLabel>
+                          <Input
+                            id={field.name}
+                            aria-invalid={fieldState.invalid}
+                            type="time"
+                            {...field}
+                            value={field.value ?? ""}
+                            className="mt-1 h-9"
+                          />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
                   </div>
-                  <Switch
-                    checked={limitedPeriodEnabled}
-                    onCheckedChange={(checked) => {
-                      setLimitedPeriodEnabled(checked);
-                      if (!checked) {
-                        ruleForm.setValue("validFrom", null);
-                        ruleForm.setValue("validUntil", null);
-                      }
-                    }}
-                    className="data-[state=checked]:bg-[#1873E8]"
-                  />
                 </div>
-                {limitedPeriodEnabled && (
-                  <div className="grid grid-cols-2 gap-3 border-t pt-3">
-                    <FormField
-                      control={ruleForm.control}
-                      name="validFrom"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Valid From</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="date"
-                              value={field.value ?? ""}
-                              onChange={(e) => field.onChange(e.target.value || null)}
-                              className="mt-1 h-9"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={ruleForm.control}
-                      name="validUntil"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Valid To</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="date"
-                              value={field.value ?? ""}
-                              onChange={(e) => field.onChange(e.target.value || null)}
-                              className="mt-1 h-9"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-              </div>
+              )}
             </div>
 
-            <div className="flex items-center justify-between border-t pt-3">
-              <div className="flex items-center gap-2">
-                <Label className="text-xs">Enable Rule</Label>
+            <div className="space-y-3 rounded-lg border p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Customer Tier Restriction</p>
+                  <p className="text-xs text-muted-foreground">
+                    Apply to specific membership tiers only
+                  </p>
+                </div>
                 <Switch
-                  checked={isEnabled}
-                  onCheckedChange={onToggle}
+                  checked={tierRestrictionEnabled}
+                  onCheckedChange={(checked) => {
+                    setTierRestrictionEnabled(checked);
+                    if (!checked) ruleForm.setValue("applicableToTiers", []);
+                  }}
                   className="data-[state=checked]:bg-[#1873E8]"
-                  disabled={toggleStatusMutation.isPending}
                 />
               </div>
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 text-red-600 hover:bg-red-50"
-                onClick={onDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Trash2 className="mr-1 h-3.5 w-3.5" />
-                )}
-                Delete Rule
-              </Button>
+              {tierRestrictionEnabled && (
+                <Controller
+                  control={ruleForm.control}
+                  name="applicableToTiers"
+                  render={({ field, fieldState }) => (
+                    <Field className="border-t pt-3" data-invalid={fieldState.invalid}>
+                      <FieldLabel className="text-xs">Applicable Tiers</FieldLabel>
+                      <div className="space-y-2">
+                        {loyaltyTiers.map((tier: any) => (
+                          <div key={tier.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`edit-tier-${rule.id}-${tier.id}`}
+                              checked={field.value?.includes(tier.id)}
+                              onCheckedChange={(checked) => {
+                                const updated = checked
+                                  ? [...(field.value || []), tier.id]
+                                  : (field.value || []).filter((t) => t !== tier.id);
+                                field.onChange(updated);
+                              }}
+                            />
+                            <Label
+                              htmlFor={`edit-tier-${rule.id}-${tier.id}`}
+                              className="flex cursor-pointer items-center gap-2 text-xs font-normal"
+                            >
+                              <div
+                                className="h-3 w-3 rounded-full"
+                                style={{ backgroundColor: tier.color }}
+                              />
+                              {tier.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+              )}
             </div>
-          </form>
-        </Form>
+
+            <div className="space-y-3 rounded-lg border p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Limited Time Period</p>
+                  <p className="text-xs text-muted-foreground">
+                    Set start and end dates for this rule
+                  </p>
+                </div>
+                <Switch
+                  checked={limitedPeriodEnabled}
+                  onCheckedChange={(checked) => {
+                    setLimitedPeriodEnabled(checked);
+                    if (!checked) {
+                      ruleForm.setValue("validFrom", null);
+                      ruleForm.setValue("validUntil", null);
+                    }
+                  }}
+                  className="data-[state=checked]:bg-[#1873E8]"
+                />
+              </div>
+              {limitedPeriodEnabled && (
+                <div className="grid grid-cols-2 gap-3 border-t pt-3">
+                  <Controller
+                    control={ruleForm.control}
+                    name="validFrom"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name} className="text-xs">
+                          Valid From
+                        </FieldLabel>
+                        <Input
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
+                          type="date"
+                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(e.target.value || null)}
+                          className="mt-1 h-9"
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={ruleForm.control}
+                    name="validUntil"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name} className="text-xs">
+                          Valid To
+                        </FieldLabel>
+                        <Input
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
+                          type="date"
+                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(e.target.value || null)}
+                          className="mt-1 h-9"
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between border-t pt-3">
+            <div className="flex items-center gap-2">
+              <Label className="text-xs">Enable Rule</Label>
+              <Switch
+                checked={isEnabled}
+                onCheckedChange={onToggle}
+                className="data-[state=checked]:bg-[#1873E8]"
+                disabled={toggleStatusMutation.isPending}
+              />
+            </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 text-red-600 hover:bg-red-50"
+              onClick={onDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="mr-1 h-3.5 w-3.5" />
+              )}
+              Delete Rule
+            </Button>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );

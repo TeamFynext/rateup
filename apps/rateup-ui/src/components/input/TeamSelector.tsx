@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 import { useTeamsByUser } from "@/backend/team/team.query";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
-import { ContainedSelection } from "./ContainedInput/ContainedInput.tsx";
 
 interface TeamSelectorProps extends SelectProps {
   value?: string;
@@ -19,11 +18,9 @@ interface TeamSelectorProps extends SelectProps {
 export function TeamSelector({
   value,
   onChange,
-  label = "",
   enableAll = false,
   enableDefaultValue = true,
   className,
-  ...props
 }: Readonly<TeamSelectorProps>) {
   // TODO: remove some nesting on results of the query?
   const { data: teamRes, isPending: teamsLoading, isError } = useTeamsByUser();
@@ -69,7 +66,7 @@ export function TeamSelector({
   }
 
   return (
-    <Select value={value} onValueChange={onChange} defaultValue={label}>
+    <Select value={value} onValueChange={onChange} items={teamOptions}>
       <SelectTrigger className={`${className || ""}`}>
         <div>
           <Users className="size-4 text-muted-foreground" />
@@ -84,18 +81,5 @@ export function TeamSelector({
         ))}
       </SelectContent>
     </Select>
-  );
-
-  return (
-    <ContainedSelection
-      allowDeselect={false}
-      data={teamOptions}
-      defaultValue={enableDefaultValue ? teamOptions[0].value : null}
-      onChange={onChange}
-      label={label}
-      value={value}
-      nothingFoundMessage={translations("No teams found!")}
-      {...props}
-    />
   );
 }
