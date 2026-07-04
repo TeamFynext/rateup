@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Paperclip,
   Plus,
+  Tag,
   Trash,
   Trash2,
   User,
@@ -517,18 +518,6 @@ function RightSidebar({
   const currentBoard = (boards || []).find((b) =>
     b.ticketColumns?.some((c: any) => c.id === ticket.ticketColumnId),
   );
-  const { labels } = useLabels(currentBoard?.id);
-
-  const handleLabelChange = (clickedLabelId: string) => {
-    const currentLabelIds = ticket.labels?.map((l: any) => l.id) || [];
-    const isSelected = currentLabelIds.includes(clickedLabelId);
-
-    const newLabelIds = isSelected
-      ? currentLabelIds.filter((id: string) => id !== clickedLabelId)
-      : [...currentLabelIds, clickedLabelId];
-
-    mutate({ id: ticketId, labelIds: newLabelIds });
-  };
 
   const handleToggleMember = (userId: string) => {
     const currentMembers = ticket.assignees?.map((a) => a.assigneeId) || [];
@@ -585,34 +574,6 @@ function RightSidebar({
               </Select>
             </div>
           )}
-
-          <div>
-            <MetaLabel>{t("Labels")}</MetaLabel>
-            <div className="flex gap-[5px] flex-wrap">
-              {labels?.map((label) => {
-                const isSelected = ticket.labels?.some((l: any) => l.id === label.id) || false;
-                const pColor = parseColor(label.color);
-                return (
-                  <button
-                    key={label.id}
-                    onClick={() => handleLabelChange(label.id)}
-                    className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
-                    style={{
-                      padding: "4px 10px",
-                      border: isSelected
-                        ? `2px solid ${pColor.textcolor}`
-                        : `2px solid ${pColor.bgcolor}`,
-                      background: pColor.bgcolor,
-                      color: pColor.textcolor,
-                      boxShadow: isSelected ? `0 0 0 2px ${pColor.textcolor}22` : "none",
-                    }}
-                  >
-                    {label.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
           <div>
             <MetaLabel>{t("Assignee")}</MetaLabel>
@@ -1191,6 +1152,23 @@ function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticketId: str
   const { mutate } = useUpdateCardMutation();
   const [description, setDescription] = useState(ticket.description || "");
 
+  const { data: boards } = useBoardsQueries();
+  const currentBoard = (boards || []).find((b) =>
+    b.ticketColumns?.some((c: any) => c.id === ticket.ticketColumnId),
+  );
+  const { labels } = useLabels(currentBoard?.id);
+
+  const handleLabelChange = (clickedLabelId: string) => {
+    const currentLabelIds = ticket.labels?.map((l: any) => l.id) || [];
+    const isSelected = currentLabelIds.includes(clickedLabelId);
+
+    const newLabelIds = isSelected
+      ? currentLabelIds.filter((id: string) => id !== clickedLabelId)
+      : [...currentLabelIds, clickedLabelId];
+
+    mutate({ id: ticketId, labelIds: newLabelIds });
+  };
+
   const [debouncedDescription] = useDebounce(description, 1000);
 
   useEffect(() => {
@@ -1278,6 +1256,40 @@ function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticketId: str
           placeholder={t("Add a description...")}
           className="min-h-20 bg-muted/30 resize-y"
         />
+      </div>
+
+      {/* Labels */}
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <Tag className="h-4 w-4 text-muted-foreground" />
+          <span className="font-body text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
+            {t("Labels")}
+          </span>
+        </div>
+        <div className="flex gap-[5px] flex-wrap">
+          {labels?.map((label) => {
+            const isSelected = ticket.labels?.some((l: any) => l.id === label.id) || false;
+            const pColor = parseColor(label.color);
+            return (
+              <button
+                key={label.id}
+                onClick={() => handleLabelChange(label.id)}
+                className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
+                style={{
+                  padding: "1px 10px",
+                  border: isSelected
+                    ? `2px solid ${pColor.textcolor}`
+                    : `2px solid ${pColor.bgcolor}`,
+                  background: pColor.bgcolor,
+                  color: pColor.textcolor,
+                  boxShadow: isSelected ? `0 0 0 2px ${pColor.textcolor}22` : "none",
+                }}
+              >
+                {label.name}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Checklists */}
