@@ -4,6 +4,7 @@ import { useUserInfo } from "@/backend/user/user.query";
 import NavHeader from "@/components/nav-header.tsx";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { ConfirmProvider } from "@/context/confirm-provider.tsx";
 
 import { AppSidebar } from "../../components/admin/admin-sidebar/app-sidebar.tsx";
 
@@ -39,14 +40,16 @@ function Page() {
     });
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <AppSidebar data={data} />
-      <SidebarInset className=" overflow-hidden">
-        <NavHeader pathname={pathname} />
-        <div className="flex flex-1 flex-col gap-4 px-4 pt-0">
-          <Outlet />
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <ConfirmProvider>
+      <SidebarProvider defaultOpen={true}>
+        <AppSidebar data={data} />
+        <SidebarInset className=" overflow-hidden">
+          <NavHeader pathname={pathname} />
+          <div className="flex flex-1 flex-col gap-4 px-4 pt-0">
+            <Outlet />
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    </ConfirmProvider>
   );
 }
