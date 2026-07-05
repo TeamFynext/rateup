@@ -1,4 +1,4 @@
-import { CheckIcon, ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 import * as RPNInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
@@ -17,17 +17,17 @@ import { Input } from "@/components/ui/input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { cn } from "@/lib/utils.ts";
 
+const RPNInputDefault = RPNInput.default;
+
 type PhoneInputProps = Omit<React.ComponentProps<"input">, "onChange" | "value" | "ref"> &
   Omit<RPNInput.Props<typeof RPNInput.default>, "onChange"> & {
     onChange?: (value: RPNInput.Value) => void;
+    ref?: React.Ref<React.ComponentRef<typeof RPNInput.default>>;
   };
 
-const PhoneInput: React.ForwardRefExoticComponent<PhoneInputProps> = React.forwardRef<
-  React.ElementRef<typeof RPNInput.default>,
-  PhoneInputProps
->(({ className, onChange, value, ...props }, ref) => {
+export const PhoneInput = ({ className, onChange, value, ref, ...props }: PhoneInputProps) => {
   return (
-    <RPNInput.default
+    <RPNInputDefault
       ref={ref}
       className={cn("flex", className)}
       flagComponent={FlagComponent}
@@ -48,13 +48,14 @@ const PhoneInput: React.ForwardRefExoticComponent<PhoneInputProps> = React.forwa
       {...props}
     />
   );
-});
-PhoneInput.displayName = "PhoneInput";
+};
 
-const InputComponent = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, ...props }, ref) => (
-    <Input className={cn("rounded-e-lg rounded-s-none", className)} {...props} ref={ref} />
-  ),
+const InputComponent = ({
+  className,
+  ref,
+  ...props
+}: React.ComponentProps<"input"> & { ref?: React.Ref<HTMLInputElement> }) => (
+  <Input className={cn("rounded-e-lg rounded-s-none", className)} {...props} ref={ref} />
 );
 InputComponent.displayName = "InputComponent";
 
@@ -108,7 +109,7 @@ const CountrySelect = ({
           className={cn("-mr-2 size-4 opacity-50", disabled ? "hidden" : "opacity-100")}
         />
       </ComboboxTrigger>
-      <ComboboxContent className="w-[300px] p-0">
+      <ComboboxContent className="w-75 p-0">
         <ComboboxChipsInput
           placeholder="Search country..."
           className="w-full border-0 border-b rounded-none px-3 h-9"
@@ -117,12 +118,7 @@ const CountrySelect = ({
         <ScrollArea className="h-72">
           <ComboboxList>
             {(item: { value: RPNInput.Country; label: string }) => (
-              <CountrySelectOption
-                key={item.value}
-                country={item.value}
-                countryName={item.label}
-                selectedCountry={selectedCountry}
-              />
+              <CountrySelectOption key={item.value} country={item.value} countryName={item.label} />
             )}
           </ComboboxList>
         </ScrollArea>
@@ -131,23 +127,12 @@ const CountrySelect = ({
   );
 };
 
-interface CountrySelectOptionProps extends RPNInput.FlagProps {
-  selectedCountry: RPNInput.Country;
-}
-
-const CountrySelectOption = ({
-  country,
-  countryName,
-  selectedCountry,
-}: CountrySelectOptionProps) => {
+const CountrySelectOption = ({ country, countryName }: RPNInput.FlagProps) => {
   return (
     <ComboboxItem value={country} className="gap-2">
       <FlagComponent country={country} countryName={countryName} />
       <span className="flex-1 text-sm">{countryName}</span>
       <span className="text-sm text-foreground/50">{`+${RPNInput.getCountryCallingCode(country)}`}</span>
-      <CheckIcon
-        className={`ml-auto size-4 ${country === selectedCountry ? "opacity-100" : "opacity-0"}`}
-      />
     </ComboboxItem>
   );
 };
@@ -161,5 +146,3 @@ const FlagComponent = ({ country, countryName }: RPNInput.FlagProps) => {
     </span>
   );
 };
-
-export { PhoneInput };

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
-import { rateupLogoBlue } from "@/utils/constants.ts";
+import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 const QrNewFooter = () => {
   return (
@@ -9,7 +9,12 @@ const QrNewFooter = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Logo */}
-          <Image src={rateupLogoBlue} alt="RateUp Logo" width={100} height={40} />
+          <Image
+            src={rateupLogoStackedWhiteTransparent}
+            alt="RateUp Logo"
+            width={100}
+            height={40}
+          />
 
           {/* Our Company */}
           <div>

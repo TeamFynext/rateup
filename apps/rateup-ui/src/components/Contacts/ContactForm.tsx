@@ -171,7 +171,7 @@ const ContactForm = ({ form, customFields, type }) => {
           placeholder={translations("Enter phone number")}
           value={form.values.phone ?? ""}
           {...form.getInputProps("phone")}
-          className="w-full rounded-md border-none bg-accent px-3 py-2 text-sm focus-within:border-input [&>input]:border-none [&>input]:focus:outline-none focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition-all duration-150 ease-in-out focus-within:border-2"
+          className="w-full rounded-md border-none bg-accent px-3 py-2 text-sm [&>input]:border-none [&>input]:focus:outline-none focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition-all duration-150 ease-in-out focus-within:border-2"
         />
         {form?.errors?.phone && <FieldError>*{form?.errors?.phone}</FieldError>}
       </Field>

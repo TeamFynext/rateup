@@ -360,8 +360,6 @@ export const rateupLogoStackedTransparent = `${imagesPath}/rateup-logo-stacked-t
 export const rateupLogoHorizontalTransparent = `${imagesPath}/rateup-logo-horizontal-transparent.png`;
 export const rateupLogoHorizontalWhiteTransparent = `${imagesPath}/rateup-logo-horizontal-white-transparent.png`;
 
-export const rateupLogoBlue = rateupLogoStackedWhiteTransparent;
-
 export const MAX_DESCRIPTION_COUNT = 300;
 export const MAX_METADATA_COUNT = 20;
 
