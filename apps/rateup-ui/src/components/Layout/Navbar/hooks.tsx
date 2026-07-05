@@ -25,7 +25,7 @@ import {
   IconMessage,
   IconQrcode,
   IconReportAnalytics,
-  IconRobotFace,
+  // IconRobotFace,
   IconSend,
   IconSettings,
   IconShield,
@@ -523,18 +523,16 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.AI) &&
-      hasTeamFeature(TeamFeature.AiChatbot) &&
-      subscription?.orgId === import.meta.env.VITE_ROOT_ORG
-        ? [
-            {
-              title: "Meta AI Agent",
-              url: "/dashboard/meta-agent",
-              icon: IconRobotFace,
-              items: [],
-            },
-          ]
-        : []),
+      // ...(hasFeature(subscription, sfpn.AI) && hasTeamFeature(TeamFeature.AiChatbot)
+      //   ? [
+      //       {
+      //         title: "Meta AI Agent",
+      //         url: "/dashboard/meta-agent",
+      //         icon: IconRobotFace,
+      //         items: [],
+      //       },
+      //     ]
+      //   : []),
       {
         title: t("Settings"),
         url: "/dashboard/settings",

@@ -119,7 +119,7 @@ export const useAddNewContactFromCSVMutation = (groupId: string) => {
         id: "contact-group-add-member",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       const isValidationError = error?.response?.data?.error === "VALIDATION_ERR";
       if (!isValidationError) {
         toast.error(error?.message || `Error adding member`, {

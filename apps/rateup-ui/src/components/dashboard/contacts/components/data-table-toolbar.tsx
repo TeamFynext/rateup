@@ -404,7 +404,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
         toast.success("Contact imported successfully");
         setOpened(false);
       },
-      onError: (error) => {
+      onError: (error: any) => {
         const isValidationError = error?.response?.data?.error === "VALIDATION_ERR";
         if (!isValidationError) {
           toast.error(error?.message || "Importing failed");
@@ -516,7 +516,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
         </div>
       </DialogContent>
       <ContactImportErrorModal
-        body={importCSVContactMutation?.error?.response?.data}
+        body={(importCSVContactMutation?.error as any)?.response?.data}
         isError={importCSVContactMutation.isError}
       />
     </Dialog>
