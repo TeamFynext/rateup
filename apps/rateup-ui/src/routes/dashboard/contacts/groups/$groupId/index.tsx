@@ -329,7 +329,7 @@ function ContactGroup() {
         group={groupDetails}
       />
       <ContactImportErrorModal
-        body={createNewContactsFromCSV?.error?.message}
+        body={createNewContactsFromCSV?.error?.response?.data}
         isError={createNewContactsFromCSV.isError}
       />
     </div>

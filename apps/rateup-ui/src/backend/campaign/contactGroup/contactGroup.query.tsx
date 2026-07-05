@@ -113,14 +113,19 @@ export const useAddNewContactFromCSVMutation = (groupId: string) => {
         queryKey: ["contactGroupById", groupId],
       });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+    onSuccess: () => {
       toast.success("Added new member successfully.", {
         id: "contact-group-add-member",
       });
     },
     onError: (error) => {
-      toast.error(error?.message || `Error adding member`, {
-        id: "contact-group-add-member",
-      });
+      const isValidationError = error?.response?.data?.error === "VALIDATION_ERR";
+      if (!isValidationError) {
+        toast.error(error?.message || `Error adding member`, {
+          id: "contact-group-add-member",
+        });
+      }
     },
   });
 };

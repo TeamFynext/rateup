@@ -129,7 +129,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
 
   const downloadExcelResponse = useDownloadExcelResponse();
   const handleExcelDownload = useCallback(
-    (columns: string[]) => {
+    (columns: string[], format: "xlsx" | "ods" = "xlsx") => {
       downloadExcelResponse.mutate({
         defaultLanguage,
         surveyId,
@@ -138,6 +138,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
         tz: dayjs.tz.guess(),
         filterTeams,
         campaignIds,
+        format,
         columnFilters: [],
         ranges: ranges?.[0],
       });

@@ -48,7 +48,7 @@ interface ResponseTableToolbarProps<TData> {
   isSyncing: boolean;
   refetchResponse: () => void;
   handleSyncGoogleSheet: () => void;
-  handleExcelDownload: (columns: string[]) => void;
+  handleExcelDownload: (columns: string[], format: "xlsx" | "ods") => void;
   handleExportContacts?: () => void;
   hasContactQuestion?: boolean;
   alertModalOpen: () => void;
@@ -407,20 +407,26 @@ export function ResponseTableToolbar<TData>({
                     ? translations("Resync with Google Sheet")
                     : translations("Sync with Google Sheet")}
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    const columns = table
-                      .getVisibleFlatColumns()
-                      .map((col) =>
-                        typeof col.columnDef?.header === "string" ? col.columnDef?.header : col?.id,
-                      );
-                    handleExcelDownload(columns);
-                    setOpenedExport(false);
-                  }}
-                >
-                  <IconFileDownload className="mr-2 h-4 w-4" />
-                  {translations("Download")}
-                </DropdownMenuItem>
+                {(["xlsx", "ods"] as const).map((format) => (
+                  <DropdownMenuItem
+                    key={format}
+                    onClick={() => {
+                      const columns = table
+                        .getVisibleFlatColumns()
+                        .map((col) =>
+                          typeof col.columnDef?.header === "string"
+                            ? col.columnDef?.header
+                            : col?.id,
+                        );
+                      handleExcelDownload(columns, format);
+                      setOpenedExport(false);
+                    }}
+                  >
+                    <IconFileDownload className="mr-2 h-4 w-4" />
+                    {format === "xlsx" && translations("Download as Excel")}
+                    {format === "ods" && translations("Download as OpenDocument (ODS)")}
+                  </DropdownMenuItem>
+                ))}
                 {hasContactQuestion && handleExportContacts && (
                   <DropdownMenuItem onClick={handleExportContacts}>
                     <IconDatabaseImport className="mr-2 h-4 w-4" />

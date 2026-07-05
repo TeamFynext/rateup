@@ -71,6 +71,7 @@ const CreateContactModal = ({
       countryCode: "91",
       customFields: [],
       updateExisting: false,
+      hasHeaderRow: true,
       external_id: "",
       labels: [],
     },
@@ -124,6 +125,7 @@ const CreateContactModal = ({
       if (!csvfile) return;
       const formData = new FormData();
       formData.append("update", form.getValues().updateExisting?.toString());
+      formData.append("hasHeaderRow", form.getValues().hasHeaderRow?.toString() ?? "true");
       const contactTypes = form.getValues().contactType;
       contactTypes.forEach((item, index) => {
         formData.append(`tags[${index}]`, item);
@@ -275,11 +277,19 @@ const CreateContactModal = ({
                 key={form.key("updateExisting")}
                 {...form.getInputProps("updateExisting")}
               />
+              <Switch
+                mx={"lg"}
+                label={translations("First row contains column headers (name, phone, ...)")}
+                key={form.key("hasHeaderRow")}
+                {...form.getInputProps("hasHeaderRow")}
+              />
               <ContainedFileInput
                 mx={"lg"}
                 label=""
-                placeholder={translations("Upload a csv file (.csv) or excel file (.xlsx)")}
-                accept=".csv,.xlsx"
+                placeholder={translations(
+                  "Upload a csv file (.csv), excel file (.xlsx) or opendocument file (.ods)",
+                )}
+                accept=".csv,.xlsx,.ods"
                 multiple={false}
                 onChange={setCsvfile}
                 styles={{

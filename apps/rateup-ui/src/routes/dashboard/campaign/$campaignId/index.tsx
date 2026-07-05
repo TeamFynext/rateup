@@ -294,9 +294,9 @@ function CampaignDetails() {
     setIsEditOpen(true);
   };
 
-  const handleDeliveryReport = () => {
+  const handleDeliveryReport = (format: "xlsx" | "ods" = "xlsx") => {
     toast.loading("Generating delivery report...", { id: "delivery-report" });
-    deliveryReportMutation.mutate({ campaignId, selectedDripStage });
+    deliveryReportMutation.mutate({ campaignId, selectedDripStage, format });
   };
 
   const isQueuing =
@@ -605,15 +605,28 @@ function CampaignDetails() {
                     </Button>
                   )}
 
-                  <Button
-                    size="sm"
-                    onClick={handleDeliveryReport}
-                    disabled={deliveryReportMutation.isPending}
-                    className="gap-2"
-                  >
-                    <FileDown className="w-3.5 h-3.5" />
-                    {deliveryReportMutation.isPending ? t("Generating...") : t("Delivery Report")}
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          size="sm"
+                          disabled={deliveryReportMutation.isPending}
+                          className="gap-2"
+                        />
+                      }
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      {deliveryReportMutation.isPending ? t("Generating...") : t("Delivery Report")}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleDeliveryReport("xlsx")}>
+                        {t("Download as Excel")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeliveryReport("ods")}>
+                        {t("Download as OpenDocument (ODS)")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
