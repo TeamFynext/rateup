@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CSV_MIMETYPES, ODS_MIMETYPE } from "../../utils/spreadsheet.js";
 
 export const allowedMimeTypes = [
   "image/jpeg",
@@ -26,9 +27,9 @@ export const allowedMimeTypes = [
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 ];
 export const dataExtractFileMimeTypes = [
-  "text/csv",
-  "application/vnd.ms-excel",
+  ...CSV_MIMETYPES,
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ODS_MIMETYPE,
 ];
 
 const uploadFileSchema = z.object({

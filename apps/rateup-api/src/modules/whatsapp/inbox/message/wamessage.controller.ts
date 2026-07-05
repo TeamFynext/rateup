@@ -59,7 +59,8 @@ import {
   updateContactById,
 } from "../../../contact/contact.service.js";
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller.js";
-import xlsx from "node-xlsx";
+import { writeXlsx } from "hucre/xlsx";
+import { XlsxStreamWriter } from "hucre";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
 import { PlatformType } from "../../../../../generated/prisma/client.js";
 import { Role } from "../../../../utils/enums/index.js";
@@ -532,21 +533,40 @@ export async function exportWhatsappChatsHandler(
     const filterfilterDataDecoded = JSON.parse(
       decodeURIComponent(filterData?.replace(/(^"|"$)/g, "")),
     );
-    const dataToExport = await exportWhatsapChats(
-      orgId,
-      constraintsDecoded,
-      filterfilterDataDecoded,
-    );
-    const _excelData = dataToExport.map((chat) => {
-      return [
-        chat.date,
-        chat.from,
-        chat.name,
-        chat.sendbody ?? chat.receivebody ?? chat.templatename ?? "",
-      ];
+
+    const writer = new XlsxStreamWriter({
+      name: "Chats",
+      columns: [
+        { header: "Date", key: "date", autoWidth: true },
+        { header: "From", key: "from", autoWidth: true },
+        { header: "Name", key: "name", autoWidth: true },
+        { header: "Message", key: "message", autoWidth: true },
+      ],
     });
-    const excelData = [["Date", "From", "Name", "Message"], ..._excelData];
-    const buffer = xlsx.build([{ name: "Chats", data: excelData, options: {} }]);
+
+    const PAGE_SIZE = 5000;
+    let offset = 0;
+    while (true) {
+      const page = await exportWhatsapChats(
+        orgId,
+        constraintsDecoded,
+        filterfilterDataDecoded,
+        PAGE_SIZE,
+        offset,
+      );
+      for (const chat of page) {
+        writer.addObject({
+          date: chat.date,
+          from: chat.from,
+          name: chat.name,
+          message: chat.sendbody ?? chat.receivebody ?? chat.templatename ?? "",
+        });
+      }
+      if (page.length < PAGE_SIZE) break;
+      offset += PAGE_SIZE;
+    }
+
+    const buffer = await writer.finish();
     reply.header(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -794,7 +814,7 @@ export async function exportWaMessageLogsHandler(
       searchQuery,
     );
 
-    const _excelData = res.data.map((row) => {
+    const excelData = res.data.map((row) => {
       let logsStr = "";
       try {
         logsStr = row.logs ? JSON.stringify(row.logs) : "";
@@ -806,23 +826,34 @@ export async function exportWaMessageLogsHandler(
           row.sourceMessage.charAt(0).toUpperCase() + row.sourceMessage.slice(1).toLowerCase();
       }
 
-      return [
-        row.createdAt ? new Date(row.createdAt).toLocaleString() : "",
-        row.phone || "",
-        row.status || "",
-        sourceLabel,
-        row.messageType || "",
-        row.messagePreview || "",
-        logsStr.replace(/\n/g, " ").substring(0, 32000),
-      ];
+      return {
+        timestamp: row.createdAt ? new Date(row.createdAt).toLocaleString() : "",
+        phone: row.phone || "",
+        status: row.status || "",
+        source: sourceLabel,
+        type: row.messageType || "",
+        message: row.messagePreview || "",
+        logs: logsStr.replace(/\n/g, " ").substring(0, 32000),
+      };
     });
 
-    const excelData = [
-      ["Timestamp", "Phone", "Status", "Source", "Type", "Message", "Logs"],
-      ..._excelData,
-    ];
-
-    const buffer = xlsx.build([{ name: "Message_Logs", data: excelData, options: {} }]);
+    const buffer = await writeXlsx({
+      sheets: [
+        {
+          name: "Message_Logs",
+          columns: [
+            { header: "Timestamp", key: "timestamp", autoWidth: true },
+            { header: "Phone", key: "phone", autoWidth: true },
+            { header: "Status", key: "status", autoWidth: true },
+            { header: "Source", key: "source", autoWidth: true },
+            { header: "Type", key: "type", autoWidth: true },
+            { header: "Message", key: "message", autoWidth: true },
+            { header: "Logs", key: "logs", autoWidth: true },
+          ],
+          data: excelData,
+        },
+      ],
+    });
     reply.header(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

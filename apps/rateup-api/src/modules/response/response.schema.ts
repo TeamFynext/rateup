@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { QuestionType, ResponseSummaryType, SurveyType } from "../../types/enums.js";
 import { ResponsePlatform } from "../../../generated/prisma/client.js";
+import { spreadsheetExportFormatSchema } from "../../utils/spreadsheet.js";
 
 // Individual question response
 const questionResponseSchema = z.object({
@@ -95,6 +96,7 @@ const generateXlsxSchema = z.object({
   filterTeams: z.array(z.string()),
   campaignIds: z.array(z.string()),
   dbFlowId: z.string().optional(),
+  format: spreadsheetExportFormatSchema.default("xlsx"),
   columnFilters: z.array(
     z.object({
       id: z.string().optional(),

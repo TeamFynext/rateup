@@ -8,8 +8,7 @@ import {
   PaginationQuery,
   updateContactSchema,
 } from "./contact.schema.js";
-import Papa from "papaparse";
-import xlsx from "node-xlsx";
+import { readSpreadsheetObjects, readSpreadsheetRows } from "../../utils/spreadsheet.js";
 import { MultipartFile } from "@fastify/multipart";
 import {
   addExistingContactsToMultipleGroups,
@@ -1289,115 +1288,79 @@ function normalizePhone(phone) {
   return phone.toString().trim();
 }
 
+// Column order assumed when the uploaded file has no header row.
+function noHeaderColumnOrder(tags: string[]) {
+  return ["name", "phone", ...tags];
+}
+
+function rowsToObjects(rows: unknown[][], headers: string[]) {
+  return rows.map((row) =>
+    Object.fromEntries(
+      headers.map((header, i) => [header, row[i] != null ? row[i].toString().trim() : ""]),
+    ),
+  );
+}
+
 export async function importCSVContacts(
   fileBody: MultipartFile,
   orgId: string,
   tags: string[],
   updateExisting: boolean = false,
   contactGroupId?: string,
+  hasHeaderRow: boolean = true,
 ) {
   const { mimetype } = fileBody;
-  const csvType = ["text/csv", "application/vnd.ms-excel"];
-  const file = csvType.includes(mimetype) ? fileBody.file : await fileBody.toBuffer();
+  const buffer = await fileBody.toBuffer();
 
-  return new Promise((resolve, reject) => {
-    let contacts = [];
-    let errorContact = [];
+  const contacts = [];
+  const errorContact = [];
 
-    const processContact = (contact) => {
-      let rawPhone = normalizePhone(contact.phone);
+  const processContact = (contact) => {
+    let rawPhone = normalizePhone(contact.phone);
 
-      const formattedPhone = rawPhone?.startsWith("+")
-        ? rawPhone?.replace(/\s+/g, "")
-        : `+${rawPhone?.replace(/\s+/g, "")}`;
+    const formattedPhone = rawPhone?.startsWith("+")
+      ? rawPhone?.replace(/\s+/g, "")
+      : `+${rawPhone?.replace(/\s+/g, "")}`;
 
-      if (!contact?.phone || !isValidPhoneNumber(formattedPhone) || !contact?.name) {
-        errorContact.push({
-          name: contact?.name || "name is missing/invalid",
-          phone: contact?.phone ? `${contact?.phone}: Invalid phone number` : "phone is missing",
-        });
-      } else {
-        contact.phone = formattedPhone.slice(1); // Remove the '+' for storage
-        contacts.push(contact);
-      }
-    };
-
-    const finalizeProcessing = async () => {
-      try {
-        if (contacts.length === 0 && errorContact.length > 0) {
-          resolve({ data: errorContact, status: "error" });
-        } else if (contacts.length > 0) {
-          const res = await createContactsFromCsv(
-            contacts,
-            orgId,
-            tags,
-            updateExisting,
-            contactGroupId,
-          );
-          if (errorContact.length > 0) {
-            resolve({ data: errorContact, status: "error" });
-          } else {
-            resolve({ data: res, status: "success" });
-          }
-        } else {
-          throw new Error("No contacts found");
-        }
-      } catch (err) {
-        reject(err);
-      }
-    };
-
-    if (csvType.includes(mimetype)) {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        chunkSize: 1024 * 1024,
-        transformHeader: (header) => header?.trim()?.toLowerCase(),
-        chunk: async (results) => {
-          if (results?.data) {
-            await Promise.all(results.data.map(processContact));
-          }
-        },
-        complete: finalizeProcessing,
-        error: (error) => {
-          reject(error);
-        },
+    if (!contact?.phone || !isValidPhoneNumber(formattedPhone) || !contact?.name) {
+      errorContact.push({
+        name: contact?.name || "name is missing/invalid",
+        phone: contact?.phone ? `${contact?.phone}: Invalid phone number` : "phone is missing",
       });
     } else {
-      const workSheetsFromFile = xlsx.parse(file);
-      const headers =
-        workSheetsFromFile?.[0]?.data?.[0]?.map((header) => header?.toString().toLowerCase()) ?? [];
-      const headerIndices = headers.map((header, index) => ({
-        header: header?.trim()?.toLowerCase(),
-        index,
-      }));
-      const sheetData = workSheetsFromFile?.[0]?.data;
-      if (!sheetData || sheetData.length < 2) {
-        log.info("No data rows available");
-        return;
-      }
-
-      const headerCount = headerIndices.length;
-      const totalRows = sheetData.length;
-
-      // Iterate directly over the rows starting from index 1 (skipping header)
-      for (let i = 1; i < totalRows; i++) {
-        const row = sheetData[i];
-        if (!row || row.length === 0) continue;
-
-        const contact = {};
-
-        // Use a simple for loop for header indices to reduce overhead
-        for (let j = 0; j < headerCount; j++) {
-          const { header, index } = headerIndices[j];
-          const value = row[index];
-          contact[header] = value != null ? value.toString().trim() : "";
-        }
-        processContact(contact);
-      }
-      finalizeProcessing();
+      contact.phone = formattedPhone.slice(1); // Remove the '+' for storage
+      contacts.push(contact);
     }
-  });
+  };
+
+  let data: Record<string, unknown>[];
+
+  if (hasHeaderRow) {
+    ({ data } = await readSpreadsheetObjects(buffer, mimetype, {
+      transformHeader: (header) => header?.toString()?.trim()?.toLowerCase(),
+      transformValue: (value) => (value != null ? value.toString().trim() : ""),
+    }));
+  } else {
+    const rows = await readSpreadsheetRows(buffer, mimetype);
+    data = rowsToObjects(rows, noHeaderColumnOrder(tags));
+  }
+
+  if (data.length === 0) {
+    log.info("No data rows available");
+    return;
+  }
+  data.forEach(processContact);
+
+  if (contacts.length === 0 && errorContact.length > 0) {
+    return { data: errorContact, status: "error" };
+  } else if (contacts.length > 0) {
+    const res = await createContactsFromCsv(contacts, orgId, tags, updateExisting, contactGroupId);
+    if (errorContact.length > 0) {
+      return { data: errorContact, status: "error" };
+    }
+    return { data: res, status: "success" };
+  }
+  throw new Error("No contacts found");
 }
 
 export async function createContactsFromCsv(
