@@ -77,6 +77,7 @@ export interface downloadExcelResponseType {
   filterTeams: string[];
   campaignIds: string[];
   dbFlowId?: string;
+  format?: "xlsx" | "ods";
   columnFilters?: { id: string; value: unknown }[];
   ranges?: {
     startDate?: Date;
@@ -93,7 +94,7 @@ export async function downloadExcelResponse(data: downloadExcelResponseType) {
     type: response.headers["content-type"] as string,
   });
 
-  return downloadBlob(blob, `${data.title}.xlsx`);
+  return downloadBlob(blob, `${data.title}.${data.format || "xlsx"}`);
 }
 
 export async function getLargeTextResponseSummaryByAI({ surveyId, data }) {

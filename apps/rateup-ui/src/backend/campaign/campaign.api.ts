@@ -60,11 +60,21 @@ export const getCampaignFilterForFlows = async (surveyId: string) => {
   }[];
 };
 
-export const campaignResponseDownloadById = async ({ campaignId, selectedDripStage }) => {
+export const campaignResponseDownloadById = async ({
+  campaignId,
+  selectedDripStage,
+  format = "xlsx",
+}: {
+  campaignId: string;
+  selectedDripStage?: string;
+  format?: "xlsx" | "ods";
+}) => {
+  const params = new URLSearchParams({ format });
+  if (selectedDripStage && selectedDripStage !== "all") {
+    params.set("selectedDripStage", selectedDripStage);
+  }
   const response = await axiosClient.post(
-    selectedDripStage && selectedDripStage !== "all"
-      ? `/campaign/${campaignId}/download?selectedDripStage=${selectedDripStage}`
-      : `/campaign/${campaignId}/download`,
+    `/campaign/${campaignId}/download?${params.toString()}`,
     {},
     {
       timeout: 25000,
@@ -75,7 +85,7 @@ export const campaignResponseDownloadById = async ({ campaignId, selectedDripSta
     type: response.headers["content-type"] as string,
   });
 
-  return downloadBlob(blob, response?.headers?.filename ?? "file.xlsx");
+  return downloadBlob(blob, response?.headers?.filename ?? `file.${format}`);
 };
 
 export async function getCampaignStatsById(campaignId, selectedDripStage) {

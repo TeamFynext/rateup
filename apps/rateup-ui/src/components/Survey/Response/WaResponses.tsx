@@ -138,7 +138,7 @@ const WaResponses = ({ survey, defaultLanguage, subscription, questions }) => {
   const downloadExcelResponse = useDownloadExcelResponse();
 
   const handleExcelDownload = useCallback(
-    (columns) => {
+    (columns, format: "xlsx" | "ods" = "xlsx") => {
       downloadExcelResponse.mutate({
         defaultLanguage,
         surveyId,
@@ -148,6 +148,7 @@ const WaResponses = ({ survey, defaultLanguage, subscription, questions }) => {
         filterTeams,
         campaignIds: campaignIds,
         dbFlowId,
+        format,
         columnFilters: [],
         ranges: ranges?.[0],
       });

@@ -328,13 +328,13 @@ const ExportContacts = ({ table }) => {
     ?.filter((column) => column.getIsVisible() && !["select", "action"].includes(column.id))
     ?.map((col) => col.id);
 
-  const handleExport = (type: string) => {
+  const handleExport = (format: "xlsx" | "ods") => {
     if (!leafColumns?.length) {
       toast.error("Please select at least one field to export.");
       return;
     }
     exportMut.mutate({
-      type,
+      format,
       fields: leafColumns,
     });
   };
@@ -346,8 +346,10 @@ const ExportContacts = ({ table }) => {
         <span className="font-medium text-sm">Export</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => handleExport("csv")}>Download as CSV</DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleExport("xlsx")}>Download as Excel</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleExport("ods")}>
+          Download as OpenDocument (ODS)
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -366,6 +368,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
   };
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [updateExisting, setUpdateExisting] = useState(false);
+  const [hasHeaderRow, setHasHeaderRow] = useState(true);
   const importCSVContactMutation = useImportCSVContactMutation();
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState([]);
@@ -374,8 +377,8 @@ const ImportContactModal = ({ opened, setOpened }) => {
   useEffect(() => {
     if (csvfile) {
       const fileExtension = csvfile.name.split(".").pop()?.toLowerCase();
-      if (fileExtension !== "csv" && fileExtension !== "xlsx") {
-        setError(t("Please upload a valid CSV or XLSX file."));
+      if (!["csv", "xlsx", "ods"].includes(fileExtension)) {
+        setError(t("Please upload a valid CSV, XLSX, or ODS file."));
       } else {
         setError(null);
       }
@@ -388,6 +391,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
     }
     const formData = new FormData();
     formData.append("update", updateExisting ? "true" : "false");
+    formData.append("hasHeaderRow", hasHeaderRow ? "true" : "false");
     formData.append("file", csvfile);
     fields.forEach((item, index) => {
       formData.append(`tags[${index}]`, item.slug);
@@ -400,8 +404,11 @@ const ImportContactModal = ({ opened, setOpened }) => {
         toast.success("Contact imported successfully");
         setOpened(false);
       },
-      onError: (error) => {
-        toast.error(error?.message || "Importing failed");
+      onError: (error: any) => {
+        const isValidationError = error?.response?.data?.error === "VALIDATION_ERR";
+        if (!isValidationError) {
+          toast.error(error?.message || "Importing failed");
+        }
         setOpened(false);
       },
     });
@@ -410,6 +417,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
   function reset() {
     setCsvfile(null);
     setUpdateExisting(false);
+    setHasHeaderRow(true);
     setError(null);
   }
 
@@ -475,11 +483,22 @@ const ImportContactModal = ({ opened, setOpened }) => {
               {t("Update the existing data while importing")}
             </Label>
           </div>
+          <div className="flex items-center space-x-2 mt-4">
+            <Switch
+              id="has-header-row"
+              className="data-[state=unchecked]:bg-gray-400"
+              checked={hasHeaderRow}
+              onCheckedChange={setHasHeaderRow}
+            />
+            <Label htmlFor="has-header-row">
+              {t("First row contains column headers (name, phone, ...)")}
+            </Label>
+          </div>
           <div className="grid items-center gap-3 mt-4">
             <Input
               id="contact-csv"
               type="file"
-              accept=".csv,.xlsx"
+              accept=".csv,.xlsx,.ods"
               onChange={(e) => setCsvfile(e.target.files?.[0] || null)}
             />
           </div>
@@ -497,7 +516,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
         </div>
       </DialogContent>
       <ContactImportErrorModal
-        body={importCSVContactMutation?.error?.message}
+        body={(importCSVContactMutation?.error as any)?.response?.data}
         isError={importCSVContactMutation.isError}
       />
     </Dialog>
