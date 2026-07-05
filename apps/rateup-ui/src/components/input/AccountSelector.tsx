@@ -1,5 +1,3 @@
-import type { MultiSelectProps, SelectProps } from "@mantine/core";
-import { Card, Group, Skeleton, Text } from "@mantine/core";
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,10 +7,11 @@ import { MessagePlatform } from "@/types/enums.ts";
 
 import { Button } from "../ui/button.tsx";
 import { Label } from "../ui/label.tsx";
+import { MultiSelect } from "../ui/multi-select.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
-import { ContainedMultiSelect } from "./ContainedInput/ContainedInput.tsx";
+import { Skeleton } from "../ui/skeleton.tsx";
 
-interface CommonAccountSelectorProps {
+interface AccountSelectorProps {
   onChange?: any;
   usePhoneNumber?: boolean;
   withAllOption?: boolean;
@@ -25,11 +24,8 @@ interface CommonAccountSelectorProps {
   className?: string;
   filterIds?: string[];
   showClearButton?: boolean;
+  disabled?: boolean;
 }
-
-type AccountSelectorProps =
-  | (CommonAccountSelectorProps & SelectProps)
-  | (CommonAccountSelectorProps & MultiSelectProps);
 
 export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   const {
@@ -45,7 +41,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     className,
     filterIds,
     showClearButton = true,
-    ...restProps
+    disabled = false,
   } = props;
   const { data, isPending, isError } = useWaSettings();
 
@@ -101,32 +97,33 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   }, [defaultAccountOption, value, optional]);
 
   if (isError) {
-    return <Text>{translations("Something went wrong!")}</Text>;
+    return <p className="text-sm text-muted-foreground">{translations("Something went wrong!")}</p>;
   }
   if (isPending) {
     return (
-      <Card h={40} w={props?.w ?? 240} radius={"md"} withBorder p={0}>
-        <Group justify="space-between" w={"100%"} my={"auto"}>
-          <Skeleton w={restProps?.w ? 40 : 100} h={17} ml={"xs"} />
-          <Skeleton w={20} h={17} mr={"xs"} />
-        </Group>
-      </Card>
+      <div className="flex h-10 w-60 items-center justify-between rounded-md border px-3">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-4 w-5" />
+      </div>
     );
   }
   if (multiple) {
     return (
-      <ContainedMultiSelect
-        data={accountOptions}
-        defaultValue={
-          defaultAccountOption?.value ? [defaultAccountOption.value as string] : undefined
-        }
-        onChange={onChange}
-        value={value}
-        label={label ?? translations("Account")}
-        placeholder={translations("Select Account")}
-        nothingFoundMessage={translations("No account found!")}
-        required
-      />
+      <div className={className}>
+        {!hideLabel && (
+          <Label className="text-xs text-muted-foreground">
+            {label || translations("Account")}
+          </Label>
+        )}
+        <MultiSelect
+          options={accountOptions}
+          value={value ?? []}
+          onValueChange={onChange}
+          placeholder={translations("Select Account")}
+          emptyIndicator={translations("No account found!")}
+          disabled={disabled}
+        />
+      </div>
     );
   }
   return (
@@ -154,6 +151,8 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
         defaultValue={optional ? undefined : defaultAccountOption?.value}
         onValueChange={onChange}
         required={!optional}
+        disabled={disabled}
+        items={accountOptions}
       >
         <SelectTrigger
           className={`!text-xs text-muted-foreground cursor-pointer hover:bg-accent h-9 ${className}`}

@@ -99,7 +99,7 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
   };
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="z-[100] max-w-xl rounded-xl border-0 p-0 overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.42)] max-h-[92vh]">
+      <DialogContent className="max-w-xl rounded-xl border-0 p-0 overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.42)] max-h-[92vh]">
         <div className="overflow-y-auto max-h-[92vh] px-7 pb-6 pt-7">
           <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#072554]">
             <RateupStar className="h-8 w-8" />

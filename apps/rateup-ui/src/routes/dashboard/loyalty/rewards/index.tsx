@@ -39,7 +39,6 @@ import InfoButton from "@/components/Button/InfoButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { RewardCard } from "@/components/LoyaltyComponents/RewardCard.tsx";
 import { RewardFormContainer } from "@/components/LoyaltyComponents/RewardFormContainer.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
@@ -52,6 +51,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { LoyaltyRewardStatus, TemplateType } from "@/types/enums.ts";
 import { docsPath } from "@/utils/constants.ts";
 
@@ -156,11 +156,7 @@ function RewardsPage() {
 
   const [rewardsViewMode, setRewardsViewMode] = useState("list");
   const [selectedRewardCategory, setSelectedRewardCategory] = useState("point-rewards");
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [pendingDeleteReward, setPendingDeleteReward] = useState<{
-    id: string;
-    name?: string | null;
-  } | null>(null);
+  const confirm = useConfirm();
 
   // Form states
   const [rewardFormCategory, setRewardFormCategory] = useState("point-rewards");
@@ -333,22 +329,17 @@ function RewardsPage() {
     }
   };
 
-  const handleDeleteReward = (rewardId: string, rewardName?: string | null) => {
-    setPendingDeleteReward({ id: rewardId, name: rewardName });
-    setDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDeleteReward = () => {
-    if (!pendingDeleteReward?.id) {
-      return;
-    }
-
-    deleteRewardMutation.mutate(pendingDeleteReward.id, {
-      onSettled: () => {
-        setDeleteDialogOpen(false);
-        setPendingDeleteReward(null);
-      },
+  const handleDeleteReward = async (rewardId: string, _rewardName?: string | null) => {
+    const shouldDelete = await confirm({
+      title: translations("Delete Reward?"),
+      description: translations("Are you sure to delete this reward?"),
+      confirmText: translations("Delete"),
+      cancelText: translations("cancel"),
     });
+
+    if (!shouldDelete) return;
+
+    deleteRewardMutation.mutate(rewardId);
   };
 
   const onSubmitPointReward = (data: z.infer<typeof pointRewardSchema>) => {
@@ -813,6 +804,10 @@ function RewardsPage() {
                       </p>
                       <Select
                         value={referralBonusType}
+                        items={[
+                          { value: "points", label: "Points" },
+                          { value: "gift", label: "Free Gift" },
+                        ]}
                         onValueChange={(v) => setReferralBonusType(v as "points" | "gift")}
                       >
                         <SelectTrigger className="h-9">
@@ -848,7 +843,11 @@ function RewardsPage() {
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                           Gift
                         </p>
-                        <Select value={referralRewardId ?? ""} onValueChange={setReferralRewardId}>
+                        <Select
+                          value={referralRewardId ?? ""}
+                          items={freeGiftsList.map((g) => ({ value: g.id, label: g.name }))}
+                          onValueChange={setReferralRewardId}
+                        >
                           <SelectTrigger className="h-9">
                             <SelectValue placeholder="Select a gift" />
                           </SelectTrigger>
@@ -896,6 +895,10 @@ function RewardsPage() {
                       </p>
                       <Select
                         value={refereeBonusType}
+                        items={[
+                          { value: "points", label: "Points" },
+                          { value: "gift", label: "Free Gift" },
+                        ]}
                         onValueChange={(v) => setRefereeBonusType(v as "points" | "gift")}
                       >
                         <SelectTrigger className="h-9">
@@ -931,7 +934,11 @@ function RewardsPage() {
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                           Gift
                         </p>
-                        <Select value={refereeRewardId ?? ""} onValueChange={setRefereeRewardId}>
+                        <Select
+                          value={refereeRewardId ?? ""}
+                          items={freeGiftsList.map((g) => ({ value: g.id, label: g.name }))}
+                          onValueChange={setRefereeRewardId}
+                        >
                           <SelectTrigger className="h-9">
                             <SelectValue placeholder="Select a gift" />
                           </SelectTrigger>
@@ -1030,23 +1037,6 @@ function RewardsPage() {
           loyaltyTemplates={loyaltyTemplates}
         />
       )}
-      <ConfirmationModal
-        opened={deleteDialogOpen}
-        onClose={() => {
-          if (deleteRewardMutation.isPending) {
-            return;
-          }
-          setDeleteDialogOpen(false);
-        }}
-        forDeleteFunctionality
-        confirmLabel={translations("Delete")}
-        headerTitle={translations("Delete Reward?")}
-        onConfirm={() => {
-          handleConfirmDeleteReward();
-        }}
-        headerLabel={translations("Are you sure to delete this reward?")}
-        closeLabel={translations("cancel")}
-      />
     </div>
   );
 }

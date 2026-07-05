@@ -112,16 +112,15 @@ const ChatselectPanelHeader = ({
           </div>
         </div>
       )}
-
       <header className="flex items-center gap-2 p-2.5">
         <div className="flex items-center gap-1 rounded-lg bg-slate-100/50 p-1 dark:bg-slate-900">
           <Dialog>
             <CustomTooltip
               trigger={
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="ghost" className={actionButtonClass}>
-                    <Users className="h-3.5 w-3.5" />
-                  </Button>
+                <DialogTrigger
+                  render={<Button size="sm" variant="ghost" className={actionButtonClass} />}
+                >
+                  <Users className="h-3.5 w-3.5" />
                 </DialogTrigger>
               }
               content={<p>New Contact</p>}
@@ -192,13 +191,19 @@ const ChatselectPanelHeader = ({
           <Popover>
             <CustomTooltip
               trigger={
-                <PopoverTrigger asChild>
-                  <Button size="sm" variant="ghost" className={cn(actionButtonClass, "relative")}>
-                    <Filter className="h-3.5 w-3.5" />
-                    <div className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] text-white">
-                      {filterCount}
-                    </div>
-                  </Button>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className={cn(actionButtonClass, "relative")}
+                    />
+                  }
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  <div className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] text-white">
+                    {filterCount}
+                  </div>
                 </PopoverTrigger>
               }
               content={<p>Advanced Filters</p>}
@@ -211,10 +216,10 @@ const ChatselectPanelHeader = ({
           <Popover>
             <CustomTooltip
               trigger={
-                <PopoverTrigger asChild>
-                  <Button size="sm" variant="ghost" className={actionButtonClass}>
-                    <Download className="h-3.5 w-3.5" />
-                  </Button>
+                <PopoverTrigger
+                  render={<Button size="sm" variant="ghost" className={actionButtonClass} />}
+                >
+                  <Download className="h-3.5 w-3.5" />
                 </PopoverTrigger>
               }
               content={<p>Download Chats</p>}
@@ -277,7 +282,7 @@ const SortMenu = ({
   selectTriggerClassName?: string;
 }) => {
   return (
-    <Select onValueChange={onChange} value={value} defaultValue={defaultValue}>
+    <Select onValueChange={onChange} value={value} defaultValue={defaultValue} items={data}>
       <SelectTrigger className={selectTriggerClassName}>
         <SelectValue placeholder={customSelectTrigger ?? <Clock className="w-3 h-3 mr-1" />} />
       </SelectTrigger>

@@ -1,7 +1,0 @@
-.chat-select {
-  cursor: pointer;
-}
-
-.chat-select:hover {
-  background-color: var(--grey-color-5);
-}

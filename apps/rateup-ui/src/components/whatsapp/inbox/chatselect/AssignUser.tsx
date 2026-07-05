@@ -130,6 +130,7 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
               setSelectedTeam(val);
               setSelectedUser("");
             }}
+            items={teams.map((team) => ({ value: team.id, label: team.name }))}
           >
             <SelectTrigger className="h-10 w-full">
               <SelectValue placeholder={t("Select Team")} />
@@ -152,7 +153,15 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
         {membersLoading ? (
           <Skeleton className="h-10 w-full rounded-md" />
         ) : (
-          <Select value={selectedUser} onValueChange={setSelectedUser} disabled={!selectedTeam}>
+          <Select
+            value={selectedUser}
+            onValueChange={setSelectedUser}
+            disabled={!selectedTeam}
+            items={teamMembersFiltered.map((staff: any) => ({
+              value: staff.id,
+              label: staff.name,
+            }))}
+          >
             <SelectTrigger className="h-10 w-full">
               <SelectValue placeholder={t("Select team member")} />
             </SelectTrigger>

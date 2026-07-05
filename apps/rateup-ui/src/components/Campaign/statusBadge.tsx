@@ -20,9 +20,9 @@ export function StatusBadge({ status, errorMessage }: Readonly<StatusBadgeProps>
 
   if (status === CampaignParticipantStatus.FAILED && errorMessage) {
     return (
-      <HoverCard openDelay={200}>
-        <HoverCardTrigger asChild>
-          <span className="cursor-default">{badge}</span>
+      <HoverCard>
+        <HoverCardTrigger delay={200} render={<span className="cursor-default" />}>
+          {badge}
         </HoverCardTrigger>
         <HoverCardContent className="w-64">
           <div className="flex items-center gap-1 mb-1">

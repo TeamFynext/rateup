@@ -15,7 +15,6 @@ import {
 } from "@/backend/whatsapp/catalog/productSet.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
@@ -30,6 +29,7 @@ import {
 import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { ImportFromShopifyModal } from "@/components/whatsapp/catalog/products/ImportFromShopifyModal.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { MetaLoginAssets, WaConfigType } from "@/types/enums.ts";
 
 const CatalogSettings = ({ catalogData }) => {
@@ -37,9 +37,7 @@ const CatalogSettings = ({ catalogData }) => {
   const update = useUpateCatalog(catalogData?.catalogId);
   const disconnect = useDisconnectCatalogFromWa(catalogData?.catalogId);
   const deleteCatalog = useDeleteWaCatalog();
-  const [opened, { open, close }] = useDisclosure(false);
-  const [openedConnect, { open: openConnect, close: closeConnect }] = useDisclosure(false);
-  const [openedDelete, { open: openDelete, close: closeDelete }] = useDisclosure(false);
+  const confirm = useConfirm();
   const [wabaId, setWabaId] = useState("");
   const [connectMode, setConnectMode] = useState<"manual" | "automatic">("automatic");
   const { data: waSettings, isLoading } = useWaSettings();
@@ -68,11 +66,21 @@ const CatalogSettings = ({ catalogData }) => {
       }
     }
   }, [catalogData, waSettings]);
-  function handleDisconnect() {
+  async function handleDisconnect() {
     if (!wabaId) {
       toast.error("Try again!");
       return;
     }
+
+    const shouldDisconnect = await confirm({
+      title: "Disconnect Whatsapp Business Account",
+      description: "Are you sure you want to disconnect catalog from whatsapp",
+      warning: "The catalog in automation on the connected accont won't work.",
+      confirmText: "Disconnect",
+    });
+
+    if (!shouldDisconnect) return;
+
     const settings = waSettings.find((s) =>
       s.wabaId === wabaId && s.type === WaConfigType.Automated
         ? s.assets.includes(MetaLoginAssets.CATALOGS)
@@ -83,20 +91,37 @@ const CatalogSettings = ({ catalogData }) => {
       {
         onSuccess: () => {
           setWabaId("");
-          close();
         },
       },
     );
   }
-  function handleConnect() {
-    update.mutate(
-      { wabaId, syncWithMeta: connectMode === "automatic" },
-      {
-        onSuccess: () => {
-          closeConnect();
-        },
+  async function handleConnect(selectedWabaId: string) {
+    const shouldConnect = await confirm({
+      title: "Connect Whatsapp Business Account",
+      description: `Are you sure you want to connect this catalog to WhatsApp Business Account (WABA ID: ${selectedWabaId})? Mode: ${connectMode === "automatic" ? "Normal Account — will also update in Meta" : "SMB (Coexistence Account) — DB only, no Meta update"}`,
+      confirmText: "Connect",
+    });
+
+    if (!shouldConnect) return;
+
+    update.mutate({ wabaId: selectedWabaId, syncWithMeta: connectMode === "automatic" });
+  }
+  async function handleDeleteCatalog() {
+    const shouldDelete = await confirm({
+      title: "Delete Catalog",
+      description: `Are you sure you want to permanently delete "${catalogData?.name}"?`,
+      warning:
+        "All products, orders, product sets, and automation links tied to this catalog will be permanently deleted.",
+      confirmText: "Delete Catalog",
+    });
+
+    if (!shouldDelete) return;
+
+    deleteCatalog.mutate(catalogData?.catalogId, {
+      onSuccess: () => {
+        navigate({ to: "/dashboard/whatsapp/catalog" });
       },
-    );
+    });
   }
   if (isLoading) return <RateupLoader />;
   return (
@@ -114,9 +139,10 @@ const CatalogSettings = ({ catalogData }) => {
           </div>
           <Select
             value={wabaId}
+            items={wabaIds.map((id) => ({ value: id, label: id }))}
             onValueChange={(value) => {
               setWabaId(value);
-              openConnect();
+              handleConnect(value);
             }}
           >
             <SelectTrigger>
@@ -131,7 +157,7 @@ const CatalogSettings = ({ catalogData }) => {
             </SelectContent>
           </Select>
         </Field>
-        <Button variant="destructive" onClick={open} disabled={disconnect.isPending}>
+        <Button variant="destructive" onClick={handleDisconnect} disabled={disconnect.isPending}>
           <IconLogin2 size={16} />
           Disconnect WhatsApp Business Account
         </Button>
@@ -173,29 +199,6 @@ const CatalogSettings = ({ catalogData }) => {
         </Field>
       )}
 
-      <ConfirmationModal
-        forDeleteFunctionality
-        deleteQuotion={"The catalog in automation on the connected accont won't work."}
-        opened={opened}
-        onClose={close}
-        onConfirm={handleDisconnect}
-        confirmLabel={"Disconnect"}
-        headerLabel={"Are you sure you want to disconnect catalog from whatsapp"}
-        headerTitle={"Disconnect Whatsapp Business Account"}
-        loading={disconnect.isPending}
-        closeAfterOnConfirm={false}
-      />
-      <ConfirmationModal
-        opened={openedConnect}
-        onClose={closeConnect}
-        onConfirm={handleConnect}
-        confirmLabel={"Connect"}
-        headerLabel={`Are you sure you want to connect this catalog to WhatsApp Business Account (WABA ID: ${wabaId})? Mode: ${connectMode === "automatic" ? "Normal Account — will also update in Meta" : "SMB (Coexistence Account) — DB only, no Meta update"}`}
-        headerTitle={"Connect Whatsapp Business Account"}
-        loading={update.isPending}
-        closeAfterOnConfirm={false}
-      />
-
       <Separator className="mt-4" />
       <ProductManagementSection catalogData={catalogData} />
 
@@ -215,33 +218,13 @@ const CatalogSettings = ({ catalogData }) => {
         <Button
           variant="destructive"
           className="w-fit"
-          onClick={openDelete}
+          onClick={handleDeleteCatalog}
           disabled={deleteCatalog.isPending}
         >
           <IconTrash size={16} />
           Delete Catalog
         </Button>
       </div>
-
-      <ConfirmationModal
-        forDeleteFunctionality
-        deleteQuotion="All products, orders, product sets, and automation links tied to this catalog will be permanently deleted."
-        opened={openedDelete}
-        onClose={closeDelete}
-        onConfirm={() =>
-          deleteCatalog.mutate(catalogData?.catalogId, {
-            onSuccess: () => {
-              closeDelete();
-              navigate({ to: "/dashboard/whatsapp/catalog" });
-            },
-          })
-        }
-        confirmLabel="Delete Catalog"
-        headerLabel={`Are you sure you want to permanently delete "${catalogData?.name}"?`}
-        headerTitle="Delete Catalog"
-        loading={deleteCatalog.isPending}
-        closeAfterOnConfirm={false}
-      />
     </Card>
   );
 };

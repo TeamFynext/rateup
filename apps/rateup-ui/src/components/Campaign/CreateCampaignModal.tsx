@@ -10,7 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -32,15 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import {
@@ -430,400 +422,415 @@ const CreateCampaignModal = ({
             </TabsList>
           </div>
 
-          <Form {...form}>
-            <form
-              id="create-campaign-form"
-              onSubmit={form.handleSubmit(handleSubmit)}
-              className="flex flex-col flex-1 min-h-0"
-            >
-              {/* Scrollable Content Area */}
-              <div className="flex-1 overflow-y-auto px-6 pb-4">
-                <TabsContent value="basic" className="space-y-4 mt-4 m-0">
-                  <div className="space-y-4">
-                    {!isEdit && (
-                      <FormField
-                        control={form.control}
-                        name="teamId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Team *")}</FormLabel>
-                            <FormControl>
-                              <TeamSelector {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-
-                    <FormField
+          <form
+            id="create-campaign-form"
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex flex-col flex-1 min-h-0"
+          >
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto px-6 pb-4">
+              <TabsContent value="basic" className="space-y-4 mt-4 m-0">
+                <div className="space-y-4">
+                  {!isEdit && (
+                    <Controller
                       control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("Campaign Name *")}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={t("e.g., Summer Sale 2025")} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      name="teamId"
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name}>{t("Team *")}</FieldLabel>
+                          <TeamSelector {...field} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
                       )}
                     />
+                  )}
 
-                    <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-                      <CardContent className="pt-4">
-                        <FormField
-                          control={form.control}
-                          name="useUserConsent"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-start justify-between space-y-0">
-                              <div className="space-y-1 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <IconCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                  <FormLabel className="font-medium">{t("User Consent")}</FormLabel>
-                                </div>
-                                <FormDescription className="text-xs">
-                                  {field.value
-                                    ? t("Only send messages to contacts who have given consent")
-                                    : t(
-                                        "Send messages to all contacts regardless of consent status",
-                                      )}
-                                </FormDescription>
-                                <p className="text-xs text-blue-600 dark:text-blue-400">
-                                  {t("Recommended: Keep enabled for compliance")}
-                                </p>
-                              </div>
-                              <FormControl>
-                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                              </FormControl>
-                            </FormItem>
-                          )}
+                  <Controller
+                    control={form.control}
+                    name="name"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>{t("Campaign Name *")}</FieldLabel>
+                        <Input
+                          id={field.name}
+                          placeholder={t("e.g., Summer Sale 2025")}
+                          aria-invalid={fieldState.invalid}
+                          {...field}
                         />
-                      </CardContent>
-                    </Card>
-
-                    {campaignType === CampaignType.DRIP && (
-                      <Alert>
-                        <IconInfoCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          {t(
-                            "Drip campaigns allow you to send a series of messages to contacts over time. Configure your message stages in the Templates tab.",
-                          )}
-                        </AlertDescription>
-                      </Alert>
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
                     )}
-                  </div>
-                </TabsContent>
+                  />
 
-                <TabsContent value="templates" className="mt-4 m-0">
-                  {watchedType === CampaignType.DRIP ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">
-                          {t("Configure your drip campaign stages ({count} stages)", {
-                            count: dripStages.length?.toString(),
-                          })}
-                        </p>
-                        <Button type="button" variant="outline" size="sm" onClick={addDripStage}>
-                          <IconPlus className="mr-2 h-4 w-4" />
-                          {t("Add Stage")}
-                        </Button>
-                      </div>
+                  <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+                    <CardContent className="pt-4">
+                      <Controller
+                        control={form.control}
+                        name="useUserConsent"
+                        render={({ field, fieldState }) => (
+                          <Field
+                            orientation="horizontal"
+                            className="justify-between"
+                            data-invalid={fieldState.invalid}
+                          >
+                            <div className="space-y-1 flex-1">
+                              <div className="flex items-center gap-2">
+                                <IconCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                <FieldLabel htmlFor={field.name} className="font-medium">
+                                  {t("User Consent")}
+                                </FieldLabel>
+                              </div>
+                              <FieldDescription className="text-xs">
+                                {field.value
+                                  ? t("Only send messages to contacts who have given consent")
+                                  : t("Send messages to all contacts regardless of consent status")}
+                              </FieldDescription>
+                              <p className="text-xs text-blue-600 dark:text-blue-400">
+                                {t("Recommended: Keep enabled for compliance")}
+                              </p>
+                            </div>
+                            <Switch
+                              id={field.name}
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </Field>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
 
-                      <div className="space-y-3">
-                        {dripStages.map((stage, idx) => (
-                          <Card key={idx} className="bg-muted/50">
-                            <CardContent className="p-4">
-                              <div className="mb-3 flex items-center justify-between">
+                  {campaignType === CampaignType.DRIP && (
+                    <Alert>
+                      <IconInfoCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        {t(
+                          "Drip campaigns allow you to send a series of messages to contacts over time. Configure your message stages in the Templates tab.",
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="templates" className="mt-4 m-0">
+                {watchedType === CampaignType.DRIP ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        {t("Configure your drip campaign stages ({count} stages)", {
+                          count: dripStages.length?.toString(),
+                        })}
+                      </p>
+                      <Button type="button" variant="outline" size="sm" onClick={addDripStage}>
+                        <IconPlus className="mr-2 h-4 w-4" />
+                        {t("Add Stage")}
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {dripStages.map((stage, idx) => (
+                        <Card key={idx} className="bg-muted/50">
+                          <CardContent className="p-4">
+                            <div className="mb-3 flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-7 w-7 bg-violet-100 dark:bg-violet-900">
+                                  <AvatarFallback className="text-xs text-violet-600 dark:text-violet-400">
+                                    {idx + 1}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm font-medium">
+                                  {t("Stage {number}", {
+                                    number: (idx + 1).toString(),
+                                  })}
+                                </span>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => removeDripStage(idx)}
+                                disabled={dripStages.length === 1}
+                              >
+                                <IconTrash className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+
+                            <div
+                              className={`grid gap-3 ${
+                                stage.delayUnit === "minutes" || stage.delayUnit === "hours"
+                                  ? "grid-cols-3"
+                                  : "grid-cols-2"
+                              }`}
+                            >
+                              <div className="space-y-2 col-span-full">
+                                <Label className="text-xs">{t("Choose Template *")}</Label>
                                 <div className="flex items-center gap-2">
-                                  <Avatar className="h-7 w-7 bg-violet-100 dark:bg-violet-900">
-                                    <AvatarFallback className="text-xs text-violet-600 dark:text-violet-400">
-                                      {idx + 1}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="text-sm font-medium">
-                                    {t("Stage {number}", {
-                                      number: (idx + 1).toString(),
-                                    })}
-                                  </span>
+                                  <Select
+                                    value={stage.templateId}
+                                    onValueChange={(val) => updateDripStage(idx, "templateId", val)}
+                                    disabled={templatesData.length === 0}
+                                    items={templatesData}
+                                  >
+                                    <SelectTrigger
+                                      className={`h-9 ${!stage.templateId ? "border-destructive" : ""}`}
+                                    >
+                                      <SelectValue
+                                        placeholder={
+                                          templatesData.length === 0
+                                            ? t("No templates available")
+                                            : t("Select template")
+                                        }
+                                      />
+                                    </SelectTrigger>
+
+                                    <SelectContent>
+                                      {templatesData.map((template) => (
+                                        <SelectItem key={template.value} value={template.value}>
+                                          {template.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <div className="flex items-center gap-2">
+                                    Or
+                                    <Button
+                                      onClick={() =>
+                                        navigate({
+                                          to: "/dashboard/whatsapp/templates/create",
+                                        })
+                                      }
+                                    >
+                                      Create Template
+                                    </Button>
+                                  </div>
                                 </div>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  onClick={() => removeDripStage(idx)}
-                                  disabled={dripStages.length === 1}
-                                >
-                                  <IconTrash className="h-4 w-4 text-destructive" />
-                                </Button>
+                                {!stage.templateId && (
+                                  <p className="text-xs text-destructive">
+                                    {t("Template is required")}
+                                  </p>
+                                )}
                               </div>
 
-                              <div
-                                className={`grid gap-3 ${
-                                  stage.delayUnit === "minutes" || stage.delayUnit === "hours"
-                                    ? "grid-cols-3"
-                                    : "grid-cols-2"
-                                }`}
-                              >
-                                <div className="space-y-2 col-span-full">
-                                  <Label className="text-xs">{t("Choose Template *")}</Label>
-                                  <div className="flex items-center gap-2">
-                                    <Select
-                                      value={stage.templateId}
-                                      onValueChange={(val) =>
-                                        updateDripStage(idx, "templateId", val)
-                                      }
-                                      disabled={templatesData.length === 0}
-                                    >
-                                      <SelectTrigger
-                                        className={`h-9 ${!stage.templateId ? "border-destructive" : ""}`}
-                                      >
-                                        <SelectValue
-                                          placeholder={
-                                            templatesData.length === 0
-                                              ? t("No templates available")
-                                              : t("Select template")
-                                          }
-                                        />
-                                      </SelectTrigger>
-
-                                      <SelectContent>
-                                        {templatesData.map((template) => (
-                                          <SelectItem key={template.value} value={template.value}>
-                                            {template.label}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <div className="flex items-center gap-2">
-                                      Or
-                                      <Button
-                                        onClick={() =>
-                                          navigate({
-                                            to: "/dashboard/whatsapp/templates/create",
-                                          })
-                                        }
-                                      >
-                                        Create Template
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  {!stage.templateId && (
-                                    <p className="text-xs text-destructive">
-                                      {t("Template is required")}
-                                    </p>
-                                  )}
+                              <div className="space-y-2">
+                                <Label className="text-xs">{t("Delay")}</Label>
+                                <div className="relative">
+                                  <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
+                                  <Input
+                                    type="number"
+                                    min={1}
+                                    step={1}
+                                    value={stage.delay}
+                                    onChange={(e) =>
+                                      updateDripStage(idx, "delay", parseInt(e.target.value) || 1)
+                                    }
+                                    className="h-9 pl-8"
+                                  />
                                 </div>
+                              </div>
 
+                              <div className="space-y-2">
+                                <Label className="text-xs">{t("Unit")}</Label>
+                                <Select
+                                  value={stage.delayUnit}
+                                  onValueChange={(val) => updateDripStage(idx, "delayUnit", val)}
+                                  items={[
+                                    { value: "minutes", label: t("Minutes") },
+                                    { value: "hours", label: t("Hours") },
+                                    { value: "days", label: t("Days") },
+                                    { value: "weeks", label: t("Weeks") },
+                                    { value: "months", label: t("Months") },
+                                  ]}
+                                >
+                                  <SelectTrigger className="h-9">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="minutes">{t("Minutes")}</SelectItem>
+                                    <SelectItem value="hours">{t("Hours")}</SelectItem>
+                                    <SelectItem value="days">{t("Days")}</SelectItem>
+                                    <SelectItem value="weeks">{t("Weeks")}</SelectItem>
+                                    <SelectItem value="months">{t("Months")}</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {(stage.delayUnit === "days" ||
+                                stage.delayUnit === "weeks" ||
+                                stage.delayUnit === "months") && (
                                 <div className="space-y-2">
-                                  <Label className="text-xs">{t("Delay")}</Label>
+                                  <Label className="text-xs">{t("Send at time")}</Label>
                                   <div className="relative">
                                     <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                                     <Input
-                                      type="number"
-                                      min={1}
-                                      step={1}
-                                      value={stage.delay}
+                                      type="time"
+                                      value={stage.sendAtTime}
                                       onChange={(e) =>
-                                        updateDripStage(idx, "delay", parseInt(e.target.value) || 1)
+                                        updateDripStage(idx, "sendAtTime", e.target.value)
                                       }
                                       className="h-9 pl-8"
                                     />
                                   </div>
                                 </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-sm py-2">{t("Choose an approved template or create one")}</p>
 
-                                <div className="space-y-2">
-                                  <Label className="text-xs">{t("Unit")}</Label>
+                    <Controller
+                      control={form.control}
+                      name="waTemplateId"
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <div className="flex items-center gap-2">
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              disabled={templatesData.length === 0}
+                              items={templatesData}
+                            >
+                              <SelectTrigger aria-invalid={fieldState.invalid}>
+                                <SelectValue
+                                  placeholder={
+                                    templatesData.length === 0
+                                      ? t("No templates available")
+                                      : t("Select template")
+                                  }
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {templatesData.map((template) => (
+                                  <SelectItem key={template.value} value={template.value}>
+                                    {template.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <div className="flex items-center gap-2">
+                              Or
+                              <Button
+                                onClick={() =>
+                                  navigate({
+                                    to: "/dashboard/whatsapp/templates/create",
+                                  })
+                                }
+                              >
+                                Create Template
+                              </Button>
+                            </div>
+                          </div>
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+
+                    {extractedDynamicVariables.length > 0 && (
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="text-sm font-medium">{t("Dynamic Variables")}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            {t("Map dynamic content to your message variables")}
+                          </p>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {extractedDynamicVariables.map((_, i) => (
+                            <Controller
+                              key={i}
+                              control={form.control}
+                              name={`dynamicTags.${i}`}
+                              render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                  <FieldLabel htmlFor={field.name} className="text-xs">
+                                    Variable {i + 1}
+                                  </FieldLabel>
                                   <Select
-                                    value={stage.delayUnit}
-                                    onValueChange={(val) => updateDripStage(idx, "delayUnit", val)}
+                                    onValueChange={(val) => {
+                                      field.onChange(val);
+                                      setTimeout(() => {
+                                        form.trigger();
+                                      }, 0);
+                                    }}
+                                    value={field.value || ""}
+                                    items={[
+                                      { value: "name", label: t("Name") },
+                                      ...(customFields?.map((customField) => ({
+                                        value: customField.slug,
+                                        label: customField.name,
+                                      })) ?? []),
+                                    ]}
                                   >
-                                    <SelectTrigger className="h-9">
-                                      <SelectValue />
+                                    <SelectTrigger
+                                      className="h-9"
+                                      aria-invalid={fieldState.invalid}
+                                    >
+                                      <SelectValue placeholder={t("Select dynamic tag")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="minutes">{t("Minutes")}</SelectItem>
-                                      <SelectItem value="hours">{t("Hours")}</SelectItem>
-                                      <SelectItem value="days">{t("Days")}</SelectItem>
-                                      <SelectItem value="weeks">{t("Weeks")}</SelectItem>
-                                      <SelectItem value="months">{t("Months")}</SelectItem>
+                                      <SelectItem value="name">{t("Name")}</SelectItem>
+                                      {customFields?.map((customField) => (
+                                        <SelectItem key={customField.slug} value={customField.slug}>
+                                          {customField.name}
+                                        </SelectItem>
+                                      ))}
                                     </SelectContent>
                                   </Select>
-                                </div>
-
-                                {(stage.delayUnit === "days" ||
-                                  stage.delayUnit === "weeks" ||
-                                  stage.delayUnit === "months") && (
-                                  <div className="space-y-2">
-                                    <Label className="text-xs">{t("Send at time")}</Label>
-                                    <div className="relative">
-                                      <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
-                                      <Input
-                                        type="time"
-                                        value={stage.sendAtTime}
-                                        onChange={(e) =>
-                                          updateDripStage(idx, "sendAtTime", e.target.value)
-                                        }
-                                        className="h-9 pl-8"
-                                      />
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <p className="text-sm py-2">
-                        {t("Choose an approved template or create one")}
-                      </p>
-
-                      <FormField
-                        control={form.control}
-                        name="waTemplateId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="flex items-center gap-2">
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                                disabled={templatesData.length === 0}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue
-                                      placeholder={
-                                        templatesData.length === 0
-                                          ? t("No templates available")
-                                          : t("Select template")
-                                      }
-                                    />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {templatesData.map((template) => (
-                                    <SelectItem key={template.value} value={template.value}>
-                                      {template.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <div className="flex items-center gap-2">
-                                Or
-                                <Button
-                                  onClick={() =>
-                                    navigate({
-                                      to: "/dashboard/whatsapp/templates/create",
-                                    })
-                                  }
-                                >
-                                  Create Template
-                                </Button>
-                              </div>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {extractedDynamicVariables.length > 0 && (
-                        <div className="space-y-3">
-                          <div>
-                            <h4 className="text-sm font-medium">{t("Dynamic Variables")}</h4>
-                            <p className="text-xs text-muted-foreground">
-                              {t("Map dynamic content to your message variables")}
-                            </p>
-                          </div>
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            {extractedDynamicVariables.map((_, i) => (
-                              <FormField
-                                key={i}
-                                control={form.control}
-                                name={`dynamicTags.${i}`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-xs">Variable {i + 1}</FormLabel>
-                                    <Select
-                                      onValueChange={(val) => {
-                                        field.onChange(val);
-                                        setTimeout(() => {
-                                          form.trigger();
-                                        }, 0);
-                                      }}
-                                      value={field.value || ""}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger className="h-9">
-                                          <SelectValue placeholder={t("Select dynamic tag")} />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        <SelectItem value="name">{t("Name")}</SelectItem>
-                                        {customFields?.map((customField) => (
-                                          <SelectItem
-                                            key={customField.slug}
-                                            value={customField.slug}
-                                          >
-                                            {customField.name}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            ))}
-                          </div>
+                                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                                </Field>
+                              )}
+                            />
+                          ))}
                         </div>
-                      )}
-                    </div>
-                  )}
-                </TabsContent>
-              </div>
-
-              {/* Footer - Fixed at bottom */}
-              <DialogFooter className="px-6 py-4 border-t bg-background">
-                <Button type="button" variant="outline" onClick={close}>
-                  {t("Cancel")}
-                </Button>
-
-                {activeTab === "basic" ? (
-                  <Button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNext();
-                    }}
-                  >
-                    {t("Next")}
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    form="create-campaign-form"
-                    disabled={
-                      isEdit
-                        ? !isFormValid || updateCampaignMutation.isPending
-                        : !isFormValid || createCampaignMutation.isPending
-                    }
-                  >
-                    {isEdit
-                      ? updateCampaignMutation.isPending
-                        ? t("Updating...")
-                        : t("Update Campaign")
-                      : createCampaignMutation.isPending
-                        ? t("Creating...")
-                        : t("Create Campaign")}
-                  </Button>
+                      </div>
+                    )}
+                  </div>
                 )}
-              </DialogFooter>
-            </form>
-          </Form>
+              </TabsContent>
+            </div>
+
+            {/* Footer - Fixed at bottom */}
+            <DialogFooter className="px-6 py-4 border-t bg-background">
+              <Button type="button" variant="outline" onClick={close}>
+                {t("Cancel")}
+              </Button>
+
+              {activeTab === "basic" ? (
+                <Button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNext();
+                  }}
+                >
+                  {t("Next")}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  form="create-campaign-form"
+                  disabled={
+                    isEdit
+                      ? !isFormValid || updateCampaignMutation.isPending
+                      : !isFormValid || createCampaignMutation.isPending
+                  }
+                >
+                  {isEdit
+                    ? updateCampaignMutation.isPending
+                      ? t("Updating...")
+                      : t("Update Campaign")
+                    : createCampaignMutation.isPending
+                      ? t("Creating...")
+                      : t("Create Campaign")}
+                </Button>
+              )}
+            </DialogFooter>
+          </form>
         </Tabs>
       </DialogContent>
     </Dialog>

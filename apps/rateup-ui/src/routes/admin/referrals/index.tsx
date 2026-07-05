@@ -76,8 +76,8 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 justify-end">
-            <DialogClose asChild>
-              <Button variant="outline">{translations("Cancel")}</Button>
+            <DialogClose render={<Button variant="outline" />}>
+              {translations("Cancel")}
             </DialogClose>
             <Button
               variant="destructive"
@@ -101,14 +101,16 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
         </DialogContent>
       </Dialog>
       <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            />
+          }
+        >
+          <Copy className="h-4 w-4" />
         </PopoverTrigger>
         <PopoverContent className="w-80 p-4" align="start">
           <div className="space-y-3">
@@ -171,7 +173,6 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
           </div>
         </PopoverContent>
       </Popover>
-
       <Button
         variant="ghost"
         size="icon"

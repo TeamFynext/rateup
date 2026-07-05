@@ -29,10 +29,11 @@ export function BoardCard({ board, onSelect, onEdit, onDelete }: Readonly<BoardC
 
   const actions = (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <IconEdit size={16} />
-        </Button>
+      <DropdownMenuTrigger
+        onClick={(e) => e.stopPropagation()}
+        render={<Button variant="ghost" size="icon" className="h-8 w-8" />}
+      >
+        <IconEdit size={16} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => onEdit(board.id)}>

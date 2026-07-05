@@ -152,18 +152,10 @@ export default function WaInboxChatFilter() {
                 });
               }}
               value={filter?.phone}
-              flex={1}
               usePhoneNumber
               withAllOption
               optional
               showClearButton={false}
-              styles={{
-                input: {
-                  background: "var(--mantine-primary-color-filled)",
-                  color: "white",
-                  width: "100%",
-                },
-              }}
               platform="all"
               className={"w-full border-0 bg-gray-100"}
             />

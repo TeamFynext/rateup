@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Bell, Users } from "lucide-react";
-import { FormProvider, useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useBoardTeamMembersById, useUpdateBoardMutation } from "@/backend/tickets/tickets.query";
@@ -14,14 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
@@ -83,174 +76,199 @@ export default function TicketSettings({
 
   return (
     <div className="max-w-2xl mx-auto p-4 relative">
-      <FormProvider {...form}>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Board Settings</CardTitle>
-                <CardDescription>
-                  Update board title, teams, and notification preferences.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-8">
-                {/* Board Information */}
-                <div>
-                  <div className="mb-2 font-semibold text-base">Board Information</div>
-                  <div className="text-sm text-muted-foreground mb-4">
-                    Update board title and associated teams
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      name="title"
-                      control={form.control}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Board Title</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Enter board title" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {/* Multi-select Teams */}
-                    <FormField
-                      name="teamIds"
-                      control={form.control}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Teams</FormLabel>
-                          <FormControl>
-                            <MultiSelect
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              options={teamOptions}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      name="description"
-                      control={form.control}
-                      render={({ field }) => (
-                        <FormItem className="col-span-1 md:col-span-2">
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Enter board description" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Board Settings</CardTitle>
+            <CardDescription>
+              Update board title, teams, and notification preferences.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            {/* Board Information */}
+            <div>
+              <div className="mb-2 font-semibold text-base">Board Information</div>
+              <div className="text-sm text-muted-foreground mb-4">
+                Update board title and associated teams
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Controller
+                  name="title"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>Board Title</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="Enter board title"
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+                {/* Multi-select Teams */}
+                <Controller
+                  name="teamIds"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>Teams</FieldLabel>
+                      <MultiSelect
+                        options={teamOptions}
+                        value={field.value ?? []}
+                        onValueChange={field.onChange}
+                        emptyIndicator="No items found."
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+                <Controller
+                  name="description"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field className="col-span-1 md:col-span-2" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="Enter board description"
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+              </div>
+            </div>
 
-                {/* Notification Recipients (users) */}
-                <div>
-                  <div className="mb-2 font-semibold text-base">Notification Recipients</div>
-                  <div className="text-sm text-muted-foreground mb-4">
-                    Select users who should receive notifications
-                  </div>
-                  {/* TODO: Replace with shadcn multi-select or checkbox group for users */}
-                  <div className="rounded border p-3 bg-muted/30">
-                    <div className="text-xs text-muted-foreground mb-2 flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      User selection coming soon
-                    </div>
-                  </div>
+            {/* Notification Recipients (users) */}
+            <div>
+              <div className="mb-2 font-semibold text-base">Notification Recipients</div>
+              <div className="text-sm text-muted-foreground mb-4">
+                Select users who should receive notifications
+              </div>
+              {/* TODO: Replace with shadcn multi-select or checkbox group for users */}
+              <div className="rounded border p-3 bg-muted/30">
+                <div className="text-xs text-muted-foreground mb-2 flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  User selection coming soon
                 </div>
+              </div>
+            </div>
 
-                {/* Ticket Creation Notifications */}
-                <div>
-                  <div className="mb-2 font-semibold text-base">Ticket Creation</div>
-                  <div className="text-sm text-muted-foreground mb-4">
-                    Notifications to send when a new ticket is created
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <FormField
-                      name="ticketCreatedEmail"
-                      control={form.control}
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-4">
-                          <FormLabel>Send email notification</FormLabel>
-                          <FormControl>
-                            <Switch checked={!!field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      name="ticketCreatedWhatsapp"
-                      control={form.control}
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-4">
-                          <FormLabel>
-                            Send WhatsApp notification (when session is available)
-                          </FormLabel>
-                          <FormControl>
-                            <Switch checked={!!field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
+            {/* Ticket Creation Notifications */}
+            <div>
+              <div className="mb-2 font-semibold text-base">Ticket Creation</div>
+              <div className="text-sm text-muted-foreground mb-4">
+                Notifications to send when a new ticket is created
+              </div>
+              <div className="flex flex-col gap-3">
+                <Controller
+                  name="ticketCreatedEmail"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field
+                      orientation="horizontal"
+                      className="justify-between"
+                      data-invalid={fieldState.invalid}
+                    >
+                      <FieldLabel htmlFor={field.name}>Send email notification</FieldLabel>
+                      <Switch
+                        id={field.name}
+                        checked={!!field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </Field>
+                  )}
+                />
+                <Controller
+                  name="ticketCreatedWhatsapp"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field
+                      orientation="horizontal"
+                      className="justify-between"
+                      data-invalid={fieldState.invalid}
+                    >
+                      <FieldLabel htmlFor={field.name}>
+                        Send WhatsApp notification (when session is available)
+                      </FieldLabel>
+                      <Switch
+                        id={field.name}
+                        checked={!!field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </Field>
+                  )}
+                />
+              </div>
+            </div>
 
-                {/* Ticket Assignment Notifications */}
-                <div>
-                  <div className="mb-2 font-semibold text-base">Ticket Assignment</div>
-                  <div className="text-sm text-muted-foreground mb-4">
-                    Notifications are sent when a ticket is assigned to a user, and the notification
-                    is sent to the assigned user.
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <FormField
-                      name="ticketAssignedEmail"
-                      control={form.control}
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-4">
-                          <FormLabel>Send email notification</FormLabel>
-                          <FormControl>
-                            <Switch checked={!!field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      name="ticketAssignedWhatsapp"
-                      control={form.control}
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-4">
-                          <FormLabel>Send WhatsApp notification</FormLabel>
-                          <FormControl>
-                            <Switch checked={!!field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col items-end gap-2">
-                {updateBoardMutation.isError && (
-                  <Alert variant="destructive" className="w-full">
-                    {updateBoardMutation.error instanceof Error
-                      ? updateBoardMutation.error.message
-                      : "Failed to save settings"}
-                  </Alert>
-                )}
-                <Button type="submit" disabled={updateBoardMutation.isPending}>
-                  <Bell className="w-4 h-4 mr-2" />
-                  Save Notification Settings
-                </Button>
-              </CardFooter>
-            </Card>
-          </form>
-        </Form>
-      </FormProvider>
+            {/* Ticket Assignment Notifications */}
+            <div>
+              <div className="mb-2 font-semibold text-base">Ticket Assignment</div>
+              <div className="text-sm text-muted-foreground mb-4">
+                Notifications are sent when a ticket is assigned to a user, and the notification is
+                sent to the assigned user.
+              </div>
+              <div className="flex flex-col gap-3">
+                <Controller
+                  name="ticketAssignedEmail"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field
+                      orientation="horizontal"
+                      className="justify-between"
+                      data-invalid={fieldState.invalid}
+                    >
+                      <FieldLabel htmlFor={field.name}>Send email notification</FieldLabel>
+                      <Switch
+                        id={field.name}
+                        checked={!!field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </Field>
+                  )}
+                />
+                <Controller
+                  name="ticketAssignedWhatsapp"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field
+                      orientation="horizontal"
+                      className="justify-between"
+                      data-invalid={fieldState.invalid}
+                    >
+                      <FieldLabel htmlFor={field.name}>Send WhatsApp notification</FieldLabel>
+                      <Switch
+                        id={field.name}
+                        checked={!!field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </Field>
+                  )}
+                />
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col items-end gap-2">
+            {updateBoardMutation.isError && (
+              <Alert variant="destructive" className="w-full">
+                {updateBoardMutation.error instanceof Error
+                  ? updateBoardMutation.error.message
+                  : "Failed to save settings"}
+              </Alert>
+            )}
+            <Button type="submit" disabled={updateBoardMutation.isPending}>
+              <Bell className="w-4 h-4 mr-2" />
+              Save Notification Settings
+            </Button>
+          </CardFooter>
+        </Card>
+      </form>
     </div>
   );
 }

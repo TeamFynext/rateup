@@ -1,4 +1,4 @@
-import { CheckIcon, ChevronsUpDownIcon } from "lucide-react";
+import { CheckIcon } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import timezones from "timezones-list";
@@ -7,14 +7,14 @@ import { cn } from "@/lib/utils.ts";
 
 import { Button } from "../ui/button.tsx";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "../ui/command.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover.tsx";
+  Combobox,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxTrigger,
+} from "../ui/combobox.tsx";
 
 interface TimezoneOption {
   label: string;
@@ -37,48 +37,41 @@ const timezoneList: TimezoneOption[] = (() => {
 const TimeZoneSelector = ({ value, onChange }) => {
   const [timezoneOpen, setTimezoneOpen] = React.useState(false);
   const { t } = useTranslation();
+
+  const items = timezoneList.map((tz) => ({ value: tz.tzCode, label: tz.label }));
+
   return (
-    <Popover open={timezoneOpen} onOpenChange={setTimezoneOpen} modal>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={timezoneOpen}
-          className="w-full justify-between"
-        >
-          {value ? timezoneList.find((tz) => tz?.tzCode === value)?.label : t("Select a timezone")}
-          <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
-        <Command>
-          <CommandInput placeholder={t("Search timezone...")} />
-          <CommandList>
-            <CommandEmpty>{t("No timezone found.")}</CommandEmpty>
-            <CommandGroup>
-              {timezoneList.map((tz) => (
-                <CommandItem
-                  key={tz?.tzCode}
-                  value={tz?.label}
-                  onSelect={() => {
-                    onChange(tz?.tzCode);
-                    setTimezoneOpen(false);
-                  }}
-                >
-                  <CheckIcon
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === tz?.tzCode ? "opacity-100" : "opacity-0",
-                    )}
-                  />
-                  {tz?.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <Combobox
+      items={items}
+      value={value ?? null}
+      onValueChange={(tzCode: string | null) => {
+        if (tzCode) onChange(tzCode);
+        setTimezoneOpen(false);
+      }}
+      open={timezoneOpen}
+      onOpenChange={setTimezoneOpen}
+    >
+      <ComboboxTrigger render={<Button variant="outline" className="w-full justify-between" />}>
+        {value ? timezoneList.find((tz) => tz?.tzCode === value)?.label : t("Select a timezone")}
+      </ComboboxTrigger>
+      <ComboboxContent className="p-0" align="start">
+        <ComboboxChipsInput
+          placeholder={t("Search timezone...")}
+          className="w-full border-0 border-b rounded-none px-3 h-9"
+        />
+        <ComboboxEmpty>{t("No timezone found.")}</ComboboxEmpty>
+        <ComboboxList>
+          {(item: { value: string; label: string }) => (
+            <ComboboxItem key={item.value} value={item.value}>
+              <CheckIcon
+                className={cn("mr-2 h-4 w-4", value === item.value ? "opacity-100" : "opacity-0")}
+              />
+              {item.label}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
   );
 };
 

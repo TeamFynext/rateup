@@ -1,6 +1,5 @@
 import { Divider, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useEffect, useState } from "react";
@@ -22,9 +21,9 @@ import {
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { ActionIconCommon } from "@/components/menu/ActionIcon/ActionIconCommon.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
@@ -51,7 +50,7 @@ function PetpoojaConfig({ integration, updateIntegration }) {
   const [error, setError] = useState(null);
   const createIntegration = useCreateIntegrationMutation(IntegratedApps.petpooja);
   const deleteIntegration = useDeleteIntegrationMutation(IntegratedApps.petpooja);
-  const [opened, { open, close }] = useDisclosure(false);
+  const confirm = useConfirm();
   const handleConfig = () => {
     if (!restaurantId.trim().length) {
       setError("Restaurant Id is required");
@@ -70,7 +69,17 @@ function PetpoojaConfig({ integration, updateIntegration }) {
       });
   };
 
-  const handleDeleteConfig = () => {
+  const handleDeleteConfig = async () => {
+    const shouldDelete = await confirm({
+      title: "Delete Integration",
+      description: "Are you sure to delete this integration?",
+      warning: "All related data will be deleted",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+    });
+
+    if (!shouldDelete) return;
+
     deleteIntegration.mutate();
   };
   useEffect(() => {
@@ -100,7 +109,7 @@ function PetpoojaConfig({ integration, updateIntegration }) {
           />
           <ActionIconCommon
             children={<IconTrash />}
-            handleClick={open}
+            handleClick={handleDeleteConfig}
             label="Delete integration"
             disabled={!integration}
           />
@@ -113,18 +122,6 @@ function PetpoojaConfig({ integration, updateIntegration }) {
           />
         )}
       </Stack>
-
-      <ConfirmationModal
-        forDeleteFunctionality
-        confirmLabel="Delete"
-        headerLabel="Are you sure to delete this integration?"
-        headerTitle="Delete Integration"
-        closeLabel="Cancel"
-        onConfirm={handleDeleteConfig}
-        deleteQuotion="All related data will be deleted"
-        onClose={close}
-        opened={opened}
-      />
     </PaperLayout>
   );
 }

@@ -103,11 +103,9 @@ function CampaignsPage() {
 
   const rightControls = (
     <Popover open={showFilters} onOpenChange={setShowFilters}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Filter className="mr-2 h-4 w-4" />
-          {t("Filters")}
-        </Button>
+      <PopoverTrigger render={<Button variant="outline" size="sm" />}>
+        <Filter className="mr-2 h-4 w-4" />
+        {t("Filters")}
       </PopoverTrigger>
 
       <PopoverContent align="end" className="w-72">
@@ -119,7 +117,18 @@ function CampaignsPage() {
 
           <div>
             <label className="text-xs">{t("Status")}</label>
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <Select
+              value={selectedStatus}
+              onValueChange={setSelectedStatus}
+              items={[
+                { value: "all", label: t("All Statuses") },
+                { value: "ACTIVE", label: t("Active") },
+                { value: "INACTIVE", label: t("Inactive") },
+                { value: "DRAFT", label: t("Draft") },
+                { value: "SCHEDULED", label: t("Scheduled") },
+                { value: "COMPLETED", label: t("Completed") },
+              ]}
+            >
               <SelectTrigger className="h-9">
                 <SelectValue />
               </SelectTrigger>

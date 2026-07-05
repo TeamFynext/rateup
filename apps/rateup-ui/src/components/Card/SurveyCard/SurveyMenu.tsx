@@ -18,8 +18,8 @@ import { toast } from "sonner";
 
 import { deleteSurvey, deleteSurveyForOneTeam, updateSurvey } from "@/backend/surveys/survey.api";
 import { useCloneSurveyMutation } from "@/backend/surveys/surveys.query";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
-import ConfirmationModal from "../../Modal/ConfirmationModal.tsx";
 import FormModalLayout from "../../Modal/FormModalLayout.tsx";
 
 interface SurveyMenuProps {
@@ -37,7 +37,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
   });
   const { t: translations } = useTranslation();
   const [opened, { close, open }] = useDisclosure(false);
-  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+  const confirm = useConfirm();
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const allTeams = teamsData?.map((team) => team?.id);
@@ -115,6 +115,29 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
     },
   });
 
+  async function handleDeleteSurvey() {
+    const shouldDelete = await confirm({
+      title: translations("Delete Survey?"),
+      description: translations("Are you sure to delete this Survey?"),
+      confirmText: translations("Delete"),
+    });
+
+    if (!shouldDelete) return;
+
+    toast.loading(translations("Hold on, survey is getting deleted..."), {
+      id: "delete-data",
+    });
+    if (selectedTeamId && selectedTeamId !== "all") {
+      await surveyDeleteMutation.mutateAsync({
+        id: survey?.id,
+        teamId: selectedTeamId,
+      });
+    } else {
+      await surveyDeleteMutation.mutateAsync({ id: survey?.id });
+    }
+    refetchSurveys();
+  }
+
   return (
     <Menu width={200}>
       <FormModalLayout
@@ -162,28 +185,6 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
           </Group>
         </Stack>
       </FormModalLayout>
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={dialogOpened}
-        onClose={closeDialog}
-        headerLabel={translations("Are you sure to delete this Survey?")}
-        headerTitle={translations("Delete Survey?")}
-        confirmLabel={translations("Delete")}
-        onConfirm={async (_e) => {
-          toast.loading(translations("Hold on, survey is getting deleted..."), {
-            id: "delete-data",
-          });
-          if (selectedTeamId && selectedTeamId !== "all") {
-            await surveyDeleteMutation.mutateAsync({
-              id: survey?.id,
-              teamId: selectedTeamId,
-            });
-          } else {
-            await surveyDeleteMutation.mutateAsync({ id: survey?.id });
-          }
-          refetchSurveys();
-        }}
-      />
       <Menu.Target>
         <ActionIcon
           variant="subtle"
@@ -225,7 +226,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
         >
           {translations("Clone")}
         </Menu.Item>
-        <Menu.Item leftSection={<IconTrash />} onClick={toggle}>
+        <Menu.Item leftSection={<IconTrash />} onClick={handleDeleteSurvey}>
           {translations("Delete")}
         </Menu.Item>
 

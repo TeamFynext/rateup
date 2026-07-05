@@ -20,7 +20,6 @@ import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import CustomAlertDialog from "@/components/ui/custom/CustomAlertDialog.tsx";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { getInitials } from "@/components/ui/utils.ts";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
@@ -79,6 +79,7 @@ function ContactGroup() {
     columnFilters,
   );
   const deleteGroupMutation = useDeleteGroupMutation();
+  const confirm = useConfirm();
 
   useEffect(() => {
     setGroupDetails(groupDetails);
@@ -100,7 +101,6 @@ function ContactGroup() {
   ];
   const loadingState = isLoading || isRefetching;
   const [showEditIconDialog, setShowEditIconDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const editContactGroupMutation = useEditContactGroupMutation(groupDetails?.id);
   function handleSaveGroupName() {
     if (!groupName.trim().length || groupName === groupDetails?.name) return;
@@ -123,7 +123,16 @@ function ContactGroup() {
   function handleCancelEditName() {
     setIsEditingName(false);
   }
-  function handleDeleteGroup() {
+  async function handleDeleteGroup() {
+    const shouldDelete = await confirm({
+      title: "Delete Group",
+      description: "Are you sure you want to delete this group?",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+    });
+
+    if (!shouldDelete) return;
+
     deleteGroupMutation.mutate(groupId, {
       onSuccess: () => {
         toast.success("Group deleted successfully");
@@ -288,7 +297,7 @@ function ContactGroup() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowDeleteDialog(true)}
+                onClick={() => handleDeleteGroup()}
                 className="h-9 gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-400 transition-all"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -319,17 +328,8 @@ function ContactGroup() {
         setOpened={setShowEditIconDialog}
         group={groupDetails}
       />
-      <CustomAlertDialog
-        opened={showDeleteDialog}
-        buttonTitle="Delete"
-        description="Are you sure you want to delete this group?"
-        title="Delete Group"
-        setOpened={setShowDeleteDialog}
-        buttonColor="bg-red-500"
-        onAction={handleDeleteGroup}
-      />
       <ContactImportErrorModal
-        body={createNewContactsFromCSV?.error?.message}
+        body={(createNewContactsFromCSV?.error as any)?.response?.data}
         isError={createNewContactsFromCSV.isError}
       />
     </div>

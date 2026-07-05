@@ -319,6 +319,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           value={form.values.type}
           onValueChange={(v) => form.setFieldValue("type", v as CatalogProductType)}
           disabled
+          items={Object.values(CatalogProductType).map((t) => ({ value: t, label: t }))}
         >
           <SelectTrigger>
             <SelectValue />
@@ -368,6 +369,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               <Select
                 value={form.values.condition}
                 onValueChange={(v) => form.setFieldValue("condition", v)}
+                items={CATALOG_PRODUCT_CONDITIONS.map((c) => ({ value: c, label: c }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -389,6 +391,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               <Select
                 value={form.values.availability}
                 onValueChange={(v) => form.setFieldValue("availability", v)}
+                items={CATALOG_PRODUCT_AVAILABILITY.map((a) => ({ value: a, label: a }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -446,6 +449,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
             <Select
               value={form.values.currencyCode}
               onValueChange={(v) => form.setFieldValue("currencyCode", v)}
+              items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -598,6 +602,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
             <Select
               value={form.values.currencyCode}
               onValueChange={(v) => form.setFieldValue("currencyCode", v)}
+              items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -659,6 +664,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
             <Select
               value={form.values.currencyCode}
               onValueChange={(v) => form.setFieldValue("currencyCode", v)}
+              items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
             >
               <SelectTrigger>
                 <SelectValue />

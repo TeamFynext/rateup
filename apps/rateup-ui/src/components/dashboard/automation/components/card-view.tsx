@@ -2,11 +2,10 @@ import { IconFolderCode } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { CardGrid } from "@/components/common/generic-card.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -19,6 +18,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { Rule } from "@/types/rule.ts";
 
 import { RuleCard } from "./rule-card.tsx";
@@ -31,10 +31,21 @@ interface CardViewProps {
 }
 
 export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<CardViewProps>) {
-  const [deleteDialogOpened, setDeleteDialogOpened] = useState(false);
-  const [ruleToDelete, setRuleToDelete] = useState<string | null>(null);
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
+  const confirm = useConfirm();
+
+  const handleDelete = async (id: string) => {
+    const shouldDelete = await confirm({
+      title: translations("Delete Rule"),
+      description: translations("Are you sure you want to delete this Rule?"),
+      confirmText: translations("Delete"),
+    });
+
+    if (!shouldDelete) return;
+
+    onDelete(id);
+  };
 
   const columns = useMemo<ColumnDef<Rule>[]>(
     () => [
@@ -115,8 +126,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
-              setRuleToDelete(row.original.id);
-              setDeleteDialogOpened(true);
+              handleDelete(row.original.id);
             }}
             variant="ghost"
             size="icon"
@@ -127,7 +137,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
         ),
       },
     ],
-    [onToggleActive, setDeleteDialogOpened, setRuleToDelete],
+    [onToggleActive, handleDelete],
   );
 
   return (
@@ -146,9 +156,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Button asChild>
-                <Link to="/dashboard/automation/new">Create Automation</Link>
-              </Button>
+              <Button render={<Link to="/dashboard/automation/new" />}>Create Automation</Button>
             </EmptyContent>
             {/* <Button
               variant="link"
@@ -176,8 +184,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
                 }}
                 onDelete={(event) => {
                   event.preventDefault();
-                  setRuleToDelete(item.id);
-                  setDeleteDialogOpened(true);
+                  handleDelete(item.id);
                 }}
               />
             </Link>
@@ -194,24 +201,6 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
           }}
         />
       )}
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={deleteDialogOpened}
-        onClose={() => {
-          setDeleteDialogOpened(false);
-          setRuleToDelete(null);
-        }}
-        headerLabel={translations("Are you sure you want to delete this Rule?")}
-        headerTitle={translations("Delete Rule")}
-        confirmLabel={translations("Delete")}
-        onConfirm={() => {
-          if (ruleToDelete) {
-            onDelete(ruleToDelete);
-            setDeleteDialogOpened(false);
-            setRuleToDelete(null);
-          }
-        }}
-      />
     </>
   );
 }

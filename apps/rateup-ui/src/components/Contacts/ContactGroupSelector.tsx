@@ -15,21 +15,21 @@ const ContactGroupSelector = ({ value, onChange, className = "", allowMultiSelec
     );
   }
   if (allowMultiSelect) {
+    const groupOptions = groups?.map((group) => ({ value: group.id, label: group.name })) ?? [];
     return (
       <MultiSelect
+        options={groupOptions}
+        value={value}
         onValueChange={onChange}
-        options={groups?.map((group) => ({
-          value: group.id,
-          label: group.name,
-        }))}
-        className={`${className}`}
         placeholder="Select groups"
-        defaultValue={value}
+        emptyIndicator="No groups found."
+        className={`${className}`}
       />
     );
   }
+  const groupItems = groups?.map((g) => ({ value: g.id, label: g.name })) ?? [];
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange} items={groupItems}>
       <SelectTrigger className={`${className}`}>
         <SelectValue placeholder={"Select a group"} />
       </SelectTrigger>

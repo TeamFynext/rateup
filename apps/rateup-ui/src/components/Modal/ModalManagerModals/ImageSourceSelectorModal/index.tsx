@@ -1,10 +1,13 @@
-import { Button, FileButton, Group } from "@mantine/core";
-import { modals } from "@mantine/modals";
+import { Button, FileButton, Group, Modal } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { IconBrandUnsplash, IconUpload } from "@tabler/icons-react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { mmImageCropModalClassnames } from "@/utils/constants.ts";
+
+import ImageCropModal from "../ImageCropModal/index.tsx";
+import UnsplashImageSelectorModal from "../UnsplashImageSelectorModal/index.tsx";
 
 import commonStyles from "../mmCommonStyles.module.css";
 import styles from "./ImageSourceSelectorModal.module.css";
@@ -13,47 +16,35 @@ function ImageSourceSelectorModal({ context: _context, id: _thisModalId, innerPr
   const { onImageSelected, forDevice } = innerProps;
   const aspectRatio = forDevice === "desktop" ? 16 / 9 : 9 / 16;
   const { t: translations } = useTranslation();
+
+  const [cropModalOpened, { open: openCropModal, close: closeCropModal }] = useDisclosure(false);
+  const [cropModalProps, setCropModalProps] = useState(null);
+
   const handleFileBtnValueChange = useCallback(
     (fileObj) => {
       if (!fileObj) {
-        // context.closeModal(thisModalId);
         onImageSelected(null);
       } else if (fileObj) {
         const { name } = fileObj;
         const url = URL.createObjectURL(fileObj);
-        modals.openContextModal({
-          modal: "imageCropModal",
-          title: translations("Crop Image"),
-          centered: true,
-          classNames: mmImageCropModalClassnames,
-          innerProps: {
-            imageUrl: url,
-            imageName: name,
-            onSaveClick: onImageSelected,
-            aspectRatio,
-          },
+        setCropModalProps({
+          imageUrl: url,
+          imageName: name,
+          onSaveClick: onImageSelected,
+          aspectRatio,
         });
+        openCropModal();
       }
     },
     [onImageSelected],
   );
 
+  const [unsplashModalOpened, { open: openUnsplashModal, close: closeUnsplashModal }] =
+    useDisclosure(false);
+
   const handleUnsplashBtnClick = useCallback(() => {
-    modals.openContextModal({
-      modal: "unsplashImageSelectorModal",
-      title: translations("Unsplash Images"),
-      centered: true,
-      className: commonStyles["mm-modal"],
-      classNames: {
-        header: commonStyles["unsplash-image-selector-modal-header"],
-      },
-      size: "80vw",
-      innerProps: {
-        onImageSelected,
-        aspectRatio,
-      },
-    });
-  }, [onImageSelected, aspectRatio]);
+    openUnsplashModal();
+  }, [openUnsplashModal]);
 
   return (
     <Group className={styles["container"]}>
@@ -73,6 +64,38 @@ function ImageSourceSelectorModal({ context: _context, id: _thisModalId, innerPr
       >
         {translations("Select from Unsplash")}
       </Button>
+      <Modal
+        opened={cropModalOpened}
+        onClose={closeCropModal}
+        title={translations("Crop Image")}
+        centered
+        classNames={mmImageCropModalClassnames}
+      >
+        {cropModalProps && (
+          <ImageCropModal
+            context={{ closeModal: closeCropModal }}
+            id="imageCropModal"
+            innerProps={cropModalProps}
+          />
+        )}
+      </Modal>
+      <Modal
+        opened={unsplashModalOpened}
+        onClose={closeUnsplashModal}
+        title={translations("Unsplash Images")}
+        centered
+        className={commonStyles["mm-modal"]}
+        classNames={{
+          header: commonStyles["unsplash-image-selector-modal-header"],
+        }}
+        size="80vw"
+      >
+        <UnsplashImageSelectorModal
+          context={{ closeModal: closeUnsplashModal }}
+          id="unsplashImageSelectorModal"
+          innerProps={{ onImageSelected, aspectRatio }}
+        />
+      </Modal>
     </Group>
   );
 }

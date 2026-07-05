@@ -145,10 +145,10 @@ export default function FlowSettings({
                 <Label htmlFor="team-select">Select Teams</Label>
                 <MultiSelect
                   options={teamOptions}
+                  value={selectedTeams}
                   onValueChange={setSelectedTeams}
-                  defaultValue={selectedTeams}
                   placeholder="Select teams"
-                  variant="default"
+                  emptyIndicator="No teams found."
                 />
               </div>
 

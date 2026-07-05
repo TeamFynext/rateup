@@ -35,10 +35,10 @@ import {
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import { ImageCropModal } from "@/components/Modal/ImageCropModal.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { NPSWeightage, QuestionType, SurveyType } from "@/types/enums.ts";
@@ -499,9 +499,9 @@ function Choice({
   maxCharCount,
   surveyType,
 }: ChoiceProps) {
-  const [opened, { open, close }] = useDisclosure(false);
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] = useDisclosure(false);
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
+  const confirm = useConfirm();
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>();
   const [selectedInputImage, setSelectedInputImage] = useState({
     url: "",
@@ -525,13 +525,26 @@ function Choice({
     }
   }, [isSubmited]);
 
+  const handleEditWarningConfirm = async () => {
+    const shouldEdit = await confirm({
+      title: translations("Warning"),
+      description: translations(
+        "Editing the choice may affect previous result count.Do you still want to continue?",
+      ),
+      confirmText: translations("Yes"),
+    });
+
+    if (!shouldEdit) return;
+
+    openEditModal();
+  };
+
   const onChangePicture = (event: File | null) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {
       toast.error(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
       return;
     }
-    close();
     setSelectedInputImage({
       url: URL.createObjectURL(event),
       name: event.name,
@@ -744,7 +757,7 @@ function Choice({
       )}
       <ActionIcon
         variant="transparent"
-        onClick={responses?.length ? open : openEditModal}
+        onClick={responses?.length ? handleEditWarningConfirm : openEditModal}
         size={"sm"}
       >
         <IconEdit />
@@ -844,16 +857,6 @@ function Choice({
           />
         </Stack>
       </FormModalLayout>
-      <ConfirmationModal
-        opened={opened}
-        confirmLabel={translations("Yes")}
-        headerTitle={translations("Warning")}
-        headerLabel={translations(
-          "Editing the choice may affect previous result count.Do you still want to continue?",
-        )}
-        onClose={close}
-        onConfirm={openEditModal}
-      />
     </Group>
   );
 }

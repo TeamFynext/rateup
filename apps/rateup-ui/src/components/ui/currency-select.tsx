@@ -136,6 +136,10 @@ const CurrencySelect = React.forwardRef<HTMLButtonElement, CurrencySelectProps>(
         {...props}
         name={name}
         data-valid={valid}
+        items={uniqueCurrencies.map((currency) => ({
+          value: currency?.code || "",
+          label: currency?.name,
+        }))}
       >
         <SelectTrigger
           className={cn("w-full", variant === "small" && "w-fit gap-2")}

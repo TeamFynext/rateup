@@ -171,7 +171,7 @@ export const deleteCustomField = async (fieldId: string) => {
   return res?.data as CustomFieldData;
 };
 
-export const exportContacts = async (data: { type: string; fields: string[] }) => {
+export const exportContacts = async (data: { format: "xlsx" | "ods"; fields: string[] }) => {
   const response = await axiosClient.post(`${CONTACT_BASE_URL}/export`, data, {
     responseType: "blob",
     timeout: 0,
@@ -180,7 +180,7 @@ export const exportContacts = async (data: { type: string; fields: string[] }) =
     type: response.headers["content-type"] as string,
   });
 
-  return downloadBlob(blob, `contacts.${data.type}`);
+  return downloadBlob(blob, `contacts.${data.format}`);
 };
 
 export const bulkAssignStatus = async (data) => {

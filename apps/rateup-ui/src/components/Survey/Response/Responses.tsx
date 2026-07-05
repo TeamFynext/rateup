@@ -17,6 +17,7 @@ import {
   useSyncResponseToGoogleSheet,
 } from "@/backend/surveys/response/response.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import {
@@ -31,7 +32,6 @@ import { TicketType } from "@/utils/enums/ticket.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
-import ConfirmationModal from "../../Modal/ConfirmationModal.tsx";
 import FormModalLayout from "../../Modal/FormModalLayout.tsx";
 import { DataTable } from "../../Table/data-table.tsx";
 import CreateTicketModal from "../../Tickets/CreateTicketModal.tsx";
@@ -61,15 +61,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
   const [isSyncing, setIsSyncing] = useState(false);
   const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
   const { data: googleAccessToken } = useIntegrationByType(IntegratedApps.googlesheet);
-  const [alertModalOpened, setAlertModalOpened] = useState(false);
-  const alertModalOpen = () => setAlertModalOpened(true);
-  const alertModalClose = () => setAlertModalOpened(false);
-
-  const [redirectModalOpened, setRedirectModalOpened] = useState(false);
-  const redirectModalOpen = () => setRedirectModalOpened(true);
-  const redirectModalClose = () => setRedirectModalOpened(false);
-
-  const [alertMsg, setAlertMsg] = useState("");
+  const confirm = useConfirm();
   const [ranges, setRange] = useState<Range[]>([
     {
       key: "selection",
@@ -137,7 +129,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
 
   const downloadExcelResponse = useDownloadExcelResponse();
   const handleExcelDownload = useCallback(
-    (columns: string[]) => {
+    (columns: string[], format: "xlsx" | "ods" = "xlsx") => {
       downloadExcelResponse.mutate({
         defaultLanguage,
         surveyId,
@@ -146,6 +138,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
         tz: dayjs.tz.guess(),
         filterTeams,
         campaignIds,
+        format,
         columnFilters: [],
         ranges: ranges?.[0],
       });
@@ -201,7 +194,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
     typeWa: survey?.type === SurveyType.WhatsApp || survey?.type === SurveyType.WaFlow,
   });
 
-  const handleSyncGoogleSheet = () => {
+  const handleSyncGoogleSheet = async () => {
     setIsSyncing(true);
     if (googleAccessToken) {
       syncResponseToGoogleSheet.mutate(
@@ -213,16 +206,21 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
               id: "success",
             });
           },
-          onError: (error: any) => {
+          onError: async (error: any) => {
             setIsSyncing(false);
             console.log(error);
             if (error.response.data?.error === "invalid_grant") {
-              setAlertMsg(
-                translations(
+              const shouldRedirect = await confirm({
+                title: translations("Sync Google Sheet"),
+                description: translations(
                   "Your access has been revoked. Please sign out and sign in again in the Apps & Services",
                 ),
-              );
-              redirectModalOpen();
+                confirmText: translations("Continue"),
+              });
+
+              if (shouldRedirect) {
+                navigate({ to: "/dashboard/apps&services/googlesheet" });
+              }
             } else {
               toast.error(error?.message || translations("Error in syncing response"));
             }
@@ -233,8 +231,31 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
     }
 
     setIsSyncing(false);
-    setAlertMsg(translations("Please sync your Google account in the App & Services."));
-    redirectModalOpen();
+    const shouldRedirect = await confirm({
+      title: translations("Sync Google Sheet"),
+      description: translations("Please sync your Google account in the App & Services."),
+      confirmText: translations("Continue"),
+    });
+
+    if (shouldRedirect) {
+      navigate({ to: "/dashboard/apps&services/googlesheet" });
+    }
+  };
+
+  const handleSyncClick = async () => {
+    if (survey.spreadSheetId) {
+      const shouldResync = await confirm({
+        title: translations("Resync Google Sheet"),
+        description: translations(
+          "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost.",
+        ),
+        confirmText: translations("Yes"),
+      });
+
+      if (!shouldResync) return;
+    }
+
+    handleSyncGoogleSheet();
   };
   const isPending = isLoading || CFLoading || isRefetching;
   const responseCount = responseData?.totalCount;
@@ -255,7 +276,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
         handleExcelDownload={handleExcelDownload}
         handleExportContacts={handleExportContacts}
         hasContactQuestion={!!hasContactQuestion}
-        alertModalOpen={alertModalOpen}
+        alertModalOpen={handleSyncClick}
         responseCount={responseCount}
       />
     ),
@@ -270,7 +291,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
       handleExcelDownload,
       handleExportContacts,
       hasContactQuestion,
-      alertModalOpen,
+      handleSyncClick,
       responseCount,
     ],
   );
@@ -284,28 +305,6 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
         closeTicketModal={closeTicketModal}
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
-      />
-      <ConfirmationModal
-        opened={alertModalOpened}
-        onClose={alertModalClose}
-        headerTitle={translations("Resync Google Sheet")}
-        headerLabel={translations(
-          "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost.",
-        )}
-        confirmLabel={translations("Yes")}
-        onConfirm={handleSyncGoogleSheet}
-      />
-      <ConfirmationModal
-        opened={redirectModalOpened}
-        onClose={redirectModalClose}
-        headerTitle={translations("Sync Google Sheet")}
-        headerLabel={alertMsg}
-        confirmLabel={translations("Continue")}
-        onConfirm={() => {
-          navigate({
-            to: "/dashboard/apps&services/googlesheet",
-          });
-        }}
       />
       <DataTable
         data={responseData ? responseData?.responses : []}

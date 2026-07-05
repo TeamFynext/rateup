@@ -6,6 +6,7 @@ import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -136,15 +137,17 @@ export const LifecycleSelector = ({
   if (all) {
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <div
-            className={`${className} flex items-center text-foreground justify-start gap-2 cursor-pointer`}
-          >
-            <Activity className="h-4 w-4 shrink-0 text-foreground" />
-            <TriggerComponent />
-          </div>
+        <DropdownMenuTrigger
+          nativeButton={false}
+          render={
+            <div
+              className={`${className} flex items-center text-foreground justify-start gap-2 cursor-pointer`}
+            />
+          }
+        >
+          <Activity className="h-4 w-4 shrink-0 text-foreground" />
+          <TriggerComponent />
         </DropdownMenuTrigger>
-
         <DropdownMenuContent side={position} align="start">
           {allItems.map((lifecycle) => (
             <DropdownMenuItem
@@ -163,26 +166,30 @@ export const LifecycleSelector = ({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div
-          className={`${className} flex items-center justify-start text-foreground gap-2 cursor-pointer`}
-        >
-          <Activity className="h-4 w-4 shrink-0 text-foreground" />
-          <TriggerComponent />
-        </div>
+      <DropdownMenuTrigger
+        nativeButton={false}
+        render={
+          <div
+            className={`${className} flex items-center justify-start text-foreground gap-2 cursor-pointer`}
+          />
+        }
+      >
+        <Activity className="h-4 w-4 shrink-0 text-foreground" />
+        <TriggerComponent />
       </DropdownMenuTrigger>
-
       <DropdownMenuContent side={position} align="start">
         {inboxLabels.map((group, index) => (
           <React.Fragment key={group.group}>
-            <DropdownMenuLabel>{group.group}</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{group.group}</DropdownMenuLabel>
 
-            {group.items.map((label) => (
-              <DropdownMenuItem key={label.value} onClick={() => handleSubmit(label.value)}>
-                <label.icon />
-                <span className="ml-1">{label.label}</span>
-              </DropdownMenuItem>
-            ))}
+              {group.items.map((label) => (
+                <DropdownMenuItem key={label.value} onClick={() => handleSubmit(label.value)}>
+                  <label.icon />
+                  <span className="ml-1">{label.label}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
 
             {index !== inboxLabels.length - 1 && <DropdownMenuSeparator />}
           </React.Fragment>

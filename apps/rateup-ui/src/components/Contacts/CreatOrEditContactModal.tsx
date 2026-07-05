@@ -225,10 +225,8 @@ const CreateOrEditContactModal = ({
           <ContactForm form={form} customFields={customFields} type={type} />
         </div>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="secondary" onClick={() => form.reset()}>
-              <span className="text-sm font-normal">{t("Cancel")}</span>
-            </Button>
+          <DialogClose render={<Button variant="secondary" onClick={() => form.reset()} />}>
+            <span className="text-sm font-normal">{t("Cancel")}</span>
           </DialogClose>
           <Button onClick={handleSubmit}>
             {createContactMutation.isPending ||

@@ -48,15 +48,17 @@ const CatalogProducts = ({ catalogData }) => {
             Add Product
           </Button>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                disabled={!catalogData}
-                aria-label="Sync products"
-              >
-                <IconRefresh size={16} />
-              </Button>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={!catalogData}
+                  aria-label="Sync products"
+                />
+              }
+            >
+              <IconRefresh size={16} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[220px]">
               {/* <DropdownMenuItem

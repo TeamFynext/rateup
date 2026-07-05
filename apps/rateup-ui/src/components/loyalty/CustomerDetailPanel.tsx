@@ -364,10 +364,10 @@ export function CustomerDetailPanel({
             </div>
             {onClose && (
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="destructive" size="icon-sm" onClick={onClose}>
-                    <X className="w-4 h-4" />
-                  </Button>
+                <TooltipTrigger
+                  render={<Button variant="destructive" size="icon-sm" onClick={onClose} />}
+                >
+                  <X className="w-4 h-4" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>{t("Close customer details")}</p>
@@ -417,7 +417,6 @@ export function CustomerDetailPanel({
           </div>
         </CardContent>
       </Card>
-
       {/* Quick Actions */}
       <Card>
         <CardHeader>
@@ -519,7 +518,6 @@ export function CustomerDetailPanel({
           </div>
         </CardContent>
       </Card>
-
       {/* Available Rewards */}
       <Card>
         <CardHeader>
@@ -569,7 +567,6 @@ export function CustomerDetailPanel({
           </div>
         </CardContent>
       </Card>
-
       {/* Pending Redemptions */}
       {unusedRedemptions.length > 0 && (
         <Card>
@@ -605,7 +602,6 @@ export function CustomerDetailPanel({
           </CardContent>
         </Card>
       )}
-
       {/* Transaction History */}
       {transactions !== undefined && (
         <div className="space-y-3">
@@ -616,7 +612,6 @@ export function CustomerDetailPanel({
           <DataTable columns={transactionColumns} data={transactions} />
         </div>
       )}
-
       {/* Issue Points Modal */}
       <Dialog open={issuePointsOpen} onOpenChange={setIssuePointsOpen}>
         <DialogContent>
@@ -667,7 +662,6 @@ export function CustomerDetailPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Redeem Reward (Claim) Modal */}
       <Dialog open={claimRewardOpen} onOpenChange={setClaimRewardOpen}>
         <DialogContent>
@@ -729,7 +723,6 @@ export function CustomerDetailPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Issue Reward Modal */}
       <Dialog open={assignRewardOpen} onOpenChange={setAssignRewardOpen}>
         <DialogContent>
@@ -792,7 +785,6 @@ export function CustomerDetailPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Redeem Coupon Modal */}
       <Dialog open={claimCouponOpen} onOpenChange={setClaimCouponOpen}>
         <DialogContent>
@@ -858,7 +850,6 @@ export function CustomerDetailPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Redeem Coupon Modal */}
       <Dialog open={redeemCouponOpen} onOpenChange={setRedeemCouponOpen}>
         <DialogContent>
@@ -891,7 +882,6 @@ export function CustomerDetailPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Use Redemption Modal */}
       <Dialog open={useRedemptionOpen} onOpenChange={setUseRedemptionOpen}>
         <DialogContent>

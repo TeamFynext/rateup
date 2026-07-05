@@ -1,56 +1,48 @@
 import {
   IconActivity,
   IconAward,
+  IconBolt,
   IconBrandInstagram,
   IconBrandWhatsapp,
   IconBrowser,
   IconBuildingStore,
+  IconChartBar,
+  IconChartLine,
+  IconCircleCheck,
   IconCirclePlus,
+  IconClock,
+  IconCreditCard,
+  IconCrown,
   IconDashboard,
   IconFileDescription,
+  IconFileSpreadsheet,
+  IconFileText,
+  IconFolder,
   IconGift,
+  IconInbox,
   IconLinkPlus,
-  IconMessageChatbot,
+  IconLogs,
+  IconMessage,
   IconQrcode,
-  IconRobotFace,
+  IconReportAnalytics,
+  // IconRobotFace,
+  IconSend,
   IconSettings,
+  IconShield,
+  IconShoppingCart,
   IconSitemap,
+  IconSparkles,
+  IconTag,
   IconTemplate,
   IconTerminal2,
   IconTicket,
   IconUser,
+  IconUserCheck,
+  IconUserCog,
   IconUsers,
   IconWaveSine,
+  IconWebhook,
 } from "@tabler/icons-react";
-import {
-  Activity,
-  Award,
-  BarChart,
-  ChartColumnBig,
-  ChartLine,
-  CircleCheckBig,
-  Clock,
-  CreditCard,
-  Crown,
-  FileSpreadsheet,
-  FileText,
-  Folder,
-  Inbox,
-  Logs,
-  MessageSquare,
-  Send,
-  Settings,
-  Shield,
-  ShoppingCart,
-  Sparkles,
-  Tag,
-  User,
-  UserCheck,
-  UserCog,
-  Users,
-  Webhook,
-  Zap,
-} from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -73,9 +65,9 @@ export function useNavMain({
   const { t } = useTranslation();
 
   const LifecycleIcon = () => <IconActivity className="h-3 w-3 text-amber-400" />;
-  const LabelIcon = () => <Tag className="h-3 w-3 text-blue-400" />;
-  const UserIcon = () => <User className="h-3 w-3 text-green-400" />;
-  const TeamIcon = () => <Users className="h-3 w-3 text-purple-400" />;
+  const LabelIcon = () => <IconTag className="h-3 w-3 text-blue-400" />;
+  const UserIcon = () => <IconUser className="h-3 w-3 text-green-400" />;
+  const TeamIcon = () => <IconUsers className="h-3 w-3 text-purple-400" />;
   // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)
   const hasTeamFeature = (feature: TeamFeature) =>
     allowedFeatures === null || allowedFeatures.has(feature);
@@ -93,17 +85,17 @@ export function useNavMain({
             {
               title: t("Inbox"),
               url: "/dashboard/inbox?tab=New",
-              icon: Inbox,
+              icon: IconInbox,
               items: [
                 {
                   title: t("New"),
                   url: "/dashboard/inbox?tab=New",
-                  icon: Sparkles,
+                  icon: IconSparkles,
                 },
                 {
                   title: t("Assigned"),
                   url: "/dashboard/inbox?tab=Assigned",
-                  icon: UserCheck,
+                  icon: IconUserCheck,
                 },
                 {
                   title: t("Mine"),
@@ -114,12 +106,12 @@ export function useNavMain({
                 {
                   title: t("Closed"),
                   url: "/dashboard/inbox?tab=Addressed",
-                  icon: CircleCheckBig,
+                  icon: IconCircleCheck,
                 },
                 {
                   title: t("All"),
                   url: "/dashboard/inbox?tab=All",
-                  icon: Inbox,
+                  icon: IconInbox,
                 },
                 {
                   group: "Filter",
@@ -226,7 +218,7 @@ export function useNavMain({
                 },
                 {
                   title: "Settings",
-                  icon: Settings,
+                  icon: IconSettings,
                   url: "/dashboard/inbox?tab=settings",
                 },
               ],
@@ -238,37 +230,37 @@ export function useNavMain({
             {
               title: t("Analytics"),
               url: "/dashboard/analytics?tab=overview",
-              icon: ChartColumnBig,
+              icon: IconReportAnalytics,
               items: [
                 {
                   title: t("Overview"),
                   url: "/dashboard/analytics?tab=overview",
-                  icon: BarChart,
+                  icon: IconChartBar,
                 },
                 {
                   title: t("Agent Performance"),
                   url: "/dashboard/analytics?tab=agent-performance",
-                  icon: Award,
+                  icon: IconAward,
                 },
                 {
                   title: t("Team Performance"),
                   url: "/dashboard/analytics?tab=team-performance",
-                  icon: Activity,
+                  icon: IconActivity,
                 },
                 {
                   title: t("Message Analytics"),
                   url: "/dashboard/analytics?tab=api-analytics",
-                  icon: ChartLine,
+                  icon: IconChartLine,
                 },
                 {
                   title: t("Message Logs"),
                   url: "/dashboard/analytics?tab=message-logs",
-                  icon: Logs,
+                  icon: IconLogs,
                 },
                 {
                   title: t("Team Activity"),
                   url: "/dashboard/analytics?tab=team-activity",
-                  icon: FileText,
+                  icon: IconFileText,
                 },
               ],
             },
@@ -279,32 +271,32 @@ export function useNavMain({
             {
               title: t("Contacts"),
               url: "/dashboard/contacts",
-              icon: Users,
+              icon: IconUsers,
               items: [
                 {
                   title: t("All Contacts"),
                   url: "/dashboard/contacts",
-                  icon: Users,
+                  icon: IconUsers,
                 },
                 {
                   title: t("Groups"),
                   url: "/dashboard/contacts/groups",
-                  icon: Folder,
+                  icon: IconFolder,
                 },
                 {
                   title: t("Custom Fields"),
                   url: "/dashboard/contacts/custom-fields",
-                  icon: FileSpreadsheet,
+                  icon: IconFileSpreadsheet,
                 },
                 {
                   title: t("Labels"),
                   url: "/dashboard/contacts/labels",
-                  icon: Tag,
+                  icon: IconTag,
                 },
                 {
                   title: t("Lifecycle"),
                   url: "/dashboard/contacts/lifecycle",
-                  icon: Activity,
+                  icon: IconActivity,
                 },
               ],
             },
@@ -315,7 +307,7 @@ export function useNavMain({
             {
               title: t("Campaign"),
               url: "/dashboard/campaign",
-              icon: Send,
+              icon: IconSend,
             },
           ]
         : []),
@@ -367,17 +359,17 @@ export function useNavMain({
                 {
                   title: t("Orders"),
                   url: "/dashboard/whatsapp/orders",
-                  icon: ShoppingCart,
+                  icon: IconShoppingCart,
                 },
                 {
                   title: t("Payments"),
                   url: "/dashboard/whatsapp/payments",
-                  icon: CreditCard,
+                  icon: IconCreditCard,
                 },
                 {
                   title: t("Conversational"),
                   url: "/dashboard/whatsapp/conversational-components",
-                  icon: MessageSquare,
+                  icon: IconMessage,
                 },
               ],
             },
@@ -397,7 +389,7 @@ export function useNavMain({
                   {
                     title: t("Automation"),
                     url: "/dashboard/automation",
-                    icon: Zap,
+                    icon: IconBolt,
                   },
                 ]
               : []),
@@ -419,7 +411,7 @@ export function useNavMain({
                 {
                   title: t("Cashier Portal"),
                   url: "/dashboard/loyalty/cashier",
-                  icon: ShoppingCart,
+                  icon: IconShoppingCart,
                 },
                 {
                   title: t("Customers"),
@@ -439,12 +431,12 @@ export function useNavMain({
                 {
                   title: t("Transactions"),
                   url: "/dashboard/loyalty/transactions",
-                  icon: Clock,
+                  icon: IconClock,
                 },
                 {
                   title: t("Approvals"),
                   url: "/dashboard/loyalty/approvals",
-                  icon: UserCheck,
+                  icon: IconUserCheck,
                 },
                 {
                   title: t("Commands"),
@@ -531,16 +523,16 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.AI) && hasTeamFeature(TeamFeature.AiChatbot)
-        ? [
-            {
-              title: "ChatBot",
-              url: "/dashboard/chatbot",
-              icon: IconRobotFace,
-              items: [],
-            },
-          ]
-        : []),
+      // ...(hasFeature(subscription, sfpn.AI) && hasTeamFeature(TeamFeature.AiChatbot)
+      //   ? [
+      //       {
+      //         title: "Meta AI Agent",
+      //         url: "/dashboard/meta-agent",
+      //         icon: IconRobotFace,
+      //         items: [],
+      //       },
+      //     ]
+      //   : []),
       {
         title: t("Settings"),
         url: "/dashboard/settings",
@@ -553,7 +545,7 @@ export function useNavMain({
               {
                 title: t("Account"),
                 url: "/dashboard/settings/account",
-                icon: User,
+                icon: IconUser,
                 description: t("Business profile & preferences"),
               },
               ...(user?.role === UserRole.SUPADM
@@ -561,7 +553,7 @@ export function useNavMain({
                     {
                       title: t("Users"),
                       url: "/dashboard/settings/users",
-                      icon: UserCog,
+                      icon: IconUserCog,
                       description: t("User accounts & access"),
                     },
                   ]
@@ -569,7 +561,7 @@ export function useNavMain({
               {
                 title: t("Team"),
                 url: "/dashboard/settings/team",
-                icon: Users,
+                icon: IconUsers,
                 description: t("Team members & roles"),
               },
             ],
@@ -582,7 +574,7 @@ export function useNavMain({
                     {
                       title: t("Channels"),
                       url: "/dashboard/settings/channels",
-                      icon: MessageSquare,
+                      icon: IconMessage,
                       description: t("Communication channels"),
                     },
                   ]
@@ -592,7 +584,7 @@ export function useNavMain({
                     {
                       title: "Integrations",
                       url: "/dashboard/settings/integrations",
-                      icon: Webhook,
+                      icon: IconWebhook,
                       description: "Webhooks & external services",
                     },
                   ]
@@ -605,7 +597,7 @@ export function useNavMain({
               {
                 title: t("Security"),
                 url: "/dashboard/settings/security",
-                icon: Shield,
+                icon: IconShield,
                 description: t("Password & security"),
               },
               ...(user?.role === UserRole.SUPADM
@@ -613,7 +605,7 @@ export function useNavMain({
                     {
                       title: t("Billing"),
                       url: "/dashboard/settings/billing",
-                      icon: CreditCard,
+                      icon: IconCreditCard,
                       description: t("Subscription & payments"),
                     },
                   ]
@@ -629,7 +621,7 @@ export function useNavMain({
                     {
                       title: t("Admin"),
                       url: "/admin",
-                      icon: Crown,
+                      icon: IconCrown,
                       description: t("Admin settings"),
                     },
                   ],

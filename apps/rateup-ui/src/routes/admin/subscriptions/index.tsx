@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Building2, Calendar, CreditCard, Package, Star } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
@@ -14,7 +13,6 @@ import {
 import { FeatureBadge } from "@/components/adminPanel/Subscription/FeatureBadge.tsx";
 import { SubscriptionEditorModal } from "@/components/adminPanel/Subscription/SubscriptionEditorModal.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import {
@@ -32,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 
 import { DataTableToolbar } from "../../../components/admin/subscriptions/data-table-toolbar.tsx";
@@ -63,11 +62,7 @@ function SubscriptionPage() {
   const { data: rateupPlans } = useRateupPaymentsPlans();
   const updateSubscriptionMutation = useUpdateSubscriptionMutation();
 
-  const [updatedField, setUpdatedField] = useState<{
-    orgId: string;
-    basePlanId: string;
-  } | null>(null);
-  const [openedDialog, { open: openDialog, close: closeDialog }] = useDisclosure(false);
+  const confirm = useConfirm();
 
   const columns: ColumnDef<SubscriptionTableData>[] = [
     {
@@ -97,12 +92,24 @@ function SubscriptionPage() {
         return (
           <Select
             value={row.original.planId}
-            onValueChange={(value) => {
-              setUpdatedField({
-                orgId: row.original.orgId,
-                basePlanId: value,
+            items={rateupPlans?.map((plan) => ({ value: plan.id, label: plan.name })) ?? []}
+            onValueChange={async (value) => {
+              const shouldUpdate = await confirm({
+                title: translations("Update Plan"),
+                description: translations("Are you sure to update plan?"),
+                confirmText: translations("Yes"),
+                cancelText: translations("Cancel"),
               });
-              openDialog();
+
+              if (!shouldUpdate) return;
+
+              updateSubscriptionMutation.mutate({
+                orgId: row.original.orgId,
+                updatedData: {
+                  basePlanId: value,
+                  renewedAt: new Date(),
+                },
+              });
             }}
           >
             <SelectTrigger className="w-[180px]">
@@ -201,18 +208,6 @@ function SubscriptionPage() {
       meta: { title: "Expires" },
     },
   ];
-
-  const handleUpdateSubscriptionPlan = () => {
-    if (updatedField) {
-      updateSubscriptionMutation.mutate({
-        orgId: updatedField.orgId,
-        updatedData: {
-          basePlanId: updatedField.basePlanId,
-          renewedAt: new Date(),
-        },
-      });
-    }
-  };
 
   if (isSubscriptionsError) {
     return (
@@ -362,15 +357,6 @@ function SubscriptionPage() {
       <div>
         <DataTable columns={columns} data={tableData} DataTableToolbar={DataTableToolbar} />
       </div>
-      <ConfirmationModal
-        opened={openedDialog}
-        onClose={closeDialog}
-        headerLabel={translations("Are you sure to update plan?")}
-        onConfirm={handleUpdateSubscriptionPlan}
-        confirmLabel={translations("Yes")}
-        closeLabel={translations("Cancel")}
-        headerTitle={translations("Update Plan")}
-      />
     </div>
   );
 }

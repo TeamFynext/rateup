@@ -32,10 +32,8 @@ const WelcomeTour = ({ steps }) => {
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Button onClick={startTour} variant="outline" size="icon-sm">
-          <IconInfoCircle size={24} />
-        </Button>
+      <TooltipTrigger render={<Button onClick={startTour} variant="outline" size="icon-sm" />}>
+        <IconInfoCircle size={24} />
       </TooltipTrigger>
       <TooltipContent>
         <p>Start Tour</p>

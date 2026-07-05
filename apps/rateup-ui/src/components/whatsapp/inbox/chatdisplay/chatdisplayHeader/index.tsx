@@ -1,6 +1,6 @@
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronDown, IconTags } from "@tabler/icons-react";
-import { ArrowLeft, Ban, BellOff, Bot, CircleCheckBig, FolderClosed } from "lucide-react";
+import { ArrowLeft, Ban, BellOff, CircleCheckBig, FolderClosed } from "lucide-react";
 import { useMemo } from "react";
 
 import {
@@ -13,13 +13,10 @@ import {
   useContactLabels,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
-import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
-import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBlockWhatsAppUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
 import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
@@ -31,19 +28,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { Label } from "@/components/ui/label.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
-import { useChatbotStore } from "@/store/chatbot.store";
-import {
-  MessagePlatform,
-  SubscriptionFeaturePathName,
-  WaMessageAssignStatus,
-} from "@/types/enums.ts";
-import { hasFeature } from "@/utils/subscription/subscription.ts";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 import { getContactClosedIcon } from "../../chatselect/chatselectCard/index.tsx";
@@ -61,12 +50,7 @@ export default function WaInboxChatDisplayHeader({
   const tags = useLifecycleContext();
   const editContactMutation = useEditContactMutation(null);
   const { data: contactLabels = [], isPending } = useContactLabels();
-  const { setSelectedContact } = useContactsStore();
   const isMobile = useMediaQuery("(max-width: 1200px)");
-  const { selectedChatbotId } = useChatbotStore();
-
-  const { data: chatbot } = useGetChatbotDetails(selectedChatbotId);
-  const { data: subscription } = useSubscription();
 
   const { data: contactgroups, isLoading: contactGroupsLoading } = useContactGroupsByContactId(
     contact.id,
@@ -74,22 +58,6 @@ export default function WaInboxChatDisplayHeader({
   const { data: groups, isLoading: groupsLoading } = useContactGroup();
   const updateGroupsMutation = useUpdateContactGroupsForContactMutation(contact.id);
   const activeGroupIds = contactgroups?.map((g) => g.id) ?? [];
-
-  const hasAIFeature = useMemo(
-    () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
-    [subscription],
-  );
-
-  function handleAiWaChat(checked: boolean) {
-    editContactMutation.mutate(
-      { contactId: contact.id, data: { aiWaChat: checked } },
-      {
-        onSuccess: () => {
-          setSelectedContact({ ...contact, aiWaChat: checked });
-        },
-      },
-    );
-  }
 
   const lifecycleGroups = useMemo(
     () => [
@@ -261,12 +229,10 @@ export default function WaInboxChatDisplayHeader({
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-8">
-                <IconTags className="h-5 w-5 text-primary" />
-                <span className="text-primary font-semibold text-xs">Attributes</span>
-                <IconChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-              </Button>
+            <DropdownMenuTrigger render={<Button variant="outline" className="h-8" />}>
+              <IconTags className="h-5 w-5 text-primary" />
+              <span className="text-primary font-semibold text-xs">Attributes</span>
+              <IconChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="p-1 w-fit min-w-60 max-w-70">
@@ -454,7 +420,8 @@ export default function WaInboxChatDisplayHeader({
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-          {hasAIFeature && chatbot?.enableWaChat && chatbot?.enableAllWaChat && (
+          {/* TODO: CHATBOT */}
+          {/* {hasAIFeature && chatbot?.enableWaChat && chatbot?.enableAllWaChat && (
             <Popover>
               <PopoverTrigger asChild className="hover:bg-accent p-1 rounded-md">
                 <Bot
@@ -477,7 +444,7 @@ export default function WaInboxChatDisplayHeader({
                 </div>
               </PopoverContent>
             </Popover>
-          )}
+          )} */}
           <WaInboxCountdownTimer timeStamp={contact?.lastReceivedMessageTimeStamp} />
           <AssignUser contactId={contact?.id} />
           <ChatHeaderMenu contact={contact} />
@@ -492,7 +459,7 @@ const ChatHeaderMenu = ({ contact }) => {
   const messagesStore = useMessagesStore();
   const { user } = useUser();
   const { updateContactById, setSelectedContact } = useContactsStore();
-  const [openedConfirmation, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
+  const confirm = useConfirm();
   const blockmut = useBlockWhatsAppUser();
   const isChatClosed = [
     WaMessageAssignStatus.CLOSED,
@@ -501,7 +468,17 @@ const ChatHeaderMenu = ({ contact }) => {
     WaMessageAssignStatus.UNRESOLVED,
   ].includes(contact?.waMessageAssignStatus);
 
-  function handleBlock() {
+  async function handleBlock() {
+    const shouldBlock = await confirm({
+      title: `Block ${contact?.name ?? contact?.phone}`,
+      description: "Are you sure to block this user?",
+      warning: "The blocked user cannot message you and you cannot message the user",
+      confirmText: "Block",
+      cancelText: "Cancel",
+    });
+
+    if (!shouldBlock) return;
+
     blockmut.mutate(
       { phoneNumbersList: [contact.phone] },
       {
@@ -582,11 +559,9 @@ const ChatHeaderMenu = ({ contact }) => {
   if (isChatClosed) return null;
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 p-0">
-          <CircleCheckBig className="w-3.5 h-3.5 text-green-500" />
-          <span className="text-green-500">Close</span>
-        </Button>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-8 p-0" />}>
+        <CircleCheckBig className="w-3.5 h-3.5 text-green-500" />
+        <span className="text-green-500">Close</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem
@@ -652,24 +627,13 @@ const ChatHeaderMenu = ({ contact }) => {
           !contact?.blockedOnWhatsApp && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={openConfirm} className="text-destructive">
+              <DropdownMenuItem onClick={handleBlock} className="text-destructive">
                 <Ban className="w-4 h-4 mr-2 text-destructive" />
                 Block contact
               </DropdownMenuItem>
             </>
           )}
       </DropdownMenuContent>
-      <ConfirmationModal
-        onClose={closeConfirm}
-        headerTitle={`Block ${contact?.name ?? contact?.phone}`}
-        confirmLabel="Block"
-        opened={openedConfirmation}
-        onConfirm={handleBlock}
-        closeLabel="Cancel"
-        deleteQuotion="The blocked user cannot message you and you cannot message the user"
-        forDeleteFunctionality
-        headerLabel="Are you sure to block this user?"
-      />
     </DropdownMenu>
   );
 };

@@ -41,7 +41,6 @@ import {
 } from "@/components/loyalty/settings/schemas.ts";
 import { TierUpdateSettings } from "@/components/loyalty/settings/TierUpdateSettings.tsx";
 import { TransactionNotifications } from "@/components/loyalty/settings/TransactionNotifications.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -52,9 +51,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Form } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { docsPath } from "@/utils/constants.ts";
 import { UserRole } from "@/utils/enums/index.ts";
@@ -86,9 +85,9 @@ function LoyaltySettingsPage() {
   });
 
   const createTriggerMutation = useCreateEventTriggerMutation();
+  const confirm = useConfirm();
 
   // States for Modals
-  const [resetModalOpen, setResetModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
@@ -480,11 +479,20 @@ function LoyaltySettingsPage() {
     }
   };
 
-  const handleResetPoints = () => {
-    if (program?.id) {
-      resetPointsMutation.mutate(program.id);
-      setResetModalOpen(false);
-    }
+  const handleResetPoints = async () => {
+    if (!program?.id) return;
+
+    const shouldReset = await confirm({
+      title: t("Reset Loyalty Points"),
+      description: t(
+        "Are you sure you want to reset all loyalty points? This action cannot be undone.",
+      ),
+      confirmText: t("Reset Points"),
+    });
+
+    if (!shouldReset) return;
+
+    resetPointsMutation.mutate(program.id);
   };
 
   const handleDeleteProgram = () => {
@@ -573,7 +581,7 @@ function LoyaltySettingsPage() {
               />
 
               <DangerZone
-                onReset={() => setResetModalOpen(true)}
+                onReset={handleResetPoints}
                 onDelete={() => {
                   setDeleteConfirmText("");
                   setDeleteModalOpen(true);
@@ -586,7 +594,7 @@ function LoyaltySettingsPage() {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-4">
-          <Form {...eventTriggersForm}>
+          <>
             <div className="space-y-4">
               <TransactionNotifications
                 form={eventTriggersForm}
@@ -650,20 +658,9 @@ function LoyaltySettingsPage() {
                 disabled={noProgram}
               />
             </div>
-          </Form>
+          </>
         </TabsContent>
       </Tabs>
-      <ConfirmationModal
-        opened={resetModalOpen}
-        onClose={() => setResetModalOpen(false)}
-        headerTitle={t("Reset Loyalty Points")}
-        headerLabel={t(
-          "Are you sure you want to reset all loyalty points? This action cannot be undone.",
-        )}
-        confirmLabel={t("Reset Points")}
-        onConfirm={handleResetPoints}
-        loading={resetPointsMutation.isPending}
-      />
       <Dialog
         open={deleteModalOpen}
         onOpenChange={(open) => {

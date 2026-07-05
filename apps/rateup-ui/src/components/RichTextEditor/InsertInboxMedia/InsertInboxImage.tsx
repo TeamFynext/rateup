@@ -55,31 +55,30 @@ const InsertInboxImage = () => {
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <RichTextEditor.Control
-          aria-label="Upload Photo"
-          title="Upload Photo"
-          disabled={isUploadingFile || media.length > 0}
-        >
-          <IconPhoto size={16} />
-        </RichTextEditor.Control>
+      <PopoverTrigger
+        render={
+          <RichTextEditor.Control
+            aria-label="Upload Photo"
+            title="Upload Photo"
+            disabled={isUploadingFile || media.length > 0}
+          />
+        }
+      >
+        <IconPhoto size={16} />
       </PopoverTrigger>
-
       <PopoverContent className="w-64 flex flex-col gap-3">
-        <Button variant="outline" size="sm" asChild>
-          <label className="cursor-pointer">
-            <div className="flex items-center justify-center gap-1">
-              <IconPhoto size={16} />
-              Select Images
-            </div>
-            <input
-              type="file"
-              multiple
-              accept="image/png,image/jpeg"
-              className="hidden"
-              onChange={handleSelect}
-            />
-          </label>
+        <Button variant="outline" size="sm" render={<label className="cursor-pointer" />}>
+          <div className="flex items-center justify-center gap-1">
+            <IconPhoto size={16} />
+            Select Images
+          </div>
+          <input
+            type="file"
+            multiple
+            accept="image/png,image/jpeg"
+            className="hidden"
+            onChange={handleSelect}
+          />
         </Button>
 
         {/* Selected file names */}

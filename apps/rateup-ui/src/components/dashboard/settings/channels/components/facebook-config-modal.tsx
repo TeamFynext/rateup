@@ -103,6 +103,7 @@ export function FacebookConfigModal({
                       pageAccessToken: page.access_token,
                     });
                   }}
+                  items={fbPages}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder={translations("Select Page")} />
@@ -125,17 +126,19 @@ export function FacebookConfigModal({
               </div>
 
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    onClick={() => syncfbpageMut.mutate()}
-                    disabled={syncfbpageMut.isPending}
-                  >
-                    <RefreshCw
-                      className={`h-4 w-4 ${syncfbpageMut.isPending ? "animate-spin" : ""}`}
+                <TooltipTrigger
+                  render={
+                    <Button
+                      variant="outline"
+                      onClick={() => syncfbpageMut.mutate()}
+                      disabled={syncfbpageMut.isPending}
                     />
-                    {translations("Sync FB pages")}
-                  </Button>
+                  }
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${syncfbpageMut.isPending ? "animate-spin" : ""}`}
+                  />
+                  {translations("Sync FB pages")}
                 </TooltipTrigger>
 
                 <TooltipContent>{translations("Sync FB pages")}</TooltipContent>

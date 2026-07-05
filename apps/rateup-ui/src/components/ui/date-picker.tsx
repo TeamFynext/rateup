@@ -17,10 +17,16 @@ export function DatePicker({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" id="date" className={`justify-start font-normal ${className}`}>
-          {value ? value.toLocaleDateString() : "Select date"}
-        </Button>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            id="date"
+            className={`justify-start font-normal ${className}`}
+          />
+        }
+      >
+        {value ? value.toLocaleDateString() : "Select date"}
       </PopoverTrigger>
       <PopoverContent className="w-auto overflow-hidden p-0" align="start">
         <Calendar

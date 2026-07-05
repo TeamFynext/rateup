@@ -3,7 +3,7 @@ import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import invariant from "tiny-invariant";
@@ -11,16 +11,7 @@ import invariant from "tiny-invariant";
 import { useBoard } from "@/backend/tickets/tickets.query";
 import { useUserInfo } from "@/backend/user/user.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import { Column } from "./column.tsx";
 import { SettingsContext } from "./settings-context.tsx";
@@ -47,8 +38,8 @@ export function Board({
   const { t } = useTranslation();
   const { settings } = useContext(SettingsContext);
   const scrollableRef = useRef<HTMLDivElement | null>(null);
+  const confirm = useConfirm();
 
-  const [deleteColumnId, setDeleteColumnId] = useState<string | null>(null);
   // get userInformation for checking the role
   const { data: userRes } = useUserInfo() as { data: { data: UserData } };
   const role = userRes?.data?.role;
@@ -69,13 +60,22 @@ export function Board({
   // Use the fetched board data or fall back to initial prop
   const data = board || initial;
 
-  const handleDeleteColumn = (columnId: string) => {
+  const handleDeleteColumn = async (columnId: string) => {
     if (!isAdmin) {
       toast.warning(t("Only admin or super admin can delete this."));
       return;
     }
 
-    setDeleteColumnId(columnId);
+    const shouldDelete = await confirm({
+      title: t("Delete List"),
+      description: t("Are you sure you want to delete this list? This action cannot be undone."),
+      confirmText: t("Delete"),
+      cancelText: t("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
+    deleteColumn(columnId);
   };
 
   const handleUpdateColumn = (columnId: string, updates: Partial<TColumn>) => {
@@ -347,36 +347,6 @@ export function Board({
                 />
               );
             })}
-
-          <AlertDialog
-            open={!!deleteColumnId}
-            onOpenChange={(open) => !open && setDeleteColumnId(null)}
-          >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t("Delete List")}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t("Are you sure you want to delete this list? This action cannot be undone.")}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setDeleteColumnId(null)}>
-                  {t("Cancel")}
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-red-600 hover:bg-red-700"
-                  onClick={() => {
-                    if (deleteColumnId) {
-                      deleteColumn(deleteColumnId);
-                      setDeleteColumnId(null);
-                    }
-                  }}
-                >
-                  {t("Delete")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </div>
     </div>

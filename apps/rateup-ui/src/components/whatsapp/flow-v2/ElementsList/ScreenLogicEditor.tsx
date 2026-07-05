@@ -224,7 +224,11 @@ function AtomicConditionBlock({
       <div className="flex flex-col gap-2 grow">
         <div>
           <Label>{translations("For Question")}</Label>
-          <Select value={selectedQId} onValueChange={setSelectedQId}>
+          <Select
+            value={selectedQId}
+            onValueChange={setSelectedQId}
+            items={logicSupportedQuestionsInScreen.map((q) => ({ value: q.id, label: q.label }))}
+          >
             <SelectTrigger className="shrink-0">
               <SelectValue />
             </SelectTrigger>
@@ -240,7 +244,14 @@ function AtomicConditionBlock({
 
         <div>
           <Label>{translations("If condition")}</Label>
-          <Select value={selectedCondition} onValueChange={(val: any) => setSelectedCondition(val)}>
+          <Select
+            value={selectedCondition}
+            onValueChange={(val: any) => setSelectedCondition(val)}
+            items={getConditionsv2(selectedQType as any).map((opt: any) => ({
+              value: opt.value,
+              label: opt.label,
+            }))}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -269,15 +280,23 @@ function AtomicConditionBlock({
               options={(getResponses2(selectedQ) || []).map((opt: any) =>
                 typeof opt === "string" ? { label: opt, value: opt } : opt,
               )}
-              defaultValue={Array.isArray(matchData) ? matchData : []}
+              value={Array.isArray(matchData) ? matchData : []}
               onValueChange={setMatchData}
               placeholder={translations("Select Responses")}
+              emptyIndicator="No items found."
             />
           </div>
         ) : (
           <div>
             <Label>{translations("Response")}</Label>
-            <Select value={Array.isArray(matchData) ? "" : matchData} onValueChange={setMatchData}>
+            <Select
+              value={Array.isArray(matchData) ? "" : matchData}
+              onValueChange={setMatchData}
+              items={getResponses2(selectedQ).map((opt: any) => ({
+                value: opt.value,
+                label: opt.label,
+              }))}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -394,7 +413,11 @@ function ConditionsActionMapBlock({
         <div className="grow rounded-lg p-6 bg-white flex items-center justify-center">
           <div className="w-full">
             <Label>{translations("Navigate to")}</Label>
-            <Select value={selectedAction} onValueChange={(val: any) => setSelectedAction(val)}>
+            <Select
+              value={selectedAction}
+              onValueChange={(val: any) => setSelectedAction(val)}
+              items={possibleActions}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

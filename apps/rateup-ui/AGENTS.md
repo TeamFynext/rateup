@@ -6,7 +6,7 @@ This file provides essential guidance for AI coding agents working in this codeb
 
 - **Framework:** TanStack Start + TanStack Router, React 19, TypeScript
 - **Build Tooling:** Vite 8 + Nitro runtime output
-- **UI:** Tailwind CSS with a mixed component stack (shadcn/ui and existing Mantine)
+- **UI:** Tailwind CSS with a mixed component stack (shadcn/ui on Base UI, and existing Mantine)
 - **Monorepo:** No (single app)
 
 ## Build & Test Commands
@@ -49,6 +49,8 @@ This file provides essential guidance for AI coding agents working in this codeb
 - Always check for existing components before creating new ones
 - Compose UI using provided patterns (see shadcn skill)
 - Do not perform broad Mantine-to-shadcn rewrites unless explicitly requested.
+- shadcn/ui primitives in `src/components/ui/` are built on `@base-ui/react` (not Radix). There is no direct `@radix-ui/*` dependency in `package.json`; don't add one or reintroduce `cmdk`/`Command`-based patterns.
+- For select-style fields prefer `Select` (`src/components/ui/select.tsx`) for single choice and `MultiSelect` (`src/components/ui/multi-select.tsx`, a thin wrapper over `Combobox` in `src/components/ui/combobox.tsx`) for multi choice. Always pass `items` on `<Select>`/`<Combobox>` roots so the trigger renders the correct label.
 
 ## Internationalization
 

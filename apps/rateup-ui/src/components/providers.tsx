@@ -17,7 +17,6 @@ import axios from "axios";
 import { Suspense } from "react";
 import Session from "supertokens-auth-react/recipe/session";
 
-import { allModalManagerModalsObj } from "@/components/Modal/ModalManagerModals/allModalManagerModalsObj.tsx";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { UserProvider } from "@/context/UserContext.tsx";
@@ -88,7 +87,7 @@ export default function Providers({ children }) {
             suspend when a modal is actually opened (near-instant, small chunk),
             not during normal page rendering. */}
         <Suspense fallback={null}>
-          <ModalsProvider modals={allModalManagerModalsObj}>
+          <ModalsProvider>
             <UserProvider>
               <RouteChangeHandler />
               <HydrationBoundary state={dehydrate(queryClient)}>

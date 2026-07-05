@@ -177,20 +177,16 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
                   onChange={(e) => setFile(e.target.files?.[0])}
                 />
 
-                <Button asChild>
-                  <Label htmlFor="file-upload">
-                    {file ? `Selected: ${file.name}` : translations("Upload Icon")}
-                  </Label>
+                <Button render={<Label htmlFor="file-upload" />}>
+                  {file ? `Selected: ${file.name}` : translations("Upload Icon")}
                 </Button>
               </div>
             </div>
           </div>
 
           <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="secondary">
-                <span className="text-sm font-normal">{translations("Cancel")}</span>
-              </Button>
+            <DialogClose render={<Button variant="secondary" />}>
+              <span className="text-sm font-normal">{translations("Cancel")}</span>
             </DialogClose>
             <Button disabled={isUploading} type="submit">
               {(editContactGroupMutation.isPending || createContactGroupMutation.isPending) && (

@@ -190,12 +190,10 @@ const CreateOrEditQuickReply = ({
           </div>
 
           <DialogFooter className="mt-2 mr-4">
-            <DialogClose asChild>
-              <Button variant="secondary">
-                <span className="text-sm" onClick={() => form.reset()}>
-                  {t("Cancel")}
-                </span>
-              </Button>
+            <DialogClose render={<Button variant="secondary" />}>
+              <span className="text-sm" onClick={() => form.reset()}>
+                {t("Cancel")}
+              </span>
             </DialogClose>
             <Button type="submit" onClick={onSubmit} size="sm">
               {update.isPending || create.isPending ? <Spinner /> : null}

@@ -1,8 +1,9 @@
-import { ActionIcon, Button, FileButton, Group, NumberInput, Stack } from "@mantine/core";
-import { modals } from "@mantine/modals";
+import { ActionIcon, Button, FileButton, Group, Modal, NumberInput, Stack } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
+import ImageCropModal from "@/components/Modal/ModalManagerModals/ImageCropModal/index.tsx";
 import { mmImageCropModalClassnames } from "@/utils/constants.ts";
 
 import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
@@ -22,6 +23,9 @@ function LogoStyles() {
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
   const resetLogoRef = useRef<() => void>(null);
+
+  const [cropModalOpened, { open: openCropModal, close: closeCropModal }] = useDisclosure(false);
+  const [cropModalProps, setCropModalProps] = useState(null);
 
   const handleHeightInputChange = useCallback((value) => {
     surveyThemeDispatch({
@@ -58,19 +62,14 @@ function LogoStyles() {
       if (value) {
         const { name } = value;
         const url = URL.createObjectURL(value);
-        modals.openContextModal({
-          modal: "imageCropModal",
-          title: "Crop Image",
-          centered: true,
-          classNames: mmImageCropModalClassnames,
-          innerProps: {
-            imageUrl: url,
-            imageName: name,
-            onSaveClick: onCroppedImgSave,
-            onCancelClick: onCroppedImgCancel,
-            aspectRatio: 4 / 3,
-          },
+        setCropModalProps({
+          imageUrl: url,
+          imageName: name,
+          onSaveClick: onCroppedImgSave,
+          onCancelClick: onCroppedImgCancel,
+          aspectRatio: 4 / 3,
         });
+        openCropModal();
       } else {
         surveyThemeDispatch({
           type: "logo-file-change",
@@ -141,6 +140,21 @@ function LogoStyles() {
           </Group>
         </Group>
       </Stack>
+      <Modal
+        opened={cropModalOpened}
+        onClose={closeCropModal}
+        title="Crop Image"
+        centered
+        classNames={mmImageCropModalClassnames}
+      >
+        {cropModalProps && (
+          <ImageCropModal
+            context={{ closeModal: closeCropModal }}
+            id="imageCropModal"
+            innerProps={cropModalProps}
+          />
+        )}
+      </Modal>
     </Stack>
   );
 }

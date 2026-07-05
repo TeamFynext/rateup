@@ -130,23 +130,25 @@ export const useSurveyResponseColumns = ({
                 return (
                   <div className="flex items-center justify-center pr-20">
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={translations("View Ticket")}
-                          className="h-9 w-9 rounded focus-visible:ring-orange-500"
-                          onClick={() =>
-                            window.open(
-                              `/dashboard/tickets/${ticket.id}`,
-                              "_blank",
-                              "noopener,noreferrer",
-                            )
-                          }
-                        >
-                          <IconTicket color="orange" className="w-9 h-9" />
-                        </Button>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={translations("View Ticket")}
+                            className="h-9 w-9 rounded focus-visible:ring-orange-500"
+                            onClick={() =>
+                              window.open(
+                                `/dashboard/tickets/${ticket.id}`,
+                                "_blank",
+                                "noopener,noreferrer",
+                              )
+                            }
+                          />
+                        }
+                      >
+                        <IconTicket color="orange" className="w-9 h-9" />
                       </TooltipTrigger>
                       <TooltipContent side="right">{translations("View Ticket")}</TooltipContent>
                     </Tooltip>
@@ -324,15 +326,17 @@ export function ActionMenu({
   return (
     <div className="px-2">
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            className="rounded-lg text-xs text-gray-500 max-w-fit -ml-3.5"
-            size="sm"
-          >
-            {translations("Select Action")}
-            <IconChevronDown className="ml-2 h-4 w-4" />
-          </Button>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="outline"
+              className="rounded-lg text-xs text-gray-500 max-w-fit -ml-3.5"
+              size="sm"
+            />
+          }
+        >
+          {translations("Select Action")}
+          <IconChevronDown className="ml-2 h-4 w-4" />
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end">

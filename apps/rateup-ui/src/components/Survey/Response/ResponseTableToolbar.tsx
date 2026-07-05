@@ -48,7 +48,7 @@ interface ResponseTableToolbarProps<TData> {
   isSyncing: boolean;
   refetchResponse: () => void;
   handleSyncGoogleSheet: () => void;
-  handleExcelDownload: (columns: string[]) => void;
+  handleExcelDownload: (columns: string[], format: "xlsx" | "ods") => void;
   handleExportContacts?: () => void;
   hasContactQuestion?: boolean;
   alertModalOpen: () => void;
@@ -235,6 +235,10 @@ export function ResponseTableToolbar<TData>({
         <Select
           value={searchTerm || "__none__"}
           onValueChange={(value) => form.setValue("searchTerm", value === "__none__" ? "" : value)}
+          items={[
+            { value: "__none__", label: translations("Select value") },
+            ...numericOptions.map((option) => ({ value: option, label: option })),
+          ]}
         >
           <SelectTrigger className="h-9 w-full pr-9">
             <SelectValue placeholder={translations("Select value")} />
@@ -324,6 +328,7 @@ export function ResponseTableToolbar<TData>({
                 form.setValue("searchBy", value);
                 form.setValue("searchTerm", "");
               }}
+              items={filterableColumns.map((column) => ({ value: column.id, label: column.label }))}
             >
               <SelectTrigger className="h-9 w-45">
                 <SelectValue placeholder={translations("Column")} />
@@ -384,11 +389,11 @@ export function ResponseTableToolbar<TData>({
 
           {!survey?.isEncrypted && (
             <DropdownMenu open={openedExport} onOpenChange={setOpenedExport}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="default" size="sm" className="gap-2">
-                  <IconTableExport className="h-3.5 w-3.5" />
-                  {translations("Export")}
-                </Button>
+              <DropdownMenuTrigger
+                render={<Button variant="default" size="sm" className="gap-2" />}
+              >
+                <IconTableExport className="h-3.5 w-3.5" />
+                {translations("Export")}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem
@@ -402,20 +407,26 @@ export function ResponseTableToolbar<TData>({
                     ? translations("Resync with Google Sheet")
                     : translations("Sync with Google Sheet")}
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    const columns = table
-                      .getVisibleFlatColumns()
-                      .map((col) =>
-                        typeof col.columnDef?.header === "string" ? col.columnDef?.header : col?.id,
-                      );
-                    handleExcelDownload(columns);
-                    setOpenedExport(false);
-                  }}
-                >
-                  <IconFileDownload className="mr-2 h-4 w-4" />
-                  {translations("Download")}
-                </DropdownMenuItem>
+                {(["xlsx", "ods"] as const).map((format) => (
+                  <DropdownMenuItem
+                    key={format}
+                    onClick={() => {
+                      const columns = table
+                        .getVisibleFlatColumns()
+                        .map((col) =>
+                          typeof col.columnDef?.header === "string"
+                            ? col.columnDef?.header
+                            : col?.id,
+                        );
+                      handleExcelDownload(columns, format);
+                      setOpenedExport(false);
+                    }}
+                  >
+                    <IconFileDownload className="mr-2 h-4 w-4" />
+                    {format === "xlsx" && translations("Download as Excel")}
+                    {format === "ods" && translations("Download as OpenDocument (ODS)")}
+                  </DropdownMenuItem>
+                ))}
                 {hasContactQuestion && handleExportContacts && (
                   <DropdownMenuItem onClick={handleExportContacts}>
                     <IconDatabaseImport className="mr-2 h-4 w-4" />

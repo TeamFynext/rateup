@@ -114,6 +114,7 @@ const ContactForm = ({ form, customFields, type }) => {
               onValueChange={(value) => {
                 updateCustomField(fieldId, value || "", customField);
               }}
+              items={options}
             >
               <SelectTrigger className="bg-accent border-none placeholder:text-sm">
                 <SelectValue placeholder={commonProps.placeholder} />
@@ -170,7 +171,7 @@ const ContactForm = ({ form, customFields, type }) => {
           placeholder={translations("Enter phone number")}
           value={form.values.phone ?? ""}
           {...form.getInputProps("phone")}
-          className="w-full rounded-md border-none bg-accent px-3 py-2 text-sm focus-within:border-input [&>input]:border-none [&>input]:focus:outline-none focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition-all duration-150 ease-in-out focus-within:border-2"
+          className="w-full rounded-md border-none bg-accent px-3 py-2 text-sm [&>input]:border-none [&>input]:focus:outline-none focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition-all duration-150 ease-in-out focus-within:border-2"
         />
         {form?.errors?.phone && <FieldError>*{form?.errors?.phone}</FieldError>}
       </Field>
@@ -188,14 +189,12 @@ const ContactForm = ({ form, customFields, type }) => {
           <Field className="flex flex-col gap-1">
             <FieldLabel>{translations("Labels")}</FieldLabel>
             <MultiSelect
+              options={labels?.map((label) => ({ value: label.id, label: label.name })) ?? []}
+              value={form.values.labels ?? []}
               onValueChange={(values) => form.setFieldValue("labels", values)}
-              options={labels?.map((label) => ({
-                value: label.id,
-                label: label.name,
-              }))}
-              defaultValue={form.values.labels}
-              className="bg-accent hover:bg-accent border-none placeholder:text-sm min-h-9"
               placeholder="Select labels"
+              emptyIndicator="No labels found."
+              className="bg-accent hover:bg-accent border-none placeholder:text-sm min-h-9"
             />
           </Field>
           <Field className="flex flex-col gap-1">
@@ -228,15 +227,17 @@ const ContactForm = ({ form, customFields, type }) => {
           <Field className="flex flex-col gap-1">
             <FieldLabel>{translations("Date of Birth")}</FieldLabel>
             <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  id="date"
-                  className="w-48 justify-between font-normal bg-accent border-none"
-                >
-                  {form.values.dob || "Select date"}
-                  <ChevronDownIcon />
-                </Button>
+              <PopoverTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    id="date"
+                    className="w-48 justify-between font-normal bg-accent border-none"
+                  />
+                }
+              >
+                {form.values.dob || "Select date"}
+                <ChevronDownIcon />
               </PopoverTrigger>
               <PopoverContent className="w-auto overflow-hidden p-0" align="start">
                 <Calendar

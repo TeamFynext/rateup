@@ -4,12 +4,12 @@ import { toast } from "sonner";
 
 import { useRemoveContactsFromGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar.tsx";
 import { Badge } from "../ui/badge.tsx";
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
-import CustomAlertDialog from "../ui/custom/CustomAlertDialog.tsx";
 import {
   Dialog,
   DialogContent,
@@ -33,12 +33,24 @@ const ContactDetailedView = ({
   setIsAddToGroupOpen,
 }) => {
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [openedConfirm, setOpenedConfirm] = useState(false);
   const [editNotes, setEditNotes] = useState(false);
   const [notes, setNotes] = useState(selectedContact.notes);
   const removeContacts = useRemoveContactsFromGroup(selectedGroup?.id);
   const updateContact = useEditContactMutation();
-  function handleRemoveContactFromGroup(group, contactIds) {
+  const confirm = useConfirm();
+  async function handleRemoveContactFromGroup(group, contactIds) {
+    const shouldRemove = await confirm({
+      title: "Remove Contact from Group",
+      description: `Are you sure you want to remove ${selectedContact.name} from group ${group?.name}?`,
+      confirmText: "Remove",
+      cancelText: "Cancel",
+    });
+
+    if (!shouldRemove) {
+      setSelectedGroup(null);
+      return;
+    }
+
     removeContacts.mutate(
       { contactIds, groupId: group.id },
       {
@@ -50,9 +62,6 @@ const ContactDetailedView = ({
         },
       },
     );
-  }
-  function handleRemoveCancel() {
-    setSelectedGroup(null);
   }
 
   function handleSaveNotes() {
@@ -184,7 +193,7 @@ const ContactDetailedView = ({
                             size="sm"
                             onClick={() => {
                               setSelectedGroup(group);
-                              setOpenedConfirm(true);
+                              handleRemoveContactFromGroup(group, [selectedContact.id]);
                             }}
                           >
                             <X className="w-4 h-4" />
@@ -203,16 +212,6 @@ const ContactDetailedView = ({
                   </p>
                 </div>
               )}
-              <CustomAlertDialog
-                title="Remove Contact from Group"
-                buttonTitle="Remove"
-                description={`Are you sure you want to remove ${selectedContact.name} from group ${selectedGroup?.name}?`}
-                onAction={() => handleRemoveContactFromGroup(selectedGroup, [selectedContact.id])}
-                opened={openedConfirm}
-                setOpened={setOpenedConfirm}
-                buttonColor="bg-red-500"
-                onCancel={handleRemoveCancel}
-              />
             </div>
           </TabsContent>
           <TabsContent value="activity" className="space-y-4">

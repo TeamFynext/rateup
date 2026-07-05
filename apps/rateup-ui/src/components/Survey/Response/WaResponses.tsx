@@ -138,7 +138,7 @@ const WaResponses = ({ survey, defaultLanguage, subscription, questions }) => {
   const downloadExcelResponse = useDownloadExcelResponse();
 
   const handleExcelDownload = useCallback(
-    (columns) => {
+    (columns, format: "xlsx" | "ods" = "xlsx") => {
       downloadExcelResponse.mutate({
         defaultLanguage,
         surveyId,
@@ -148,6 +148,7 @@ const WaResponses = ({ survey, defaultLanguage, subscription, questions }) => {
         filterTeams,
         campaignIds: campaignIds,
         dbFlowId,
+        format,
         columnFilters: [],
         ranges: ranges?.[0],
       });
@@ -241,10 +242,8 @@ const WaResponses = ({ survey, defaultLanguage, subscription, questions }) => {
                   >
                     {ticketExist && (
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div>
-                            <IconTicket color="orange" className="w-9 h-9" />
-                          </div>
+                        <TooltipTrigger render={<div />}>
+                          <IconTicket color="orange" className="w-9 h-9" />
                         </TooltipTrigger>
                         <TooltipContent side="right">{translations("View Ticket")}</TooltipContent>
                       </Tooltip>

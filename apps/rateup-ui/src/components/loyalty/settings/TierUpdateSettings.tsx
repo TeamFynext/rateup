@@ -1,12 +1,11 @@
 import { ArrowUpCircle, Loader2, Save, Send } from "lucide-react";
-import type { UseFormReturn } from "react-hook-form";
+import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { FormField } from "@/components/ui/form.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
@@ -43,7 +42,7 @@ export function TierUpdateSettings({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <FormField
+        <Controller
           control={form.control}
           name={`${LoyaltyEventType.TIER_UPGRADED}.enabled`}
           render={({ field }) => (
@@ -69,7 +68,7 @@ export function TierUpdateSettings({
 
         {form.watch(`${LoyaltyEventType.TIER_UPGRADED}.enabled`) && (
           <div className="space-y-2">
-            <FormField
+            <Controller
               control={form.control}
               name={`${LoyaltyEventType.TIER_UPGRADED}.waTemplateId`}
               render={({ field }) => (

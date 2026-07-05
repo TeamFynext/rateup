@@ -71,6 +71,7 @@ const CreateContactModal = ({
       countryCode: "91",
       customFields: [],
       updateExisting: false,
+      hasHeaderRow: true,
       external_id: "",
       labels: [],
     },
@@ -124,6 +125,7 @@ const CreateContactModal = ({
       if (!csvfile) return;
       const formData = new FormData();
       formData.append("update", form.getValues().updateExisting?.toString());
+      formData.append("hasHeaderRow", form.getValues().hasHeaderRow?.toString() ?? "true");
       const contactTypes = form.getValues().contactType;
       contactTypes.forEach((item, index) => {
         formData.append(`tags[${index}]`, item);
@@ -275,11 +277,19 @@ const CreateContactModal = ({
                 key={form.key("updateExisting")}
                 {...form.getInputProps("updateExisting")}
               />
+              <Switch
+                mx={"lg"}
+                label={translations("First row contains column headers (name, phone, ...)")}
+                key={form.key("hasHeaderRow")}
+                {...form.getInputProps("hasHeaderRow")}
+              />
               <ContainedFileInput
                 mx={"lg"}
                 label=""
-                placeholder={translations("Upload a csv file (.csv) or excel file (.xlsx)")}
-                accept=".csv,.xlsx"
+                placeholder={translations(
+                  "Upload a csv file (.csv), excel file (.xlsx) or opendocument file (.ods)",
+                )}
+                accept=".csv,.xlsx,.ods"
                 multiple={false}
                 onChange={setCsvfile}
                 styles={{
@@ -332,16 +342,15 @@ export const UserSelector = ({
     );
   }
   if (allowMultiSelect) {
+    const userOptions = users?.data?.map((user) => ({ value: user.id, label: user.name })) ?? [];
     return (
       <MultiSelect
+        options={userOptions}
+        value={value}
         onValueChange={onChange}
-        options={users?.data?.map((user) => ({
-          value: user.id,
-          label: user.name,
-        }))}
-        className={`${className}`}
         placeholder="Select staff"
-        defaultValue={value}
+        emptyIndicator="No staff found."
+        className={`${className}`}
       />
     );
   }
@@ -354,8 +363,9 @@ export const UserSelector = ({
   function onValueChange(value) {
     onChange(value === "all" ? users.data.map((u) => u.id) : value, value === "all");
   }
+  const userSelectItems = userData?.map((user) => ({ value: user.id, label: user.name })) ?? [];
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select value={value} onValueChange={onValueChange} items={userSelectItems}>
       <SelectTrigger className={`${className}`}>
         <div>
           <User className="size-4 text-muted-foreground" />

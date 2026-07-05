@@ -87,6 +87,7 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
               <Select
                 value={currentMapping?.shopifyPath || ""}
                 onValueChange={(val) => handleMappingChange(i, val)}
+                items={variableOptions}
               >
                 <SelectTrigger className="h-9">
                   <SelectValue

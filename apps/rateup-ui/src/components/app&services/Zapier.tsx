@@ -1,5 +1,4 @@
 import { ActionIcon, Avatar, Flex, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconKey, IconReload, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,8 +16,8 @@ import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { IntegratedApps, ZapierTriggers } from "@/types/enums.ts";
 import type { ZapierIntegration } from "@/types/global";
@@ -186,8 +185,7 @@ function ZapierTriggerList({
   isLoading: boolean;
 }) {
   const triggers = integration ? (integration.credential?.triggerSubscriptions ?? []) : [];
-  const [opened, { open, close }] = useDisclosure(false);
-  const [trigger, setTrigger] = useState(null);
+  const confirm = useConfirm();
   const deleteMut = useDeleteZapierTriggerHook();
   const groupedTrigger = useMemo(
     () =>
@@ -197,12 +195,17 @@ function ZapierTriggerList({
       })),
     [integration],
   );
-  function handleDelete() {
-    deleteMut.mutate(trigger, {
-      onSettled: () => {
-        setTrigger(null);
-      },
+  async function handleDeleteClick(tr) {
+    const shouldDelete = await confirm({
+      title: "Delete trigger subscription",
+      description: "Are you sure you want to delete this subscription?",
+      warning: tr?.active ? "The zap with this subscription will get paused" : undefined,
+      confirmText: "Delete",
     });
+
+    if (!shouldDelete) return;
+
+    deleteMut.mutate(tr);
   }
   if (!integration) return null;
   return (
@@ -227,10 +230,7 @@ function ZapierTriggerList({
                         loading={deleteMut.isPending}
                         variant="subtle"
                         color="red"
-                        onClick={() => {
-                          setTrigger(tr);
-                          open();
-                        }}
+                        onClick={() => handleDeleteClick(tr)}
                       >
                         {<IconTrash size={"1.2rem"} />}
                       </ActionIcon>
@@ -260,19 +260,6 @@ function ZapierTriggerList({
           </Stack>
         ))}
       </Stack>
-      <ConfirmationModal
-        headerLabel="Are you sure you want to delete this subscription?"
-        deleteQuotion={trigger?.active ? "The zap with this subscription will get paused" : ""}
-        confirmLabel="Delete"
-        headerTitle="Delete trigger subscription"
-        onClose={() => {
-          setTrigger(null);
-          close();
-        }}
-        onConfirm={handleDelete}
-        opened={opened}
-        forDeleteFunctionality
-      />
     </PaperLayout>
   );
 }

@@ -189,7 +189,15 @@ function SurveysPageFilter({
 
   return (
     <div className="flex flex-col sm:flex-row gap-2">
-      <Select value={filterParam} onValueChange={setFilterParam}>
+      <Select
+        value={filterParam}
+        onValueChange={setFilterParam}
+        items={[
+          { value: "all", label: t("All") },
+          { value: "active", label: t("Active") },
+          { value: "paused", label: t("Paused") },
+        ]}
+      >
         <SelectTrigger className="min-w-40">
           <SelectValue placeholder={t("Status")} />
         </SelectTrigger>
@@ -202,7 +210,12 @@ function SurveysPageFilter({
         </SelectContent>
       </Select>
 
-      <Select value={selectedTeamId} onValueChange={setSelectedTeamId} disabled={disabled}>
+      <Select
+        value={selectedTeamId}
+        onValueChange={setSelectedTeamId}
+        disabled={disabled}
+        items={[{ value: "all", label: t("All Teams") }, ...teamOptions]}
+      >
         <SelectTrigger className="min-w-42">
           <div className="flex items-center gap-2 truncate">
             <div className="flex size-7 items-center justify-center rounded-md bg-muted">

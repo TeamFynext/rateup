@@ -42,16 +42,6 @@ import { StatusBadge } from "@/components/Campaign/statusBadge.tsx";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -65,6 +55,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import {
   CampaignParticipantStatus,
@@ -83,7 +74,6 @@ function CampaignDetails() {
   const [activeTab, setActiveTab] = useState("info");
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [sorting] = useState([CONTACT_SORT]);
   const [columnFilters] = useDebouncedState([], 200);
@@ -105,7 +95,7 @@ function CampaignDetails() {
   const { update } = useRouteParams();
   const rawCampaignId = params?.campaignId;
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const confirm = useConfirm();
 
   const campaignId = useMemo(() => {
     if (!rawCampaignId) return undefined;
@@ -239,7 +229,6 @@ function CampaignDetails() {
   );
   const removeMulitpleGroupParticipants = useRemoveMulitpleGroupParticipants(campaignId, () => {
     setSelectedIds([]);
-    setOpenDeleteModal(false);
   });
 
   useEffect(() => {
@@ -305,9 +294,9 @@ function CampaignDetails() {
     setIsEditOpen(true);
   };
 
-  const handleDeliveryReport = () => {
+  const handleDeliveryReport = (format: "xlsx" | "ods" = "xlsx") => {
     toast.loading("Generating delivery report...", { id: "delivery-report" });
-    deliveryReportMutation.mutate({ campaignId, selectedDripStage });
+    deliveryReportMutation.mutate({ campaignId, selectedDripStage, format });
   };
 
   const isQueuing =
@@ -407,10 +396,20 @@ function CampaignDetails() {
     );
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    const shouldDelete = await confirm({
+      title: t("Delete Campaign"),
+      description: t(
+        "Are you sure you want to delete this campaign? This action cannot be undone.",
+      ),
+      confirmText: t("Delete"),
+      cancelText: t("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
     deleteCampaignMutation.mutate(campaignId, {
       onSuccess: () => {
-        setIsDeleteDialogOpen(false);
         toast.success("Campaign deleted successfully");
         navigate({
           to: "/dashboard/campaign",
@@ -419,6 +418,27 @@ function CampaignDetails() {
       onError: (error) => {
         toast.error(error?.message || "Failed to delete campaign");
       },
+    });
+  };
+
+  const handleDeleteParticipants = async () => {
+    const shouldDelete = await confirm({
+      title: t("Delete Participants"),
+      description: t(
+        "Are you sure you want to delete {count} selected participants? This action cannot be undone.",
+        {
+          count: selectedIds.length?.toString(),
+        },
+      ),
+      confirmText: t("Delete"),
+      cancelText: t("Cancel"),
+    });
+
+    if (!shouldDelete) return;
+
+    removeMulitpleGroupParticipants.mutate({
+      data: selectedIds,
+      campaignId,
     });
   };
   const handleStopCampaign = () => {
@@ -482,14 +502,12 @@ function CampaignDetails() {
                 </Button>
 
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
+                  <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
+                    <MoreVertical className="w-4 h-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem
-                      onClick={() => setIsDeleteDialogOpen(true)}
+                      onClick={handleDelete}
                       className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
@@ -587,15 +605,28 @@ function CampaignDetails() {
                     </Button>
                   )}
 
-                  <Button
-                    size="sm"
-                    onClick={handleDeliveryReport}
-                    disabled={deliveryReportMutation.isPending}
-                    className="gap-2"
-                  >
-                    <FileDown className="w-3.5 h-3.5" />
-                    {deliveryReportMutation.isPending ? t("Generating...") : t("Delivery Report")}
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          size="sm"
+                          disabled={deliveryReportMutation.isPending}
+                          className="gap-2"
+                        />
+                      }
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      {deliveryReportMutation.isPending ? t("Generating...") : t("Delivery Report")}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleDeliveryReport("xlsx")}>
+                        {t("Download as Excel")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeliveryReport("ods")}>
+                        {t("Download as OpenDocument (ODS)")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
@@ -687,7 +718,7 @@ function CampaignDetails() {
                         <Button
                           variant="destructive"
                           disabled={selectedIds.length === 0}
-                          onClick={() => setOpenDeleteModal(true)}
+                          onClick={handleDeleteParticipants}
                         >
                           {t("Delete Contacts ({count})", {
                             count: selectedIds.length?.toString(),
@@ -737,54 +768,6 @@ function CampaignDetails() {
         </Tabs>
       </div>
       {/* ── Dialogs (portalled, outside layout flow) ──────────────────── */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("Delete Campaign")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("Are you sure you want to delete this campaign? This action cannot be undone.")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {t("Delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("Delete Participants")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t(
-                "Are you sure you want to delete {count} selected participants? This action cannot be undone.",
-                {
-                  count: selectedIds.length?.toString(),
-                },
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90"
-              onClick={() =>
-                removeMulitpleGroupParticipants.mutate({
-                  data: selectedIds,
-                  campaignId,
-                })
-              }
-            >
-              {t("Delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
       {isEditOpen && editingCampaign && (
         <CreateCampaignModal
           isEdit

@@ -4,13 +4,13 @@ import {
   Center,
   Image,
   LoadingOverlay,
+  Modal,
   rem,
   SimpleGrid,
   Stack,
   Text,
 } from "@mantine/core";
-import { useIntersection, useMediaQuery } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
+import { useDisclosure, useIntersection, useMediaQuery } from "@mantine/hooks";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,7 @@ import { mmImageCropModalClassnames } from "@/utils/constants.ts";
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput.tsx";
 import useDebounce from "../../../menu/hook/useDebounce.ts";
+import ImageCropModal from "../ImageCropModal/index.tsx";
 
 function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
   const { onImageSelected, aspectRatio } = innerProps;
@@ -45,19 +46,17 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
     ) ?? []
   ).filter((item) => item !== undefined);
 
+  const [cropModalOpened, { open: openCropModal, close: closeCropModal }] = useDisclosure(false);
+  const [cropModalProps, setCropModalProps] = useState(null);
+
   const handleImageClick = useCallback((url, name) => {
-    modals.openContextModal({
-      modal: "imageCropModal",
-      title: translations("Crop Image"),
-      centered: true,
-      classNames: mmImageCropModalClassnames,
-      innerProps: {
-        imageUrl: url,
-        imageName: name,
-        onSaveClick: onImageSelected,
-        aspectRatio,
-      },
+    setCropModalProps({
+      imageUrl: url,
+      imageName: name,
+      onSaveClick: onImageSelected,
+      aspectRatio,
     });
+    openCropModal();
   }, []);
 
   return (
@@ -98,6 +97,21 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
           ))
         )}
       </SimpleGrid>
+      <Modal
+        opened={cropModalOpened}
+        onClose={closeCropModal}
+        title={translations("Crop Image")}
+        centered
+        classNames={mmImageCropModalClassnames}
+      >
+        {cropModalProps && (
+          <ImageCropModal
+            context={{ closeModal: closeCropModal }}
+            id="imageCropModal"
+            innerProps={cropModalProps}
+          />
+        )}
+      </Modal>
     </Stack>
   );
 }

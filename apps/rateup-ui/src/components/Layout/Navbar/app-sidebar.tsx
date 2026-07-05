@@ -47,7 +47,7 @@ import { useNavMain } from "./hooks.tsx";
 import { NavUser } from "./user-nav.tsx";
 import { WhatsAppSettingsModal } from "./utils.tsx";
 
-const sidebarIconProps = { className: "size-5!", strokeWidth: 1.7 };
+const sidebarIconProps = { className: "size-5!", strokeWidth: 1.75 };
 
 // ---------------------------------------------------------------------------
 // Custom hook – chat filter logic
@@ -238,7 +238,7 @@ function NavItemContent({
 
   return (
     <>
-      {item.icon && <item.icon />}
+      {item.icon && <item.icon {...sidebarIconProps} />}
       <div className="flex min-w-0 flex-1 items-center gap-2 group-data-[collapsible=icon]:hidden">
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
@@ -292,22 +292,22 @@ function NavLink({
 }>) {
   return (
     <SidebarMenuButton
-      asChild
       isActive={isActive}
       tooltip={item.title}
       className={showDescription ? "h-11 py-2" : undefined}
+      render={
+        <Link
+          to={item.url || "#"}
+          title={item.title}
+          aria-label={item.title}
+          onClick={(e) => {
+            if (!onRouteGuard(item.url)) e.preventDefault();
+            onClick?.();
+          }}
+        />
+      }
     >
-      <Link
-        to={item.url || "#"}
-        title={item.title}
-        aria-label={item.title}
-        onClick={(e) => {
-          if (!onRouteGuard(item.url)) e.preventDefault();
-          onClick?.();
-        }}
-      >
-        <NavItemContent item={item} isActive={isActive} showDescription={showDescription} />
-      </Link>
+      <NavItemContent item={item} isActive={isActive} showDescription={showDescription} />
     </SidebarMenuButton>
   );
 }
@@ -341,33 +341,33 @@ function NavItem({
         : isPathPrefixActive(fullPathname, item.url));
     return (
       <SidebarMenuSubItem>
-        <SidebarMenuSubButton asChild isActive={isActive}>
-          {item.url === "#" || !item.url ? (
-            <button
-              aria-label={item.title}
-              className="w-full"
-              onClick={(e) => {
-                if (!onRouteGuard(item.url)) e.preventDefault();
-                item?.handleClick?.();
-              }}
-            >
-              {item.icon && <item.icon />}
-              <span>{item.title}</span>
-            </button>
-          ) : (
-            <Link
-              to={item.url}
-              title={item.title}
-              aria-label={item.title}
-              onClick={(e) => {
-                if (!onRouteGuard(item.url)) e.preventDefault();
-                item?.handleClick?.();
-              }}
-            >
-              {item.icon && <item.icon />}
-              <span>{item.title}</span>
-            </Link>
-          )}
+        <SidebarMenuSubButton
+          isActive={isActive}
+          render={
+            item.url === "#" || !item.url ? (
+              <button
+                aria-label={item.title}
+                className="w-full"
+                onClick={(e) => {
+                  if (!onRouteGuard(item.url)) e.preventDefault();
+                  item?.handleClick?.();
+                }}
+              />
+            ) : (
+              <Link
+                to={item.url}
+                title={item.title}
+                aria-label={item.title}
+                onClick={(e) => {
+                  if (!onRouteGuard(item.url)) e.preventDefault();
+                  item?.handleClick?.();
+                }}
+              />
+            )
+          }
+        >
+          {item.icon && <item.icon {...sidebarIconProps} />}
+          <span>{item.title}</span>
         </SidebarMenuSubButton>
       </SidebarMenuSubItem>
     );
@@ -396,28 +396,24 @@ function NavItem({
     const activeChildPath = getMostSpecificChildRoute(item.items, fullPathname);
 
     return (
-      <Collapsible asChild defaultOpen={false} className="group/collapsible">
-        <SidebarMenuItem>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton tooltip={item.title}>
-              <NavItemContent item={item} isActive={false} showRotatingChevron />
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              {item.items.map((subItem: any) => (
-                <NavItem
-                  key={subItem.title}
-                  item={subItem}
-                  fullPathname={fullPathname}
-                  onRouteGuard={onRouteGuard}
-                  variant="sub"
-                  activeSubPath={activeChildPath}
-                />
-              ))}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        </SidebarMenuItem>
+      <Collapsible defaultOpen={false} className="group/collapsible" render={<SidebarMenuItem />}>
+        <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
+          <NavItemContent item={item} isActive={false} showRotatingChevron />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {item.items.map((subItem: any) => (
+              <NavItem
+                key={subItem.title}
+                item={subItem}
+                fullPathname={fullPathname}
+                onRouteGuard={onRouteGuard}
+                variant="sub"
+                activeSubPath={activeChildPath}
+              />
+            ))}
+          </SidebarMenuSub>
+        </CollapsibleContent>
       </Collapsible>
     );
   }
@@ -678,37 +674,27 @@ export default function AppSidebar({
         intendedRoute={intendedRoute}
       />
       {/* Icon rail */}
-      <Sidebar
-        className="w-(--sidebar-width-icon) border-r h-screen z-50 text-white!"
-        collapsible="none"
-      >
+      <Sidebar className="w-fit border-r h-screen z-50 text-white!" collapsible="none">
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                size="lg"
-                asChild
-                className="md:h-8 md:p-0 hidden md:flex ml-0.5"
+                className="md:h-8 md:p-0 hidden md:flex ml-0.5 hover:bg-transparent"
                 tooltip={userData?.data?.orgName}
+                render={<div aria-label="Organization" />}
               >
-                <div aria-label="Organization">
-                  <Avatar
-                    className={`${userData?.data.orgLogo ? "bg-background" : "bg-sidebar-primary"} text-sidebar-primary-foreground`}
-                  >
-                    <AvatarImage
-                      src={getFileUrlFromKey(userData?.data.orgLogo)}
-                      alt={userData?.data?.orgName}
-                      className="rounded-md"
-                    />
-                    <AvatarFallback className="uppercase bg-sidebar-primary text-sidebar-primary-foreground">
-                      {userData?.data?.orgName?.slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{userData?.data?.orgName}</span>
-                    <span className="truncate text-xs">Enterprise</span>
-                  </div>
-                </div>
+                <Avatar
+                  className={`${userData?.data.orgLogo ? "bg-background" : "bg-sidebar-primary"} text-sidebar-primary-foreground`}
+                >
+                  <AvatarImage
+                    src={getFileUrlFromKey(userData?.data.orgLogo)}
+                    alt={userData?.data?.orgName}
+                    className="rounded-md"
+                  />
+                  <AvatarFallback className="uppercase bg-sidebar-primary text-sidebar-primary-foreground">
+                    {userData?.data?.orgName?.slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
               </SidebarMenuButton>
               <SidebarTrigger className="flex md:hidden" />
             </SidebarMenuItem>
@@ -718,7 +704,7 @@ export default function AppSidebar({
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarMenu className="gap-2">
+              <SidebarMenu>
                 {navMain.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
@@ -730,20 +716,11 @@ export default function AppSidebar({
                         if (!allow) e.preventDefault();
                       }}
                       isActive={activeItem?.title === item.title}
-                      asChild={!!item.url && item.url !== "#"}
                       aria-label={item.title}
+                      render={item.url && item.url !== "#" ? <Link to={item.url} /> : undefined}
                     >
-                      {item.url && item.url !== "#" ? (
-                        <Link to={item.url}>
-                          <item.icon {...sidebarIconProps} />
-                          <span className="sr-only">{item.title}</span>
-                        </Link>
-                      ) : (
-                        <>
-                          <item.icon {...sidebarIconProps} />
-                          <span className="sr-only">{item.title}</span>
-                        </>
-                      )}
+                      <item.icon {...sidebarIconProps} />
+                      <span className="sr-only">{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -758,7 +735,6 @@ export default function AppSidebar({
           <NavUser user={userData?.data} />
         </SidebarFooter>
       </Sidebar>
-
       {/* Expanded nav panel */}
       {activeItem?.items && activeItem.items.length > 0 && (
         <Sidebar className="w-60 border-r relative hidden md:flex" collapsible="icon">
@@ -767,7 +743,7 @@ export default function AppSidebar({
               <h2 className="flex text-foreground text-lg gap-1 font-bold group-data-[collapsible=icon]:hidden">
                 {activeItem.icon && (
                   <div className="rounded-md flex items-center justify-center shrink-0 size-7">
-                    <activeItem.icon className="ml-1 size-5 m-auto" />
+                    <activeItem.icon {...sidebarIconProps} />
                   </div>
                 )}
                 {activeItem?.title}

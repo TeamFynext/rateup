@@ -1,4 +1,3 @@
-import AiBotNode from "./aibot-node.tsx";
 import assignNode from "./assign-node.tsx";
 import AudioNode from "./audio-node.tsx";
 import ButtonNode from "./button-node.tsx";
@@ -49,7 +48,6 @@ export const nodeTypes = {
   locationNode: LocationNode,
   contactsNode: ContactsNode,
   flowNode: FlowNode,
-  aibotNode: AiBotNode,
   ticketNode: ticketNode,
   assignNode: assignNode,
   leadgenNode: LeadgenNode,

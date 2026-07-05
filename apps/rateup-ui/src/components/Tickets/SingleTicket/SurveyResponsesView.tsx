@@ -50,7 +50,6 @@ const SurveyResponsesView = ({
           {parse(question?.title?.[language] || question?.title || "")}
         </div>
       </div>
-
       <div className="ml-2 mt-2 flex flex-col gap-3">
         {response ? (
           <>

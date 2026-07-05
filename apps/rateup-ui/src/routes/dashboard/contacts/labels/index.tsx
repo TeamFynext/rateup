@@ -9,16 +9,6 @@ import {
   useUpdateContactLabelMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { DataTable } from "@/components/Table/data-table.tsx";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -30,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import { DataTableToolbar } from "../../../../components/dashboard/contacts/labels/data-table-toolbar.tsx";
 import type { ContactLabel } from "../../../../components/dashboard/contacts/labels/utils.tsx";
@@ -44,10 +35,10 @@ function LabelsPage() {
   const createLabelMutation = useCreateContactLabelMutation();
   const updateLabelMutation = useUpdateContactLabelMutation();
   const deleteLabelMutation = useDeleteContactLabelMutation();
+  const confirm = useConfirm();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState<ContactLabel | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -59,7 +50,7 @@ function LabelsPage() {
     () =>
       createColumns({
         onEdit: openEditModal,
-        onDelete: openDeleteDialog,
+        onDelete: handleDelete,
       }),
     [],
   );
@@ -89,12 +80,21 @@ function LabelsPage() {
     );
   };
 
-  const handleDelete = async () => {
-    if (!selectedLabel) return;
+  const handleDelete = async (label: ContactLabel) => {
+    const shouldDelete = await confirm({
+      title: "Delete Label",
+      description:
+        label._count.contactLabels > 0
+          ? `Are you sure you want to delete "${label.name}"? This label is currently assigned to ${label._count.contactLabels} contact${label._count.contactLabels === 1 ? "" : "s"}. Deleting this label will remove it from all contacts.`
+          : `Are you sure you want to delete "${label.name}"?`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+    });
 
-    deleteLabelMutation.mutate(selectedLabel.id, {
+    if (!shouldDelete) return;
+
+    deleteLabelMutation.mutate(label.id, {
       onSuccess: () => {
-        setIsDeleteDialogOpen(false);
         setSelectedLabel(null);
       },
     });
@@ -108,11 +108,6 @@ function LabelsPage() {
       description: label.description || "",
     });
     setIsEditModalOpen(true);
-  }
-
-  function openDeleteDialog(label: ContactLabel) {
-    setSelectedLabel(label);
-    setIsDeleteDialogOpen(true);
   }
 
   const resetForm = () => {
@@ -284,38 +279,6 @@ function LabelsPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Delete Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Label</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{selectedLabel?.name}"?
-              {selectedLabel?._count.contactLabels > 0 && (
-                <>
-                  <br />
-                  <br />
-                  This label is currently assigned to{" "}
-                  <strong>{selectedLabel._count.contactLabels}</strong> contact
-                  {selectedLabel._count.contactLabels === 1 ? "" : "s"}. Deleting this label will
-                  remove it from all contacts.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={submitting}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {submitting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

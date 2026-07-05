@@ -109,6 +109,7 @@ const TestimonialFilter = ({
                 <Select
                   value={filters?.teams?.[0] || ""}
                   onValueChange={(value) => filterData("teams", [value])}
+                  items={teamMultiSelectOptions}
                 >
                   <SelectTrigger className="h-8">
                     <SelectValue placeholder={translations("All Teams")} />
@@ -130,6 +131,7 @@ const TestimonialFilter = ({
                 <Select
                   value={filters?.surveys?.[0] || ""}
                   onValueChange={(value) => filterData("surveys", [value])}
+                  items={removeDuplicates(surveyMultiSelectOptions)}
                 >
                   <SelectTrigger className="h-8">
                     <SelectValue placeholder={translations("All Surveys")} />

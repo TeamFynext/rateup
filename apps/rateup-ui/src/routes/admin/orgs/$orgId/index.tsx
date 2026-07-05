@@ -40,7 +40,6 @@ import { SubscriptionEditorModal } from "@/components/adminPanel/Subscription/Su
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -54,6 +53,7 @@ import { Label } from "@/components/ui/label.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 export const Route = createFileRoute("/admin/orgs/$orgId/")({
@@ -123,9 +123,8 @@ function StatSection({ title, children, icon: Icon }) {
 function OrgById() {
   const [opened, { close, open }] = useDisclosure(false);
   const [isAnnualMessageLimit, setIsAnnualMessageLimit] = useState(false);
-  const [openedConfirmModal, { open: openConfirmModal, close: closeConfirmModal }] =
-    useDisclosure(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const confirm = useConfirm();
   const params = useParams({
     strict: false,
   });
@@ -154,6 +153,21 @@ function OrgById() {
       orgId,
       data: { isPaused: !orgDetails?.isPaused },
     });
+  };
+
+  const handlePauseResumeClick = async () => {
+    const shouldProceed = await confirm({
+      title: orgDetails?.isPaused
+        ? translations("Resume Organization")
+        : translations("Pause Organization"),
+      description: `Are you sure to ${orgDetails?.isPaused ? "resume" : "pause"} this organization?`,
+      confirmText: translations("Yes"),
+      cancelText: translations("cancel"),
+    });
+
+    if (!shouldProceed) return;
+
+    handleOrgPauseStatus();
   };
 
   const handleAnnualMessageLimit = (checked: boolean) => {
@@ -284,7 +298,7 @@ function OrgById() {
             {orgDetails?.id !== import.meta.env.VITE_ROOT_ORG && (
               <Button
                 variant={orgDetails?.isPaused ? "default" : "destructive"}
-                onClick={openConfirmModal}
+                onClick={handlePauseResumeClick}
               >
                 {orgDetails?.isPaused ? (
                   <Play className="h-4 w-4 mr-2" />
@@ -395,21 +409,6 @@ function OrgById() {
       {subscription && (
         <SubscriptionEditorModal subscription={subscription} opened={opened} onClose={close} />
       )}
-      <ConfirmationModal
-        opened={openedConfirmModal}
-        onClose={closeConfirmModal}
-        confirmLabel={translations("Yes")}
-        headerTitle={
-          orgDetails?.isPaused
-            ? translations("Resume Organization")
-            : translations("Pause Organization")
-        }
-        onConfirm={() => {
-          handleOrgPauseStatus();
-        }}
-        headerLabel={`Are you sure to ${orgDetails?.isPaused ? "resume" : "pause"} this organization?`}
-        closeLabel={translations("cancel")}
-      />
       <DeleteOrgModal
         open={openDeleteModal}
         deletionMailSent={orgDetails?.deletionMailSent}

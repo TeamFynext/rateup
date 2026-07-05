@@ -101,12 +101,19 @@ function Home() {
           />
           <div className="flex items-center gap-2">
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="text-xs gap-1" disabled={isLoading}>
-                  <Filter className="w-3.5 h-3.5" />
-                  Filter
-                  <ChevronDown className="w-3.5 h-3.5" />
-                </Button>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs gap-1"
+                    disabled={isLoading}
+                  />
+                }
+              >
+                <Filter className="w-3.5 h-3.5" />
+                Filter
+                <ChevronDown className="w-3.5 h-3.5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="text-sm">
                 <DropdownMenuItem
@@ -162,7 +169,6 @@ function Home() {
           />
         </ListPageHeaderSection>
       </ListPageHeader>
-
       <ListPageContent
         isLoading={isLoading}
         isError={isError}

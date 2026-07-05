@@ -25,7 +25,6 @@ import {
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -48,6 +47,7 @@ import WelcomeTour from "@/components/WelcomeTour/WelcomeTour.tsx";
 import { TemplateFilterSort } from "@/components/whatsapp/templates/FilterAndSort.tsx";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates.tsx";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { TemplateType, WhatsappSettingsStatus } from "@/types/enums.ts";
 import { docsPath } from "@/utils/constants.ts";
 
@@ -423,9 +423,8 @@ function Template() {
   const { data: templates, isPending, isError, refetch } = useWaTemplates();
   const navigate = useNavigate();
   const [sortOption, setSortOption] = useState("latest");
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [deleteDialogOpened, setDeleteDialogOpened] = useState(false);
   const { data } = useWaSettings();
+  const confirm = useConfirm();
   const { t: translations } = useTranslation();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search.trim(), 200);
@@ -545,14 +544,23 @@ function Template() {
     return sortData(filtered, sortOption) as TemplateListEntry[];
   }, [templates, filters, sortOption, debouncedSearch, selectedAccountId]);
 
-  const templateDeleteMutation = useDeleteWaTemplateMutation(
-    () => {
-      setSelectedTemplate(null);
-    },
-    () => {
-      setSelectedTemplate(null);
-    },
-  );
+  const templateDeleteMutation = useDeleteWaTemplateMutation();
+
+  async function handleDeleteTemplate(templateId: string) {
+    const shouldDelete = await confirm({
+      title: translations("Delete Template"),
+      description: translations("Are you sure you want to delete this Template?"),
+      confirmText: translations("Delete"),
+      cancelText: translations("cancel"),
+    });
+
+    if (!shouldDelete) return;
+
+    toast.loading(translations("Hold on, Template is getting Deleted..."), {
+      id: "template-delete",
+    });
+    templateDeleteMutation.mutate(templateId);
+  }
 
   function handleCreateClick() {
     setShowModal(true);
@@ -602,10 +610,8 @@ function Template() {
         <SyncTemplatesButton disabled={isPending} whatsappSettingsPhoneIds={syncAccountIds} />
       ) : (
         <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <SyncTemplatesButton disabled />
-            </div>
+          <TooltipTrigger render={<div />}>
+            <SyncTemplatesButton disabled />
           </TooltipTrigger>
           <TooltipContent>
             <p>{translations("Connect a WhatsApp number in settings to sync Template")}</p>
@@ -623,9 +629,7 @@ function Template() {
             createButton
           ) : (
             <Tooltip>
-              <TooltipTrigger asChild>
-                <div>{createButton}</div>
-              </TooltipTrigger>
+              <TooltipTrigger render={<div />}>{createButton}</TooltipTrigger>
               <TooltipContent>
                 <p>{translations("Connect a WhatsApp number in settings to create a Template")}</p>
               </TooltipContent>
@@ -646,7 +650,6 @@ function Template() {
           {rightControls}
         </ListPageHeaderSection>
       </ListPageHeader>
-
       <ListPageContent
         isLoading={isPending}
         isError={isError}
@@ -662,29 +665,11 @@ function Template() {
             <TemplateCard
               template={template}
               onClick={() => handleEditClick(template)}
-              toggle={() => setDeleteDialogOpened((prev) => !prev)}
-              setSelectedTemplate={setSelectedTemplate}
+              onDelete={() => handleDeleteTemplate(template.id)}
             />
           )}
         />
       </ListPageContent>
-
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={deleteDialogOpened}
-        onClose={() => setDeleteDialogOpened(false)}
-        headerLabel={translations("Are you sure you want to delete this Template?")}
-        headerTitle={translations("Delete Template")}
-        confirmLabel={translations("Delete")}
-        onConfirm={() => {
-          if (selectedTemplate) {
-            toast.loading(translations("Hold on, Template is getting Deleted..."), {
-              id: "template-delete",
-            });
-            templateDeleteMutation.mutate(selectedTemplate);
-          }
-        }}
-      />
       <Dialog
         open={showModal}
         onOpenChange={(open) => {
@@ -773,48 +758,41 @@ function Template() {
 interface TemplateCardProps {
   readonly template: TemplateListEntry;
   readonly onClick: () => void;
-  readonly toggle: () => void;
-  readonly setSelectedTemplate: (value: string) => void;
+  readonly onDelete: () => void;
 }
 
-function TemplateCard({
-  template,
-  onClick,
-  toggle,
-  setSelectedTemplate,
-}: Readonly<TemplateCardProps>) {
+function TemplateCard({ template, onClick, onDelete }: Readonly<TemplateCardProps>) {
   const hasActiveCampaign = (template?._count?.Campaign ?? 0) > 0;
 
   const menu = (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <IconDots size={20} />
-        </Button>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={(e) => e.stopPropagation()}
+          />
+        }
+      >
+        <IconDots size={20} />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
         <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <DropdownMenuItem
-                onClick={() => {
-                  if (hasActiveCampaign) return;
-                  setSelectedTemplate(template.id);
-                  toggle();
-                }}
-                disabled={hasActiveCampaign}
-                variant="destructive"
-              >
-                <IconTrash size={16} className="mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </div>
+          <TooltipTrigger render={<div />}>
+            <DropdownMenuItem
+              onClick={() => {
+                if (hasActiveCampaign) return;
+                onDelete();
+              }}
+              disabled={hasActiveCampaign}
+              variant="destructive"
+            >
+              <IconTrash size={16} className="mr-2" />
+              Delete
+            </DropdownMenuItem>
           </TooltipTrigger>
           <TooltipContent>
             <p>

@@ -13,7 +13,6 @@ import {
   useUpdateUserPause,
 } from "@/backend/user/user.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -26,6 +25,7 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import {
   formatIsoDateStringWithTime,
   isInLastSevenDays,
@@ -69,10 +69,9 @@ function Index() {
   });
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [openedConfirmModal, { open: openConfirmModal, close: closeConfirmModal }] =
-    useDisclosure(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isUpdatedRecipe, setIsUpdatedRecipe] = useState(false);
+  const confirm = useConfirm();
 
   const columns: ColumnDef<UserTableData>[] = [
     {
@@ -174,11 +173,10 @@ function Index() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
               const user = users?.find((user) => user.email === row.original.id);
-              setSelectedUser(user);
-              openConfirmModal();
+              await handlePauseResumeClick(user);
             }}
             className="h-8 w-8 p-0"
           >
@@ -190,12 +188,23 @@ function Index() {
     },
   ];
 
-  const handleUserStatus = () => {
-    const data = {
-      isPaused: !selectedUser.isPaused,
-      pausedBy: "rateup",
-    };
-    updatePauseStatus.mutate({ userId: selectedUser.userId, data });
+  const handlePauseResumeClick = async (user: any) => {
+    const shouldProceed = await confirm({
+      title: user?.isPaused ? translations("Resume User") : translations("Pause User"),
+      description: `${translations("Are you sure to")} ${
+        user?.isPaused ? translations("resume") : translations("pause")
+      } ${translations("this user?")}`,
+      confirmText: "Yes",
+      cancelText: translations("cancel"),
+    });
+
+    if (!shouldProceed) return;
+
+    setSelectedUser(user);
+    updatePauseStatus.mutate({
+      userId: user.userId,
+      data: { isPaused: !user.isPaused, pausedBy: "rateup" },
+    });
   };
 
   const handleUpdateUserRecipe = () => {
@@ -410,21 +419,6 @@ function Index() {
       <FormModalLayout centered opened={opened} onClose={close} title="" size="xl">
         <UserModal selectedUser={selectedUser} />
       </FormModalLayout>
-      <ConfirmationModal
-        opened={openedConfirmModal}
-        onClose={closeConfirmModal}
-        confirmLabel="Yes"
-        headerTitle={
-          selectedUser?.isPaused ? translations("Resume User") : translations("Pause User")
-        }
-        onConfirm={() => {
-          handleUserStatus();
-        }}
-        headerLabel={` ${translations("Are you sure to")} ${
-          selectedUser?.isPaused ? translations("resume") : translations("pause")
-        } ${translations("this user?")}`}
-        closeLabel={translations("cancel")}
-      />
     </div>
   );
 }

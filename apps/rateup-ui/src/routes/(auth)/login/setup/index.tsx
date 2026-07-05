@@ -488,41 +488,39 @@ function CollapsibleCard({
           open ? "rounded-t-xl rounded-b-none" : "rounded-xl"
         }`}
       >
-        <CollapsibleTrigger asChild>
-          <div className="flex items-center gap-3.5 px-4 sm:px-5 cursor-pointer select-none">
-            {/* Progress ring */}
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-              style={{
-                border: allDone
-                  ? "2px solid #10b981"
-                  : partial
-                    ? "2px solid rgb(24,115,232)"
-                    : "2px solid #e5e7eb",
-                background: allDone ? "#10b981" : partial ? "rgba(24,115,232,0.1)" : "transparent",
-              }}
-            >
-              {allDone && <CheckCircle2 size={14} color="white" />}
-            </div>
-
-            {/* Title */}
-            <div className="flex-1">
-              <p className="text-sm font-bold">{section.title}</p>
-              <p className="text-xs text-gray-400">{section.sub}</p>
-            </div>
-
-            {/* Count */}
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
-              {doneCount} / {total}
-            </span>
-
-            <ChevronDown className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        <CollapsibleTrigger
+          render={
+            <div className="flex items-center gap-3.5 px-4 sm:px-5 cursor-pointer select-none" />
+          }
+        >
+          {/* Progress ring */}
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+            style={{
+              border: allDone
+                ? "2px solid #10b981"
+                : partial
+                  ? "2px solid rgb(24,115,232)"
+                  : "2px solid #e5e7eb",
+              background: allDone ? "#10b981" : partial ? "rgba(24,115,232,0.1)" : "transparent",
+            }}
+          >
+            {allDone && <CheckCircle2 size={14} color="white" />}
           </div>
+          {/* Title */}
+          <div className="flex-1">
+            <p className="text-sm font-bold">{section.title}</p>
+            <p className="text-xs text-gray-400">{section.sub}</p>
+          </div>
+          {/* Count */}
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
+            {doneCount} / {total}
+          </span>
+          <ChevronDown className={`transition-transform ${open ? "rotate-180" : ""}`} />
         </CollapsibleTrigger>
       </Card>
-
       {/* Content */}
-      <CollapsibleContent forceMount>
+      <CollapsibleContent keepMounted>
         <AnimatePresence initial={false} mode="wait">
           {open && (
             <motion.div

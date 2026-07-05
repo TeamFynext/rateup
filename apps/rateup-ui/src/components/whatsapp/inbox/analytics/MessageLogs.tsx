@@ -270,12 +270,14 @@ function MessageLogs({ dateRange }) {
 
           return (
             <Popover>
-              <PopoverTrigger asChild>
-                <div className="max-w-64 truncate text-xs text-red-500 cursor-pointer hover:underline">
-                  {shortMessage}
-                </div>
+              <PopoverTrigger
+                nativeButton={false}
+                render={
+                  <div className="max-w-64 truncate text-xs text-red-500 cursor-pointer hover:underline" />
+                }
+              >
+                {shortMessage}
               </PopoverTrigger>
-
               <PopoverContent
                 align="start"
                 className="w-[500px] border border-slate-200 bg-white text-black dark:bg-black dark:text-white shadow-lg"
@@ -321,7 +323,17 @@ function MessageLogs({ dateRange }) {
             )}
           </div>
 
-          <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value)}>
+          <Select
+            value={selectedStatus}
+            onValueChange={(value) => setSelectedStatus(value)}
+            items={[
+              { value: "all", label: t("All Status") },
+              { value: "sent", label: t("Sent") },
+              { value: "delivered", label: t("Delivered") },
+              { value: "failed", label: t("Failed") },
+              { value: "read", label: t("Read") },
+            ]}
+          >
             <SelectTrigger className="h-8 w-full max-w-44">
               <SelectValue placeholder={t("All Status")} />
             </SelectTrigger>
@@ -334,7 +346,16 @@ function MessageLogs({ dateRange }) {
             </SelectContent>
           </Select>
 
-          <Select value={selectedSource} onValueChange={(value) => setSelectedSource(value)}>
+          <Select
+            value={selectedSource}
+            onValueChange={(value) => setSelectedSource(value)}
+            items={[
+              { value: "all", label: t("All Sources") },
+              { value: "CAMPAIGN", label: t("Campaign") },
+              { value: "TEMPLATE", label: t("Template") },
+              { value: "external", label: t("External API") },
+            ]}
+          >
             <SelectTrigger className="h-8 w-full max-w-44">
               <SelectValue placeholder={t("All Sources")} />
             </SelectTrigger>

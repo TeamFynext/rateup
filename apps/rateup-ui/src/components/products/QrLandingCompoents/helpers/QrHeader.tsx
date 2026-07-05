@@ -7,7 +7,7 @@ import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.
 import DropDownMobileNavItems from "@/components/RateupHomePage/helpers/DropDownMobileNavItems.tsx";
 import DropDownNavItems from "@/components/RateupHomePage/helpers/DropDownNavItems.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { rateupLogoBlue } from "@/utils/constants.ts";
+import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 const QrHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,7 +29,7 @@ const QrHeader = () => {
         <div className="flex h-20 items-center justify-between">
           <div className="flex items-center">
             <Link to="https://rateup.app" className="flex items-center gap-2">
-              <Image src={rateupLogoBlue} alt="logo" height={50} width={60} />
+              <Image src={rateupLogoStackedWhiteTransparent} alt="logo" height={50} width={60} />
             </Link>
           </div>
 

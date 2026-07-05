@@ -6,24 +6,28 @@ import { useTranslation } from "react-i18next";
 import FormModalLayout from "../Modal/FormModalLayout.tsx";
 
 const ContactImportErrorModal = ({ isError = false, body }) => {
-  const { error, data } = body ?? { error: "", data: "" };
-  const [opened, { toggle, close }] = useDisclosure(false);
+  const responseError = body?.error ?? "";
+  const failedRows: { name?: string; phone?: string }[] = Array.isArray(body?.data)
+    ? body.data
+    : [];
+  const [opened, { open, close }] = useDisclosure(false);
   const { t: translations } = useTranslation();
-  useEffect(() => {
-    if (isError && data?.length > 0) {
-      toggle();
-    }
-  }, [isError]);
-  if (!opened) return;
 
-  const rows =
-    isError &&
-    data?.map((element: { name?: string; phone?: string }) => (
-      <Table.Tr key={element.name}>
-        <Table.Td>{element?.name}</Table.Td>
-        <Table.Td>{element?.phone}</Table.Td>
-      </Table.Tr>
-    ));
+  useEffect(() => {
+    if (isError && failedRows.length > 0) {
+      open();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isError, failedRows.length]);
+
+  if (!opened) return null;
+
+  const rows = failedRows.map((element, index) => (
+    <Table.Tr key={`${element?.name}-${element?.phone}-${index}`}>
+      <Table.Td>{element?.name}</Table.Td>
+      <Table.Td>{element?.phone}</Table.Td>
+    </Table.Tr>
+  ));
 
   return (
     <FormModalLayout
@@ -33,7 +37,7 @@ const ContactImportErrorModal = ({ isError = false, body }) => {
       title={translations("Failed contact import")}
       size={"xl"}
     >
-      {isError && error === "VALIDATION_ERR" && (
+      {responseError === "VALIDATION_ERR" && (
         <ScrollAreaAutosize mah={500}>
           <Table stickyHeader>
             <Table.Thead>

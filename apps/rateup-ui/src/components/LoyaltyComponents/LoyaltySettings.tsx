@@ -41,10 +41,10 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { TemplateType, WaAutomatedReplyResponseType } from "@/types/enums.ts";
 
 import { AccountSelector } from "../input/AccountSelector.tsx";
-import ConfirmationModal from "../Modal/ConfirmationModal.tsx";
 import WaTextEditor from "../RichTextEditor/waTextEditor.tsx";
 import { DataTable } from "../Table/data-table.tsx";
 
@@ -71,13 +71,25 @@ interface LoyaltyTemplateFormValues {
 const LoyaltySettings = () => {
   const { data: templateConfigs, isPending } = useGetAllLoyaltyTemplates();
   const [opened, { open, close }] = useDisclosure(false);
-  const [dialogOpened, { open: openDialog, close: closeDialog }] = useDisclosure(false);
+  const confirm = useConfirm();
 
   const [selectedConfig, setSelectedConfig] = useState<LoyaltyTemplateConfig | null>(null);
   const { t: translations } = useTranslation();
-  const columns = useLoyaltyTemplateColumns(setSelectedConfig, open, openDialog);
-
   const deleteMutation = useDeleteLoyaltyTemplate();
+
+  async function handleDeleteConfig(config: LoyaltyTemplateConfig) {
+    const shouldDelete = await confirm({
+      title: translations("Delete Command"),
+      description: translations("Are you sure to delete this Command Configuration?"),
+      confirmText: translations("Delete"),
+    });
+
+    if (!shouldDelete) return;
+
+    deleteMutation.mutate(config?.id);
+  }
+
+  const columns = useLoyaltyTemplateColumns(setSelectedConfig, open, handleDeleteConfig);
 
   return (
     <div className="space-y-4">
@@ -105,22 +117,6 @@ const LoyaltySettings = () => {
         close={() => {
           setSelectedConfig(null);
           close();
-        }}
-      />
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={dialogOpened}
-        onClose={closeDialog}
-        headerLabel={translations("Are you sure to delete this Command Configuration?")}
-        headerTitle={translations("Delete Command")}
-        confirmLabel={translations("Delete")}
-        onConfirm={() => {
-          deleteMutation.mutate(selectedConfig?.id, {
-            onSettled: () => {
-              setSelectedConfig(null);
-              closeDialog();
-            },
-          });
         }}
       />
     </div>
@@ -275,6 +271,7 @@ const LoyaltyWaTemplateConfig = ({
                       form.setFieldValue("type", value as LoyaltyTemplateTypes)
                     }
                     disabled={!!config}
+                    items={typeData}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder={translations("Select type")} />
@@ -483,7 +480,7 @@ interface LoyaltyTemplate {
 function useLoyaltyTemplateColumns(
   setSelectedConfig: (value: LoyaltyTemplateConfig | null) => void,
   open: () => void,
-  openDialog: () => void,
+  handleDeleteConfig: (config: LoyaltyTemplateConfig) => void,
 ) {
   const { t: translations } = useTranslation();
   const getLoyaltyTemplateLabel = useLoyaltyTemplateLabel();
@@ -531,10 +528,7 @@ function useLoyaltyTemplateColumns(
               <Button
                 variant="ghost"
                 size="icon-sm"
-                onClick={() => {
-                  setSelectedConfig(selectedRow);
-                  openDialog();
-                }}
+                onClick={() => handleDeleteConfig(selectedRow)}
                 className="text-destructive hover:text-destructive"
               >
                 <IconTrash className="size-4" />
@@ -544,7 +538,14 @@ function useLoyaltyTemplateColumns(
         },
       }),
     ],
-    [columnHelper, getLoyaltyTemplateLabel, open, openDialog, setSelectedConfig, translations],
+    [
+      columnHelper,
+      getLoyaltyTemplateLabel,
+      open,
+      handleDeleteConfig,
+      setSelectedConfig,
+      translations,
+    ],
   );
 }
 

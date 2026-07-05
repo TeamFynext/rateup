@@ -50,10 +50,8 @@ const ContactMenu = ({ contact, groupId }) => {
   };
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost">
-          <EllipsisVertical />
-        </Button>
+      <DropdownMenuTrigger render={<Button variant="ghost" />}>
+        <EllipsisVertical />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem
@@ -74,7 +72,7 @@ const ContactMenu = ({ contact, groupId }) => {
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem color="red" onClick={openDeleteModal} className="text-red-500">
+        <DropdownMenuItem variant="destructive" onClick={openDeleteModal} className="text-red-500">
           <Trash className="text-red-500 w-4 h-4 mr-2" />
           {translations("Delete contact")}
         </DropdownMenuItem>

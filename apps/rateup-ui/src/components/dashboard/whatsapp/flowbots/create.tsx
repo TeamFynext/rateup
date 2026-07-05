@@ -494,7 +494,6 @@ export function AutomatedReplyForm({
         onConfirm={handleConfirmDiscard}
         onCancel={() => setConfirmDiscardOpen(false)}
       />
-
       <form onSubmit={rootForm.onSubmit(handleSubmitClick)} className="space-y-6" noValidate>
         <Card>
           {/* FIX: Template button moved into CardHeader as a secondary action */}
@@ -542,10 +541,12 @@ export function AutomatedReplyForm({
                   <FieldLabel className="items-center gap-1.5">
                     {t("WhatsApp Account")}
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="cursor-help text-xs text-muted-foreground bg-muted rounded-full size-4 flex items-center justify-center font-medium">
-                          ?
-                        </span>
+                      <TooltipTrigger
+                        render={
+                          <span className="cursor-help text-xs text-muted-foreground bg-muted rounded-full size-4 flex items-center justify-center font-medium" />
+                        }
+                      >
+                        ?
                       </TooltipTrigger>
                       <TooltipContent side="right" className="max-w-xs text-xs">
                         {t(
