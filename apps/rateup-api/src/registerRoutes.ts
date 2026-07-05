@@ -55,6 +55,8 @@ import { customerAccountPublicRoutes } from "./modules/loyalty/accounts/account.
 import { apiAnalyticsRoutes } from "./modules/apiAnalytics/apianalytics.routes.js";
 import { webhookRoutes } from "./modules/webhook/webhook.route.js";
 import { referralRoutes } from "./modules/referrals/referrals.route.js";
+import { metaAgentRoutes } from "./modules/metaAgent/metaAgent.route.js";
+import { metaAgentWebhookRoutes } from "./modules/metaAgent/metaAgent.webhook.route.js";
 
 // Route configurations
 const routeConfigs = [
@@ -122,6 +124,8 @@ const routeConfigs = [
   { plugin: apiAnalyticsRoutes, prefix: "/api/apianalytics" },
   { plugin: webhookRoutes, prefix: "/api/webhook" },
   { plugin: referralRoutes, prefix: "/api/referrals" },
+  { plugin: metaAgentRoutes, prefix: "/api/meta-agent" },
+  { plugin: metaAgentWebhookRoutes, prefix: "/api/meta-agent/webhook" },
 ];
 
 export async function registerRoutes(server: FastifyInstance): Promise<void> {

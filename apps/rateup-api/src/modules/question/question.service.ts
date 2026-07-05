@@ -1,7 +1,7 @@
 import { MultipartFile } from "@fastify/multipart";
+import { parseCsvObjects } from "hucre/csv";
+import { readXlsxObjects } from "hucre";
 import { randomUUID } from "node:crypto";
-import xlsx from "node-xlsx";
-import Papa from "papaparse";
 import prisma from "../../utils/prisma.js";
 import { updateSurveyVariables } from "../survey/survey.service.js";
 import { createSurveyDefaultVariableForQuestion } from "../survey/survey.utils.js";
@@ -189,57 +189,33 @@ export async function updateLogicJump(screenId: string, surveyId: string) {
 export async function getAllowedEmailsFromFile(fileBody: MultipartFile) {
   const { mimetype } = fileBody;
   const csvType = ["text/csv", "application/vnd.ms-excel"];
-  const file = csvType.includes(mimetype) ? fileBody.file : await fileBody.toBuffer();
-  return new Promise((resolve, reject) => {
-    let allowedEmails = [];
+  const buffer = await fileBody.toBuffer();
+  const allowedEmails: string[] = [];
 
-    const processEmail = (row) => {
-      if (!emailPattern.test(row?.email)) {
-        throw new Error("Invalid Email");
-      } else {
-        allowedEmails.push(row?.email);
-      }
-    };
-
-    const finalizeProcessing = () => {
-      try {
-        if (allowedEmails.length > 0) resolve(allowedEmails);
-        else reject("No email IDs found");
-      } catch (err) {
-        reject(err);
-      }
-    };
-
-    if (csvType.includes(mimetype)) {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        chunkSize: 1024 * 1024,
-        transformHeader: (header) => header?.trim()?.toLowerCase(),
-        chunk: (results) => {
-          if (results?.data) {
-            results.data.forEach(processEmail);
-          }
-        },
-        complete: finalizeProcessing,
-        error: (error) => {
-          reject(error);
-        },
-      });
-    } else {
-      const workSheetsFromFile = xlsx.parse(file);
-      const headers =
-        workSheetsFromFile?.[0]?.data?.[0]?.map((header) => header?.toString().toLowerCase()) ?? [];
-      const headerIndices = headers.map((header, index) => ({ header, index }));
-
-      workSheetsFromFile?.[0]?.data?.slice(1).forEach((row) => {
-        let email = {};
-        headerIndices.forEach(({ header, index }) => {
-          email[header] = row[index]?.toString()?.trim();
-        });
-        processEmail(email);
-      });
-      finalizeProcessing();
+  const processEmail = (row: Record<string, unknown>) => {
+    if (!emailPattern.test(String(row?.email ?? ""))) {
+      throw new Error("Invalid Email");
     }
-  });
+    allowedEmails.push(String(row.email));
+  };
+
+  if (csvType.includes(mimetype)) {
+    const { data } = parseCsvObjects(buffer.toString("utf-8"), {
+      header: true,
+      skipEmptyRows: true,
+      transformHeader: (header) => header?.trim()?.toLowerCase(),
+    });
+    data.forEach(processEmail);
+  } else {
+    const { data } = await readXlsxObjects(buffer, {
+      transformHeader: (header) => header?.toString()?.trim()?.toLowerCase(),
+      transformValue: (value) => value?.toString()?.trim(),
+    });
+    data.forEach(processEmail);
+  }
+
+  if (allowedEmails.length === 0) {
+    throw new Error("No email IDs found");
+  }
+  return allowedEmails;
 }

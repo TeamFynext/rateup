@@ -25,7 +25,7 @@ import {
 import dayjs from "dayjs";
 import { saveSheetIdToSurvey } from "../survey/survey.service.js";
 import { google } from "googleapis";
-import xlsx from "node-xlsx";
+import { write } from "hucre";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import { updateMonthlyStat } from "../stats/stats.service.js";
@@ -256,6 +256,7 @@ export async function downloadExcelResponse(
   defaultLanguage,
   visibleColumn = [],
   tz = "Asia/Calcutta",
+  format: "xlsx" | "ods" = "xlsx",
 ) {
   const responses = allResponses?.flatMap((data) => data?.responses) || [];
 
@@ -522,22 +523,25 @@ export async function downloadExcelResponse(
         }
       });
     });
-    let options = [];
-    headerArray.map((data, i) => {
-      const headingWidth = String(data)?.length + 2;
-      const dataWidth = getMaxContentWidth(bodyArray, i);
-      const width = Math.max(headingWidth, dataWidth);
-      options.push({ width: width > 40 ? 40 : width });
-    });
-    let buffer = xlsx.build([
-      {
-        name: "Sheet1",
-        data: [headerArray, ...bodyArray],
-        options: {
-          "!cols": options,
+    const columns = headerArray.map((header, i) => ({
+      header,
+      key: `col${i}`,
+      autoWidth: true,
+    }));
+    const data = bodyArray.map((row) =>
+      Object.fromEntries(row.map((value, i) => [`col${i}`, value])),
+    );
+
+    const buffer = await write({
+      sheets: [
+        {
+          name: "Sheet1",
+          columns,
+          data,
         },
-      },
-    ]);
+      ],
+      format,
+    });
 
     return buffer;
   }
@@ -548,6 +552,7 @@ export async function downloadExcelResponseV2(
   questions,
   visibleColumn = [],
   tz = "Asia/Calcutta",
+  format: "xlsx" | "ods" = "xlsx",
 ) {
   const responses = allResponses?.flatMap((data) => data?.responses) || [];
 
@@ -622,34 +627,27 @@ export async function downloadExcelResponseV2(
       return row;
     });
 
-    // Adjust column widths
-    const options = headerArray.map((header, index) => {
-      const headingWidth = String(header).length + 2;
-      const dataWidth = getMaxContentWidth(bodyArray, index);
-      return { width: Math.min(Math.max(headingWidth, dataWidth), 40) };
-    });
+    const columns = headerArray.map((header, i) => ({
+      header,
+      key: `col${i}`,
+      autoWidth: true,
+    }));
+    const data = bodyArray.map((row) =>
+      Object.fromEntries(row.map((value, i) => [`col${i}`, value])),
+    );
 
-    const buffer = xlsx.build([
-      {
-        name: "Sheet1",
-        data: [headerArray, ...bodyArray],
-        options: {
-          "!cols": options,
+    const buffer = await write({
+      sheets: [
+        {
+          name: "Sheet1",
+          columns,
+          data,
         },
-      },
-    ]);
+      ],
+      format,
+    });
     return buffer;
   }
-}
-function getMaxContentWidth(data, columnIndex: number) {
-  let maxWidth = 0;
-  for (const row of data) {
-    const valueLength = String(row[columnIndex]).length;
-    if (valueLength > maxWidth) {
-      maxWidth = valueLength;
-    }
-  }
-  return maxWidth;
 }
 
 export async function resetResponsesStats(surveyId: string) {

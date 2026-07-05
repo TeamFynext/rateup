@@ -9,7 +9,8 @@ import {
 import { log } from "../../utils/logger.js";
 import dayjs from "dayjs";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
-import xlsx from "node-xlsx";
+import { SpreadsheetExportFormat } from "../../utils/spreadsheet.js";
+import { write } from "hucre";
 
 import { WaTemplateComponent, WHATSAPP_BUTTON_TYPE } from "../../types/whatsapp.types.js";
 import {
@@ -517,7 +518,11 @@ export const getResponseByCampaignById = async (id: string) => {
   return responsesWithTitles;
 };
 
-export const getResponseExcelByCampaignById = async (id: string, selectedDripStage?: string) => {
+export const getResponseExcelByCampaignById = async (
+  id: string,
+  selectedDripStage?: string,
+  format: SpreadsheetExportFormat = "xlsx",
+) => {
   const stats = await getCampaginStatsById(id, selectedDripStage);
   const pageSize = 10000; // Number of records per batch
   let page = 0;
@@ -601,44 +606,51 @@ export const getResponseExcelByCampaignById = async (id: string, selectedDripSta
       page++;
     }
   }
-  const headerArray = ["Created At", "Participant Name", "Phone", "Status", "Sent At"];
-  const bodyArray = campaignParticipants?.map((participant) => [
-    participant?.createdAt,
-    participant?.contact?.name,
-    participant?.contact?.phone,
-    participant?.status,
-    participant?.sentAt,
-  ]);
+  const formatExportDate = (date?: Date | null) =>
+    date ? dayjs(date).format("DD-MM-YYYY hh:mm A") : "";
 
-  const statsHeaderArray = [
-    "Count Pending",
-    "Count Read",
-    "Count Sent",
-    "Count Failed",
-    "Count Delivered",
-    "Count Completed",
-  ];
-  const statsBodyArray = [
-    stats?.countPending,
-    stats?.countRead,
-    stats?.countSent,
-    stats?.countFailed,
-    stats?.countDelivered,
-    stats?.countCompleted,
+  const participantsData = campaignParticipants?.map((participant) => ({
+    createdAt: formatExportDate(participant?.createdAt),
+    name: participant?.contact?.name,
+    phone: participant?.contact?.phone,
+    status: participant?.status,
+    sentAt: formatExportDate(participant?.sentAt),
+  }));
+
+  const statsData = [
+    {
+      countPending: stats?.countPending,
+      countRead: stats?.countRead,
+      countSent: stats?.countSent,
+      countFailed: stats?.countFailed,
+      countDelivered: stats?.countDelivered,
+      countCompleted: stats?.countCompleted,
+    },
   ];
 
-  const buffer = xlsx.build([
-    {
-      name: "Stats",
-      data: [statsHeaderArray, statsBodyArray],
-      options: {},
-    },
-    {
-      name: "Participants",
-      data: [headerArray, ...bodyArray],
-      options: {},
-    },
-  ]);
+  const statsColumns = [
+    { header: "Count Pending", key: "countPending", autoWidth: true },
+    { header: "Count Read", key: "countRead", autoWidth: true },
+    { header: "Count Sent", key: "countSent", autoWidth: true },
+    { header: "Count Failed", key: "countFailed", autoWidth: true },
+    { header: "Count Delivered", key: "countDelivered", autoWidth: true },
+    { header: "Count Completed", key: "countCompleted", autoWidth: true },
+  ];
+  const participantsColumns = [
+    { header: "Created At", key: "createdAt", autoWidth: true },
+    { header: "Participant Name", key: "name", autoWidth: true },
+    { header: "Phone", key: "phone", autoWidth: true },
+    { header: "Status", key: "status", autoWidth: true },
+    { header: "Sent At", key: "sentAt", autoWidth: true },
+  ];
+
+  const buffer = await write({
+    sheets: [
+      { name: "Stats", columns: statsColumns, data: statsData },
+      { name: "Participants", columns: participantsColumns, data: participantsData },
+    ],
+    format,
+  });
 
   return { title: campaign?.name, data: buffer };
 };

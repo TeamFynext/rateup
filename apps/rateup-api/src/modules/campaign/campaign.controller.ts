@@ -24,6 +24,12 @@ import {
 import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema.js";
 import { CampaignStatus, CampaignType, SentCampaignEnum } from "../../types/enums.js";
 import { log } from "../../utils/logger.js";
+import {
+  getSpreadsheetContentType,
+  getSpreadsheetFilename,
+  spreadsheetExportFormatSchema,
+  SpreadsheetExportFormat,
+} from "../../utils/spreadsheet.js";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
@@ -184,18 +190,24 @@ export async function getResponseByCampaignByIdHandler(
 export async function getResponseExcelByCampaignByIdHandler(
   request: FastifyRequest<{
     Params: ByCampaignIdParams;
-    Querystring: { selectedDripStage?: string };
+    Querystring: { selectedDripStage?: string; format?: SpreadsheetExportFormat };
   }>,
   reply: FastifyReply,
 ) {
   try {
+    const parsedFormat = spreadsheetExportFormatSchema.safeParse(request.query.format ?? "xlsx");
+    if (!parsedFormat.success) {
+      return reply.code(400).send({ error: 'Invalid export format. Use "xlsx" or "ods".' });
+    }
+    const format = parsedFormat.data;
     const { title, data } = await getResponseExcelByCampaignById(
       request.params.campaignId,
       request.query.selectedDripStage,
+      format,
     );
-    reply.header("filename", `${encodeURIComponent(title)}.xlsx`);
+    reply.header("filename", `${encodeURIComponent(getSpreadsheetFilename(title, format))}`);
     reply.header("Access-Control-Expose-Headers", "filename");
-    reply.status(200).type("application/xlsx").send(data);
+    reply.status(200).type(getSpreadsheetContentType(format)).send(data);
   } catch (error) {
     log.error({ err: error }, "Error while handling getResponseExcelByCampaignById");
     return reply.code(500).send(error);

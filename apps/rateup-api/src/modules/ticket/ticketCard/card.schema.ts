@@ -15,6 +15,7 @@ const cardCore = {
   priority: z.enum(TicketPriority).optional(),
   labelIds: z.array(z.string().uuid()).optional().nullable(),
   deadline: z.coerce.date().optional().nullable(),
+  assignees: z.array(z.object({ assigneeId: z.string().uuid() })).optional(),
 };
 
 // Schema for creating a card
