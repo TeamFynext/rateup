@@ -1,4 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
+import dayjs from "dayjs";
 import {
   ByContactIdParams,
   createMultipleContactInput,
@@ -40,8 +41,13 @@ import {
 } from "../loyalty/settings/settings.service.js";
 import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js";
 import prisma from "../../utils/prisma.js";
-import Papa from "papaparse";
-import xlsx from "node-xlsx";
+import {
+  getSpreadsheetContentType,
+  getSpreadsheetFilename,
+  spreadsheetExportFormatSchema,
+  SpreadsheetExportFormat,
+} from "../../utils/spreadsheet.js";
+import { write } from "hucre";
 import { LifecycleIdParamSchema } from "../lifecycle/lifecycle.schema.js";
 //used in zapier
 export async function createContactHandler(
@@ -223,14 +229,17 @@ export async function importCSVContactsHandler(request: FastifyRequest, reply: F
       return reply.code(400).send({ error: "This file type is not permitted." });
     const tags = [];
     let update = false;
+    let hasHeaderRow = true;
     for (const key in file?.fields) {
       if (key.startsWith("tags[")) {
         tags.push(file?.fields?.[key]?.["value"]);
       } else if (key === "update") {
         update = file?.fields?.[key]?.["value"] === "true";
+      } else if (key === "hasHeaderRow") {
+        hasHeaderRow = file?.fields?.[key]?.["value"] !== "false";
       }
     }
-    const res: any = await importCSVContacts(file, orgId, tags, update);
+    const res: any = await importCSVContacts(file, orgId, tags, update, undefined, hasHeaderRow);
     if (res.status === "error") {
       return reply.code(400).send({ error: "VALIDATION_ERR", data: res.data });
     }
@@ -307,11 +316,16 @@ export async function deleteCustomFieldHandler(
 
 export async function exportContactHandler(
   request: FastifyRequest<{
-    Body: { type?: "csv" | "xlsx"; fields?: string[] };
+    Body: { format?: SpreadsheetExportFormat; fields?: string[] };
   }>,
   reply: FastifyReply,
 ) {
-  const { type = "csv", fields = ["id", "name", "phone"] } = request.body || {};
+  const parsedFormat = spreadsheetExportFormatSchema.safeParse(request.body?.format ?? "xlsx");
+  if (!parsedFormat.success) {
+    return reply.code(400).send({ error: 'Invalid export format. Use "xlsx" or "ods".' });
+  }
+  const format = parsedFormat.data;
+  const { fields = ["id", "name", "phone"] } = request.body || {};
   const { orgId } = request.user;
   if (!orgId) {
     reply.code(400).send({ error: "orgId is required" });
@@ -385,6 +399,12 @@ export async function exportContactHandler(
         }
       }
 
+      const createdAt = (result as Record<string, unknown>).createdAt;
+      if (createdAt instanceof Date) {
+        (result as Record<string, unknown>).createdAt =
+          dayjs(createdAt).format("DD-MM-YYYY hh:mm A");
+      }
+
       return result;
     });
 
@@ -392,32 +412,24 @@ export async function exportContactHandler(
     cursor = contacts.at(-1).id;
   }
 
-  // --- CSV export ---
-  if (type === "csv") {
-    const csv = Papa.unparse(allContacts, { columns: fields });
-    reply
-      .header("Content-Type", "text/csv")
-      .header("Content-Disposition", `attachment; filename="contacts_${orgId}.csv"`)
-      .send(csv);
-    return;
-  }
+  const buffer = await write({
+    sheets: [
+      {
+        name: "Contacts",
+        columns: fields.map((f) => ({ header: f, key: f, autoWidth: true })),
+        data: allContacts.map((row) => Object.fromEntries(fields.map((f) => [f, row[f] ?? ""]))),
+      },
+    ],
+    format,
+  });
 
-  // --- Excel export ---
-  if (type === "xlsx") {
-    const sheetData = [
-      fields, // headers
-      ...allContacts.map((row) => fields.map((f) => row[f] ?? "")),
-    ];
-    const buffer = xlsx.build([{ name: "Contacts", data: sheetData, options: {} }]);
-
-    reply
-      .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-      .header("Content-Disposition", `attachment; filename="contacts_${orgId}.xlsx"`)
-      .send(buffer);
-    return;
-  }
-
-  reply.code(400).send({ error: 'Invalid export type. Use "csv" or "excel".' });
+  reply
+    .header("Content-Type", getSpreadsheetContentType(format))
+    .header(
+      "Content-Disposition",
+      `attachment; filename="${getSpreadsheetFilename(`contacts_${orgId}`, format)}"`,
+    )
+    .send(buffer);
 }
 
 export async function updateLifecycleStageofContactsHandler(

@@ -47,6 +47,7 @@ import {
   addZapierTriggerToQueue,
   ZapierTriggers,
 } from "../integrations/external/zapier/zapier.service.js";
+import { getSpreadsheetContentType, getSpreadsheetFilename } from "../../utils/spreadsheet.js";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -137,6 +138,8 @@ export async function downloadExcelResponseHandler(
       request.body.ranges,
       request.body.tz,
     );
+    const format = request.body.format || "xlsx";
+
     let question;
     if (request.body.dbFlowId) {
       let flow = await getFlowFromDb(request.body.dbFlowId);
@@ -148,8 +151,16 @@ export async function downloadExcelResponseHandler(
         question,
         request.body.visibleColumn,
         request.body.tz,
+        format,
       );
-      reply.status(200).type("application/xlsx").send(data);
+      reply
+        .status(200)
+        .header("Content-Type", getSpreadsheetContentType(format))
+        .header(
+          "Content-Disposition",
+          `attachment; filename="${getSpreadsheetFilename("responses", format)}"`,
+        )
+        .send(data);
     } else {
       question = await getQuestionsBySurveyId(surveyId);
       const data = await downloadExcelResponse(
@@ -159,8 +170,16 @@ export async function downloadExcelResponseHandler(
         request.body.defaultLanguage,
         request.body.visibleColumn,
         request.body.tz,
+        format,
       );
-      reply.status(200).type("application/xlsx").send(data);
+      reply
+        .status(200)
+        .header("Content-Type", getSpreadsheetContentType(format))
+        .header(
+          "Content-Disposition",
+          `attachment; filename="${getSpreadsheetFilename("responses", format)}"`,
+        )
+        .send(data);
     }
   } catch (error) {
     log.error({ err: error }, "Error downloading excel");

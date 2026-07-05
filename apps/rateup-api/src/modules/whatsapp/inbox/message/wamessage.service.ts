@@ -714,6 +714,8 @@ export async function exportWhatsapChats(
   orgId: string,
   constraints: WaChatExportConstraints,
   bodyFilterProps: WaChatFilterSchema,
+  limit?: number,
+  offset?: number,
 ): Promise<
   Array<{
     date: string;
@@ -802,8 +804,9 @@ export async function exportWhatsapChats(
         "CampaignParticipant" cpt ON cpt."contactId" = c."id"
     WHERE
       c."orgId" = $1::uuid ${extendedWhereClause()}
-    ORDER BY 
-      wm."createdAt" ASC`;
+    ORDER BY
+      wm."createdAt" ASC
+    ${limit != null ? `LIMIT ${Number(limit)} OFFSET ${Number(offset ?? 0)}` : ""}`;
 
   const result = await prisma.$queryRawUnsafe(query, orgId);
   return result as Array<{
