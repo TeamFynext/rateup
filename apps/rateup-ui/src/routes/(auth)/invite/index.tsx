@@ -19,8 +19,8 @@ import { toast } from "sonner";
 import { signOut } from "supertokens-auth-react/recipe/session";
 
 import { completeInvite } from "@/backend/team/team.api";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
-import { rateupLogoUrl } from "@/components/HomePage/constants.tsx";
+import { Button } from "@/components/ui/button";
+import { rateupLogoStackedWhiteTransparent } from "@/utils/constants";
 
 import styles from "../../../components/(auth)/invite/styles.module.css";
 
@@ -95,7 +95,7 @@ function Invite() {
       >
         <Center>
           <Link to="/">
-            <Image src={rateupLogoUrl} alt="RateUp Logo" w={140} />
+            <Image src={rateupLogoStackedWhiteTransparent} alt="RateUp Logo" w={100} />
           </Link>
         </Center>
         <Flex gap="md" justify="center" align="center" direction="column" wrap="wrap">
@@ -150,23 +150,28 @@ function Invite() {
                   </Text>
 
                   {updateInviteMutation.data?.data.data.isUser ? (
-                    <RateupButtonPrimary
+                    <Button
                       onClick={() => {
                         navigate({
                           to: "/login",
                         });
                       }}
-                      title={translations("Continue")}
-                    />
+                    >
+                      {translations("Continue")}
+                    </Button>
                   ) : (
-                    <RateupButtonPrimary
+                    <Button
                       onClick={() => {
-                        navigate({
-                          to: `${updateInviteMutation.data?.data.data.redirectLink}&type=invite`,
-                        });
+                        const link = updateInviteMutation.data?.data.data.redirectLink;
+                        if (link) {
+                          const url = new URL(link, window.location.origin);
+                          url.searchParams.set("type", "invite");
+                          window.location.href = url.toString();
+                        }
                       }}
-                      title={translations("Continue")}
-                    />
+                    >
+                      {translations("Continue")}
+                    </Button>
                   )}
                 </Flex>
               )}
