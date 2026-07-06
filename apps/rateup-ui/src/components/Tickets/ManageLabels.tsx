@@ -46,7 +46,15 @@ const parseColor = (c: string) => {
   }
 };
 
-export function ManageLabels({ boardId }: { boardId: string }) {
+export function ManageLabels({
+  boardId,
+  open,
+  onOpenChange,
+}: Readonly<{
+  boardId: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}>) {
   const { t } = useTranslation();
   const { labels, isLoading, createLabel, updateLabel, deleteLabel, deleteLabels } =
     useLabels(boardId);
@@ -94,173 +102,183 @@ export function ManageLabels({ boardId }: { boardId: string }) {
   };
 
   return (
-    <>
-      <Dialog
-        onOpenChange={(open) => {
-          if (!open) {
-            setView("list");
-          }
-        }}
-      >
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setView("list");
+        }
+        if (onOpenChange) {
+          onOpenChange(isOpen);
+        }
+      }}
+    >
+      {open === undefined && (
         <DialogTrigger render={<Button variant="outline" size="sm" className="h-9 shrink-0" />}>
           <Tag className="w-4 h-4 sm:mr-2 text-muted-foreground" />
           <span className="hidden sm:inline">{t("Manage Labels")}</span>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[360px] p-0">
-          <DialogHeader className="p-4 border-b">
-            <DialogTitle className="text-center font-semibold">
-              {view === "list" && t("Labels")}
-              {view === "create" && t("Create Label")}
-              {view === "edit" && t("Edit Label")}
-            </DialogTitle>
-          </DialogHeader>
+      )}
+      <DialogContent className="sm:max-w-[360px] p-0">
+        <DialogHeader className="p-4 border-b">
+          <DialogTitle className="text-center font-semibold">
+            {view === "list" && t("Labels")}
+            {view === "create" && t("Create Label")}
+            {view === "edit" && t("Edit Label")}
+          </DialogTitle>
+        </DialogHeader>
 
-          <div className="p-4">
-            {view === "list" ? (
-              <div className="flex flex-col gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder={t("Search labels...")}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
+        <div className="p-4">
+          {view === "list" ? (
+            <div className="flex flex-col gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder={t("Search labels...")}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
 
-                <div className="text-sm font-semibold text-muted-foreground mt-2">
-                  {t("Labels")}
-                </div>
+              <div className="text-sm font-semibold text-muted-foreground mt-2">{t("Labels")}</div>
 
-                <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
-                  {isLoading ? (
-                    <div className="text-center text-sm text-muted-foreground py-4">
-                      {t("Loading...")}
-                    </div>
-                  ) : filteredLabels.length === 0 ? (
-                    <div className="text-center text-sm text-muted-foreground py-4">
-                      {t("No labels found")}
-                    </div>
-                  ) : (
-                    filteredLabels.map((label) => {
-                      const parsedColor = parseColor(label.color);
-                      return (
-                        <div key={label.id} className="flex items-center gap-3 group">
-                          <Checkbox
-                            checked={selectedLabels.includes(label.id)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedLabels([...selectedLabels, label.id]);
-                              } else {
-                                setSelectedLabels(selectedLabels.filter((id) => id !== label.id));
-                              }
-                            }}
-                          />
-                          <div
-                            className="flex-1 py-1.5 px-3 rounded-md text-sm font-medium"
-                            style={{
-                              backgroundColor: parsedColor.bgcolor,
-                              color: parsedColor.textcolor,
-                              border: `1px solid ${parsedColor.textcolor}`,
-                            }}
-                          >
-                            {label.name}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-8 h-8"
-                            onClick={() => {
-                              setEditingLabel(label);
-                              setName(label.name);
-                              setColor(parsedColor);
-                              setView("edit");
-                            }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
+              <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+                {(() => {
+                  if (isLoading) {
+                    return (
+                      <div className="text-center text-sm text-muted-foreground py-4">
+                        {t("Loading...")}
+                      </div>
+                    );
+                  }
+
+                  if (filteredLabels.length === 0) {
+                    return (
+                      <div className="text-center text-sm text-muted-foreground py-4">
+                        {t("No labels found")}
+                      </div>
+                    );
+                  }
+
+                  return filteredLabels.map((label) => {
+                    const parsedColor = parseColor(label.color);
+                    return (
+                      <div key={label.id} className="flex items-center gap-3 group">
+                        <Checkbox
+                          checked={selectedLabels.includes(label.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedLabels([...selectedLabels, label.id]);
+                            } else {
+                              setSelectedLabels(selectedLabels.filter((id) => id !== label.id));
+                            }
+                          }}
+                        />
+                        <div
+                          className="flex-1 py-1.5 px-3 rounded-md text-sm font-medium"
+                          style={{
+                            backgroundColor: parsedColor.bgcolor,
+                            color: parsedColor.textcolor,
+                            border: `1px solid ${parsedColor.textcolor}`,
+                          }}
+                        >
+                          {label.name}
                         </div>
-                      );
-                    })
-                  )}
-                </div>
-
-                {selectedLabels.length > 0 ? (
-                  <Button
-                    variant="destructive"
-                    className="w-full mt-2"
-                    onClick={handleDeleteSelectedLabels}
-                  >
-                    {t("Delete Selected Labels")} ({selectedLabels.length})
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="w-full mt-2 bg-background hover:bg-muted"
-                    onClick={() => {
-                      setName("");
-                      setColor(PRESET_COLORS[0]);
-                      setView("create");
-                    }}
-                  >
-                    {t("Create a new label")}
-                  </Button>
-                )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8"
+                          onClick={() => {
+                            setEditingLabel(label);
+                            setName(label.name);
+                            setColor(parsedColor);
+                            setView("edit");
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">{t("Name")}</label>
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={t("Label name")}
-                  />
-                </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">{t("Color")}</label>
-                  <div className="grid grid-cols-8 gap-2 w-fit">
-                    {PRESET_COLORS.map((c, i) => (
-                      <button
-                        key={i}
-                        className={`w-8 h-8 rounded-md transition-all ${color.bgcolor === c.bgcolor ? "ring-2 ring-primary ring-offset-2" : ""}`}
-                        style={{ backgroundColor: c.textcolor }}
-                        onClick={() => setColor(c)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button variant="outline" className="flex-1" onClick={() => setView("list")}>
-                    {t("Cancel")}
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    onClick={view === "create" ? handleCreate : handleUpdate}
-                    disabled={!name}
-                  >
-                    {t("Save")}
-                  </Button>
-                </div>
-                {view === "edit" && (
-                  <Button
-                    variant="destructive"
-                    className="w-full mt-2"
-                    onClick={() => {
-                      if (editingLabel) deleteLabel(editingLabel.id);
-                      setView("list");
-                    }}
-                  >
-                    {t("Delete Label")}
-                  </Button>
-                )}
+              {selectedLabels.length > 0 ? (
+                <Button
+                  variant="destructive"
+                  className="w-full mt-2"
+                  onClick={handleDeleteSelectedLabels}
+                >
+                  {t("Delete Selected Labels")} ({selectedLabels.length})
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full mt-2 bg-background hover:bg-muted"
+                  onClick={() => {
+                    setName("");
+                    setColor(PRESET_COLORS[0]);
+                    setView("create");
+                  }}
+                >
+                  {t("Create a new label")}
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">{t("Name")}</label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t("Label name")}
+                />
               </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">{t("Color")}</label>
+                <div className="grid grid-cols-8 gap-2 w-fit">
+                  {PRESET_COLORS.map((c, i) => (
+                    <button
+                      key={i}
+                      className={`w-8 h-8 rounded-md transition-all ${color.bgcolor === c.bgcolor ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                      style={{ backgroundColor: c.textcolor }}
+                      onClick={() => setColor(c)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <Button variant="outline" className="flex-1" onClick={() => setView("list")}>
+                  {t("Cancel")}
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={view === "create" ? handleCreate : handleUpdate}
+                  disabled={!name}
+                >
+                  {t("Save")}
+                </Button>
+              </div>
+              {view === "edit" && (
+                <Button
+                  variant="destructive"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    if (editingLabel) deleteLabel(editingLabel.id);
+                    setView("list");
+                  }}
+                >
+                  {t("Delete Label")}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
