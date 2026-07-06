@@ -9,6 +9,7 @@ import { WaMessageBody } from "../../../types/whatsapp.types.js";
 import { assignChat } from "../whatsappSurvey/wasurvey.utils.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import redisConnection from "../../../utils/redisConnection.js";
 import { templateData } from "../messageTemplates/wa_templates.service.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
@@ -605,6 +606,10 @@ async function validateConditionGroup(
   }
 }
 
+function ruleSendOncePerDayKey(ruleId: string, phone: string): string {
+  return `rule:${ruleId}:sendOncePerDay:${phone}`;
+}
+
 /**
  * Validates all condition groups for a rule (AND/OR logic at rule level)
  */
@@ -620,11 +625,9 @@ export async function validateRuleConditions(
   if (rule.options) {
     // Check sendOncePerDay option
     if (rule.options.sendOncePerDay) {
-      const recentActivity = await findRecentAutomation(phone, orgId, {
-        timeWindow: 24 * 60 * 60 * 1000, // 24 hours
-      });
-      // If there's recent activity, rule fails (don't send again)
-      if (recentActivity) return false;
+      const alreadySentToday = await redisConnection.exists(ruleSendOncePerDayKey(rule.id, phone));
+      // If this rule already fired for this contact within 24 hours, don't send again
+      if (alreadySentToday) return false;
     }
 
     // Check businessHours option
@@ -820,6 +823,16 @@ export async function checkAndExecuteRuleByTriggerEvent(
       );
 
       const executedActions = await executeRuleActions(rule, context);
+
+      if (rule.options?.sendOncePerDay && phoneText) {
+        await redisConnection.set(
+          ruleSendOncePerDayKey(rule.id, phoneText),
+          "1",
+          "EX",
+          24 * 60 * 60,
+        );
+      }
+
       return {
         rule,
         executedActions,
