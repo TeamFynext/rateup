@@ -118,14 +118,6 @@ export const parseColor = (c: string) => {
   }
 };
 
-const TAG_COLORS = [
-  "bg-blue-50 text-blue-600",
-  "bg-red-50 text-red-600",
-  "bg-purple-50 text-purple-600",
-  "bg-yellow-50 text-yellow-700",
-  "bg-green-50 text-green-600",
-];
-
 function CardDisplay({
   card,
   state,

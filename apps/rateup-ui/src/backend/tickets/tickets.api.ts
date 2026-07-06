@@ -1,4 +1,3 @@
-import type { NotificationFormValues } from "@/components/Tickets/boardSettings.tsx";
 import type { Board, Card, Column, Label, MemberData } from "@/components/Tickets/types.ts";
 import type { TicketType } from "@/utils/enums/ticket.ts";
 
@@ -98,7 +97,7 @@ export const createBoard = async (board: {
   return data;
 };
 
-export const updateBoard = async (board: Partial<NotificationFormValues>): Promise<Board> => {
+export const updateBoard = async (board): Promise<Board> => {
   const { data } = await axiosClient.put(`/tickets/boards/${board.id}`, board);
   return data;
 };
