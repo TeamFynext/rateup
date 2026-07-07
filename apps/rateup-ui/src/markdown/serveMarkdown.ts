@@ -1,6 +1,5 @@
 // src/markdown/serveMarkdown.ts
 
-import { wrapMiddlewaresWithSentry } from "@sentry/tanstackstart-react";
 import { createMiddleware } from "@tanstack/react-start";
 
 type MarkdownSource =
@@ -13,26 +12,24 @@ type MarkdownSource =
  * Accepts either a static markdown string or a function that builds markdown dynamically.
  */
 export function createMarkdownMiddleware(markdownSource: MarkdownSource) {
-  return wrapMiddlewaresWithSentry({
-    markdownMiddleware: createMiddleware().server(async ({ next, request }) => {
-      const accept = request.headers.get("accept") ?? "";
-      const acceptsMarkdown = /text\/markdown/.test(accept);
+  return createMiddleware().server(async ({ next, request }) => {
+    const accept = request.headers.get("accept") ?? "";
+    const acceptsMarkdown = /text\/markdown/.test(accept);
 
-      if (!acceptsMarkdown) {
-        return next();
-      }
-      const markdown =
-        typeof markdownSource === "function" ? await markdownSource({ request }) : markdownSource;
+    if (!acceptsMarkdown) {
+      return next();
+    }
+    const markdown =
+      typeof markdownSource === "function" ? await markdownSource({ request }) : markdownSource;
 
-      if (markdown instanceof Response) {
-        return markdown;
-      }
+    if (markdown instanceof Response) {
+      return markdown;
+    }
 
-      return new Response(markdown, {
-        headers: {
-          "Content-Type": "text/markdown; charset=utf-8",
-        },
-      });
-    }),
+    return new Response(markdown, {
+      headers: {
+        "Content-Type": "text/markdown; charset=utf-8",
+      },
+    });
   });
 }

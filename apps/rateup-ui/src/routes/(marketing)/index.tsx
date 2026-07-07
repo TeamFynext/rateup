@@ -1,4 +1,3 @@
-import { wrapMiddlewaresWithSentry } from "@sentry/tanstackstart-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { createMiddleware } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
@@ -75,10 +74,7 @@ const marketingSearchSchema = z.object({
 export const Route = createFileRoute("/(marketing)/")({
   validateSearch: (search) => marketingSearchSchema.parse(search),
   server: {
-    middleware: [
-      ...createMarkdownMiddleware(homepageMarkdown),
-      ...wrapMiddlewaresWithSentry({ apiCatalogMiddleware }),
-    ],
+    middleware: [createMarkdownMiddleware(homepageMarkdown), apiCatalogMiddleware],
   },
   component: RouteComponent,
   head: () => ({
