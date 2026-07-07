@@ -31,6 +31,7 @@ import invariant from "tiny-invariant";
 
 import { useCardTeamMembersById } from "@/backend/tickets/tickets.query";
 import { useUserInfo } from "@/backend/user/user.query";
+import { getUserColor } from "@/components/Tickets/BoardContent.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
   DropdownMenu,
@@ -117,14 +118,6 @@ export const parseColor = (c: string) => {
   }
 };
 
-const TAG_COLORS = [
-  "bg-blue-50 text-blue-600",
-  "bg-red-50 text-red-600",
-  "bg-purple-50 text-purple-600",
-  "bg-yellow-50 text-yellow-700",
-  "bg-green-50 text-green-600",
-];
-
 function CardDisplay({
   card,
   state,
@@ -143,8 +136,9 @@ function CardDisplay({
   const { t } = useTranslation();
   const { data: members = [] } = useCardTeamMembersById(card.id);
 
-  const assignedMemberId = card.assignees?.[0]?.assigneeId;
-  const assignee = members.find((m: any) => m.id === assignedMemberId);
+  const assignedMemberIds = card.assignees?.map((a: any) => a.assigneeId) || [];
+  const assignees = members.filter((m: any) => assignedMemberIds.includes(m.id));
+  const firstAssignee = assignees[0];
 
   const allItems = (card.checklists || []).flatMap((cl: any) => cl.items || []);
   const doneCount = allItems.filter((i: any) => i.done).length;
@@ -248,25 +242,74 @@ function CardDisplay({
         {/* Subtitle */}
         <div className="flex items-center gap-1.5 mt-1">
           <span
-            className={`w-[7px] h-[7px] rounded-full shrink-0 ${assignee ? "bg-green-500" : "bg-gray-300"}`}
+            className={`w-[7px] h-[7px] rounded-full shrink-0 ${firstAssignee ? "bg-green-500" : "bg-gray-300"}`}
           />
-          <span className="font-body text-[12.5px] text-muted-foreground font-medium truncate">
-            {assignee ? assignee.name : t("Unassigned")}
+          <span className="font-body text-[12.5px] text-muted-foreground font-medium truncate flex items-center">
+            {firstAssignee ? (
+              <>
+                {firstAssignee.name}
+                {assignees.length > 1 && (
+                  <span className="ml-1.5 font-bold tracking-wide">+{assignees.length - 1}</span>
+                )}
+              </>
+            ) : (
+              t("Unassigned")
+            )}
           </span>
         </div>
         {/* Meta */}
         <div className="flex items-center gap-1.5 flex-wrap mt-[11px]">
-          {tags.slice(0, 2).map((tag, idx) => {
-            const colorClass = TAG_COLORS[idx % TAG_COLORS.length];
-            return (
-              <span
-                key={idx}
-                className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold tracking-wide capitalize ${colorClass}`}
-              >
-                {tag}
-              </span>
-            );
-          })}
+          {/* <div>
+            {tags.slice(0, 2).map((tag, idx) => {
+              const colorClass = TAG_COLORS[idx % TAG_COLORS.length];
+              return (
+                <span
+                  key={idx}
+                  className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold tracking-wide capitalize ${colorClass}`}
+                >
+                  {tag}
+                </span>
+              );
+            })}
+          </div> */}
+
+          {card.labels && card.labels.length > 0 ? (
+            <>
+              {card.labels.slice(0, 2).map((lbl: any) => {
+                const pColor = parseColor(lbl.color);
+                return (
+                  <span
+                    key={lbl.id}
+                    className="px-2 py-0.5 rounded-full font-body text-[10.5px] font-bold tracking-wide capitalize"
+                    style={{
+                      backgroundColor: pColor.bgcolor,
+                      color: pColor.textcolor,
+                      border: `1px solid ${pColor.bgcolor}`,
+                    }}
+                  >
+                    {lbl.name}
+                  </span>
+                );
+              })}
+              {card.labels.length > 2 && (
+                <span className="px-2 py-0.5 rounded-full font-body text-[10.5px] font-bold tracking-wide text-muted-foreground bg-muted border border-border">
+                  +{card.labels.length - 2}
+                </span>
+              )}
+            </>
+          ) : card.label ? (
+            <span
+              className="px-2 py-0.5 rounded-full font-body text-[10.5px] font-bold tracking-wide capitalize"
+              style={{
+                backgroundColor: parseColor(card.label.color).bgcolor,
+                color: parseColor(card.label.color).textcolor,
+                border: `1px solid ${parseColor(card.label.color).bgcolor}`,
+              }}
+            >
+              {card.label.name}
+            </span>
+          ) : null}
+
           {card.attachments && card.attachments.length > 0 && (
             <span className="inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium text-muted-foreground">
               <Paperclip size={12} className="text-muted-foreground" strokeWidth={2} />
@@ -295,60 +338,7 @@ function CardDisplay({
         <div className="h-px bg-border my-3" />
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-2">
-          {/* Label Badge (Replacing Priority) */}
-          <div className="flex gap-1 flex-wrap">
-            {card.labels && card.labels.length > 0 ? (
-              <>
-                {card.labels.slice(0, 2).map((lbl: any) => (
-                  <span
-                    key={lbl.id}
-                    className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider capitalize"
-                    style={{
-                      padding: "2px 9px",
-                      backgroundColor: parseColor(lbl.color).bgcolor,
-                      color: parseColor(lbl.color).textcolor,
-                      border: `1px solid ${parseColor(lbl.color).textcolor}`,
-                    }}
-                  >
-                    {lbl.name}
-                  </span>
-                ))}
-                {card.labels.length > 2 && (
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider text-muted-foreground bg-muted border border-border"
-                    style={{
-                      padding: "2px 9px",
-                    }}
-                  >
-                    +{card.labels.length - 2}
-                  </span>
-                )}
-              </>
-            ) : card.label ? (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider capitalize"
-                style={{
-                  padding: "2px 9px",
-                  backgroundColor: parseColor(card.label.color).bgcolor,
-                  color: parseColor(card.label.color).textcolor,
-                  border: `1px solid ${parseColor(card.label.color).textcolor}`,
-                }}
-              >
-                {card.label.name}
-              </span>
-            ) : (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider capitalize text-muted-foreground bg-muted border border-border"
-                style={{
-                  padding: "2px 9px",
-                }}
-              >
-                {t("No Label")}
-              </span>
-            )}
-          </div>
-
+        <div className="flex items-center justify-end gap-[9px]">
           <div className="flex items-center gap-[9px]">
             {dateFormatted && (
               <span
@@ -372,18 +362,32 @@ function CardDisplay({
                 {dateFormatted}
               </span>
             )}
-            {assignee ? (
-              <Avatar className="h-[22px] w-[22px]">
-                <AvatarImage src={getFileUrlFromKey(assignee.profilePhoto)} />
-                <AvatarFallback className="text-[9px] bg-primary/20 text-primary font-bold">
-                  {assignee.name
-                    ?.split(" ")
-                    .map((n: string) => n[0])
-                    .join("")
-                    .substring(0, 2)
-                    .toUpperCase() || "UN"}
-                </AvatarFallback>
-              </Avatar>
+            {assignees.length > 0 ? (
+              <div className="flex items-center -space-x-1.5">
+                {assignees.slice(0, 3).map((a: any, i: number) => (
+                  <Avatar
+                    key={a.id}
+                    className="h-[22px] w-[22px] border-2 border-background"
+                    style={{ zIndex: 3 - i }}
+                  >
+                    <AvatarImage src={getFileUrlFromKey(a.profilePhoto)} />
+                    <AvatarFallback
+                      className="text-[9px] font-bold text-white"
+                      style={{ backgroundColor: getUserColor(a.id) }}
+                    >
+                      {a.name?.substring(0, 2).toUpperCase() || "UN"}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+                {assignees.length > 3 && (
+                  <div
+                    className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-muted border-2 border-background text-[9px] font-bold text-muted-foreground"
+                    style={{ zIndex: 0 }}
+                  >
+                    +{assignees.length - 3}
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="w-[22px] h-[22px] rounded-full border-[1.5px] border-dashed border-border flex items-center justify-center">
                 <User size={11} className="text-muted-foreground" />

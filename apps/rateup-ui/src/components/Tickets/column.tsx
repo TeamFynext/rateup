@@ -9,12 +9,11 @@ import {
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
 import { IconDots, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
-import { Ticket } from "lucide-react";
 import { memo, useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import invariant from "tiny-invariant";
 
-import { useBoard, useLabels } from "@/backend/tickets/tickets.query";
+import { useBoard } from "@/backend/tickets/tickets.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import {
@@ -24,11 +23,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Textarea } from "@/components/ui/textarea.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import { TicketType } from "@/utils/enums/ticket.ts";
 
 import { Input } from "../ui/input.tsx";
-import { Card, CardShadow, parseColor } from "./card.tsx";
+import { Card, CardShadow } from "./card.tsx";
 import { blockBoardPanningAttr } from "./data-attributes.ts";
 import { isShallowEqual } from "./is-shallow-equal.ts";
 import { SettingsContext } from "./settings-context.tsx";
@@ -101,14 +106,10 @@ export function Column({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newCard, setNewCard] = useState<{
     title: string;
-    description: string;
-    labelIds: string[];
-    deadline: string;
+    columnId: string;
   }>({
     title: "",
-    description: "",
-    labelIds: [],
-    deadline: "",
+    columnId: column.id,
   });
   const openEditModal = () => setIsEditModalOpen(true);
   const closeEditModal = () => setIsEditModalOpen(false);
@@ -124,8 +125,7 @@ export function Column({
     setTitleError(false);
   };
 
-  const { createCard, deleteCard } = useBoard(currentBoardId || "");
-  const { labels } = useLabels(currentBoardId || "");
+  const { createCard, deleteCard, board } = useBoard(currentBoardId || "");
 
   const handleOpenAddCardModal = () => {
     openAddCardModal();
@@ -167,27 +167,16 @@ export function Column({
 
     const payload: any = {
       title: newCard.title,
-      description: newCard.description,
-      ticketColumnId: column.id,
+      ticketColumnId: newCard.columnId || column.id,
       type: TicketType.CUSTOM,
     };
-
-    if (newCard.labelIds && newCard.labelIds.length > 0) {
-      payload.labelIds = newCard.labelIds;
-    }
-
-    if (newCard.deadline) {
-      payload.deadline = newCard.deadline;
-    }
 
     createCard(payload);
 
     // Reset and close modal
     setNewCard({
       title: "",
-      description: "",
-      labelIds: [],
-      deadline: "",
+      columnId: column.id,
     });
     closeAddCardModal();
   };
@@ -481,103 +470,57 @@ export function Column({
         </DialogContent>
       </Dialog>
       <Dialog open={isAddCardModalOpen} onOpenChange={(open) => !open && closeAddCardModal()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t("Add Ticket")}</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-5 py-2">
-            <div className="flex flex-col gap-2">
-              <Label className="text-sm font-semibold">
-                {t("Title")} <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                value={newCard.title}
-                onChange={(e) => {
-                  setNewCard((prev) => ({ ...prev, title: e.target.value }));
-                  if (titleError) setTitleError(false);
-                }}
-                placeholder={t("e.g., Fix the navigation bug")}
-                className={`h-10 ${titleError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                autoFocus
-                required
-              />
-              {titleError && (
-                <span className="text-red-500 text-[13px] font-medium mt-0.5">
-                  {t("Please enter a title for the ticket")}
-                </span>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label className="text-sm font-semibold">{t("Description")}</Label>
-              <Textarea
-                value={newCard.description}
-                onChange={(e) =>
-                  setNewCard((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder={t("Add a more detailed description...")}
-                className="resize-none"
-                rows={4}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label className="text-sm font-semibold">{t("Label")}</Label>
-              <div className="flex gap-2 flex-wrap">
-                {labels?.map((label) => {
-                  const isSelected = newCard.labelIds.includes(label.id);
-                  const pColor = parseColor(label.color);
-                  return (
-                    <button
-                      key={label.id}
-                      type="button"
-                      onClick={() =>
-                        setNewCard((prev) => ({
-                          ...prev,
-                          labelIds: isSelected
-                            ? prev.labelIds.filter((id) => id !== label.id)
-                            : [...prev.labelIds, label.id],
-                        }))
-                      }
-                      className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
-                      style={{
-                        padding: "4px 10px",
-                        border: isSelected
-                          ? `2px solid ${pColor.textcolor}`
-                          : `2px solid ${pColor.bgcolor}`,
-                        background: pColor.bgcolor,
-                        color: pColor.textcolor,
-                        boxShadow: isSelected ? `0 0 0 2px ${pColor.textcolor}22` : "none",
-                      }}
-                    >
-                      {label.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label className="text-sm font-semibold">{t("Due Date")}</Label>
-              <Input
-                type="date"
-                value={newCard.deadline}
-                onChange={(e) => setNewCard((prev) => ({ ...prev, deadline: e.target.value }))}
-                min={new Date().toISOString().split("T")[0]}
-                className="h-10"
-                onClick={(e) => "showPicker" in e.target && (e.target as any).showPicker()}
-              />
-            </div>
+        <DialogContent className="w-[460px] max-w-[calc(100vw-32px)] rounded-2xl p-[28px_28px_24px]">
+          <div className="mb-5 font-display text-lg font-extrabold text-ink-900">
+            {t("New Ticket")}
           </div>
-          <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" onClick={closeAddCardModal} className="h-10 px-5">
+
+          <div className="">
+            <Label className="mb-1.5 block text-muted-foreground text-xs font-semibold uppercase">
+              {t("Title")}
+            </Label>
+            <Input
+              autoFocus
+              value={newCard.title}
+              onChange={(e) => {
+                setNewCard((prev) => ({ ...prev, title: e.target.value }));
+                if (titleError) setTitleError(false);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && handleAddCard()}
+              placeholder={t("What needs to be resolved?")}
+              className={`${titleError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+            />
+          </div>
+
+          <div className="">
+            <Label className="mb-1.5 block text-muted-foreground text-xs font-semibold uppercase">
+              {t("Column")}
+            </Label>
+            <Select
+              value={newCard.columnId}
+              onValueChange={(val) => setNewCard((prev) => ({ ...prev, columnId: val }))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t("Select a column")}>
+                  {board?.ticketColumns?.find((c: any) => c.id === newCard.columnId)?.title}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {board?.ticketColumns?.map((c: any) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end gap-2.5">
+            <Button variant="outline" size="sm" onClick={closeAddCardModal}>
               {t("Cancel")}
             </Button>
-            <Button onClick={handleAddCard} className="h-10 px-5 font-semibold shadow-sm">
-              <Ticket size={16} className="mr-2" /> {t("Add Ticket")}
+            <Button size="sm" onClick={handleAddCard} disabled={!newCard.title.trim()}>
+              {t("Create Ticket")}
             </Button>
           </div>
         </DialogContent>

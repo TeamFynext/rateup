@@ -41,6 +41,7 @@ import {
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import TicketTextEditor from "@/components/RichTextEditor/TicketTextEditor.tsx";
 import { getCellData } from "@/components/Survey/Response/WaResponses.tsx";
+import { getUserColor } from "@/components/Tickets/BoardContent";
 import { parseColor } from "@/components/Tickets/card.tsx";
 import SurveyResponsesView from "@/components/Tickets/SingleTicket/SurveyResponsesView.tsx";
 import type { Activity, Card, TicketComment } from "@/components/Tickets/types.ts";
@@ -581,72 +582,51 @@ function RightSidebar({
           <div>
             <MetaLabel>{t("Assignee")}</MetaLabel>
             <div className="flex flex-wrap gap-2 items-center">
-              {assignedMembers.map((memberId) => {
-                const user = members.find((m) => m.id === memberId);
-                if (!user) return null;
+              {members.map((user) => {
+                const isSelected = assignedMembers.includes(user.id);
+                const userColor = getUserColor(user.id);
                 return (
                   <Tooltip key={user.id}>
                     <TooltipTrigger
                       render={
-                        <Avatar
-                          className="h-8 w-8 border hover:opacity-80 transition cursor-pointer"
+                        <button
                           onClick={() => handleToggleMember(user.id)}
+                          style={{
+                            outline: isSelected
+                              ? `2.5px solid ${userColor}`
+                              : "2.5px solid transparent",
+                            outlineOffset: 1.5,
+                          }}
+                          className="rounded-full border-none bg-transparent p-0 transition-all duration-150 cursor-pointer flex hover:scale-105"
                         />
                       }
                     >
-                      <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} />
-                      <AvatarFallback>{user.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                      <Avatar className="h-8 w-8 border-none">
+                        <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} />
+                        <AvatarFallback
+                          className="text-xs font-bold text-white"
+                          style={{ backgroundColor: userColor }}
+                        >
+                          {user.name?.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                     </TooltipTrigger>
                     <TooltipContent>{user.name}</TooltipContent>
                   </Tooltip>
                 );
               })}
-
-              <Popover>
-                <PopoverTrigger
-                  render={
-                    <button className="h-8 w-8 rounded-full border-2 border-dashed flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors" />
-                  }
-                >
-                  <Plus className="h-4 w-4" />
-                </PopoverTrigger>
-                <PopoverContent className="w-56 p-1" align="start">
-                  <div
-                    className="max-h-64 overflow-y-auto"
-                    onWheel={(e) => e.stopPropagation()}
-                    onTouchMove={(e) => e.stopPropagation()}
-                  >
-                    {members.length === 0 ? (
-                      <div className="p-4 text-center text-sm text-muted-foreground">
-                        {t("No members found")}
-                      </div>
-                    ) : (
-                      members.map((user) => {
-                        const isSelected = assignedMembers.includes(user.id);
-                        return (
-                          <button
-                            key={user.id}
-                            onClick={() => handleToggleMember(user.id)}
-                            className="w-full flex items-center justify-between p-2 hover:bg-muted rounded-md text-sm transition"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} />
-                                <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <span>{user.name}</span>
-                            </div>
-                            {isSelected && <Check className="h-4 w-4 text-primary" />}
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
             </div>
-            {assignedMembers.length === 0 && (
-              <div className="text-sm text-muted-foreground mt-2">{t("Unassigned")}</div>
+            {assignedMembers.length > 0 ? (
+              <div className="mt-2 font-body text-xs text-muted-foreground">
+                <strong className="text-foreground">
+                  {assignedMembers
+                    .map((id) => members.find((m) => m.id === id)?.name)
+                    .filter(Boolean)
+                    .join(", ")}
+                </strong>
+              </div>
+            ) : (
+              <div className="mt-2 font-body text-xs text-muted-foreground">{t("Unassigned")}</div>
             )}
           </div>
           {linkedContact ? (
@@ -714,10 +694,13 @@ function RightSidebar({
             <div>
               <MetaLabel>{t("Created by")}</MetaLabel>
               <div className="flex items-center gap-2">
-                <Avatar className="h-7 w-7">
+                <Avatar className="h-7 w-7 border-none">
                   <AvatarImage src={creator.profilePhoto ?? undefined} />
-                  <AvatarFallback className="text-xs font-semibold">
-                    {creator.name?.charAt(0).toUpperCase()}
+                  <AvatarFallback
+                    className="text-[10px] font-bold text-white"
+                    style={{ backgroundColor: getUserColor(creator.id) }}
+                  >
+                    {creator.name?.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <span className="font-body text-[13px] text-foreground font-medium">
@@ -1264,35 +1247,71 @@ function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticketId: str
 
       {/* Labels */}
       <div>
-        <div className="flex items-center gap-2 mb-2">
-          <Tag className="h-4 w-4 text-muted-foreground" />
-          <span className="font-body text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
-            {t("Labels")}
-          </span>
-        </div>
-        <div className="flex gap-[5px] flex-wrap">
-          {labels?.map((label) => {
-            const isSelected = ticket.labels?.some((l: any) => l.id === label.id) || false;
+        <SectionLabel label={t("Labels")} icon={Tag} />
+        <div className="mt-[9px] flex flex-wrap items-center gap-1.5">
+          {ticket.labels?.map((label: any) => {
             const pColor = parseColor(label.color);
             return (
               <button
                 key={label.id}
                 onClick={() => handleLabelChange(label.id)}
-                className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
+                className="rounded-full flex items-center gap-[3px] cursor-pointer transition-all duration-150 hover:opacity-80 group border-none px-3 py-0.5"
                 style={{
-                  padding: "1px 10px",
-                  border: isSelected
-                    ? `2px solid ${pColor.textcolor}`
-                    : `2px solid ${pColor.bgcolor}`,
                   background: pColor.bgcolor,
                   color: pColor.textcolor,
-                  boxShadow: isSelected ? `0 0 0 2px ${pColor.textcolor}22` : "none",
                 }}
               >
-                {label.name}
+                <span className="text-xs">{label.name}</span>
+                <X size={11} className="opacity-50 group-hover:opacity-100" strokeWidth={2.5} />
               </button>
             );
           })}
+
+          <Popover>
+            <PopoverTrigger
+              render={
+                <button className="flex items-center gap-[3px] px-3 py-0.5 rounded-full border-[1.5px] border-dashed border-muted-foreground/60 bg-transparent font-body text-[11px] font-semibold text-muted-foreground/80 transition-all duration-150 hover:border-primary hover:text-primary cursor-pointer" />
+              }
+            >
+              <Plus size={10} strokeWidth={2.5} />
+              <span className="text-xs">{t("Add label")}</span>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2" align="start">
+              <div className="text-[11px] font-bold tracking-wider uppercase text-muted-foreground mb-2 px-1 mt-1">
+                {t("Board Labels")}
+              </div>
+              <div
+                className="max-h-64 overflow-y-auto flex flex-col gap-1"
+                onWheel={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+              >
+                {!labels || labels.length === 0 ? (
+                  <div className="text-[11px] text-muted-foreground text-center p-2">
+                    {t("No labels found on this board.")}
+                  </div>
+                ) : (
+                  labels.map((label) => {
+                    const isSelected = ticket.labels?.some((l: any) => l.id === label.id);
+                    const pColor = parseColor(label.color);
+                    return (
+                      <button
+                        key={label.id}
+                        onClick={() => handleLabelChange(label.id)}
+                        className="rounded-md flex items-center justify-between px-2.5 py-1.5 transition cursor-pointer text-left w-full text-[11.5px] font-semibold hover:opacity-80 border-none"
+                        style={{
+                          background: pColor.bgcolor,
+                          color: pColor.textcolor,
+                        }}
+                      >
+                        {label.name}
+                        {isSelected && <Check size={12} strokeWidth={3} />}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
