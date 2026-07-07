@@ -509,7 +509,7 @@ function NavSection({
             {item.group}
           </SidebarGroupLabel>
         )}
-        <SidebarGroupContent className="flex flex-col gap-1 group-data-[collapsible=icon]:items-center">
+        <SidebarGroupContent className="flex flex-col gap-1">
           {item.items?.map((subItem: any) => (
             <NavItem
               key={subItem.url}
@@ -533,7 +533,7 @@ function NavSection({
       {item.showTitle && <SidebarGroupLabel>{item.group}</SidebarGroupLabel>}
       <SidebarSeparator className="m-0 hidden group-data-[collapsible=icon]:block" />
       <SidebarGroupContent className="flex p-2">
-        <SidebarMenu className="group-data-[collapsible=icon]:items-center">
+        <SidebarMenu>
           {item.items.map((groupItem: any) => (
             <NavItem
               key={groupItem.title ?? groupItem.url}
@@ -789,7 +789,7 @@ export default function AppSidebar({
       </Sidebar>
       {/* Expanded nav panel */}
       {activeItem?.items && activeItem.items.length > 0 && (
-        <Sidebar className="w-60 border-r relative hidden md:flex" collapsible="icon">
+        <Sidebar className="w-56 border-r relative hidden md:flex" collapsible="icon">
           <SidebarHeader className="gap-3.5 border-b bg-background p-3 group-data-[collapsible=icon]:px-2">
             <div className="flex w-full items-center justify-between group-data-[collapsible=icon]:justify-center">
               <h2 className="flex text-foreground text-lg gap-1 font-bold group-data-[collapsible=icon]:hidden">
@@ -806,7 +806,7 @@ export default function AppSidebar({
 
           <SidebarContent className="bg-background pt-1">
             {activeItem.settingsStyle ? (
-              <div className="flex flex-col px-2 group-data-[collapsible=icon]:px-0">
+              <div className="flex flex-col px-2">
                 {activeItem.items?.map((item: any, index: number) => (
                   <NavSection
                     key={item.group ?? index}
@@ -833,8 +833,8 @@ export default function AppSidebar({
                         />
                       ) : (
                         <SidebarGroup key={item.title ?? item.url} className="p-0">
-                          <SidebarGroupContent className="flex flex-col px-2 group-data-[collapsible=icon]:px-0">
-                            <SidebarMenu className="gap-1 group-data-[collapsible=icon]:items-center">
+                          <SidebarGroupContent className="flex flex-col px-2">
+                            <SidebarMenu className="gap-1">
                               <NavItem
                                 item={item}
                                 fullPathname={fullPathname}
