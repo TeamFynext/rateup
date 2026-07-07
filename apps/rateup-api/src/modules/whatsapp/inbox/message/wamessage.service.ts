@@ -292,37 +292,6 @@ export async function filterChats(
         filters.push(`(c."lastReceivedMessageTimeStamp" IS NOT NULL)`);
       }
 
-      // Contact groups filter
-      if (bodyFilterProps?.contactGroups?.length > 0) {
-        params.push(bodyFilterProps.contactGroups);
-        filters.push(`EXISTS (
-          SELECT 1 FROM "ContactGroupMap" cgm 
-          WHERE cgm."contactId" = c.id 
-          AND cgm."contactGroupId" = ANY($${paramIndex}::uuid[])
-        )`);
-        paramIndex++;
-      }
-
-      // Campaigns filter
-      if (bodyFilterProps?.campaigns?.length > 0) {
-        params.push(bodyFilterProps.campaigns);
-        filters.push(`EXISTS (
-          SELECT 1 FROM "CampaignParticipant" cpt 
-          WHERE cpt."contactId" = c.id 
-          AND cpt."campaignId" = ANY($${paramIndex}::uuid[])
-        )`);
-        paramIndex++;
-      }
-
-      // Tags filter
-      if (bodyFilterProps?.tags?.length > 0) {
-        const tagFilters = bodyFilterProps.tags.map((tag) => {
-          params.push(JSON.stringify(tag));
-          return `c."tags" @> $${paramIndex++}::jsonb`;
-        });
-        filters.push(`(${tagFilters.join(" OR ")})`);
-      }
-
       // Labels filter
       if (bodyFilterProps?.labels?.length > 0) {
         params.push(bodyFilterProps.labels);
@@ -484,23 +453,6 @@ export async function filterChats(
         }
       }
 
-      //category filter
-      if (bodyFilterProps?.category?.length) {
-        if (bodyFilterProps?.category === "conversation") {
-          filters.push(`NOT EXISTS (SELECT 1 FROM "CampaignParticipant" cpt WHERE cpt."contactId" = c.id) AND 
-              NOT EXISTS (SELECT 1 FROM "WaAutomatedReplyMessage" aut WHERE aut."phone" = c."phone")`);
-        }
-        if (bodyFilterProps?.category === "campaign") {
-          filters.push(
-            `EXISTS (SELECT 1 FROM "CampaignParticipant" cpt WHERE cpt."contactId" = c.id)`,
-          );
-        }
-        if (bodyFilterProps?.category === "automation") {
-          filters.push(
-            `EXISTS (SELECT 1 FROM "WaAutomatedReplyMessage" aut WHERE aut."phone" = c."phone")`,
-          );
-        }
-      }
       // Phone filter
       // if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
       //   params.push(bodyFilterProps.phone);
@@ -755,28 +707,6 @@ export async function exportWhatsapChats(
     // Handling repliesOnly constraint
     if (constraints?.repliesOnly) {
       extendedWhereClause += `AND wm."messageBody"->>'exchangeProcess' = 'receive' `;
-    }
-
-    // Filter for contactGroups when ContactGroup (cg) is accessible
-    if (bodyFilterProps?.contactGroups && bodyFilterProps?.contactGroups?.length > 0) {
-      extendedWhereClause += `AND cg."id" IN (${bodyFilterProps.contactGroups
-        ?.map((v: string) => `'${v}'::uuid`)
-        .join(",")})`;
-    }
-
-    // Filter for campaigns when CampaignParticipant (cpt) is accessible
-    if (bodyFilterProps?.campaigns && bodyFilterProps?.campaigns?.length > 0) {
-      extendedWhereClause += `AND cpt."campaignId" IN (${bodyFilterProps?.campaigns
-        ?.map((v: string) => `'${v}'::uuid`)
-        .join(",")})`;
-    }
-
-    // Filter for tags
-    if (bodyFilterProps?.tags && bodyFilterProps.tags.length > 0) {
-      const tagsFilter = bodyFilterProps.tags
-        .map((tag) => `c."tags" @> '${JSON.stringify(tag)}'`)
-        .join(" OR ");
-      extendedWhereClause += ` AND (${tagsFilter}) `;
     }
 
     return extendedWhereClause.trim();
