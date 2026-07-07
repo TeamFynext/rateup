@@ -80,7 +80,7 @@ function LabelsPage() {
     );
   };
 
-  const handleDelete = async (label: ContactLabel) => {
+  async function handleDelete(label: ContactLabel) {
     const shouldDelete = await confirm({
       title: "Delete Label",
       description:
@@ -98,7 +98,7 @@ function LabelsPage() {
         setSelectedLabel(null);
       },
     });
-  };
+  }
 
   function openEditModal(label: ContactLabel) {
     setSelectedLabel(label);

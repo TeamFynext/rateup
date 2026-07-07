@@ -1,7 +1,7 @@
 import { TeamFeature } from "@/types/enums.ts";
 
 const DASHBOARD_LANDING_PRIORITY: Array<{ feature: TeamFeature; to: string }> = [
-  { feature: TeamFeature.Inbox, to: "/dashboard/inbox?tab=New" },
+  { feature: TeamFeature.Inbox, to: "/dashboard/inbox?tab=all" },
   { feature: TeamFeature.Analytics, to: "/dashboard/analytics" },
   { feature: TeamFeature.Contacts, to: "/dashboard/contacts" },
   { feature: TeamFeature.Campaigns, to: "/dashboard/campaign" },
