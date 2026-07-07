@@ -81,7 +81,7 @@ const jsonLd = {
 
 export const Route = createFileRoute("/(marketing)/products/whatsapp-feedback/")({
   server: {
-    middleware: createMarkdownMiddleware(productsMarkdown),
+    middleware: [createMarkdownMiddleware(productsMarkdown)],
   },
   component: WhatsappFeedback,
   head: () => ({

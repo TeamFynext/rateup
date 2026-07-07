@@ -56,6 +56,7 @@ const config = defineConfig({
             org: "rateup",
             project: "tanstackstart-ui",
             authToken: process.env.SENTRY_AUTH_TOKEN,
+            autoInstrumentMiddleware: false,
           }),
         ]
       : []),

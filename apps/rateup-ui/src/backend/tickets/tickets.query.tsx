@@ -179,6 +179,7 @@ export function useUpdateBoardMutation() {
     mutationFn: updateBoard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: ["board"] });
       queryClient.invalidateQueries({ queryKey: ["notification"] });
       queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
       toast.success("Board updated successfully!", {
@@ -221,6 +222,7 @@ export function useBoardQueries(enabled = true) {
     mutationFn: updateBoard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: ["board"] });
       toast.success("Board updated successfully!", {
         id: "update-board-success",
       });
@@ -254,6 +256,7 @@ export function useBoardQueries(enabled = true) {
     createBoard: createBoardMutation.mutate,
     updateBoard: updateBoardMutation.mutate,
     deleteBoard: deleteBoardMutation.mutate,
+    isDeleteBoardLoading: deleteBoardMutation.isPending,
   };
 }
 export const useUpdateCardMutation = () => {

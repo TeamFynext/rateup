@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, Columns3, LayoutPanelTop, List, Search, Settings } from "lucide-react";
+import { ChevronLeft, LayoutPanelTop, List, Search, Settings } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -12,8 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 
 import { Board } from "./board.tsx";
 import TicketSettings from "./boardSettings.tsx";
-import { ManageColumnsDialog } from "./ManageColumnsDialog.tsx";
-import { ManageLabels } from "./ManageLabels.tsx";
 import { TicketListView } from "./TicketListView.tsx";
 
 export function BoardContent({
@@ -37,7 +35,6 @@ export function BoardContent({
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSettings, setShowSettings] = useState(false);
-  const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
   const [viewPref, setViewPref] = useState(() => {
     return localStorage.getItem("rateup_ticket_view") || "board";
   });
@@ -89,37 +86,6 @@ export function BoardContent({
         <span className="text-muted-foreground">{t("Board not found")}</span>
       </div>
     );
-
-  if (showSettings) {
-    return (
-      <div className="h-full flex flex-col p-4">
-        <Button variant="ghost" onClick={() => setShowSettings(false)} className="self-start mb-4">
-          <ChevronLeft className="w-4 h-4 mr-2" /> {t("Back to Board")}
-        </Button>
-        <TicketSettings
-          boardId={selectedBoardId}
-          teamOptions={teamOptions}
-          selectedBoard={selectedBoard}
-        />
-      </div>
-    );
-  }
-
-  const avatarColors = [
-    "#ef4444",
-    "#f97316",
-    "#f59e0b",
-    "#10b981",
-    "#3b82f6",
-    "#6366f1",
-    "#8b5cf6",
-    "#ec4899",
-  ];
-  const getUserColor = (id: string) => {
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) hash += id.charCodeAt(i);
-    return avatarColors[hash % avatarColors.length];
-  };
 
   const handleViewChange = (v: string) => {
     setViewPref(v);
@@ -200,18 +166,6 @@ export function BoardContent({
                     <List className="w-3.5 h-3.5 mr-1.5" /> {t("List")}
                   </TabsTrigger>
                 </TabsList>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 shrink-0"
-                  onClick={() => setIsManageColumnsOpen(true)}
-                >
-                  <Columns3 className="w-4 h-4 sm:mr-2 text-primary" />
-                  <span className="hidden sm:inline text-primary">{t("Manage Columns")}</span>
-                </Button>
-
-                <ManageLabels boardId={selectedBoardId} />
 
                 <Button
                   variant="outline"
@@ -367,11 +321,13 @@ export function BoardContent({
         </TabsContent>
       </Tabs>
 
-      {isManageColumnsOpen && (
-        <ManageColumnsDialog
-          columns={selectedBoard?.ticketColumns || []}
-          onClose={() => setIsManageColumnsOpen(false)}
-          onSave={handleSaveColumns}
+      {showSettings && selectedBoard && (
+        <TicketSettings
+          boardId={selectedBoardId}
+          teamOptions={teamOptions}
+          selectedBoard={selectedBoard}
+          onClose={() => setShowSettings(false)}
+          onSaveColumns={handleSaveColumns}
         />
       )}
     </div>
@@ -406,3 +362,19 @@ function StatPill({ label, value, color }: StatPillProps) {
     </div>
   );
 }
+
+const avatarColors = [
+  "#ef4444",
+  "#f97316",
+  "#f59e0b",
+  "#10b981",
+  "#3b82f6",
+  "#6366f1",
+  "#8b5cf6",
+  "#ec4899",
+];
+export const getUserColor = (id: string) => {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash += id.charCodeAt(i);
+  return avatarColors[hash % avatarColors.length];
+};
