@@ -274,7 +274,7 @@ const ChatselectPanelHeader = ({
                   : "bg-slate-50 text-slate-500 hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
               )}
             >
-              <span className="text-xs font-bold">Everyone</span>
+              <span className="text-xs font-bold">{translations("Everyone")}</span>
             </button>
             <button
               onClick={() =>
@@ -287,7 +287,7 @@ const ChatselectPanelHeader = ({
                   : "bg-slate-50 text-slate-500 hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
               )}
             >
-              <span className="text-xs font-bold">Mine • 0</span>
+              <span className="text-xs font-bold">{translations("Mine")}</span>
             </button>
           </div>
 
