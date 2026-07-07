@@ -19,7 +19,6 @@ import {
   exportWaMessageLogs,
   generateInboxResponse,
   getAssignedUserForContact,
-  getChatFilterData,
   getFilteredContacts,
   getInboxAnalytics,
   getInboxUserCount,
@@ -71,13 +70,6 @@ export const useSendNewWaMessage = (
     onError: (error) => {
       console.error("Error sending message", error);
     },
-  });
-};
-
-export const useChatFilterData = () => {
-  return useQuery({
-    queryKey: ["contacts", "filter-data"],
-    queryFn: getChatFilterData,
   });
 };
 

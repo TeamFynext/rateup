@@ -76,9 +76,6 @@ const WaInboxChatSelect = () => {
   const { t: translations } = useTranslation();
   const checkIfAnyFilterisActive = useCallback((filters: any) => {
     return (
-      filters.contactGroups.length > 0 ||
-      filters.campaigns.length > 0 ||
-      filters.tags.length > 0 ||
       filters.searchTerm?.length > 0 ||
       filters.messageType !== "all" ||
       filters.messageType !== "usermessages" ||
@@ -121,11 +118,6 @@ const WaInboxChatSelect = () => {
       if (checkIfAnyFilterisActive(filters)) {
         const processedFilters = {
           ...filters,
-          contactGroups: filters?.contactGroups?.map((group) => group.value),
-          campaigns: filters?.campaigns?.map((group) => group.value),
-          tags: filters?.tags?.map((group) => ({
-            [group.group]: group.value,
-          })),
         };
         setProcessedFilter(processedFilters);
         setFilterData(encodeURIComponent(JSON.stringify(processedFilters)));
@@ -248,13 +240,14 @@ const WaInboxChatSelect = () => {
     const hasOpenStatus = filter?.status?.some((s) =>
       openStatus.includes(s as WaMessageAssignStatus),
     );
-    if (tab === "Addressed" && hasOpenStatus) {
+    // On the 'closed' tab, strip any open-status filters that were previously set
+    if (tab === "closed" && hasOpenStatus) {
       setFilter({
         ...filter,
         status: filter.status.filter((s) => !openStatus.includes(s as WaMessageAssignStatus)),
       });
-    } else if (tab === "All" && !hasOpenStatus) {
-      const prFilter = previousFilterForTab?.find((t) => t.tab === "All");
+    } else if (tab === "all" && !hasOpenStatus) {
+      const prFilter = previousFilterForTab?.find((t) => t.tab === "all");
       if (prFilter) {
         const openStatusInPrFilter = prFilter?.filter?.status?.filter((s) =>
           openStatus.includes(s as WaMessageAssignStatus),
@@ -297,24 +290,35 @@ const WaInboxChatSelect = () => {
       });
       return;
     }
-    if (tab === "All") {
+    if (tab === "all") {
+      // All conversations — no status restriction
       prepareFilters({
         ...filter,
         messageType: "all",
         waMessageAssignStatus: null,
         blockedUsers: false,
       });
-    } else if (tab === "New") {
+    } else if (tab === "open") {
+      // Open = Assigned (not Unassigned/New)
+      prepareFilters({
+        ...filter,
+        messageType: "usermessages",
+        waMessageAssignStatus: "Assigned",
+        blockedUsers: false,
+      });
+    } else if (tab === "closed") {
+      // Closed = Addressed
       prepareFilters({
         ...filter,
         messageType: "all",
-        waMessageAssignStatus: "UnAssigned",
+        waMessageAssignStatus: "Addressed",
         blockedUsers: false,
       });
     } else {
+      // Fallback for any legacy/custom tab values
       prepareFilters({
         ...filter,
-        messageType: tab === "Sent" ? "all" : "usermessages",
+        messageType: "usermessages",
         waMessageAssignStatus: tab,
         blockedUsers: false,
       });
@@ -393,7 +397,7 @@ const WaInboxChatSelect = () => {
             ref={parentRef}
             className="List"
             style={{
-              height: `calc(100dvh - 65px)`,
+              height: `calc(100dvh - 120px)`,
               width: `100%`,
               overflow: "auto",
             }}
@@ -448,7 +452,7 @@ const WaInboxChatSelect = () => {
                     </TooltipProvider>
                   )}
 
-                  {tab !== "Addressed" && (
+                  {tab !== "closed" && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger

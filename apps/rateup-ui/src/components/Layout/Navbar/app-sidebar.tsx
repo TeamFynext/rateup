@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
+import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import NotificationBellIcon from "@/components/Layout/Notification/index.tsx";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
@@ -41,6 +42,7 @@ import {
 import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilter/index.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { cn } from "@/lib/utils.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import { useNavMain } from "./hooks.tsx";
@@ -290,6 +292,55 @@ function NavLink({
   onClick?: () => void;
   showDescription?: boolean;
 }>) {
+  if (item.variant === "inbox-tab") {
+    return (
+      <Link
+        to={item.url || "#"}
+        title={item.title}
+        aria-label={item.title}
+        onClick={(e) => {
+          if (!onRouteGuard(item.url)) e.preventDefault();
+          onClick?.();
+        }}
+        className={cn(
+          "flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-[9px] transition-colors",
+          isActive
+            ? "bg-blue-50 dark:bg-blue-500/20"
+            : "bg-transparent hover:bg-blue-50/50 dark:hover:bg-blue-500/10",
+        )}
+      >
+        <span
+          className={cn(
+            "flex items-center justify-center [&>svg]:size-[17px]",
+            isActive ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-300",
+          )}
+        >
+          {item.icon && <item.icon />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div
+            className={cn(
+              "text-sm",
+              isActive
+                ? "font-bold text-primary dark:text-primary"
+                : "font-medium text-slate-700 dark:text-slate-300",
+            )}
+          >
+            {item.title}
+          </div>
+          {item.hint ? (
+            <div className="mt-px text-[11px] text-slate-400 dark:text-slate-500">{item.hint}</div>
+          ) : null}
+        </div>
+        {item.title?.toLowerCase() !== "all" && item.count != null && (
+          <span className="rounded-full px-2 py-0.5 text-[11px] font-bold bg-slate-50 dark:bg-white/10">
+            {item.count}
+          </span>
+        )}
+      </Link>
+    );
+  }
+
   return (
     <SidebarMenuButton
       isActive={isActive}
@@ -606,6 +657,7 @@ export default function AppSidebar({
     handleFilter,
     allowedFeatures,
     user,
+    sectionCounts: useChatContactCountStore().sectionCounts,
   });
 
   const [activeItem, setActiveItem] = useState(navMain[0]);

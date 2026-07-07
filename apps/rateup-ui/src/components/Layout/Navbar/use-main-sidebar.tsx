@@ -8,18 +8,14 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { useUserInfo } from "@/backend/user/user.query";
-import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import useLocalStorage from "@/hooks/localStorage.tsx";
 
-import { useChatFilterStore } from "../../whatsapp/inbox/chatselect/chatFilter/index.tsx";
 import {
   getSignupRedirect,
   getStoredRedirect,
   getUserInfoErrorMessage,
   hasUserPayload,
-  mergeInboxCountByAssignedTeams,
 } from "./main-sidebar.utils.ts";
 
 type UseMainSidebarArgs = Readonly<{
@@ -76,13 +72,10 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
     userInfoErrorMessage,
   });
 
-  const { setTotalCount } = useChatContactCountStore();
-  const { filter } = useChatFilterStore();
   const isInbox = pathname?.includes("/dashboard/inbox");
   const isTicketsBoard = pathname?.includes("/dashboard/tickets") && Boolean(search?.b);
   const paddingExclusion =
     isInbox || isTicketsBoard ? true : pathname?.includes("/dashboard/whatsapp/flows/v2/");
-  const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
 
   useEffect(() => {
     if (!welcomeMessage || welcomeRefetchDone.current) {
@@ -155,15 +148,6 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       });
     }
   }, [navigate, resolvedUserData]);
-
-  useEffect(() => {
-    if (!inboxCount) {
-      return;
-    }
-
-    const mergedCount = mergeInboxCountByAssignedTeams(inboxCount, filter.assignedTeams);
-    setTotalCount(mergedCount);
-  }, [filter.assignedTeams, inboxCount, setTotalCount]);
 
   return {
     contactLabels,
