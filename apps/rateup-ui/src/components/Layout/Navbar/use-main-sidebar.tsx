@@ -80,7 +80,8 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       : pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
         pathname?.includes("/dashboard/whatsapp/flowbots/") ||
         pathname?.includes("/dashboard/instagram/flowbots/");
-  const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
+
+  // const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
 
   useEffect(() => {
     if (!welcomeMessage || welcomeRefetchDone.current) {
