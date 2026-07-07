@@ -78,10 +78,6 @@ interface ContactsWithLastMessageResponse {
   nextOffset: number | null;
 }
 
-export async function getChatFilterData() {
-  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/filterdata`)).data;
-}
-
 export async function getFilteredContacts(filterData: string, page: number) {
   return (
     await axiosClient.get(
