@@ -12,7 +12,7 @@
 .divider {
   position: sticky;
   top: 0;
-  z-index: 9999;
+  /* z-index: 9999; */
   background-color: var(--mantine-color-white);
 }
 .no_params_wrapper {

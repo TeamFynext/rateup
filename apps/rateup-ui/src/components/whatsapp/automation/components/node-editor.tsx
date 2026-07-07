@@ -1,34 +1,23 @@
 import {
-  ActionIcon,
-  Badge,
-  Button,
-  FileButton,
-  Group,
-  Image,
-  Radio,
-  RadioGroup,
-  SegmentedControl,
-  Select,
-  Stack,
-  Switch,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import { isNotEmpty, useForm } from "@mantine/form";
-import {
   IconBrandFacebookFilled,
   IconCheck,
   IconDeviceFloppy,
   IconExclamationCircle,
+  IconFile,
+  IconMusic,
+  IconPhoto,
   IconPlus,
   IconRefresh,
-  IconRestore,
   IconTrash,
+  IconUpload,
+  IconVideo,
   IconX,
 } from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { FileWarningIcon, RefreshCwIcon, XIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { FormProvider, useForm as useRHForm, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
@@ -55,18 +44,31 @@ import {
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
-import {
-  ContainedDatePickerInput,
-  ContainedMultiSelect,
-  ContainedNumberInput,
-  ContainedSelection,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
+import {
+  Attachment,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentMedia,
+  AttachmentTitle,
+  AttachmentTrigger,
+} from "@/components/ui/attachment.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { FileConverter } from "@/components/whatsapp/flow-v2/input/DataSource.tsx";
 import WaTemplateFormElements, {
   NoParams,
@@ -84,9 +86,43 @@ import type {
   TypedNode,
   WhatsappProductSet,
 } from "../types/node-types.ts";
-import { validateNodeData } from "../types/node-types.ts";
+import { firstNodeError, nodeResolver } from "../types/node-validation.ts";
+import {
+  ContainedDatePickerInput,
+  ContainedMultiSelect,
+  ContainedNumberInput,
+  ContainedSelection,
+  ContainedTextField,
+  FileButton,
+  isNotEmpty,
+  Radio,
+  RadioGroup,
+  SegmentedControl,
+  Select,
+  Switch,
+  useForm,
+} from "./editor-ui.tsx";
+import { FlowPanel } from "./flow-panel.tsx";
+import { getNodeLabel, getNodeVisual } from "./nodes/node-config.tsx";
 
-import styles from "./node-editor.module.css";
+// Tailwind class map (replaces the former node-editor.module.css)
+const styles = {
+  nodeEditor:
+    "absolute right-0 top-0 z-10 flex h-full w-[340px] flex-col border-l border-border bg-card text-card-foreground shadow-[-8px_0_24px_rgba(0,0,0,0.12)]",
+  editorHeader: "flex items-center justify-between gap-2 border-b border-border px-4 py-3.5",
+  editorHeaderTitle: "flex min-w-0 items-center gap-2 text-[15px] font-semibold",
+  editorHeaderDot: "size-2 shrink-0 rounded-full",
+  closeButton:
+    "flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+  editorContent: "flex-1 overflow-y-auto p-4",
+  editorSection: "mb-5 flex flex-col gap-2",
+  editorFooter: "flex justify-end border-t border-border p-4",
+  optionRow: "mb-2 flex",
+  conditionalHelp: "mt-3 rounded-md bg-muted p-3 text-xs text-muted-foreground",
+  contactSection: "rounded-md border border-border bg-muted",
+  sectionContainer: "rounded-md border border-border",
+  rowContainer: "rounded-md bg-muted",
+} as const;
 
 // Node editor props
 interface NodeEditorProps {
@@ -109,30 +145,36 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
     userId: string;
   };
 
-  const [nodeData, setNodeData] = useState<NodeData>(node.data);
+  // react-hook-form is the single source of truth for the editor. Values sync
+  // back to the flow on every change; the resolver produces per-field errors
+  // (shown inline) and drives the node card's invalid border.
+  const form = useRHForm<NodeData>({
+    defaultValues: node.data,
+    resolver: nodeResolver(node.type),
+    mode: "onChange",
+  });
+  const nodeData = form.watch();
+  const errors = form.formState.errors as Record<string, { message?: string } | undefined>;
+  // Errors are only surfaced after the first Save attempt (then live-updated).
 
-  // Update local state when node changes
+  // Reset whenever a different node is opened — no validation until Save.
   useEffect(() => {
-    setNodeData(node.data);
-  }, [node]);
+    form.reset(node.data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [node.id]);
 
   const handleInputChange = <T extends NodeType>(key: keyof NodeTypeMap[T], value: any) => {
-    setNodeData((prevData) => {
-      const updatedData = {
-        ...prevData,
-        [key]: value,
-      };
-      onChange(node.id, updatedData);
-      return updatedData;
+    form.setValue(key as any, value, {
+      shouldDirty: true,
     });
+    onChange(node.id, form.getValues());
   };
 
   // Handle done button with validation
-  const handleDone = () => {
-    // Validate the node data before closing
-    const validationResult = validateNodeData({ ...node, data: nodeData });
-    if (!validationResult.valid) {
-      toast.error(validationResult.message);
+  const handleDone = async () => {
+    const valid = await form.trigger();
+    if (!valid) {
+      toast.error(firstNodeError({ ...node, data: form.getValues() }));
       return;
     }
     onClose();
@@ -323,15 +365,23 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
   };
 
   return (
-    <div className={styles.nodeEditor}>
-      <div className={styles.editorHeader}>
-        <Text truncate={"end"}>Edit {nodeData.label}</Text>
-        <button className={styles.closeButton} onClick={onClose}>
-          ✕
-        </button>
-      </div>
-
-      <div className={styles.editorContent}>
+    <FlowPanel
+      side="right"
+      title={nodeData.label || getNodeLabel(node.type)}
+      icon={
+        <span
+          className="size-2.5 shrink-0 rounded-full"
+          style={{ backgroundColor: getNodeVisual(node.type).color }}
+        />
+      }
+      onClose={onClose}
+      footer={
+        <Button className="w-full" onClick={handleDone}>
+          Save
+        </Button>
+      }
+    >
+      <FormProvider {...form}>
         <div className={styles.editorSection}>
           <ContainedTextField
             type="text"
@@ -339,20 +389,34 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
             value={nodeData.label || ""}
             onChange={(e) => handleInputChange("label", e.target.value)}
             placeholder="Enter node label..."
+            error={errors.label?.message}
           />
         </div>
 
         {renderEditor()}
-      </div>
-
-      <div className={styles.editorFooter}>
-        <Button onClick={handleDone}>Save</Button>
-      </div>
-    </div>
+      </FormProvider>
+    </FlowPanel>
   );
 }
 
 // Define props type for all node components
+type FieldErrors = Record<string, { message?: string } | undefined>;
+
+/** Read the inline error message for a given field name from the RHF context. */
+function useFieldError(name: string): string | undefined {
+  const { formState } = useFormContext();
+  return (formState.errors as FieldErrors)[name]?.message;
+}
+
+/** Inline error message for fields that aren't wrapped in a shadcn Field (rich
+ * text, dynamic arrays, etc.). */
+function FieldMsg({ name, message }: Readonly<{ name?: string; message?: string }>) {
+  const contextError = useFieldError(name ?? "");
+  const text = message ?? (name ? contextError : undefined);
+  if (!text) return null;
+  return <p className="text-xs font-normal text-destructive">{text}</p>;
+}
+
 interface NodeComponentProps<T extends NodeType> {
   nodeData: NodeTypeMap[T];
   handleInputChange: (key: keyof NodeTypeMap[T], value: any) => void;
@@ -374,6 +438,7 @@ const TextNodeEditor: React.FC<NodeComponentProps<"textNode">> = ({
         required
         max={4096}
       />
+      <FieldMsg name="body" />
       <Switch
         label="Enable link preview"
         checked={typedData.previewUrl || true}
@@ -392,13 +457,12 @@ const ConditionalNodeEditor: React.FC<NodeComponentProps<"conditionalNode">> = (
   const typedData = nodeData;
   return (
     <div className={styles.editorSection}>
-      <label htmlFor="condition">Condition</label>
-      <input
-        id="condition"
-        type="text"
+      <ContainedTextField
+        label="Condition"
         value={typedData.condition || ""}
         onChange={(e) => handleInputChange("condition", e.target.value)}
         placeholder="Enter condition (e.g., {{variable}} == 'value')"
+        error={useFieldError("condition")}
       />
       <div className={styles.conditionalHelp}>
         <h4>Condition Examples:</h4>
@@ -421,7 +485,6 @@ const InputNodeEditor: React.FC<
   const typedData = nodeData;
   return (
     <div className={styles.editorSection}>
-      <label htmlFor="question">Question</label>
       <WaTextEditor
         content={typedData.question || ""}
         handleInputChange={(e) => handleInputChange("question", e)}
@@ -430,14 +493,14 @@ const InputNodeEditor: React.FC<
         required
         max={4096}
       />
+      <FieldMsg name="question" />
 
-      <label htmlFor="variableName">Save Answer to Variable</label>
-      <input
-        id="variableName"
-        type="text"
+      <ContainedTextField
+        label="Save Answer to Variable"
         value={typedData.variableName || ""}
         onChange={(e) => handleInputChange("variableName", e.target.value)}
         placeholder="Variable name (e.g., user_email)"
+        error={useFieldError("variableName")}
       />
 
       {/* <label htmlFor="validation">Validation (optional)</label>
@@ -459,13 +522,14 @@ const PauseNodeEditor: React.FC<NodeComponentProps<"pauseNode">> = ({
 }) => {
   const typedData = nodeData;
   return (
-    <Stack gap="md">
+    <div className="flex flex-col gap-4">
       <ContainedNumberInput
         label="Pause Duration"
         min={1}
         value={typedData.duration?.toString()}
         onChange={(val) => handleInputChange("duration", val)}
         description="Duration to pause the automation flow"
+        error={useFieldError("duration")}
       />
       <ContainedSelection
         label="Unit"
@@ -478,7 +542,7 @@ const PauseNodeEditor: React.FC<NodeComponentProps<"pauseNode">> = ({
         onChange={(val) => handleInputChange("unit", val)}
         allowDeselect={false}
       />
-    </Stack>
+    </div>
   );
 };
 
@@ -495,6 +559,7 @@ const MediaNodeEditor: React.FC<
   const { t: translations } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const resetRef = useRef<() => void>(null);
+  const filenameError = useFieldError("filename");
 
   const clearFile = async (skip = false) => {
     if (!skip && (!file || typeof file !== "string")) {
@@ -598,54 +663,151 @@ const MediaNodeEditor: React.FC<
     }
   };
 
+  const MediaIcon =
+    nodeType === "imageNode"
+      ? IconPhoto
+      : nodeType === "videoNode"
+        ? IconVideo
+        : nodeType === "audioNode"
+          ? IconMusic
+          : IconFile;
+  const isImage = nodeType === "imageNode";
+  const previewSrc = media || (typedData?.link ? getFileUrlFromKey(typedData.link) : undefined);
+  const hasMedia = !!file || !!typedData?.link;
+  const showCard = hasMedia || loading;
+  const canPreview = !!previewSrc && !loading && !mediaError;
+  const state: "idle" | "uploading" | "error" | "done" = mediaError
+    ? "error"
+    : loading
+      ? "uploading"
+      : hasMedia
+        ? "done"
+        : "idle";
+
   return (
-    <Stack>
-      <Group justify="flex-end">
-        <Badge variant="light" color="blue" size="xs">
-          Size Limit: {getFileSizeLimitText()}
-        </Badge>
-      </Group>
-      {nodeType === "imageNode" && (media || typedData?.link) && (
-        <Image
-          src={media || getFileUrlFromKey(typedData?.link)}
-          alt="Media"
-          h={100}
-          w={100}
-          mx={"auto"}
-        />
-      )}
-      <Group justify="center" mt={"xs"}>
+    <div className="flex flex-col gap-2.5">
+      {!showCard ? (
         <FileButton resetRef={resetRef} onChange={handleFileChange} accept={getAcceptType()}>
           {(props) => (
-            <Button {...props} size="xs">
-              Select File
-            </Button>
+            <button type="button" onClick={props.onClick} className="w-full text-left">
+              <Attachment state="idle" className="w-full cursor-pointer">
+                <AttachmentMedia>
+                  <IconUpload />
+                </AttachmentMedia>
+                <AttachmentContent>
+                  <AttachmentTitle>Select a file</AttachmentTitle>
+                  <AttachmentDescription>Max size {getFileSizeLimitText()}</AttachmentDescription>
+                </AttachmentContent>
+              </Attachment>
+            </button>
           )}
         </FileButton>
-        <ActionIcon variant="light" disabled={!file} onClick={() => clearFile()}>
-          <IconRestore />
-        </ActionIcon>
-        {typedData?.link && (
-          <ActionIcon variant="light" c={"red"} onClick={() => clearFile(true)}>
-            <IconTrash />
-          </ActionIcon>
-        )}
-      </Group>
-      {mediaError && (
-        <Text size="xs" c="red" ta="center" mt="sm">
-          {mediaError}
-        </Text>
+      ) : (
+        <Dialog>
+          <Attachment state={state} className="w-full">
+            <AttachmentMedia variant={isImage ? "image" : "icon"}>
+              {loading ? (
+                <Spinner />
+              ) : mediaError ? (
+                <FileWarningIcon />
+              ) : isImage && previewSrc ? (
+                <img src={previewSrc} alt="Media preview" />
+              ) : (
+                <MediaIcon />
+              )}
+            </AttachmentMedia>
+            <AttachmentContent>
+              <AttachmentTitle>{file?.name || "Uploaded file"}</AttachmentTitle>
+              <AttachmentDescription>
+                {loading
+                  ? "Uploading…"
+                  : mediaError
+                    ? "Upload failed"
+                    : canPreview
+                      ? "Click to preview"
+                      : file
+                        ? "Not uploaded yet"
+                        : `Uploaded · max ${getFileSizeLimitText()}`}
+              </AttachmentDescription>
+            </AttachmentContent>
+            <AttachmentActions>
+              {!loading && (
+                <FileButton
+                  resetRef={resetRef}
+                  onChange={handleFileChange}
+                  accept={getAcceptType()}
+                >
+                  {(props) => (
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <AttachmentAction aria-label="Replace file" onClick={props.onClick}>
+                            <RefreshCwIcon />
+                          </AttachmentAction>
+                        }
+                      />
+                      <TooltipContent>Replace file</TooltipContent>
+                    </Tooltip>
+                  )}
+                </FileButton>
+              )}
+              {!loading && (
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <AttachmentAction
+                        aria-label="Remove file"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => clearFile(!!typedData?.link)}
+                      >
+                        <XIcon />
+                      </AttachmentAction>
+                    }
+                  />
+                  <TooltipContent>Remove file</TooltipContent>
+                </Tooltip>
+              )}
+            </AttachmentActions>
+            {canPreview && (
+              <DialogTrigger render={<AttachmentTrigger aria-label="Preview media" />} />
+            )}
+          </Attachment>
+          {canPreview && (
+            <DialogContent className="sm:max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="truncate pr-6">{file?.name || "Preview"}</DialogTitle>
+              </DialogHeader>
+              {isImage ? (
+                <img
+                  src={previewSrc}
+                  alt="Media preview"
+                  className="max-h-[70vh] w-full rounded-lg object-contain"
+                />
+              ) : nodeType === "videoNode" ? (
+                <video src={previewSrc} controls className="max-h-[70vh] w-full rounded-lg" />
+              ) : nodeType === "audioNode" ? (
+                <audio src={previewSrc} controls className="w-full" />
+              ) : (
+                <iframe
+                  src={previewSrc}
+                  title="Document preview"
+                  className="h-[70vh] w-full rounded-lg border border-border"
+                />
+              )}
+            </DialogContent>
+          )}
+        </Dialog>
       )}
 
+      <FieldMsg name="link" />
+
+      {mediaError && <p className="text-center text-xs text-destructive">{mediaError}</p>}
+
       {file && (
-        <Stack>
-          <Text size="sm" ta="center" mt="sm">
-            Picked file: {file.name}
-          </Text>
-          <Button onClick={uploadFileData} disabled={loading} leftSection={<IconDeviceFloppy />}>
-            {loading ? "Uploading..." : "Upload"}
-          </Button>
-        </Stack>
+        <Button onClick={uploadFileData} disabled={loading}>
+          {loading ? <Spinner /> : <IconDeviceFloppy />}
+          {loading ? "Uploading..." : "Upload"}
+        </Button>
       )}
       {nodeType !== "audioNode" && !disableCaption && (
         <WaTextEditor
@@ -670,9 +832,10 @@ const MediaNodeEditor: React.FC<
           maxLength={1024}
           placeholder="Enter FileName..."
           description={"Supports FileName with maximum 1024 characters."}
+          error={filenameError}
         />
       )}
-    </Stack>
+    </div>
   );
 };
 
@@ -692,6 +855,7 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
 }) => {
   const typedData = nodeData;
   const newButtonRef = useRef<HTMLInputElement | null>(null);
+  const headerError = useFieldError("header");
 
   const getType = () => {
     switch (typedData.headerType) {
@@ -722,7 +886,7 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
   };
 
   return (
-    <Stack gap={"xs"}>
+    <div className="flex flex-col gap-2">
       <ContainedSelection
         label="Header Type"
         placeholder="Select header type"
@@ -746,6 +910,7 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
           placeholder="Enter header text..."
           label="Header Text"
           maxLength={60}
+          error={headerError}
         />
       ) : (
         typedData.headerType && (
@@ -767,6 +932,7 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
         max={1024}
         required
       />
+      <FieldMsg name="body" />
 
       <WaTextEditor
         handleInputChange={(e) => handleInputChange("footer", e)}
@@ -777,14 +943,8 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
       />
 
       {/* Buttons - At least one required */}
-      <Text size="sm" mt="md">
-        Buttons (At least one required)
-      </Text>
-      {(typedData.buttons || []).length === 0 && (
-        <Text c="red" size="sm">
-          Please add at least one button
-        </Text>
-      )}
+      <p className="mt-2 text-sm">Buttons (At least one required)</p>
+      <FieldMsg name="buttons" />
 
       {(typedData.buttons || []).map((button: any, index: number) => (
         <div key={index} className={styles.optionRow}>
@@ -821,8 +981,10 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
             maxLength={20}
             description="Max 20 characters"
             rightSection={
-              <ActionIcon
-                variant="transparent"
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
                 onClick={() => {
                   const newButtons = [...(typedData.buttons || [])];
                   newButtons.splice(index, 1);
@@ -830,7 +992,7 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
                 }}
               >
                 <IconX size={16} />
-              </ActionIcon>
+              </Button>
             }
             ref={index === typedData.buttons?.length - 1 ? newButtonRef : null}
           />
@@ -839,7 +1001,7 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
       <Button disabled={typedData.buttons?.length >= 3} onClick={addNewButton}>
         + Add Button
       </Button>
-    </Stack>
+    </div>
   );
 };
 
@@ -855,7 +1017,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
     }, 0);
   };
   return (
-    <Stack gap={"xs"}>
+    <div className="flex flex-col gap-2">
       <ContainedTextField
         onChange={(e) => handleInputChange("header", e?.target?.value)}
         value={typedData.header || ""}
@@ -871,6 +1033,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
         max={4096}
         required
       />
+      <FieldMsg name="body" />
 
       <WaTextEditor
         handleInputChange={(e) => handleInputChange("footer", e)}
@@ -887,23 +1050,20 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
         onChange={(e) => handleInputChange("button", e.target.value)}
         maxLength={20}
         description="Button text shown at the bottom of the list (max 20 characters)"
+        error={useFieldError("button")}
       />
 
-      <Text fw={500} mt="md">
-        Sections
-      </Text>
-      <Text size="xs" c="dimmed">
+      <p className="mt-2 font-medium">Sections</p>
+      <p className="text-xs text-muted-foreground">
         Interactive list messages support up to 10 sections, with up to 10 rows across all sections
         combined
-      </Text>
+      </p>
+      <FieldMsg name="sections" />
 
       {(typedData.sections || []).map((section: any, sectionIndex: number) => (
-        <Stack
+        <div
           key={sectionIndex}
-          className={styles.sectionContainer}
-          p="xs"
-          my="xs"
-          style={{ border: "1px solid #eee", borderRadius: "8px" }}
+          className={`${styles.sectionContainer} my-2 flex flex-col gap-4 p-2`}
         >
           <ContainedTextField
             label={`Section ${sectionIndex + 1} Title`}
@@ -920,9 +1080,11 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
             maxLength={24}
             description="Max 24 characters"
             rightSection={
-              <ActionIcon
-                color="red"
-                variant="subtle"
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="text-destructive"
                 onClick={() => {
                   const newSections = [...(typedData.sections || [])];
                   newSections.splice(sectionIndex, 1);
@@ -930,28 +1092,18 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
                 }}
               >
                 <IconX size={16} />
-              </ActionIcon>
+              </Button>
             }
           />
 
-          <Text fw={500} size="sm">
-            Rows
-          </Text>
+          <p className="text-sm font-medium">Rows</p>
           {(section.rows || []).map((row: any, rowIndex: number) => (
-            <Stack
-              key={rowIndex}
-              gap="xs"
-              className={styles.rowContainer}
-              p="xs"
-              style={{
-                backgroundColor: "#f9f9f9",
-                borderRadius: "4px",
-              }}
-            >
-              <Group justify="flex-end">
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
+            <div key={rowIndex} className={`${styles.rowContainer} flex flex-col gap-2 p-2`}>
+              <div className="flex flex-wrap items-center justify-end gap-2.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => {
                     const newSections = [...(typedData.sections || [])];
                     newSections[sectionIndex].rows.splice(rowIndex, 1);
@@ -959,8 +1111,8 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
                   }}
                 >
                   <IconX size={14} />
-                </ActionIcon>
-              </Group>
+                </Button>
+              </div>
               <ContainedTextField
                 label="Title"
                 placeholder="Enter row title"
@@ -991,11 +1143,11 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
                 maxLength={72}
                 description="Max 72 characters"
               />
-            </Stack>
+            </div>
           ))}
           <Button
-            variant="light"
-            size="compact-xs"
+            variant="ghost"
+            size="xs"
             disabled={getTotalRowCount(typedData.sections || []) >= 10}
             onClick={() => {
               const newSections = [...(typedData.sections || [])];
@@ -1012,7 +1164,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
           >
             + Add Row
           </Button>
-        </Stack>
+        </div>
       ))}
 
       <Button
@@ -1022,11 +1174,11 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
           const newSections = [...(typedData.sections || []), { title: "", rows: [] }];
           handleInputChange("sections", newSections);
         }}
-        mt="md"
+        className="mt-2"
       >
         + Add Section
       </Button>
-    </Stack>
+    </div>
   );
 };
 
@@ -1053,7 +1205,7 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
   };
 
   return (
-    <Stack gap={"xs"}>
+    <div className="flex flex-col gap-2">
       <ContainedSelection
         label="Header Type"
         placeholder="Select header type"
@@ -1097,6 +1249,7 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
         required
         max={1024}
       />
+      <FieldMsg name="body" />
 
       <WaTextEditor
         handleInputChange={(e) => handleInputChange("footer", e)}
@@ -1116,6 +1269,7 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
         }}
         maxLength={20}
         description="Button text shown (max 20 characters)"
+        error={useFieldError("display_text")}
       />
 
       <ContainedTextField
@@ -1128,8 +1282,9 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
           handleInputChange("url", e.target.value);
         }}
         description="The URL that will open when the button is clicked"
+        error={useFieldError("url")}
       />
-    </Stack>
+    </div>
   );
 };
 
@@ -1179,10 +1334,12 @@ const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templa
     handleInputChange("parameters", parameterData);
   }, [parameterData]);
 
+  const templateError = useFieldError("template");
+
   if (isPending || isLoading || isSettingsLoading) return <RateupLoader />;
 
   return (
-    <Stack>
+    <div className="flex flex-col gap-4">
       <ContainedSelection
         data={templateData}
         label="Template"
@@ -1197,6 +1354,7 @@ const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templa
           });
         }}
         flex={1}
+        error={templateError}
       />
       {templateData?.find((t) => t.value === typedData?.template?.id)?.flowId && (
         <TeamSelector
@@ -1209,9 +1367,9 @@ const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templa
       )}
       {selectedTemplate?.data?.components?.length <= 1 &&
       selectedTemplate?.data?.components?.[0]?.example === undefined ? (
-        <Stack justify="center" align="center" h={"60dvh"}>
+        <div className="flex h-[60dvh] flex-col items-center justify-center gap-4">
           <NoParams type={"Body"} />
-        </Stack>
+        </div>
       ) : (
         <WaTemplateFormElements
           setParameterData={setParameterData}
@@ -1220,7 +1378,7 @@ const TemplateNodeEditor: React.FC<NodeComponentProps<"templateNode"> & { templa
           leadgenData={leadgenData}
         />
       )}
-    </Stack>
+    </div>
   );
 };
 
@@ -1231,7 +1389,7 @@ const LocationNodeEditor: React.FC<NodeComponentProps<"locationNode">> = ({
 }) => {
   const typedData = nodeData;
   return (
-    <Stack gap="xs">
+    <div className="flex flex-col gap-2">
       <ContainedTextField
         label="Location Name"
         placeholder="Enter location name..."
@@ -1240,7 +1398,7 @@ const LocationNodeEditor: React.FC<NodeComponentProps<"locationNode">> = ({
         description="Name of the location to be shared"
       />
 
-      <Group grow>
+      <div className="flex flex-wrap items-center gap-2.5 *:flex-1">
         <ContainedTextField
           label="Latitude"
           required
@@ -1248,6 +1406,7 @@ const LocationNodeEditor: React.FC<NodeComponentProps<"locationNode">> = ({
           value={typedData.latitude || ""}
           onChange={(e) => handleInputChange("latitude", e.target.value)}
           description="Decimal latitude coordinate"
+          error={useFieldError("latitude")}
         />
 
         <ContainedTextField
@@ -1257,8 +1416,9 @@ const LocationNodeEditor: React.FC<NodeComponentProps<"locationNode">> = ({
           value={typedData.longitude || ""}
           onChange={(e) => handleInputChange("longitude", e.target.value)}
           description="Decimal longitude coordinate"
+          error={useFieldError("longitude")}
         />
-      </Group>
+      </div>
 
       <ContainedTextField
         label="Address (optional)"
@@ -1268,10 +1428,10 @@ const LocationNodeEditor: React.FC<NodeComponentProps<"locationNode">> = ({
         description="Full address that corresponds to these coordinates"
       />
 
-      <Text size="xs" c="dimmed" mt="sm">
+      <p className="mt-2 text-xs text-muted-foreground">
         Note: Both latitude and longitude are required for a valid location message
-      </Text>
-    </Stack>
+      </p>
+    </div>
   );
 };
 
@@ -1328,18 +1488,17 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
   const activeContact = typedData.contacts?.[activeContactIndex] || {};
 
   return (
-    <Stack gap="xs">
-      <Group justify="space-between">
-        <Text fw={500} mt="xs">
-          Contacts ({typedData.contacts?.length || 0}/257)
-        </Text>
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <p className="mt-2 font-medium">Contacts ({typedData.contacts?.length || 0}/257)</p>
         <Button size="xs" disabled={typedData.contacts?.length >= 257} onClick={addNewContact}>
           <IconPlus size={16} /> Add Contact
         </Button>
-      </Group>
+      </div>
+      <FieldMsg name="contacts" />
 
       {typedData.contacts && typedData.contacts.length > 0 && (
-        <Group>
+        <div className="flex flex-wrap items-center gap-2.5">
           <Select
             label="Select Contact to Edit"
             data={typedData.contacts.map((_, i) => ({
@@ -1351,31 +1510,24 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
             style={{ flex: 1 }}
           />
           {typedData.contacts.length > 1 && (
-            <ActionIcon
-              color="red"
-              variant="subtle"
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="mt-6 text-destructive"
               onClick={() => removeContact(activeContactIndex)}
-              mt={25}
             >
               <IconTrash size={16} />
-            </ActionIcon>
+            </Button>
           )}
-        </Group>
+        </div>
       )}
 
-      <Text size="xs" c="dimmed">
-        Create contact cards to share with your users
-      </Text>
+      <p className="text-xs text-muted-foreground">Create contact cards to share with your users</p>
 
       {/* Name section - formatted_name is required */}
-      <Stack
-        className={styles.contactSection}
-        p="xs"
-        style={{ background: "#f9f9f9", borderRadius: "8px" }}
-      >
-        <Text fw={500} size="sm">
-          Contact Name
-        </Text>
+      <div className={`${styles.contactSection} flex flex-col gap-4 p-2`}>
+        <p className="text-sm font-medium">Contact Name</p>
         <ContainedTextField
           label="Full Name"
           required
@@ -1429,17 +1581,11 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
             updateContactField(activeContactIndex, ["name", "suffix"], e.target.value);
           }}
         />
-      </Stack>
+      </div>
 
       {/* Organization section */}
-      <Stack
-        className={styles.contactSection}
-        p="xs"
-        style={{ background: "#f9f9f9", borderRadius: "8px" }}
-      >
-        <Text fw={500} size="sm">
-          Organization
-        </Text>
+      <div className={`${styles.contactSection} flex flex-col gap-4 p-2`}>
+        <p className="text-sm font-medium">Organization</p>
         <ContainedTextField
           label="Company"
           placeholder="Company or organization name"
@@ -1465,7 +1611,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
             updateContactField(activeContactIndex, ["org", "title"], e.target.value);
           }}
         />
-      </Stack>
+      </div>
 
       {/* Birthday */}
       <ContainedDatePickerInput
@@ -1478,18 +1624,12 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
       />
 
       {/* Phones section */}
-      <Stack
-        className={styles.contactSection}
-        p="xs"
-        style={{ background: "#f9f9f9", borderRadius: "8px" }}
-      >
-        <Group justify="space-between">
-          <Text fw={500} size="sm">
-            Phone Numbers
-          </Text>
+      <div className={`${styles.contactSection} flex flex-col gap-4 p-2`}>
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <p className="text-sm font-medium">Phone Numbers</p>
           <Button
             size="xs"
-            variant="subtle"
+            variant="ghost"
             onClick={() => {
               const phones = [...(activeContact?.phones || []), { phone: "", type: "CELL" }];
               updateContactField(activeContactIndex, ["phones"], phones);
@@ -1497,10 +1637,10 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           >
             + Add Phone
           </Button>
-        </Group>
+        </div>
 
         {(activeContact?.phones || []).map((phone, index) => (
-          <Stack key={index}>
+          <div key={index} className="flex flex-col gap-4">
             <ContainedTextField
               label={`Phone ${index + 1}`}
               placeholder="Phone number with country code"
@@ -1545,9 +1685,11 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
               }}
               description="WhatsApp user ID. If omitted, the message will display an Invite to WhatsApp button instead of the standard button"
             />
-            <ActionIcon
-              color="red"
-              variant="subtle"
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="text-destructive"
               onClick={() => {
                 const phones = [...(activeContact?.phones || [])];
                 phones.splice(index, 1);
@@ -1555,24 +1697,18 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
               }}
             >
               <IconX size={16} />
-            </ActionIcon>
-          </Stack>
+            </Button>
+          </div>
         ))}
-      </Stack>
+      </div>
 
       {/* Emails section */}
-      <Stack
-        className={styles.contactSection}
-        p="xs"
-        style={{ background: "#f9f9f9", borderRadius: "8px" }}
-      >
-        <Group justify="space-between">
-          <Text fw={500} size="sm">
-            Email Addresses
-          </Text>
+      <div className={`${styles.contactSection} flex flex-col gap-4 p-2`}>
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <p className="text-sm font-medium">Email Addresses</p>
           <Button
             size="xs"
-            variant="subtle"
+            variant="ghost"
             onClick={() => {
               const emails = [...(activeContact?.emails || []), { email: "", type: "WORK" }];
               updateContactField(activeContactIndex, ["emails"], emails);
@@ -1580,10 +1716,10 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           >
             + Add Email
           </Button>
-        </Group>
+        </div>
 
         {(activeContact?.emails || []).map((email, index) => (
-          <Stack key={index}>
+          <div key={index} className="flex flex-col gap-4">
             <ContainedTextField
               label={`Email ${index + 1}`}
               placeholder="Email address"
@@ -1613,9 +1749,11 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
               }}
               style={{ flex: 1 }}
             />
-            <ActionIcon
-              color="red"
-              variant="subtle"
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="text-destructive"
               onClick={() => {
                 const emails = [...(activeContact?.emails || [])];
                 emails.splice(index, 1);
@@ -1623,24 +1761,18 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
               }}
             >
               <IconX size={16} />
-            </ActionIcon>
-          </Stack>
+            </Button>
+          </div>
         ))}
-      </Stack>
+      </div>
 
       {/* Addresses section */}
-      <Stack
-        className={styles.contactSection}
-        p="xs"
-        style={{ background: "#f9f9f9", borderRadius: "8px" }}
-      >
-        <Group justify="space-between">
-          <Text fw={500} size="sm">
-            Addresses
-          </Text>
+      <div className={`${styles.contactSection} flex flex-col gap-4 p-2`}>
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <p className="text-sm font-medium">Addresses</p>
           <Button
             size="xs"
-            variant="subtle"
+            variant="ghost"
             onClick={() => {
               const addresses = [
                 ...(activeContact?.addresses || []),
@@ -1659,15 +1791,17 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           >
             + Add Address
           </Button>
-        </Group>
+        </div>
 
         {(activeContact?.addresses || []).map((address, index) => (
-          <Stack key={index} gap="xs">
-            <Group justify="space-between">
-              <Text size="sm">Address {index + 1}</Text>
-              <ActionIcon
-                color="red"
-                variant="subtle"
+          <div key={index} className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2.5">
+              <p className="text-sm">Address {index + 1}</p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="text-destructive"
                 onClick={() => {
                   const addresses = [...(activeContact?.addresses || [])];
                   addresses.splice(index, 1);
@@ -1675,8 +1809,8 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                 }}
               >
                 <IconX size={16} />
-              </ActionIcon>
-            </Group>
+              </Button>
+            </div>
 
             <ContainedTextField
               label="Street"
@@ -1692,7 +1826,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
               }}
             />
 
-            <Group grow>
+            <div className="flex flex-wrap items-center gap-2.5 *:flex-1">
               <ContainedTextField
                 label="City"
                 placeholder="City"
@@ -1719,9 +1853,9 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                   updateContactField(activeContactIndex, ["addresses"], addresses);
                 }}
               />
-            </Group>
+            </div>
 
-            <Stack>
+            <div className="flex flex-col gap-4">
               <ContainedTextField
                 label="ZIP/Postal Code"
                 placeholder="ZIP/Postal code"
@@ -1763,7 +1897,7 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
                 }}
                 description="ISO two-letter code"
               />
-            </Stack>
+            </div>
 
             <Select
               label="Address Type"
@@ -1780,23 +1914,17 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
               }}
               style={{ maxWidth: 200 }}
             />
-          </Stack>
+          </div>
         ))}
-      </Stack>
+      </div>
 
       {/* URLs section */}
-      <Stack
-        className={styles.contactSection}
-        p="xs"
-        style={{ background: "#f9f9f9", borderRadius: "8px" }}
-      >
-        <Group justify="space-between">
-          <Text fw={500} size="sm">
-            Websites
-          </Text>
+      <div className={`${styles.contactSection} flex flex-col gap-4 p-2`}>
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <p className="text-sm font-medium">Websites</p>
           <Button
             size="xs"
-            variant="subtle"
+            variant="ghost"
             onClick={() => {
               const urls = [...(activeContact?.urls || []), { url: "", type: "WORK" }];
               updateContactField(activeContactIndex, ["urls"], urls);
@@ -1804,10 +1932,10 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
           >
             + Add Website
           </Button>
-        </Group>
+        </div>
 
         {(activeContact?.urls || []).map((url, index) => (
-          <Stack key={index}>
+          <div key={index} className="flex flex-col gap-4">
             <ContainedTextField
               label={`Website ${index + 1}`}
               placeholder="https://..."
@@ -1835,9 +1963,11 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
               }}
               style={{ flex: 1 }}
             />
-            <ActionIcon
-              color="red"
-              variant="subtle"
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="text-destructive"
               onClick={() => {
                 const urls = [...(activeContact?.urls || [])];
                 urls.splice(index, 1);
@@ -1845,11 +1975,11 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
               }}
             >
               <IconX size={16} />
-            </ActionIcon>
-          </Stack>
+            </Button>
+          </div>
         ))}
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   );
 };
 
@@ -1860,6 +1990,7 @@ const TicketNodeEditor: React.FC<NodeComponentProps<"ticketNode"> & { options: a
   options,
 }) => {
   const typedData = nodeData;
+  const ticketError = useFieldError("ticket");
   const [selectedBoard, setSelectedBoard] = useState({
     selectedBoardId: typedData.ticket?.selectedBoardId,
     selectedBoardColumnId: typedData.ticket?.selectedBoardColumnId,
@@ -1883,7 +2014,7 @@ const TicketNodeEditor: React.FC<NodeComponentProps<"ticketNode"> & { options: a
   }, [options, selectedBoard?.selectedBoardId]);
 
   return (
-    <Stack gap="xs">
+    <div className="flex flex-col gap-2">
       <Select
         label="Select Board"
         placeholder="Choose a board"
@@ -1910,9 +2041,10 @@ const TicketNodeEditor: React.FC<NodeComponentProps<"ticketNode"> & { options: a
               selectedBoardColumnName: values?.label,
             });
           }}
+          error={ticketError}
         />
       )}
-    </Stack>
+    </div>
   );
 };
 
@@ -1974,7 +2106,7 @@ const AssignNodeEditor: React.FC<NodeComponentProps<"assignNode"> & { options: a
   }, [typedData.assign]);
 
   return (
-    <Stack gap="xs">
+    <div className="flex flex-col gap-2">
       {typedData?.assign?.assignType === "staff" && (
         <Switch
           label="Assign only if assignee is online"
@@ -2006,17 +2138,17 @@ const AssignNodeEditor: React.FC<NodeComponentProps<"assignNode"> & { options: a
 
       {typedData?.assign?.assignType === "staff" && (
         <>
-          <Group justify="center" gap={2}>
+          <div className="flex flex-wrap items-center justify-center gap-0.5">
             <IconExclamationCircle size={"1rem"} />
-            <Text size="xs">Assign the chat</Text>
-          </Group>
-          <Stack>
+            <p className="text-xs">Assign the chat</p>
+          </div>
+          <div className="flex flex-col gap-4">
             <TeamSelector label="Select Team" {...form.getInputProps("teamId")} />
             <RadioGroup {...form.getInputProps("choice")}>
-              <Group>
+              <div className="flex flex-wrap items-center gap-2.5">
                 <Radio value={"all"} label={"All Members"} />
                 <Radio value={"manual"} label={"Select Manually"} />
-              </Group>
+              </div>
             </RadioGroup>
             {form.values?.choice === "manual" && (
               <ContainedMultiSelect
@@ -2032,10 +2164,10 @@ const AssignNodeEditor: React.FC<NodeComponentProps<"assignNode"> & { options: a
               {...form.getInputProps("roundRobin", { type: "checkbox" })}
               description="Assign chats to team members in a round robin fashion"
             />
-          </Stack>
+          </div>
         </>
       )}
-    </Stack>
+    </div>
   );
 };
 // FlowNode Component
@@ -2046,7 +2178,7 @@ const FlowNodeEditor: React.FC<NodeComponentProps<"flowNode"> & { flows: any }> 
 }) => {
   const typedData = nodeData;
   return (
-    <Stack>
+    <div className="flex flex-col gap-4">
       <ContainedSelection
         data={
           flows?.map((t) => ({
@@ -2065,17 +2197,21 @@ const FlowNodeEditor: React.FC<NodeComponentProps<"flowNode"> & { flows: any }> 
           });
         }}
         flex={1}
+        error={useFieldError("flow")}
       />
       {typedData?.flow?.id && (
-        <TeamSelector
-          value={typedData.teamId}
-          onChange={(id) => {
-            handleInputChange("teamId", id);
-          }}
-          w={"100%"}
-        />
+        <>
+          <TeamSelector
+            value={typedData.teamId}
+            onChange={(id) => {
+              handleInputChange("teamId", id);
+            }}
+            w={"100%"}
+          />
+          <FieldMsg name="teamId" />
+        </>
       )}
-    </Stack>
+    </div>
   );
 };
 
@@ -2209,8 +2345,8 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
 
   if (isLoading || isPending || isSettingsLoading) return <RateupLoader />;
   return (
-    <Stack>
-      <Group gap={3}>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-[3px]">
         <ContainedSelection
           data={pages}
           value={typedData?.fbPageId}
@@ -2222,25 +2358,31 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           nothingFoundMessage="nothing found"
           searchable
         />
-        <Tooltip label={"Sync pages if not found."}>
-          <ActionIcon
-            onClick={() => syncfbpageMut.mutate()}
-            mt={25}
-            variant="light"
-            loading={syncfbpageMut.isPending}
-          >
-            <IconRefresh />
-          </ActionIcon>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="mt-6"
+                onClick={() => syncfbpageMut.mutate()}
+                disabled={syncfbpageMut.isPending}
+              >
+                {syncfbpageMut.isPending ? <Spinner /> : <IconRefresh />}
+              </Button>
+            }
+          />
+          <TooltipContent>Sync pages if not found.</TooltipContent>
         </Tooltip>
-      </Group>
+      </div>
       {!isFieldSubscribed && (
-        <RateupButtonBlue
-          onClick={subscribeTolead}
-          title="Subscribe to Lead"
-          loading={subscribeFieldMut.isPending}
-        />
+        <Button className="w-full" onClick={subscribeTolead} disabled={subscribeFieldMut.isPending}>
+          {subscribeFieldMut.isPending && <Spinner />}
+          Subscribe to Lead
+        </Button>
       )}
-      <Group gap={2}>
+      <div className="flex flex-wrap items-center gap-0.5">
         <ContainedSelection
           data={adAccounts}
           value={typedData?.adAccountId}
@@ -2250,19 +2392,26 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           nothingFoundMessage="nothing found"
           searchable
         />
-        <Tooltip label={"Sync ad accounts if not found."}>
-          <ActionIcon
-            onClick={() => syncAdAccMut.mutate()}
-            mt={25}
-            variant="light"
-            loading={syncAdAccMut.isPending}
-          >
-            <IconRefresh />
-          </ActionIcon>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="mt-6"
+                onClick={() => syncAdAccMut.mutate()}
+                disabled={syncAdAccMut.isPending}
+              >
+                {syncAdAccMut.isPending ? <Spinner /> : <IconRefresh />}
+              </Button>
+            }
+          />
+          <TooltipContent>Sync ad accounts if not found.</TooltipContent>
         </Tooltip>
-      </Group>
+      </div>
 
-      <Group gap={2}>
+      <div className="flex flex-wrap items-center gap-0.5">
         <ContainedSelection
           data={leadgenForms}
           onChange={(value) => handleInputChange("leadgenFormId", value)}
@@ -2272,23 +2421,30 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           nothingFoundMessage="nothing found"
           searchable
         />
-        <Tooltip label={"Sync Leadgen Forms if not found."}>
-          <ActionIcon
-            onClick={() =>
-              syncLeadgenFormsMut.mutate({
-                fbPageId: typedData?.fbPageId,
-                pageAccessToken: typedData?.pageAccessToken,
-              })
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="mt-6"
+                onClick={() =>
+                  syncLeadgenFormsMut.mutate({
+                    fbPageId: typedData?.fbPageId,
+                    pageAccessToken: typedData?.pageAccessToken,
+                  })
+                }
+                disabled={syncLeadgenFormsMut.isPending}
+              >
+                {syncLeadgenFormsMut.isPending ? <Spinner /> : <IconRefresh />}
+              </Button>
             }
-            mt={25}
-            variant="light"
-            loading={syncLeadgenFormsMut.isPending}
-          >
-            <IconRefresh />
-          </ActionIcon>
+          />
+          <TooltipContent>Sync Leadgen Forms if not found.</TooltipContent>
         </Tooltip>
-      </Group>
-      <Group gap={2}>
+      </div>
+      <div className="flex flex-wrap items-center gap-0.5">
         <ContainedSelection
           data={ads}
           onChange={(_value, option) =>
@@ -2300,18 +2456,25 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           nothingFoundMessage="nothing found"
           searchable
         />
-        <Tooltip label={"Sync Ads if not found."}>
-          <ActionIcon
-            onClick={() => syncAdsMut.mutate()}
-            mt={25}
-            variant="light"
-            loading={syncAdsMut.isPending}
-          >
-            <IconRefresh />
-          </ActionIcon>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="mt-6"
+                onClick={() => syncAdsMut.mutate()}
+                disabled={syncAdsMut.isPending}
+              >
+                {syncAdsMut.isPending ? <Spinner /> : <IconRefresh />}
+              </Button>
+            }
+          />
+          <TooltipContent>Sync Ads if not found.</TooltipContent>
         </Tooltip>
-      </Group>
-      <Group gap={2}>
+      </div>
+      <div className="flex flex-wrap items-center gap-0.5">
         <ContainedSelection
           data={formQuestions}
           onChange={(value) => handleInputChange("phoneField", value)}
@@ -2321,37 +2484,40 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           nothingFoundMessage="nothing found"
           searchable
         />
-        <Tooltip label={"Sync form questions if not found."}>
-          <ActionIcon
-            onClick={() =>
-              syncformQuestionsMut.mutate({
-                fbPageId: typedData?.fbPageId,
-                pageAccessToken: typedData?.pageAccessToken,
-              })
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="mt-6"
+                onClick={() =>
+                  syncformQuestionsMut.mutate({
+                    fbPageId: typedData?.fbPageId,
+                    pageAccessToken: typedData?.pageAccessToken,
+                  })
+                }
+                disabled={syncformQuestionsMut.isPending}
+              >
+                {syncformQuestionsMut.isPending ? <Spinner /> : <IconRefresh />}
+              </Button>
             }
-            mt={25}
-            variant="light"
-            loading={syncformQuestionsMut.isPending}
-          >
-            <IconRefresh />
-          </ActionIcon>
+          />
+          <TooltipContent>Sync form questions if not found.</TooltipContent>
         </Tooltip>
-      </Group>
+      </div>
       {typedData?.fbPageId?.length && !pageAccessTokenByUser && typedData?.phoneField?.length ? (
-        <RateupButtonBlue
-          leftIcon={<IconBrandFacebookFilled size={"1.5rem"} />}
-          title="Allow lead access"
-          onClick={handleFbLogin}
-          color="#1877f2"
-          radius={"sm"}
-        />
+        <Button className="w-full" onClick={handleFbLogin}>
+          <IconBrandFacebookFilled size={20} />
+          Allow lead access
+        </Button>
       ) : typedData?.phoneField?.length ? (
         <Badge
-          variant="light"
-          leftSection={<IconCheck size={"1rem"} />}
-          tt={"initial"}
-          color="green"
+          variant="secondary"
+          className="border-transparent bg-green-500/15 text-green-600 normal-case dark:text-green-400"
         >
+          <IconCheck size={"1rem"} />
           Allowed Lead Access
         </Badge>
       ) : null}
@@ -2360,7 +2526,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
         onChange={(value) => handleInputChange("phone", value)}
         value={typedData?.phone}
       />
-    </Stack>
+    </div>
   );
 };
 
@@ -2432,7 +2598,7 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
 
   if (isLoading || isPending || isLoadingProductSets) return <RateupLoader />;
   return (
-    <Stack gap="xs">
+    <div className="flex flex-col gap-2">
       <ContainedSelection
         label={"Catalog Message type"}
         placeholder="Select"
@@ -2467,16 +2633,17 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
           description="Products from this set will be displayed"
           rightSectionPointerEvents="all"
           rightSection={
-            <ActionIcon
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="text-blue-600"
               onClick={() => typedData.catalogId && syncProductSetsMut.mutate(typedData.catalogId)}
-              variant="subtle"
-              color="blue"
-              loading={syncProductSetsMut.isPending}
-              disabled={!typedData.catalogId}
+              disabled={syncProductSetsMut.isPending || !typedData.catalogId}
               title="Sync from Meta"
             >
-              <IconRefresh size={16} />
-            </ActionIcon>
+              {syncProductSetsMut.isPending ? <Spinner /> : <IconRefresh size={16} />}
+            </Button>
           }
         />
       )}
@@ -2526,12 +2693,10 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
       )}
       {(typedData.sections || []).map(
         (section: CatalogNodeData["sections"][0], sectionIndex: number) => (
-          <Stack
+          <div
             key={sectionIndex}
-            className={styles.sectionContainer}
-            p="xs"
-            my="xs"
-            style={{ border: "1px solid #eee", borderRadius: "8px" }}
+            className={`${styles.sectionContainer} my-2 flex flex-col gap-4 p-2`}
+            style={{ border: "1px solid var(--border)", borderRadius: "var(--radius)" }}
           >
             <ContainedTextField
               label={`Section ${sectionIndex + 1} Title`}
@@ -2548,9 +2713,11 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
               maxLength={24}
               description="Max 24 characters"
               rightSection={
-                <ActionIcon
-                  color="red"
-                  variant="subtle"
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-destructive"
                   onClick={() => {
                     const newSections = [...(typedData.sections || [])];
                     newSections.splice(sectionIndex, 1);
@@ -2558,13 +2725,13 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
                   }}
                 >
                   <IconX size={16} />
-                </ActionIcon>
+                </Button>
               }
             />
-            <Text size="xs" c="dimmed">
+            <p className="text-xs text-muted-foreground">
               Catalog Multi product message support up to 10 sections, with a minimum of 1 product
               per section and a maximum of 30 products across all sections.
-            </Text>
+            </p>
             <ContainedMultiSelect
               label={"Products"}
               value={section.productItems || []}
@@ -2579,7 +2746,7 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
               }}
               placeholder="Select multiple items"
             />
-          </Stack>
+          </div>
         ),
       )}
       {typedData.type === CatalogMessages.MultiProduct && (
@@ -2590,12 +2757,12 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
             const newSections = [...(typedData.sections || []), { title: "", rows: [] }];
             handleInputChange("sections", newSections);
           }}
-          mt="md"
+          className="mt-2"
         >
           + Add Section
         </Button>
       )}
-    </Stack>
+    </div>
   );
 };
 
@@ -2606,23 +2773,25 @@ const InstagramGenericTemplateNodeEditor: React.FC<
   const typedData = nodeData;
 
   return (
-    <Stack gap={"xs"}>
-      <Text size="sm" fw={500}>
-        Template Elements (Cards)
-      </Text>
-      <Text size="xs" c="dimmed">
+    <div className="flex flex-col gap-2">
+      <p className="text-sm font-medium">Template Elements (Cards)</p>
+      <p className="text-xs text-muted-foreground">
         Create cards with images, text, and buttons for Instagram messaging
-      </Text>
+      </p>
 
       {(typedData.elements || []).map((element, index: number) => (
-        <Stack key={index} p="sm" style={{ border: "1px solid #eee", borderRadius: "8px" }}>
-          <Group justify="space-between">
-            <Text size="sm" fw={500}>
-              Card {index + 1}
-            </Text>
-            <ActionIcon
-              color="red"
-              variant="subtle"
+        <div
+          key={index}
+          className="flex flex-col gap-4 p-2"
+          style={{ border: "1px solid var(--border)", borderRadius: "var(--radius)" }}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2.5">
+            <p className="text-sm font-medium">Card {index + 1}</p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="text-destructive"
               onClick={() => {
                 const newElements = [...(typedData.elements || [])];
                 newElements.splice(index, 1);
@@ -2630,8 +2799,8 @@ const InstagramGenericTemplateNodeEditor: React.FC<
               }}
             >
               <IconX size={16} />
-            </ActionIcon>
-          </Group>
+            </Button>
+          </div>
 
           <ContainedTextField
             label="Title"
@@ -2678,11 +2847,9 @@ const InstagramGenericTemplateNodeEditor: React.FC<
             }}
           />
 
-          <Text size="xs" fw={500} mt="xs">
-            Buttons
-          </Text>
+          <p className="mt-2 text-xs font-medium">Buttons</p>
           {(element.buttons || []).map((button, btnIndex: number) => (
-            <Group key={btnIndex} gap="xs">
+            <div key={btnIndex} className="flex flex-wrap items-center gap-2">
               <Select
                 size="xs"
                 value={button.type}
@@ -2720,9 +2887,10 @@ const InstagramGenericTemplateNodeEditor: React.FC<
                   }}
                 />
               )}
-              <ActionIcon
-                size="sm"
-                variant="subtle"
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => {
                   const newElements = [...(typedData.elements || [])];
                   newElements[index].buttons.splice(btnIndex, 1);
@@ -2730,12 +2898,12 @@ const InstagramGenericTemplateNodeEditor: React.FC<
                 }}
               >
                 <IconX size={14} />
-              </ActionIcon>
-            </Group>
+              </Button>
+            </div>
           ))}
           <Button
             size="xs"
-            variant="light"
+            variant="ghost"
             disabled={element.buttons?.length >= 3}
             onClick={() => {
               const newElements = [...(typedData.elements || [])];
@@ -2752,7 +2920,7 @@ const InstagramGenericTemplateNodeEditor: React.FC<
           >
             + Add Button
           </Button>
-        </Stack>
+        </div>
       ))}
 
       <Button
@@ -2765,7 +2933,7 @@ const InstagramGenericTemplateNodeEditor: React.FC<
       >
         + Add Card
       </Button>
-    </Stack>
+    </div>
   );
 };
 
@@ -2777,7 +2945,7 @@ const InstagramQuickReplyNodeEditor: React.FC<NodeComponentProps<"instagramQuick
   const typedData = nodeData;
 
   return (
-    <Stack gap={"xs"}>
+    <div className="flex flex-col gap-2">
       <ContainedTextField
         label="Message Text"
         placeholder="Enter your message"
@@ -2786,15 +2954,11 @@ const InstagramQuickReplyNodeEditor: React.FC<NodeComponentProps<"instagramQuick
         onChange={(e) => handleInputChange("text", e.target.value)}
       />
 
-      <Text size="sm" fw={500} mt="md">
-        Quick Replies
-      </Text>
-      <Text size="xs" c="dimmed">
-        Add up to 13 quick reply buttons
-      </Text>
+      <p className="mt-2 text-sm font-medium">Quick Replies</p>
+      <p className="text-xs text-muted-foreground">Add up to 13 quick reply buttons</p>
 
       {(typedData.quick_replies || []).map((reply, index: number) => (
-        <Group key={index} gap="xs">
+        <div key={index} className="flex flex-wrap items-center gap-2">
           <ContainedTextField
             flex={1}
             placeholder="Reply text"
@@ -2822,9 +2986,10 @@ const InstagramQuickReplyNodeEditor: React.FC<NodeComponentProps<"instagramQuick
               handleInputChange("quick_replies", newReplies);
             }}
           />
-          <ActionIcon
-            size="sm"
-            variant="subtle"
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => {
               const newReplies = [...(typedData.quick_replies || [])];
               newReplies.splice(index, 1);
@@ -2832,8 +2997,8 @@ const InstagramQuickReplyNodeEditor: React.FC<NodeComponentProps<"instagramQuick
             }}
           >
             <IconX size={14} />
-          </ActionIcon>
-        </Group>
+          </Button>
+        </div>
       ))}
 
       <Button
@@ -2853,7 +3018,7 @@ const InstagramQuickReplyNodeEditor: React.FC<NodeComponentProps<"instagramQuick
       >
         + Add Quick Reply
       </Button>
-    </Stack>
+    </div>
   );
 };
 
@@ -2865,7 +3030,7 @@ const InstagramStoryReplyNodeEditor: React.FC<NodeComponentProps<"instagramStory
   const typedData = nodeData;
 
   return (
-    <Stack gap={"xs"}>
+    <div className="flex flex-col gap-2">
       <Switch
         label="Story Mention"
         description="Enable if this is a response to a story mention"
@@ -2881,10 +3046,10 @@ const InstagramStoryReplyNodeEditor: React.FC<NodeComponentProps<"instagramStory
         onChange={(e) => handleInputChange("text", e.target.value)}
       />
 
-      <Text size="xs" c="dimmed">
+      <p className="text-xs text-muted-foreground">
         This node will send a message in response to Instagram story replies or mentions
-      </Text>
-    </Stack>
+      </p>
+    </div>
   );
 };
 
@@ -2919,14 +3084,12 @@ const InstagramProductTemplateNodeEditor: React.FC<
   if (isPending || isLoading) return <RateupLoader />;
 
   return (
-    <Stack gap={"xs"}>
-      <Text size="sm" fw={500}>
-        Products
-      </Text>
-      <Text size="xs" c="dimmed">
+    <div className="flex flex-col gap-2">
+      <p className="text-sm font-medium">Products</p>
+      <p className="text-xs text-muted-foreground">
         Select up to 10 products from your catalog. A single product sends a product message;
         multiple products send a carousel.
-      </Text>
+      </p>
 
       <ContainedMultiSelect
         label="Products"
@@ -2940,7 +3103,7 @@ const InstagramProductTemplateNodeEditor: React.FC<
         searchable
         maxValues={10}
       />
-    </Stack>
+    </div>
   );
 };
 
@@ -2952,18 +3115,16 @@ const InstagramIceBreakerNodeEditor: React.FC<NodeComponentProps<"instagramIceBr
   const typedData = nodeData;
 
   return (
-    <Stack gap={"xs"}>
-      <Text size="sm" fw={500}>
-        Ice Breakers
-      </Text>
-      <Text size="xs" c="dimmed">
+    <div className="flex flex-col gap-2">
+      <p className="text-sm font-medium">Ice Breakers</p>
+      <p className="text-xs text-muted-foreground">
         Add conversation starters that appear in the Instagram chat. Users can tap these to start a
         conversation.
-      </Text>
+      </p>
 
       {(typedData.iceBreakers || []).map((iceBreaker, index: number) => (
-        <Group key={index} gap="xs" align="flex-start">
-          <Stack flex={1} gap="xs">
+        <div key={index} className="flex flex-wrap items-start gap-2">
+          <div className="flex flex-1 flex-col gap-2">
             <ContainedTextField
               label="Question"
               placeholder="e.g., What are your hours?"
@@ -2990,11 +3151,13 @@ const InstagramIceBreakerNodeEditor: React.FC<NodeComponentProps<"instagramIceBr
                 handleInputChange("iceBreakers", newIceBreakers);
               }}
             />
-          </Stack>
-          <ActionIcon
+          </div>
+          <Button
+            type="button"
             style={{ marginTop: "20px" }}
-            color="red"
-            variant="subtle"
+            variant="ghost"
+            size="icon-sm"
+            className="text-destructive"
             onClick={() => {
               const newIceBreakers = [...(typedData.iceBreakers || [])];
               newIceBreakers.splice(index, 1);
@@ -3002,25 +3165,25 @@ const InstagramIceBreakerNodeEditor: React.FC<NodeComponentProps<"instagramIceBr
             }}
           >
             <IconTrash size={16} />
-          </ActionIcon>
-        </Group>
+          </Button>
+        </div>
       ))}
 
       <Button
         variant="outline"
-        leftSection={<IconPlus size={16} />}
         onClick={() => {
           const newIceBreakers = [...(typedData.iceBreakers || []), { question: "", payload: "" }];
           handleInputChange("iceBreakers", newIceBreakers);
         }}
       >
+        <IconPlus size={16} />
         Add Ice Breaker
       </Button>
 
-      <Text size="xs" c="dimmed" mt="xs">
+      <p className="mt-2 text-xs text-muted-foreground">
         Note: Ice breakers are displayed to users when they first open a conversation with your
         Instagram account.
-      </Text>
-    </Stack>
+      </p>
+    </div>
   );
 };

@@ -1,95 +1,69 @@
-import { ActionIcon, Text } from "@mantine/core";
-import { useHover } from "@mantine/hooks";
-import { IconTrash } from "@tabler/icons-react";
-import { Handle, Position, useReactFlow } from "@xyflow/react";
+import { Handle, Position } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
-import type { JSX } from "react";
 import { memo } from "react";
 import type React from "react";
 
-import styles from "./node-styles.module.css";
+import {
+  BaseNode as UiBaseNode,
+  BaseNodeContent,
+  BaseNodeHeader,
+  BaseNodeHeaderTitle,
+} from "@/components/ui/base-node.tsx";
+import { NodeHeaderActions, NodeHeaderDeleteAction } from "@/components/ui/node-header.tsx";
+import { cn } from "@/lib/utils.ts";
+
+import { getNodeVisual } from "./node-config.tsx";
 
 interface BaseNodeProps extends NodeProps {
-  icon?: JSX.Element;
   color?: string;
   children?: React.ReactNode;
   disableRight?: boolean;
+  disableLeft?: boolean;
+  invalid?: boolean;
 }
 
 function BaseNode({
   data,
-  icon,
-  color = "#6366f1",
+  type,
+  color,
   children,
   disableRight = false,
+  disableLeft = false,
+  invalid = false,
   selected,
   id,
-}: BaseNodeProps) {
-  const { hovered, ref } = useHover();
-  const { deleteElements } = useReactFlow();
+}: Readonly<BaseNodeProps>) {
+  const accent = color ?? getNodeVisual((data?.type as string) || type).color;
+
+  const handleClass = "size-3.5! rounded-full! border-2! border-(--node-accent)! bg-card!";
 
   return (
-    <div
-      ref={ref}
-      className={`${styles.node}`}
-      style={{
-        borderLeft: `4px solid ${color}`,
-        borderColor: color,
-        boxShadow: selected ? `0 0 0 2px ${color}` : "none",
-        backgroundColor: `${color}40`,
-      }}
+    <UiBaseNode
+      selected={selected}
+      className={cn("group/node", invalid && "border-destructive ring-1 ring-destructive")}
+      style={{ ["--node-accent" as string]: accent }}
     >
-      {hovered && (
-        <ActionIcon
-          color="red"
-          // variant="subtle"
-          size="sm"
-          onClick={(event) => {
-            event.stopPropagation();
-            deleteElements({ nodes: [{ id }] });
-          }}
-          style={{
-            position: "absolute",
-            top: "8px",
-            right: "8px",
-            zIndex: 10,
-          }}
-          aria-label="Delete node"
-        >
-          <IconTrash size={16} />
-        </ActionIcon>
+      <BaseNodeHeader>
+        <span
+          aria-hidden
+          className="size-3 shrink-0 rounded-xs"
+          style={{ backgroundColor: "var(--node-accent)" }}
+        />
+        <BaseNodeHeaderTitle>{data.label as string}</BaseNodeHeaderTitle>
+        <NodeHeaderActions className="opacity-0 transition-opacity group-hover/node:opacity-100 group-focus-within/node:opacity-100">
+          <NodeHeaderDeleteAction id={id} />
+        </NodeHeaderActions>
+      </BaseNodeHeader>
+
+      <BaseNodeContent>{children}</BaseNodeContent>
+
+      {!disableLeft && (
+        <Handle type="target" position={Position.Left} id="left" className={handleClass} />
       )}
-      <div className={styles.content}>
-        <div className={styles.header}>
-          <div className={styles.icon}>{icon}</div>
-          <Text className={styles.title} truncate={"end"}>
-            {data.label as string}
-          </Text>
-        </div>
-
-        <div className={styles.details}>{children}</div>
-      </div>
-
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left"
-        className={styles.handle}
-        style={{
-          border: `3px solid ${color}`,
-        }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right"
-        className={styles.handle}
-        style={{
-          display: disableRight ? "none" : "block",
-          border: `3px solid ${color}`,
-        }}
-      />
-    </div>
+      {!disableRight && (
+        <Handle type="source" position={Position.Right} id="right" className={handleClass} />
+      )}
+    </UiBaseNode>
   );
 }
 

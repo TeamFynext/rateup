@@ -1,6 +1,4 @@
-import { useDebouncedCallback, useHotkeys } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import {
   addEdge,
   Background,
@@ -28,34 +26,36 @@ import type { WaAutomatedReply } from "@/types/global";
 import { validateNodeData } from "../types/node-types.ts";
 import type { TypedNode } from "../types/node-types.ts";
 import { getLayoutedElements } from "../utils/auto-layout.ts";
+import { useDebouncedCallback, useHotkeys } from "../utils/flow-hooks.ts";
 import { HistoryManager } from "../utils/history.ts";
 import ComponentSidebar from "./component-sidebar.tsx";
-import CustomEdge from "./CustomEdge.tsx";
+import CustomEdge from "./custom-edge.tsx";
 import { FlowbotPreviewPlayground } from "./flowbot-phone-preview.tsx";
 import { initialEdges, initialNodes, leadAutomationinitialNodes } from "./initial-data.ts";
 import NodeEditor from "./node-editor.tsx";
 import { nodeTypes } from "./nodes/index.tsx";
+import { getNodeLabel, getNodeVisual } from "./nodes/node-config.tsx";
 import Toolbar from "./toolbar.tsx";
 
-import styles from "./flow-editor.module.css";
-
 const defaultEdgeOptions = {
-  style: { stroke: "#6366f1", strokeWidth: 2 },
+  type: "custom",
+  animated: true,
+  style: { stroke: "var(--primary)", strokeWidth: 2, strokeDasharray: "6 6" },
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    color: "#6366f1",
+    color: "var(--primary)",
   },
 };
 
 // This component is wrapped with ReactFlowProvider in the parent component
 function FlowEditorContent({
-  flowbotId,
   waAutomationData,
   refetch,
+  onOpenSettings,
 }: {
-  readonly flowbotId: string;
   readonly waAutomationData: WaAutomatedReply;
   readonly refetch: () => void;
+  readonly onOpenSettings?: () => void;
 }) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const isLeadAutomation = waAutomationData?.commands?.[0]?.startsWith("lead");
@@ -69,7 +69,6 @@ function FlowEditorContent({
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const navigate = useNavigate();
   const session = useSessionContext() as {
     userId: string;
   };
@@ -267,7 +266,7 @@ function FlowEditorContent({
         position,
         data: {
           ...nodeData,
-          label: nodeData.label ?? `New ${type}`,
+          label: nodeData.label ?? getNodeLabel(type),
         },
       };
 
@@ -313,15 +312,6 @@ function FlowEditorContent({
       }, 50);
     },
     [nodes, edges, setNodes, reactFlowInstance],
-  );
-
-  const handleTabSwitch = useCallback(
-    (tab: string) => {
-      navigate({
-        to: `?tab=${tab}`,
-      });
-    },
-    [flowbotId],
   );
 
   const validateFlow = useCallback(
@@ -429,8 +419,17 @@ function FlowEditorContent({
         if (flow.nodes && flow.edges) {
           isInitialLoadRef.current = true;
 
+          // Normalise saved edges so every arrow/marker uses the primary colour,
+          // regardless of any per-edge colour baked into older flows.
+          const normalizedEdges = flow.edges.map((edge: any) => ({
+            ...edge,
+            type: "custom",
+            style: defaultEdgeOptions.style,
+            markerEnd: defaultEdgeOptions.markerEnd,
+          }));
+
           setNodes(flow.nodes);
-          setEdges(flow.edges);
+          setEdges(normalizedEdges);
 
           // Store initial flow JSON to prevent unnecessary saves
           lastSavedFlowRef.current = JSON.stringify(flow);
@@ -438,7 +437,7 @@ function FlowEditorContent({
 
           // Initialize history with loaded flow
           historyManager.clear();
-          historyManager.saveState({ nodes: flow.nodes, edges: flow.edges });
+          historyManager.saveState({ nodes: flow.nodes, edges: normalizedEdges });
           updateUndoRedoState();
 
           setTimeout(() => {
@@ -461,8 +460,15 @@ function FlowEditorContent({
   ]);
 
   return (
-    <div className={styles.flowEditorContainer}>
-      <div className={styles.flowWrapper} ref={reactFlowWrapper}>
+    <div className="relative flex h-full w-full bg-background">
+      <div
+        className="relative h-full grow bg-ink-100 dark:bg-background"
+        ref={reactFlowWrapper}
+        style={{
+          backgroundImage:
+            "radial-gradient(80% 55% at 50% 0%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 70%)",
+        }}
+      >
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -477,15 +483,26 @@ function FlowEditorContent({
           fitView
           snapToGrid
           snapGrid={[15, 15]}
-          connectionLineType={ConnectionLineType.SmoothStep}
+          connectionLineType={ConnectionLineType.Bezier}
+          connectionLineStyle={{
+            stroke: "var(--primary)",
+            strokeWidth: 2,
+            strokeDasharray: "6 6",
+          }}
           defaultEdgeOptions={defaultEdgeOptions}
           edgeTypes={{ custom: CustomEdge }}
           proOptions={{ hideAttribution: true }}
         >
-          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="var(--flow-dots)" />
           <Controls />
-          <MiniMap nodeStrokeWidth={3} zoomable pannable />
-          <Panel position="top-center" className={styles.toolbar}>
+          <MiniMap
+            nodeStrokeWidth={3}
+            nodeColor={(n) => getNodeVisual((n.data?.type as string) || n.type).color}
+            maskColor="color-mix(in srgb, var(--muted) 60%, transparent)"
+            zoomable
+            pannable
+          />
+          <Panel position="top-center" className="z-10">
             <Toolbar
               onSave={saveFlow}
               onAutoLayout={handleAutoLayout}
@@ -493,7 +510,7 @@ function FlowEditorContent({
               onRedo={handleRedo}
               canUndo={canUndo}
               canRedo={canRedo}
-              handleTabSwitch={handleTabSwitch}
+              onOpenSettings={onOpenSettings}
               validateFlow={validateFlow}
               saveDisabled={!hasUnsavedChanges}
               refetch={refetch}
@@ -514,9 +531,15 @@ function FlowEditorContent({
           </Panel>
         </ReactFlow>
       </div>
-      <ComponentSidebar platform={waAutomationData.platform || "whatsapp"} />
-      {isEditorOpen && selectedNode && (
-        <NodeEditor node={selectedNode} onChange={handleNodeDataChange} onClose={closeEditor} />
+      {isEditorOpen && selectedNode ? (
+        <NodeEditor
+          key={selectedNode.id}
+          node={selectedNode}
+          onChange={handleNodeDataChange}
+          onClose={closeEditor}
+        />
+      ) : (
+        <ComponentSidebar platform={waAutomationData.platform || "whatsapp"} />
       )}
     </div>
   );
@@ -524,17 +547,21 @@ function FlowEditorContent({
 
 // Wrapper component that provides the ReactFlowProvider
 export default function FlowEditor({
-  flowbotId,
   data,
   refetch,
+  onOpenSettings,
 }: Readonly<{
-  flowbotId: string;
   data: WaAutomatedReply;
   refetch: () => void;
+  onOpenSettings?: () => void;
 }>) {
   return (
     <ReactFlowProvider>
-      <FlowEditorContent flowbotId={flowbotId} waAutomationData={data} refetch={refetch} />
+      <FlowEditorContent
+        waAutomationData={data}
+        refetch={refetch}
+        onOpenSettings={onOpenSettings}
+      />
     </ReactFlowProvider>
   );
 }

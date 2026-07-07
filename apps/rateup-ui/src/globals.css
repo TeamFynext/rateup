@@ -181,6 +181,9 @@
   --sidebar-ring: oklch(0.553 0.013 58.071);
   --custom-shadow-base: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
   --custom-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+  /* React Flow canvas */
+  --flow-dots: oklch(0.35 0.006 56.043);
 }
 
 @theme inline {
@@ -375,6 +378,10 @@
 
 * {
   box-sizing: border-box;
+}
+
+.react-flow__minimap svg {
+  background: var(--card);
 }
 
 ::-webkit-scrollbar {

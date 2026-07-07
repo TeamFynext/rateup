@@ -81,7 +81,11 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   const isInbox = pathname?.includes("/dashboard/inbox");
   const isTicketsBoard = pathname?.includes("/dashboard/tickets") && Boolean(search?.b);
   const paddingExclusion =
-    isInbox || isTicketsBoard ? true : pathname?.includes("/dashboard/whatsapp/flows/v2/");
+    isInbox || isTicketsBoard
+      ? true
+      : pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
+        pathname?.includes("/dashboard/whatsapp/flowbots/") ||
+        pathname?.includes("/dashboard/instagram/flowbots/");
   const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
 
   useEffect(() => {
