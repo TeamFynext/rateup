@@ -8,6 +8,8 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { useUserInfo } from "@/backend/user/user.query";
+import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
+import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import useLocalStorage from "@/hooks/localStorage.tsx";
 
@@ -81,7 +83,18 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
         pathname?.includes("/dashboard/whatsapp/flowbots/") ||
         pathname?.includes("/dashboard/instagram/flowbots/");
 
-  // const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
+  const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
+  const setSectionCounts = useChatContactCountStore((state) => state.setSectionCounts);
+
+  useEffect(() => {
+    if (inboxCount) {
+      setSectionCounts({
+        openCount: inboxCount.assigned + inboxCount.unassigned,
+        closedCount: inboxCount.closed,
+        allCount: inboxCount.total,
+      });
+    }
+  }, [inboxCount, setSectionCounts]);
 
   useEffect(() => {
     if (!welcomeMessage || welcomeRefetchDone.current) {

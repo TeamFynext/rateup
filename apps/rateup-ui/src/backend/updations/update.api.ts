@@ -21,3 +21,9 @@ export async function migrateLoyaltyTierPriority() {
     timeout: 60000,
   });
 }
+
+export async function seedInboxStats() {
+  return await axiosClient.put(`${baseUrl}/seed-inbox-stats`, null, {
+    timeout: 60000,
+  });
+}

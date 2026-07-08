@@ -76,7 +76,7 @@ export default function WaInboxChatSelectCard({
         "p-3 cursor-pointer transition-all hover:bg-primary/10 border-l-4",
         selectedContact?.id === contact?.id
           ? "bg-primary/5 border-primary"
-          : contact?.unReadMessageCount > 0
+          : contact?.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED
             ? "bg-amber-50 dark:bg-amber-500/10 border-amber-400"
             : "border-transparent",
       )}
