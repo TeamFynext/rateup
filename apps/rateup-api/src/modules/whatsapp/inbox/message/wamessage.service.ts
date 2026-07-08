@@ -32,6 +32,7 @@ import {
   createLocationMessage,
 } from "../../whatsappSurvey/wasurvey.utils.js";
 import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../../constants.js";
+import { getOrCreateInboxStats } from "../inboxStats/inboxStats.service.js";
 import { Role } from "../../../org/org.services.js";
 import { getTeamIdsByUserId } from "../../../team/team.service.js";
 import { UserAvailabilityStatus } from "../../../user/user.schema.js";
@@ -984,41 +985,16 @@ export async function deleteAssignedUsersforContact(contactId) {
     },
   });
 }
-
-export async function getContactsCountByInbox(orgId: string, userId: string, role) {
+export async function getContactsCountByInbox(orgId: string, userId: string, role: string) {
   const teamIds = await getTeamIdsByUserId(userId);
+  const stats = await getOrCreateInboxStats(orgId);
   const count: {
     new_assigned_count: number;
     new_unassigned_count: number;
-    new_assigned_to_me_count: number;
-    assigned_count: number;
-    closed_count: number;
-    assigned_to_me_count: number;
-    blocked_count: number;
   }[] = await prisma.$queryRaw`WITH message_flags AS (
     SELECT
       c.id AS contact_id,
       c."waMessageAssignStatus",
-      c."blockedOnWhatsApp",
-      EXISTS (
-        SELECT 1 FROM "WaMessage" wm_recv 
-        WHERE wm_recv."contactId" = c.id 
-        AND wm_recv."messageBody"->>'exchangeProcess' = 'receive'
-        LIMIT 1
-      ) AS has_receive,
-      EXISTS (
-        SELECT 1 FROM "WaMessage" wm_recent 
-        WHERE wm_recent."contactId" = c.id 
-        AND wm_recent."messageBody"->>'exchangeProcess' = 'receive'
-        AND c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours'
-        LIMIT 1
-      ) AS has_recent,
-      EXISTS (
-        SELECT 1 FROM "WaInboxAssign" wa 
-        WHERE wa."contactId" = c.id 
-        AND wa."assignedUserId" = ${userId}::uuid
-        LIMIT 1
-      ) AS is_assigned_to_me,
       EXISTS (
         SELECT 1 FROM "WaInboxAssign" wa 
         WHERE wa."contactId" = c.id 
@@ -1026,58 +1002,42 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
         LIMIT 1
       ) AS is_assigned_to_my_team
     FROM "Contact" c
-    WHERE c."orgId" = ${orgId}::uuid
+    WHERE c."orgId" = ${orgId}::uuid 
+      AND NOT c."blockedOnWhatsApp" 
+      AND c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours'
   ), orgDetails AS (
     SELECT o."waAssignedChatPermission" AS permission FROM "Org" o WHERE o."id" = ${orgId}::uuid
   )
   SELECT
-    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND mf.has_receive
-      AND NOT mf."blockedOnWhatsApp" AND (
-      CASE 
-        WHEN orgDetails.permission = ${WaAssignedChatPermission.All} THEN 1
-        WHEN orgDetails.permission = ${WaAssignedChatPermission.Admins} THEN ${role === Role.MEMBER ? 0 : 1}
-        WHEN orgDetails.permission = ${WaAssignedChatPermission.TeamMembers} THEN is_assigned_to_my_team::int
-      END 
-      )=1)::INTEGER AS assigned_count,
-      COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND mf.has_receive
-      AND NOT mf."blockedOnWhatsApp")::INTEGER AS closed_count,
-      COUNT(*) FILTER (WHERE mf.has_receive AND mf.is_assigned_to_me AND NOT mf."blockedOnWhatsApp")::INTEGER AS assigned_to_me_count,
-      COUNT(*) FILTER (WHERE mf."blockedOnWhatsApp")::INTEGER AS blocked_count,
-      COUNT(*) FILTER (WHERE mf.has_recent AND mf."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED}
-    AND NOT mf."blockedOnWhatsApp" AND (
+    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND (
       CASE 
         WHEN orgDetails.permission = ${WaAssignedChatPermission.All} THEN 1
         WHEN orgDetails.permission = ${WaAssignedChatPermission.Admins} THEN ${role === Role.MEMBER ? 0 : 1}
         WHEN orgDetails.permission = ${WaAssignedChatPermission.TeamMembers} THEN is_assigned_to_my_team::int
       END 
     ) = 1)::INTEGER AS new_assigned_count,
-    COUNT(*) FILTER (WHERE mf.has_recent AND mf."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED}
-    AND NOT mf."blockedOnWhatsApp")::INTEGER AS new_unassigned_count,
-    COUNT(*) FILTER (WHERE mf.has_recent AND mf.is_assigned_to_me AND NOT mf."blockedOnWhatsApp")::INTEGER AS new_assigned_to_me_count
+    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED})::INTEGER AS new_unassigned_count
   FROM message_flags mf CROSS JOIN orgDetails;`;
 
   const assignedTeamWiseCount = await prisma.$queryRaw`
   SELECT 
     "teamId", 
-    COUNT(DISTINCT "contactId")::INTEGER AS "assignedCount",
-    COUNT(DISTINCT CASE WHEN "assignedUserId" = ${userId}::uuid THEN "contactId" END)::INTEGER AS "assignedToMeCount"
+    COUNT(DISTINCT "contactId")::INTEGER AS "assignedCount"
   FROM "WaInboxAssign"
   GROUP BY "teamId";
-`;
-
-  if (count[0].new_assigned_count === 0 && count[0].new_assigned_to_me_count > 0) {
-    count[0].new_assigned_count = count[0].new_assigned_to_me_count;
-  }
+  `;
 
   return {
     new: count[0].new_assigned_count + count[0].new_unassigned_count,
     newAssigned: count[0].new_assigned_count,
     newUnassigned: count[0].new_unassigned_count,
-    newAssignedTome: count[0].new_assigned_to_me_count,
-    closed: count[0].closed_count,
-    assignedToMe: count[0].assigned_to_me_count,
-    assigned: count[0].assigned_count,
-    blocked: count[0].blocked_count,
+    newAssignedTome: 0,
+    closed: stats.closedCount + stats.spamCount + stats.resolvedCount + stats.unresolvedCount,
+    assignedToMe: 0,
+    assigned: stats.assignedCount,
+    blocked: stats.blockedCount,
+    total: stats.totalCount,
+    unassigned: stats.unassignedCount,
     assignedTeamWiseCount,
   };
 }

@@ -426,3 +426,60 @@ export async function syncTeamFeaturesFromSubscription(orgId?: string) {
 
   return results;
 }
+
+export async function recalculateInboxStats(orgId: string) {
+  const stats: any[] = await prisma.$queryRaw`WITH message_flags AS (
+    SELECT
+      c.id AS contact_id,
+      c."waMessageAssignStatus",
+      c."blockedOnWhatsApp",
+      c."lastReceivedMessageTimeStamp" IS NOT NULL AS has_receive
+    FROM "Contact" c
+    WHERE c."orgId" = ${orgId}::uuid
+  )
+  SELECT
+    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'UNASSIGNED' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS unassigned_count,
+    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'ASSIGNED' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS assigned_count,
+    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'CLOSED' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS closed_count,
+    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'SPAM' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS spam_count,
+    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'RESOLVED' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS resolved_count,
+    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'UNRESOLVED' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS unresolved_count,
+    COUNT(*) FILTER (WHERE mf."blockedOnWhatsApp")::INTEGER AS blocked_count,
+    COUNT(*) FILTER (WHERE mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS total_count
+  FROM message_flags mf;`;
+
+  if (!stats || stats.length === 0) return null;
+
+  const data = {
+    unassignedCount: stats[0].unassigned_count || 0,
+    assignedCount: stats[0].assigned_count || 0,
+    closedCount: stats[0].closed_count || 0,
+    spamCount: stats[0].spam_count || 0,
+    resolvedCount: stats[0].resolved_count || 0,
+    unresolvedCount: stats[0].unresolved_count || 0,
+    blockedCount: stats[0].blocked_count || 0,
+    totalCount: stats[0].total_count || 0,
+  };
+
+  return await prisma.inboxStats.upsert({
+    where: { orgId },
+    update: data,
+    create: { orgId, ...data },
+  });
+}
+
+export async function seedInboxStatsAutomation() {
+  const orgs = await prisma.org.findMany({ select: { id: true } });
+  let successCount = 0;
+
+  for (const org of orgs) {
+    try {
+      await recalculateInboxStats(org.id);
+      successCount++;
+    } catch (error) {
+      log.error({ err: error }, `Failed to seed InboxStats for org ${org.id}`);
+    }
+  }
+
+  return { total: orgs.length, seeded: successCount };
+}
