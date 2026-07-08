@@ -7,6 +7,7 @@ import {
   migrateWaTemplateToWhatsappPhoneId,
   syncTeamFeatures,
   migrateLoyaltyTierPriority,
+  seedInboxStats,
 } from "./update.api";
 
 export const useMigrateWaTemplateToWhatsappPhoneId = () => {
@@ -41,6 +42,18 @@ export const useMigrateLoyaltyTierPriority = () => {
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to migrate loyalty tier priorities");
+    },
+  });
+};
+
+export const useSeedInboxStats = () => {
+  return useMutation({
+    mutationFn: seedInboxStats,
+    onSuccess: (response: any) => {
+      toast.success(response?.data || "Inbox stats seeded successfully");
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to seed inbox stats");
     },
   });
 };

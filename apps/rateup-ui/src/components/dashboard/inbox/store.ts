@@ -44,8 +44,6 @@ interface ChatContactCountStore {
     closedCount: number;
     /** All (new + assigned + closed) */
     allCount: number;
-    /** Assigned to current user */
-    mineOpenCount: number;
   };
   setSectionCounts: (value: ChatContactCountStore["sectionCounts"]) => void;
 }
@@ -66,7 +64,6 @@ export const useChatContactCountStore = create<ChatContactCountStore>((set) => (
     openCount: 0,
     closedCount: 0,
     allCount: 0,
-    mineOpenCount: 0,
   },
   setSectionCounts: (value) => set({ sectionCounts: value }),
 }));

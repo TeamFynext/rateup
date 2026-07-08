@@ -85,24 +85,14 @@ export function useNavMain({
         ? [
             {
               title: t("Inbox"),
-              url: "/dashboard/inbox?tab=all",
+              url: "/dashboard/inbox?tab=open",
               icon: IconInbox,
               items: [
-                {
-                  title: t("All"),
-                  url: "/dashboard/inbox?tab=all",
-                  icon: Layers,
-                  count: sectionCounts?.allCount || 0,
-                  variant: "inbox-tab",
-                },
                 {
                   title: t("Open"),
                   url: "/dashboard/inbox?tab=open",
                   icon: IconInbox,
                   count: sectionCounts?.openCount || 0,
-                  hint: sectionCounts?.mineOpenCount
-                    ? `${sectionCounts.mineOpenCount} assigned to you`
-                    : undefined,
                   variant: "inbox-tab",
                 },
                 {
@@ -110,6 +100,13 @@ export function useNavMain({
                   url: "/dashboard/inbox?tab=closed",
                   icon: IconCircleCheck,
                   count: sectionCounts?.closedCount || 0,
+                  variant: "inbox-tab",
+                },
+                {
+                  title: t("All"),
+                  url: "/dashboard/inbox?tab=all",
+                  icon: Layers,
+                  count: sectionCounts?.allCount || 0,
                   variant: "inbox-tab",
                 },
                 {

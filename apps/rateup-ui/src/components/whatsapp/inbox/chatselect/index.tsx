@@ -299,11 +299,12 @@ const WaInboxChatSelect = () => {
         blockedUsers: false,
       });
     } else if (tab === "open") {
-      // Open = Assigned (not Unassigned/New)
+      // Open = Assigned and Unassigned
       prepareFilters({
         ...filter,
         messageType: "usermessages",
-        waMessageAssignStatus: "Assigned",
+        waMessageAssignStatus: undefined,
+        status: ["ASSIGNED", "UNASSIGNED"],
         blockedUsers: false,
       });
     } else if (tab === "closed") {

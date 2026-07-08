@@ -412,7 +412,7 @@ function RateUpOnboarding() {
               });
 
               navigate({
-                to: "/dashboard/inbox?tab=all",
+                to: "/dashboard/inbox?tab=open",
               });
             }}
           >

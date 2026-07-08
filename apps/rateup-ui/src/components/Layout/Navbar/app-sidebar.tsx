@@ -332,11 +332,11 @@ function NavLink({
             <div className="mt-px text-[11px] text-slate-400 dark:text-slate-500">{item.hint}</div>
           ) : null}
         </div>
-        {/* {item.title?.toLowerCase() !== "all" && item.count != null && (
+        {item.count != null && (
           <span className="rounded-full px-2 py-0.5 text-[11px] font-bold bg-slate-50 dark:bg-white/10">
             {item.count}
           </span>
-        )} */}
+        )}
       </Link>
     );
   }
