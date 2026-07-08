@@ -15,6 +15,7 @@ import {
   migrateWaTemplatePhoneIdsHandler,
   syncTeamFeaturesHandler,
   migrateLoyaltyTierPriorityHandler,
+  seedInboxStatsAutomationHandler,
 } from "./update.controller.js";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
@@ -30,4 +31,5 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.put("/migrate-wa-template-to-whatsapp-phone-id", migrateWaTemplatePhoneIdsHandler);
   server.put("/sync-team-features", syncTeamFeaturesHandler);
   server.put("/migrate-loyalty-tier-priority", migrateLoyaltyTierPriorityHandler);
+  server.put("/seed-inbox-stats", seedInboxStatsAutomationHandler);
 }

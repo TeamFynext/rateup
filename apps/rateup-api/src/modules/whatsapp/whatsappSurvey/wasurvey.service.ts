@@ -22,6 +22,11 @@ import {
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import {
+  incrementInboxStat,
+  decrementInboxStat,
+  mapStatusToField,
+} from "../inbox/inboxStats/inboxStats.service.js";
+import {
   updateCampaignParticipant,
   updateDripCampaignParticipant,
 } from "../../campaign/campaignParticipants/campaignParticipants.service.js";
@@ -247,6 +252,16 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
     );
     if (res.status === 200) {
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
+      const contactsToBlock = await prisma.contact.findMany({
+        where: {
+          phone: { in: phoneNumbers },
+          orgId,
+          blockedOnWhatsApp: false,
+          lastReceivedMessageTimeStamp: { not: null },
+        },
+        select: { waMessageAssignStatus: true },
+      });
+
       await prisma.contact.updateMany({
         where: {
           phone: {
@@ -258,6 +273,14 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
           blockedOnWhatsApp: true,
         },
       });
+
+      for (const contact of contactsToBlock) {
+        const statusField = mapStatusToField(contact.waMessageAssignStatus);
+        if (statusField) await decrementInboxStat(orgId, statusField, 1);
+      }
+      if (contactsToBlock.length > 0) {
+        await incrementInboxStat(orgId, "blockedCount", contactsToBlock.length);
+      }
       return { success: true };
     }
     if (res.status === 400 && res.data?.error?.code === 139100) {
@@ -265,6 +288,16 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
       const blockedNumbers = res.data?.blocked_users?.added_users?.map((user) => user?.input);
       const failedNumbers = res.data?.blocked_users?.failed_users?.map((user) => user?.input);
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
+      const contactsToBlock = await prisma.contact.findMany({
+        where: {
+          phone: { in: blockedNumbers },
+          orgId,
+          blockedOnWhatsApp: false,
+          lastReceivedMessageTimeStamp: { not: null },
+        },
+        select: { waMessageAssignStatus: true },
+      });
+
       await prisma.contact.updateMany({
         where: {
           phone: {
@@ -276,6 +309,14 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
           blockedOnWhatsApp: true,
         },
       });
+
+      for (const contact of contactsToBlock) {
+        const statusField = mapStatusToField(contact.waMessageAssignStatus);
+        if (statusField) await decrementInboxStat(orgId, statusField, 1);
+      }
+      if (contactsToBlock.length > 0) {
+        await incrementInboxStat(orgId, "blockedCount", contactsToBlock.length);
+      }
       return {
         success: false,
         failedNumbers,
@@ -301,6 +342,16 @@ export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[])
     );
     if (res.status === 200) {
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
+      const contactsToUnblock = await prisma.contact.findMany({
+        where: {
+          phone: { in: phoneNumbers },
+          orgId,
+          blockedOnWhatsApp: true,
+          lastReceivedMessageTimeStamp: { not: null },
+        },
+        select: { waMessageAssignStatus: true },
+      });
+
       await prisma.contact.updateMany({
         where: {
           phone: {
@@ -312,6 +363,14 @@ export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[])
           blockedOnWhatsApp: false,
         },
       });
+
+      for (const contact of contactsToUnblock) {
+        const statusField = mapStatusToField(contact.waMessageAssignStatus);
+        if (statusField) await incrementInboxStat(orgId, statusField, 1);
+      }
+      if (contactsToUnblock.length > 0) {
+        await decrementInboxStat(orgId, "blockedCount", contactsToUnblock.length);
+      }
       return { success: true };
     }
     if (res.status === 400 && res.data?.error?.code === 139100) {
@@ -319,6 +378,16 @@ export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[])
       const unblockedNumbers = res.data?.blocked_users?.added_users?.map((user) => user?.input);
       const failedNumbers = res.data?.blocked_users?.failed_users?.map((user) => user?.input);
       log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
+      const contactsToUnblock = await prisma.contact.findMany({
+        where: {
+          phone: { in: unblockedNumbers },
+          orgId,
+          blockedOnWhatsApp: true,
+          lastReceivedMessageTimeStamp: { not: null },
+        },
+        select: { waMessageAssignStatus: true },
+      });
+
       await prisma.contact.updateMany({
         where: {
           phone: {
@@ -330,6 +399,14 @@ export async function unblockWhatsappUser(orgId: string, phoneNumbers: string[])
           blockedOnWhatsApp: false,
         },
       });
+
+      for (const contact of contactsToUnblock) {
+        const statusField = mapStatusToField(contact.waMessageAssignStatus);
+        if (statusField) await incrementInboxStat(orgId, statusField, 1);
+      }
+      if (contactsToUnblock.length > 0) {
+        await decrementInboxStat(orgId, "blockedCount", contactsToUnblock.length);
+      }
       return {
         success: false,
         failedNumbers,
@@ -1090,7 +1167,6 @@ export async function handleLeadGen(body: WaMessageBody) {
             },
           ],
         },
-        isEnabled: true,
       },
     });
     if (!automation) {

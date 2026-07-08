@@ -38,6 +38,12 @@ import {
 import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../whatsapp/constants.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
 import { integrationTriggerQueue, notificationQueue } from "../../utils/redisConnection.js";
+import {
+  mapStatusToField,
+  transitionInboxStat,
+  incrementInboxStat,
+  decrementInboxStat,
+} from "../whatsapp/inbox/inboxStats/inboxStats.service.js";
 import { updateZohoLeadQueue, ZohoTriggers } from "../integrations/external/zoho/zoho.service.js";
 import {
   addZohoContactToQueue,
@@ -673,6 +679,40 @@ export async function updateContactById(
       },
     },
   });
+
+  // InboxStats Hook
+  const isFirstReceive =
+    !contactRecord.lastReceivedMessageTimeStamp && updatedContact.lastReceivedMessageTimeStamp;
+  const isBlockedChanged = contactRecord.blockedOnWhatsApp !== updatedContact.blockedOnWhatsApp;
+  const isStatusChanged =
+    contactRecord.waMessageAssignStatus !== updatedContact.waMessageAssignStatus;
+
+  if (isFirstReceive) {
+    if (!updatedContact.blockedOnWhatsApp) {
+      await incrementInboxStat(updatedContact.orgId, "totalCount", 1);
+      const newField = mapStatusToField(updatedContact.waMessageAssignStatus);
+      if (newField) await incrementInboxStat(updatedContact.orgId, newField, 1);
+    }
+  } else if (contactRecord.lastReceivedMessageTimeStamp) {
+    if (isBlockedChanged) {
+      if (updatedContact.blockedOnWhatsApp) {
+        await incrementInboxStat(updatedContact.orgId, "blockedCount", 1);
+        await decrementInboxStat(updatedContact.orgId, "totalCount", 1);
+        const oldField = mapStatusToField(contactRecord.waMessageAssignStatus);
+        if (oldField) await decrementInboxStat(updatedContact.orgId, oldField, 1);
+      } else {
+        await decrementInboxStat(updatedContact.orgId, "blockedCount", 1);
+        await incrementInboxStat(updatedContact.orgId, "totalCount", 1);
+        const newField = mapStatusToField(updatedContact.waMessageAssignStatus);
+        if (newField) await incrementInboxStat(updatedContact.orgId, newField, 1);
+      }
+    } else if (isStatusChanged && !updatedContact.blockedOnWhatsApp) {
+      const oldField = mapStatusToField(contactRecord.waMessageAssignStatus);
+      const newField = mapStatusToField(updatedContact.waMessageAssignStatus);
+      await transitionInboxStat(updatedContact.orgId, oldField, newField, 1);
+    }
+  }
+
   if (contact.waMessageAssignStatus === WaMessageAssignStatusTab.Closed) {
     checkAndExecuteRuleByTriggerEvent("CHAT_CLOSED", {
       orgId: updatedContact?.orgId,
@@ -1707,6 +1747,8 @@ export async function bulkUpdateWaMessageAssignStatus(
       name: true,
       orgId: true,
       waMessageAssignStatus: true,
+      lastReceivedMessageTimeStamp: true,
+      blockedOnWhatsApp: true,
     },
   });
 
@@ -1729,6 +1771,28 @@ export async function bulkUpdateWaMessageAssignStatus(
         : {}),
     },
   });
+
+  const orgId = contacts[0].orgId;
+  const newField = mapStatusToField(waMessageAssignStatus);
+  const transitions: Record<string, number> = {};
+
+  for (const c of contacts) {
+    if (
+      c.lastReceivedMessageTimeStamp &&
+      !c.blockedOnWhatsApp &&
+      c.waMessageAssignStatus !== waMessageAssignStatus
+    ) {
+      const oldField = mapStatusToField(c.waMessageAssignStatus);
+      if (oldField && newField) {
+        if (!transitions[oldField]) transitions[oldField] = 0;
+        transitions[oldField]++;
+      }
+    }
+  }
+
+  for (const [oldField, count] of Object.entries(transitions)) {
+    await transitionInboxStat(orgId, oldField as any, newField, count);
+  }
 
   //  Execute triggers in parallel
 

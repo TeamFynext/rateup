@@ -10,6 +10,7 @@ import {
   updateUsageStatsAutomation,
   updateUsageStatsTemplateMessageCount,
   syncTeamFeaturesFromSubscription,
+  seedInboxStatsAutomation,
 } from "./update.service.js";
 import prisma from "../../utils/prisma.js";
 import { StageCategory } from "../../../generated/prisma/enums.js";
@@ -316,5 +317,22 @@ export async function syncTeamFeaturesHandler(
   } catch (error) {
     log.error(error);
     res.code(500).send("Error syncing team features");
+  }
+}
+
+export async function seedInboxStatsAutomationHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const result = await seedInboxStatsAutomation();
+    reply
+      .code(200)
+      .send(
+        `Seeded inbox stats successfully. Seeded ${result.seeded} out of ${result.total} orgs.`,
+      );
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
   }
 }
