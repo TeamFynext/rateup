@@ -495,7 +495,7 @@ export function AutomatedReplyForm({
         onCancel={() => setConfirmDiscardOpen(false)}
       />
       <form onSubmit={rootForm.onSubmit(handleSubmitClick)} className="space-y-6" noValidate>
-        <Card>
+        <Card className="m-1">
           {/* FIX: Template button moved into CardHeader as a secondary action */}
           <CardHeader className="flex flex-row items-start justify-between gap-4">
             <div>
@@ -504,15 +504,17 @@ export function AutomatedReplyForm({
                 {t("Configure the basic settings for your Chatbot")}
               </CardDescription>
             </div>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setTemplatePickerOpen(true)}
-            >
-              <IconTemplate size={16} />
-              {t("Use Template")}
-            </Button>
+            {!editMode && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setTemplatePickerOpen(true)}
+              >
+                <IconTemplate size={16} />
+                {t("Use Template")}
+              </Button>
+            )}
           </CardHeader>
 
           <CardContent className="space-y-5">

@@ -59,7 +59,7 @@ export function ActionCard({
   return (
     <Card
       className={cn(
-        "cursor-pointer ring-0 shadow-custom-base! hover:shadow-custom-hover! transition-shadow hover:-translate-y-0.5 gap-3.5",
+        "cursor-pointer ring-accent shadow-custom-base! hover:shadow-custom-hover! transition-shadow hover:-translate-y-0.5 gap-3.5",
         className,
       )}
       onClick={onClick}

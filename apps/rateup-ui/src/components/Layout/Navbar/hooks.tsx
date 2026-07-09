@@ -31,7 +31,6 @@ import {
   IconShield,
   IconShoppingCart,
   IconSitemap,
-  IconSparkles,
   IconTag,
   IconTemplate,
   IconTerminal2,
@@ -43,6 +42,7 @@ import {
   IconWaveSine,
   IconWebhook,
 } from "@tabler/icons-react";
+import { Layers } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -61,6 +61,7 @@ export function useNavMain({
   handleFilter,
   allowedFeatures,
   user,
+  sectionCounts,
 }: any) {
   const { t } = useTranslation();
 
@@ -84,34 +85,29 @@ export function useNavMain({
         ? [
             {
               title: t("Inbox"),
-              url: "/dashboard/inbox?tab=New",
+              url: "/dashboard/inbox?tab=open",
               icon: IconInbox,
               items: [
                 {
-                  title: t("New"),
-                  url: "/dashboard/inbox?tab=New",
-                  icon: IconSparkles,
+                  title: t("Open"),
+                  url: "/dashboard/inbox?tab=open",
+                  icon: IconInbox,
+                  count: sectionCounts?.openCount || 0,
+                  variant: "inbox-tab",
                 },
-                {
-                  title: t("Assigned"),
-                  url: "/dashboard/inbox?tab=Assigned",
-                  icon: IconUserCheck,
-                },
-                {
-                  title: t("Mine"),
-                  url: "/dashboard/inbox?tab=mine",
-                  icon: IconUser,
-                },
-
                 {
                   title: t("Closed"),
-                  url: "/dashboard/inbox?tab=Addressed",
+                  url: "/dashboard/inbox?tab=closed",
                   icon: IconCircleCheck,
+                  count: sectionCounts?.closedCount || 0,
+                  variant: "inbox-tab",
                 },
                 {
                   title: t("All"),
-                  url: "/dashboard/inbox?tab=All",
-                  icon: IconInbox,
+                  url: "/dashboard/inbox?tab=all",
+                  icon: Layers,
+                  count: sectionCounts?.allCount || 0,
+                  variant: "inbox-tab",
                 },
                 {
                   group: "Filter",

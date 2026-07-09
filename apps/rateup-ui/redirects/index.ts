@@ -1,6 +1,15 @@
 import blogRedirects from "./redirects-blog.ts";
 import pageRedirects from "./redirects-pages.ts";
 
-const redirects = [...blogRedirects, ...pageRedirects];
+export type RedirectRule = {
+  to: string;
+  statusCode?: 301 | 302;
+};
 
-export default redirects;
+// via `beforeLoad` using TanStack's type-safe `redirect()`.
+export const REDIRECT_MAP: Record<string, RedirectRule> = {
+  ...blogRedirects,
+  ...pageRedirects,
+};
+
+export default REDIRECT_MAP;

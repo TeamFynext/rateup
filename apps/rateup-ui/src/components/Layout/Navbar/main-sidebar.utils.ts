@@ -82,9 +82,6 @@ export const mergeInboxCountByAssignedTeams = (
     assigned: assignedTeamWiseCount.reduce((count, teamCount) => {
       return assignedTeams.includes(teamCount.teamId) ? count + teamCount.assignedCount : count;
     }, 0),
-    assignedToMe: assignedTeamWiseCount.reduce((count, teamCount) => {
-      return assignedTeams.includes(teamCount.teamId) ? count + teamCount.assignedToMeCount : count;
-    }, 0),
   };
 };
 

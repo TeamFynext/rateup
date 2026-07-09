@@ -1,15 +1,15 @@
 import {
-  ArrowLeft,
-  ArrowUp,
+  ArrowDown,
+  ArrowRight,
   CheckCheck,
-  FileText,
   Loader2,
   Redo2,
   Save,
   Settings,
-  Table,
+  Sparkles,
   Undo2,
 } from "lucide-react";
+import type { ComponentType } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -18,9 +18,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-
-import styles from "./toolbar.module.css";
 
 interface ToolbarProps {
   onSave: () => void;
@@ -29,11 +28,48 @@ interface ToolbarProps {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
-  handleTabSwitch: (tab: string) => void;
+  onOpenSettings?: () => void;
   validateFlow: (slient?: boolean) => void;
   saveDisabled?: boolean;
   refetch?: () => void;
   isPending?: boolean;
+}
+
+function ToolButton({
+  icon: Icon,
+  label,
+  onClick,
+  disabled,
+  variant = "ghost",
+}: Readonly<{
+  icon: ComponentType;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  variant?: "ghost" | "default";
+}>) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            type="button"
+            variant={variant}
+            size="icon-sm"
+            onClick={onClick}
+            disabled={disabled}
+          />
+        }
+      >
+        <Icon />
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function Divider() {
+  return <Separator orientation="vertical" className="mx-0.5 h-5" />;
 }
 
 export default function Toolbar({
@@ -43,148 +79,75 @@ export default function Toolbar({
   onRedo,
   canUndo,
   canRedo,
-  handleTabSwitch,
+  onOpenSettings,
   validateFlow,
   saveDisabled = false,
   refetch,
   isPending = false,
 }: Readonly<ToolbarProps>) {
   return (
-    <div className={styles.toolbar}>
+    <div className="flex items-center gap-0.5 rounded-xl border border-border bg-card p-1 shadow-lg">
+      {/* Save */}
       <Tooltip>
         <TooltipTrigger
           render={
             <Button
-              variant="outline"
-              size="icon"
-              className={styles.toolbarButton}
+              type="button"
+              variant={saveDisabled ? "ghost" : "default"}
+              size="icon-sm"
               onClick={onSave}
-              disabled={saveDisabled}
+              disabled={saveDisabled || isPending}
             />
           }
         >
-          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {isPending ? <Loader2 className="animate-spin" /> : <Save />}
         </TooltipTrigger>
-        <TooltipContent>Save</TooltipContent>
+        <TooltipContent>{saveDisabled ? "All changes saved" : "Save"}</TooltipContent>
       </Tooltip>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant="outline"
-              size="icon"
-              className={styles.toolbarButton}
-              onClick={() => validateFlow(false)}
-            />
-          }
-        >
-          <CheckCheck className="h-4 w-4" />
-        </TooltipTrigger>
-        <TooltipContent>Validate</TooltipContent>
-      </Tooltip>
+
+      <ToolButton icon={CheckCheck} label="Validate flow" onClick={() => validateFlow(false)} />
+
+      <Divider />
+
+      <ToolButton icon={Undo2} label="Undo (Ctrl+Z)" onClick={onUndo} disabled={!canUndo} />
+      <ToolButton icon={Redo2} label="Redo (Ctrl+Y)" onClick={onRedo} disabled={!canRedo} />
+
+      <Divider />
+
+      {/* Auto layout */}
       <DropdownMenu>
         <Tooltip>
           <DropdownMenuTrigger
             render={
-              <TooltipTrigger
-                render={<Button variant="outline" size="icon" className={styles.toolbarButton} />}
-              />
+              <TooltipTrigger render={<Button type="button" variant="ghost" size="icon-sm" />} />
             }
           >
-            <Table className="h-4 w-4" />
+            <Sparkles />
           </DropdownMenuTrigger>
-          <TooltipContent>Layout</TooltipContent>
+          <TooltipContent>Auto layout</TooltipContent>
         </Tooltip>
-
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent align="center">
           <DropdownMenuItem onClick={() => onAutoLayout("TB")}>
-            <ArrowUp className="mr-2 h-4 w-4" />
-            Vertical Layout
+            <ArrowDown className="mr-2 h-4 w-4" />
+            Vertical
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onAutoLayout("LR")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Horizontal Layout
+            <ArrowRight className="mr-2 h-4 w-4" />
+            Horizontal
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant="outline"
-              size="icon"
-              className={styles.toolbarButton}
-              onClick={onUndo}
-              disabled={!canUndo}
-            />
-          }
-        >
-          <Undo2 className="h-4 w-4" />
-        </TooltipTrigger>
-        <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant="outline"
-              size="icon"
-              className={styles.toolbarButton}
-              onClick={onRedo}
-              disabled={!canRedo}
-            />
-          }
-        >
-          <Redo2 className="h-4 w-4" />
-        </TooltipTrigger>
-        <TooltipContent>Redo (Ctrl+Y or Ctrl+Shift+Z)</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant="outline"
-              size="icon"
-              className={styles.toolbarButton}
-              onClick={() => {
-                refetch?.();
-                handleTabSwitch("settings");
-              }}
-            />
-          }
-        >
-          <Settings className="h-4 w-4" />
-        </TooltipTrigger>
-        <TooltipContent>Settings</TooltipContent>
-      </Tooltip>
-      {/* <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className={styles.toolbarButton}
-              onClick={() => handleTabSwitch("share")}
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Share</TooltipContent>
-        </Tooltip> */}
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant="outline"
-              size="icon"
-              className={styles.toolbarButton}
-              onClick={() => handleTabSwitch("response")}
-            />
-          }
-        >
-          <FileText className="h-4 w-4" />
-        </TooltipTrigger>
-        <TooltipContent>Response</TooltipContent>
-      </Tooltip>
+
+      <Divider />
+
+      <ToolButton
+        icon={Settings}
+        label="Settings"
+        onClick={() => {
+          refetch?.();
+          onOpenSettings?.();
+        }}
+      />
     </div>
   );
 }

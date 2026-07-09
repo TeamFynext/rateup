@@ -186,8 +186,7 @@ export default function WaInboxChatDisplayHeader({
               showOnlineStatus={!isSessionExpired}
               onlineStatusPosition="topLeft"
               showRing={true}
-              variant="light-blue"
-              ringClassName="ring-gray-200"
+              src={contact?.profilePic}
             />
             <div
               className={`absolute -bottom-0.5 -right-0.5 rounded-full p-0.5 shadow-sm ${
@@ -197,10 +196,10 @@ export default function WaInboxChatDisplayHeader({
               {sourcePlatform?.icon}
             </div>
           </div>
-          <div className="min-w-0 flex-shrink">
+          <div className="min-w-0 flex-shrink flex flex-col justify-center">
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-0.5">
-                <h3 className="truncate">
+                <h3 className="truncate font-bold text-sm">
                   {contact?.name ||
                     contact?.whatsappUserName ||
                     contact?.phone ||
@@ -225,6 +224,17 @@ export default function WaInboxChatDisplayHeader({
                 )}
               </div>
             </div>
+            {contact?.phone &&
+              contact.phone !==
+                (contact?.name ||
+                  contact?.whatsappUserName ||
+                  contact?.phone ||
+                  contact?.igsId ||
+                  contact?.psid) && (
+                <p className="text-[10px] text-muted-foreground truncate -mt-0.5">
+                  {contact.phone}
+                </p>
+              )}
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -559,9 +569,16 @@ const ChatHeaderMenu = ({ contact }) => {
   if (isChatClosed) return null;
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-8 p-0" />}>
-        <CircleCheckBig className="w-3.5 h-3.5 text-green-500" />
-        <span className="text-green-500">Close</span>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            size="sm"
+            className="h-8 bg-green-600 hover:bg-green-700 data-open:bg-green-700 px-2 border-transparent shadow-none"
+          />
+        }
+      >
+        <CircleCheckBig className="w-2 h-2 text-white" />
+        <span className="text-white text-xs">Close</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem

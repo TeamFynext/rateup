@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import { cn } from "@/lib/utils.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
 import { formatDateWithRelativeTime, formatToRelativeTime } from "@/utils/dateTime.ts";
@@ -71,7 +72,14 @@ export default function WaInboxChatSelectCard({
         setSelectedContact(contact);
         setIsChatDisplayOpen(true);
       }}
-      className={`p-3 cursor-pointer transition-all hover:bg-primary/10 ${selectedContact?.id === contact?.id && "bg-primary/5 border-l-4 border-primary"} ${contact?.unReadMessageCount > 0 && "bg-blue-50/30"}`}
+      className={cn(
+        "p-3 cursor-pointer transition-all hover:bg-primary/10 border-l-4",
+        selectedContact?.id === contact?.id
+          ? "bg-primary/5 border-primary"
+          : contact?.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED
+            ? "bg-amber-50 dark:bg-amber-500/10 border-amber-400"
+            : "border-transparent",
+      )}
     >
       <div className="flex items-start space-x-2">
         {isSelectionMode && (
@@ -104,7 +112,6 @@ export default function WaInboxChatSelectCard({
             onlineStatusPosition="topLeft"
             src={contact?.profilePic}
             showRing={true}
-            variant="light-blue"
           />
           <div
             className={`absolute -bottom-0.5 -right-0.5 rounded-full p-0.5 ${
@@ -168,84 +175,91 @@ export default function WaInboxChatSelectCard({
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-1 h-5">
-            <div className="flex items-center gap-1 flex-wrap">
+          <div className="flex items-center justify-between gap-1 min-h-5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {/* {contact?.lastReceivedMessageTimeStamp &&
                 dayjs().diff(contact.lastReceivedMessageTimeStamp, "hour") <
                   24 && <Badge className="h-3 text-[10px] p-2">New</Badge>} */}
               {lifecycleInfo && (
-                <Badge variant="secondary" className={`text-[10px] h-5 px-1.5`}>
+                <span className="inline-flex items-center gap-[3px] rounded-full px-2 py-0.5 text-[10px] font-bold bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                   {lifecycleInfo?.emoji + " " + lifecycleInfo?.name}
-                </Badge>
+                </span>
+              )}
+
+              {WaMessageClosedStatus.includes(contact?.waMessageAssignStatus) ? (
+                <div className="flex ">
+                  <CustomTooltip
+                    trigger={<Icon className={`text-[10px] h-4 ${closed.color}`} />}
+                    content={
+                      <span>
+                        {contact.closedAt ? (
+                          <span>{`Marked as ${contact?.waMessageAssignStatus} by ${contact.closedUser?.name} at ${formatDateWithRelativeTime(contact.closedAt)}`}</span>
+                        ) : (
+                          translations("Closed")
+                        )}
+                      </span>
+                    }
+                  />
+                  {contact.closedAt && (
+                    <span className="text-xs text-muted-foreground ml-1">
+                      {formatToRelativeTime(contact.closedAt)}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                contact?.waMessageAssignStatus !== WaMessageAssignStatus.UNASSIGNED &&
+                contact?.assignedUsers?.length > 0 && (
+                  <CustomTooltip
+                    trigger={
+                      <div className="flex space-x-1">
+                        {contact?.assignedUsers?.slice(0, 1).map((a) => {
+                          return (
+                            <span
+                              key={a?.id}
+                              className="inline-flex items-center gap-[5px] rounded-full border border-blue-200/50 bg-blue-50 py-[3px] pr-[9px] pl-1 text-[10px] font-extrabold text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30"
+                            >
+                              <span className="flex size-3.5 items-center justify-center rounded-full bg-blue-500 text-[8px] font-extrabold text-white">
+                                {a?.name?.charAt(0)?.toUpperCase()}
+                              </span>
+                              <span className="truncate max-w-[60px]">{a?.name}</span>
+                            </span>
+                          );
+                        })}
+                        {contact?.assignedUsers.length > 1 && (
+                          <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white shrink-0">
+                            +{contact?.assignedUsers?.length - 1}
+                          </div>
+                        )}
+                      </div>
+                    }
+                    content={
+                      <div>
+                        <p className="mb-1">Assigned Staff:</p>
+                        <div className="flex gap-1 flex-wrap max-w-lg py-2">
+                          {contact?.assignedUsers.map((user) => (
+                            <Badge key={user?.id} className="h-4 p-2 text-[10px]">
+                              {user?.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    }
+                  />
+                )
               )}
             </div>
 
-            {WaMessageClosedStatus.includes(contact?.waMessageAssignStatus) ? (
-              <div className="flex ">
-                <CustomTooltip
-                  trigger={<Icon className={`text-[10px] h-4 ${closed.color}`} />}
-                  content={
-                    <span>
-                      {contact.closedAt ? (
-                        <span>{`Marked as ${contact?.waMessageAssignStatus} by ${contact.closedUser?.name} at ${formatDateWithRelativeTime(contact.closedAt)}`}</span>
-                      ) : (
-                        translations("Closed")
-                      )}
-                    </span>
-                  }
-                />
-                {contact.closedAt && (
-                  <span className="text-xs text-muted-foreground">
-                    {formatToRelativeTime(contact.closedAt)}
-                  </span>
-                )}
-              </div>
-            ) : contact?.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED ? (
-              <CustomTooltip
-                trigger={
-                  <UserX
-                    className={`text-[10px] h-4 text-gray-500 dark:text-gray-400 rounded-2xl`}
-                  />
-                }
-                content={<span>{translations("UnAssigned")}</span>}
-              />
-            ) : (
-              contact?.assignedUsers?.length > 0 && (
+            {contact?.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED && (
+              <div className="flex shrink-0">
                 <CustomTooltip
                   trigger={
-                    <div className="flex space-x-1">
-                      {contact?.assignedUsers?.slice(0, 2).map((a) => {
-                        return (
-                          <Badge
-                            variant="outline"
-                            key={a?.id}
-                            className="border-blue-500 text-blue-500"
-                          >
-                            {a?.name}
-                          </Badge>
-                        );
-                      })}
-                      {contact?.assignedUsers.length > 2 && (
-                        <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white">
-                          +{contact?.assignedUsers?.length - 2}
-                        </div>
-                      )}
-                    </div>
+                    <UserX
+                      className={`text-[10px] h-4 text-gray-500 dark:text-gray-400 rounded-2xl`}
+                    />
                   }
-                  content={
-                    <div>
-                      <p className="mb-1">Assigned Staff:</p>
-                      <div className="flex gap-1 flex-wrap max-w-lg py-2">
-                        {contact?.assignedUsers.map((user) => (
-                          <Badge key={user?.id} className="h-4 p-2 text-[10px]">
-                            {user?.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  }
+                  content={<span>{translations("UnAssigned")}</span>}
                 />
-              )
+              </div>
             )}
           </div>
         </div>

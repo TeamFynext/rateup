@@ -1,23 +1,18 @@
-// TanStack Start does not support declarative redirects via config files.
-// Use route handlers or redirect() in server functions instead.
-// Example: Use a route loader to detect and redirect conditions.
+import type { RedirectRule } from "./index.ts";
 
-const pageRedirects = [
-  {
-    source: "/shipping-and-delivery",
-    destination: "/terms-of-service#shipping-and-delivery",
-    permanent: false,
+const pageRedirects: Record<string, RedirectRule> = {
+  "/shipping-and-delivery": {
+    to: "/terms-of-service#shipping-and-delivery",
+    statusCode: 302,
   },
-  {
-    source: "/cancellation-and-refund",
-    destination: "/terms-of-service#cancellation-and-refund",
-    permanent: false,
+  "/cancellation-and-refund": {
+    to: "/terms-of-service#cancellation-and-refund",
+    statusCode: 302,
   },
-  {
-    source: "/blog/about",
-    destination: "/blog",
-    permanent: true,
+  "/blog/about": {
+    to: "/blog",
+    statusCode: 301,
   },
-];
+};
 
 export default pageRedirects;

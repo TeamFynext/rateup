@@ -1,5 +1,15 @@
 import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { CheckCircle, Clock, Download, Filter, RefreshCcw, Search, Users, X } from "lucide-react";
+import {
+  ChevronDown,
+  CheckCircle,
+  Clock,
+  Download,
+  RefreshCw,
+  Search,
+  SlidersHorizontal,
+  UserPlus,
+  X,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -17,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
@@ -51,39 +62,30 @@ const ChatselectPanelHeader = ({
     },
   ];
   const { filter, setFilter } = useChatFilterStore();
+  const { user } = useUser();
   const { t: translations } = useTranslation();
+
+  const isMine = filter?.assignedUserIds?.includes(user?.userId || "");
   useEffect(() => {
     if (filter.searchTerm.length && !showSearchBar) setShowSearchBar(true);
     function getFilterActiveCount() {
       let count = 0;
-      if (filter.contactGroups.length > 0) {
-        count += filter.contactGroups.length;
-      }
-      if (filter.campaigns.length > 0) {
-        count += filter.campaigns.length;
-      }
-      if (filter.tags.length > 0) {
-        count += filter.tags.length;
-      }
       if (filter.messageType !== "usermessages") {
         count += 1;
       }
       if (filter.strictFilter !== false) {
         count += 1;
       }
-      if ((tab === "All" || tab === "Addressed") && filter.status?.length) {
+      if ((tab === "all" || tab === "closed") && filter.status?.length) {
         count += filter.status.length;
       }
-      if (["Assigned", "AssignedToMe"]?.includes(tab) && filter.assignedTeams) {
+      if (tab === "open" && filter.assignedTeams) {
         count += filter.assignedTeams.length;
       }
       return count;
     }
     setFilterCount(getFilterActiveCount());
   }, [filter, tab]);
-
-  const actionButtonClass =
-    "h-7 w-7 p-0 border-0 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 rounded transition-all";
 
   return (
     <div className="relative shrink-0">
@@ -112,156 +114,199 @@ const ChatselectPanelHeader = ({
           </div>
         </div>
       )}
-      <header className="flex items-center gap-2 p-2.5">
-        <div className="flex items-center gap-1 rounded-lg bg-slate-100/50 p-1 dark:bg-slate-900">
-          <Dialog>
-            <CustomTooltip
-              trigger={
-                <DialogTrigger
-                  render={<Button size="sm" variant="ghost" className={actionButtonClass} />}
-                >
-                  <Users className="h-3.5 w-3.5" />
-                </DialogTrigger>
-              }
-              content={<p>New Contact</p>}
-              side="bottom"
-            />
-            <DialogContent>
-              <DialogTitle>
-                <div className="flex flex-col items-start justify-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <div className="bg-green-500 w-10 h-10 rounded-full flex items-center justify-center">
-                      <IconBrandWhatsapp color="white" size={26} />
-                    </div>
-                    <h1 className="font-semibold text-lg">
-                      {translations("Add New WhatsApp contact")}
-                    </h1>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    {translations(
-                      "Add a contact to start WhatsApp conversation Enter their details below to begin messaging",
-                    )}
-                    .
-                  </p>
-                </div>
-              </DialogTitle>
-              <AddUnknownContactForm
-                phone=""
-                triggerType="action_button"
-                successCallback={onUnknownContactAddSuccess}
+      <div className="flex flex-col">
+        {/* Row 1: Title and Actions */}
+        <div className="flex h-14 shrink-0 items-center justify-between gap-2.5 border-b px-4 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+          <span className="text-[15px] font-extrabold whitespace-nowrap capitalize text-slate-900 dark:text-slate-100">
+            {tab}
+          </span>
+          <div className="flex items-center gap-3.5 text-slate-400 dark:text-slate-500">
+            <Dialog>
+              <CustomTooltip
+                trigger={
+                  <DialogTrigger
+                    render={
+                      <button className="flex items-center justify-center border-0 bg-transparent p-0 outline-none" />
+                    }
+                  >
+                    <UserPlus className="size-4 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors" />
+                  </DialogTrigger>
+                }
+                content={<p>New Contact</p>}
+                side="bottom"
               />
-            </DialogContent>
-          </Dialog>
-          <CustomTooltip
-            trigger={
-              <Button
-                size="sm"
-                variant="ghost"
-                className={actionButtonClass}
-                onClick={() => setShowSearchBar(true)}
-              >
-                <Search className="h-3.5 w-3.5" />
-              </Button>
-            }
-            content={<p>Search</p>}
-            side="bottom"
-          />
-
-          <CustomTooltip
-            trigger={
-              <Button
-                size="sm"
-                variant="ghost"
-                className={cn(
-                  actionButtonClass,
-                  isSelectionMode && "bg-white text-primary dark:bg-slate-800 dark:text-primary",
-                )}
-                onClick={() => {
-                  setIsSelectionMode(!isSelectionMode);
-                  setSelectedChats([]);
-                }}
-              >
-                <CheckCircle className="h-3.5 w-3.5" />
-              </Button>
-            }
-            content={<p>Select Chats</p>}
-            side="bottom"
-          />
-
-          <Popover>
-            <CustomTooltip
-              trigger={
-                <PopoverTrigger
-                  render={
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className={cn(actionButtonClass, "relative")}
-                    />
-                  }
-                >
-                  <Filter className="h-3.5 w-3.5" />
-                  <div className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] text-white">
-                    {filterCount}
+              <DialogContent>
+                <DialogTitle>
+                  <div className="flex flex-col items-start justify-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <div className="bg-green-500 w-10 h-10 rounded-full flex items-center justify-center">
+                        <IconBrandWhatsapp color="white" size={26} />
+                      </div>
+                      <h1 className="font-semibold text-lg">
+                        {translations("Add New WhatsApp contact")}
+                      </h1>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {translations(
+                        "Add a contact to start WhatsApp conversation Enter their details below to begin messaging",
+                      )}
+                      .
+                    </p>
                   </div>
-                </PopoverTrigger>
-              }
-              content={<p>Advanced Filters</p>}
-              side="bottom"
-            />
-            <PopoverContent className="w-full">
-              <WaInboxChatFilter />
-            </PopoverContent>
-          </Popover>
-          <Popover>
+                </DialogTitle>
+                <AddUnknownContactForm
+                  phone=""
+                  triggerType="action_button"
+                  successCallback={onUnknownContactAddSuccess}
+                />
+              </DialogContent>
+            </Dialog>
+
             <CustomTooltip
               trigger={
-                <PopoverTrigger
-                  render={<Button size="sm" variant="ghost" className={actionButtonClass} />}
+                <button
+                  className="flex items-center justify-center border-0 bg-transparent p-0 outline-none"
+                  onClick={() => setShowSearchBar(true)}
                 >
-                  <Download className="h-3.5 w-3.5" />
-                </PopoverTrigger>
+                  <Search className="size-4 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors" />
+                </button>
               }
-              content={<p>Download Chats</p>}
+              content={<p>Search</p>}
               side="bottom"
             />
-            <PopoverContent className="w-full">
-              <WaInboxChatExport />
-            </PopoverContent>
-          </Popover>
-          <CustomTooltip
-            trigger={
-              <Button
-                variant="ghost"
-                size="sm"
-                className={actionButtonClass}
-                onClick={() => refetchFilteredContacts()}
-              >
-                <RefreshCcw
-                  className={`h-3.5 w-3.5 ${isRefetchingFilteredContacts ? "animate-spin" : ""}`}
-                />
-              </Button>
-            }
-            content={<span>{translations("Refresh")}</span>}
-          />
+
+            <CustomTooltip
+              trigger={
+                <button
+                  className="flex items-center justify-center border-0 bg-transparent p-0 outline-none"
+                  onClick={() => {
+                    setIsSelectionMode(!isSelectionMode);
+                    setSelectedChats([]);
+                  }}
+                >
+                  <CheckCircle
+                    className={cn(
+                      "size-4 cursor-pointer transition-colors",
+                      isSelectionMode
+                        ? "text-blue-600 dark:text-blue-500"
+                        : "hover:text-slate-900 dark:hover:text-slate-200",
+                    )}
+                  />
+                </button>
+              }
+              content={<p>Select Chats</p>}
+              side="bottom"
+            />
+
+            <Popover>
+              <CustomTooltip
+                trigger={
+                  <PopoverTrigger
+                    render={
+                      <button className="flex items-center justify-center border-0 bg-transparent p-0 outline-none" />
+                    }
+                  >
+                    <div className="relative">
+                      <SlidersHorizontal className="size-4 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors" />
+                      {filterCount > 0 && (
+                        <div className="absolute -right-1.5 -top-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] text-white">
+                          {filterCount}
+                        </div>
+                      )}
+                    </div>
+                  </PopoverTrigger>
+                }
+                content={<p>Advanced Filters</p>}
+                side="bottom"
+              />
+              <PopoverContent className="w-full">
+                <WaInboxChatFilter />
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <CustomTooltip
+                trigger={
+                  <PopoverTrigger
+                    render={
+                      <button className="flex items-center justify-center border-0 bg-transparent p-0 outline-none" />
+                    }
+                  >
+                    <Download className="size-4 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors" />
+                  </PopoverTrigger>
+                }
+                content={<p>Download Chats</p>}
+                side="bottom"
+              />
+              <PopoverContent className="w-full">
+                <WaInboxChatExport />
+              </PopoverContent>
+            </Popover>
+
+            <CustomTooltip
+              trigger={
+                <button
+                  className="flex items-center justify-center border-0 bg-transparent p-0 outline-none"
+                  onClick={() => refetchFilteredContacts()}
+                >
+                  <RefreshCw
+                    className={cn(
+                      "size-4 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors",
+                      isRefetchingFilteredContacts && "animate-spin",
+                    )}
+                  />
+                </button>
+              }
+              content={<span>{translations("Refresh")}</span>}
+            />
+          </div>
         </div>
 
-        <div className="ml-auto flex items-center text-xs">
-          {/* <CustomTooltip
-            trigger={ */}
-          <SortMenu
-            data={sortData}
-            value={filter?.sortBy}
-            onChange={(value) => setFilter({ ...filter, sortBy: value })}
-            defaultValue="newest"
-            selectTriggerClassName="h-7 gap-1 border-0 bg-transparent px-1 text-xs font-medium text-slate-400 shadow-none hover:bg-transparent hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
-            customSelectTrigger={<Clock className="h-3 w-3" />}
-          />
-          {/* }
-            content={<span>{translations("Sort")}</span>}
-          /> */}
+        {/* Row 2: Sort */}
+        <div className="flex items-center justify-between gap-2 border-b px-4 py-2.5 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex gap-0.5 rounded-full p-[3px] bg-slate-50 dark:bg-slate-800">
+            <button
+              onClick={() => setFilter({ ...filter, assignedUserIds: [] })}
+              className={cn(
+                "cursor-pointer rounded-full px-2.5 py-1 transition-all border-0 outline-none",
+                !isMine
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                  : "bg-slate-50 text-slate-500 hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
+              )}
+            >
+              <span className="text-xs font-bold">{translations("Everyone")}</span>
+            </button>
+            <button
+              onClick={() =>
+                setFilter({ ...filter, assignedUserIds: user?.userId ? [user.userId] : [] })
+              }
+              className={cn(
+                "cursor-pointer rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-all border-0 outline-none",
+                isMine
+                  ? "bg-white text-primary shadow-sm dark:bg-slate-700 dark:text-primary"
+                  : "bg-slate-50 text-slate-500 hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
+              )}
+            >
+              <span className="text-xs font-bold">{translations("Mine")}</span>
+            </button>
+          </div>
+
+          <div className="flex cursor-pointer items-center gap-1 text-xs whitespace-nowrap text-slate-500 dark:text-slate-400">
+            <SortMenu
+              data={sortData}
+              value={filter?.sortBy}
+              onChange={(value) => setFilter({ ...filter, sortBy: value })}
+              defaultValue="newest"
+              selectTriggerClassName="h-auto w-auto gap-1 border-0 bg-transparent p-0 text-xs text-slate-500 dark:text-slate-400 shadow-none hover:bg-transparent"
+              customSelectTrigger={
+                <div className="flex items-center gap-1">
+                  Sort <ChevronDown className="size-[13px]" />
+                </div>
+              }
+            />
+          </div>
         </div>
-      </header>
+      </div>
     </div>
   );
 };

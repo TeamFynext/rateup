@@ -1,4 +1,3 @@
-import { Loader, Text } from "@mantine/core";
 import { useSearch } from "@tanstack/react-router";
 import { CheckCircle, Filter, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -6,29 +5,17 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { useChatFilterData } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums.ts";
-import { WaMessageClosedStatus } from "@/utils/constants.ts";
 
-import {
-  ContainedMultiSelect,
-  ContainedSelection,
-} from "../../../../input/ContainedInput/ContainedInput.tsx";
+import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput.tsx";
 
-export interface MultiGV {
-  group: string;
-  value: string;
-}
 export interface ChatFilter {
   messageType: "all" | "replied" | "unread" | "usermessages";
   strictFilter: boolean;
   searchTerm?: string;
-  contactGroups: Array<MultiGV>;
-  campaigns: Array<MultiGV>;
-  tags: Array<MultiGV>;
   waMessageAssignStatus?: string;
   blockedUsers: boolean;
   status: string[];
@@ -36,27 +23,18 @@ export interface ChatFilter {
   phone?: string;
   labels: string[];
   sortBy: "newest" | "oldest";
-  category: "conversation" | "campaign" | "automation";
   lifecycle?: string;
   assignedUserIds: string[];
 }
 
 export default function WaInboxChatFilter() {
-  const { data, isLoading, error } = useChatFilterData();
-
   const { filter, setFilter, clearFilter, setPreviousFilterForTab, previousFilterForTab } =
     useChatFilterStore();
 
   const { t: translations } = useTranslation();
   const searchParams = useSearch({ strict: false });
-  const tab = (searchParams.tab as string) ?? "New";
+  const tab = (searchParams.tab as string) ?? "all";
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
-
-  const allMultiSelectFilters = [
-    ...(filter?.contactGroups ?? []),
-    ...(filter?.campaigns ?? []),
-    ...(filter?.tags ?? []),
-  ];
 
   const teamOptions = teamRes
     ? teamRes.data?.map((team) => ({
@@ -65,57 +43,75 @@ export default function WaInboxChatFilter() {
       }))
     : [];
 
-  function multiSelectOnChange(cf: ChatFilter, value: Array<MultiGV>) {
-    const current_filter = { contactGroups: [], campaigns: [], tags: [] };
-    if (value.length === 0) {
-      setFilter({ ...cf, contactGroups: [], campaigns: [], tags: [] });
-    } else {
-      const fcgs = value?.filter((v) => v.group === "contactGroups");
-      const fcs = value?.filter((v) => v.group === "campaigns");
-      const fts = value?.filter((v) => v.group !== "contactGroups" && v.group !== "campaigns");
-      if (fcgs.length > 0) {
-        current_filter.contactGroups = fcgs;
-      }
-      if (fcs.length > 0) {
-        current_filter.campaigns = fcs;
-      }
-      if (fts.length > 0) {
-        current_filter.tags = fts;
-      }
-      setFilter({
-        ...cf,
-        contactGroups: current_filter.contactGroups,
-        campaigns: current_filter.campaigns,
-        tags: current_filter.tags,
-      });
-    }
+  let statusData: { id: string; label: string }[] = [];
+  if (tab === "open") {
+    statusData = [
+      {
+        id: WaMessageAssignStatus.ASSIGNED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.ASSIGNED],
+      },
+      {
+        id: WaMessageAssignStatus.UNASSIGNED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNASSIGNED],
+      },
+    ];
+  } else if (tab === "closed") {
+    statusData = [
+      {
+        id: WaMessageAssignStatus.CLOSED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.CLOSED],
+      },
+      {
+        id: WaMessageAssignStatus.RESOLVED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.RESOLVED],
+      },
+      {
+        id: WaMessageAssignStatus.UNRESOLVED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNRESOLVED],
+      },
+      {
+        id: WaMessageAssignStatus.SPAM,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.SPAM],
+      },
+    ];
+  } else {
+    // tab === "all"
+    statusData = [
+      {
+        id: WaMessageAssignStatus.ASSIGNED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.ASSIGNED],
+      },
+      {
+        id: WaMessageAssignStatus.UNASSIGNED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNASSIGNED],
+      },
+      {
+        id: WaMessageAssignStatus.CLOSED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.CLOSED],
+      },
+      {
+        id: WaMessageAssignStatus.RESOLVED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.RESOLVED],
+      },
+      {
+        id: WaMessageAssignStatus.UNRESOLVED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNRESOLVED],
+      },
+      {
+        id: WaMessageAssignStatus.SPAM,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.SPAM],
+      },
+    ];
   }
 
-  const statusData = Object.values(WaMessageAssignStatus)
-    .filter(
-      (status) =>
-        status !== WaMessageAssignStatus.NEW &&
-        (tab === "Addressed" ? WaMessageClosedStatus.includes(status) : true),
-    )
-    .map((status) => ({
-      id: status,
-      label: WaMessageAssignStatusTab[status],
-    }));
+  if (teamsLoading) {
+    return null;
+  }
 
-  if (isLoading || teamsLoading) {
-    return <Loader size={"xs"} />;
-  }
-  if (error) {
-    return (
-      <Text size="xs" c={"red"}>
-        {translations("Failed to fetch filter data")}
-      </Text>
-    );
-  }
   return (
     <div className="flex flex-col gap-4">
       {/* header */}
-      <div className="flex items-center justify-between bg-primary p-3 rounded-md">
+      <div className="flex items-center justify-between bg-primary p-3 rounded-md gap-10">
         <div className="flex items-center gap-3">
           <div className="bg-white/20 rounded-full p-2 flex items-center justify-center">
             <Filter className="w-4 h-4 text-white" />
@@ -126,14 +122,14 @@ export default function WaInboxChatFilter() {
         <Button
           onClick={() => clearFilter()}
           variant="outline"
-          className="ml-auto !text-xs text-muted-foreground h-7 px-2 hover:text-blue-500 flex items-center gap-2"
+          className="ml-auto !text-[11px] text-muted-foreground h-6 px-2 hover:text-blue-500 flex items-center gap-1"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="w-3 h-3" />
           <span>{translations("Reset")}</span>
         </Button>
       </div>
       <div className="flex flex-col gap-3">
-        {/* Account */}
+        {/* Channel / Phone */}
         <div>
           <label
             htmlFor="accountselector"
@@ -145,7 +141,6 @@ export default function WaInboxChatFilter() {
           <div className="mt-2">
             <AccountSelector
               onChange={(phone) => {
-                // updatePhoneId(phoneId);
                 setFilter({
                   ...filter,
                   phone,
@@ -162,80 +157,8 @@ export default function WaInboxChatFilter() {
           </div>
         </div>
 
-        {/* Tags, Groups, Campaigns */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-            <div className="leading-tight">{translations("Tags/ Groups/ Campaigns")}</div>
-          </label>
-
-          <div className="mt-2">
-            <ContainedMultiSelect
-              variant="filled"
-              maw={250}
-              // TODO reimplement strict filter
-
-              // label={
-              //   <Switch
-              //     w={"100%"}
-              //     size="xs"
-              //     label={`${props?.filter?.strictFilter ? "Disable" : "Enable"} Strict filter`}
-              //     checked={props.filter.strictFilter}
-              //     onChange={(e) =>
-              //       setFilters("strictFilter", e.currentTarget.checked)
-              //     }
-              //   />
-              // }
-              placeholder={translations("Tags/ Groups/ Campaigns")}
-              data={data}
-              value={allMultiSelectFilters?.map((val) => `${val.group}|-${val.value}`)}
-              onChange={(value) => {
-                multiSelectOnChange(
-                  filter,
-                  value.map((val) => {
-                    const grpname = val.split("|-")[0];
-                    const grpval = val.split("|-")[1];
-                    return {
-                      group: grpname,
-                      value: grpval,
-                    };
-                  }),
-                );
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-            <div className="leading-tight">{translations("Category")}</div>
-          </label>
-
-          <div className="mt-2">
-            <ContainedSelection
-              radius="md"
-              maw={250}
-              value={filter.category}
-              onChange={(value: any) =>
-                setFilter({
-                  ...filter,
-                  category: filter.category === value ? null : value,
-                })
-              }
-              placeholder={translations("Select category (type in to search)")}
-              data={[
-                { value: "conversation", label: "Conversations" },
-                { value: "campaign", label: "Campaigns" },
-                { value: "automation", label: "Automation" },
-              ]}
-              searchable
-              variant="filled"
-            />
-          </div>
-        </div>
-
-        {/* Status (only on All tab) */}
-        {(tab === "All" || tab === "Addressed") && (
+        {/* Status (on all/closed/open tabs) */}
+        {(tab === "all" || tab === "closed" || tab === "open") && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className="bg-gray-100 text-gray-700 p-2 rounded-md">
@@ -247,50 +170,56 @@ export default function WaInboxChatFilter() {
             </div>
 
             <div className="mt-1 space-y-2">
-              {statusData.map((status) => (
-                <div key={status.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={status.id}
-                    checked={filter.status?.includes(status.id)}
-                    onCheckedChange={(checked) => {
-                      const newFilter = {
-                        ...filter,
-                        status: checked
+              {statusData.map((status) => {
+                const isChecked = filter.status?.includes(status.id);
+
+                return (
+                  <div key={status.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={status.id}
+                      checked={isChecked}
+                      onCheckedChange={(checked) => {
+                        const newStatusList = checked
                           ? Array.from(new Set([...(filter.status || []), status.id]))
-                          : filter.status?.filter((s) => s !== status.id),
-                      };
-                      setFilter({
-                        ...newFilter,
-                      });
-                      const index = previousFilterForTab.findIndex((p) => p.tab === tab);
+                          : filter.status?.filter((s) => s !== status.id) || [];
 
-                      let updated;
+                        const newFilter = {
+                          ...filter,
+                          status: newStatusList,
+                        };
+                        setFilter({
+                          ...newFilter,
+                        });
+                        const index = previousFilterForTab.findIndex((p) => p.tab === tab);
 
-                      if (index !== -1) {
-                        updated = previousFilterForTab.map((p, i) =>
-                          i === index ? { ...p, filter: newFilter } : p,
-                        );
-                      } else {
-                        updated = [...previousFilterForTab, { tab, filter: newFilter }];
-                      }
+                        let updated;
 
-                      setPreviousFilterForTab(updated);
-                    }}
-                  />
-                  <label
-                    htmlFor={status.id}
-                    className="text-xs font-light text-muted-foreground cursor-pointer select-none"
-                  >
-                    {status.label}
-                  </label>
-                </div>
-              ))}
+                        if (index !== -1) {
+                          updated = previousFilterForTab.map((p, i) =>
+                            i === index ? { ...p, filter: newFilter } : p,
+                          );
+                        } else {
+                          updated = [...previousFilterForTab, { tab, filter: newFilter }];
+                        }
+
+                        setPreviousFilterForTab(updated);
+                      }}
+                    />
+                    <label
+                      htmlFor={status.id}
+                      className="text-xs font-light text-muted-foreground cursor-pointer select-none"
+                    >
+                      {status.label}
+                    </label>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Assigned / mine */}
-        {["Assigned", "mine"].includes(tab) && (
+        {/* Assigned Teams (open tab only) */}
+        {tab === "open" && (
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <div className="leading-tight">{translations("Assigned Teams")}</div>
@@ -334,9 +263,6 @@ const intialValues: ChatFilter = {
   messageType: "usermessages",
   strictFilter: false,
   searchTerm: "",
-  contactGroups: [],
-  campaigns: [],
-  tags: [],
   waMessageAssignStatus: null,
   blockedUsers: false,
   status: [],
@@ -345,7 +271,6 @@ const intialValues: ChatFilter = {
   labels: [],
   lifecycle: "",
   sortBy: "newest",
-  category: null,
   assignedUserIds: [],
 };
 export const useChatFilterStore = create<ChatFilterStore>()(

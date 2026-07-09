@@ -6,6 +6,7 @@ import {
   IconFile,
   IconGitMerge,
   IconImageInPicture,
+  IconComponents,
   IconInputSpark,
   IconLayout,
   IconMapPin,
@@ -20,9 +21,11 @@ import {
 import type React from "react";
 import { useCallback } from "react";
 
-import { Card } from "@/components/ui/card.tsx";
 import type { AutomationPlatform } from "@/types/platform.ts";
 import { isComponentSupportedOnPlatform } from "@/types/platform.ts";
+
+import { FlowPanel } from "./flow-panel.tsx";
+import { getNodeVisual } from "./nodes/node-config.tsx";
 
 // Component categories and items
 const categories = [
@@ -123,15 +126,13 @@ const categories = [
   },
 ];
 
-export default function ComponentSidebar({ platform }: { platform: string }) {
+export default function ComponentSidebar({ platform }: Readonly<{ platform: string }>) {
   const selectedPlatform = platform as AutomationPlatform;
 
-  // Debug log to verify platform
-  console.log("[ComponentSidebar] Received platform:", platform, "Parsed as:", selectedPlatform);
-
-  // Function to get default node data based on node type
-  const getDefaultNodeData = useCallback((nodeId: string, label: string) => {
-    const baseData = { label, type: nodeId };
+  // Function to get default node data based on node type. The visible label is
+  // filled in on drop from the shared node-config, so nodes get friendly names.
+  const getDefaultNodeData = useCallback((nodeId: string) => {
+    const baseData = { type: nodeId };
 
     switch (nodeId) {
       case "instagramGenericTemplateNode":
@@ -182,56 +183,52 @@ export default function ComponentSidebar({ platform }: { platform: string }) {
 
   // Filter categories based on selected platform
   const getFilteredCategories = () => {
-    const filtered = categories
+    return categories
       .map((category) => ({
         ...category,
-        items: category.items.filter((item) => {
-          const isSupported = isComponentSupportedOnPlatform(item.id, selectedPlatform);
-          console.log(`[Filter] ${item.id} on ${selectedPlatform}:`, isSupported);
-          return isSupported;
-        }),
+        items: category.items.filter((item) =>
+          isComponentSupportedOnPlatform(item.id, selectedPlatform),
+        ),
       }))
       .filter((category) => category.items.length > 0);
-
-    console.log(
-      "[ComponentSidebar] Filtered categories:",
-      filtered.length,
-      "Total items:",
-      filtered.reduce((sum, cat) => sum + cat.items.length, 0),
-    );
-    return filtered;
   };
 
   const filteredCategories = getFilteredCategories();
 
   return (
-    <Card className="w-62.5 overflow-y-auto p-4">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Components</h2>
-        <p className="text-sm text-muted-foreground">Drag components to the canvas</p>
-      </div>
-
-      {filteredCategories.map((category) => (
-        <div key={category.name} className="mb-6">
-          <h3 className="mb-2 text-sm font-medium text-muted-foreground">{category.name}</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {category.items.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-col items-center gap-1 rounded-md border bg-background p-3 cursor-move hover:bg-accent hover:text-accent-foreground transition-colors"
-                role="none"
-                draggable
-                onDragStart={(event) =>
-                  onDragStart(event, item.id, getDefaultNodeData(item.id, item.label))
-                }
-              >
-                <div className="text-muted-foreground">{item.icon}</div>
-                <span className="text-xs text-center">{item.label}</span>
-              </div>
-            ))}
+    <FlowPanel side="right" title="Components" icon={<IconComponents size={18} />} collapsible>
+      <div className="flex flex-col gap-5">
+        {filteredCategories.map((category) => (
+          <div key={category.name} className="flex flex-col gap-1.5">
+            <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {category.name}
+            </h3>
+            {category.items.map((item) => {
+              const accent = getNodeVisual(item.id).color;
+              return (
+                <div
+                  key={item.id}
+                  className="group flex cursor-grab items-center gap-3 rounded-lg border border-transparent bg-background p-2.5 transition-colors hover:border-border hover:bg-accent active:cursor-grabbing"
+                  role="none"
+                  draggable
+                  onDragStart={(event) => onDragStart(event, item.id, getDefaultNodeData(item.id))}
+                >
+                  <span
+                    className="flex size-8 shrink-0 items-center justify-center rounded-md"
+                    style={{
+                      backgroundColor: `color-mix(in srgb, ${accent} 18%, transparent)`,
+                      color: accent,
+                    }}
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="text-sm font-medium">{item.label}</span>
+                </div>
+              );
+            })}
           </div>
-        </div>
-      ))}
-    </Card>
+        ))}
+      </div>
+    </FlowPanel>
   );
 }
