@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { WaMessageAssignStatus, ContactsWithLastMessage } from "../api/inbox/types";
+import { ContactsWithLastMessage } from "../api/inbox/types";
 import { deleteUploadedFiles } from "./fileUpload";
 
 type ChatState = {
@@ -30,7 +30,7 @@ export const useChatAssignStatusStore = create<ChatState>((set: any) => ({
 }));
 
 export const useSelectedTabStore = create<SelectedTabState>((set: any) => ({
-  selectedTab: "New",
+  selectedTab: "Open",
   setSelectedTab: (tab: string) => set({ selectedTab: tab }),
 }));
 
@@ -64,9 +64,6 @@ export type ChatFilter = {
   lifecycle?: string;
   assignedUserIds: string[];
 };
-interface Props {
-  setFilterCount: (value: number) => void;
-}
 
 type ChatFilterStore = {
   filter: ChatFilter;
@@ -76,23 +73,8 @@ type ChatFilterStore = {
     tab: string;
     filter: ChatFilter;
   }[];
-  setPreviousFilterForTab: (value:any) => void;
+  setPreviousFilterForTab: (value: any) => void;
 };
-
-// export const useChatFilterStore = create<ChatFilterStore>((set) => ({
-//   filter: {
-//     messageType: "usermessages",
-//     strictFilter: false,
-//     searchTerm: "",
-//     contactGroups: [],
-//     campaigns: [],
-//     tags: [],
-//     waMessageAssignStatus: "New",
-//     blockedUsers: false,
-//     newStatuses: [],
-//   },
-//   setFilter: (value) => set({ filter: value }),
-// }));
 
 const intialValues: ChatFilter = {
   messageType: "usermessages",
@@ -103,9 +85,7 @@ const intialValues: ChatFilter = {
   tags: [],
   waMessageAssignStatus: null,
   blockedUsers: false,
-  status: Object.values(WaMessageAssignStatus).filter(
-    (st) => st !== WaMessageAssignStatus.NEW,
-  ),
+  status: [],
   assignedTeams: [],
   phone: "all",
   labels: [],
@@ -353,10 +333,10 @@ type WaMedia = {
 interface MediaStore {
   media: WaMedia[];
   addMedia: (value: WaMedia) => void;
-  removeMedia: (key) => void;
+  removeMedia: (key: string) => void;
   resetMedia: () => void;
-  selectedMedia: WaMedia;
-  setSelectedMedia: (value) => void;
+  selectedMedia: WaMedia | null;
+  setSelectedMedia: (value: WaMedia | null) => void;
 }
 
 export const useMediaStore = create<MediaStore>((set) => ({

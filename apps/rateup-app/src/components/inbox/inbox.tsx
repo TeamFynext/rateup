@@ -19,13 +19,15 @@ type InboxProps = {
   messageType: string;
   searchTerm?: string;
   waMessageAssignStatus?: string | null;
+  statusOverride?: string[];
 };
 
 export default function Inbox({
   messageType,
   searchTerm,
   waMessageAssignStatus,
-}: InboxProps) {
+  statusOverride,
+}: Readonly<InboxProps>) {
   const filter = useChatFilterStore((state) => state.filter);
   const setSelectedContact = useSelectedContactStore((state) => state.setSelectedContact);
   const router = useRouter();
@@ -39,6 +41,7 @@ export default function Inbox({
     messageType,
     searchTerm,
     waMessageAssignStatus,
+    status: statusOverride !== undefined ? statusOverride : filter.status,
   };
   const { wsData } = useWsData();
 

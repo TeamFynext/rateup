@@ -6,22 +6,20 @@ import {
   KeyboardAvoidingView,
   useColorScheme,
   Pressable,
-  ScrollView,
 } from "react-native";
 import {
-  UserCheck,
   Sparkles,
-  User,
   CircleCheckBig,
   InboxIcon,
 } from "lucide-react-native";
 import { useContactCounts } from "@/api/inbox/contacts/contacts.query";
 import InboxButtons from "@/components/inbox/InboxButtons";
-import { useChatFilterStore } from "@/utils/store";
+import { useChatFilterStore, useSelectedTabStore } from "@/utils/store";
 import Inbox from "@/components/inbox/inbox";
 import SearchBar from "@/components/inbox/inboxSearchBar";
 import RefreshButton from "@/components/inbox/RefreshButton";
 import { Colors } from "@/constants/colors";
+import { useAuth } from "@/context/AuthContext";
 
 type IconType = React.ComponentType<any>;
 
@@ -30,12 +28,12 @@ function TabIcon({
   focused,
   count,
   label,
-}: {
+}: Readonly<{
   Icon: IconType;
   focused: boolean;
   count?: number;
   label: string;
-}) {
+}>) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -66,12 +64,14 @@ function TabIcon({
         backgroundColor,
         borderRadius: 999,
         paddingVertical: 6,
-        paddingHorizontal: 14,
+        paddingHorizontal: 10,
         flexDirection: "row",
         alignItems: "center",
-        gap: 6,
+        justifyContent: "center",
+        gap: 4,
         borderWidth,
         borderColor,
+        alignSelf: "stretch",
       }}
     >
       <Icon color={textColor} size={15} />
@@ -119,43 +119,31 @@ function TabIcon({
 
 export default function InboxLayout() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<
-    "New" | "Assigned" | "Mine" | "Closed" | "All"
-  >("New");
+  const { selectedTab, setSelectedTab } = useSelectedTabStore();
+  const activeTab = selectedTab as "Open" | "Closed" | "All";
+  const setActiveTab = (tab: "Open" | "Closed" | "All") => setSelectedTab(tab);
+
+  const { userId } = useAuth();
+  const setFilter = useChatFilterStore((state) => state.setFilter);
+  const filterFromStore = useChatFilterStore((state) => state.filter);
+  const isMine = !!(userId && filterFromStore.assignedUserIds && filterFromStore.assignedUserIds.includes(userId));
 
   const renderInboxContent = () => {
     switch (activeTab) {
-      case "New":
+      case "Open":
         return (
           <Inbox
             messageType="usermessages"
-            waMessageAssignStatus="UnAssigned"
+            waMessageAssignStatus={undefined}
             searchTerm={searchTerm}
-          />
-        );
-
-      case "Assigned":
-        return (
-          <Inbox
-            messageType="usermessages"
-            waMessageAssignStatus="Assigned"
-            searchTerm={searchTerm}
-          />
-        );
-
-      case "Mine":
-        return (
-          <Inbox
-            messageType="all"
-            waMessageAssignStatus="mine"
-            searchTerm={searchTerm}
+            statusOverride={filterFromStore.status && filterFromStore.status.length > 0 ? filterFromStore.status : ["ASSIGNED", "UNASSIGNED"]}
           />
         );
 
       case "Closed":
         return (
           <Inbox
-            messageType="usermessages"
+            messageType="all"
             waMessageAssignStatus="Addressed"
             searchTerm={searchTerm}
           />
@@ -164,7 +152,7 @@ export default function InboxLayout() {
       case "All":
         return (
           <Inbox
-            messageType="usermessages"
+            messageType="all"
             waMessageAssignStatus={null}
             searchTerm={searchTerm}
           />
@@ -187,11 +175,13 @@ export default function InboxLayout() {
     },
   } = useContactCounts();
 
-  const filterFromStore = useChatFilterStore((state) => state.filter);
   const activeFilterCount =
-    (filterFromStore.campaigns.length > 0 ? 1 : 0) +
-    (filterFromStore.contactGroups.length > 0 ? 1 : 0) +
-    (filterFromStore.tags.length > 0 ? 1 : 0);
+    ((filterFromStore.status && filterFromStore.status.length > 0) ? 1 : 0) +
+    ((filterFromStore.assignedTeams && filterFromStore.assignedTeams.length > 0) ? 1 : 0) +
+    ((filterFromStore.assignedUserIds && filterFromStore.assignedUserIds.length > 0) ? 1 : 0) +
+    ((filterFromStore.labels && filterFromStore.labels.length > 0) ? 1 : 0) +
+    (filterFromStore.lifecycle ? 1 : 0) +
+    ((filterFromStore.phone && filterFromStore.phone !== "all") ? 1 : 0);
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -260,43 +250,85 @@ export default function InboxLayout() {
             borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
           }}
         >
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 16,
+          <View
+            style={{
+              flexDirection: "row",
               alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 16,
               gap: 8,
             }}
           >
-            <Pressable onPress={() => setActiveTab("New")}>
+            <Pressable onPress={() => setActiveTab("Open")} style={{ flex: 1 }}>
               <TabIcon
                 Icon={Sparkles}
-                focused={activeTab === "New"}
-                label="New"
-                count={contactCounts.unassigned}
+                focused={activeTab === "Open"}
+                label="Open"
+                count={(contactCounts.unassigned || 0) + (contactCounts.assigned || 0)}
               />
             </Pressable>
 
-            <Pressable onPress={() => setActiveTab("Assigned")}>
-              <TabIcon
-                Icon={UserCheck}
-                focused={activeTab === "Assigned"}
-                label="Assigned"
-                count={contactCounts.assigned}
-              />
-            </Pressable>
+            {activeTab === "Open" && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  backgroundColor: isDark ? "#27272a" : "#f3f4f6",
+                  padding: 2,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: isDark ? "#3f3f46" : "#e5e7eb",
+                }}
+              >
+                <Pressable
+                  onPress={() => setFilter({ ...filterFromStore, assignedUserIds: [] })}
+                  style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 999,
+                    backgroundColor: !isMine ? (isDark ? "#3f3f46" : "#fff") : "transparent",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontFamily: "Nunito_700Bold",
+                      color: !isMine
+                        ? (isDark ? "#fff" : "#111827")
+                        : (isDark ? "#a1a1aa" : "#6b7280"),
+                    }}
+                  >
+                    Everyone
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    if (userId) {
+                      setFilter({ ...filterFromStore, assignedUserIds: [userId] });
+                    }
+                  }}
+                  style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 999,
+                    backgroundColor: isMine ? (isDark ? "#3f3f46" : "#fff") : "transparent",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontFamily: "Nunito_700Bold",
+                      color: isMine
+                        ? (isDark ? "#fff" : "#111827")
+                        : (isDark ? "#a1a1aa" : "#6b7280"),
+                    }}
+                  >
+                    Mine
+                  </Text>
+                </Pressable>
+              </View>
+            )}
 
-            <Pressable onPress={() => setActiveTab("Mine")}>
-              <TabIcon
-                Icon={User}
-                focused={activeTab === "Mine"}
-                label="Mine"
-                count={contactCounts.assignedToMe}
-              />
-            </Pressable>
-
-            <Pressable onPress={() => setActiveTab("Closed")}>
+            <Pressable onPress={() => setActiveTab("Closed")} style={{ flex: 1 }}>
               <TabIcon
                 Icon={CircleCheckBig}
                 focused={activeTab === "Closed"}
@@ -304,14 +336,14 @@ export default function InboxLayout() {
               />
             </Pressable>
 
-            <Pressable onPress={() => setActiveTab("All")}>
+            <Pressable onPress={() => setActiveTab("All")} style={{ flex: 1 }}>
               <TabIcon
                 Icon={InboxIcon}
                 focused={activeTab === "All"}
                 label="All"
               />
             </Pressable>
-          </ScrollView>
+          </View>
         </View>
 
         <View className="flex-1" style={{ backgroundColor: listBgColor }}>
