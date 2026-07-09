@@ -1,9 +1,11 @@
-import { Checkbox, Modal, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandMeta } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 
-import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Label } from "@/components/ui/label.tsx";
 import { MetaLoginAssets } from "@/types/enums.ts";
 
 import { MetaLoginButton } from "./meta-login-button.tsx";
@@ -94,41 +96,48 @@ export function ConnectMetaAccountButton() {
 
   return (
     <>
-      <RateupButtonBlue
-        title="Add Account"
-        onClick={open}
-        leftIcon={<IconBrandMeta />}
-        radius="sm"
-      />
-      <Modal opened={opened} onClose={close} centered>
-        <Stack>
-          <Checkbox.Group
-            defaultValue={[MetaLoginAssets.WHATSAPP]}
-            label="Select assets you want to connect"
-            withAsterisk
-            value={selectedAssets}
-            onChange={setSelectedAssets}
-            error={error}
-          >
-            <Stack mt="xs">
-              {assets.map((asset) => (
-                <Checkbox
-                  disabled={asset === MetaLoginAssets.WHATSAPP}
-                  value={asset}
-                  key={asset}
-                  label={asset}
-                  styles={{ label: { textTransform: "capitalize" } }}
-                />
-              ))}
-            </Stack>
-          </Checkbox.Group>
-          <MetaLoginButton
-            disabled={Boolean(error)}
-            configId={configId}
-            selectedAssets={selectedAssets}
-          />
-        </Stack>
-      </Modal>
+      <Button onClick={open}>
+        <IconBrandMeta />
+        Connect Meta Account
+      </Button>
+      <Dialog open={opened} onOpenChange={(next) => (next ? open() : close())}>
+        <DialogContent>
+          <DialogTitle>Connect Meta account</DialogTitle>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium">
+                Select assets you want to connect
+                <span className="text-destructive"> *</span>
+              </p>
+              <div className="mt-2 flex flex-col gap-2">
+                {assets.map((asset) => {
+                  const checked = selectedAssets.includes(asset);
+                  return (
+                    <Label key={asset} className="flex items-center gap-2 font-normal capitalize">
+                      <Checkbox
+                        disabled={asset === MetaLoginAssets.WHATSAPP}
+                        checked={checked}
+                        onCheckedChange={(next) =>
+                          setSelectedAssets((prev) =>
+                            next ? [...prev, asset] : prev.filter((a) => a !== asset),
+                          )
+                        }
+                      />
+                      {asset}
+                    </Label>
+                  );
+                })}
+              </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+            </div>
+            <MetaLoginButton
+              disabled={Boolean(error)}
+              configId={configId}
+              selectedAssets={selectedAssets}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

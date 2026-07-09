@@ -1,4 +1,4 @@
-import { useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   IconBrandInstagram,
   IconBrandWhatsapp,
@@ -12,8 +12,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Controller, useForm, type Resolver } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import z from "zod";
 
 import {
   useCreateWaAutomatedReplyMutation,
@@ -280,7 +282,17 @@ function ConfirmDiscardDialog({ open, onConfirm, onCancel }: Readonly<ConfirmDis
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-function getInitialValues(initialValues?: WaAutomatedReply, forcedPlatform?: AutomationPlatform) {
+type AutomatedReplyFormValues = {
+  name: string;
+  platform: AutomationPlatform | string;
+  matchData: WaAutomatedReply["matchData"];
+  whatsappSettingsPhoneId: string | null;
+} & Record<string, any>;
+
+function getInitialValues(
+  initialValues?: WaAutomatedReply,
+  forcedPlatform?: AutomationPlatform,
+): AutomatedReplyFormValues {
   if (initialValues) {
     return {
       ...initialValues,
@@ -330,23 +342,17 @@ export function AutomatedReplyForm({
   const navigate = useNavigate();
 
   // FIX: Added validation rules
-  const rootForm = useForm({
-    initialValues: getInitialValues(initialValues, platform),
-    validate: {
-      name: (value) => {
-        const trimmedValue = value?.trim();
+  const formSchema = z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, t("Chatbot name is required"))
+      .min(3, t("Name must be at least 3 characters")),
+  });
 
-        if (!trimmedValue) {
-          return t("Chatbot name is required");
-        }
-
-        if (trimmedValue.length < 3) {
-          return t("Name must be at least 3 characters");
-        }
-
-        return null;
-      },
-    },
+  const rootForm = useForm<AutomatedReplyFormValues>({
+    resolver: zodResolver(formSchema) as unknown as Resolver<AutomatedReplyFormValues>,
+    defaultValues: getInitialValues(initialValues, platform),
   });
 
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
@@ -355,12 +361,12 @@ export function AutomatedReplyForm({
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
-    rootForm.setInitialValues(getInitialValues(initialValues, platform));
+    rootForm.reset(getInitialValues(initialValues, platform));
   }, [initialValues, platform]);
 
   useEffect(() => {
     if (!platform) return;
-    rootForm.setFieldValue("platform", platform);
+    rootForm.setValue("platform", platform);
   }, [platform]);
 
   const qc = useQueryClient();
@@ -372,8 +378,9 @@ export function AutomatedReplyForm({
   const createInstagramMutation = useCreateInstagramAutomationMutation();
   const updateInstagramMutation = useUpdateInstagramAutomationMutation();
 
-  const isInstagram = rootForm.values.platform === AutomationPlatform.INSTAGRAM;
-  const isDirty = rootForm.isDirty();
+  const platformValue = rootForm.watch("platform");
+  const isInstagram = platformValue === AutomationPlatform.INSTAGRAM;
+  const isDirty = rootForm.formState.isDirty;
 
   // FIX: Guard cancel with confirmation if form has unsaved changes
   function handleCancelClick() {
@@ -392,7 +399,7 @@ export function AutomatedReplyForm({
   }
 
   function handleSubmitClick() {
-    const data = rootForm.values;
+    const data = rootForm.getValues();
 
     if (editMode) {
       if (isInstagram) {
@@ -455,13 +462,12 @@ export function AutomatedReplyForm({
   }
 
   function handleTemplateSelect(template: (typeof DEMO_TEMPLATES)[0]) {
-    rootForm.setValues({
+    rootForm.reset({
       name: template.name,
       platform: platform ?? template.platform,
       matchData: template.matchData,
       whatsappSettingsPhoneId: null,
     });
-    rootForm.resetDirty();
     toast.success(t("Template {templateName} applied!", { templateName: template.name }));
   }
 
@@ -470,9 +476,6 @@ export function AutomatedReplyForm({
     updateMutation.isPending ||
     createInstagramMutation.isPending ||
     updateInstagramMutation.isPending;
-
-  const nameErrorMessage =
-    typeof rootForm.errors.name === "string" ? rootForm.errors.name : undefined;
 
   let submitLabel = t("Create Chatbot");
   if (isSaving) {
@@ -494,7 +497,7 @@ export function AutomatedReplyForm({
         onConfirm={handleConfirmDiscard}
         onCancel={() => setConfirmDiscardOpen(false)}
       />
-      <form onSubmit={rootForm.onSubmit(handleSubmitClick)} className="space-y-6" noValidate>
+      <form onSubmit={rootForm.handleSubmit(handleSubmitClick)} className="space-y-6" noValidate>
         <Card className="m-1">
           {/* FIX: Template button moved into CardHeader as a secondary action */}
           <CardHeader className="flex flex-row items-start justify-between gap-4">
@@ -519,23 +522,29 @@ export function AutomatedReplyForm({
 
           <CardContent className="space-y-5">
             <FieldGroup>
-              <Field data-invalid={!!rootForm.errors.name}>
-                <FieldLabel htmlFor="chatbot-name">
-                  {t("Chatbot Name")} <span aria-hidden="true">*</span>
-                </FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="chatbot-name"
-                    placeholder={t("e.g. Welcome Bot, Support Bot...")}
-                    aria-invalid={!!rootForm.errors.name}
-                    {...rootForm.getInputProps("name")}
-                  />
-                  <FieldDescription>{t("Give this bot a clear internal name.")}</FieldDescription>
-                  <FieldError
-                    errors={nameErrorMessage ? [{ message: nameErrorMessage }] : undefined}
-                  />
-                </FieldContent>
-              </Field>
+              <Controller
+                name="name"
+                control={rootForm.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="chatbot-name">
+                      {t("Chatbot Name")} <span aria-hidden="true">*</span>
+                    </FieldLabel>
+                    <FieldContent>
+                      <Input
+                        {...field}
+                        id="chatbot-name"
+                        placeholder={t("e.g. Welcome Bot, Support Bot...")}
+                        aria-invalid={fieldState.invalid}
+                      />
+                      <FieldDescription>
+                        {t("Give this bot a clear internal name.")}
+                      </FieldDescription>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </FieldContent>
+                  </Field>
+                )}
+              />
 
               {/* FIX: Shortened label with tooltip for explanation */}
               {!isInstagram && (
@@ -559,9 +568,16 @@ export function AutomatedReplyForm({
                     <span className="text-xs text-muted-foreground">({t("Optional")})</span>
                   </FieldLabel>
                   <FieldContent>
-                    <AccountSelector
-                      optional={true}
-                      {...rootForm.getInputProps("whatsappSettingsPhoneId")}
+                    <Controller
+                      name="whatsappSettingsPhoneId"
+                      control={rootForm.control}
+                      render={({ field }) => (
+                        <AccountSelector
+                          optional={true}
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
                     <FieldDescription>
                       {t(

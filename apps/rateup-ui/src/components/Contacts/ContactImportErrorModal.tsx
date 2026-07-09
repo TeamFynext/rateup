@@ -1,9 +1,10 @@
-import { ScrollAreaAutosize, Table } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import FormModalLayout from "../Modal/FormModalLayout.tsx";
+import { ScrollArea } from "../ui/scroll-area.tsx";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table.tsx";
 
 const ContactImportErrorModal = ({ isError = false, body }) => {
   const responseError = body?.error ?? "";
@@ -23,10 +24,10 @@ const ContactImportErrorModal = ({ isError = false, body }) => {
   if (!opened) return null;
 
   const rows = failedRows.map((element, index) => (
-    <Table.Tr key={`${element?.name}-${element?.phone}-${index}`}>
-      <Table.Td>{element?.name}</Table.Td>
-      <Table.Td>{element?.phone}</Table.Td>
-    </Table.Tr>
+    <TableRow key={`${element?.name}-${element?.phone}-${index}`}>
+      <TableCell>{element?.name}</TableCell>
+      <TableCell>{element?.phone}</TableCell>
+    </TableRow>
   ));
 
   return (
@@ -38,17 +39,17 @@ const ContactImportErrorModal = ({ isError = false, body }) => {
       size={"xl"}
     >
       {responseError === "VALIDATION_ERR" && (
-        <ScrollAreaAutosize mah={500}>
-          <Table stickyHeader>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>{translations("Name")}</Table.Th>
-                <Table.Th>{translations("Phone")}</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>{rows}</Table.Tbody>
+        <ScrollArea className="max-h-125">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{translations("Name")}</TableHead>
+                <TableHead>{translations("Phone")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>{rows}</TableBody>
           </Table>
-        </ScrollAreaAutosize>
+        </ScrollArea>
       )}
     </FormModalLayout>
   );

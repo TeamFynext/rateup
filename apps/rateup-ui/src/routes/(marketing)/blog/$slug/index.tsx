@@ -1,8 +1,9 @@
-import { Avatar, Image } from "@mantine/core";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { Image } from "@unpic/react";
 
 import Layout from "@/components/blog/Layout.tsx";
 import SharePopover from "@/components/blog/ShareBlog.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { getMarkdownContent } from "@/lib/content.ts";
 import { getSinglePost } from "@/lib/posts.ts";
 import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
@@ -84,6 +85,17 @@ export const Route = createFileRoute("/(marketing)/blog/$slug/")({
   },
 });
 
+function getInitials(name?: string) {
+  if (!name) return "";
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 // For rendering post content
 function PostContent({ html }: Readonly<{ html: string }>) {
   return (
@@ -103,6 +115,7 @@ function Page() {
         {post.feature_image && (
           <div className="relative h-64 w-full bg-slate-900 sm:h-96 lg:h-[500px]">
             <Image
+              layout="fullWidth"
               src={post.feature_image}
               alt={post.feature_image_alt || post.title}
               className="h-full w-full object-cover opacity-80"
@@ -133,13 +146,13 @@ function Page() {
               {post.title}
             </h1>
             <div className="mt-6 flex items-center">
-              <Avatar
-                src={post.primary_author?.profile_image}
-                name={post.primary_author?.name}
-                color="initials"
-                size="md"
-                className="mr-4"
-              />
+              <Avatar size="lg" className="mr-4">
+                <AvatarImage
+                  src={post.primary_author?.profile_image}
+                  alt={post.primary_author?.name}
+                />
+                <AvatarFallback>{getInitials(post.primary_author?.name)}</AvatarFallback>
+              </Avatar>
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <Link to={`/blog/author/${post.primary_author?.slug}`}>
@@ -196,13 +209,13 @@ function Page() {
             {/* Author bio */}
             <div className="mt-12 rounded-xl bg-slate-50 p-6">
               <div className="flex flex-col items-center sm:flex-row">
-                <Avatar
-                  src={post.primary_author?.profile_image}
-                  name={post.primary_author?.name}
-                  color="initials"
-                  size="xl"
-                  className="mb-4 h-20 w-20 rounded-full sm:mb-0 sm:mr-6"
-                />
+                <Avatar size="lg" className="mb-4 size-20 rounded-full sm:mb-0 sm:mr-6">
+                  <AvatarImage
+                    src={post.primary_author?.profile_image}
+                    alt={post.primary_author?.name}
+                  />
+                  <AvatarFallback>{getInitials(post.primary_author?.name)}</AvatarFallback>
+                </Avatar>
                 <div>
                   <h3 className="mb-2 text-lg font-semibold text-slate-900">
                     About {post.primary_author?.name}

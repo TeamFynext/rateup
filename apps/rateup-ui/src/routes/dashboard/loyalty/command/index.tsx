@@ -1,10 +1,9 @@
-import { Stack } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import LoyaltySettings from "@/components/LoyaltyComponents/LoyaltySettings.tsx";
 import RegisterPageShare from "@/components/LoyaltyComponents/RegisterPageShare.tsx";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { Card, CardContent } from "@/components/ui/card";
 import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/command/")({
@@ -24,12 +23,14 @@ function Index() {
         </div>
         <InfoButton docUrl={`${docsPath}/loyality/commands`} />
       </div>
-      <Stack gap={"md"} m={"xs"}>
-        <PaperLayout>
-          <RegisterPageShare />
-        </PaperLayout>
+      <div className="m-2 flex flex-col gap-4">
+        <Card>
+          <CardContent>
+            <RegisterPageShare />
+          </CardContent>
+        </Card>
         <LoyaltySettings />
-      </Stack>
+      </div>
     </div>
   );
 }

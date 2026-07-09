@@ -1,4 +1,3 @@
-import { BackgroundImage, Flex, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import { CreditsCard } from "@/components/Card/CreditsCard.tsx";
@@ -55,27 +54,24 @@ export default function TemplateCard({ survey }) {
     : titleText;
 
   return (
-    <Flex align={"center"} h={200} w={300} style={{ backgroundColor }}>
+    <div className="flex h-50 w-75 items-center" style={{ backgroundColor }}>
       <CreditsCard
         enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
         url={backgroundImageSrc}
       >
-        <BackgroundImage
+        <div
           className={classes.parentContainer}
-          style={{ height: "100%", width: "100%", objectFit: "contain" }}
-          src={backgroundImageSrc}
+          style={{
+            height: "100%",
+            width: "100%",
+            backgroundImage: backgroundImageSrc ? `url(${backgroundImageSrc})` : undefined,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
         >
-          <Flex
-            justify={"center"}
-            align={"center"}
-            h={"100%"}
-            direction={"column"}
-            pos={"relative"}
-          >
-            <Stack
-              mt="lg"
-              w={"80%"}
-              ta={"center"}
+          <div className="relative flex h-full flex-col items-center justify-center">
+            <div
+              className="mt-6 flex w-4/5 flex-col gap-4 text-center"
               style={{
                 fontFamily: "inherit",
                 fontSize: "20px",
@@ -83,11 +79,11 @@ export default function TemplateCard({ survey }) {
                 maxWidth: "200px",
               }}
             >
-              <Text truncate dangerouslySetInnerHTML={{ __html: newTitle }} />
-            </Stack>
-          </Flex>
-        </BackgroundImage>
+              <span className="block truncate" dangerouslySetInnerHTML={{ __html: newTitle }} />
+            </div>
+          </div>
+        </div>
       </CreditsCard>
-    </Flex>
+    </div>
   );
 }

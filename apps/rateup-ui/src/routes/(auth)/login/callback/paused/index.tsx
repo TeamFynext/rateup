@@ -1,10 +1,9 @@
-import { Anchor, Center, Image, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconLogout } from "@tabler/icons-react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 
-import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/(auth)/login/callback/paused/")({
   component: PausedPage,
@@ -17,32 +16,30 @@ function PausedPage() {
   const isMobile = useMediaQuery("(max-width: 480px)");
 
   return (
-    <Center h={"100vh"}>
-      <PaperLayout w={"fit-content"} p={"xl"}>
-        <Stack align="center">
-          <Image
+    <div className="flex h-screen items-center justify-center">
+      <Card className="p-8 w-fit">
+        <div className="flex flex-col items-center gap-4">
+          <img
             src={`${import.meta.env.VITE_FRONTEND_URL}/images/bw-logo.png`}
             alt="Logo"
-            w={isMobile ? 70 : 80}
-            h={isMobile ? 70 : 80}
-            fit={"contain"}
+            className="object-contain"
+            style={{ width: isMobile ? 70 : 80, height: isMobile ? 70 : 80 }}
           />
-          <Text size="xl" fw={600} c={"dimmed"}>
-            Your account is Paused !
-          </Text>
+          <p className="text-xl font-semibold text-muted-foreground">Your account is Paused !</p>
           {getPausedText(pausedby)}
-          <RateupButtonBlue
-            leftIcon={<IconLogout />}
-            title="logout"
+          <Button
             onClick={() =>
               navigate({
                 to: "/logout",
               })
             }
-          />
-        </Stack>
-      </PaperLayout>
-    </Center>
+          >
+            <IconLogout />
+            Logout
+          </Button>
+        </div>
+      </Card>
+    </div>
   );
 }
 
@@ -50,16 +47,18 @@ function getPausedText(pausedby) {
   switch (pausedby) {
     case "org":
       return (
-        <Stack align="center">
-          <Text c={"dimmed"}>Kindly contact your organization Super Admin for details.</Text>
-        </Stack>
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-muted-foreground">
+            Kindly contact your organization Super Admin for details.
+          </p>
+        </div>
       );
     case "rateup":
       return (
-        <Stack align="center">
-          <Text c={"dimmed"}>Kindly contact Rateup Support for details.</Text>
-          <Anchor>Mail: hello@rateup.app</Anchor>
-        </Stack>
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-muted-foreground">Kindly contact Rateup Support for details.</p>
+          <a className="text-primary underline-offset-4 hover:underline">Mail: hello@rateup.app</a>
+        </div>
       );
   }
 }

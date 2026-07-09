@@ -1,4 +1,3 @@
-import { Skeleton } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2 } from "lucide-react";
@@ -24,6 +23,7 @@ import {
 } from "@/components/ui/card.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 export const Route = createFileRoute("/dashboard/whatsapp/conversational-components/")({
   component: ConversationalComponents,
@@ -146,8 +146,8 @@ function DisplayConversationalSettings({
   if (isPending) {
     return (
       <div className="space-y-4">
-        <Skeleton height={200} />
-        <Skeleton height={200} />
+        <Skeleton className="h-50 w-full" />
+        <Skeleton className="h-50 w-full" />
       </div>
     );
   }

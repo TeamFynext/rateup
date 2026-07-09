@@ -45,6 +45,14 @@ export function useNotTeamMembers(teamId: string) {
   });
 }
 
+interface CreateTeamValues {
+  name: string;
+  code: string;
+  color: string;
+  features: string[];
+  whatsappAccessToken?: string;
+}
+
 export function useCreateTeamMutation(
   setIsCreateTeamDialogOpen: (arg: boolean) => void,
   createTeamForm: any,
@@ -52,7 +60,7 @@ export function useCreateTeamMutation(
 ) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (values) => handleCreateTeam(values),
+    mutationFn: (values: CreateTeamValues) => handleCreateTeam(values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
       toast.success("Team created successfully.", {
@@ -122,7 +130,7 @@ export function useDeleteTeamMutation() {
   });
 }
 
-async function handleCreateTeam(values) {
+async function handleCreateTeam(values: CreateTeamValues) {
   const { orgId } = await getOrgIdRole();
   const { userId } = await getUserID();
   const data = {

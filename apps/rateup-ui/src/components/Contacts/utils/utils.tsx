@@ -1,4 +1,3 @@
-import { Box, Select } from "@mantine/core";
 import { IconBrandInstagram } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -20,6 +19,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import { getInitials } from "@/components/ui/utils.ts";
 
 const selectCheckBox: ColumnDef<any>[] = [
@@ -164,13 +170,13 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
       cell: (info) => {
         const labels = info.row.original.ContactLabelMap?.map((label) => label?.label?.name) || [];
         return labels.length > 0 ? (
-          <Box style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+          <div className="flex flex-wrap gap-1">
             {labels.map((label, index) => (
               <Badge key={index} variant="secondary" color="blue">
                 {label}
               </Badge>
             ))}
-          </Box>
+          </div>
         ) : (
           "-"
         );
@@ -228,12 +234,26 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
         ),
       meta: {
         filterComponent: (setFilterValue) => {
+          const consentItems = [
+            { value: "true", label: "true" },
+            { value: "false", label: "false" },
+          ];
           return (
             <Select
-              data={["true", "false"]}
-              placeholder="Select"
-              onChange={(e) => setFilterValue(e === null ? null : e === "true")}
-            />
+              items={consentItems}
+              onValueChange={(e) => setFilterValue(e === null ? null : e === "true")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {consentItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           );
         },
         title: "Consent",

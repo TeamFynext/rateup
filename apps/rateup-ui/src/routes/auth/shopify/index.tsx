@@ -1,5 +1,3 @@
-import { Center, Stack, Text } from "@mantine/core";
-import { IconLoader } from "@tabler/icons-react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { Suspense, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,8 +6,7 @@ import Session from "supertokens-auth-react/recipe/session";
 import { useUpdateShopifySession } from "@/backend/appsIntegration/shopify/shopify.query";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-
-import style from "@/components/Graph/graph.module.css";
+import { Spinner } from "@/components/ui/spinner";
 
 export const Route = createFileRoute("/auth/shopify/")({
   component: Page,
@@ -76,13 +73,13 @@ function ShopifyAuthCallback({
   if (!shop) return null;
 
   return (
-    <Center h={"100vh"}>
+    <div className="flex h-screen items-center justify-center">
       {updateShopifySession.isPending && (
-        <Stack justify="center" align="center">
-          <IconLoader className={style.rotateInfinitely} display={"block"} />
-          <Text>{translations("Wait..Connecting Shopify with Rateup")}</Text>
-        </Stack>
+        <div className="flex flex-col items-center justify-center gap-4">
+          <Spinner className="size-8" />
+          <p>{translations("Wait..Connecting Shopify with Rateup")}</p>
+        </div>
       )}
-    </Center>
+    </div>
   );
 }
