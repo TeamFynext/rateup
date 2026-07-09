@@ -209,6 +209,7 @@ model Org {
   waMessageOrgTeamMaps     WaMessageOrgTeamMap[]
   Webhook                  Webhook?
   inboxAutomations         InboxAutomation[]
+  inboxStats               InboxStats?
 }
 
 model UsageStats {
@@ -2680,4 +2681,21 @@ model Referral {
   visit_count   Int      @default(0)
   signup_count  Int      @default(0)
   created_at    DateTime @default(now())
+}
+
+model InboxStats {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId     String   @unique @db.Uuid
+
+  unassignedCount Int @default(0)
+  assignedCount   Int @default(0)
+  closedCount     Int @default(0)
+  spamCount       Int @default(0)
+  resolvedCount   Int @default(0)
+  unresolvedCount Int @default(0)
+  blockedCount    Int @default(0)
+  totalCount      Int @default(0)
 }
