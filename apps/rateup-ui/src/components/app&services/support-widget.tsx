@@ -1,20 +1,22 @@
-import { schemaResolver, useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useClickOutside, useScrollIntoView } from "@mantine/hooks";
 import axios from "axios";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { ArrowRight, Home, MessageCircle, Minus, MoreHorizontal, Send, Smile } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { getBrowserId } from "@/lib/browserId.ts";
 
 import PhoneInputWithCountry from "../input/PhoneInputWithCountry.tsx";
 import { parseWhatsAppToReact } from "../RichTextEditor/waTextEditor.tsx";
-import { Label } from "../ui/label.tsx";
 
 interface SupportWidgetProps {
   whatsappNumber?: string;
@@ -88,14 +90,12 @@ export default function SupportWidget({
   const queryParams = orgId ? `?orgId=${orgId}` : "";
 
   const form = useForm<z.infer<typeof supportSchema>>({
-    initialValues: {
+    resolver: zodResolver(supportSchema),
+    defaultValues: {
       name: "",
       phone: "",
       email: "",
     },
-    validate: schemaResolver(supportSchema, {
-      sync: true,
-    }),
   });
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -173,11 +173,10 @@ export default function SupportWidget({
     scrollIntoView();
   }, [messages]);
 
-  const handleNext = async () => {
-    if (form.validate().hasErrors) return;
+  const handleNext = form.handleSubmit(async (formValues) => {
     const values = {
-      ...form.values,
-      phone: form.values.phone.replace("+", ""),
+      ...formValues,
+      phone: formValues.phone.replace("+", ""),
     };
 
     try {
@@ -195,7 +194,7 @@ export default function SupportWidget({
     } catch (error) {
       console.error(error);
     }
-  };
+  });
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent(`Hello! I need support.`);
@@ -294,71 +293,91 @@ export default function SupportWidget({
                     <p className="text-muted-foreground mb-4 text-sm">
                       Let us know how we can help you today.
                     </p>
-                    <form onSubmit={form.onSubmit(handleNext)} className="space-y-3">
-                      <div className="relative">
-                        <Label className="text-xs font-medium text-muted-foreground mb-1">
-                          Name <span className="text-orange-500">*</span>
-                        </Label>
-                        <div className="flex items-center bg-background rounded-lg shadow-sm border border-border px-2">
-                          <Smile className="h-4 w-4 text-muted-foreground mr-1" />
-                          <input
-                            {...form.getInputProps("name")}
-                            className="flex-1 bg-transparent h-8 text-sm px-1 outline-none border-none"
-                            placeholder="Your name"
-                          />
+                    <form onSubmit={handleNext}>
+                      <FieldGroup className="gap-3">
+                        <Controller
+                          name="name"
+                          control={form.control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel htmlFor={field.name}>
+                                Name <span className="text-orange-500">*</span>
+                              </FieldLabel>
+                              <InputGroup>
+                                <InputGroupAddon>
+                                  <Smile />
+                                </InputGroupAddon>
+                                <InputGroupInput
+                                  {...field}
+                                  id={field.name}
+                                  aria-invalid={fieldState.invalid}
+                                  placeholder="Your name"
+                                />
+                              </InputGroup>
+                              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                            </Field>
+                          )}
+                        />
+
+                        <Controller
+                          name="phone"
+                          control={form.control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel htmlFor="support-phone">
+                                Phone <span className="text-orange-500">*</span>
+                              </FieldLabel>
+                              <PhoneInputWithCountry
+                                id="support-phone"
+                                defaultCountry="IN"
+                                international
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                borderRadius={8}
+                                className="h-8 flex-1 rounded-lg border border-border bg-background px-1 text-sm shadow-sm"
+                                placeholder="Phone number"
+                              />
+                              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                            </Field>
+                          )}
+                        />
+
+                        <Controller
+                          name="email"
+                          control={form.control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel htmlFor={field.name}>
+                                Email <span className="text-orange-500">*</span>
+                              </FieldLabel>
+                              <InputGroup>
+                                <InputGroupAddon>
+                                  <MoreHorizontal />
+                                </InputGroupAddon>
+                                <InputGroupInput
+                                  {...field}
+                                  id={field.name}
+                                  type="email"
+                                  aria-invalid={fieldState.invalid}
+                                  placeholder="Email address"
+                                />
+                              </InputGroup>
+                              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                            </Field>
+                          )}
+                        />
+
+                        <div className="flex justify-end pt-2">
+                          <Button
+                            type="submit"
+                            className="h-8 min-w-[70px] rounded-full bg-blue-600 px-4 py-1 text-xs text-white shadow transition-transform duration-200 hover:scale-105 hover:bg-blue-700"
+                            size="sm"
+                          >
+                            Next <ArrowRight data-icon="inline-end" />
+                          </Button>
                         </div>
-                        {form.errors.name && (
-                          <div className="text-xs text-red-500 mt-1">{form.errors.name}</div>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <Label className="text-xs font-medium text-muted-foreground mb-1">
-                          Phone <span className="text-orange-500">*</span>
-                        </Label>
-                        <div className="flex items-center bg-background rounded-lg shadow-sm border border-border">
-                          <PhoneInputWithCountry
-                            defaultCountry="IN"
-                            international
-                            value={form.values.phone}
-                            onChange={(e) => form.setFieldValue("phone", e)}
-                            borderRadius={8}
-                            className="flex-1 border-0 bg-transparent focus:ring-0 focus:outline-none h-8 text-sm px-1"
-                            placeholder="Phone number"
-                            required
-                          />
-                        </div>
-                        {form.errors.phone && (
-                          <div className="text-xs text-red-500 mt-1">{form.errors.phone}</div>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <Label className="text-xs font-medium text-muted-foreground mb-1">
-                          Email <span className="text-orange-500">*</span>
-                        </Label>
-                        <div className="flex items-center bg-background rounded-lg shadow-sm border border-border px-2">
-                          <MoreHorizontal className="h-4 w-4 text-muted-foreground mr-1" />
-                          <input
-                            type="email"
-                            {...form.getInputProps("email")}
-                            className="flex-1 border-0 bg-transparent focus:ring-0 focus:outline-none h-8 text-sm px-1"
-                            placeholder="Email address"
-                            required
-                          />
-                        </div>
-                        {form.errors.email && (
-                          <div className="text-xs text-red-500 mt-1">{form.errors.email}</div>
-                        )}
-                      </div>
-                      <div className="flex justify-end pt-2">
-                        <Button
-                          type="submit"
-                          disabled={form.isDirty && Object.keys(form.errors).length > 0}
-                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-full shadow disabled:opacity-50 text-xs h-8 min-w-[70px] transition-transform duration-200 hover:scale-105"
-                          size="sm"
-                        >
-                          Next <ArrowRight className="h-3 w-3" />
-                        </Button>
-                      </div>
+                      </FieldGroup>
                     </form>
                   </div>
                 )}

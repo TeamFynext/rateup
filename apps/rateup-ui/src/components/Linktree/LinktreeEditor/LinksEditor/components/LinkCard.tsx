@@ -1,16 +1,16 @@
-import { Box, Button, Loader, Text, TextInput } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { IconGripVertical, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { useConfirm } from "@/context/confirm-provider";
 
 import { useLinktreeObj } from "../../LinktreeContext/LinktreeContext.tsx";
 
-import restOfModalStyles from "../../../LinktreeCard/LinktreeCard.module.css";
 import styles from "../LinksEditor.module.css";
-import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 function LinkCard({ linkObj, onDelete }) {
   const { id, linkDisplayName, linkUrl } = linkObj;
@@ -23,9 +23,10 @@ function LinkCard({ linkObj, onDelete }) {
   const [isLinkUrlBeingUpdated, setIsLinkUrlBeingUpdated] = useState(false);
 
   const [linkUrlInputState, setLinkUrlInputState] = useState(linkUrl);
-  const linkDisplayNameInputRef = useRef(null);
-  const linkUrlInputRef = useRef(null);
+  const linkDisplayNameInputRef = useRef<HTMLInputElement>(null);
+  const linkUrlInputRef = useRef<HTMLInputElement>(null);
 
+  const confirm = useConfirm();
   const { links } = useLinktreeObj();
   const params = useParams({
     strict: false,
@@ -89,48 +90,37 @@ function LinkCard({ linkObj, onDelete }) {
   }, [linkUrl, linkUrlInputState]);
 
   const handleDeleteClick = useCallback(async () => {
-    modals.openConfirmModal({
+    const ok = await confirm({
       title: "Delete Link?",
-      children: (
-        <Text className={restOfModalStyles["are-you-sure-text"]}>
-          Are you sure to delete this Link?
-        </Text>
-      ),
-      labels: { confirm: "Delete", cancel: "Cancel" },
-      className: restOfModalStyles["delete-confirmation-modal"],
-      centered: true,
-      classNames: {
-        header: modalStyles["modal-header"],
-        body: modalStyles["modal-body"],
-        content: modalStyles["modal-content"],
-      },
-      onConfirm: () => onDelete(linkObj.id),
+      description: "Are you sure to delete this Link?",
+      confirmText: "Delete",
+      cancelText: "Cancel",
     });
-  }, [onDelete, linkObj]);
+    if (!ok) return;
+    onDelete(linkObj.id);
+  }, [onDelete, linkObj, confirm]);
 
   return (
-    <Box className={styles["link-card"]}>
-      <Box className={styles["drag-handle-icon-and-link-info-container"]}>
-        <Box className={styles["drag-handle-div"]}>
+    <div className={styles["link-card"]}>
+      <div className={styles["drag-handle-icon-and-link-info-container"]}>
+        <div className={styles["drag-handle-div"]}>
           <IconGripVertical size={"1.25rem"} />
-        </Box>
-        <Box className={styles["title-and-url-container"]}>
+        </div>
+        <div className={styles["title-and-url-container"]}>
           {!isLinkDisplayNameBeingEdited ? (
             <Button
               className={styles["display-name-edit-btn"]}
-              rightSection={
-                isLinkDisplayNameBeingUpdated ? (
-                  <Loader size={"1rem"} />
-                ) : (
-                  <IconPencil size={"1rem"} />
-                )
-              }
               onClick={() => setIsLinkDisplayNameBeingEdited(true)}
             >
               {linkDisplayNameInputState}
+              {isLinkDisplayNameBeingUpdated ? (
+                <Spinner data-icon="inline-end" />
+              ) : (
+                <IconPencil data-icon="inline-end" />
+              )}
             </Button>
           ) : (
-            <TextInput
+            <Input
               className={`${styles["link-card-input"]} ${styles["display-name-input"]}`}
               value={linkDisplayNameInputState}
               onChange={(e) => setLinkDisplayNameInputState(e.target.value)}
@@ -147,15 +137,17 @@ function LinkCard({ linkObj, onDelete }) {
           {!isLinkUrlBeingEdited ? (
             <Button
               className={styles["link-url-edit-btn"]}
-              rightSection={
-                isLinkUrlBeingUpdated ? <Loader size={"1rem"} /> : <IconPencil size={"1rem"} />
-              }
               onClick={() => setIsLinkUrlBeingEdited(true)}
             >
               {linkUrlInputState}
+              {isLinkUrlBeingUpdated ? (
+                <Spinner data-icon="inline-end" />
+              ) : (
+                <IconPencil data-icon="inline-end" />
+              )}
             </Button>
           ) : (
-            <TextInput
+            <Input
               ref={linkUrlInputRef}
               className={`${styles["link-card-input"]} ${styles["linkurl-input"]}`}
               value={linkUrlInputState}
@@ -168,20 +160,16 @@ function LinkCard({ linkObj, onDelete }) {
               }}
             />
           )}
-        </Box>
-      </Box>
+        </div>
+      </div>
 
-      <Box className={styles["delete-btn-container"]}>
-        <Button
-          className={styles["delete-btn"]}
-          leftSection={<IconTrash size={"0.875rem"} />}
-          // onClick={() => onDelete(linkObj.id)}
-          onClick={handleDeleteClick}
-        >
+      <div className={styles["delete-btn-container"]}>
+        <Button className={styles["delete-btn"]} onClick={handleDeleteClick}>
+          <IconTrash data-icon="inline-start" />
           Delete
         </Button>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }
 

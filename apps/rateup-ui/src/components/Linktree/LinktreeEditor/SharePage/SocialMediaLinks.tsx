@@ -1,5 +1,7 @@
-import { ActionIcon, Box, Image, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import FormModalLayout from "../../../Modal/FormModalLayout.tsx";
 import IFrameModal from "../../../Survey/ShareSurvey/IFrameModal.tsx";
@@ -11,26 +13,31 @@ function SocialMediaLinks({ linktreeName, linktreeShareUrl, isPublished }) {
   const [isIframeModalOpen, { open: openIframeModal, close: closeIframeModal }] = useDisclosure();
 
   return (
-    <Box
+    <div
       className={styles["social-media-links-container"]}
       style={{ opacity: !isPublished ? 0.5 : 1 }}
     >
-      {socialMediaLinks.map((linkObj) => {
-        const { id, iconSrc, alt, tooltipLabel, link } = linkObj;
-        return (
-          <Tooltip label={tooltipLabel} position="bottom" key={id}>
-            {id === "iframe" ? (
-              <ActionIcon onClick={openIframeModal} size={"2.5rem"}>
-                <Image className={styles["social-media-icon"]} src={iconSrc} alt={alt} />
-              </ActionIcon>
-            ) : (
-              <a href={getLink(id, link, linktreeName, linktreeShareUrl)} target="_blank">
-                <Image className={styles["social-media-icon"]} src={iconSrc} alt={alt} />
-              </a>
-            )}
-          </Tooltip>
-        );
-      })}
+      <TooltipProvider>
+        {socialMediaLinks.map((linkObj) => {
+          const { id, iconSrc, alt, tooltipLabel, link } = linkObj;
+          return (
+            <Tooltip key={id}>
+              <TooltipTrigger
+                render={
+                  id === "iframe" ? (
+                    <Button variant="ghost" size="icon-lg" onClick={openIframeModal} />
+                  ) : (
+                    <a href={getLink(id, link, linktreeName, linktreeShareUrl)} target="_blank" />
+                  )
+                }
+              >
+                <img className={styles["social-media-icon"]} src={iconSrc} alt={alt} />
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{tooltipLabel}</TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </TooltipProvider>
 
       <FormModalLayout
         title="Generate IFrame"
@@ -41,7 +48,7 @@ function SocialMediaLinks({ linktreeName, linktreeShareUrl, isPublished }) {
       >
         <IFrameModal close={closeIframeModal} shareUrl={linktreeShareUrl} />
       </FormModalLayout>
-    </Box>
+    </div>
   );
 }
 

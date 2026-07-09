@@ -1,17 +1,17 @@
-import { Tabs, TabsList, TabsTab } from "@mantine/core";
+import { TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import styles from "../../Survey/SurveyTheme/components/PageSelector/PageSelector.module.css";
 
-function TabsListComp({ value, onChange }) {
+function TabsListComp() {
   return (
-    <Tabs value={value} onChange={onChange} classNames={styles} className="tabs-list-comp-tabs">
-      <TabsList>
-        <TabsTab value="links">Links</TabsTab>
-        <TabsTab value="theme">Theme</TabsTab>
-        <TabsTab value="share">Share</TabsTab>
-        <TabsTab value="stats">Stats</TabsTab>
+    <div className="tabs-list-comp-tabs">
+      <TabsList className={styles.list}>
+        <TabsTrigger value="links">Links</TabsTrigger>
+        <TabsTrigger value="theme">Theme</TabsTrigger>
+        <TabsTrigger value="share">Share</TabsTrigger>
+        <TabsTrigger value="stats">Stats</TabsTrigger>
       </TabsList>
-    </Tabs>
+    </div>
   );
 }
 

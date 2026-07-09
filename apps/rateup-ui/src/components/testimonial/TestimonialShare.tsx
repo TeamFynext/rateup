@@ -1,23 +1,11 @@
-import {
-  ActionIcon,
-  Center,
-  CopyButton,
-  Flex,
-  Group,
-  Image,
-  Modal,
-  Paper,
-  ScrollArea,
-  ScrollAreaAutosize,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
 import { IconChevronLeft, IconCopy, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { RateupButtonBlue, RateupButtonSecondary } from "../Button/RateupButtons.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+
 import NothingFound from "../NothingFound/NothingFound.tsx";
 import TestimonialCard from "./TestimonialCard.tsx";
 
@@ -26,15 +14,15 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
   const { t: translations } = useTranslation();
   if (filteredTestimonials?.length <= 0)
     return (
-      <Center mt={150}>
+      <div className="flex items-center justify-center mt-37.5">
         <NothingFound text={translations("No testimonials found")} />
-      </Center>
+      </div>
     );
 
   return (
-    <ScrollAreaAutosize h={"100%"}>
-      <Stack>
-        <Group p={"sm"}>
+    <ScrollArea className="h-full">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-2 p-3">
           {filteredTestimonials?.map((testimonial, _index) => (
             <TestimonialCard
               testimonial={testimonial}
@@ -42,9 +30,9 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
               key={testimonial?.id}
             />
           ))}
-        </Group>
-      </Stack>
-    </ScrollAreaAutosize>
+        </div>
+      </div>
+    </ScrollArea>
   );
 };
 
@@ -53,105 +41,97 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
   const iframe = `<iframe src="${shareUrl}" width="100%"></iframe>`;
 
   const [isPreview, setIsPreview] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { t: translations } = useTranslation();
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(iframe);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      size="1000px"
-      padding={0}
-      bg={"red"}
-      radius={"lg"}
-      closeOnClickOutside
-      withCloseButton={false}
-      centered
-      zIndex={400}
+    <Dialog
+      open={opened}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
     >
-      {!isPreview ? (
-        <Stack>
-          <Stack
-            bg={"var(--tertiary-color)"}
-            p={"xl"}
-            c={"white"}
-            gap={0}
-            style={{ borderRadius: "10px" }}
-          >
-            <Flex justify={"flex-end"}>
-              <ActionIcon onClick={onClose} color="var(--tertiary-color)">
-                <IconX size={"1.5rem"} />
-              </ActionIcon>
-            </Flex>
-            <Group gap={"xs"} justify="center" align="center">
-              <Stack gap={0}>
-                <Title fw={400}>{translations("Share Your Testimonials")}</Title>
-                <Title order={5} fw={400}>
-                  {translations(
-                    "Follow the instruction to share your testimonials on your website",
-                  )}
-                </Title>
-              </Stack>
-              <Image src={`../../images/Party Svg Icon.svg`} w={60} h={60} />
-            </Group>
-          </Stack>
-          <Stack px={100} py={"xl"}>
-            <Stack>
-              <Title order={5}>Add this widget to your website</Title>
-              <ScrollArea offsetScrollbars={"x"}>
-                <Paper bg="black" c={"white"} py={"xl"}>
-                  <Text pl={"md"} fz={"sm"}>
-                    {iframe}
-                  </Text>
-                </Paper>
-              </ScrollArea>
-              <CopyButton value={iframe}>
-                {({ copied, copy }) => (
-                  <RateupButtonSecondary
-                    title={copied ? translations("Copied code") : translations("Copy code")}
-                    onClick={copy}
-                    rightIcon={<IconCopy />}
-                    styles={{ root: { width: "fit-content" } }}
-                  />
-                )}
-              </CopyButton>
-            </Stack>
-            <Text c={"#494949"} fw={400}>
-              {translations(
-                "Place this code in the desired section of your website to display the embed.",
-              )}
-            </Text>
-            <RateupButtonBlue
-              title={translations("Preview")}
-              styles={{ root: { width: "fit-content" } }}
-              onClick={() => setIsPreview(true)}
-            />
-          </Stack>
-        </Stack>
-      ) : (
-        <>
-          <RateupButtonBlue
-            styles={{
-              root: {
-                background: "transparent",
-                color: "var(--tertiary-color)",
-              },
-            }}
-            title={translations("Back")}
-            leftIcon={<IconChevronLeft />}
-            onClick={() => setIsPreview(false)}
-          />
-          <Stack px={"sm"}>
-            <div>
-              <iframe
-                src={shareUrl}
-                width={"100%"}
-                height={400}
-                style={{ border: "none" }}
-              ></iframe>
+      <DialogContent className="max-w-250 p-0" showCloseButton={false}>
+        <DialogTitle className="sr-only">{translations("Share Your Testimonials")}</DialogTitle>
+        {!isPreview ? (
+          <div className="flex flex-col gap-4">
+            <div
+              className="flex flex-col gap-0 rounded-[10px] p-8 text-white"
+              style={{ background: "var(--tertiary-color)" }}
+            >
+              <div className="flex justify-end">
+                <Button variant="ghost" size="icon" className="text-white" onClick={onClose}>
+                  <IconX size={"1.5rem"} />
+                </Button>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <div className="flex flex-col gap-0">
+                  <h2 className="text-3xl font-normal">
+                    {translations("Share Your Testimonials")}
+                  </h2>
+                  <h5 className="text-base font-normal">
+                    {translations(
+                      "Follow the instruction to share your testimonials on your website",
+                    )}
+                  </h5>
+                </div>
+                <img src={`../../images/Party Svg Icon.svg`} className="size-15" alt="" />
+              </div>
             </div>
-          </Stack>
-        </>
-      )}
-    </Modal>
+            <div className="flex flex-col gap-4 px-25 py-8">
+              <div className="flex flex-col gap-4">
+                <h5 className="text-base font-medium">Add this widget to your website</h5>
+                <ScrollArea className="w-full">
+                  <div className="bg-black py-8 text-white">
+                    <p className="pl-4 text-sm">{iframe}</p>
+                  </div>
+                </ScrollArea>
+                <Button variant="outline" className="w-fit" onClick={handleCopy}>
+                  <span>{copied ? translations("Copied code") : translations("Copy code")}</span>
+                  <IconCopy data-icon="inline-end" />
+                </Button>
+              </div>
+              <p className="font-normal" style={{ color: "#494949" }}>
+                {translations(
+                  "Place this code in the desired section of your website to display the embed.",
+                )}
+              </p>
+              <Button className="w-fit" onClick={() => setIsPreview(true)}>
+                {translations("Preview")}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <Button
+              variant="ghost"
+              className="w-fit"
+              style={{ color: "var(--tertiary-color)" }}
+              onClick={() => setIsPreview(false)}
+            >
+              <IconChevronLeft data-icon="inline-start" />
+              <span>{translations("Back")}</span>
+            </Button>
+            <div className="flex flex-col gap-3 px-3">
+              <div>
+                <iframe
+                  src={shareUrl}
+                  width={"100%"}
+                  height={400}
+                  style={{ border: "none" }}
+                ></iframe>
+              </div>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 export default TestimonialShare;

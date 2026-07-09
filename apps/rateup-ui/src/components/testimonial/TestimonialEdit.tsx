@@ -1,9 +1,10 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { Center, Checkbox, Group, ScrollAreaAutosize, Stack } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
 import type { CSSProperties } from "react";
 
 import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { reorder } from "@/utils/questions.ts";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 
@@ -45,22 +46,21 @@ const TestimonialEdit = ({
   };
   if (testimonials?.length <= 0)
     return (
-      <Center mt={150}>
+      <div className="flex items-center justify-center mt-37.5">
         <NothingFound text={"No testimonials found"} />
-      </Center>
+      </div>
     );
 
   return (
-    <ScrollAreaAutosize h={"100%"}>
-      <Stack w={"100%"}>
+    <ScrollArea className="h-full">
+      <div className="flex flex-col gap-4 w-full">
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="testimonial-list" direction={"vertical"}>
             {(provided) => (
-              <Group
+              <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                style={{ flexWrap: "wrap" }}
-                p={"sm"}
+                className="flex flex-wrap items-center gap-2 p-3"
               >
                 {filteredTestimonials?.map((testimonial, index) => {
                   const isSelected = selectedTestimonialIds.some((t) => t === testimonial.id);
@@ -77,9 +77,9 @@ const TestimonialEdit = ({
                             {isDelete && (
                               <Checkbox
                                 checked={isSelected}
-                                classNames={{ root: classes.checkboxWrapper }}
-                                onChange={(e) => {
-                                  if (e.currentTarget.checked)
+                                className={classes.checkboxWrapper}
+                                onCheckedChange={(checked) => {
+                                  if (checked)
                                     setSelectedTestimonialIds((prev) => [...prev, testimonial?.id]);
                                   else
                                     setSelectedTestimonialIds((prev) =>
@@ -87,9 +87,6 @@ const TestimonialEdit = ({
                                     );
                                 }}
                                 tabIndex={-1}
-                                size="md"
-                                radius={"xl"}
-                                color={"red"}
                               />
                             )}
                             <TestimonialCard
@@ -103,12 +100,12 @@ const TestimonialEdit = ({
                   );
                 })}
                 {provided.placeholder}
-              </Group>
+              </div>
             )}
           </Droppable>
         </DragDropContext>
-      </Stack>
-    </ScrollAreaAutosize>
+      </div>
+    </ScrollArea>
   );
 };
 

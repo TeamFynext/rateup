@@ -1,10 +1,11 @@
-import { Button, Group } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
 import { produce } from "immer";
 import { isEqual } from "lodash";
 import { useCallback, useState } from "react";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 import { useLinktreeObj } from "../../../LinktreeContext/LinktreeContext.tsx";
 import { initialState as defaultThemeobj } from "../../ThemeContext/constants.ts";
@@ -91,18 +92,19 @@ function SaveChangesBtn() {
   }, [currentThemeObj]);
 
   return (
-    <Group>
+    <div className="flex items-center gap-2">
       <p style={{ color: haveUnsavedChanges ? "red" : "green", fontSize: 14 }}>
         {haveUnsavedChanges ? "Unsaved Changes" : "All Changes are saved"}
       </p>
       <Button
         className={styles["save-btn"]}
-        loading={isSaving}
+        disabled={isSaving}
         onClick={handleSavingLinktreeChanges}
       >
+        {isSaving && <Spinner data-icon="inline-start" />}
         Save
       </Button>
-    </Group>
+    </div>
   );
 }
 
