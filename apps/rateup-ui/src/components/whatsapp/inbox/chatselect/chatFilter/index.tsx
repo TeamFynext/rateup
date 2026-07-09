@@ -9,7 +9,6 @@ import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums.ts";
-import { WaMessageClosedStatus } from "@/utils/constants.ts";
 
 import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput.tsx";
 
@@ -44,16 +43,66 @@ export default function WaInboxChatFilter() {
       }))
     : [];
 
-  const statusData = Object.values(WaMessageAssignStatus)
-    .filter(
-      (status) =>
-        status !== WaMessageAssignStatus.NEW &&
-        (tab === "closed" ? WaMessageClosedStatus.includes(status) : true),
-    )
-    .map((status) => ({
-      id: status,
-      label: WaMessageAssignStatusTab[status],
-    }));
+  let statusData: { id: string; label: string }[] = [];
+  if (tab === "open") {
+    statusData = [
+      {
+        id: WaMessageAssignStatus.ASSIGNED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.ASSIGNED],
+      },
+      {
+        id: WaMessageAssignStatus.UNASSIGNED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNASSIGNED],
+      },
+    ];
+  } else if (tab === "closed") {
+    statusData = [
+      {
+        id: WaMessageAssignStatus.CLOSED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.CLOSED],
+      },
+      {
+        id: WaMessageAssignStatus.RESOLVED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.RESOLVED],
+      },
+      {
+        id: WaMessageAssignStatus.UNRESOLVED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNRESOLVED],
+      },
+      {
+        id: WaMessageAssignStatus.SPAM,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.SPAM],
+      },
+    ];
+  } else {
+    // tab === "all"
+    statusData = [
+      {
+        id: WaMessageAssignStatus.ASSIGNED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.ASSIGNED],
+      },
+      {
+        id: WaMessageAssignStatus.UNASSIGNED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNASSIGNED],
+      },
+      {
+        id: WaMessageAssignStatus.CLOSED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.CLOSED],
+      },
+      {
+        id: WaMessageAssignStatus.RESOLVED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.RESOLVED],
+      },
+      {
+        id: WaMessageAssignStatus.UNRESOLVED,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNRESOLVED],
+      },
+      {
+        id: WaMessageAssignStatus.SPAM,
+        label: WaMessageAssignStatusTab[WaMessageAssignStatus.SPAM],
+      },
+    ];
+  }
 
   if (teamsLoading) {
     return null;
@@ -108,8 +157,8 @@ export default function WaInboxChatFilter() {
           </div>
         </div>
 
-        {/* Status (only on all/closed tabs) */}
-        {(tab === "all" || tab === "closed") && (
+        {/* Status (on all/closed/open tabs) */}
+        {(tab === "all" || tab === "closed" || tab === "open") && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className="bg-gray-100 text-gray-700 p-2 rounded-md">
@@ -121,44 +170,50 @@ export default function WaInboxChatFilter() {
             </div>
 
             <div className="mt-1 space-y-2">
-              {statusData.map((status) => (
-                <div key={status.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={status.id}
-                    checked={filter.status?.includes(status.id)}
-                    onCheckedChange={(checked) => {
-                      const newFilter = {
-                        ...filter,
-                        status: checked
+              {statusData.map((status) => {
+                const isChecked = filter.status?.includes(status.id);
+
+                return (
+                  <div key={status.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={status.id}
+                      checked={isChecked}
+                      onCheckedChange={(checked) => {
+                        const newStatusList = checked
                           ? Array.from(new Set([...(filter.status || []), status.id]))
-                          : filter.status?.filter((s) => s !== status.id),
-                      };
-                      setFilter({
-                        ...newFilter,
-                      });
-                      const index = previousFilterForTab.findIndex((p) => p.tab === tab);
+                          : filter.status?.filter((s) => s !== status.id) || [];
 
-                      let updated;
+                        const newFilter = {
+                          ...filter,
+                          status: newStatusList,
+                        };
+                        setFilter({
+                          ...newFilter,
+                        });
+                        const index = previousFilterForTab.findIndex((p) => p.tab === tab);
 
-                      if (index !== -1) {
-                        updated = previousFilterForTab.map((p, i) =>
-                          i === index ? { ...p, filter: newFilter } : p,
-                        );
-                      } else {
-                        updated = [...previousFilterForTab, { tab, filter: newFilter }];
-                      }
+                        let updated;
 
-                      setPreviousFilterForTab(updated);
-                    }}
-                  />
-                  <label
-                    htmlFor={status.id}
-                    className="text-xs font-light text-muted-foreground cursor-pointer select-none"
-                  >
-                    {status.label}
-                  </label>
-                </div>
-              ))}
+                        if (index !== -1) {
+                          updated = previousFilterForTab.map((p, i) =>
+                            i === index ? { ...p, filter: newFilter } : p,
+                          );
+                        } else {
+                          updated = [...previousFilterForTab, { tab, filter: newFilter }];
+                        }
+
+                        setPreviousFilterForTab(updated);
+                      }}
+                    />
+                    <label
+                      htmlFor={status.id}
+                      className="text-xs font-light text-muted-foreground cursor-pointer select-none"
+                    >
+                      {status.label}
+                    </label>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

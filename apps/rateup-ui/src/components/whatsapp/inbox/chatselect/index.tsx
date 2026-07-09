@@ -45,7 +45,7 @@ import ChatselectPanelHeader from "./ChatselectPanelHeader.tsx";
 const WaInboxChatSelect = () => {
   const searchParams = useSearch({ strict: false });
   const tab = (searchParams.tab as string) ?? "New";
-  const { filter, setFilter, previousFilterForTab, clearFilter } = useChatFilterStore();
+  const { filter, setFilter, clearFilter } = useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
   const {
     setSelectedContact,
@@ -237,27 +237,30 @@ const WaInboxChatSelect = () => {
 
   useEffect(() => {
     const openStatus = [WaMessageAssignStatus.ASSIGNED, WaMessageAssignStatus.UNASSIGNED];
-    const hasOpenStatus = filter?.status?.some((s) =>
-      openStatus.includes(s as WaMessageAssignStatus),
-    );
-    // On the 'closed' tab, strip any open-status filters that were previously set
-    if (tab === "closed" && hasOpenStatus) {
-      setFilter({
-        ...filter,
-        status: filter.status.filter((s) => !openStatus.includes(s as WaMessageAssignStatus)),
-      });
-    } else if (tab === "all" && !hasOpenStatus) {
-      const prFilter = previousFilterForTab?.find((t) => t.tab === "all");
-      if (prFilter) {
-        const openStatusInPrFilter = prFilter?.filter?.status?.filter((s) =>
-          openStatus.includes(s as WaMessageAssignStatus),
-        );
+    const closedStatus = [
+      WaMessageAssignStatus.CLOSED,
+      WaMessageAssignStatus.RESOLVED,
+      WaMessageAssignStatus.UNRESOLVED,
+      WaMessageAssignStatus.SPAM,
+    ];
+
+    if (tab === "open") {
+      const currentOpen =
+        filter.status?.filter((s) => openStatus.includes(s as WaMessageAssignStatus)) || [];
+      if (currentOpen.length !== (filter.status?.length ?? 0)) {
         setFilter({
           ...filter,
-          status: [...filter.status, ...openStatusInPrFilter],
+          status: currentOpen,
         });
-      } else {
-        setFilter({ ...filter, status: [...filter.status, ...openStatus] });
+      }
+    } else if (tab === "closed") {
+      const currentClosed =
+        filter.status?.filter((s) => closedStatus.includes(s as WaMessageAssignStatus)) || [];
+      if (currentClosed.length !== (filter.status?.length ?? 0)) {
+        setFilter({
+          ...filter,
+          status: currentClosed,
+        });
       }
     }
   }, [tab]);
@@ -299,12 +302,13 @@ const WaInboxChatSelect = () => {
         blockedUsers: false,
       });
     } else if (tab === "open") {
-      // Open = Assigned and Unassigned
+      const openStatuses = ["ASSIGNED", "UNASSIGNED"];
+      const selectedOpenStatuses = filter.status?.filter((s) => openStatuses.includes(s));
       prepareFilters({
         ...filter,
         messageType: "usermessages",
         waMessageAssignStatus: undefined,
-        status: ["ASSIGNED", "UNASSIGNED"],
+        status: selectedOpenStatuses?.length ? selectedOpenStatuses : openStatuses,
         blockedUsers: false,
       });
     } else if (tab === "closed") {
