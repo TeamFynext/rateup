@@ -1,5 +1,5 @@
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
-import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Outlet, redirect, Scripts } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -26,6 +26,7 @@ import {
   PINTEREST_VERIFICATION,
 } from "@/utils/fbpixel.ts";
 
+import { REDIRECT_MAP } from "../../redirects/index.ts";
 import Providers from "../components/providers.tsx";
 
 import appCss from "../globals.css?url";
@@ -35,6 +36,17 @@ function LocaleProviders({ children }: Readonly<{ children: React.ReactNode }>) 
 }
 
 export const Route = createRootRoute({
+  beforeLoad: ({ location }) => {
+    // Check if the current path matches any redirect rule in REDIRECT_MAP
+    const rule = REDIRECT_MAP[location.pathname];
+
+    if (rule) {
+      throw redirect({
+        href: rule.to,
+        statusCode: rule.statusCode ?? 301,
+      });
+    }
+  },
   head: () => ({
     meta: [
       {
