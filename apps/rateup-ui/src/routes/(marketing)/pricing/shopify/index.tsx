@@ -1,4 +1,3 @@
-import { Center, Stack, Text } from "@mantine/core";
 import { IconArrowRight, IconLoader } from "@tabler/icons-react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { Suspense, useEffect, useState } from "react";
@@ -7,8 +6,8 @@ import Session from "supertokens-auth-react/recipe/session";
 
 import { useUserOrgOrders } from "@/backend/payment/payment.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import { Button } from "@/components/ui/button";
 
 import style from "@/components/Graph/graph.module.css";
 
@@ -78,60 +77,48 @@ function ShopifySubscriptionApprovalCallback() {
 
   if (isFetching || subscriptionFetching)
     return (
-      <Center h={"100vh"}>
-        <Stack justify="center" align="center">
-          <IconLoader className={style.rotateInfinitely} display={"block"} />
-          <Text>{translations("Wait..Processing your subscription order")}</Text>
-        </Stack>
-      </Center>
+      <div className="flex h-screen items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <IconLoader className={style.rotateInfinitely} />
+          <p>{translations("Wait..Processing your subscription order")}</p>
+        </div>
+      </div>
     );
 
   return (
-    <Center h={"100vh"}>
-      <Stack
-        justify="center"
-        align="center"
-        bg={"light-dark(var(--mantine-color-gray-3), var(--mantine-color-body))"}
-        p={"xl"}
-      >
+    <div className="flex h-screen items-center justify-center">
+      <div className="flex flex-col items-center justify-center gap-4 bg-muted p-8">
         {isSubscribtionUpdated ? (
-          <Stack justify="center" align="center">
-            <Text c="green" fw={500}>
-              Your Subscription has been activated 🎉
-            </Text>
-            <Text>
+          <div className="flex flex-col items-center justify-center gap-4">
+            <p className="font-medium text-green-600">Your Subscription has been activated 🎉</p>
+            <p>
               Thank you for choosing Rateup Premium subscription. <br /> <br /> You can now enjoy
               Rateup Premium features
               <br />
               You will be notified by email shortly.
-            </Text>
-          </Stack>
+            </p>
+          </div>
         ) : isOrderCreated ? (
-          <Stack justify="center" align="center">
-            <Text c="green" fw={500}>
-              Your Subscription Order has placed..!
-            </Text>
-            <Text>
+          <div className="flex flex-col items-center justify-center gap-4">
+            <p className="font-medium text-green-600">Your Subscription Order has placed..!</p>
+            <p>
               Thank you for choosing Rateup Premium subscription. <br /> <br /> You can enjoy Rateup
               Premium features once your order fully processed
               <br />
               You will be notified by email shortly.
-            </Text>
-          </Stack>
+            </p>
+          </div>
         ) : (
-          <Stack justify="center" align="center">
-            <Text c="green" fw={500}>
-              Thank you for choosing Rateup..!
-            </Text>
-            <Text>Follow up your account page for order details and subscription status</Text>
-          </Stack>
+          <div className="flex flex-col items-center justify-center gap-4">
+            <p className="font-medium text-green-600">Thank you for choosing Rateup..!</p>
+            <p>Follow up your account page for order details and subscription status</p>
+          </div>
         )}
-        <RateupButtonBlue
-          title="Go to account setting"
-          rightIcon={<IconArrowRight />}
-          onClick={() => updateRoute()}
-        />
-      </Stack>
-    </Center>
+        <Button onClick={() => updateRoute()}>
+          {translations("Go to account setting")}
+          <IconArrowRight />
+        </Button>
+      </div>
+    </div>
   );
 }

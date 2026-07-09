@@ -1,9 +1,10 @@
-import { Button as MantineButton } from "@mantine/core";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useRegisterBusinessClientMutation } from "@/backend/whatsapp/settings/waSettings.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 
 const fbLogin = (
   configId: string | null = null,
@@ -110,7 +111,7 @@ export function MetaLoginButton({
   }
 
   return (
-    <MantineButton
+    <Button
       onClick={login}
       style={{
         backgroundColor: "#1877f2",
@@ -124,10 +125,10 @@ export function MetaLoginButton({
         height: "40px",
         padding: "0 24px",
       }}
-      loading={registerMutation.isPending}
-      disabled={disabled}
+      disabled={disabled || registerMutation.isPending}
     >
+      {registerMutation.isPending && <Spinner />}
       {translations("Login with Facebook")}
-    </MantineButton>
+    </Button>
   );
 }

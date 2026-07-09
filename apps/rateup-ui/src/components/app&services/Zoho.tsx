@@ -21,11 +21,12 @@ import {
 import { useLifecyclesWithContactCount } from "@/backend/lifecycle/lifecycle.query";
 import RefreshButton from "@/components/Button/RefreshButton";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Switch } from "@/components/ui/switch";
 import { useUser } from "@/context/UserContext";
 import { IntegratedApps } from "@/types/enums";
@@ -168,12 +169,15 @@ const ZohoAuthentication = ({ integration }) => {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <ContainedTextField
-          label={t("Organization ID")}
-          value={user.user.orgId}
-          readOnly
-          rightSection={<ApiCopyButton value={user.user.orgId} />}
-        />
+        <Field>
+          <FieldLabel htmlFor="zoho-org-id">{t("Organization ID")}</FieldLabel>
+          <InputGroup>
+            <InputGroupInput id="zoho-org-id" value={user.user.orgId} readOnly />
+            <InputGroupAddon align="inline-end">
+              <ApiCopyButton value={user.user.orgId} />
+            </InputGroupAddon>
+          </InputGroup>
+        </Field>
 
         {!integration && (
           <div className="space-y-2 rounded-xl border bg-muted/30 p-4">

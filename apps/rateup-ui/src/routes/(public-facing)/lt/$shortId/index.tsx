@@ -1,4 +1,3 @@
-import { Group, Image } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { getPublicLinktreeWithShortId } from "@/backend/linktree/linktree.api";
@@ -26,10 +25,10 @@ function Lt() {
   const { linktreeObj } = Route.useLoaderData();
   if (!linktreeObj) {
     return (
-      <Group className={styles["not-available-div"]}>
-        <Image src={"/images/bw-logo.png"} alt="logo" width={70} height={70} />
+      <div className={`flex items-center gap-2 ${styles["not-available-div"]}`}>
+        <img src={"/images/bw-logo.png"} alt="logo" width={70} height={70} />
         <p className={styles["not-available-p"]}>Linktree Not available</p>
-      </Group>
+      </div>
     );
   }
   return <LinkTreeC linktreeObj={linktreeObj} />;

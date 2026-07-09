@@ -1,4 +1,4 @@
-import { isNotEmpty, useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import { Building, Camera, Edit, Globe, Home, Mail, MapPin, Phone, Upload } from "lucide-react";
@@ -6,11 +6,13 @@ import { Building, Camera, Edit, Globe, Home, Mail, MapPin, Phone, Upload } from
 import "react-phone-number-input/style.css";
 
 import React, { useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import PhoneInputWithCountrySelect, { isValidPhoneNumber } from "react-phone-number-input";
 import SelectR from "react-select";
 import countryList from "react-select-country-list";
 import { toast } from "sonner";
+import z from "zod";
 
 import { useUpdateOrgDetailsMutation, useUpdateOrgLogoMutation } from "@/backend/org/org.query";
 import {
@@ -33,6 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import {
@@ -58,8 +61,32 @@ function Account() {
   const { user } = useUser();
   const countries = countryList().getData();
 
-  const orgForm = useForm({
-    initialValues: {
+  const orgFormSchema = z.object({
+    name: z.string().trim().min(1, translations("Name cannot be blank")),
+    phone: z
+      .string()
+      .refine((value) => !value || isValidPhoneNumber(value), translations("Invalid phone number")),
+    address: z.string(),
+    location: z.string(),
+    industry: z.string(),
+    website: z.string(),
+    businessmail: z.email(translations("Invalid email address")),
+  });
+
+  const profileFormSchema = z.object({
+    title: z.string().trim().min(1, translations("Select a title")),
+    fullname: z.string().trim().min(1, translations("Name Cannot be blank")),
+    phone: z
+      .string()
+      .refine((value) => !value || isValidPhoneNumber(value), translations("Invalid phone number")),
+  });
+
+  type OrgFormValues = z.infer<typeof orgFormSchema>;
+  type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
+  const orgForm = useForm<OrgFormValues>({
+    resolver: zodResolver(orgFormSchema),
+    defaultValues: {
       name: "",
       phone: "",
       address: "",
@@ -68,35 +95,19 @@ function Account() {
       website: "",
       businessmail: "",
     },
-    validate: {
-      name: isNotEmpty(translations("Name cannot be blank")),
-      phone: (value) => {
-        if (value && !isValidPhoneNumber(value)) return translations("Invalid phone number");
-        return null;
-      },
-      businessmail: (value) => {
-        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
-          return translations("Invalid email address");
-        return null;
-      },
-    },
   });
 
-  const profileForm = useForm({
-    initialValues: {
+  const profileForm = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
       title: "",
       fullname: "",
       phone: "",
     },
-    validate: {
-      title: isNotEmpty(translations("Select a title")),
-      fullname: isNotEmpty(translations("Name Cannot be blank")),
-      phone: (value) => {
-        if (value && !isValidPhoneNumber(value)) return translations("Invalid phone number");
-        return null;
-      },
-    },
   });
+
+  const orgPhone = orgForm.watch("phone");
+  const orgAddress = orgForm.watch("address");
 
   const [isBusinessDialogOpen, setIsBusinessDialogOpen] = useState(false);
   const [isLogoUpload, setIsLogoUpload] = useState(false);
@@ -117,7 +128,7 @@ function Account() {
   const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoadingUpload);
   const orgDetailsUpdate = useUpdateOrgDetailsMutation();
 
-  const onSubmit = (values) => {
+  const onSubmit = (values: ProfileFormValues) => {
     const data = {
       title: values.title,
       name: values.fullname,
@@ -130,7 +141,7 @@ function Account() {
   useEffect(() => {
     if (profileData?.data?.data) {
       const profile = profileData.data.data;
-      profileForm.setValues({
+      profileForm.reset({
         title: profile.gender || "",
         fullname: profile.name || "",
         phone: profile.phone || "",
@@ -145,7 +156,7 @@ function Account() {
 
   useEffect(() => {
     if (user) {
-      orgForm.setValues({
+      orgForm.reset({
         name: user?.orgName ?? "",
         phone: user?.orgPhone ?? "",
         address: user?.orgAddress ?? "",
@@ -209,7 +220,7 @@ function Account() {
     closeCropDialog();
   };
 
-  const onOrgSubmit = (values) => {
+  const onOrgSubmit = (values: OrgFormValues) => {
     const data = {
       name: values.name,
       phone: values?.phone ?? "",
@@ -414,7 +425,7 @@ function Account() {
             <Phone className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
               <p className="font-medium text-gray-700 mb-0.5">{translations("Phone")}</p>
-              <p className="text-gray-500">{orgForm?.values?.phone || "—"}</p>
+              <p className="text-gray-500">{orgPhone || "—"}</p>
             </div>
           </div>
 
@@ -446,7 +457,7 @@ function Account() {
             <Home className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
               <p className="font-medium text-gray-700 mb-0.5">{translations("Address")}</p>
-              <p className="text-gray-500">{orgForm?.values?.address || "—"}</p>
+              <p className="text-gray-500">{orgAddress || "—"}</p>
             </div>
           </div>
         </div>
@@ -462,152 +473,217 @@ function Account() {
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={orgForm.onSubmit(onOrgSubmit)} className="space-y-4 py-4">
-              {/* Logo Upload */}
-              <div className="flex items-center gap-6">
-                <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
-                  <AvatarImage src={orgAvatarSrc || ""} />
-                  <AvatarFallback className="bg-primary text-white text-xl">
-                    {user?.orgName?.slice(0, 1)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <Label htmlFor="orgLogoUpload" className="cursor-pointer">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
-                      <Upload className="w-4 h-4" />
-                      <span className="text-sm">{translations("Upload Logo")}</span>
-                    </div>
-                    <input
-                      id="orgLogoUpload"
-                      type="file"
-                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          toggleCropDialog();
-                          setSelectedImage({
-                            name: file.name,
-                            url: URL.createObjectURL(file),
-                          });
-                          e.target.value = "";
-                          setIsLogoUpload(true);
-                        }
-                      }}
-                    />
-                  </Label>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {translations("JPG, PNG or GIF")}.{translations("Max size 2MB")}.
-                  </p>
+            <form onSubmit={orgForm.handleSubmit(onOrgSubmit)} className="py-4">
+              <FieldGroup className="gap-4">
+                {/* Logo Upload */}
+                <div className="flex items-center gap-6">
+                  <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
+                    <AvatarImage src={orgAvatarSrc || ""} />
+                    <AvatarFallback className="bg-primary text-white text-xl">
+                      {user?.orgName?.slice(0, 1)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <Label htmlFor="orgLogoUpload" className="cursor-pointer">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
+                        <Upload className="w-4 h-4" />
+                        <span className="text-sm">{translations("Upload Logo")}</span>
+                      </div>
+                      <input
+                        id="orgLogoUpload"
+                        type="file"
+                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            toggleCropDialog();
+                            setSelectedImage({
+                              name: file.name,
+                              url: URL.createObjectURL(file),
+                            });
+                            e.target.value = "";
+                            setIsLogoUpload(true);
+                          }
+                        }}
+                      />
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {translations("JPG, PNG or GIF")}.{translations("Max size 2MB")}.
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Organization Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="businessName">{translations("Business Name")}</Label>
-                  <Input
-                    id="businessName"
-                    {...orgForm.getInputProps("name")}
-                    placeholder={translations("Enter your business name")}
+                {/* Organization Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Controller
+                    name="name"
+                    control={orgForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="businessName">
+                          {translations("Business Name")}
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id="businessName"
+                          aria-invalid={fieldState.invalid}
+                          placeholder={translations("Enter your business name")}
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="industry"
+                    control={orgForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="industry">{translations("Industry")}</FieldLabel>
+                        <Select
+                          name={field.name}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          items={industries.map((industry) => ({
+                            value: industry,
+                            label: industry,
+                          }))}
+                        >
+                          <SelectTrigger
+                            id="industry"
+                            className="w-full"
+                            aria-invalid={fieldState.invalid}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {industries.map((industry) => (
+                              <SelectItem key={industry} value={industry}>
+                                {industry}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="website"
+                    control={orgForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="website">{translations("Website")}</FieldLabel>
+                        <Input
+                          {...field}
+                          id="website"
+                          aria-invalid={fieldState.invalid}
+                          placeholder="https://your-website.com"
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="phone"
+                    control={orgForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="businessPhone">
+                          {translations("Business Phone")}
+                        </FieldLabel>
+                        <PhoneInputWithCountrySelect
+                          id="businessPhone"
+                          defaultCountry="IN"
+                          international
+                          countryCallingCodeEditable={false}
+                          placeholder={translations("Phone Number")}
+                          value={field.value || ""}
+                          onChange={(value) => field.onChange(value ?? "")}
+                          onBlur={field.onBlur}
+                          className="rounded-md border border-gray-300 px-2 py-1 w-full"
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="businessmail"
+                    control={orgForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="businessEmail">
+                          {translations("Business Email")}
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id="businessEmail"
+                          aria-invalid={fieldState.invalid}
+                          placeholder="business@company.com"
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="location"
+                    control={orgForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="location">{translations("Location")}</FieldLabel>
+                        <SelectR
+                          inputId="location"
+                          options={countries}
+                          value={countries.find((country) => country.label === field.value) || null}
+                          onChange={(option) => field.onChange(option?.label || "")}
+                          onBlur={field.onBlur}
+                          placeholder={translations("Select Your Location")}
+                          isSearchable
+                          className="rounded-md text-sm bg-white [&>input]:w-full border-gray-200"
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="address"
+                    control={orgForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field className="md:col-span-2" data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="address">{translations("Address")}</FieldLabel>
+                        <Textarea
+                          {...field}
+                          id="address"
+                          aria-invalid={fieldState.invalid}
+                          placeholder={translations("Enter your complete business address")}
+                          className="resize-none"
+                          rows={2}
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="industry">{translations("Industry")}</Label>
-                  <Select
-                    defaultValue={user?.onboarding?.industry || "E-commerce"}
-                    onValueChange={(val) => orgForm.setFieldValue("industry", val)}
-                    items={industries.map((industry) => ({ value: industry, label: industry }))}
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsBusinessDialogOpen(false)}
                   >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {industries.map((industry) => (
-                        <SelectItem key={industry} value={industry}>
-                          {industry}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="website">{translations("Website")}</Label>
-                  <Input
-                    id="website"
-                    {...orgForm.getInputProps("website")}
-                    placeholder="https://your-website.com"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="businessPhone">{translations("Business Phone")}</Label>
-                  <PhoneInputWithCountrySelect
-                    defaultCountry="IN"
-                    international
-                    countryCallingCodeEditable={false}
-                    placeholder={translations("Phone Number")}
-                    value={orgForm?.values?.phone || ""}
-                    {...orgForm?.getInputProps("phone")}
-                    className="rounded-md border border-gray-300 px-2 py-1 w-full"
-                  />
-                  {orgForm.errors.phone && (
-                    <p className="text-xs text-red-500">{orgForm.errors.phone}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="businessEmail">{translations("Business Email")}</Label>
-                  <Input
-                    id="businessEmail"
-                    {...orgForm.getInputProps("businessmail")}
-                    placeholder="business@company.com"
-                  />
-                  {orgForm.errors.businessmail && (
-                    <p className="text-xs text-red-500">{orgForm.errors.businessmail}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="location">{translations("Location")}</Label>
-                  <SelectR
-                    options={countries}
-                    value={
-                      countries.find((country) => country.label === orgForm.values.location) || null
-                    }
-                    onChange={(option) => orgForm.setFieldValue("location", option?.label || "")}
-                    placeholder={translations("Select Your Location")}
-                    isSearchable
-                    className="rounded-md text-sm bg-white [&>input]:w-full border-gray-200"
-                  />
-                </div>
-
-                <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="address">{translations("Address")}</Label>
-                  <Textarea
-                    id="address"
-                    {...orgForm.getInputProps("address")}
-                    placeholder={translations("Enter your complete business address")}
-                    className="resize-none"
-                    rows={2}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsBusinessDialogOpen(false)}
-                >
-                  {translations("Cancel")}
-                </Button>
-                <Button type="submit" className="bg-primary">
-                  {translations("Save Changes")}
-                </Button>
-              </DialogFooter>
+                    {translations("Cancel")}
+                  </Button>
+                  <Button type="submit" className="bg-primary">
+                    {translations("Save Changes")}
+                  </Button>
+                </DialogFooter>
+              </FieldGroup>
             </form>
           </DialogContent>
         </Dialog>
@@ -643,135 +719,154 @@ function Account() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={profileForm.onSubmit(onSubmit)} className="space-y-4 py-4">
-            {/* Profile Image Upload */}
-            <div className="flex items-center gap-6">
-              <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
-                <AvatarImage src={avatarSrc} />
-                <AvatarFallback className="bg-primary text-white text-xl">
-                  {profileData?.data?.data?.name?.slice(0, 1) || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <Label htmlFor="profileImageUpload" className="cursor-pointer">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
-                    <Upload className="w-4 h-4" />
-                    <span className="text-sm">{translations("Upload Photo")}</span>
-                  </div>
-                  <input
-                    ref={resetRef}
-                    id="profileImageUpload"
-                    type="file"
-                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                    className="hidden"
-                    onChange={handleImagePicker}
-                  />
-                </Label>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {translations("JPG, PNG or GIF")}. {translations("Max size 2MB")}.
-                </p>
+          <form onSubmit={profileForm.handleSubmit(onSubmit)} className="py-4">
+            <FieldGroup className="gap-4">
+              {/* Profile Image Upload */}
+              <div className="flex items-center gap-6">
+                <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
+                  <AvatarImage src={avatarSrc} />
+                  <AvatarFallback className="bg-primary text-white text-xl">
+                    {profileData?.data?.data?.name?.slice(0, 1) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <Label htmlFor="profileImageUpload" className="cursor-pointer">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
+                      <Upload className="w-4 h-4" />
+                      <span className="text-sm">{translations("Upload Photo")}</span>
+                    </div>
+                    <input
+                      ref={resetRef}
+                      id="profileImageUpload"
+                      type="file"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                      className="hidden"
+                      onChange={handleImagePicker}
+                    />
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {translations("JPG, PNG or GIF")}. {translations("Max size 2MB")}.
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* Title/Gender */}
-            <div className="space-y-2">
-              <Label htmlFor="title">
-                {translations("Title")} <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={profileForm.values.title}
-                onValueChange={(value) => profileForm.setFieldValue("title", value)}
-                required
-                items={[
-                  { value: "MALE", label: "Mr" },
-                  { value: "FEMALE", label: "Mrs" },
-                  { value: "OTHER", label: "Mx" },
-                ]}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select title" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MALE">Mr</SelectItem>
-                  <SelectItem value="FEMALE">Mrs</SelectItem>
-                  <SelectItem value="OTHER">Mx</SelectItem>
-                </SelectContent>
-              </Select>
-              {profileForm.errors.title && (
-                <p className="text-xs text-red-500">{profileForm.errors.title}</p>
-              )}
-            </div>
-
-            {/* Full Name */}
-            <div className="space-y-2">
-              <Label htmlFor="fullname">
-                {translations("Full Name")} <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="fullname"
-                placeholder={translations("Enter your full name")}
-                {...profileForm.getInputProps("fullname")}
+              {/* Title/Gender */}
+              <Controller
+                name="title"
+                control={profileForm.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="title">
+                      {translations("Title")} <span className="text-red-500">*</span>
+                    </FieldLabel>
+                    <Select
+                      name={field.name}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={[
+                        { value: "MALE", label: "Mr" },
+                        { value: "FEMALE", label: "Mrs" },
+                        { value: "OTHER", label: "Mx" },
+                      ]}
+                    >
+                      <SelectTrigger
+                        id="title"
+                        className="w-full"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue placeholder="Select title" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MALE">Mr</SelectItem>
+                        <SelectItem value="FEMALE">Mrs</SelectItem>
+                        <SelectItem value="OTHER">Mx</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
               />
-              {profileForm.errors.fullname && (
-                <p className="text-xs text-red-500">{profileForm.errors.fullname}</p>
-              )}
-            </div>
 
-            {/* Email - Read Only */}
-            <div className="space-y-2">
-              <Label htmlFor="profileEmail">{translations("Email Address")}</Label>
-              <Input
-                id="profileEmail"
-                type="email"
-                value={profileData?.data?.data?.email || ""}
-                disabled={true}
-                readOnly
-                className="bg-gray-100 cursor-not-allowed opacity-70"
+              {/* Full Name */}
+              <Controller
+                name="fullname"
+                control={profileForm.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="fullname">
+                      {translations("Full Name")} <span className="text-red-500">*</span>
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id="fullname"
+                      aria-invalid={fieldState.invalid}
+                      placeholder={translations("Enter your full name")}
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
               />
-              {profileForm.errors.email && (
-                <p className="text-xs text-red-500">{profileForm.errors.email}</p>
-              )}
-            </div>
 
-            {/* Phone */}
-            <div className="space-y-2">
-              <Label htmlFor="profilePhone">{translations("Phone Number")}</Label>
-              <PhoneInputWithCountrySelect
-                defaultCountry="IN"
-                international
-                countryCallingCodeEditable={false}
-                placeholder={translations("Phone Number")}
-                {...profileForm.getInputProps("phone")}
-                className="rounded-md border border-gray-300 px-2 py-1 w-full"
+              {/* Email - Read Only */}
+              <Field>
+                <FieldLabel htmlFor="profileEmail">{translations("Email Address")}</FieldLabel>
+                <Input
+                  id="profileEmail"
+                  type="email"
+                  value={profileData?.data?.data?.email || ""}
+                  disabled={true}
+                  readOnly
+                  className="bg-gray-100 cursor-not-allowed opacity-70"
+                />
+              </Field>
+
+              {/* Phone */}
+              <Controller
+                name="phone"
+                control={profileForm.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="profilePhone">{translations("Phone Number")}</FieldLabel>
+                    <PhoneInputWithCountrySelect
+                      id="profilePhone"
+                      defaultCountry="IN"
+                      international
+                      countryCallingCodeEditable={false}
+                      placeholder={translations("Phone Number")}
+                      value={field.value || ""}
+                      onChange={(value) => field.onChange(value ?? "")}
+                      onBlur={field.onBlur}
+                      className="rounded-md border border-gray-300 px-2 py-1 w-full"
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
               />
-              {profileForm.errors.phone && (
-                <p className="text-xs text-red-500">{profileForm.errors.phone}</p>
-              )}
-            </div>
 
-            {/* Role - Read Only */}
-            <div className="space-y-2">
-              <Label htmlFor="profileRole">{translations("Role")}</Label>
-              <Input
-                id="profileRole"
-                value={profileData?.data?.data?.role || ""}
-                disabled
-                className="bg-gray-50"
-              />
-            </div>
+              {/* Role - Read Only */}
+              <Field>
+                <FieldLabel htmlFor="profileRole">{translations("Role")}</FieldLabel>
+                <Input
+                  id="profileRole"
+                  value={profileData?.data?.data?.role || ""}
+                  disabled
+                  className="bg-gray-50"
+                />
+              </Field>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsEditProfileDialogOpen(false)}
-              >
-                {translations("Cancel")}
-              </Button>
-              <Button type="submit" className="bg-primary" disabled={false}>
-                {translations("Save Changes")}
-              </Button>
-            </DialogFooter>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditProfileDialogOpen(false)}
+                >
+                  {translations("Cancel")}
+                </Button>
+                <Button type="submit" className="bg-primary" disabled={false}>
+                  {translations("Save Changes")}
+                </Button>
+              </DialogFooter>
+            </FieldGroup>
           </form>
         </DialogContent>
       </Dialog>

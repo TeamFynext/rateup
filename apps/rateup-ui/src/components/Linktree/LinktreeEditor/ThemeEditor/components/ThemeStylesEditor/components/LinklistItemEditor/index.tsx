@@ -1,5 +1,6 @@
-import { Box, Slider } from "@mantine/core";
 import { useCallback } from "react";
+
+import { Slider } from "@/components/ui/slider";
 
 import CustomColorPicker from "../../../../../../../Survey/ShareSurvey/components/CustomColorPicker/index.tsx";
 import { useThemeDispatch, useThemeObj } from "../../../../ThemeContext/ThemeContext.tsx";
@@ -36,30 +37,30 @@ function LinklistItemEditor() {
   }, []);
 
   return (
-    <Box className={styles["link-list-editor"]}>
-      <Box className={`style-section-div`}>
+    <div className={styles["link-list-editor"]}>
+      <div className={`style-section-div`}>
         <h2>Text Color</h2>
         <CustomColorPicker value={color} onChange={handleColorChange} />
-      </Box>
+      </div>
 
-      <Box className={`style-section-div`}>
+      <div className={`style-section-div`}>
         <h2>Background Color</h2>
         <CustomColorPicker value={backgroundColor} onChange={handleBackgroundColorChange} />
-      </Box>
+      </div>
 
-      <Box className={`style-section-div`}>
+      <div className={`style-section-div`}>
         <h2>Border Radius</h2>
         <Slider
-          value={borderRadius}
-          onChange={handleBorderRadiusChange}
-          label={(value) => value}
+          value={[borderRadius]}
+          onValueChange={(value) =>
+            handleBorderRadiusChange(Array.isArray(value) ? value[0] : value)
+          }
           step={1}
-          defaultValue={16}
           min={0}
           max={100}
         />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }
 

@@ -1,9 +1,9 @@
-import { Flex, Loader, SimpleGrid } from "@mantine/core";
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 
 import { getAllTestimonialsByCollection } from "@/backend/testimonials/testimonial.api";
 import TestimonialCard from "@/components/testimonial/TestimonialCard.tsx";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/(public-facing)/public/testimonial/$collectionId/")({
@@ -79,7 +79,7 @@ function Collections() {
   const collection = Route.useLoaderData();
   const renderContent = () => {
     if (isLoading) {
-      return <Loader type="bars" />;
+      return <Spinner />;
     }
     if (collection.theme?.layout === "horizontal") {
       return (
@@ -103,7 +103,7 @@ function Collections() {
       );
     }
     return (
-      <SimpleGrid cols={3}>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {collection.testimonials.map((testimonial) => (
           <TestimonialCard
             testimonial={testimonial}
@@ -111,13 +111,11 @@ function Collections() {
             key={testimonial.id}
           />
         ))}
-      </SimpleGrid>
+      </div>
     );
   };
 
   return (
-    <Flex justify={"center"} align={"center"} m={"xl"} bg={"transparent"}>
-      {renderContent()}
-    </Flex>
+    <div className="flex items-center justify-center bg-transparent m-8">{renderContent()}</div>
   );
 }

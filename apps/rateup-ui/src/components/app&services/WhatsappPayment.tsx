@@ -1,10 +1,10 @@
-import { ActionIcon, Badge, Box, Flex, Group, Stack, Text, Tooltip } from "@mantine/core";
-import { schemaResolver, useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useDisclosure } from "@mantine/hooks";
 import { IconRefresh } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import dayjs from "dayjs";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -14,16 +14,30 @@ import {
   useIntegrationByType,
   useRegenerateWaPaymentConfigurationOauthMutation,
 } from "@/backend/appsIntegration/integration.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
-import {
-  ContainedSelection,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { MCC, PROVIDER_NAMES } from "@/components/integrations/utils.ts";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
 
 // TODO: re add create and get all wa payment config list
@@ -32,6 +46,8 @@ enum Providers {
   payu = "payu",
   zaakpay = "zaakpay",
 }
+
+const providerOptions = Object.keys(Providers).map((name) => ({ value: name, label: name }));
 
 export function WhatsappPayment() {
   const [opened, { close, open }] = useDisclosure(false);
@@ -71,25 +87,19 @@ export function WhatsappPayment() {
       .regex(/^\S*$/, "configuration_name cannot contain spaces"),
   });
   const form = useForm<z.infer<typeof schema>>({
-    mode: "uncontrolled",
-    initialValues: {
+    resolver: zodResolver(schema),
+    defaultValues: {
       configuration_name: "",
       purpose_code: "00",
       merchant_category_code: "0000",
       provider_name: Providers.razorpay,
     },
-    validate: schemaResolver(schema, {
-      sync: true,
-    }),
   });
   const getConfigForm = useForm<z.infer<typeof getConfigSchema>>({
-    mode: "uncontrolled",
-    initialValues: {
+    resolver: zodResolver(getConfigSchema),
+    defaultValues: {
       configuration_name: "",
     },
-    validate: schemaResolver(getConfigSchema, {
-      sync: true,
-    }),
   });
   if (isPending) <RateupLoader />;
   const handleSubmit = () => {
@@ -109,86 +119,201 @@ export function WhatsappPayment() {
   };
 
   return (
-    <Stack h={"100%"}>
-      <Group>
+    <div className="flex h-full flex-col gap-4">
+      <div className="flex items-center gap-2">
         {/* <RateupButtonPrimary
           title="New Configuration"
           rightIcon={<IconPlus />}
           onClick={open}
         /> */}
-        <RateupButtonPrimary
-          title="Get Configuration From Whatsapp"
-          variant="light"
-          rightIcon={<IconRefresh />}
+        <Button
+          variant="secondary"
           onClick={() => {
             open();
             // refetch().then(() => integrationListRefetch());
           }}
-        />
-        <FormModalLayout
-          onClose={() => {
-            close();
-            form.reset();
-          }}
-          opened={opened}
-          title="Get Configuration"
-          noCustomHeader
-          centered
-          onSubmit={getConfigForm.onSubmit(handleSubmit)}
-          includeCancelButton
-          buttonTitle={"Submit"}
         >
-          <Stack gap={"xs"}>
-            <ContainedTextField
-              label={"Payment configuration name"}
-              placeholder="Enter configuration name"
-              {...getConfigForm.getInputProps("configuration_name")}
-            />
-          </Stack>
-        </FormModalLayout>
-        <FormModalLayout
-          onClose={() => {
-            close();
-            form.reset();
+          Get Configuration From Whatsapp
+          <IconRefresh data-icon="inline-end" />
+        </Button>
+        <Dialog
+          open={opened}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) {
+              close();
+              form.reset();
+            }
           }}
-          opened={
-            // opened
-            null
-          }
-          title="New Configuration"
-          noCustomHeader
-          centered
-          onSubmit={form.onSubmit(handleSubmit)}
-          includeCancelButton
-          buttonTitle={"Submit"}
         >
-          <Stack gap={"xs"}>
-            <ContainedTextField
-              label={"Payment configuration name"}
-              placeholder="Enter configuration name"
-              {...form.getInputProps("configuration_name")}
-            />
-            <ContainedSelection
-              label={"Merchant category code (MCC)"}
-              data={MCC}
-              placeholder="Select merchant category code (MCC)"
-              {...form.getInputProps("merchant_category_code")}
-            />
-            <ContainedSelection
-              label={"Purpose code"}
-              data={PROVIDER_NAMES}
-              placeholder="Select purpose code"
-              {...form.getInputProps("purpose_code")}
-            />
-            <ContainedSelection
-              label={"Provider name"}
-              data={Object.keys(Providers)}
-              placeholder="Select provider name"
-              {...form.getInputProps("provider_name")}
-            />
-          </Stack>
-        </FormModalLayout>
-      </Group>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Get Configuration</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={getConfigForm.handleSubmit(handleSubmit)}>
+              <FieldGroup className="gap-4">
+                <Controller
+                  name="configuration_name"
+                  control={getConfigForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>Payment configuration name</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="Enter configuration name"
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+                <DialogFooter>
+                  <DialogClose render={<Button variant="secondary" type="button" />}>
+                    Cancel
+                  </DialogClose>
+                  <Button type="submit">Submit</Button>
+                </DialogFooter>
+              </FieldGroup>
+            </form>
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={false}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) {
+              close();
+              form.reset();
+            }
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>New Configuration</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={form.handleSubmit(handleSubmit)}>
+              <FieldGroup className="gap-4">
+                <Controller
+                  name="configuration_name"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>Payment configuration name</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="Enter configuration name"
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+                <Controller
+                  name="merchant_category_code"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="merchant_category_code">
+                        Merchant category code (MCC)
+                      </FieldLabel>
+                      <Select
+                        name={field.name}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        items={MCC}
+                      >
+                        <SelectTrigger
+                          id="merchant_category_code"
+                          className="w-full"
+                          aria-invalid={fieldState.invalid}
+                        >
+                          <SelectValue placeholder="Select merchant category code (MCC)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MCC.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+                <Controller
+                  name="purpose_code"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="purpose_code">Purpose code</FieldLabel>
+                      <Select
+                        name={field.name}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        items={PROVIDER_NAMES}
+                      >
+                        <SelectTrigger
+                          id="purpose_code"
+                          className="w-full"
+                          aria-invalid={fieldState.invalid}
+                        >
+                          <SelectValue placeholder="Select purpose code" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PROVIDER_NAMES.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+                <Controller
+                  name="provider_name"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="provider_name">Provider name</FieldLabel>
+                      <Select
+                        name={field.name}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        items={providerOptions}
+                      >
+                        <SelectTrigger
+                          id="provider_name"
+                          className="w-full"
+                          aria-invalid={fieldState.invalid}
+                        >
+                          <SelectValue placeholder="Select provider name" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {providerOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+                <DialogFooter>
+                  <DialogClose render={<Button variant="secondary" type="button" />}>
+                    Cancel
+                  </DialogClose>
+                  <Button type="submit">Submit</Button>
+                </DialogFooter>
+              </FieldGroup>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
       <WhatsappPaymentList
         data={data}
         deleteMutation={deleteMutation}
@@ -196,7 +321,7 @@ export function WhatsappPayment() {
           regenerateWaPaymentConfigurationOauthMutation
         }
       />
-    </Stack>
+    </div>
   );
 }
 
@@ -207,68 +332,74 @@ function WhatsappPaymentList({
 }) {
   if (!data?.credential || data?.credential?.length === 0) return <NothingFound text="" />;
   return (
-    <Box className={clsx("cards-grid-global-class")}>
+    <div className={clsx("cards-grid-global-class")}>
       {data?.credential?.map((credential) => (
-        <PaperLayout layoutAnimation key={credential?.configuration_name}>
-          <Stack justify="space-between" h={"100%"} gap={4}>
-            <Flex justify={"space-between"} align={"center"}>
-              <Text mr={"sm"} truncate fz="lg" fw={500}>
-                {credential?.configuration_name}
-              </Text>
-              {/* <WhatsappPaymentCardMenu
-                name={credential?.configuration_name}
-                deleteMutation={deleteMutation}
-              /> */}
-            </Flex>
-            <Box>
-              <Text>MCC: {credential?.merchant_category_code?.description}</Text>
-              <Text>PC: {credential?.purpose_code?.description}</Text>
-            </Box>
-            <Group>
+        <Card key={credential?.configuration_name}>
+          <CardHeader className="flex items-center justify-between">
+            <CardTitle className="mr-3 truncate text-lg">
+              {credential?.configuration_name}
+            </CardTitle>
+            {/* <WhatsappPaymentCardMenu
+              name={credential?.configuration_name}
+              deleteMutation={deleteMutation}
+            /> */}
+          </CardHeader>
+          <CardContent className="flex h-full flex-col justify-between gap-1">
+            <div>
+              <p>MCC: {credential?.merchant_category_code?.description}</p>
+              <p>PC: {credential?.purpose_code?.description}</p>
+            </div>
+            <div className="flex items-center gap-2">
               {credential.status === "Needs Connecting" &&
                 credential?.expiration &&
                 (dayjs.unix(credential?.expiration).isBefore(dayjs()) ? (
                   <>
-                    <Tooltip label={"Click to refresh button to regenerate verification link"}>
-                      <Link to={credential?.oauth_url} target="_blank">
-                        <RateupButtonPrimary
-                          title="Click to verify"
-                          variant="light"
-                          size="xs"
-                          disabled
-                        />
-                      </Link>
+                    <Tooltip>
+                      <TooltipTrigger render={<Link to={credential?.oauth_url} target="_blank" />}>
+                        <Button variant="secondary" size="sm" disabled>
+                          Click to verify
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Click to refresh button to regenerate verification link
+                      </TooltipContent>
                     </Tooltip>
-                    <Tooltip label={"Click to regenerate verification link"}>
-                      <ActionIcon
-                        variant="light"
-                        onClick={() =>
-                          regenerateWaPaymentConfigurationOauthMutation.mutate(
-                            credential?.configuration_name,
-                          )
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              regenerateWaPaymentConfigurationOauthMutation.mutate(
+                                credential?.configuration_name,
+                              )
+                            }
+                          />
                         }
                       >
                         <IconRefresh />
-                      </ActionIcon>
+                      </TooltipTrigger>
+                      <TooltipContent>Click to regenerate verification link</TooltipContent>
                     </Tooltip>
                   </>
                 ) : (
                   <Link to={credential?.oauth_url} target="_blank">
-                    <RateupButtonPrimary title="Click to verify" size="xs" />
+                    <Button size="sm">Click to verify</Button>
                   </Link>
                 ))}
-            </Group>
-            <Group justify="space-between">
-              <Badge variant="light" color="orange">
+            </div>
+            <div className="flex items-center justify-between">
+              <Badge className="border-transparent bg-orange-100 text-orange-700">
                 {credential?.provider_name ?? "RazorPay"}
               </Badge>
-              <Badge variant="light" color="green">
+              <Badge className="border-transparent bg-green-100 text-green-700">
                 {credential?.status}
               </Badge>
-            </Group>
-          </Stack>
-        </PaperLayout>
+            </div>
+          </CardContent>
+        </Card>
       ))}
-    </Box>
+    </div>
   );
 }

@@ -1,4 +1,3 @@
-import { Center, Checkbox, Group, Loader, ScrollAreaAutosize, Stack } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
@@ -6,6 +5,9 @@ import {
   useGetAllTestimonialsByCollection,
   useGetAllTestimonialsByOrg,
 } from "@/backend/testimonials/testimonial.query";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import type { filterType } from "@/routes/dashboard/testimonial/$collectionId/index.tsx";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 
@@ -37,46 +39,43 @@ const TestimonialSelect = ({
     const esistingtestimonialIds = collection?.testimonials.map((t) => t.id);
     return esistingtestimonialIds?.includes(idtocheck);
   }
-  if (isTestimonialLoading) return <Loader />;
+  if (isTestimonialLoading) return <Spinner />;
   if (filteredTestimonials?.length <= 0)
     return (
-      <Center mt={150}>
+      <div className="flex items-center justify-center mt-37.5">
         <NothingFound text={translations("No testimonials found")} />
-      </Center>
+      </div>
     );
   return (
-    <ScrollAreaAutosize h={"100%"}>
-      <Stack>
-        <Group p={"sm"}>
+    <ScrollArea className="h-full">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-2 p-3">
           {filteredTestimonials?.map((testimonial, _index) => {
             const isSelected = selectedTestimonialIds?.some((t) => t === testimonial?.id);
             return (
               <div className={classes.root} key={testimonial?.id}>
                 <Checkbox
-                  classNames={{ root: classes.checkboxWrapper }}
+                  className={classes.checkboxWrapper}
                   checked={
                     isSelected || checkIfTestimonialIdsAreIncludedInAllTestimonials(testimonial?.id)
                   }
                   disabled={checkIfTestimonialIdsAreIncludedInAllTestimonials(testimonial?.id)}
-                  onChange={(e) => {
-                    if (e.currentTarget.checked)
-                      setSelectedTestimonialIds((prev) => [...prev, testimonial?.id]);
+                  onCheckedChange={(checked) => {
+                    if (checked) setSelectedTestimonialIds((prev) => [...prev, testimonial?.id]);
                     else
                       setSelectedTestimonialIds((prev) =>
                         prev?.filter((t) => t !== testimonial?.id),
                       );
                   }}
                   tabIndex={-1}
-                  size="md"
-                  radius={"xl"}
                 />
                 <TestimonialCard testimonial={testimonial} />
               </div>
             );
           })}
-        </Group>
-      </Stack>
-    </ScrollAreaAutosize>
+        </div>
+      </div>
+    </ScrollArea>
   );
 };
 

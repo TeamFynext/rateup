@@ -1,10 +1,10 @@
-import { Group, Stack } from "@mantine/core";
 import { useSearch } from "@tanstack/react-router";
 
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import { cn } from "@/lib/utils";
 
 import NothingFound from "../../../NothingFound/NothingFound.tsx";
-import PaperLayout from "../../../styled/Layouts/PaperLayout.tsx";
 import { useLinktreeObj } from "../LinktreeContext/LinktreeContext.tsx";
 
 import styles from "./Stats.module.css";
@@ -16,41 +16,41 @@ function Stats() {
   const shortUrlId = searchParams.shortUrlId;
 
   return (
-    <PaperLayout className={styles["stats-page-root-div"]}>
-      <Stack className={styles["stats-container"]}>
-        <Group className={styles["visited-div"]}>
-          <Group>
+    <Card className={"p-4"}>
+      <div className={cn("flex flex-col gap-4", styles["stats-container"])}>
+        <div className={cn("flex items-center gap-2", styles["visited-div"])}>
+          <div className="flex items-center gap-2">
             <h1 className={styles["visited-text-h1"]}>Visited: </h1>
             <p className={styles["visited-count-p"]}>{visitorsCount}</p>
             <RefreshButton queryKeys={["linktree", shortUrlId as string]} />
-          </Group>
-        </Group>
-        <Stack className={styles["links-container"]}>
+          </div>
+        </div>
+        <div className={cn("flex flex-col gap-4", styles["links-container"])}>
           {!links || !links.length ? (
             <NothingFound text="No Links Found" />
           ) : (
             links?.map(({ id, linkDisplayName, linkUrl, noOfClicks = 0 }) => {
               return (
-                <PaperLayout key={id} className={styles["link-card"]}>
-                  <Group justify="space-between">
-                    <Stack className={styles["name-and-url-container"]}>
+                <Card key={id} className={"p-4"}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className={cn("flex flex-col gap-4", styles["name-and-url-container"])}>
                       <h2>{linkDisplayName}</h2>
                       <p>{linkUrl}</p>
-                    </Stack>
-                    <Group>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <p className={styles["no-of-clicks-p"]}>
                         <span>Number of Clicks: </span>
                         <span className={styles["no-of-clicks-number-span"]}>{noOfClicks}</span>
                       </p>
-                    </Group>
-                  </Group>
-                </PaperLayout>
+                    </div>
+                  </div>
+                </Card>
               );
             })
           )}
-        </Stack>
-      </Stack>
-    </PaperLayout>
+        </div>
+      </div>
+    </Card>
   );
 }
 

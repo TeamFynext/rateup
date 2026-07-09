@@ -1,4 +1,3 @@
-import { ActionIcon, Center, Divider, Flex, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconLogout, IconPencilMinus } from "@tabler/icons-react";
 import { useState } from "react";
@@ -7,7 +6,10 @@ import { useTranslation } from "react-i18next";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useDeregisterBusinessClientMutation } from "@/backend/whatsapp/settings/waSettings.query";
 import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
 import { ConnectMetaAccountButton } from "./connect-meta-account-button.tsx";
@@ -37,12 +39,12 @@ export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettin
 
   if (!waSettings?.length) {
     return (
-      <Center h="100%" bg="whitesmoke" style={{ borderRadius: "4px" }}>
-        <Stack align="center" gap="md" p={"md"}>
-          <Text>No WhatsApp Business Accounts Connected</Text>
+      <div className="flex h-full items-center justify-center rounded bg-muted">
+        <div className="flex flex-col items-center gap-4 p-4">
+          <p className="text-sm">No WhatsApp Business Accounts Connected</p>
           <ConnectMetaAccountButton />
-        </Stack>
-      </Center>
+        </div>
+      </div>
     );
   }
 
@@ -69,7 +71,7 @@ export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettin
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   {/* Header with Edit & Logout buttons */}
-                  <Flex justify="space-between" align="start">
+                  <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h4 className="font-semibold text-base">
@@ -81,33 +83,45 @@ export function MetaLoginStatus({ waSettings }: Readonly<{ waSettings?: WaSettin
                       </div>
                       <p className="text-xs text-muted-foreground">{setting.phone}</p>
                     </div>
-                    <Group gap="xs">
-                      <Tooltip label={translations("Edit Display Name")}>
-                        <ActionIcon
-                          onClick={() => {
-                            setSelectedWaSettings(setting);
-                            openEdit();
-                          }}
-                          variant="subtle"
-                          size="lg"
-                        >
-                          <IconPencilMinus size={18} />
-                        </ActionIcon>
+                    <div className="flex items-center gap-2">
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedWaSettings(setting);
+                                openEdit();
+                              }}
+                            >
+                              <IconPencilMinus size={18} />
+                            </Button>
+                          }
+                        />
+                        <TooltipContent>{translations("Edit Display Name")}</TooltipContent>
                       </Tooltip>
-                      <Tooltip label={translations("Logout from this WhatsApp Business Account")}>
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          size="lg"
-                          onClick={() => handleDeRegister(setting.phoneId)}
-                        >
-                          <IconLogout size={18} />
-                        </ActionIcon>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleDeRegister(setting.phoneId)}
+                            >
+                              <IconLogout size={18} />
+                            </Button>
+                          }
+                        />
+                        <TooltipContent>
+                          {translations("Logout from this WhatsApp Business Account")}
+                        </TooltipContent>
                       </Tooltip>
-                    </Group>
-                  </Flex>
+                    </div>
+                  </div>
 
-                  <Divider />
+                  <Separator />
 
                   {/* Account Details */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

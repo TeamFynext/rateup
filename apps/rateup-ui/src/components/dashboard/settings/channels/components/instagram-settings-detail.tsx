@@ -1,10 +1,10 @@
-import { Group, Skeleton, Stack } from "@mantine/core";
 import { IconBrandInstagram } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 import { InstagramConnectionsList } from "./instagram-connections-list.tsx";
 
@@ -21,13 +21,13 @@ export function InstagramSettingsDetail({
 
   if (isLoading) {
     content = (
-      <Stack p="md">
-        <Skeleton height={8} width="50%" />
-        <Group>
-          <Skeleton height={30} width={300} />
-          <Skeleton height={30} width={300} />
-        </Group>
-      </Stack>
+      <div className="flex flex-col gap-4 p-4">
+        <Skeleton className="h-2 w-1/2" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-7.5 w-75" />
+          <Skeleton className="h-7.5 w-75" />
+        </div>
+      </div>
     );
   } else if (waSettings?.length) {
     content = <InstagramConnectionsList waSettings={waSettings} />;

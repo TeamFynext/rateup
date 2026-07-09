@@ -1,21 +1,12 @@
-import {
-  Box,
-  Card,
-  Center,
-  Divider,
-  Group,
-  List,
-  LoadingOverlay,
-  Modal,
-  rem,
-  Stack,
-  Text,
-} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCircleCheck, IconX } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 
+import { Card } from "@/components/ui/card.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { gAnalyticsAndFbEvent } from "@/utils/gtag.ts";
 
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons.tsx";
@@ -54,7 +45,7 @@ const PlanCard = ({
     setIsIframeLoading(false);
   }, []);
 
-  let marginTop = "xl";
+  let marginTop = "32px";
   const title = `Subscribe Now`;
 
   if (isPopular) {
@@ -64,61 +55,55 @@ const PlanCard = ({
 
   return (
     <Card
-      shadow="md"
-      radius="lg"
-      withBorder
-      w={PlanCardWidth}
-      mt={marginTop}
-      mih={"100%"}
+      className="gap-0 border py-0 shadow-md"
       style={{
+        width: PlanCardWidth,
+        marginTop,
+        minHeight: "100%",
         zIndex: 3,
         borderTopLeftRadius: isPopular ? "0px" : "15px",
         borderTopRightRadius: isPopular ? "0px" : "15px",
       }}
     >
-      <Card.Section>
-        <Box m="xs" bg={cardMainColor} style={{ borderRadius: "5px" }}>
-          <Stack m={"md"} pt="sm" pb="md" gap={0}>
-            <Text fz={Title4} c={"white"}>
-              {data?.displayName}
-            </Text>
+      <div className="m-2 rounded-[5px]" style={{ background: cardMainColor }}>
+        <div className="m-4 flex flex-col gap-0 pt-3 pb-4">
+          <p style={{ fontSize: Title4 }} className="text-white">
+            {data?.displayName}
+          </p>
 
-            <Group>
-              <Text size={"lg"} fw={500} c={"white"}>
-                {data?.paymentPlan?.period || data?.stripeProduct?.interval ? (
-                  <>
-                    {currencySymbol}
-                    <NumberAnimate
-                      value={data?.paymentPlan?.amount || data?.stripeProduct?.amount || 0}
-                    />
-                    {(
-                      !isStripe
-                        ? data?.paymentPlan?.period === "monthly"
-                        : data?.stripeProduct?.interval === "month"
-                    )
-                      ? " / month"
-                      : " / year"}
-                  </>
-                ) : (
-                  "Customized Plan & Pricing"
-                )}
-              </Text>
-            </Group>
-          </Stack>
-        </Box>
-      </Card.Section>
+          <div className="flex items-center gap-2">
+            <p className="text-lg font-medium text-white">
+              {data?.paymentPlan?.period || data?.stripeProduct?.interval ? (
+                <>
+                  {currencySymbol}
+                  <NumberAnimate
+                    value={data?.paymentPlan?.amount || data?.stripeProduct?.amount || 0}
+                  />
+                  {(
+                    !isStripe
+                      ? data?.paymentPlan?.period === "monthly"
+                      : data?.stripeProduct?.interval === "month"
+                  )
+                    ? " / month"
+                    : " / year"}
+                </>
+              ) : (
+                "Customized Plan & Pricing"
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
       {totalItems - 1 === index ? (
-        <Stack justify="space-around" h="100%">
-          <Center
-            c={cardMainColor}
-            mb={largeScreen ? "xl" : "md"}
-            mt={largeScreen ? "lg" : "xs"}
-            pb={largeScreen && "5px"}
-            h="80%"
+        <div className="flex h-full flex-col justify-around">
+          <div
+            className={`flex h-[80%] items-center justify-center ${
+              largeScreen ? "mt-6 mb-8 pb-1.25" : "mt-2 mb-4"
+            }`}
           >
-            <Text fz={"clamp(30px, 25.712px + 0.714vw, 36px)"}>Lets Talk!</Text>
-          </Center>
-          <Center mb="lg">
+            <p style={{ fontSize: "clamp(30px, 25.712px + 0.714vw, 36px)" }}>Lets Talk!</p>
+          </div>
+          <div className="mb-6 flex items-center justify-center">
             <RateupButtonPrimary
               title="Contact Sales"
               color={cardMainColor}
@@ -134,15 +119,15 @@ const PlanCard = ({
               size="md"
               className={ButtonStyles["button-hover"]}
             />
-          </Center>
-        </Stack>
+          </div>
+        </div>
       ) : (
-        <Stack justify="space-between" h="100%">
-          <Stack gap={5} p="0" mt={"sm"}>
+        <div className="flex h-full flex-col justify-between">
+          <div className="mt-3 flex flex-col gap-1.25 p-0">
             {generateListItems(data?.description)}
-          </Stack>
+          </div>
 
-          <Center mb="lg">
+          <div className="mb-6 flex items-center justify-center">
             <RateupButtonPrimary
               title={title}
               color={cardMainColor}
@@ -182,32 +167,35 @@ const PlanCard = ({
                 }
               }}
             />
-          </Center>
-        </Stack>
+          </div>
+        </div>
       )}
-      <Modal
-        opened={opened}
-        classNames={styles}
-        onClose={close}
-        zIndex={400}
-        title={"Contact Sales"}
-        centered
-        size={"100vw"}
-        closeOnClickOutside={false}
+      <Dialog
+        open={opened}
+        onOpenChange={(next) => {
+          if (!next) close();
+        }}
       >
-        <LoadingOverlay
-          visible={isIframeLoading}
-          zIndex={1000}
-          overlayProps={{ radius: "sm", blur: 2 }}
-        />
-        {opened && (
-          <iframe
-            onLoad={upadateLoadingStateOfIframe}
-            className={styles["contact-form-iframe"]}
-            src="https://rateup.app/ws/8hKp9bb9"
-          />
-        )}
-      </Modal>
+        <DialogContent className="w-screen max-w-screen">
+          <DialogHeader>
+            <DialogTitle>Contact Sales</DialogTitle>
+          </DialogHeader>
+          <div className="relative">
+            {isIframeLoading && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-sm bg-background/60 backdrop-blur-[2px]">
+                <Spinner />
+              </div>
+            )}
+            {opened && (
+              <iframe
+                onLoad={upadateLoadingStateOfIframe}
+                className={styles["contact-form-iframe"]}
+                src="https://rateup.app/ws/8hKp9bb9"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
@@ -215,26 +203,23 @@ const PlanCard = ({
 export default PlanCard;
 
 const generateListItems = (listData: string[] = []) => (
-  <List
-    spacing="xs"
-    size="md"
-    center
-    icon={<IconCircleCheck style={{ width: rem(16), height: rem(16), color: "green" }} />}
-  >
+  <ul className="flex flex-col">
     {listData.map((item) => {
       const isNegative = item.startsWith("-");
       const displayName = isNegative ? item.substring(1) : item;
       return (
-        <Stack key={item} gap={2}>
-          <List.Item
-            icon={isNegative && <IconX style={{ width: rem(16), height: rem(16), color: "red" }} />}
-          >
-            {displayName}
-          </List.Item>
-
-          <Divider my="md" />
-        </Stack>
+        <li key={item} className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-2 text-base">
+            {isNegative ? (
+              <IconX style={{ width: 16, height: 16, color: "red" }} />
+            ) : (
+              <IconCircleCheck style={{ width: 16, height: 16, color: "green" }} />
+            )}
+            <span>{displayName}</span>
+          </div>
+          <Separator className="my-4" />
+        </li>
       );
     })}
-  </List>
+  </ul>
 );

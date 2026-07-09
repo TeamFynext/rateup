@@ -1,7 +1,7 @@
-import { Rating, Stack, Text, Title } from "@mantine/core";
+import { Rating } from "@mantine/core";
 import { motion } from "motion/react";
 
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { Card } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
@@ -45,16 +45,8 @@ export const PricingPlanReview = () => {
       viewport={{ once: true }}
       className="flex flex-col justify-center items-center h-[100%] py-4"
     >
-      <Title ta={"center"} c="white" order={3} mb={"lg"}>
-        Why People Love Us
-      </Title>
-      <PaperLayout
-        shadow="lg"
-        className="bg-gray-50"
-        p={0}
-        py={"lg"}
-        w={{ base: 350, xs: "90%", sm: "80%" }}
-      >
+      <h3 className="mb-6 text-center text-2xl font-bold text-white">Why People Love Us</h3>
+      <Card className={"w-[80%]"}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -65,20 +57,16 @@ export const PricingPlanReview = () => {
             <CarouselContent>
               {reviews.map((review, index) => (
                 <CarouselItem key={index} className="px-15">
-                  <Stack justify="center" align="center" gap={"xs"}>
+                  <div className="flex flex-col items-center justify-center gap-2">
                     <Rating value={5} />
                     <p className="text-sm italic">
                       {quote} {review.description} {quote}
                     </p>
-                    <Stack gap={0} p={0} justify="center" align="center">
-                      <Text fw={500} size="sm">
-                        {review.author}
-                      </Text>
-                      <Text size="sm" c="dimmed">
-                        {review.position}
-                      </Text>
-                    </Stack>
-                  </Stack>
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-sm font-medium">{review.author}</p>
+                      <p className="text-sm text-muted-foreground">{review.position}</p>
+                    </div>
+                  </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -86,7 +74,7 @@ export const PricingPlanReview = () => {
             <CarouselNext />
           </Carousel>
         </motion.div>
-      </PaperLayout>
+      </Card>
     </motion.div>
   );
 };

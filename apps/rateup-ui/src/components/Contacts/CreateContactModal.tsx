@@ -1,18 +1,6 @@
-import {
-  Blockquote,
-  Box,
-  Checkbox,
-  Group,
-  NavLink,
-  Paper,
-  Radio,
-  Stack,
-  Switch,
-} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
-import { User } from "lucide-react";
+import { Download, Info, User } from "lucide-react";
 import { Activity, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -29,12 +17,17 @@ import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { importMethod } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
-import { RateupButtonBlue, RateupButtonSecondary } from "../Button/RateupButtons.tsx";
 import { ContainedFileInput } from "../input/ContainedInput/ContainedInput.tsx";
+import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
+import { Checkbox } from "../ui/checkbox.tsx";
+import { Label } from "../ui/label.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
+import { Spinner } from "../ui/spinner.tsx";
+import { Switch } from "../ui/switch.tsx";
 import ContactForm from "./ContactForm.tsx";
 
 const CreateContactModal = ({
@@ -209,80 +202,120 @@ const CreateContactModal = ({
     form.setFieldValue("contactType", customFields?.map((field) => field.slug) || []);
   }, [initialValues]);
 
+  const sourceValue = form.getValues().source;
+  const contactTypeValue: string[] = form.getValues().contactType ?? [];
+
   return (
-    <Box p="0">
+    <div>
       <form
-        onSubmit={handleSubmit}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
         onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
         onReset={form.reset}
       >
-        <Stack>
-          <Group justify="space-between">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             {initialValues ? null : (
-              <Radio.Group
-                name="importMethod"
-                label={translations("Import Contacts")}
-                key={form.key("source")}
-                {...form.getInputProps("source")}
-              >
-                <Group>
-                  <Radio value={importMethod.MANUAL} label={translations("Manual")} />
-                  <Radio value={importMethod.CSV} label={translations("Import CSV/XLSX")} />
-                </Group>
-              </Radio.Group>
+              <div className="flex flex-col gap-2">
+                <Label>{translations("Import Contacts")}</Label>
+                <RadioGroup
+                  value={sourceValue}
+                  onValueChange={(value) => form.setFieldValue("source", value)}
+                  className="flex flex-row items-center gap-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value={importMethod.MANUAL} id="import-manual" />
+                    <Label htmlFor="import-manual" className="font-normal">
+                      {translations("Manual")}
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value={importMethod.CSV} id="import-csv" />
+                    <Label htmlFor="import-csv" className="font-normal">
+                      {translations("Import CSV/XLSX")}
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
             )}
 
             {customFields?.length > 0 && (
-              <Paper p="xs" withBorder>
-                <Checkbox.Group
-                  key={form.key("contactType")}
-                  {...form.getInputProps("contactType")}
-                >
-                  <Group>
-                    {customFields?.map((data) => (
+              <Card className="flex flex-row flex-wrap items-center gap-4 p-2">
+                {customFields?.map((data) => {
+                  const checked = contactTypeValue.includes(data?.slug);
+                  return (
+                    <div className="flex items-center gap-2" key={data?.id}>
                       <Checkbox
-                        value={data?.slug}
-                        label={data?.name}
-                        key={data?.id}
-                        tt={"capitalize"}
+                        id={`contact-type-${data?.slug}`}
+                        checked={checked}
+                        onCheckedChange={(value) => {
+                          form.setFieldValue(
+                            "contactType",
+                            value
+                              ? [...contactTypeValue, data?.slug]
+                              : contactTypeValue.filter((slug) => slug !== data?.slug),
+                          );
+                        }}
                       />
-                    ))}
-                  </Group>
-                </Checkbox.Group>
-              </Paper>
+                      <Label
+                        htmlFor={`contact-type-${data?.slug}`}
+                        className="font-normal capitalize"
+                      >
+                        {data?.name}
+                      </Label>
+                    </div>
+                  );
+                })}
+              </Card>
             )}
-          </Group>
-          {(form.getValues().source == importMethod.MANUAL ||
-            form.getValues().source != importMethod.CSV ||
+          </div>
+          {(sourceValue == importMethod.MANUAL ||
+            sourceValue != importMethod.CSV ||
             initialValues) && <ContactForm form={form} customFields={customFields} type={type} />}
-          {form.getValues().source == importMethod.CSV && !initialValues && (
-            <Stack>
-              <Blockquote color="blue" icon={<IconInfoCircle />} p={"sm"} iconSize={40} mx={"lg"}>
-                {translations(
-                  "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone",
-                )}
-                <NavLink
-                  href={getFileUrlFromKey("/File/contact/demo.csv", false)}
-                  label={translations("Download Demo Csv File")}
-                  leftSection={<IconDownload size="1rem" stroke={1.5} />}
-                  download
-                  active
-                  style={{ borderRadius: "4px" }}
-                  target="_blank"
+          {sourceValue == importMethod.CSV && !initialValues && (
+            <div className="flex flex-col gap-4">
+              <blockquote className="mx-6 flex items-start gap-2 rounded-md border-l-4 border-l-rateup-blue bg-accent p-3 text-sm">
+                <Info className="mt-0.5 size-5 shrink-0 text-rateup-blue" />
+                <div className="flex flex-col gap-2">
+                  <span>
+                    {translations(
+                      "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone",
+                    )}
+                  </span>
+                  <a
+                    href={getFileUrlFromKey("/File/contact/demo.csv", false)}
+                    download
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex w-fit items-center gap-1 rounded-sm text-rateup-blue underline underline-offset-2"
+                  >
+                    <Download className="size-4" />
+                    {translations("Download Demo Csv File")}
+                  </a>
+                </div>
+              </blockquote>
+              <div className="mx-6 flex items-center gap-2">
+                <Switch
+                  id="update-existing"
+                  checked={form.getValues().updateExisting}
+                  onCheckedChange={(value) => form.setFieldValue("updateExisting", value)}
                 />
-              </Blockquote>
-              <Switch
-                mx={"lg"}
-                label={translations("Update the existing data while importing")}
-                key={form.key("updateExisting")}
-                {...form.getInputProps("updateExisting")}
-              />
-              <Switch
-                mx={"lg"}
-                label={translations("First row contains column headers (name, phone, ...)")}
-                key={form.key("hasHeaderRow")}
-                {...form.getInputProps("hasHeaderRow")}
-              />
+                <Label htmlFor="update-existing" className="font-normal">
+                  {translations("Update the existing data while importing")}
+                </Label>
+              </div>
+              <div className="mx-6 flex items-center gap-2">
+                <Switch
+                  id="has-header-row"
+                  checked={form.getValues().hasHeaderRow}
+                  onCheckedChange={(value) => form.setFieldValue("hasHeaderRow", value)}
+                />
+                <Label htmlFor="has-header-row" className="font-normal">
+                  {translations("First row contains column headers (name, phone, ...)")}
+                </Label>
+              </div>
               <ContainedFileInput
                 mx={"lg"}
                 label=""
@@ -300,28 +333,31 @@ const CreateContactModal = ({
                   },
                 }}
               />
-            </Stack>
+            </div>
           )}
 
-          <Group justify="flex-end">
-            <RateupButtonSecondary title="cancel" onClick={contactClose} />
-            <RateupButtonBlue
-              title={
-                initialValues
-                  ? translations("Update Contact")
-                  : form.getValues().source == importMethod.MANUAL
-                    ? translations("Add Contact")
-                    : translations("Import Contacts")
-              }
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="secondary" type="button" onClick={contactClose}>
+              <span className="text-sm font-normal">{translations("cancel")}</span>
+            </Button>
+            <Button
               type="button"
-              loading={isCreating}
               onClick={handleSubmit}
-              disabled={form.getValues().source == importMethod.CSV && !initialValues && !csvfile}
-            />
-          </Group>
-        </Stack>
+              disabled={sourceValue == importMethod.CSV && !initialValues && !csvfile}
+            >
+              {isCreating && <Spinner />}
+              <span className="text-sm font-normal">
+                {initialValues
+                  ? translations("Update Contact")
+                  : sourceValue == importMethod.MANUAL
+                    ? translations("Add Contact")
+                    : translations("Import Contacts")}
+              </span>
+            </Button>
+          </div>
+        </div>
       </form>
-    </Box>
+    </div>
   );
 };
 export default CreateContactModal;

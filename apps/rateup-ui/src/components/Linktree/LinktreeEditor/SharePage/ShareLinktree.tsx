@@ -1,10 +1,10 @@
-import { Group, Stack } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
+import { cn } from "@/lib/utils";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
 import { RateupButtonBlue } from "../../../Button/RateupButtons.tsx";
@@ -67,11 +67,11 @@ function ShareLinktree({ url, isPublished, title }) {
   }, [logoTabPanelState]);
 
   return (
-    <Group className={styles["logo-tab-panel-and-qr-container"]}>
+    <div className={cn("flex items-center gap-2", styles["logo-tab-panel-and-qr-container"])}>
       <LogoTabpanel state={logoTabPanelState} dispatch={logoTabPanelDispatch} />
 
       {url && (
-        <Stack align="center">
+        <div className="flex flex-col items-center gap-4">
           {/* Qr Preview */}
           <Preview
             logoTabPanelState={logoTabPanelState}
@@ -84,9 +84,9 @@ function ShareLinktree({ url, isPublished, title }) {
             title="Save Settings"
             onClick={handleSaveOfShareSettings}
           />
-        </Stack>
+        </div>
       )}
-    </Group>
+    </div>
   );
 }
 

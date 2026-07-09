@@ -1,4 +1,3 @@
-import { Badge, Group, SegmentedControl, Stack, Text } from "@mantine/core";
 import { useNavigate } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
@@ -7,6 +6,8 @@ import { useMemo, useState } from "react";
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import { currencyLabel } from "@/components/menu/util/currencyData.ts";
 import { BookDemoModal1 } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
 
 import PlanCardNew from "./Card/PlanCardNew.tsx";
@@ -96,24 +97,6 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
       to: route,
     });
   }
-  const periods = [
-    { label: "Monthly", value: "monthly" },
-    {
-      label: (
-        <Group gap={"xs"} p={0} w={140}>
-          <Text>Yearly</Text>
-          <Badge
-            color={period === "yearly" ? "white" : "#00397b"}
-            c={period === "yearly" ? "#00397b" : "white"}
-          >
-            Save 20%
-          </Badge>
-        </Group>
-      ),
-      value: "yearly",
-    },
-  ];
-
   return (
     <section className="relative flex flex-col justify-center gap-6 items-center bg-gray-100 py-12 px-6 md:px-12 text-gray-800">
       <div className="text-center">
@@ -122,19 +105,18 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
         </h4>
         <h1 className="text-4xl md:text-5xl font-bold text-[#00397b] mt-3">Choose What You Need</h1>
       </div>
-      <Stack justify={"center"} align="center" gap={0}>
+      <div className="flex flex-col items-center justify-center">
         <Image src={"/images/subscriptionArrow.png"} height={32} width={67} alt="image of arrow" />
-        <SegmentedControl
-          transitionDuration={500}
-          transitionTimingFunction="linear"
-          size="lg"
-          color={"#00397b"}
-          bg="#cce1ee"
-          data={periods}
-          value={period}
-          onChange={(value) => setPeriod(value)}
-        />
-      </Stack>
+        <Tabs value={period} onValueChange={(next) => setPeriod(next as string)}>
+          <TabsList className="bg-primary/30 min-h-10">
+            <TabsTrigger value="monthly">Monthly</TabsTrigger>
+            <TabsTrigger value="yearly">
+              <span>Yearly</span>
+              <Badge>Save 20%</Badge>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
 
       <motion.div
         className="grid gap-8 sm:grid-cols-1 lg:grid-cols-3 md:grid-cols-2 max-w-5xl mx-auto"

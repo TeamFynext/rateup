@@ -1,4 +1,3 @@
-import { Box } from "@mantine/core";
 import { useCallback } from "react";
 
 import LocalOrUnsplashImagePicker from "../../../../../../../LocalOrUnsplashImagePicker/index.tsx";
@@ -39,16 +38,16 @@ function BackgroundEditor() {
   }, []);
 
   return (
-    <Box className={styles["background-editor-div"]}>
-      <Box className={`style-section-div`}>
+    <div className={styles["background-editor-div"]}>
+      <div className={`style-section-div`}>
         <h2>Background Color</h2>
         <CustomColorPicker value={backgroundColor} onChange={handleBackgroundColorChange} />
-      </Box>
+      </div>
 
-      <Box className={`style-section-div`}>
+      <div className={`style-section-div`}>
         <h2>Background Image</h2>
 
-        <Box className={styles["bg-img-upload-btns-container"]}>
+        <div className={styles["bg-img-upload-btns-container"]}>
           <LocalOrUnsplashImagePicker
             forDevice={"desktop"}
             label={"Desktop"}
@@ -61,9 +60,9 @@ function BackgroundEditor() {
             onImageSelected={handleMobileBackgroundImageChange}
             value={mobileBgImgUrl}
           />
-        </Box>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 }
 

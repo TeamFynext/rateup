@@ -1,6 +1,8 @@
-import { Box, Button, ScrollArea } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
+
+import { Button } from "@/components/ui/button.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 
 import NothingFound from "../../../NothingFound/NothingFound.tsx";
 import { useLinktreeObj } from "../LinktreeContext/LinktreeContext.tsx";
@@ -16,18 +18,14 @@ function LinksEditor() {
     useDisclosure();
 
   return (
-    <Box className={styles["links-editor-root-div"]}>
-      <Box className={styles["link-editor-contianer"]}>
-        <Box className={styles["add-link-btn-container"]}>
-          <Button
-            className={styles["add-link-btn"]}
-            fullWidth
-            leftSection={<IconPlus />}
-            onClick={openAddLinkModal}
-          >
+    <div className={styles["links-editor-root-div"]}>
+      <div className={styles["link-editor-contianer"]}>
+        <div className={styles["add-link-btn-container"]}>
+          <Button className={`${styles["add-link-btn"]} w-full`} onClick={openAddLinkModal}>
+            <IconPlus data-icon="inline-start" />
             Add Link
           </Button>
-        </Box>
+        </div>
 
         <ScrollArea className={styles["links-list-container"]}>
           {!links || !links.length ? (
@@ -45,8 +43,8 @@ function LinksEditor() {
             links={links ? links : []}
           />
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }
 

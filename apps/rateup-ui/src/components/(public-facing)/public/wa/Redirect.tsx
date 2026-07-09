@@ -1,4 +1,3 @@
-import { Box, Stack } from "@mantine/core";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -17,11 +16,11 @@ export function Redirect({ tag = null, res }: any) {
   }, [res?.shareUrl, tag]);
 
   return (
-    <Stack justify="center" align="center" h={"100dvh"}>
-      <Box>
+    <div className="flex flex-col items-center justify-center" style={{ height: "100dvh" }}>
+      <div>
         <RateupLoader />
         <div>Redirecting to whatsapp...</div>
-      </Box>
-    </Stack>
+      </div>
+    </div>
   );
 }

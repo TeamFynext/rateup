@@ -1,5 +1,4 @@
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
-import { Box } from "@mantine/core";
 
 function Reorder({ onDragEnd, className = "", children, itemsArr }) {
   const handleDragEnd = (result) => {
@@ -18,15 +17,10 @@ function Reorder({ onDragEnd, className = "", children, itemsArr }) {
     <DragDropContext onDragEnd={handleDragEnd}>
       <Droppable droppableId="droppable">
         {(provided, _snapshot) => (
-          <Box
-            className={className}
-            {...provided.droppableProps}
-            // {...provided.draggableProps}
-            ref={provided.innerRef}
-          >
+          <div className={className} {...provided.droppableProps} ref={provided.innerRef}>
             {children}
             {provided.placeholder}
-          </Box>
+          </div>
         )}
       </Droppable>
     </DragDropContext>

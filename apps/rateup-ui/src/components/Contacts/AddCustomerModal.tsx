@@ -1,19 +1,7 @@
-import {
-  ActionIcon,
-  Box,
-  Checkbox,
-  Group,
-  Radio,
-  ScrollArea,
-  Stack,
-  Table,
-  TextInput,
-  Tooltip,
-} from "@mantine/core";
 import { useDebouncedState } from "@mantine/hooks";
-import { IconRefresh, IconSearch } from "@tabler/icons-react";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import { RefreshCw, Search } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -28,9 +16,17 @@ import { ContactGroupType } from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { contactAddType } from "@/utils/enums/index.ts";
 
-import { RateupButtonBlue, RateupButtonSecondary } from "../Button/RateupButtons.tsx";
 import RateupLoader from "../Loaders/RateupLoader.tsx";
 import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
+import { Button } from "../ui/button.tsx";
+import { Checkbox } from "../ui/checkbox.tsx";
+import { Input } from "../ui/input.tsx";
+import { Label } from "../ui/label.tsx";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
+import { ScrollArea } from "../ui/scroll-area.tsx";
+import { Spinner } from "../ui/spinner.tsx";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.tsx";
 import ContactPagination from "./ContactPagination.tsx";
 import CreateContactModal from "./CreateContactModal.tsx";
 
@@ -89,25 +85,14 @@ const AddCustomerModal = ({
     );
   };
 
-  const customStyle = {
-    label: {
-      fontWeight: "bold",
-      fontSize: "18px",
-    },
-  };
-
   const rows = contactData?.map((contact) => {
     if (type === ContactGroupType.LOYALTY) {
       return (
-        <Table.Tr
+        <TableRow
           key={contact?.loyaltyCustomer?.id}
-          bg={
-            customerList.includes(contact?.loyaltyCustomer?.id)
-              ? "var(--mantine-color-blue-light)"
-              : undefined
-          }
+          className={customerList.includes(contact?.loyaltyCustomer?.id) ? "bg-accent" : undefined}
         >
-          <Table.Td>
+          <TableCell>
             <Checkbox
               aria-label={translations("Select row")}
               checked={
@@ -115,50 +100,50 @@ const AddCustomerModal = ({
                 existingContactIds?.includes(contact?.loyaltyCustomer?.id)
               }
               disabled={existingContactIds?.includes(contact?.loyaltyCustomer?.id)}
-              onChange={(event) =>
+              onCheckedChange={(checked) =>
                 setCustomerList(
-                  event.currentTarget.checked
+                  checked
                     ? [...customerList, contact?.loyaltyCustomer?.id]
                     : customerList.filter((id) => id !== contact?.loyaltyCustomer?.id),
                 )
               }
             />
-          </Table.Td>
-          <Table.Td>{contact?.name}</Table.Td>
-          <Table.Td>{contact?.phone}</Table.Td>
+          </TableCell>
+          <TableCell>{contact?.name}</TableCell>
+          <TableCell>{contact?.phone}</TableCell>
           {type === ContactGroupType.LOYALTY && (
             <>
-              <Table.Td>{contact?.email}</Table.Td>
-              <Table.Td>{contact?.dob && dayjs(contact?.dob)?.format("DD/MM/YYYY")}</Table.Td>
+              <TableCell>{contact?.email}</TableCell>
+              <TableCell>{contact?.dob && dayjs(contact?.dob)?.format("DD/MM/YYYY")}</TableCell>
             </>
           )}
-        </Table.Tr>
+        </TableRow>
       );
     } else {
       return (
-        <Table.Tr
+        <TableRow
           key={contact?.id}
-          bg={customerList.includes(contact?.id) ? "var(--mantine-color-blue-light)" : undefined}
+          className={customerList.includes(contact?.id) ? "bg-accent" : undefined}
         >
-          <Table.Td>
+          <TableCell>
             <Checkbox
               aria-label={translations("Select row")}
               checked={
                 customerList?.includes(contact?.id) || existingContactIds?.includes(contact?.id)
               }
               disabled={existingContactIds?.includes(contact?.id)}
-              onChange={(event) =>
+              onCheckedChange={(checked) =>
                 setCustomerList(
-                  event.currentTarget.checked
+                  checked
                     ? [...customerList, contact?.id]
                     : customerList.filter((id) => id !== contact?.loyaltyCustomer?.id),
                 )
               }
             />
-          </Table.Td>
-          <Table.Td>{contact?.name}</Table.Td>
-          <Table.Td>{contact?.phone}</Table.Td>
-        </Table.Tr>
+          </TableCell>
+          <TableCell>{contact?.name}</TableCell>
+          <TableCell>{contact?.phone}</TableCell>
+        </TableRow>
       );
     }
   });
@@ -167,25 +152,29 @@ const AddCustomerModal = ({
   const totalPageCount = (data?.totalCount ?? 1) / pagination.pageSize;
 
   return (
-    <Box p="0">
-      <Stack gap={"md"}>
-        <Group>
-          <Radio.Group
+    <div>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <Label className="text-lg font-bold">{translations("Choose")}</Label>
+          <RadioGroup
             value={addType}
-            onChange={(value) => setAddType(value)}
-            name="addType"
-            label={translations("Choose")}
-            styles={customStyle}
+            onValueChange={(value) => setAddType(value)}
+            className="flex flex-row items-center gap-4"
           >
-            <Group>
-              <Radio value={contactAddType.NEW} label={translations("Add New Contact")} />
-              <Radio
-                value={contactAddType.EXISTING}
-                label={translations("Add Existing Contacts")}
-              />
-            </Group>
-          </Radio.Group>
-        </Group>
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value={contactAddType.NEW} id="add-type-new" />
+              <Label htmlFor="add-type-new" className="font-normal">
+                {translations("Add New Contact")}
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value={contactAddType.EXISTING} id="add-type-existing" />
+              <Label htmlFor="add-type-existing" className="font-normal">
+                {translations("Add Existing Contacts")}
+              </Label>
+            </div>
+          </RadioGroup>
+        </div>
 
         {addType == contactAddType.NEW ? (
           <CreateContactModal
@@ -196,7 +185,7 @@ const AddCustomerModal = ({
             createNewContactMutation={createNewContactMutation}
           />
         ) : (
-          <Stack justify="center" gap={"md"}>
+          <div className="flex flex-col justify-center gap-4">
             <FilterSelect
               contactArray={contactGroupData?.map((data) => ({
                 value: data?.id,
@@ -205,57 +194,67 @@ const AddCustomerModal = ({
               setFilterByTag={setColumnFilters}
               filterByTag={columnFilters}
             />
-            <Group justify="space-between" px={"md"}>
-              <Checkbox
-                aria-label="select all"
-                label={translations("Select All")}
-                checked={remainingContactIds?.every((id) => customerList.includes(id))}
-                onChange={(event) => {
-                  setCustomerList(event.currentTarget.checked ? remainingContactIds : []);
-                }}
-                disabled={contactGroupData.every((customer) =>
-                  existingContactIds.includes(customer?.id),
-                )}
-              />
-              <TextInput
-                leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
-                radius="xl"
-                size="sm"
-                placeholder={translations("Search Contact")}
-                rightSectionWidth={60}
-                defaultValue={searchTerm}
-                onChange={(event) => setSearchTerm(event.currentTarget.value)}
-                w={300}
-              />
-            </Group>
+            <div className="flex items-center justify-between gap-2 px-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="select-all-contacts"
+                  aria-label="select all"
+                  checked={remainingContactIds?.every((id) => customerList.includes(id))}
+                  onCheckedChange={(checked) => {
+                    setCustomerList(checked ? remainingContactIds : []);
+                  }}
+                  disabled={contactGroupData.every((customer) =>
+                    existingContactIds.includes(customer?.id),
+                  )}
+                />
+                <Label htmlFor="select-all-contacts" className="font-normal">
+                  {translations("Select All")}
+                </Label>
+              </div>
+              <div className="relative w-75">
+                <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  className="rounded-full pl-9"
+                  placeholder={translations("Search Contact")}
+                  defaultValue={searchTerm}
+                  onChange={(event) => setSearchTerm(event.currentTarget.value)}
+                />
+              </div>
+            </div>
             <PaperLayout>
-              <ScrollArea h={200}>
-                <Table stickyHeader>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>
-                        <Tooltip label={translations("refresh data")}>
-                          <ActionIcon
-                            variant="light"
-                            onClick={() => {
-                              refetch();
-                            }}
+              <ScrollArea className="h-50">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  refetch();
+                                }}
+                              />
+                            }
                           >
-                            <IconRefresh />
-                          </ActionIcon>
+                            <RefreshCw />
+                          </TooltipTrigger>
+                          <TooltipContent>{translations("refresh data")}</TooltipContent>
                         </Tooltip>
-                      </Table.Th>
-                      <Table.Th>{translations("Name")}</Table.Th>
-                      <Table.Th>{translations("Phone Number")}</Table.Th>
+                      </TableHead>
+                      <TableHead>{translations("Name")}</TableHead>
+                      <TableHead>{translations("Phone Number")}</TableHead>
                       {type === ContactGroupType.LOYALTY && (
                         <>
-                          <Table.Th>{translations("Email")}</Table.Th>
-                          <Table.Th>{translations("Date of Birth")}</Table.Th>
+                          <TableHead>{translations("Email")}</TableHead>
+                          <TableHead>{translations("Date of Birth")}</TableHead>
                         </>
                       )}
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>{rows}</Table.Tbody>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>{rows}</TableBody>
                 </Table>
               </ScrollArea>
               <ContactPagination
@@ -264,18 +263,19 @@ const AddCustomerModal = ({
                 totalPageCount={totalPageCount}
               />
             </PaperLayout>
-            <Group justify="flex-end">
-              <RateupButtonSecondary title={translations("cancel")} onClick={close} />
-              <RateupButtonBlue
-                title={translations("Add Member")}
-                onClick={handleAddExistingContacts}
-                loading={isCreating}
-              />
-            </Group>
-          </Stack>
+            <div className="flex items-center justify-end gap-2">
+              <Button variant="secondary" onClick={close}>
+                {translations("cancel")}
+              </Button>
+              <Button onClick={handleAddExistingContacts} disabled={isCreating}>
+                {isCreating && <Spinner />}
+                {translations("Add Member")}
+              </Button>
+            </div>
+          </div>
         )}
-      </Stack>
-    </Box>
+      </div>
+    </div>
   );
 };
 

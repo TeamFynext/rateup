@@ -1,9 +1,10 @@
-import { Flex, Loader, Paper, Stack, Text, Title } from "@mantine/core";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { useCreateAuthToken } from "@/backend/appsIntegration/integration.query";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 
 export const Route = createFileRoute("/auth/oauth2callback/")({
   component: AuthCallBack,
@@ -39,29 +40,26 @@ function AuthCallBack() {
   }, [code, error]);
 
   return (
-    <>
-      <Flex justify={"center"} align={"center"} mt={200}>
-        {isLoading ? (
-          <Stack justify="center" align="center">
-            <Text> Please wait..</Text>
-            <Loader />
-          </Stack>
-        ) : (
-          <Paper withBorder p={"xl"} shadow="xl">
-            <Title order={2}>Your accout has been synced with RateUp</Title>
-            <Flex justify="center" mt={"xl"}>
-              <RateupButtonBlue
-                title="Go Back"
-                onClick={() => {
-                  navigate({
-                    to: callbackRoute,
-                  });
-                }}
-              />
-            </Flex>
-          </Paper>
-        )}
-      </Flex>
-    </>
+    <div className="mt-50 flex items-center justify-center">
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center gap-4">
+          <p> Please wait..</p>
+          <Spinner className="size-8" />
+        </div>
+      ) : (
+        <Card className="border p-8 shadow-xl">
+          <h2 className="text-2xl font-semibold">Your accout has been synced with RateUp</h2>
+          <div className="mt-8 flex justify-center">
+            <Button
+              onClick={() => {
+                navigate({
+                  to: callbackRoute,
+                });
+              }}
+            />
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

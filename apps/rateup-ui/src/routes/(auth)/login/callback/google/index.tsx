@@ -1,8 +1,9 @@
-import { LoadingOverlay, Text } from "@mantine/core";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { signInAndUp } from "supertokens-auth-react/recipe/thirdparty";
+
+import { Spinner } from "@/components/ui/spinner";
 
 export const Route = createFileRoute("/(auth)/login/callback/google/")({
   component: GoogleCallbacck,
@@ -75,18 +76,9 @@ function GoogleCallbacck() {
   }, []);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <LoadingOverlay visible />
-      <Text pt="7rem" size="md">
-        Signing with Google... Please wait...
-      </Text>
+    <div className="flex min-h-screen flex-col items-center justify-center">
+      <Spinner className="size-8" />
+      <p className="pt-28 text-base">Signing with Google... Please wait...</p>
     </div>
   );
 }

@@ -1,10 +1,12 @@
-import { useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import { Folder } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import z from "zod";
 
 import {
   useCreateContactGroupMutation,
@@ -26,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog.tsx";
+import { Field, FieldError, FieldLabel } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
 import { Label } from "../ui/label.tsx";
 import { Spinner } from "../ui/spinner.tsx";
@@ -43,52 +46,67 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
   const [isUploading, setIsUploading] = useState(false);
   const navigate = useNavigate();
   const { t: translations } = useTranslation();
-  const form = useForm({
-    initialValues: groupDetails
-      ? { ...groupDetails, contactType: [] }
-      : {
-          name: "",
-          icon: "",
-          teamId: "",
-          contactType: [],
-          tags: {},
-        },
-    validate: {
-      name: (value) => (value.length ? null : translations("Cannot be empty")),
-      teamId: (value) => !isEdit && !value && translations("Must select a team"),
-    },
+
+  const groupFormSchema = z
+    .object({
+      name: z.string().trim().min(1, translations("Cannot be empty")),
+      teamId: z.string().optional(),
+    })
+    .passthrough()
+    .superRefine((values, ctx) => {
+      if (!isEdit && !values.teamId) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["teamId"],
+          message: translations("Must select a team"),
+        });
+      }
+    });
+
+  const defaultValues = groupDetails
+    ? { ...groupDetails, contactType: [] }
+    : {
+        name: "",
+        icon: "",
+        teamId: "",
+        contactType: [],
+        tags: {},
+      };
+
+  const form = useForm<any>({
+    resolver: zodResolver(groupFormSchema),
+    defaultValues,
   });
+
+  const iconValue = form.watch("icon");
+  const nameValue = form.watch("name");
 
   useEffect(() => {
     if (groupDetails) {
-      form.setValues(groupDetails);
-      form.setFieldValue("teamId", groupDetails.teamId);
+      form.reset({ ...groupDetails });
     } else {
-      form.reset();
+      form.reset(defaultValues);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupDetails]);
 
   const createContactGroupMutation = useCreateContactGroupMutation();
 
   const editContactGroupMutation = useEditContactGroupMutation(groupDetails?.id);
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const validation = form.validate();
-    if (validation.hasErrors) {
-      return;
-    }
+  const onSubmit = () => {
+    const values = form.getValues();
 
     // Process tags for selected contact types
     const result = {};
-    for (const key of form.values.contactType) {
-      if (form.values?.tags?.hasOwnProperty(key)) {
-        result[key] = form.values?.tags?.[key];
+    for (const key of values.contactType ?? []) {
+      if (values?.tags?.hasOwnProperty(key)) {
+        result[key] = values?.tags?.[key];
       }
     }
 
     const updatedValues = {
-      ...form.values,
+      ...values,
       type,
       tags: result,
     };
@@ -125,51 +143,72 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
     setIsUploading(true);
     uploadFile(file)
       .then((key) => {
-        form.setFieldValue("icon", key);
+        form.setValue("icon", key);
         setIsUploading(false);
       })
       .catch((_err) => {
         toast.error(translations("Error uploading icon. Please try again."));
         setIsUploading(false);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file]);
 
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
       <DialogContent onClick={(e) => e.stopPropagation()}>
-        <form onSubmit={handleSubmit} onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, form.handleSubmit(onSubmit)]])}
+        >
           <DialogHeader>
             <DialogTitle>Create New Group</DialogTitle>
             <DialogDescription>Create a new contact group with team</DialogDescription>
           </DialogHeader>
           <div className="my-5">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col space-y-2">
-                <Label>{translations("Group Name")}</Label>
-                <Input
-                  {...form.getInputProps("name")}
-                  required
-                  placeholder={translations("Enter group name")}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <TeamSelector
-                {...form.getInputProps("teamId")}
-                label={translations("Select Team")}
-                readOnly={isEdit}
-                className="w-full"
-                onClick={(e) => e.stopPropagation()}
+              <Controller
+                name="name"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>{translations("Group Name")}</FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      required
+                      placeholder={translations("Enter group name")}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="teamId"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>{translations("Select Team")}</FieldLabel>
+                    <TeamSelector
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="w-full"
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
               />
             </div>
             <div className="flex flex-col gap-2 mt-4 ">
-              {form.values.icon?.length ? (
+              {iconValue?.length ? (
                 <Avatar>
-                  <AvatarImage src={getFileUrlFromKey(form.values.icon)} alt={form.values.name} />
+                  <AvatarImage src={getFileUrlFromKey(iconValue)} alt={nameValue} />
                 </Avatar>
               ) : (
                 <Folder />
               )}
-              <div className="space-y-4">
+              <div className="flex flex-col gap-4">
                 <input
                   id="file-upload"
                   type="file"
@@ -185,7 +224,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
           </div>
 
           <DialogFooter>
-            <DialogClose render={<Button variant="secondary" />}>
+            <DialogClose render={<Button variant="secondary" type="button" />}>
               <span className="text-sm font-normal">{translations("Cancel")}</span>
             </DialogClose>
             <Button disabled={isUploading} type="submit">

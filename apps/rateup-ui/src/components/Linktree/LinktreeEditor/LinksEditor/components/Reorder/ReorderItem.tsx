@@ -1,5 +1,4 @@
 import { Draggable } from "@hello-pangea/dnd";
-import { Box } from "@mantine/core";
 import { IconGripVertical } from "@tabler/icons-react";
 import cx from "clsx";
 import type { CSSProperties } from "react";
@@ -11,7 +10,7 @@ function ReorderItem({ children, id, index, className = "" }) {
     <Draggable draggableId={id} index={index}>
       {(provided, snapshot) => {
         return (
-          <Box
+          <div
             {...provided.draggableProps}
             {...provided.dragHandleProps}
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
@@ -23,7 +22,7 @@ function ReorderItem({ children, id, index, className = "" }) {
               <IconGripVertical size={18} stroke={1.5} />
             </div>
             {children}
-          </Box>
+          </div>
         );
       }}
     </Draggable>

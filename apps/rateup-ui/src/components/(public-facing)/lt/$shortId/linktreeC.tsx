@@ -1,4 +1,3 @@
-import { Box, Image } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { produce } from "immer";
 import { useCallback, useEffect } from "react";
@@ -122,32 +121,32 @@ const LinkTreeC = ({ linktreeObj }) => {
   }, []);
 
   return (
-    <Box style={backgroundStylesObj} className={`${styles["root-div"]}`}>
-      <Box className={styles["logo-img-container"]}>
+    <div style={backgroundStylesObj} className={`${styles["root-div"]}`}>
+      <div className={styles["logo-img-container"]}>
         {logoUrl ? (
-          <Image src={logoUrl} alt="logo" style={{ ...logoStyles, objectFit: "contain" }} />
+          <img src={logoUrl} alt="logo" style={{ ...logoStyles, objectFit: "contain" }} />
         ) : (
-          <Image
+          <img
             src={`${imagesPath}/camera-off.svg`}
             alt="logo"
             style={{ ...logoStyles, objectFit: "contain" }}
           />
         )}
-      </Box>
+      </div>
 
-      <Box className={styles["title-div-container"]}>
+      <div className={styles["title-div-container"]}>
         <h1 className={styles["title"]} style={titleStyles}>
           {titleText}
         </h1>
-      </Box>
+      </div>
 
-      <Box className={styles["subtitle-div-container"]}>
+      <div className={styles["subtitle-div-container"]}>
         <p className={styles["subtitle-p"]} style={subtitleStyles}>
           {subtitleText}
         </p>
-      </Box>
+      </div>
 
-      <Box className={styles["links-list-container"]}>
+      <div className={styles["links-list-container"]}>
         {links.map(({ id, linkDisplayName, linkUrl }) => {
           return (
             <a
@@ -162,9 +161,9 @@ const LinkTreeC = ({ linktreeObj }) => {
             </a>
           );
         })}
-      </Box>
+      </div>
       <UnsplashCreditText url={isMobile ? mobileBgImgUrl : desktopBgImgUrl} />
-    </Box>
+    </div>
   );
 };
 

@@ -1,5 +1,3 @@
-import { Box } from "@mantine/core";
-
 import SaveChangesBtn from "./components/SaveChangesBtn/index.tsx";
 import ThemePreview from "./components/ThemePreview/index.tsx";
 import ThemeStyles from "./components/ThemeStylesEditor/index.tsx";
@@ -10,16 +8,16 @@ import styles from "./ThemeEditor.module.css";
 function ThemeEditor() {
   return (
     <ThemeObjProvider>
-      <Box className={styles["theme-editor-root-div"]}>
-        <Box className={styles["save-changes-comp-container"]}>
+      <div className={styles["theme-editor-root-div"]}>
+        <div className={styles["save-changes-comp-container"]}>
           <SaveChangesBtn />
-        </Box>
+        </div>
 
-        <Box className={styles["theme-preview-and-styles-editors-wrapper"]}>
+        <div className={styles["theme-preview-and-styles-editors-wrapper"]}>
           <ThemePreview />
           <ThemeStyles />
-        </Box>
-      </Box>
+        </div>
+      </div>
     </ThemeObjProvider>
   );
 }
