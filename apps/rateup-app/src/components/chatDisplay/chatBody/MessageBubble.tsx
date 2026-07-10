@@ -12,6 +12,10 @@ import { namePreview } from "@/utils/chatbox_utils";
 import { WaTemplateComponent } from "@/context/type";
 import {
   Lock,
+  CheckCheck,
+  Check,
+  Clock,
+  AlertCircle
 } from "lucide-react-native";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { getClosedIcon } from "@/util";
@@ -28,6 +32,7 @@ type MessageBubbleProps = {
   template: any;
   templateComponentParams?: WaTemplateComponent[];
   assignStatus?: string;
+  stats?: any;
 };
 
 const MessageBubble = ({
@@ -40,6 +45,7 @@ const MessageBubble = ({
   template,
   templateComponentParams,
   assignStatus,
+  stats,
 }: MessageBubbleProps) => {
   const getBgColor = () => {
     if (exchangeProcess === "internal") {
@@ -377,18 +383,29 @@ const MessageBubble = ({
             {renderContent(bubbleTextColor)}
           </View>
 
-          <Text
-            style={{
-              fontSize: 11,
-              fontFamily: "Nunito_400Regular",
-              color: timestampColor,
-              textAlign: "right",
-              marginTop: 3,
-              marginRight: 4,
-            }}
-          >
-            {timestamp}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginTop: 3, marginRight: 4, gap: 4 }}>
+            <Text
+              style={{
+                fontSize: 11,
+                fontFamily: "Nunito_400Regular",
+                color: timestampColor,
+                textAlign: "right",
+              }}
+            >
+              {timestamp}
+            </Text>
+            {isSender && (
+              <View>
+                {(() => {
+                  if (stats?.read) return <CheckCheck size={13} color={Colors.accent.cyan} />;
+                  if (stats?.delivered) return <CheckCheck size={13} color={timestampColor} />;
+                  if (stats?.failed || stats?.error) return <AlertCircle size={13} color="#ef4444" />;
+                  if (stats?.sent) return <Check size={13} color={timestampColor} />;
+                  return <Clock size={12} color={timestampColor} />;
+                })()}
+              </View>
+            )}
+          </View>
         </View>
       )}
 

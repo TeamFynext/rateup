@@ -10,8 +10,9 @@ import {
   useColorScheme,
   ScrollView,
   Modal,
+  RefreshControl,
 } from "react-native";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { countries } from "@/constants/countries";
 import {
   ChevronDown,
@@ -110,12 +111,19 @@ const CashierPortal = () => {
   const [redeemCouponOpen, setRedeemCouponOpen] = useState(false);
 
   const { data: tiers } = useLoyaltyTiers();
-  const { data: customerData, isLoading: isLoadingCustomer } =
+  const { data: customerData, isLoading: isLoadingCustomer, isError: isCustomerError, refetch } =
     useCustomerRewardsByPhone(fullPhoneNumber);
   const awardPoints = useAwardPointsMutation();
   const redeemRewardMutation = useRedeemReward(fullPhoneNumber);
   const assignReward = useAssignRewardMutation(() => { });
   const redeemRewardByShortCode = useRedeemRewardByShortCode();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   const [pointsAmount, setPointsAmount] = useState("");
   const [pointsNotes, setPointsNotes] = useState("");
@@ -296,6 +304,14 @@ const CashierPortal = () => {
           flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors["primary-blue"]}
+            colors={[colors["primary-blue"]]}
+          />
+        }
       >
         {/* Card */}
         <View className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-gray-200 dark:border-slate-800 shadow-sm">
@@ -371,21 +387,31 @@ const CashierPortal = () => {
         </View>
         {!customer && (
           <View className="h-full justify-center flex-1 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-gray-200 dark:border-slate-800 shadow-sm items-center">
-            {/* Icon */}
-            <View className="w-16 h-16 rounded-full bg-primaryBlue/10 items-center justify-center mb-4">
-              <User size={28} color={isDark ? "#60a5fa" : "#2563eb"} />
-            </View>
+            {isCustomerError ? (
+              <>
+                <Text className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  Check your internet connection
+                </Text>
+                <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1 mb-5">
+                  We couldn&apos;t reach the server to fetch customer details.
+                </Text>
+              </>
+            ) : (
+              <>
+                <View className="w-16 h-16 rounded-full bg-primaryBlue/10 items-center justify-center mb-4">
+                  <User size={28} color={isDark ? "#60a5fa" : "#2563eb"} />
+                </View>
 
-            {/* Title */}
-            <Text className="text-lg font-semibold text-gray-900 dark:text-white">
-              No Customer Selected
-            </Text>
+                <Text className="text-lg font-semibold text-gray-900 dark:text-white">
+                  No Customer Selected
+                </Text>
 
-            {/* Description */}
-            <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1 mb-5">
-              Search for a customer using their phone number to view details and
-              perform actions.
-            </Text>
+                <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1 mb-5">
+                  Search for a customer using their phone number to view details and
+                  perform actions.
+                </Text>
+              </>
+            )}
           </View>
         )}
         {customer && (

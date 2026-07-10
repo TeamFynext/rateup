@@ -1,5 +1,5 @@
-import React, { memo, useMemo } from "react";
-import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
+import React, { memo, useMemo, useState, useCallback } from "react";
+import { View, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useWaFlowsFromDb } from "@/api/whatsapp/flow/flow.query";
 import FlowSearchBar from "@/components/flow/FlowSearchBar";
@@ -14,9 +14,8 @@ const getStatusBadge = (status: string) => {
     <View className="flex-row items-center justify-center gap-1">
       <View className={`w-2 h-2 rounded-full ${color}`} />
       <Text
-        className={`text-xs font-medium ${
-          status === "PUBLISHED" ? "text-green-600" : "text-orange-500"
-        }`}
+        className={`text-xs font-medium ${status === "PUBLISHED" ? "text-green-600" : "text-orange-500"
+          }`}
       >
         {status}
       </Text>
@@ -25,7 +24,14 @@ const getStatusBadge = (status: string) => {
 };
 
 const Flow = () => {
-  const { data = [], isLoading } = useWaFlowsFromDb();
+  const { data = [], isLoading, isError, refetch } = useWaFlowsFromDb();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
   const { search } = useSearchFlowStore();
   const router = useRouter();
 
@@ -96,8 +102,8 @@ const Flow = () => {
       .getDate()
       .toString()
       .padStart(2, "0")}/${(createdAt.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}/${createdAt.getFullYear()}`;
+        .toString()
+        .padStart(2, "0")}/${createdAt.getFullYear()}`;
 
     return (
       <TouchableOpacity
@@ -142,6 +148,23 @@ const Flow = () => {
           data={filteredAndSortedFlows}
           renderItem={renderItem}
           keyExtractor={(item) => item.dbFlowId}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors["primary-blue"]}
+              colors={[colors["primary-blue"]]}
+            />
+          }
+          ListEmptyComponent={
+            <View className="items-center mt-20">
+              {isError ? (
+                <Text className="text-gray-700 dark:text-gray-300 font-medium">Check your internet connection</Text>
+              ) : (
+                <Text className="text-gray-500">No flows found.</Text>
+              )}
+            </View>
+          }
           contentContainerStyle={{ paddingBottom: 20 }}
         />
       </View>

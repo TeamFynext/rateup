@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   useColorScheme,
   Pressable,
+  ScrollView,
 } from "react-native";
 import {
   Sparkles,
@@ -18,6 +19,7 @@ import { useChatFilterStore, useSelectedTabStore } from "@/utils/store";
 import Inbox from "@/components/inbox/inbox";
 import SearchBar from "@/components/inbox/inboxSearchBar";
 import RefreshButton from "@/components/inbox/RefreshButton";
+import { useInboxCountStore } from "@/store/inboxCountStore";
 import { Colors } from "@/constants/colors";
 import { useAuth } from "@/context/AuthContext";
 
@@ -84,7 +86,7 @@ function TabIcon({
       >
         {label}
       </Text>
-      {count !== undefined && count > 0 && (
+      {count !== undefined && (
         <Text
           style={
             focused
@@ -102,6 +104,8 @@ function TabIcon({
                 overflow: "hidden",
               }
               : {
+                paddingHorizontal: 7,
+                paddingVertical: 1,
                 fontSize: 12,
                 fontFamily: "Nunito_400Regular",
                 color: isDark
@@ -163,17 +167,20 @@ export default function InboxLayout() {
     }
   };
 
-  const {
-    data: contactCounts = {
-      all: 0,
-      assigned: 0,
-      assignedToMe: 0,
-      closed: 0,
-      new: 0,
-      sent: 0,
-      unassigned: 0,
-    },
-  } = useContactCounts();
+  const { data: contactCountsData, isLoading: isContactCountsLoading } = useContactCounts();
+  const setCounts = useInboxCountStore((state) => state.setCounts);
+  const contactCounts = useInboxCountStore((state) => state.counts);
+
+  useEffect(() => {
+    if (contactCountsData) {
+      setCounts({
+        openCount: (contactCountsData.assigned || 0) + (contactCountsData.unassigned || 0),
+        closedCount: contactCountsData.closed || 0,
+        allCount: contactCountsData.total || contactCountsData.all || 0,
+        newCount: contactCountsData.new || 0,
+      });
+    }
+  }, [contactCountsData, setCounts]);
 
   const activeFilterCount =
     ((filterFromStore.status && filterFromStore.status.length > 0) ? 1 : 0) +
@@ -231,7 +238,7 @@ export default function InboxLayout() {
                 marginTop: 2,
               }}
             >
-              {contactCounts.new} {contactCounts.new === 1 ? "conversation needs" : "conversations need"} attention
+              {contactCounts.newCount} {contactCounts.newCount === 1 ? "conversation needs" : "conversations need"} attention
             </Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
@@ -250,11 +257,12 @@ export default function InboxLayout() {
             borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
           }}
         >
-          <View
-            style={{
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
               flexDirection: "row",
               alignItems: "center",
-              justifyContent: "space-between",
               paddingHorizontal: 16,
               gap: 8,
             }}
@@ -264,7 +272,7 @@ export default function InboxLayout() {
                 Icon={Sparkles}
                 focused={activeTab === "Open"}
                 label="Open"
-                count={(contactCounts.unassigned || 0) + (contactCounts.assigned || 0)}
+                count={contactCounts.openCount}
               />
             </Pressable>
 
@@ -333,6 +341,7 @@ export default function InboxLayout() {
                 Icon={CircleCheckBig}
                 focused={activeTab === "Closed"}
                 label="Closed"
+                count={contactCounts.closedCount}
               />
             </Pressable>
 
@@ -341,9 +350,10 @@ export default function InboxLayout() {
                 Icon={InboxIcon}
                 focused={activeTab === "All"}
                 label="All"
+                count={contactCounts.allCount}
               />
             </Pressable>
-          </View>
+          </ScrollView>
         </View>
 
         <View className="flex-1" style={{ backgroundColor: listBgColor }}>

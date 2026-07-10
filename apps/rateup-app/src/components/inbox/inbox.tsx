@@ -9,11 +9,12 @@ import {
   returnMessageContentBasedOnParsedMessage,
 } from "@/api/inbox/messages/utils";
 import { useWsData } from "@/context/UserContext";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import ChatBox from "../chatBox/ChatBox";
+import { useContactsStore, makeFilterKey, useMessagesStore } from "@/store/inboxStore";
 
 type InboxProps = {
   messageType: string;
@@ -32,9 +33,6 @@ export default function Inbox({
   const setSelectedContact = useSelectedContactStore((state) => state.setSelectedContact);
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [updatedContacts, setUpdatedContacts] = useState<
-    ContactsWithLastMessage[]
-  >([]);
 
   const mergedFilter = {
     ...filter,
@@ -56,53 +54,107 @@ export default function Inbox({
     isError,
   } = useFilteredContacts(encodedFilter);
 
-  const contacts = data?.pages.flatMap((page) => page.rows) ?? [];
+  const contactsByFilter = useContactsStore(state => state.contactsByFilter);
+  const contactsById = useContactsStore(state => state.contactsById);
+  const addContactsForFilter = useContactsStore(state => state.addContactsForFilter);
+  const updateContactById = useContactsStore(state => state.updateContactById);
+  const setFilter = useContactsStore(state => state.setFilter);
+  const loadContactsFromDB = useContactsStore(state => state.loadContactsFromDB);
 
-  const [prevWsData, setPrevWsData] = useState(wsData);
-
-  if (wsData !== prevWsData) {
-    setPrevWsData(wsData);
-    if (wsData?.type === "inbox" && wsData?.inbox?.contact?.id) {
-      const contactId = wsData.inbox.contact.id;
-
-      setUpdatedContacts((prev) => {
-        const alreadyUpdated = prev.find((c) => c.id === contactId);
-        const fromOriginalContacts = contacts.find((c) => c.id === contactId);
-        const baseContact = alreadyUpdated || fromOriginalContacts;
-
-        if (!baseContact) return prev; // not in current contacts list
-
-        const isUnread =
-          Array.isArray(wsData.inbox?.message.readUsers) &&
-          wsData.inbox.message.readUsers.length === 0 &&
-          wsData.inbox.message.sendBy === null;
-
-        const updatedContact: ContactsWithLastMessage = {
-          ...baseContact,
-          ...wsData.inbox?.contact,
-          lastMessage: wsData.inbox?.message,
-          lastReceivedMessageTimeStamp:
-            wsData.inbox?.contact.lastReceivedMessageTimeStamp,
-          unReadMessageCount: isUnread
-            ? (baseContact.unReadMessageCount ?? 0) + 1
-            : baseContact.unReadMessageCount ?? 0,
-        };
-        const filtered = prev.filter((c) => c.id !== contactId);
-        return [updatedContact, ...filtered];
-      });
-    }
-  }
+  const filterKey = makeFilterKey(mergedFilter);
 
   useEffect(() => {
-    if (wsData?.type === "inbox" && wsData?.inbox?.contact?.id) {
-      queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
-    }
-  }, [wsData, queryClient]);
+    setFilter(mergedFilter);
+    // Assuming currentUser logic isn't strictly required for contacts load, passing null or basic info is fine.
+    loadContactsFromDB(mergedFilter, null);
+  }, [filterKey, setFilter, loadContactsFromDB]);
 
-  const displayedContacts = contacts.map((contact) => {
-    const updated = updatedContacts.find((u) => u.id === contact.id);
-    return updated || contact;
-  });
+  // Handle data load from react-query
+  useEffect(() => {
+    if (!data) return;
+    let isActive = true;
+
+    const syncContacts = async () => {
+      const allContacts = data.pages.flatMap((page) => page.rows) ?? [];
+      if (!allContacts.length) return;
+
+      const existingIds = new Set(contactsByFilter[filterKey] || []);
+      const newContacts = allContacts
+        .filter((c) => {
+          const existingContact = contactsById.has(c.id);
+          if (!existingContact) return true;
+          return !existingIds.has(c.id);
+        })
+        .map((c) => {
+          if (contactsById.has(c.id)) return c;
+          return { ...c, updatedAt: new Date().toISOString() };
+        });
+
+      if (newContacts.length > 0 && isActive) {
+        await addContactsForFilter(filterKey, newContacts);
+
+        newContacts.forEach((c: any) => {
+          if (!c.messages) return;
+          const messageMap = new Map();
+          c.messages.forEach((m: any) => {
+            const key = `${c.id}_${m.sourceIdentifier}`;
+            const all = `${c.id}_all`;
+            messageMap.set(key, [...(messageMap.get(key) ?? []), m]);
+            messageMap.set(all, [...(messageMap.get(all) ?? []), m]);
+          });
+
+          const mergeMessages = useMessagesStore.getState().mergeMessages;
+          Array.from(messageMap.entries()).forEach(([k, msgs]) => {
+            mergeMessages(k, msgs, false);
+          });
+        });
+      }
+    };
+
+    syncContacts();
+
+    return () => {
+      isActive = false;
+    };
+  }, [data, filterKey]);
+
+  // Websocket hook
+  useEffect(() => {
+    if (wsData?.type === "inbox" && wsData?.inbox?.contact?.id) {
+      const contactId = wsData.inbox.contact.id;
+      const isUnread =
+        Array.isArray(wsData.inbox?.message.readUsers) &&
+        wsData.inbox.message.readUsers.length === 0 &&
+        wsData.inbox.message.sendBy === null;
+
+      updateContactById(
+        contactId,
+        (oldContact) => {
+          if (!oldContact) return oldContact;
+          return {
+            ...oldContact,
+            ...wsData.inbox?.contact,
+            lastMessage: wsData.inbox?.message,
+            lastReceivedMessageTimeStamp: wsData.inbox?.contact.lastReceivedMessageTimeStamp,
+            unReadMessageCount: isUnread
+              ? (oldContact.unReadMessageCount ?? 0) + 1
+              : oldContact.unReadMessageCount ?? 0,
+          };
+        },
+        isUnread
+      );
+
+      if (wsData.inbox.message) {
+        const msg = wsData.inbox.message as any;
+        const k = `${contactId}_${msg.sourceIdentifier || msg.id}`;
+        useMessagesStore.getState().mergeMessages(k, [msg], false);
+        useMessagesStore.getState().mergeMessages(`${contactId}_all`, [msg], false);
+      }
+    }
+  }, [wsData, queryClient, updateContactById]);
+
+  const contactIds = contactsByFilter[filterKey] || [];
+  let displayedContacts = contactIds.map((id) => contactsById.get(id)).filter(Boolean);
 
   const finalContacts =
     waMessageAssignStatus === "Addressed"
@@ -122,16 +174,12 @@ export default function Inbox({
       parsedMessage,
       item?.lastMessage?.messageBody?.exchangeProcess
     );
-    const sessionExpiry = dayjs(item.lastReceivedMessageTimeStamp).add(
-      24,
-      "hour"
-    );
+    const sessionExpiry = dayjs(item.lastReceivedMessageTimeStamp).add(24, "hour");
     const now = dayjs();
     const diffInMinutes = sessionExpiry.diff(now, "minute");
     const isSessionActive = diffInMinutes > 0;
     const platform = item?.lastMessage?.sourcePlatform;
-    const name =
-      item.name || item?.whatsappUserName || item.igsId || item.phone;
+    const name = item.name || item?.whatsappUserName || item.igsId || item.phone;
 
     return (
       <ChatBoxComponent
@@ -153,9 +201,7 @@ export default function Inbox({
             pathname: `/protected/chat/${item.id}`,
           });
         }}
-        lastMessageTimeStamp={dayjs
-          .utc(item.lastMessage?.waCreatedAt)
-          .fromNow()}
+        lastMessageTimeStamp={dayjs.utc(item.lastMessage?.waCreatedAt).fromNow()}
         lastReceivedMessageTimeStamp={item.lastReceivedMessageTimeStamp}
         isSessionActive={isSessionActive}
         unReadMessageCount={item.unReadMessageCount}
@@ -163,7 +209,7 @@ export default function Inbox({
     );
   };
 
-  if (isLoading) {
+  if (isLoading && !finalContacts.length) {
     return (
       <View className="flex-1 justify-center items-center bg-white dark:bg-slate-950">
         <ActivityIndicator size="large" />
@@ -171,21 +217,19 @@ export default function Inbox({
     );
   }
 
-  if (isError) {
+  if (isError && !finalContacts.length) {
     return (
       <View className="flex-1 justify-center items-center bg-white dark:bg-slate-950">
-        <Text className="text-red-500 text-center">
-          Failed to load contacts.
-        </Text>
+        <Text className="text-red-500 text-center">Failed to load contacts.</Text>
       </View>
     );
   }
 
   return (
     <FlashList
-      data={finalContacts}
+      data={finalContacts as any[]}
       keyExtractor={(item) => item.id}
-      renderItem={renderItem}
+      renderItem={renderItem as any}
       ListEmptyComponent={
         <View className="h-full flex items-center justify-center">
           <Text className="text-gray-500">No contacts found.</Text>

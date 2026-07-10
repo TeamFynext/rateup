@@ -6,7 +6,7 @@ import { MessagePlatform } from "@/constants/enums";
 export type ParsedWaMessageReturn = {
   timeStamp: string;
   messageType: string;
-  messageContent: string;
+  messageContent: any;
   template?: WaTemplateFetchBody;
   interactive?: WaSendMessageBody["interactive"];
 };
@@ -87,10 +87,10 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
   } else {
     if (messageBody?.exchangeProcess === "send") {
       const { send } = messageBody;
-      messageType = send.type;
+      messageType = send?.type || "text";
       switch (messageType) {
         case "text":
-          messageContent = send?.text?.body;
+          messageContent = send?.text?.body || messageBody?.text?.body || "";
           break;
         case "image":
           messageContent = `${send?.image?.link}_caption_${send?.image?.caption ?? ""}`;

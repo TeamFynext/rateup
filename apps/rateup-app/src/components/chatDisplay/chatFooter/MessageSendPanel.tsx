@@ -26,6 +26,7 @@ import {
   useSendNewWaMessage,
 } from "@/api/inbox/messages/message.query";
 import { uploadFile } from "@/utils/fileUpload";
+import { useMessagesStore, useContactsStore } from "@/store/inboxStore";
 import VoiceRecorder from "./VoiceRecorder";
 import {
   ImageIcon,
@@ -210,7 +211,32 @@ const MessageSendPanel = ({
   const handleSendPrivateMessage = handleSubmit((values) => {
     if (!values.text.body && !values.media.length) return;
     const id = generateInternalMessageId();
-    createPrivateMessage.mutate({ ...values, messageId: id });
+
+    // Optimistic UI update
+    if (selectedContactId) {
+      const contactId = selectedContactId as string;
+      const mockedMessage = {
+        id,
+        messageId: id,
+        createdAt: new Date().toISOString(),
+        waCreatedAt: new Date().toISOString(),
+        messageBody: {
+          exchangeProcess: "privateNote",
+          privateNote: {
+            text: values.text,
+            media: values.media,
+          },
+        },
+        sender: { name: "You" },
+      };
+      useMessagesStore.getState().addMessage(`${contactId}_${whatsappSettingsPhoneId}`, mockedMessage);
+      useMessagesStore.getState().addMessage(`${contactId}_all`, mockedMessage);
+
+      createPrivateMessage.mutate({ ...values, messageId: id });
+    } else {
+      createPrivateMessage.mutate({ ...values, messageId: id });
+    }
+
     reset(initialMessgabody);
     resetMedia();
     setAudioUrl(null);
@@ -218,7 +244,43 @@ const MessageSendPanel = ({
 
   const handleSend = handleSubmit((values) => {
     if (!values.text.body && !values.media.length) return;
-    sendnewWaMessage.mutate(values);
+
+    // Optimistic UI update
+    if (selectedContactId) {
+      const contactId = selectedContactId as string;
+      const id = Date.now().toString();
+      const mockedMessage = {
+        id,
+        messageId: id,
+        createdAt: new Date().toISOString(),
+        waCreatedAt: new Date().toISOString(),
+        messageBody: {
+          exchangeProcess: "send",
+          send: {
+            type: values.media?.length ? "image" : "text",
+            text: values.text,
+            image: values.media?.length ? { link: values.media[0].uri, caption: values.text?.body } : undefined,
+          },
+        },
+        sender: { name: "You" },
+      };
+      useMessagesStore.getState().addMessage(`${contactId}_${whatsappSettingsPhoneId}`, mockedMessage);
+      useMessagesStore.getState().addMessage(`${contactId}_all`, mockedMessage);
+
+      useContactsStore.getState().updateContactById(contactId, (c) => {
+        if (!c) return c;
+        return {
+          ...c,
+          lastMessage: mockedMessage,
+          lastReceivedMessageTimeStamp: new Date().toISOString(),
+        };
+      }, false);
+
+      sendnewWaMessage.mutate(values);
+    } else {
+      sendnewWaMessage.mutate(values);
+    }
+
     reset(initialMessgabody);
     resetMedia();
     setAudioUrl(null);

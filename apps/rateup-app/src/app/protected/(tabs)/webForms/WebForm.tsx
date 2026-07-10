@@ -1,5 +1,5 @@
-import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
-import React, { useMemo } from "react";
+import { View, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from "react-native";
+import React, { useMemo, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import isToday from "dayjs/plugin/isToday";
@@ -18,12 +18,20 @@ dayjs.extend(relativeTime);
 dayjs.extend(isToday);
 
 const WebForm = () => {
-  const { data: webform, isLoading } = useSurveys();
+  const { data: webform, isLoading, isError, refetch } = useSurveys();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
+
   const { teamId, status, sortByDate, alphabetical } = useWebFormFilterStore();
   const { search } = useSearchWebFormStore();
   const router = useRouter();
   const filteredForms = useMemo(() => {
-    if (!webform) return [];
+    if (!webform || !Array.isArray(webform)) return [];
 
     let filtered = webform.filter((form) => form.type === "web");
 
@@ -104,16 +112,14 @@ const WebForm = () => {
 
         <View className="flex-row justify-between items-center mt-1">
           <View
-            className={`px-2 py-[2px] rounded-full flex-row items-center ${
-              item.active
-                ? "bg-green-100 text-green-700"
-                : "bg-orange-100 text-orange-700"
-            }`}
+            className={`px-2 py-[2px] rounded-full flex-row items-center ${item.active
+              ? "bg-green-100 text-green-700"
+              : "bg-orange-100 text-orange-700"
+              }`}
           >
             <View
-              className={`w-2 h-2 rounded-full mr-1 ${
-                item.active ? "bg-green-500" : "bg-orange-500"
-              }`}
+              className={`w-2 h-2 rounded-full mr-1 ${item.active ? "bg-green-500" : "bg-orange-500"
+                }`}
             />
             <Text className="text-xs font-medium">
               {item.active ? "Active" : "Paused"}
@@ -148,9 +154,21 @@ const WebForm = () => {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors["primary-blue"]}
+              colors={[colors["primary-blue"]]}
+            />
+          }
           ListEmptyComponent={
             <View className="items-center mt-20">
-              <Text className="text-gray-500">No web forms found.</Text>
+              {isError ? (
+                <Text className="text-gray-700 dark:text-gray-300 font-medium">Check your internet connection</Text>
+              ) : (
+                <Text className="text-gray-500">No web forms found.</Text>
+              )}
             </View>
           }
           contentContainerStyle={{ paddingBottom: 20 }}
