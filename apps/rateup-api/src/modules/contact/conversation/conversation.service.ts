@@ -1,11 +1,25 @@
-import { WaMessageAssignStatus } from "../../../types/enums.js";
+import { CloseReason, InboxStatus, WaMessageAssignStatus } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
 import {
   ConversationAssigneeUpdateSchema,
   ConversationCore,
+  InboxActor,
   UpdateConversationSchema,
 } from "./conversation.schema.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { isTerminalInboxStatus } from "../../whatsapp/constants.js";
+import {
+  mapStatusToField,
+  transitionInboxStat,
+} from "../../whatsapp/inbox/inboxStats/inboxStats.service.js";
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/// The subset of the client available inside `prisma.$transaction(fn)`.
+type TxClient = Omit<
+  typeof prisma,
+  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+>;
 
 export async function createConversation(input: ConversationCore) {
   const { contactId, ...rest } = input;
@@ -19,6 +33,159 @@ export async function createConversation(input: ConversationCore) {
       ...rest,
     },
   });
+}
+
+/// Automation and rule closes have no acting user, so `closedBy` stays null and
+/// the attribution lives in `closeReason` / `closedByAutomation` instead. Only a
+/// genuine user id may be written to `closedBy`, which is an FK to User: callers
+/// pass sentinels like "RateUp" for non-human actors.
+function resolveClosedBy(actor: InboxActor): string | null {
+  if (actor.source !== "user") return null;
+  return actor.userId && UUID_PATTERN.test(actor.userId) ? actor.userId : null;
+}
+
+export const resolveClosedByUserId = resolveClosedBy;
+
+/// Legacy callers thread a bare `userId` that may be a sentinel such as "RateUp"
+/// or "Automation" rather than a real id. Map those onto a structured actor.
+export function resolveInboxActor(userId?: string): InboxActor {
+  if (userId && UUID_PATTERN.test(userId)) return { source: "user", userId };
+  return { source: "system" };
+}
+
+function resolveCloseReason(status: InboxStatus, actor: InboxActor): CloseReason | null {
+  if (status === WaMessageAssignStatus.SPAM) return CloseReason.SPAM;
+  switch (actor.source) {
+    case "user":
+      return CloseReason.MANUAL;
+    case "automation":
+      return CloseReason.AUTOMATION_IDLE;
+    case "rule":
+      return CloseReason.RULE;
+    default:
+      return null;
+  }
+}
+
+/// Everything a status transition writes to `Conversation`, in one place, so
+/// that the transactional mirror and `setInboxStatus` cannot disagree.
+export function conversationStatusData(
+  status: InboxStatus,
+  actor: InboxActor,
+  closeReason?: CloseReason,
+  now: Date = new Date(),
+) {
+  if (!isTerminalInboxStatus(status)) {
+    // Reopening clears the previous close stamp.
+    return {
+      status,
+      closedAt: null,
+      closedBy: null,
+      resolvedAt: null,
+      closeReason: null,
+      closedByAutomation: false,
+    };
+  }
+  return {
+    status,
+    closedAt: now,
+    closedBy: resolveClosedBy(actor),
+    closeReason: closeReason ?? resolveCloseReason(status, actor),
+    closedByAutomation: actor.source === "automation",
+    resolvedAt: status === WaMessageAssignStatus.RESOLVED ? now : null,
+  };
+}
+
+/// Mirrors `status` onto the contact's latest conversation using the caller's
+/// transaction, so `Contact.waMessageAssignStatus` and `Conversation.status`
+/// commit together. Callers that already own a transaction use this directly;
+/// everyone else goes through `setInboxStatus`.
+export async function mirrorConversationStatusTx(
+  tx: TxClient,
+  contactId: string,
+  status: InboxStatus,
+  actor: InboxActor,
+  opts: { closeReason?: CloseReason; conversationId?: string; now?: Date } = {},
+) {
+  const target = opts.conversationId
+    ? await tx.conversation.findUnique({ where: { id: opts.conversationId } })
+    : await tx.conversation.findFirst({
+        where: { contactId },
+        orderBy: { createdAt: "desc" },
+      });
+  if (!target) return null;
+
+  // Moving a *closed* conversation back to a live status is a reopen. A closed
+  // conversation is a finished record -- its closedAt and resolution timings
+  // must stay put -- so it is left alone and the caller opens a successor via
+  // `openConversationForContact`. Resurrecting it here would also mean no new
+  // conversation is ever created, since the contact would appear to have a live
+  // one already.
+  if (isTerminalInboxStatus(target.status) && !isTerminalInboxStatus(status)) return null;
+
+  return await tx.conversation.update({
+    where: { id: target.id },
+    data: conversationStatusData(status, actor, opts.closeReason, opts.now),
+  });
+}
+
+/// The single authoritative inbox-status transition.
+///
+/// `Contact.waMessageAssignStatus` remains the live-inbox source of truth (the
+/// chat list, per-tab counts and `InboxStats` all read it); `Conversation.status`
+/// mirrors it. Both are written in one transaction so the two cannot drift.
+export async function setInboxStatus(
+  contactId: string,
+  status: InboxStatus,
+  actor: InboxActor,
+  opts: { closeReason?: CloseReason; conversationId?: string } = {},
+) {
+  const terminal = isTerminalInboxStatus(status);
+  const now = new Date();
+  const closedBy = resolveClosedBy(actor);
+
+  const result = await prisma.$transaction(async (tx) => {
+    const before = await tx.contact.findUnique({
+      where: { id: contactId },
+      select: {
+        orgId: true,
+        waMessageAssignStatus: true,
+        blockedOnWhatsApp: true,
+        lastReceivedMessageTimeStamp: true,
+      },
+    });
+    if (!before) throw new Error(`Contact ${contactId} not found`);
+
+    const contact = await tx.contact.update({
+      where: { id: contactId },
+      data: {
+        waMessageAssignStatus: status,
+        ...(terminal ? { closedAt: now, closedBy } : { closedAt: null, closedBy: null }),
+      },
+    });
+
+    const conversation = await mirrorConversationStatusTx(tx, contactId, status, actor, {
+      ...opts,
+      now,
+    });
+
+    return { before, contact, conversation };
+  });
+
+  // InboxStats is an org-level counter cache, not part of the status invariant.
+  // It is maintained after commit, the same way every other writer treats it.
+  const { before, contact } = result;
+  const statusChanged = before.waMessageAssignStatus !== contact.waMessageAssignStatus;
+  if (statusChanged && before.lastReceivedMessageTimeStamp && !contact.blockedOnWhatsApp) {
+    await transitionInboxStat(
+      contact.orgId,
+      mapStatusToField(before.waMessageAssignStatus),
+      mapStatusToField(contact.waMessageAssignStatus),
+      1,
+    );
+  }
+
+  return result;
 }
 
 export async function updateConversation(conversationId: string, data: UpdateConversationSchema) {
@@ -157,25 +324,46 @@ export async function getLastCreatedConversationForContact(contactId: string) {
   });
 }
 
-export async function updateClosedConversationStatus(
-  conversationId: string,
-  status: string,
-  userId: string,
+/// The conversation a new inbound message belongs to: the most recent one that
+/// has not reached a terminal status. Returns null when the last conversation
+/// was closed, which is the signal to open a fresh one.
+export async function getActiveConversationForContact(contactId: string) {
+  const latest = await getLastCreatedConversationForContact(contactId);
+  if (!latest || isTerminalInboxStatus(latest.status)) return null;
+  return latest;
+}
+
+/// Opens the next conversation for a contact, carrying the reopen counter
+/// forward from the conversation it succeeds. A thread that is closed and then
+/// messaged again becomes a *new* conversation, so that `closedAt`,
+/// `firstRespondedAt` and the resolution-time metrics keep describing exactly
+/// one open-to-close cycle.
+export async function openConversationForContact(
+  contactId: string,
+  orgId: string,
+  status: InboxStatus = WaMessageAssignStatus.UNASSIGNED,
 ) {
-  const conversation = await prisma.conversation.update({
-    where: {
-      id: conversationId,
-    },
+  const previous = await getLastCreatedConversationForContact(contactId);
+  return await prisma.conversation.create({
     data: {
-      status: status,
-      closedAt: new Date(),
-      closedBy:
-        userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)
-          ? userId
-          : null,
+      contactId,
+      orgId,
+      status,
+      reopenCount: previous ? previous.reopenCount + 1 : 0,
     },
   });
-  return conversation;
+}
+
+export async function updateClosedConversationStatus(
+  conversationId: string,
+  status: InboxStatus,
+  actor: InboxActor,
+  closeReason?: CloseReason,
+) {
+  return await prisma.conversation.update({
+    where: { id: conversationId },
+    data: conversationStatusData(status, actor, closeReason),
+  });
 }
 
 export async function checkIfFirstSendMessageInConversation(
@@ -259,7 +447,7 @@ export async function getConversationOverview(
    CASE WHEN COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) = 0 THEN 0
         ELSE ( 
          COUNT(*) FILTER (
-         WHERE c."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt" BETWEEN 
+         WHERE c."status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt" BETWEEN 
          COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())
         )::float / COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) * 100)
    END AS "resolutionRate"
@@ -292,7 +480,7 @@ export async function getResolvedConversationWeeklyStats(orgId: string) {
       "contactId" IN (
         SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
       )
-      AND "status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
+      AND "status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
     GROUP BY "weekStart"
     ORDER BY "weekStart" DESC
     LIMIT 12;
@@ -350,7 +538,7 @@ resolved_per_day AS (
     "contactId" IN (
       SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
     )
-    AND "status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
+    AND "status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
     AND "closedAt" IS NOT NULL
     AND "closedAt"::date >= ${startDate}
   GROUP BY DATE("closedAt")
@@ -507,14 +695,14 @@ export async function getOverAllQuickStatsOfConversations(orgId: string) {
     }[]
   >`
  SELECT
-    COUNT(*) FILTER (WHERE c."status" = ${WaMessageAssignStatus.ASSIGNED})::INTEGER AS "conversationInProgress",
-    COUNT(*) FILTER (WHERE c."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}))::INTEGER AS "resolved",
-    COUNT(*) FILTER (WHERE c."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt" >= date_trunc('week',CURRENT_DATE))::INTEGER AS "resolvedThisWeek",
-    (COUNT(*) FILTER (WHERE c."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt" >= date_trunc('week', CURRENT_DATE) - INTERVAL '1 week'
+    COUNT(*) FILTER (WHERE c."status"::text = ${WaMessageAssignStatus.ASSIGNED})::INTEGER AS "conversationInProgress",
+    COUNT(*) FILTER (WHERE c."status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}))::INTEGER AS "resolved",
+    COUNT(*) FILTER (WHERE c."status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt" >= date_trunc('week',CURRENT_DATE))::INTEGER AS "resolvedThisWeek",
+    (COUNT(*) FILTER (WHERE c."status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt" >= date_trunc('week', CURRENT_DATE) - INTERVAL '1 week'
     AND c."closedAt" <  date_trunc('week', CURRENT_DATE)))::INTEGER AS "resolvedLastWeek",
     COUNT(*) FILTER (WHERE c."createdAt"::date = CURRENT_DATE)::INTEGER AS "conversationCreatedToday",
     COUNT(*)::INTEGER AS "totalConversation",
-    COUNT(*) FILTER (WHERE c."status" = ${WaMessageAssignStatus.UNASSIGNED})::INTEGER AS "newConversations",
+    COUNT(*) FILTER (WHERE c."status"::text = ${WaMessageAssignStatus.UNASSIGNED})::INTEGER AS "newConversations",
     (SELECT COUNT(*)::INTEGER
  FROM "OrgMember" om
  JOIN "User" u ON u.id = om."userId"
@@ -613,7 +801,7 @@ assigned_stats AS (
   FROM assignments ca
   JOIN valid_conversations vc
     ON vc.id = ca."conversationId"
-  WHERE vc."status" = ${WaMessageAssignStatus.ASSIGNED}
+  WHERE vc."status"::text = ${WaMessageAssignStatus.ASSIGNED}
     AND ca."lastAssignedAt" <= COALESCE(${rangeEnd}, NOW())
     AND (
       ca."lastRemovedAt" IS NULL
@@ -629,7 +817,7 @@ closed_stats AS (
     vc."closedBy" AS "userId",
     COUNT(*)::INT AS total_closed
   FROM valid_conversations vc
-  WHERE vc."status" = ANY (${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
+  WHERE vc."status"::text = ANY (${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
     AND vc."closedAt" BETWEEN COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
                              AND COALESCE(${rangeEnd}, NOW())
   GROUP BY vc."closedBy"
@@ -839,7 +1027,7 @@ assigned_stats AS (
     FROM assignments a
     JOIN valid_conversations vc
       ON vc.id = a."conversationId"
-    WHERE vc."status" = ${WaMessageAssignStatus.ASSIGNED}
+    WHERE vc."status"::text = ${WaMessageAssignStatus.ASSIGNED}
       AND a."lastAssignedAt" <= NOW()
       AND (
         a."lastRemovedAt" IS NULL
@@ -851,7 +1039,7 @@ assigned_stats AS (
     SELECT
       COUNT(*)::INT AS total_closed
     FROM valid_conversations vc
-    WHERE vc."status" = ANY (${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
+    WHERE vc."status"::text = ANY (${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
       AND vc."closedBy" = ${userId}
       AND vc."closedAt" >= ${sinceDate}
   ),
@@ -905,24 +1093,24 @@ resolution_stats AS (
   SELECT
     COUNT(*) FILTER (
       WHERE vc."closedAt" >= ${sevenDaysAgo}
-        AND vc."status" IN (${WaMessageAssignStatus.RESOLVED})
+        AND vc."status"::text IN (${WaMessageAssignStatus.RESOLVED})
     ) AS resolved_last_7d,
 
     COUNT(*) FILTER (
       WHERE vc."closedAt" >= ${sevenDaysAgo}
-        AND vc."status" IN (${WaMessageAssignStatus.RESOLVED}, ${WaMessageAssignStatus.CLOSED})
+        AND vc."status"::text IN (${WaMessageAssignStatus.RESOLVED}, ${WaMessageAssignStatus.CLOSED})
     ) AS total_last_7d,
 
     COUNT(*) FILTER (
       WHERE vc."closedAt" >= ${fourteenDaysAgo}
         AND vc."closedAt" < ${sevenDaysAgo}
-        AND vc."status" IN (${WaMessageAssignStatus.RESOLVED})
+        AND vc."status"::text IN (${WaMessageAssignStatus.RESOLVED})
     ) AS resolved_prev_7d,
 
     COUNT(*) FILTER (
       WHERE vc."closedAt" >= ${fourteenDaysAgo}
         AND vc."closedAt" < ${sevenDaysAgo}
-        AND vc."status" IN (${WaMessageAssignStatus.RESOLVED}, ${WaMessageAssignStatus.CLOSED})
+        AND vc."status"::text IN (${WaMessageAssignStatus.RESOLVED}, ${WaMessageAssignStatus.CLOSED})
     ) AS total_prev_7d
   FROM valid_conversations vc
   WHERE vc."closedBy" = ${userId}
@@ -1009,7 +1197,7 @@ metrics AS (
         (
             SELECT 
                 (COUNT(*) FILTER (
-                    WHERE ac.status = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]} )
+                    WHERE ac.status::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]} )
                     AND ac."closedBy" = ${userId}
                 )::DECIMAL
                 /
@@ -1199,7 +1387,7 @@ export async function getTeamOverview(orgId: string, dateRange) {
     t.id AS "teamId",
     t.name AS "teamName",
     t.color AS "teamColor",
-    (COUNT(DISTINCT c.id) FILTER(WHERE c."status" = ${WaMessageAssignStatus.ASSIGNED}
+    (COUNT(DISTINCT c.id) FILTER(WHERE c."status"::text = ${WaMessageAssignStatus.ASSIGNED}
     AND c."createdAt" >= COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
          AND c."createdAt" < COALESCE(${rangeEnd}, NOW())
     ))::INTEGER AS "assignedConversations",
@@ -1293,18 +1481,18 @@ export async function getTeamDetailedMetrics(teamId: string, orgId: string, days
     (SELECT "name" FROM "Team" WHERE id = ${teamId}::uuid) AS "teamName",
     (SELECT "color" FROM "Team" WHERE id = ${teamId}::uuid) AS "teamColor",
     AVG(EXTRACT(EPOCH FROM (tc.respondedAt - tc."createdAt"))) FILTER (WHERE tc.respondedAt IS NOT NULL) AS "averageResponseTime",
-    COUNT(*) FILTER (WHERE tc."status" = ${WaMessageAssignStatus.ASSIGNED})::INTEGER AS "activeChats",
+    COUNT(*) FILTER (WHERE tc."status"::text = ${WaMessageAssignStatus.ASSIGNED})::INTEGER AS "activeChats",
     CASE WHEN COUNT(*) = 0 THEN 0
-         ELSE (COUNT(*) FILTER (WHERE tc."status"  = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}))::float / COUNT(*)::float * 100)
+         ELSE (COUNT(*) FILTER (WHERE tc."status"::text  = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}))::float / COUNT(*)::float * 100)
     END AS "resolutionRate",
     (
       COALESCE(
-        (COUNT(*) FILTER (WHERE tc."closedAt" >= ${sevenDaysAgo} AND tc."status" = ${WaMessageAssignStatus.RESOLVED})::DECIMAL / NULLIF(COUNT(*) FILTER (WHERE tc."closedAt" >= ${sevenDaysAgo} AND tc."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})), 0)) * 100,
+        (COUNT(*) FILTER (WHERE tc."closedAt" >= ${sevenDaysAgo} AND tc."status"::text = ${WaMessageAssignStatus.RESOLVED})::DECIMAL / NULLIF(COUNT(*) FILTER (WHERE tc."closedAt" >= ${sevenDaysAgo} AND tc."status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})), 0)) * 100,
         0
       )
       -
       COALESCE(
-        (COUNT(*) FILTER (WHERE tc."closedAt" >= ${fourteenDaysAgo} AND tc."closedAt" < ${sevenDaysAgo} AND tc."status" = ${WaMessageAssignStatus.RESOLVED})::DECIMAL / NULLIF(COUNT(*) FILTER (WHERE tc."closedAt" >= ${fourteenDaysAgo} AND tc."closedAt" < ${sevenDaysAgo} AND tc."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})), 0)) * 100,
+        (COUNT(*) FILTER (WHERE tc."closedAt" >= ${fourteenDaysAgo} AND tc."closedAt" < ${sevenDaysAgo} AND tc."status"::text = ${WaMessageAssignStatus.RESOLVED})::DECIMAL / NULLIF(COUNT(*) FILTER (WHERE tc."closedAt" >= ${fourteenDaysAgo} AND tc."closedAt" < ${sevenDaysAgo} AND tc."status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})), 0)) * 100,
         0
       )
     ) AS "resolutionRateComparedToLastWeek",
@@ -1348,7 +1536,7 @@ export async function getTeamDetailedMetrics(teamId: string, orgId: string, days
           u."name",
           om."status" AS "onlineStatus",
           AVG(EXTRACT(EPOCH FROM (vc."firstRespondedAt" - vc."createdAt"))) FILTER (WHERE vc."firstRespondedAt" IS NOT NULL) AS "avgResponseTime",
-          COUNT(DISTINCT cau."conversationId") FILTER (WHERE NOT (vc."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})))::INT AS "staffActiveChats",
+          COUNT(DISTINCT cau."conversationId") FILTER (WHERE NOT (vc."status"::text = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})))::INT AS "staffActiveChats",
           COUNT(DISTINCT wm.id)::INT AS "messagesHandled"
         FROM "TeamMember" tm
         JOIN "User" u ON u.id = tm."userId"

@@ -166,6 +166,7 @@ export async function processDripCampaigns() {
       participantCreatedAt: Date;
       campaignStartedAt: Date;
       campaignId: string;
+      dailySendLimit: number | null;
     }[]
   >(`
   SELECT DISTINCT ON (cds.id, p."campaignId")
@@ -175,7 +176,8 @@ export async function processDripCampaigns() {
     cds."sendAtTime",
     p."createdAt" AS "participantCreatedAt",
     c."startedAt" AS "campaignStartedAt",
-    p."campaignId"
+    p."campaignId",
+    c."dailySendLimit"
   FROM "CampaignParticipantDripStage" cpds
   JOIN "CampaignParticipant" p ON p.id = cpds."participantId"
   JOIN "Campaign" c ON c.id = p."campaignId"
@@ -193,6 +195,7 @@ export async function processDripCampaigns() {
       participantCreatedAt,
       campaignStartedAt,
       campaignId,
+      dailySendLimit,
     } = row;
 
     const baseDate = dayjs(participantCreatedAt).isAfter(campaignStartedAt)
@@ -207,12 +210,16 @@ export async function processDripCampaigns() {
     }
 
     if (dayjs().isAfter(sendAfter)) {
+      // The cap applies per stage: each stage's pending participants are spread
+      // across days. Re-enqueues of a stage are deduplicated by the dispatcher,
+      // so an already-delayed participant keeps its original batch.
       await enqueueCampaignMessage(
         campaignId,
         [CampaignParticipantStatus.PENDING],
         undefined,
         undefined,
         dripStageId,
+        dailySendLimit ?? undefined,
       );
     }
   }

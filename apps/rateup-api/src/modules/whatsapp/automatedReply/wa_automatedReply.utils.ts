@@ -994,6 +994,8 @@ async function executeCloseTicketAction(
     },
     undefined,
     contact,
+    // Closed by the rule engine, not by a person.
+    { source: "rule" },
   );
 
   return true;

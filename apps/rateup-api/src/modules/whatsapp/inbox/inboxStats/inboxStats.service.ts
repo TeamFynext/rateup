@@ -50,6 +50,45 @@ export async function getOrCreateInboxStats(orgId: string) {
   return stats;
 }
 
+export interface InboxCounts {
+  unassignedCount: number;
+  assignedCount: number;
+  closedCount: number;
+  spamCount: number;
+  resolvedCount: number;
+  unresolvedCount: number;
+  blockedCount: number;
+  totalCount: number;
+  /** UNASSIGNED + ASSIGNED. */
+  openCount: number;
+  /** Every conversation in the org, regardless of status. */
+  allCount: number;
+}
+
+/**
+ * Derives the inbox counts from `Conversation` instead of the denormalized
+ * `InboxStats` counters, which drift whenever an increment is missed.
+ *
+ * One `groupBy` gives every per-status count; `open`, `closed` and `all` are
+ * summed from it rather than issued as extra queries. `blockedCount` still
+ * comes from `Contact.blockedOnWhatsApp` -- it is not a conversation status.
+ */
+export async function getInboxCountsFromConversations(orgId: string) {
+  const result: {
+    all_count: number;
+    open_count: number;
+    closed_count: number;
+  }[] = await prisma.$queryRaw`
+  SELECT
+    COUNT(*)::INT                                                               AS all_count,
+    COUNT(*) FILTER (WHERE status IN ('UNASSIGNED','ASSIGNED'))::INT            AS open_count,
+    COUNT(*) FILTER (WHERE status IN ('CLOSED','SPAM','RESOLVED','UNRESOLVED'))::INT AS closed_count
+  FROM "Conversation"
+  WHERE "orgId" = ${orgId}
+`;
+  return result?.[0] || { all_count: 0, open_count: 0, closed_count: 0 };
+}
+
 export async function incrementInboxStat(orgId: string, field: StatsField, amount: number = 1) {
   if (!field || amount <= 0) return;
   await prisma.inboxStats.upsert({
