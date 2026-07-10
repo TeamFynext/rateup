@@ -27,3 +27,21 @@ export async function seedInboxStats() {
     timeout: 60000,
   });
 }
+
+export interface ReconcileInboxStatusResult {
+  message: string;
+  applied: boolean;
+  scanned: number;
+  mismatched: number;
+  repaired: number;
+  skippedReopenPending: number;
+}
+
+/** Dry run unless `apply` is true; only then are the repairs written. */
+export async function reconcileInboxStatus(apply = false) {
+  return await axiosClient.put<ReconcileInboxStatusResult>(
+    `${baseUrl}/reconcile-inbox-status?apply=${apply}`,
+    null,
+    { timeout: 60000 },
+  );
+}

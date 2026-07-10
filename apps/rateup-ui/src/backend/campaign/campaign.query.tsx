@@ -114,7 +114,12 @@ interface sendCampaignProps {
   participantId?: string;
   status?: CampaignStatus;
   type?: string;
+  /** Max messages dispatched per day. Null/undefined = send to everyone at once. */
+  dailySendLimit?: number | null;
 }
+
+// Codes whose server-supplied message already describes what was scheduled.
+const SCHEDULED_CODES = ["MSG_SCHEDULED", "MSG_SCHEDULE_REQUESTED"];
 
 export const useSendCampaign = (campaignId: string, teamId: string) => {
   const queryClient = useQueryClient();
@@ -126,6 +131,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
       sentCampaignChoice,
       status,
       type,
+      dailySendLimit,
     }: sendCampaignProps) =>
       sendCampaign(
         campaignId,
@@ -135,6 +141,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
         campaignSentAt,
         status,
         type,
+        dailySendLimit,
       ),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
@@ -143,7 +150,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
         queryKey: ["campaignStats", campaignId],
       });
       toast.success(
-        res?.data?.code === "MSG_SCHEDULED"
+        SCHEDULED_CODES.includes(res?.data?.code)
           ? (res?.data?.message ?? "Campaign scheduled successfully")
           : "Campaign started successfully. It may take a few minutes to send to all participants.",
         { id: "campaign-start" },

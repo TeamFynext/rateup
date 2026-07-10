@@ -89,7 +89,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   useEffect(() => {
     if (inboxCount) {
       setSectionCounts({
-        openCount: inboxCount.assigned + inboxCount.unassigned,
+        openCount: inboxCount.open,
         closedCount: inboxCount.closed,
         allCount: inboxCount.total,
       });

@@ -1638,6 +1638,8 @@ export interface Campaign {
   teamId: string;
   waTemplateId: string;
   campaignSentAt?: Date;
+  /** Max messages dispatched per day. Null = dispatch every participant at once. */
+  dailySendLimit?: number | null;
 }
 
 // type for org websocket messages
