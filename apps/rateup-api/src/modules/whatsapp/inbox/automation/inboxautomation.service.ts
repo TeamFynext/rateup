@@ -2,6 +2,7 @@ import prisma from "../../../../utils/prisma.js";
 import { UpdateInboxAutomationInput } from "./inboxautomation.schema.js";
 import { InboxAutomationCondition } from "../../../../../generated/prisma/client.js";
 import { updateContactById } from "../../../contact/contact.service.js";
+import { WaMessageAssignStatus } from "../../../../types/enums.js";
 
 export async function enableInboxAutomation(orgId: string, condition: InboxAutomationCondition) {
   const existing = await prisma.inboxAutomation.findFirst({
@@ -121,9 +122,12 @@ export async function runInboxAutomationCron() {
         await updateContactById(
           contact.id,
           {
-            waMessageAssignStatus: "CLOSED" as any,
+            waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
           },
           "RateUp",
+          undefined,
+          // Idle auto-close: no acting user, so attribution lives in closeReason.
+          { source: "automation" },
         );
       } catch (err) {
         console.error(`Failed to auto-close contact ${contact.id}:`, err);
