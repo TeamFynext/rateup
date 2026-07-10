@@ -6,6 +6,7 @@ import {
   useMigrateWaTemplateToWhatsappPhoneId,
   useSyncTeamFeatures,
   useSeedInboxStats,
+  useReconcileInboxStatus,
 } from "@/backend/updations/update.query";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -17,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 import { isProduction } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/admin/updateCenter/")({
@@ -28,6 +30,18 @@ function UpdateAllThemes() {
   const syncTeamFeaturesMutation = useSyncTeamFeatures();
   const migrateLoyaltyTierPriorityMutation = useMigrateLoyaltyTierPriority();
   const seedInboxStatsMutation = useSeedInboxStats();
+  const reconcileInboxStatusMutation = useReconcileInboxStatus();
+  const confirm = useConfirm();
+
+  // The dry run is safe to fire directly; applying rewrites conversation rows.
+  const handleReconcileApply = async () => {
+    const shouldApply = await confirm({
+      title: "Apply inbox status repairs",
+      description:
+        "This rewrites Conversation.status to match each contact's inbox status. Run the dry run first and confirm the mismatch count looks right. This cannot be undone.",
+    });
+    if (shouldApply) reconcileInboxStatusMutation.mutate(true);
+  };
 
   return (
     <div className="container mx-auto space-y-8">
@@ -201,6 +215,52 @@ function UpdateAllThemes() {
                   </>
                 )}
               </Button>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
+            <CardHeader className="pb-3">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
+                  <Database className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-lg">Reconcile Inbox Status</CardTitle>
+                  <CardDescription className="mt-1">
+                    Realigns each contact&apos;s latest Conversation.status with the contact&apos;s
+                    inbox status. Dry run reports the mismatches without writing.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => reconcileInboxStatusMutation.mutate(false)}
+                  disabled={reconcileInboxStatusMutation.isPending}
+                  className="flex-1"
+                >
+                  {reconcileInboxStatusMutation.isPending ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      Running...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Dry Run
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleReconcileApply}
+                  disabled={reconcileInboxStatusMutation.isPending}
+                  className="flex-1"
+                >
+                  <Database className="mr-2 h-4 w-4" />
+                  Apply Repairs
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

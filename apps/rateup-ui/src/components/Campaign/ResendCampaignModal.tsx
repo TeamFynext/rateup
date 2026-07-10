@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { AlertCircle, CalendarIcon, ChevronDownIcon, Clock, Send } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -17,15 +17,17 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { CampaignParticipantStatus } from "@/types/enums.ts";
-
-import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group.tsx";
 
 export interface ResendOptions {
   sendMode: "NOW" | "SCHEDULED";
   scheduleDate?: string;
   scheduleTime?: string;
   statuses: CampaignParticipantStatus[];
+  /** Max messages dispatched per day. Undefined = send to everyone at once. */
+  dailySendLimit?: number;
 }
 
 interface ResendCampaignModalProps {
@@ -35,7 +37,21 @@ interface ResendCampaignModalProps {
   isLoading?: boolean;
   stats?: Record<string, number | undefined>;
   isFirstSend?: boolean;
+  /** The campaign's saved cap. The modal opens showing this rather than resetting. */
+  campaignDailySendLimit?: number | null;
 }
+
+// Keys of the `stats` prop, which counts participants per status.
+const STATUS_STAT_KEY: Record<CampaignParticipantStatus, string> = {
+  [CampaignParticipantStatus.FAILED]: "failed",
+  [CampaignParticipantStatus.PENDING]: "pending",
+  [CampaignParticipantStatus.SENT]: "sent",
+  [CampaignParticipantStatus.DELIVERED]: "delivered",
+  [CampaignParticipantStatus.READ]: "read",
+  [CampaignParticipantStatus.COMPLETED]: "completed",
+};
+
+const DEFAULT_DAILY_SEND_LIMIT = "250";
 
 const STATUS_OPTIONS = [
   {
@@ -75,7 +91,9 @@ export const ResendCampaignModal = ({
   onClose,
   onSubmit,
   isLoading = false,
+  stats,
   isFirstSend = false,
+  campaignDailySendLimit = null,
 }: ResendCampaignModalProps) => {
   const { t } = useTranslation("campaign.resend");
   const getToday = () => new Date().toISOString().split("T")[0];
@@ -88,12 +106,41 @@ export const ResendCampaignModal = ({
   );
 
   const [sendMode, setSendMode] = useState<"NOW" | "SCHEDULED">("NOW");
+  const [isDailyLimitEnabled, setIsDailyLimitEnabled] = useState(!!campaignDailySendLimit);
+  const [dailySendLimit, setDailySendLimit] = useState(
+    campaignDailySendLimit ? String(campaignDailySendLimit) : DEFAULT_DAILY_SEND_LIMIT,
+  );
+
+  // The modal stays mounted between opens, so the initial state above is stale
+  // once the campaign query resolves. Re-seed from the saved cap on each open.
+  useEffect(() => {
+    if (!isOpen) return;
+    setIsDailyLimitEnabled(!!campaignDailySendLimit);
+    setDailySendLimit(
+      campaignDailySendLimit ? String(campaignDailySendLimit) : DEFAULT_DAILY_SEND_LIMIT,
+    );
+  }, [isOpen, campaignDailySendLimit]);
 
   const toggleStatus = (status: CampaignParticipantStatus) => {
     setSelectedStatuses((prev) =>
       prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status],
     );
   };
+
+  const parsedDailyLimit = Number(dailySendLimit);
+  const isDailyLimitValid =
+    Number.isInteger(parsedDailyLimit) && parsedDailyLimit > 0 && dailySendLimit.trim() !== "";
+
+  // How many participants this send will actually target, so the user can see
+  // how many days the cap stretches the campaign over.
+  const recipientCount = selectedStatuses.reduce(
+    (total, status) => total + (stats?.[STATUS_STAT_KEY[status]] ?? 0),
+    0,
+  );
+  const estimatedDays =
+    isDailyLimitEnabled && isDailyLimitValid && recipientCount > 0
+      ? Math.ceil(recipientCount / parsedDailyLimit)
+      : 0;
 
   const handleSubmit = () => {
     if (selectedStatuses.length === 0) {
@@ -106,11 +153,17 @@ export const ResendCampaignModal = ({
       return;
     }
 
+    if (isDailyLimitEnabled && !isDailyLimitValid) {
+      toast.error(t("Enter a daily send limit of at least 1"));
+      return;
+    }
+
     onSubmit({
       sendMode,
       scheduleDate: sendMode === "SCHEDULED" ? scheduleDate : undefined,
       scheduleTime: sendMode === "SCHEDULED" ? scheduleTime : undefined,
       statuses: selectedStatuses,
+      dailySendLimit: isDailyLimitEnabled ? parsedDailyLimit : undefined,
     });
   };
 
@@ -130,72 +183,118 @@ export const ResendCampaignModal = ({
           {/* SEND MODE */}
           <div className="space-y-3">
             <Label className="font-semibold">{t("When to send")}</Label>
-            <div className="inline-flex rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60 p-0.5">
-              <ToggleGroup
-                value={[sendMode]}
-                onValueChange={(v) => v && setSendMode(v?.[0] as any)}
-                className="gap-0"
-              >
-                <ToggleGroupItem
-                  value="NOW"
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm data-[state=on]:bg-white dark:data-[state=on]:bg-slate-700 data-[state=on]:shadow-sm data-[state=on]:text-slate-900 dark:data-[state=on]:text-slate-50 text-slate-500 dark:text-slate-400 transition-all duration-200 border-0 h-auto"
-                >
-                  <Send className="w-3.5 h-3.5" />
+            <Tabs
+              value={sendMode}
+              onValueChange={(value) => setSendMode(value as "NOW" | "SCHEDULED")}
+            >
+              <TabsList>
+                <TabsTrigger value="NOW">
+                  <Send />
                   {t("Send Now")}
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="SCHEDULED"
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm data-[state=on]:bg-white dark:data-[state=on]:bg-slate-700 data-[state=on]:shadow-sm data-[state=on]:text-slate-900 dark:data-[state=on]:text-slate-50 text-slate-500 dark:text-slate-400 transition-all duration-200 border-0 h-auto"
-                >
-                  <CalendarIcon className="w-3.5 h-3.5" />
+                </TabsTrigger>
+                <TabsTrigger value="SCHEDULED">
+                  <CalendarIcon />
                   {t("Schedule Later")}
-                </ToggleGroupItem>
-              </ToggleGroup>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="SCHEDULED">
+                <div className="flex items-center gap-2 p-1 bg-muted rounded-xl w-fit">
+                  {/* DATE PICKER */}
+                  <Popover>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-background hover:shadow-sm transition-all"
+                        />
+                      }
+                    >
+                      <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">
+                        {scheduleDate ? dayjs(scheduleDate).format("MMMM D, YYYY") : t("Date")}
+                      </span>
+                      <ChevronDownIcon className="w-4 h-4" />
+                    </PopoverTrigger>
+
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={scheduleDate ? new Date(scheduleDate) : undefined}
+                        onSelect={(date) => {
+                          if (!date) return;
+                          setScheduleDate(date.toISOString().split("T")[0]);
+                        }}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        captionLayout="dropdown"
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* TIME PICKER */}
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                      className="border-0 p-0 h-auto bg-transparent shadow-none focus-visible:ring-0"
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* DAILY SEND LIMIT */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="dailySendLimit" className="font-semibold">
+                  {t("Limit messages per day")}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    "Spread this campaign across consecutive days instead of sending at once. Saved to the campaign.",
+                  )}
+                </p>
+              </div>
+              <Switch
+                id="dailySendLimit"
+                checked={isDailyLimitEnabled}
+                onCheckedChange={setIsDailyLimitEnabled}
+              />
             </div>
 
-            {sendMode === "SCHEDULED" && (
-              <div className="flex items-center gap-2 p-1 bg-muted rounded-xl w-fit">
-                {/* DATE PICKER */}
-                <Popover>
-                  <PopoverTrigger
-                    render={
-                      <Button
-                        variant="ghost"
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-background hover:shadow-sm transition-all"
-                      />
-                    }
-                  >
-                    <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">
-                      {scheduleDate ? dayjs(scheduleDate).format("MMMM D, YYYY") : t("Date")}
-                    </span>
-                    <ChevronDownIcon className="w-4 h-4" />
-                  </PopoverTrigger>
-
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={scheduleDate ? new Date(scheduleDate) : undefined}
-                      onSelect={(date) => {
-                        if (!date) return;
-                        setScheduleDate(date.toISOString().split("T")[0]);
-                      }}
-                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                      captionLayout="dropdown"
-                    />
-                  </PopoverContent>
-                </Popover>
-
-                {/* TIME PICKER */}
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
+            {isDailyLimitEnabled && (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
                   <Input
-                    type="time"
-                    value={scheduleTime}
-                    onChange={(e) => setScheduleTime(e.target.value)}
-                    className="border-0 p-0 h-auto bg-transparent shadow-none focus-visible:ring-0"
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={dailySendLimit}
+                    onChange={(e) => setDailySendLimit(e.target.value)}
+                    className="w-32"
                   />
+                  <span className="text-sm text-muted-foreground">{t("messages per day")}</span>
                 </div>
+
+                {!isDailyLimitValid ? (
+                  <p className="text-xs text-destructive flex items-center gap-1.5">
+                    <AlertCircle className="w-3 h-3" />
+                    {t("Enter a daily send limit of at least 1")}
+                  </p>
+                ) : (
+                  estimatedDays > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {t("{total} recipients will be sent over {days} day(s)", {
+                        total: recipientCount,
+                        days: estimatedDays,
+                      })}
+                    </p>
+                  )
+                )}
               </div>
             )}
           </div>
@@ -242,7 +341,14 @@ export const ResendCampaignModal = ({
           <Button variant="outline" onClick={onClose}>
             {t("Cancel")}
           </Button>
-          <Button onClick={handleSubmit} disabled={isLoading || selectedStatuses.length === 0}>
+          <Button
+            onClick={handleSubmit}
+            disabled={
+              isLoading ||
+              selectedStatuses.length === 0 ||
+              (isDailyLimitEnabled && !isDailyLimitValid)
+            }
+          >
             {isLoading ? t("Sending...") : isFirstSend ? "Send Campaign" : t("Resend Campaign")}
           </Button>
         </DialogFooter>
