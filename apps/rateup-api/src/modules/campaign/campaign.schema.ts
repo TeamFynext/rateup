@@ -54,7 +54,6 @@ const updateCampaignInputSchema = z.object({
   dynamicTags: z.array(z.string().nullable()).optional(),
   useUserConsent: z.boolean().optional(),
   whatsappSettingsPhoneId: z.string().optional(),
-  dailySendLimit: z.number().int().positive().optional().nullable(),
   dripStages: z
     .array(
       z.object({
@@ -115,7 +114,6 @@ const sendCampaignInputSchema = z.object({
   sentCampaignChoice: z.enum(SentCampaignEnum),
   status: z.enum(CampaignStatus).optional().nullable(),
   type: z.string().optional(),
-  dailySendLimit: z.number().int().positive().optional().nullable(),
 });
 
 export type GetCampaignsQuery = z.infer<typeof getCampaignsQuerySchema>;

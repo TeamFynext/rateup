@@ -4,8 +4,6 @@ import { log } from "../../utils/logger.js";
 import { subscriptionGates } from "../../utils/canAccess.js";
 import { TeamFeature } from "../../../generated/prisma/client.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
-import type { InboxStatus } from "../../types/enums.js";
-import { WaMessageClosedStatus } from "../whatsapp/constants.js";
 
 export async function updateUsageStatsTemplateMessageCount() {
   const subscriptions = await prisma.subscription.findMany();
@@ -468,93 +466,6 @@ export async function recalculateInboxStats(orgId: string) {
     update: data,
     create: { orgId, ...data },
   });
-}
-
-/**
- * Repairs historical `Contact.waMessageAssignStatus` <-> `Conversation.status`
- * drift. Before the two columns were written in one transaction they could
- * diverge whenever the second write failed; this realigns the survivors.
- *
- * `Contact.waMessageAssignStatus` is the live-inbox source of truth, so it wins:
- * each contact's *latest* conversation is aligned to it. Older conversations are
- * finished records and are never touched.
- *
- * Two cases are deliberately left alone:
- *   - A live contact whose latest conversation is terminal. That is the pending
- *     reopen state: the successor conversation is opened by the next inbound
- *     message, and rewriting the closed one would destroy its `closedAt`.
- *   - Contacts with no conversation at all.
- */
-export async function reconcileInboxStatus(apply: boolean) {
-  const PAGE_SIZE = 1_000;
-
-  let cursor: string | undefined;
-  let scanned = 0;
-  let repaired = 0;
-  let skippedReopenPending = 0;
-  const mismatches: {
-    contactId: string;
-    conversationId: string;
-    from: InboxStatus;
-    to: InboxStatus;
-  }[] = [];
-
-  for (;;) {
-    const contacts = await prisma.contact.findMany({
-      take: PAGE_SIZE,
-      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-      orderBy: { id: "asc" },
-      select: {
-        id: true,
-        waMessageAssignStatus: true,
-        Conversations: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          select: { id: true, status: true },
-        },
-      },
-    });
-    if (!contacts.length) break;
-    cursor = contacts.at(-1)!.id;
-    scanned += contacts.length;
-
-    for (const contact of contacts) {
-      const latest = contact.Conversations[0];
-      if (!latest) continue;
-      if (latest.status === contact.waMessageAssignStatus) continue;
-
-      const contactIsLive = !WaMessageClosedStatus.includes(contact.waMessageAssignStatus);
-      const conversationIsClosed = WaMessageClosedStatus.includes(latest.status);
-      if (contactIsLive && conversationIsClosed) {
-        skippedReopenPending++;
-        continue;
-      }
-
-      mismatches.push({
-        contactId: contact.id,
-        conversationId: latest.id,
-        from: latest.status,
-        to: contact.waMessageAssignStatus,
-      });
-
-      if (apply) {
-        await prisma.conversation.update({
-          where: { id: latest.id },
-          data: { status: contact.waMessageAssignStatus },
-        });
-        repaired++;
-      }
-    }
-  }
-
-  return {
-    applied: apply,
-    scanned,
-    mismatched: mismatches.length,
-    repaired,
-    skippedReopenPending,
-    mismatches,
-  };
 }
 
 export async function seedInboxStatsAutomation() {

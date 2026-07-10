@@ -85,15 +85,8 @@ export async function sendCampaignHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const {
-    status,
-    campaignSentAt,
-    sentCampaignChoice,
-    sendToStatuses,
-    participantId,
-    type,
-    dailySendLimit,
-  } = request.body;
+  const { status, campaignSentAt, sentCampaignChoice, sendToStatuses, participantId, type } =
+    request.body;
   const { campaignId } = request.params;
 
   try {
@@ -136,26 +129,13 @@ export async function sendCampaignHandler(
       });
     }
 
-    // A per-day cap spreads participants over consecutive days. The dispatcher
-    // applies it when it fans the campaign out into per-participant jobs. A
-    // single-participant resend is never throttled, so it ignores the cap.
-    const effectiveDailySendLimit = participantId ? undefined : (dailySendLimit ?? undefined);
-
     if (campaignSentAt && sentCampaignChoice === SentCampaignEnum.LATER) {
       await updateCampaign(campaignId, {
         status: CampaignStatus.QUEUING,
         campaignSentAt,
         scheduledStatuses: [],
-        dailySendLimit: dailySendLimit ?? null,
       });
-      await enqueueCampaignMessage(
-        campaignId,
-        sendToStatuses,
-        undefined,
-        campaignSentAt,
-        undefined,
-        effectiveDailySendLimit,
-      );
+      await enqueueCampaignMessage(campaignId, sendToStatuses, undefined, campaignSentAt);
       return reply.status(200).send({
         message: "Campaign scheduling requested",
         code: "MSG_SCHEDULE_REQUESTED",
@@ -165,17 +145,9 @@ export async function sendCampaignHandler(
       status: CampaignStatus.QUEUING,
       campaignSentAt: null,
       scheduledStatuses: [],
-      ...(participantId ? {} : { dailySendLimit: dailySendLimit ?? null }),
     });
 
-    await enqueueCampaignMessage(
-      campaignId,
-      sendToStatuses,
-      participantId,
-      undefined,
-      undefined,
-      effectiveDailySendLimit,
-    );
+    await enqueueCampaignMessage(campaignId, sendToStatuses, participantId);
     return reply.status(200).send({
       message: "Campaign enqueue request accepted. Processing will occur asynchronously.",
       code: "ENQUEUE_REQUEST_ACCEPTED",

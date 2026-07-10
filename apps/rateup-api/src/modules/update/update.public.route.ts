@@ -16,7 +16,6 @@ import {
   syncTeamFeaturesHandler,
   migrateLoyaltyTierPriorityHandler,
   seedInboxStatsAutomationHandler,
-  reconcileInboxStatusHandler,
 } from "./update.controller.js";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
@@ -33,5 +32,4 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.put("/sync-team-features", syncTeamFeaturesHandler);
   server.put("/migrate-loyalty-tier-priority", migrateLoyaltyTierPriorityHandler);
   server.put("/seed-inbox-stats", seedInboxStatsAutomationHandler);
-  server.put("/reconcile-inbox-status", reconcileInboxStatusHandler);
 }
