@@ -32,7 +32,7 @@ import {
   createLocationMessage,
 } from "../../whatsappSurvey/wasurvey.utils.js";
 import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../../constants.js";
-import { getInboxCountsFromConversations } from "../inboxStats/inboxStats.service.js";
+import { getOrCreateInboxStats } from "../inboxStats/inboxStats.service.js";
 import { Role } from "../../../org/org.services.js";
 import { getTeamIdsByUserId } from "../../../team/team.service.js";
 import { UserAvailabilityStatus } from "../../../user/user.schema.js";
@@ -91,7 +91,7 @@ export async function addNewWaMessage(
     statsData = { stats: initialStats };
   }
 
-  const createMessage = prisma.waMessage.create({
+  const newMessage = prisma.waMessage.create({
     data: {
       messageBody: messageBody as any,
       contactId,
@@ -115,26 +115,6 @@ export async function addNewWaMessage(
       },
     },
   });
-
-  // Keep the denormalized conversation metrics in step with the message that
-  // produced them. INTERNAL messages (system notes, private notes) carry a
-  // `sendBy` but are not agent replies, so they must not touch these counters.
-  const tracksMetrics = Boolean(conversationId) && sourcePlatform !== PlatformType.INTERNAL;
-  if (!tracksMetrics) return await createMessage;
-
-  const messageAt = waCreatedAt ? new Date(waCreatedAt) : new Date();
-  const [newMessage] = await prisma.$transaction([
-    createMessage,
-    prisma.conversation.update({
-      where: { id: conversationId },
-      data: {
-        messageCount: { increment: 1 },
-        lastMessageAt: messageAt,
-        // Direction is inferred from `sendBy`: null means inbound.
-        ...(sendBy ? { lastAgentMessageAt: messageAt } : { lastCustomerMessageAt: messageAt }),
-      },
-    }),
-  ]);
 
   return newMessage;
 }
@@ -344,7 +324,7 @@ export async function filterChats(
         if (isNew) {
           params.push(WaMessageAssignStatus.UNASSIGNED);
           filters.push(
-            `c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."waMessageAssignStatus"::TEXT = $${paramIndex++}::TEXT`,
+            `c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."waMessageAssignStatus" = $${paramIndex++}::TEXT`,
           );
         } else {
           const assignedStatus = WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
@@ -354,10 +334,10 @@ export async function filterChats(
             } else {
               params.push(WaMessageClosedStatus);
             }
-            filters.push(`c."waMessageAssignStatus"::TEXT = ANY($${paramIndex++}::TEXT[])`);
+            filters.push(`c."waMessageAssignStatus" = ANY($${paramIndex++})`);
           } else {
             params.push(assignedStatus);
-            filters.push(`c."waMessageAssignStatus"::TEXT = $${paramIndex++}::TEXT`);
+            filters.push(`c."waMessageAssignStatus" = $${paramIndex++}`);
           }
           if (isAssignedToMe) {
             params.push(userId);
@@ -378,7 +358,7 @@ export async function filterChats(
       if (!bodyFilterProps?.waMessageAssignStatus) {
         if (bodyFilterProps.status.length) {
           params.push(bodyFilterProps.status);
-          let newQuery = `(c."waMessageAssignStatus"::TEXT = ANY($${paramIndex++}::TEXT[]))`;
+          let newQuery = `(c."waMessageAssignStatus" = ANY($${paramIndex++}::TEXT[]))`;
           filters.push(newQuery);
         }
       }
@@ -1007,7 +987,7 @@ export async function deleteAssignedUsersforContact(contactId) {
 }
 export async function getContactsCountByInbox(orgId: string, userId: string, role: string) {
   const teamIds = await getTeamIdsByUserId(userId);
-  const stats = await getInboxCountsFromConversations(orgId);
+  const stats = await getOrCreateInboxStats(orgId);
   const count: {
     new_assigned_count: number;
     new_unassigned_count: number;
@@ -1029,14 +1009,14 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
     SELECT o."waAssignedChatPermission" AS permission FROM "Org" o WHERE o."id" = ${orgId}::uuid
   )
   SELECT
-    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus"::TEXT = ${WaMessageAssignStatus.ASSIGNED} AND (
+    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND (
       CASE 
         WHEN orgDetails.permission = ${WaAssignedChatPermission.All} THEN 1
         WHEN orgDetails.permission = ${WaAssignedChatPermission.Admins} THEN ${role === Role.MEMBER ? 0 : 1}
         WHEN orgDetails.permission = ${WaAssignedChatPermission.TeamMembers} THEN is_assigned_to_my_team::int
       END 
     ) = 1)::INTEGER AS new_assigned_count,
-    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus"::TEXT = ${WaMessageAssignStatus.UNASSIGNED})::INTEGER AS new_unassigned_count
+    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED})::INTEGER AS new_unassigned_count
   FROM message_flags mf CROSS JOIN orgDetails;`;
 
   const assignedTeamWiseCount = await prisma.$queryRaw`
@@ -1052,14 +1032,13 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
     newAssigned: count[0].new_assigned_count,
     newUnassigned: count[0].new_unassigned_count,
     newAssignedTome: 0,
+    closed: stats.closedCount + stats.spamCount + stats.resolvedCount + stats.unresolvedCount,
     assignedToMe: 0,
-    open: stats.open_count,
-    closed: stats.closed_count,
-    total: stats.all_count,
+    assigned: stats.assignedCount,
+    blocked: stats.blockedCount,
+    total: stats.totalCount,
+    unassigned: stats.unassignedCount,
     assignedTeamWiseCount,
-    // assigned: stats.assigned_count,
-    // blocked: stats.blocked_count,
-    // unassigned: stats.unassignedCount,
   };
 }
 
@@ -1265,13 +1244,8 @@ export async function generateChatAnalytics(orgId: string) {
       (SELECT COUNT(*)::INTEGER FROM "Contact" c 
         WHERE c."orgId" = ${orgId}::uuid AND c."waMessageAssignStatus" = 'ASSIGNED') 
         AS "assignedContactCount",
-      -- "NEW" is a derived tab (unassigned + received within 24h), never a stored
-      -- status. This previously compared against a literal 'NEW' and so always
-      -- counted zero.
-      (SELECT COUNT(*)::INTEGER FROM "Contact" c
-        WHERE c."orgId" = ${orgId}::uuid
-          AND c."waMessageAssignStatus" = 'UNASSIGNED'
-          AND c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours')
+      (SELECT COUNT(*)::INTEGER FROM "Contact" c 
+        WHERE c."orgId" = ${orgId}::uuid AND c."waMessageAssignStatus" = 'NEW') 
         AS "newContactCount",
       (SELECT COUNT(*)::INTEGER FROM "Contact" c 
         WHERE c."orgId" = ${orgId}::uuid AND c."waMessageAssignStatus" = 'CLOSED') 

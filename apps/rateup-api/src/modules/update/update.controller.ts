@@ -11,7 +11,6 @@ import {
   updateUsageStatsTemplateMessageCount,
   syncTeamFeaturesFromSubscription,
   seedInboxStatsAutomation,
-  reconcileInboxStatus,
 } from "./update.service.js";
 import prisma from "../../utils/prisma.js";
 import { StageCategory } from "../../../generated/prisma/enums.js";
@@ -332,26 +331,6 @@ export async function seedInboxStatsAutomationHandler(
       .send(
         `Seeded inbox stats successfully. Seeded ${result.seeded} out of ${result.total} orgs.`,
       );
-  } catch (e) {
-    log.error(e);
-    reply.code(500).send(e);
-  }
-}
-
-// Dry run by default; pass ?apply=true to write the repairs.
-export async function reconcileInboxStatusHandler(
-  request: FastifyRequest<{ Querystring: { apply?: string } }>,
-  reply: FastifyReply,
-) {
-  try {
-    const apply = request.query.apply === "true";
-    const result = await reconcileInboxStatus(apply);
-    reply.code(200).send({
-      message: apply
-        ? `Reconciled ${result.repaired} conversation(s).`
-        : `Dry run: ${result.mismatched} conversation(s) would be reconciled. Re-run with ?apply=true to write.`,
-      ...result,
-    });
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

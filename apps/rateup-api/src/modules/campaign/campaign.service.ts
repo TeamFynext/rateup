@@ -17,7 +17,6 @@ import {
   getCampaignCount,
   waCampaignDequeue,
   waCampaignEnqueue,
-  waMessageQueue,
 } from "../../utils/redisConnection.js";
 import { Prisma } from "../../../generated/prisma/client.js";
 
@@ -656,57 +655,6 @@ export const getResponseExcelByCampaignById = async (
   return { title: campaign?.name, data: buffer };
 };
 
-// Jobs released within this window of each other belong to the same batch.
-// addBulk stamps them a few ms apart, so a small tolerance groups them cleanly.
-const BATCH_GROUPING_TOLERANCE_MS = 60_000;
-
-export interface CampaignScheduleInfo {
-  /** Messages still waiting on a delay, i.e. not yet released to a worker. */
-  scheduledCount: number;
-  /** When the next batch is released, or null if nothing is delayed. */
-  nextBatchAt: string | null;
-  /** How many messages that next batch contains. */
-  nextBatchCount: number;
-}
-
-/**
- * Reports what a daily-limited campaign still has parked in Redis. The
- * dispatcher gives each participant job a `delay`, so a job's release time is
- * `timestamp + delay`; the earliest such time is the next batch.
- */
-export async function getCampaignScheduleInfo(campaignId: string): Promise<CampaignScheduleInfo> {
-  const empty: CampaignScheduleInfo = {
-    scheduledCount: 0,
-    nextBatchAt: null,
-    nextBatchCount: 0,
-  };
-
-  try {
-    // Delayed jobs are named after their campaign by `enqueueCampaignMessages`.
-    const delayed = await waMessageQueue.getDelayed();
-    const releaseTimes = delayed
-      .filter((job) => job?.name === campaignId)
-      .map((job) => job.timestamp + (job.opts?.delay ?? 0));
-
-    if (!releaseTimes.length) return empty;
-
-    const nextBatchAt = Math.min(...releaseTimes);
-    const nextBatchCount = releaseTimes.filter(
-      (at) => at - nextBatchAt < BATCH_GROUPING_TOLERANCE_MS,
-    ).length;
-
-    return {
-      scheduledCount: releaseTimes.length,
-      nextBatchAt: new Date(nextBatchAt).toISOString(),
-      nextBatchCount,
-    };
-  } catch (error) {
-    // Schedule info is decorative; never fail the whole stats call over it.
-    console.error("Error reading campaign schedule info:", error);
-    return empty;
-  }
-}
-
 export async function getCampaginStatsById(campaignId: string, selectedDripStage = "all") {
   if (selectedDripStage === "all") {
     const stats = await prisma.campaignStats.findUnique({
@@ -737,15 +685,9 @@ export async function getCampaginStatsById(campaignId: string, selectedDripStage
         countDelivered: 0,
         countPending: 0,
         countCompleted: 0,
-        scheduledCount: 0,
-        nextBatchAt: null,
-        nextBatchCount: 0,
       };
     }
-    const [tc, schedule] = await Promise.all([
-      getCampaignCount(campaignId),
-      getCampaignScheduleInfo(campaignId),
-    ]);
+    const tc = await getCampaignCount(campaignId);
 
     return {
       countRead: stats.totalRead,
@@ -755,7 +697,6 @@ export async function getCampaginStatsById(campaignId: string, selectedDripStage
       countPending: stats.campaign?._count?.campaignParticipants ?? 0,
       countCompleted: stats.totalCompleted,
       queueCount: tc ?? 0,
-      ...schedule,
     };
   } else {
     const stats = await prisma.campaignDripStage.findUnique({
@@ -798,18 +739,12 @@ export async function getCampaginStatsById(campaignId: string, selectedDripStage
   }
 }
 
-/**
- * Hands the campaign to the dispatcher as a single instruction. The dispatcher
- * expands it into per-participant jobs; when `dailySendLimit` is set it staggers
- * those jobs across consecutive days instead of releasing them all at once.
- */
 export async function enqueueCampaignMessage(
   campaignId: string,
   sendToStatuses: CampaignParticipantStatus[],
   participantId?: string,
   scheduledAt?: Date,
   dripStageId?: string,
-  dailySendLimit?: number,
 ): Promise<{ status: boolean; message: string }> {
   try {
     waCampaignEnqueue.add(
@@ -820,7 +755,6 @@ export async function enqueueCampaignMessage(
         participantId,
         scheduledAt,
         dripStageId,
-        dailySendLimit,
       },
       {
         removeOnComplete: true,

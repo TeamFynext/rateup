@@ -31,13 +31,10 @@ import {
   ZapierTriggers,
 } from "../integrations/external/zapier/zapier.service.js";
 import {
-  conversationStatusData,
   createConversation,
-  mirrorConversationStatusTx,
-  resolveClosedByUserId,
-  resolveInboxActor,
+  getLastCreatedConversationForContact,
+  updateClosedConversationStatus,
 } from "./conversation/conversation.service.js";
-import type { InboxActor } from "./conversation/conversation.schema.js";
 import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../whatsapp/constants.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
 import { integrationTriggerQueue, notificationQueue } from "../../utils/redisConnection.js";
@@ -606,7 +603,6 @@ export async function updateContactById(
   contact: updateContactSchema,
   userId?: string,
   existing?: any,
-  actor?: InboxActor,
 ) {
   // Use provided existing contact if available, otherwise fetch
   const contactRecord =
@@ -646,54 +642,42 @@ export async function updateContactById(
     });
   }
 
-  const nextStatus = contact.waMessageAssignStatus;
-  const statusChanged =
-    nextStatus !== undefined && contactRecord.waMessageAssignStatus !== nextStatus;
-  const closing = statusChanged && WaMessageClosedStatus.includes(nextStatus);
-  const transitionActor: InboxActor = actor ?? resolveInboxActor(userId);
-  const now = new Date();
-
-  // The contact write and the conversation mirror must commit together, or the
-  // two status columns drift whenever the second write fails.
-  const updatedContact = await prisma.$transaction(async (tx) => {
-    const updated = await tx.contact.update({
-      where: {
-        id: contactId,
-      },
-      data: {
-        name: contact.name,
-        phone: contact.phone,
-        aiWaChat: contact.aiWaChat,
-        waMessageAssignStatus: nextStatus,
-        lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp || undefined,
-        ...(closing
-          ? {
-              closedAt: now,
-              closedBy: resolveClosedByUserId(transitionActor),
-            }
-          : {}),
-        notes: contact.notes,
-        lifecycleId: contact.lifecycleId,
-      },
-      include: {
-        waInboxAssign: {
-          select: {
-            assignedUserId: true,
-          },
-        },
-        contactGroups: {
-          select: {
-            contactGroupId: true,
-          },
+  const updatedContact = await prisma.contact.update({
+    where: {
+      id: contactId,
+    },
+    data: {
+      name: contact.name,
+      phone: contact.phone,
+      aiWaChat: contact.aiWaChat,
+      waMessageAssignStatus: contact.waMessageAssignStatus,
+      lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp || undefined,
+      ...(contactRecord.waMessageAssignStatus !== contact.waMessageAssignStatus &&
+      WaMessageClosedStatus.includes(contact.waMessageAssignStatus)
+        ? {
+            closedAt: new Date(),
+            closedBy:
+              userId &&
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)
+                ? userId
+                : null,
+          }
+        : {}),
+      notes: contact.notes,
+      lifecycleId: contact.lifecycleId,
+    },
+    include: {
+      waInboxAssign: {
+        select: {
+          assignedUserId: true,
         },
       },
-    });
-
-    if (statusChanged) {
-      await mirrorConversationStatusTx(tx, contactId, nextStatus, transitionActor, { now });
-    }
-
-    return updated;
+      contactGroups: {
+        select: {
+          contactGroupId: true,
+        },
+      },
+    },
   });
 
   // InboxStats Hook
@@ -923,7 +907,13 @@ export async function updateContactById(
         messageId: contact.messageId,
       });
     }
-    // The conversation was already mirrored inside the transaction above.
+    const conversation = await getLastCreatedConversationForContact(updatedContact.id);
+    if (conversation)
+      await updateClosedConversationStatus(
+        conversation.id,
+        updatedContact.waMessageAssignStatus,
+        userId,
+      );
   }
   return updatedContact;
 }
@@ -1043,7 +1033,7 @@ export async function getOrCreateContactByPhone(
         },
       });
       if (addToConversation) {
-        conversation = await createConversation({ contactId: contact.id, orgId: contact.orgId });
+        conversation = await createConversation({ contactId: contact.id });
       }
       await addZapierTriggerToQueue(
         ZapierTriggers.CONTACT_CREATE,
@@ -1122,7 +1112,7 @@ export async function getOrCreateContactByIgsId(
         },
       });
       if (addToConversation) {
-        conversation = await createConversation({ contactId: contact.id, orgId: contact.orgId });
+        conversation = await createConversation({ contactId: contact.id });
       }
       await addZapierTriggerToQueue(
         ZapierTriggers.CONTACT_CREATE,
@@ -1213,7 +1203,6 @@ export async function getOrCreateContactByPsid(
     if (addToConversation) {
       conversation = await createConversation({
         contactId: contact.id,
-        orgId: contact.orgId,
       });
     }
 
@@ -1766,52 +1755,21 @@ export async function bulkUpdateWaMessageAssignStatus(
   if (!contacts.length) return [];
 
   const closing = WaMessageClosedStatus.includes(waMessageAssignStatus);
-  const actor: InboxActor = resolveInboxActor(userId);
-  const now = new Date();
 
-  //  Bulk update -- contacts and their latest conversations commit together so
-  //  the two status columns cannot drift.
-  await prisma.$transaction(async (tx) => {
-    await tx.contact.updateMany({
-      where: {
-        id: { in: contactIds },
-      },
-      data: {
-        waMessageAssignStatus,
-        ...(closing
-          ? {
-              closedAt: now,
-              // `closedBy` is an FK to User: never write a sentinel actor here.
-              closedBy: resolveClosedByUserId(actor),
-            }
-          : {}),
-      },
-    });
-
-    // One conversation per contact: the most recently created.
-    const conversations = await tx.conversation.findMany({
-      where: { contactId: { in: contactIds } },
-      orderBy: [{ contactId: "asc" }, { createdAt: "desc" }],
-      select: { id: true, contactId: true, status: true },
-    });
-    const latest = [
-      ...conversations
-        .reduce((acc, c) => (acc.has(c.contactId) ? acc : acc.set(c.contactId, c)), new Map())
-        .values(),
-    ];
-
-    // An already-closed conversation is never reopened in place; see
-    // `mirrorConversationStatusTx`.
-    const latestIds = latest
-      .filter((c) => closing || !WaMessageClosedStatus.includes(c.status))
-      .map((c) => c.id);
-
-    if (latestIds.length) {
-      await tx.conversation.updateMany({
-        where: { id: { in: latestIds } },
-        data: conversationStatusData(waMessageAssignStatus, actor, undefined, now),
-      });
-    }
+  //  Bulk update
+  await prisma.contact.updateMany({
+    where: {
+      id: { in: contactIds },
+    },
+    data: {
+      waMessageAssignStatus,
+      ...(closing
+        ? {
+            closedAt: new Date(),
+            closedBy: userId,
+          }
+        : {}),
+    },
   });
 
   const orgId = contacts[0].orgId;
@@ -1909,7 +1867,12 @@ export async function bulkUpdateWaMessageAssignStatus(
         });
       }
 
-      // The conversation was already closed in the transaction above.
+      // Close conversation
+      const conversation = await getLastCreatedConversationForContact(contact.id);
+
+      if (conversation) {
+        await updateClosedConversationStatus(conversation.id, waMessageAssignStatus, userId);
+      }
     }),
   );
 

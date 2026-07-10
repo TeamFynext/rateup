@@ -1,32 +1,17 @@
 import z from "zod";
-import { CloseReason, WaMessageAssignStatus } from "../../../types/enums.js";
-
-const inboxStatusSchema = z.enum(WaMessageAssignStatus);
-const closeReasonSchema = z.enum(CloseReason);
 
 const conversationCoreSchema = z.object({
   contactId: z.uuid(),
-  orgId: z.uuid(),
-  status: inboxStatusSchema.optional(),
+  status: z.string().optional(),
 });
 
 const updateConversationSchema = z.object({
-  status: inboxStatusSchema.optional(),
+  status: z.string().optional(),
   firstRespondedAt: z.date().optional(),
   assignedAt: z.date().optional(),
   closedAt: z.date().optional(),
   closedBy: z.uuid().optional(),
   firstRespondedByUserAt: z.date().optional(),
-  resolvedAt: z.date().optional(),
-  closeReason: closeReasonSchema.optional(),
-  closedByAutomation: z.boolean().optional(),
-});
-
-/// Who caused a status transition. `closedBy` is only ever populated from a real
-/// `userId`; automation and rule closes intentionally leave it null.
-const inboxActorSchema = z.object({
-  userId: z.uuid().optional(),
-  source: z.enum(["user", "automation", "rule", "system"]),
 });
 
 const conversationAssigneeUpdateSchema = z.object({
@@ -64,7 +49,6 @@ const teamIdParamsSchema = z.object({
 
 export type ConversationCore = z.infer<typeof conversationCoreSchema>;
 export type UpdateConversationSchema = z.infer<typeof updateConversationSchema>;
-export type InboxActor = z.infer<typeof inboxActorSchema>;
 export type ConversationParamsSchema = z.infer<typeof conversationParamsSchema>;
 export type ConversationAssigneeUpdateSchema = z.infer<typeof conversationAssigneeUpdateSchema>;
 export type StatsQuerySchema = z.infer<typeof statsQuerySchema>;
@@ -80,7 +64,4 @@ export {
   statsQuerySchema,
   staffIdParamsSchema,
   teamIdParamsSchema,
-  inboxActorSchema,
-  inboxStatusSchema,
-  closeReasonSchema,
 };

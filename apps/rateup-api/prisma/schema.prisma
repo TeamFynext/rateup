@@ -831,7 +831,7 @@ model Contact {
   aiWaChat                     Boolean                   @default(false)
   isAiBotActive                Boolean                   @default(false)
   chatbotId                    String                    @default("")
-  waMessageAssignStatus        InboxStatus               @default(UNASSIGNED)
+  waMessageAssignStatus        String                    @default("UNASSIGNED")
   waInboxAssign                WaInboxAssign[]
   lastReceivedMessageTimeStamp DateTime?
   whatsappUserName             String? //whatsapp or instagram username
@@ -994,9 +994,6 @@ model Campaign {
   endedAt   DateTime?
   status    String    @default("INACTIVE") // enums.ts: CampaignStatus
   type      String // enums.ts: CampaignType
-
-  // Max messages dispatched per day. Null = dispatch every participant at once.
-  dailySendLimit Int?
 
   team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId               String                @db.Uuid
@@ -2595,33 +2592,12 @@ model ConversationAssignedUserTeamMap {
   @@index([userId, lastAssignedAt, lastRemovedAt])
 }
 
-/// Storage vocabulary for inbox status. Mirrored between `Contact.waMessageAssignStatus`
-/// (live-inbox source of truth) and `Conversation.status`. "NEW" is a derived UI tab
-/// (unassigned + recent) and "BLOCKED" is `Contact.blockedOnWhatsApp`; neither is stored here.
-enum InboxStatus {
-  UNASSIGNED
-  ASSIGNED
-  CLOSED
-  SPAM
-  RESOLVED
-  UNRESOLVED
-}
-
-enum CloseReason {
-  MANUAL
-  AUTOMATION_IDLE
-  RULE
-  SPAM
-}
-
 model Conversation {
   id                     String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   contactId              String                            @db.Uuid
   contact                Contact                           @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  /// Denormalized from `Contact.orgId` so analytics can scope by org without joining Contact.
-  orgId                  String                            @db.Uuid
   messages               WaMessage[]
-  status                 InboxStatus                       @default(UNASSIGNED)
+  status                 String                            @default("UNASSIGNED")
   firstRespondedAt       DateTime?
   firstRespondedByUserAt DateTime?
   assignedUsers          ConversationAssignedUserTeamMap[]
@@ -2629,24 +2605,11 @@ model Conversation {
   closedAt               DateTime?
   closedBy               String?                           @db.Uuid
   closedByUser           User?                             @relation(fields: [closedBy], references: [id])
-  /// Set only when status becomes RESOLVED; `closedAt` covers any terminal state.
-  resolvedAt             DateTime?
-  closeReason            CloseReason?
-  closedByAutomation     Boolean                           @default(false)
-  lastMessageAt          DateTime?
-  lastCustomerMessageAt  DateTime?
-  lastAgentMessageAt     DateTime?
-  messageCount           Int                               @default(0)
-  reopenCount            Int                               @default(0)
   createdAt              DateTime                          @default(now())
-  updatedAt              DateTime                          @updatedAt
 
   @@index([contactId])
   @@index([firstRespondedAt])
   @@index([createdAt])
-  @@index([orgId, status])
-  @@index([orgId, createdAt])
-  @@index([orgId, lastMessageAt(sort: Desc)])
 }
 
 enum WaMessageOrgTeamType {
