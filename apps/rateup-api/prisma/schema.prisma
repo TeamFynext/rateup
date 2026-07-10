@@ -2619,7 +2619,7 @@ model Conversation {
   contactId              String                            @db.Uuid
   contact                Contact                           @relation(fields: [contactId], references: [id], onDelete: Cascade)
   /// Denormalized from `Contact.orgId` so analytics can scope by org without joining Contact.
-  orgId                  String                            @db.Uuid
+  orgId                  String?                           @db.Uuid
   messages               WaMessage[]
   status                 InboxStatus                       @default(UNASSIGNED)
   firstRespondedAt       DateTime?
@@ -2639,7 +2639,7 @@ model Conversation {
   messageCount           Int                               @default(0)
   reopenCount            Int                               @default(0)
   createdAt              DateTime                          @default(now())
-  updatedAt              DateTime                          @updatedAt
+  updatedAt              DateTime?                         @updatedAt
 
   @@index([contactId])
   @@index([firstRespondedAt])
