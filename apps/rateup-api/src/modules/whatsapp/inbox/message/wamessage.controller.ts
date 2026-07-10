@@ -73,8 +73,9 @@ import {
 import {
   checkIfFirstSendMessageInConversation,
   checkIfFirstUserSendMessageInConversation,
-  createConversation,
+  getActiveConversationForContact,
   getLastCreatedConversationForContact,
+  openConversationForContact,
   updateConversation,
 } from "../../../contact/conversation/conversation.service.js";
 import { WaMessageClosedStatus } from "../../constants.js";
@@ -202,15 +203,18 @@ export async function handleWaMessages(
       }
     }
     if (!conversation) {
-      conversation = await getLastCreatedConversationForContact(contact.id);
       if (
-        !conversation &&
         type === "receive" &&
         contact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED
       ) {
-        conversation = await createConversation({
-          contactId: contact.id,
-        });
+        // An inbound message belongs to a live conversation. If the last one was
+        // closed (or there was never one), this message opens a new conversation
+        // rather than appending to a finished record.
+        conversation =
+          (await getActiveConversationForContact(contact.id)) ??
+          (await openConversationForContact(contact.id, orgId));
+      } else {
+        conversation = await getLastCreatedConversationForContact(contact.id);
       }
     }
 

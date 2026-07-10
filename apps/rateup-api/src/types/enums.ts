@@ -428,14 +428,18 @@ export enum LoyaltyTemplateTypes {
   TierUpgraded = "TierUpgraded",
 }
 
-export enum WaMessageAssignStatus {
-  UNASSIGNED = "UNASSIGNED",
-  ASSIGNED = "ASSIGNED",
-  CLOSED = "CLOSED",
-  SPAM = "SPAM",
-  RESOLVED = "RESOLVED",
-  UNRESOLVED = "UNRESOLVED",
-}
+/// The stored inbox status vocabulary, re-exported from the Prisma enum so the
+/// database and the TypeScript view cannot drift. Kept under its historical
+/// name so existing `WaMessageAssignStatus.X` call sites keep working.
+export { CloseReason, InboxStatus as WaMessageAssignStatus } from "../../generated/prisma/enums.js";
+export type { InboxStatus } from "../../generated/prisma/enums.js";
+
+/// Internal system messages describe inbox *events*, whose vocabulary is a
+/// superset of the stored statuses: a reassignment is an event, but never a
+/// value of `Contact.waMessageAssignStatus`. Keeping the two apart stops anyone
+/// from tightening `createInternalWaMessage`'s parameter to the storage enum
+/// and silently dropping "REASSIGNED".
+export type InboxEventLabel = import("../../generated/prisma/enums.js").InboxStatus | "REASSIGNED";
 
 export enum LoyaltyApiFeature {
   action = "action",
