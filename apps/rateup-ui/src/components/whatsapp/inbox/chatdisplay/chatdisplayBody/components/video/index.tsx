@@ -1,9 +1,10 @@
-import { ActionIcon, Group, Stack, Text } from "@mantine/core";
 import { IconDownload } from "@tabler/icons-react";
-import { useRef } from "react";
+import { Loader2 } from "lucide-react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useGetMediaFile } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { Button } from "@/components/ui/button.tsx";
 
 interface Props {
   messageContent: string;
@@ -14,6 +15,7 @@ export default function WaInboxVideo({ messageContent }: Props) {
   const [id, caption] = messageContent.split("_caption_");
   const link = id.startsWith("http") ? id : null;
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   const handleVideoError = () => {
     toast.error("Video file not found", {
@@ -24,17 +26,16 @@ export default function WaInboxVideo({ messageContent }: Props) {
   const handleDownload = () => {
     mutate(id, {
       onSuccess: (fileData) => {
-        // Create a Blob URL from the fetched video data
         const blob = new Blob([fileData], { type: "video/mp4" });
         const url = URL.createObjectURL(blob);
 
-        // Play the video automatically
         if (videoRef.current) {
           videoRef.current.load();
           videoRef.current.src = url;
           videoRef.current.play().catch((err) => {
             console.error("Failed to play video:", err);
           });
+          setVideoLoaded(true);
         }
       },
       onError: (error) => {
@@ -46,34 +47,30 @@ export default function WaInboxVideo({ messageContent }: Props) {
   };
 
   return (
-    <Stack gap={1} p={0}>
-      <Group pt={"xs"} align="center" pos={"relative"}>
+    <div className="flex flex-col gap-1 p-0">
+      <div className="relative flex justify-center items-center pt-2">
         <video
           ref={videoRef}
           controls
           style={{ width: "100%" }}
           onError={videoRef?.current?.src ? handleVideoError : undefined}
         >
-          <source type="video/mp4" src={link} />
+          <source type="video/mp4" src={link ?? ""} />
           Your browser does not support the video element.
         </video>
-        {!link && (
-          <ActionIcon
-            pos={"absolute"}
-            right={"45%"}
-            left={"45%"}
-            radius={"xl"}
-            size={"lg"}
+        {!link && !videoLoaded && (
+          <Button
+            size="icon"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full h-10 w-10 shrink-0"
             onClick={handleDownload}
             aria-label="Download Video"
-            loading={isPending}
-            display={videoRef?.current?.src ? "none" : "flex"}
+            disabled={isPending}
           >
-            <IconDownload />
-          </ActionIcon>
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <IconDownload size={16} />}
+          </Button>
         )}
-      </Group>
-      <Text size={"sm"}>{caption}</Text>
-    </Stack>
+      </div>
+      {caption && <p className="text-sm mt-1">{caption}</p>}
+    </div>
   );
 }

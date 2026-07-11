@@ -1,5 +1,5 @@
-import { Badge, Card, Group, Loader, Radio, Stack, Title } from "@mantine/core";
 import { IconSend } from "@tabler/icons-react";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -7,12 +7,12 @@ import {
   useAllWaAutomatedReplies,
   useInitiateWaAutomatedReplyMutation,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import SimpleModalLayout from "@/components/Modal/SimpleModalLayout.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
-
-import classes2 from "../flowDisplayModel/flowSelectCard/styles.module.css";
-import classes from "../flowDisplayModel/styles.module.css";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import { cn } from "@/lib/utils.ts";
 
 interface Props {
   sessionExpired: boolean;
@@ -44,49 +44,62 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
   return (
     <>
       <SimpleModalLayout
-        {...{
-          opened: props?.opened,
-          onClose,
-          title: "Initiate Automation",
-          centered: true,
-        }}
+        opened={props?.opened}
+        onClose={onClose}
+        title="Initiate Automation"
+        centered={true}
       >
-        {isLoading && <Loader />}
-        {error && <Badge color="red">error</Badge>}
+        {isLoading && (
+          <div className="flex items-center justify-center p-6">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
+        {error && (
+          <div className="mb-4">
+            <Badge variant="destructive">error</Badge>
+          </div>
+        )}
         {automations && automations?.length > 0 ? (
           <>
-            <Stack className={classes.inner}>
-              <Title order={4} fw={400} size={"sm"}>
-                Select a automation
-              </Title>
-              <Radio.Group
-                value={selectedAutomationId}
-                onChange={(value) => setSelectedAutomationId(value)}
-              >
-                {automations?.map((automation) => (
-                  <Card className={classes2.wrapper} key={automation?.id}>
-                    <Radio
-                      className={classes2.inner}
-                      value={automation?.id}
-                      label={automation?.name}
-                      fz={"xs"}
-                    />
-                  </Card>
-                ))}
-              </Radio.Group>
-            </Stack>
-            <Group className={classes.send_button_wrapper}>
-              <RateupButtonPrimary
-                title={translations("Send")}
-                loading={initiate.isPending}
+            <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto p-1">
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                Select an automation
+              </h4>
+              <RadioGroup value={selectedAutomationId} onValueChange={setSelectedAutomationId}>
+                <div className="flex flex-col gap-2">
+                  {automations?.map((automation) => (
+                    <label
+                      key={automation?.id}
+                      htmlFor={automation?.id}
+                      className={cn(
+                        "flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all hover:bg-muted/50",
+                        selectedAutomationId === automation?.id
+                          ? "border-primary bg-primary/5"
+                          : "border-border",
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <RadioGroupItem value={automation?.id} id={automation?.id} />
+                        <span className="text-xs font-medium select-none">{automation?.name}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </RadioGroup>
+            </div>
+            <div className="flex justify-end pt-4 border-t border-border mt-4">
+              <Button
+                disabled={!selectedAutomationId || initiate.isPending}
                 onClick={handleSendAutomatedReply}
-                rightIcon={<IconSend />}
-                disabled={!selectedAutomationId}
-              />
-            </Group>
+              >
+                {initiate.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+                <span>{translations("Send")}</span>
+                {!initiate.isPending && <IconSend className="ml-1.5 h-4 w-4" />}
+              </Button>
+            </div>
           </>
         ) : (
-          <NothingFound text={"No Automations found"} />
+          !isLoading && <NothingFound text={"No Automations found"} />
         )}
       </SimpleModalLayout>
     </>

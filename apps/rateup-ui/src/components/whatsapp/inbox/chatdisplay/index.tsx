@@ -1,4 +1,3 @@
-import { Group, Text } from "@mantine/core";
 import { IconExclamationCircle, IconPaperclip } from "@tabler/icons-react";
 import { MessageSquare } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -88,10 +87,10 @@ export default function WaInboxChatDisplay() {
     footerContent = <WaInboxChatDisplayFooter contact={contact} />;
   } else {
     footerContent = (
-      <Group bg={"black"} justify="center" c={"white"} color="white" gap={2} py={2}>
+      <div className="flex justify-center items-center bg-black text-white gap-2 py-2">
         <IconExclamationCircle size={"1rem"} />
-        <Text size="xs">This chat is not assigned to you</Text>
-      </Group>
+        <p className="text-xs">This chat is not assigned to you</p>
+      </div>
     );
   }
   useEffect(() => {
@@ -170,15 +169,9 @@ export default function WaInboxChatDisplay() {
         <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm border-2 border-dashed border-primary">
           <div className="flex flex-col items-center gap-3 text-white">
             <IconPaperclip size={48} />
-            <Text size="lg" fw={600}>
-              Drop files to upload
-            </Text>
-            <Text size="sm" opacity={0.8}>
-              Images, videos, audio or documents
-            </Text>
-            <Text size="xs" opacity={0.7}>
-              Maximum {MAX_FILES} files
-            </Text>
+            <p className="text-lg font-semibold">Drop files to upload</p>
+            <p className="text-sm opacity-80">Images, videos, audio or documents</p>
+            <p className="text-xs opacity-70">Maximum {MAX_FILES} files</p>
           </div>
         </div>
       )}

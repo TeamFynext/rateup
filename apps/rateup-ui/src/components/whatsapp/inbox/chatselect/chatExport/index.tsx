@@ -1,41 +1,97 @@
-import {
-  Button,
-  Checkbox,
-  Divider,
-  Flex,
-  Group,
-  Radio,
-  RadioGroup,
-  Stack,
-  Text,
-} from "@mantine/core";
-import type { DatePickerProps } from "@mantine/dates";
-import { DatePicker } from "@mantine/dates";
-import { useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { IconDownload } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { z } from "zod/v4";
 
 import { useExportWaChats } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import useContactStore from "@/components/dashboard/inbox/store.ts";
+import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { DatePicker } from "@/components/ui/date-picker.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
 
-import classes from "./styles.module.css";
+const DateType = {
+  BETWEEN: "between",
+  BEFORE: "before",
+  AFTER: "after",
+  ON: "on",
+} as const;
 
-enum DateType {
-  BETWEEN = "between",
-  BEFORE = "before",
-  AFTER = "after",
-  ON = "on",
-}
+const chatExportSchema = z
+  .object({
+    date: z.object({
+      type: z.enum(["between", "before", "after", "on"]),
+      inclusive: z.boolean(),
+      between: z.object({
+        from: z.string(),
+        to: z.string(),
+      }),
+      before: z.string(),
+      after: z.string(),
+      on: z.string(),
+    }),
+    repliesOnly: z.boolean(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.date.type === "between") {
+      if (!val.date.between.from) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "From date is required",
+          path: ["date", "between", "from"],
+        });
+      }
+      if (!val.date.between.to) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "To date is required",
+          path: ["date", "between", "to"],
+        });
+      }
+    } else if (val.date.type === "before" && !val.date.before) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Date is required",
+        path: ["date", "before"],
+      });
+    } else if (val.date.type === "after" && !val.date.after) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Date is required",
+        path: ["date", "after"],
+      });
+    } else if (val.date.type === "on" && !val.date.on) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Date is required",
+        path: ["date", "on"],
+      });
+    }
+  });
+
+type ChatExportFormValues = z.infer<typeof chatExportSchema>;
+
 export default function WaInboxChatExport() {
   const [chatsExporting, setChatsExporting] = useState(false);
   const exportChats = useExportWaChats();
   const { t: translations } = useTranslation();
   const { filterData } = useContactStore();
-  const form = useForm({
-    initialValues: {
+
+  const {
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { isValid },
+  } = useForm<ChatExportFormValues>({
+    resolver: zodResolver(chatExportSchema),
+    mode: "onChange",
+    defaultValues: {
       date: {
         type: DateType.BETWEEN,
         inclusive: false,
@@ -49,40 +105,21 @@ export default function WaInboxChatExport() {
       },
       repliesOnly: false,
     },
-    onValuesChange(values, previous) {
-      if (values.date.type !== previous.date.type) {
-        form.setFieldValue("date.between.from", "");
-        form.setFieldValue("date.between.to", "");
-        form.setFieldValue("date.before", "");
-        form.setFieldValue("date.after", "");
-        form.setFieldValue("date.on", "");
-        form.setFieldValue("date.inclusive", false);
-        form.setFieldValue("repliesOnly", false);
-      }
-    },
-    validate(values) {
-      const errors = {};
-      if (values.date.type === DateType.BETWEEN) {
-        if (!values.date.between.from) {
-          errors["date.between.from"] = "This field is required";
-        }
-        if (!values.date.between.to) {
-          errors["date.between.to"] = "This field is required";
-        }
-      }
-      if (values.date.type === DateType.BEFORE && !values.date.before) {
-        errors["date.before"] = "This field is required";
-      }
-      if (values.date.type === DateType.AFTER && !values.date.after) {
-        errors["date.after"] = "This field is required";
-      }
-      if (values.date.type === DateType.ON && !values.date.on) {
-        errors["date.on"] = "This field is required";
-      }
-      return Object.keys(errors).length > 0 ? errors : false;
-    },
   });
-  function handleSubmit(values: typeof form.values) {
+
+  const dateType = watch("date.type");
+
+  useEffect(() => {
+    setValue("date.between.from", "");
+    setValue("date.between.to", "");
+    setValue("date.before", "");
+    setValue("date.after", "");
+    setValue("date.on", "");
+    setValue("date.inclusive", false);
+    setValue("repliesOnly", false);
+  }, [dateType, setValue]);
+
+  function onSubmit(values: ChatExportFormValues) {
     setChatsExporting(true);
     toast.loading("Exporting chats...", {
       id: "export-chats",
@@ -104,105 +141,211 @@ export default function WaInboxChatExport() {
     );
   }
 
+  const parseSafeDate = (dateStr?: string) => {
+    if (!dateStr) return undefined;
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? undefined : d;
+  };
+
+  const selectedDateType = watch("date.type");
+
   return (
-    <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
-      <Stack className={classes.hovercard_dropdown_inner}>
-        <Text className={classes.hovercard_title}>{translations("Export Whatsapp chats")}</Text>
-        <Divider />
-        <RadioGroup size="xs" {...form.getInputProps("date.type")}>
-          <Group>
-            <Radio label={translations("Between")} size="xs" value={DateType.BETWEEN} />
-            <Radio label={translations("Before")} size="xs" value={DateType.BEFORE} />
-            <Radio label={translations("After")} size="xs" value={DateType.AFTER} />
-            <Radio label={translations("On")} size="xs" value={DateType.ON} />
-          </Group>
-        </RadioGroup>
-        <Flex justify="center">
-          {form.values.date.type === DateType.ON && (
-            <CustomDatePicker
-              label={translations("on")}
-              value={new Date(form.values.date.on)}
-              onChange={(value) => form.setFieldValue("date.on", dayjs(value).format("YYYY-MM-DD"))}
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="flex flex-col gap-3 p-3 min-w-[320px] bg-background">
+        <h3 className="text-sm font-semibold text-foreground">
+          {translations("Export Whatsapp chats")}
+        </h3>
+        <Separator />
+
+        <Controller
+          name="date.type"
+          control={control}
+          render={({ field }) => (
+            <RadioGroup
+              value={field.value}
+              onValueChange={field.onChange}
+              className="flex flex-row gap-3 items-center"
+            >
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value={DateType.BETWEEN} id="date-between" />
+                <label
+                  htmlFor="date-between"
+                  className="text-xs text-muted-foreground cursor-pointer select-none"
+                >
+                  {translations("Between")}
+                </label>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value={DateType.BEFORE} id="date-before" />
+                <label
+                  htmlFor="date-before"
+                  className="text-xs text-muted-foreground cursor-pointer select-none"
+                >
+                  {translations("Before")}
+                </label>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value={DateType.AFTER} id="date-after" />
+                <label
+                  htmlFor="date-after"
+                  className="text-xs text-muted-foreground cursor-pointer select-none"
+                >
+                  {translations("After")}
+                </label>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value={DateType.ON} id="date-on" />
+                <label
+                  htmlFor="date-on"
+                  className="text-xs text-muted-foreground cursor-pointer select-none"
+                >
+                  {translations("On")}
+                </label>
+              </div>
+            </RadioGroup>
+          )}
+        />
+
+        <div className="flex justify-center gap-3">
+          {selectedDateType === DateType.ON && (
+            <Controller
+              name="date.on"
+              control={control}
+              render={({ field }) => (
+                <CustomDatePicker
+                  label={translations("on")}
+                  value={parseSafeDate(field.value)}
+                  onChange={(date) => field.onChange(dayjs(date).format("YYYY-MM-DD"))}
+                />
+              )}
             />
           )}
-          {form.values.date.type === DateType.BEFORE && (
-            <CustomDatePicker
-              label={translations("before")}
-              value={new Date(form.values.date.before)}
-              onChange={(value) =>
-                form.setFieldValue("date.before", dayjs(value).format("YYYY-MM-DD"))
-              }
+          {selectedDateType === DateType.BEFORE && (
+            <Controller
+              name="date.before"
+              control={control}
+              render={({ field }) => (
+                <CustomDatePicker
+                  label={translations("before")}
+                  value={parseSafeDate(field.value)}
+                  onChange={(date) => field.onChange(dayjs(date).format("YYYY-MM-DD"))}
+                />
+              )}
             />
           )}
-          {form.values.date.type === DateType.AFTER && (
-            <CustomDatePicker
-              label={translations("after")}
-              value={new Date(form.values.date.after)}
-              onChange={(value) =>
-                form.setFieldValue("date.after", dayjs(value).format("YYYY-MM-DD"))
-              }
+          {selectedDateType === DateType.AFTER && (
+            <Controller
+              name="date.after"
+              control={control}
+              render={({ field }) => (
+                <CustomDatePicker
+                  label={translations("after")}
+                  value={parseSafeDate(field.value)}
+                  onChange={(date) => field.onChange(dayjs(date).format("YYYY-MM-DD"))}
+                />
+              )}
             />
           )}
-          {form.values.date.type === DateType.BETWEEN && (
+          {selectedDateType === DateType.BETWEEN && (
             <>
-              <CustomDatePicker
-                label={translations("from")}
-                {...form.getInputProps("date.between.from")}
-                value={new Date(form.values.date.between.from)}
-                onChange={(value) =>
-                  form.setFieldValue("date.between.from", dayjs(value).format("YYYY-MM-DD"))
-                }
+              <Controller
+                name="date.between.from"
+                control={control}
+                render={({ field }) => (
+                  <CustomDatePicker
+                    label={translations("from")}
+                    value={parseSafeDate(field.value)}
+                    onChange={(date) => field.onChange(dayjs(date).format("YYYY-MM-DD"))}
+                  />
+                )}
               />
-              <CustomDatePicker
-                label={translations("to")}
-                {...form.getInputProps("date.between.to")}
-                value={new Date(form.values.date.between.to)}
-                onChange={(value) =>
-                  form.setFieldValue("date.between.to", dayjs(value).format("YYYY-MM-DD"))
-                }
+              <Controller
+                name="date.between.to"
+                control={control}
+                render={({ field }) => (
+                  <CustomDatePicker
+                    label={translations("to")}
+                    value={parseSafeDate(field.value)}
+                    onChange={(date) => field.onChange(dayjs(date).format("YYYY-MM-DD"))}
+                  />
+                )}
               />
             </>
           )}
-        </Flex>
-        <Group justify="space-between">
-          <Checkbox
-            label={translations("Replies Only")}
-            size="xs"
-            checked={form.values.repliesOnly}
-            {...form.getInputProps("repliesOnly")}
-          />
-          {form.values.date.type !== "between" && form.values.date.type !== "on" && (
-            <Checkbox
-              label={translations("Inclusive")}
-              size="xs"
-              checked={form.values.date.inclusive}
-              {...form.getInputProps("date.inclusive")}
+        </div>
+
+        <div className="flex items-center justify-between mt-1">
+          <div className="flex gap-4">
+            <Controller
+              name="repliesOnly"
+              control={control}
+              render={({ field }) => (
+                <div className="flex items-center gap-1.5">
+                  <Checkbox
+                    id="replies-only"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                  <label
+                    htmlFor="replies-only"
+                    className="text-xs text-muted-foreground cursor-pointer select-none"
+                  >
+                    {translations("Replies Only")}
+                  </label>
+                </div>
+              )}
             />
-          )}
+            {selectedDateType !== "between" && selectedDateType !== "on" && (
+              <Controller
+                name="date.inclusive"
+                control={control}
+                render={({ field }) => (
+                  <div className="flex items-center gap-1.5">
+                    <Checkbox
+                      id="date-inclusive"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                    <label
+                      htmlFor="date-inclusive"
+                      className="text-xs text-muted-foreground cursor-pointer select-none"
+                    >
+                      {translations("Inclusive")}
+                    </label>
+                  </div>
+                )}
+              />
+            )}
+          </div>
+
           <Button
             type="submit"
-            variant="light"
-            size="compact-xs"
-            leftSection={<IconDownload size={15} />}
-            ml={"auto"}
-            disabled={chatsExporting || !form.isValid()}
+            size="sm"
+            className="h-8 text-xs ml-auto flex items-center gap-1.5"
+            disabled={chatsExporting || !isValid}
           >
+            <IconDownload size={15} />
             {translations("Export")}
           </Button>
-        </Group>
-      </Stack>
+        </div>
+      </div>
     </form>
   );
 }
 
-const CustomDatePicker = (props: DatePickerProps & { label: string }) => {
-  const { label, ...others } = props;
+const CustomDatePicker = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value?: Date;
+  onChange?: (date: Date) => void;
+}) => {
   return (
-    <Stack className={classes.date_picker_wrapper}>
-      <Text size="xs" className={classes.date_picker_label}>
-        {label}
-      </Text>
-      <DatePicker {...others} size="xs" maxDate={new Date()} />
-    </Stack>
+    <div className="flex flex-col gap-1 p-2 border rounded-lg bg-card max-w-[140px] flex-1">
+      <span className="capitalize text-[10px] font-semibold text-primary">{label}</span>
+      <DatePicker value={value} onChange={onChange} className="h-7 w-full text-[11px]" />
+    </div>
   );
 };

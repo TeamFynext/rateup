@@ -1,14 +1,12 @@
-import { Button, Group, Image, Text } from "@mantine/core";
 import { IconCircleDashedCheck } from "@tabler/icons-react";
 import { CornerUpLeft, ExternalLink, List } from "lucide-react";
 
 import { whatsappToHTML } from "@/components/RichTextEditor/waTextEditor.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import type { WaSendMessageBody } from "@/types/global";
-
-import classes from "./styles.module.css";
 
 interface Props {
   interactiveBody: WaSendMessageBody["interactive"];
@@ -18,58 +16,78 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
   return (
     <>
       {props?.messageContent && (
-        <Group gap={"xs"}>
-          <IconCircleDashedCheck size={15} color="var(--mantine-primary-color-9" />
-          <Text className={classes.responded_text}>{`${props.messageContent} responded`}</Text>
-        </Group>
+        <div className="flex items-center gap-1">
+          <IconCircleDashedCheck size={15} className="text-primary" />
+          <span className="text-xs font-medium text-primary">{`${props.messageContent} responded`}</span>
+        </div>
       )}
       {props?.interactiveBody?.header && (
         <WaInboxInteractiveHeader interactiveBody={props?.interactiveBody} />
       )}
       {props?.interactiveBody?.body && (
-        <Text
-          className={classes.body_text}
+        <p
+          className="text-sm font-normal text-foreground leading-relaxed"
           dangerouslySetInnerHTML={{
             __html: whatsappToHTML(props?.interactiveBody?.body?.text),
           }}
         />
       )}
       {props?.interactiveBody?.footer && (
-        <Text
-          className={classes.footer_text}
+        <p
+          className="text-xs font-light text-muted-foreground"
           dangerouslySetInnerHTML={{
             __html: whatsappToHTML(props?.interactiveBody?.footer?.text),
           }}
         />
       )}
       {props?.interactiveBody?.action?.buttons?.map((button) => (
-        <Button key={button?.reply?.id} leftSection={<CornerUpLeft size={16} />} variant="light">
-          {button?.reply?.title || button?.reply?.id}
+        <Button
+          key={button?.reply?.id}
+          variant="secondary"
+          className="w-full text-xs text-indigo-600 gap-1.5 hover:bg-muted/40"
+        >
+          <CornerUpLeft size={16} />
+          <span>{button?.reply?.title || button?.reply?.id}</span>
         </Button>
       ))}
 
       {props?.interactiveBody?.action?.parameters?.flow_cta && (
-        <Button variant="light">{props?.interactiveBody?.action?.parameters?.flow_cta}</Button>
+        <Button
+          variant="secondary"
+          className="w-full text-xs text-indigo-600 gap-1.5 hover:bg-muted/40"
+        >
+          {props?.interactiveBody?.action?.parameters?.flow_cta}
+        </Button>
       )}
       {props?.interactiveBody?.action?.name === "cta_url" && (
-        <Button
-          variant="light"
-          component="a"
+        <a
           href={props?.interactiveBody?.action?.parameters?.url}
           target="_blank"
           rel="noopener noreferrer"
-          leftSection={<ExternalLink size={16} />}
+          className="w-full"
         >
-          {props?.interactiveBody?.action?.parameters?.display_text}
-        </Button>
+          <Button
+            variant="secondary"
+            className="w-full text-xs text-indigo-600 gap-1.5 hover:bg-muted/40"
+          >
+            <ExternalLink size={16} />
+            <span>{props?.interactiveBody?.action?.parameters?.display_text}</span>
+          </Button>
+        </a>
       )}
       {props?.interactiveBody?.action?.button && (
         <Popover>
-          <PopoverTrigger disabled={!props?.interactiveBody?.action?.sections?.length}>
-            <Button key={props?.interactiveBody?.action?.button} fullWidth variant="light">
-              <List className="w-5 h-5 mr-1" />
-              {props?.interactiveBody?.action?.button}
-            </Button>
+          <PopoverTrigger
+            render={
+              <Button
+                variant="secondary"
+                className="w-full text-xs text-indigo-600 gap-1.5 hover:bg-muted/40"
+                disabled={!props?.interactiveBody?.action?.sections?.length}
+              />
+            }
+          >
+            <List className="w-4 h-4" />
+            <span>{props?.interactiveBody?.action?.button}</span>
           </PopoverTrigger>
           <PopoverContent>
             <div className="flex flex-col gap-1">
@@ -81,8 +99,8 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
                     {section?.rows?.map((r) => (
                       <div key={r.id} className="flex flex-col gap-1">
                         <div>
-                          <p className="text-sm">{r.title}</p>
-                          <p className="text-sm text-muted-foreground">{r.description}</p>
+                          <p className="text-sm font-medium">{r.title}</p>
+                          <p className="text-xs text-muted-foreground">{r.description}</p>
                         </div>
                         <Separator className="my-1" />
                       </div>
@@ -100,8 +118,20 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
 const WaInboxInteractiveHeader = (props: Omit<Props, "messageContent">) => {
   switch (props?.interactiveBody?.header?.type) {
     case "text":
-      return <Text className={classes.header_text}>{props?.interactiveBody?.header?.text}</Text>;
+      return (
+        <span className="text-md font-semibold text-foreground">
+          {props?.interactiveBody?.header?.text}
+        </span>
+      );
     case "image":
-      return <Image src={props?.interactiveBody?.header?.image?.link} mah={300} />;
+      return (
+        <img
+          src={props?.interactiveBody?.header?.image?.link}
+          className="max-h-[300px] w-full object-cover rounded-md"
+          alt="Header interactive image"
+        />
+      );
+    default:
+      return null;
   }
 };

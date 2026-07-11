@@ -1,5 +1,3 @@
-import type { IndicatorProps } from "@mantine/core";
-import { ActionIcon, CopyButton, Tooltip } from "@mantine/core";
 import { IconCopy } from "@tabler/icons-react";
 import type { EmojiClickData } from "emoji-picker-react";
 import {
@@ -15,15 +13,22 @@ import {
   Terminal,
   UserCog,
 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore.ts";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import { useUser } from "@/context/UserContext.tsx";
@@ -38,7 +43,7 @@ interface Props {
   forPreview?: boolean;
   reaction?: {
     emoji?: string;
-    pos: IndicatorProps["position"];
+    pos?: string;
     reaction?: string;
     from?: string;
     reactedAt?: string;
@@ -272,18 +277,17 @@ export const getColorForUser = (userName = "") => {
     "#FFA500", // Orange
     "#00CED1", // Cyan
     "#FF69B4", // Pink
-    "#FFD700", // Yellow
+    "#FFD700", // Gold
     "#4B0082", // Indigo
   ];
-  // Create a simple hash from the user's name (or other identifier)
   let hash = 0;
   for (let i = 0; i < userName.length; i++) {
     hash = (userName.codePointAt(i) ?? 0) + ((hash << 5) - hash);
   }
-  // Map the hash to a color
   const colorIndex = Math.abs(hash) % colors.length;
   return colors[colorIndex];
 };
+
 export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   const { exchangeProcess, messageObject, reaction } = props;
   const { user } = useUser();
@@ -320,6 +324,16 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
     whatsappSettingsPhoneId,
     platform,
   );
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (!messageContentRef?.current?.innerText) return;
+    navigator.clipboard.writeText(messageContentRef.current.innerText);
+    setCopied(true);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   function sendReaction(emoji: string, emojiData: EmojiClickData) {
     if (!whatsappSettingsPhoneId) {
@@ -361,20 +375,25 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
     <div key={messageObject.id} className={`group flex w-full items-end gap-2 ${rootAlignment}`}>
       {exchangeProcess === "send" && (
         <div className="pointer-events-none mt-auto opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
-          <CopyButton value={messageContentRef?.current?.innerText ?? ""}>
-            {({ copied, copy }) => (
-              <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="right">
-                <ActionIcon
-                  color={copied ? "teal" : "gray"}
-                  variant="subtle"
-                  onClick={copy}
-                  className="mt-auto"
-                >
-                  {copied ? <Check size={16} /> : <IconCopy size={16} />}
-                </ActionIcon>
-              </Tooltip>
-            )}
-          </CopyButton>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground mt-auto"
+                    onClick={handleCopy}
+                  />
+                }
+              >
+                {copied ? <Check className="h-4 w-4 text-teal-500" /> : <IconCopy size={16} />}
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{copied ? "Copied" : "Copy"}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       )}
       <div className="flex max-w-[min(42rem,82vw)] items-end gap-2">
@@ -403,7 +422,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
               </span>
             )}
             <div
-              className={`relative overflow-hidden p-3 shadow-sm ${bubbleBackgroundClass} ${bubbleBorderClass}`}
+              className={`relative p-3 shadow-sm w-fit ${bubbleBackgroundClass} ${bubbleBorderClass}`}
             >
               {exchangeProcess === "send" &&
                 (isAutomatedSend ? (
@@ -476,15 +495,25 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
       {exchangeProcess === "receive" && (
         <div className="pointer-events-none flex items-center gap-1 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
           <PopoverEmojiPicker onEmojiClick={sendReaction} />
-          <CopyButton value={messageContentRef?.current?.innerText}>
-            {({ copied, copy }) => (
-              <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="right">
-                <ActionIcon color={copied ? "teal" : "gray"} variant="subtle" onClick={copy}>
-                  {copied ? <Check size={16} /> : <IconCopy size={16} />}
-                </ActionIcon>
-              </Tooltip>
-            )}
-          </CopyButton>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={handleCopy}
+                  />
+                }
+              >
+                {copied ? <Check className="h-4 w-4 text-teal-500" /> : <IconCopy size={16} />}
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{copied ? "Copied" : "Copy"}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       )}
     </div>
@@ -496,20 +525,22 @@ export function reactionEmojiMap(reaction) {
     return "❤";
   }
 
-  return "�";
+  return "";
 }
 
 const ReactionPopOver = ({ reaction }: Readonly<{ reaction?: Props["reaction"] }>) => {
   if (!reaction) return null;
   return (
     <Popover>
-      <PopoverTrigger>
-        <button
-          type="button"
-          className="cursor-pointer rounded-full border border-slate-200 bg-white px-2 py-0.5 text-center text-xs shadow-sm dark:border-slate-800 dark:bg-slate-900"
-        >
-          {reaction?.emoji || reactionEmojiMap(reaction?.reaction)}
-        </button>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            className="cursor-pointer rounded-full border border-slate-200 bg-white px-2 py-0.5 text-center text-xs shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          />
+        }
+      >
+        {reaction?.emoji || reactionEmojiMap(reaction?.reaction)}
       </PopoverTrigger>
       <PopoverContent className="flex items-center justify-between gap-3 rounded-xl border-slate-200 bg-white/95 shadow-lg dark:border-slate-800 dark:bg-slate-950/95">
         <div className="flex gap-1 items-center">

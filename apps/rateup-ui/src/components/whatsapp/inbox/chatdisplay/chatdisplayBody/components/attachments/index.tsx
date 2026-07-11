@@ -1,4 +1,3 @@
-import { Group, Stack, Text } from "@mantine/core";
 import { IconPlayerPlayFilled } from "@tabler/icons-react";
 import React, { useState } from "react";
 
@@ -14,27 +13,16 @@ const StoryMentionPreview = ({ url }: { url: string }) => {
   const [expired, setExpired] = useState(false);
   if (expired) {
     return (
-      <Text
-        style={{ borderRadius: "10px" }}
-        c="var(--grey-color-7)"
-        p={"xs"}
-        size="xs"
-        bg="var(--light-grey-color-5)"
-      >
+      <span className="text-xs text-[var(--grey-color-7)] p-2 bg-[var(--light-grey-color-5)] rounded-[10px] w-fit">
         Story is no longer available
-      </Text>
+      </span>
     );
   }
   return (
     <img
       src={url}
       alt="Story"
-      style={{
-        maxWidth: 200,
-        maxHeight: 300,
-        borderRadius: 10,
-        display: "block",
-      }}
+      className="max-w-[200px] max-h-[300px] rounded-[10px] block"
       onError={() => setExpired(true)}
     />
   );
@@ -51,8 +39,8 @@ const WaInboxAttachments = ({
     text?: string;
   };
 }) => {
-  if (!messageContent.attachments.length) return;
-  function getMediaComponent(attachment) {
+  if (!messageContent.attachments.length) return null;
+  function getMediaComponent(attachment: any) {
     switch (attachment?.type) {
       case "audio":
         return <WaInboxAudio messageContent={attachment?.content} />;
@@ -69,45 +57,34 @@ const WaInboxAttachments = ({
         return <WaInboxText messageContent={attachment?.content} />;
       case "story_mention":
         return (
-          <Stack gap="xs">
-            <Text
-              style={{ borderRadius: "10px" }}
-              c="var(--grey-color-7)"
-              p={"xs"}
-              size="xs"
-              bg="var(--light-grey-color-5)"
-            >
+          <div className="flex flex-col gap-2">
+            <span className="text-xs text-[var(--grey-color-7)] p-2 bg-[var(--light-grey-color-5)] rounded-[10px] w-fit">
               Mentioned you in their story
-            </Text>
+            </span>
             {attachment?.content ? <StoryMentionPreview url={attachment.content} /> : null}
-          </Stack>
+          </div>
         );
       case "ephemeral":
         return (
-          <Group
-            gap={"xs"}
-            p={"xs"}
-            style={{ borderRadius: "10px" }}
-            bg="var(--light-grey-color-5)"
-          >
-            <IconPlayerPlayFilled color="var(--grey-color-7)" size={"1rem"} />
-            <Text c="var(--grey-color-7)" size="xs">
+          <div className="flex items-center gap-1.5 p-2 bg-[var(--light-grey-color-5)] rounded-[10px] w-fit">
+            <IconPlayerPlayFilled className="text-[var(--grey-color-7)]" size={16} />
+            <span className="text-xs text-[var(--grey-color-7)] font-medium">
               Disappearing media
-            </Text>
-          </Group>
+            </span>
+          </div>
         );
 
       default:
-        return <Text c="red">Unsupported message type</Text>;
+        return <span className="text-xs text-red-500 font-medium">Unsupported message type</span>;
     }
   }
 
   return (
-    <Stack>
+    <div className="flex flex-col gap-2.5">
       {messageContent?.attachments?.map((at, index) => {
         return <React.Fragment key={index}>{getMediaComponent(at)}</React.Fragment>;
       })}
-    </Stack>
+    </div>
   );
 };
 

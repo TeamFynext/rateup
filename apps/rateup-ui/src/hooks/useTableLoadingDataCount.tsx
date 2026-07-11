@@ -1,4 +1,4 @@
-import { useMediaQuery } from "@mantine/hooks";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 
 const useTableLoadingDataCount = () => {
   const isLarge = useMediaQuery("(min-width: 1200px)");

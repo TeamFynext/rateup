@@ -1,25 +1,24 @@
-import { Card, Divider, Group, Skeleton, Stack } from "@mantine/core";
-
-import classes from "./styles.module.css";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 const ChatSelectSkeletonCard = () => {
   return (
     <>
-      <Card py={"xs"}>
-        <Group py={2}>
-          <Skeleton height={40} circle />
-          <Stack className={classes.inner} flex={1}>
-            <Group className={classes.chat_card_header}>
-              <Skeleton height={20} width="70%" />
-            </Group>
-            <Group justify="space-between">
-              <Skeleton height={20} width="20%" />
-              <Skeleton height={20} width="20%" />
-            </Group>
-          </Stack>
-        </Group>
-      </Card>
-      <Divider />
+      <div className="py-3 px-4">
+        <div className="flex items-center gap-3 py-0.5">
+          <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+          <div className="flex-1 flex flex-col gap-1.5">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-4 w-[60%]" />
+              <Skeleton className="h-3 w-[15%]" />
+            </div>
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-3 w-[45%]" />
+              <Skeleton className="h-3 w-[10%]" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="border-b border-border/60" />
     </>
   );
 };

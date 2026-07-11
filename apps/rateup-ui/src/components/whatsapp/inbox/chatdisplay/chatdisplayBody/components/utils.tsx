@@ -1,5 +1,3 @@
-import type { IndicatorProps } from "@mantine/core";
-import { Center, Group, Stack, Text } from "@mantine/core";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import { Clock } from "lucide-react";
@@ -34,26 +32,18 @@ import WaInboxTemplate from "./template/index.tsx";
 import WaInboxText from "./text/index.tsx";
 import WaInboxVideo from "./video/index.tsx";
 
-import classes from "../styles.module.css";
-
 const IgCommentBubble = ({
   messageContent,
 }: {
   messageContent: { text?: string; commentId?: string; mediaId?: string };
 }) => {
   return (
-    <Stack gap={4}>
-      <Text
-        size="xs"
-        c="var(--grey-color-7)"
-        p="xs"
-        bg="var(--light-grey-color-5)"
-        style={{ borderRadius: 10 }}
-      >
+    <div className="flex flex-col gap-1">
+      <span className="text-xs text-[var(--grey-color-7)] p-2 bg-[var(--light-grey-color-5)] rounded-[10px] w-fit">
         Commented on your post
-      </Text>
+      </span>
       {messageContent.text ? <WaInboxText messageContent={messageContent.text} /> : null}
-    </Stack>
+    </div>
   );
 };
 
@@ -93,9 +83,9 @@ export const SingleMessage = ({ message }) => {
       return <WaInboxOrder messageContent={messageContent} timestamp={timeStamp} />;
     default:
       return (
-        <Text fz={"xs"} c={"red"}>
+        <span className="text-xs text-red-500 font-medium">
           {messageType} {translations("message type display is not supported yet")}
-        </Text>
+        </span>
       );
   }
 };
@@ -155,10 +145,7 @@ export function getReactionMessage({
           selectedContact.whatsappUserName ??
           selectedContact.phone ??
           selectedContact.igsId),
-      pos:
-        exchangeProcess === "receive"
-          ? "bottom-start"
-          : ("bottom-end" as IndicatorProps["position"]),
+      pos: exchangeProcess === "receive" ? "bottom-start" : "bottom-end",
     };
 }
 
@@ -169,7 +156,7 @@ export const TempMessageBody = ({ body, timestamp }) => {
     <div className="flex gap-2 pb-4 pr-4 pl-6">
       <div className="flex flex-col gap-2">
         <div className="bg-green-500/10 px-4 py-2.5 rounded-2xl shadow-sm rounded-br-sm">
-          <p className={`text-sm`} style={{ color: userColor }}>
+          <p className="text-sm font-semibold mb-1" style={{ color: userColor }}>
             {user?.userName}
           </p>
           {body.url && body.urlType === "image" && (
@@ -180,6 +167,7 @@ export const TempMessageBody = ({ body, timestamp }) => {
           )}
           {body.url && body.urlType === "document" && (
             <p
+              className="cursor-pointer underline text-primary"
               onClick={() => {
                 window.open(body.url, "_blank");
               }}
@@ -203,14 +191,14 @@ export const TempMessageBody = ({ body, timestamp }) => {
 export const EndofConversationComponent = () => {
   const { t: translations } = useTranslation();
   return (
-    <Center>
-      <Group className={classes.indicator_wrapper}>
-        <IconBrandWhatsapp size={20} color="gray" />
-        <Text className={classes.indicator_text}>
+    <div className="flex justify-center">
+      <div className="mt-2 bg-[#dcf0e4] dark:bg-[#dcf0e4]/10 rounded-md shadow-xs p-2.5 flex items-center gap-2">
+        <IconBrandWhatsapp size={20} className="text-gray-500" />
+        <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
           {translations("This is the beginning of your conversation")}
-        </Text>
-      </Group>
-    </Center>
+        </span>
+      </div>
+    </div>
   );
 };
 
