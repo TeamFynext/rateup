@@ -1,45 +1,56 @@
 .add-question-btn-questions-list-container {
   height: 100%;
+  gap: 0;
 }
 
 .add-question-btn-more-than-1-que {
-  position: relative;
-  border-bottom: 1px solid var(--mantine-color-gray-4);
-  padding-bottom: 1rem;
-  padding: 1rem;
-  flex-wrap: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-bottom: 1px solid #ececea;
+  flex-shrink: 0;
 }
 
-.add-question-btn-more-than-1-que .add-content-btn {
-  height: auto;
-  padding: 0.625rem;
-  font-weight: bold;
-  border-radius: 0.625rem;
-  min-width: 7.5rem;
+.add-content-btn {
+  width: 100%;
+  height: 40px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  justify-content: center;
+  gap: 7px;
 }
 
-.add-question-btn-more-than-1-que .add-content-btn svg path {
-  stroke: 2;
+.edit-theme-btn-wrapper {
+  width: 100%;
+  height: 38px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1.5px solid #ececea;
+  background: white;
+  color: #4a4c49;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: background 150ms;
 }
 
-.add-question-btn-more-than-1-que .survey-preview-btn,
-.edit-theme-btn {
-  height: auto;
-  width: auto;
-  border-radius: 0.625rem;
-  line-height: normal;
-  padding: 0.4375rem;
+.edit-theme-btn-wrapper:hover {
+  background: #f4f5f2;
 }
 
 .questions-list-container {
   flex: 1 1 0;
   overflow: auto;
-  padding: 1rem;
   padding-top: 0;
   padding-bottom: 0.625rem;
 }
 
-.questions-list-container :global(.mantine-ScrollArea-viewport) > div {
+.questions-list-container [data-slot="scroll-area-viewport"] > div {
   display: block !important;
 }
 
@@ -53,11 +64,5 @@
 .icon-text {
   display: inline-block;
   position: relative;
-  font-size: 14;
-}
-
-@media (max-width: 1568px) {
-  .icon-text {
-    display: none;
-  }
+  font-size: 14px;
 }

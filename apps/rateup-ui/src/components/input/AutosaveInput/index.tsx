@@ -1,10 +1,11 @@
-import { Box, Button, Loader, Textarea, TextInput } from "@mantine/core";
-import { IconPencil } from "@tabler/icons-react";
+import { IconLoader2, IconPencil } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import styles from "./AutosaveInput.module.css";
+import { Input } from "@/components/ui/input.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
+import { cn } from "@/lib/utils.ts";
 
 interface AutosaveInputProps {
   value?: string;
@@ -29,11 +30,11 @@ function AutosaveInput({
   const [isInputBeingEdited, setIsInputBeingEdited] = useState(false);
   const [isSavingText, setIsSavingText] = useState(false);
   const { t: translations } = useTranslation();
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
 
   const handleEditBtnClick = useCallback(() => {
     setIsInputBeingEdited(true);
-  }, [inputRef.current]);
+  }, []);
 
   const handleInputBlur = useCallback(
     async (_e) => {
@@ -53,76 +54,75 @@ function AutosaveInput({
     [inputState, value, name],
   );
 
-  const handleInputChange = useCallback((e) => {
-    const value = e.target.value;
-    setInputState(value);
-  }, []);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setInputState(e.target.value);
+    },
+    [],
+  );
 
-  const handleKeyDown = useCallback((e) => {
-    if (e.code === "Enter") {
-      if (e.shiftKey && isTextArea) {
-        inputRef.current?.blur();
-      } else if (!isTextArea) {
-        inputRef.current?.blur();
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.code === "Enter") {
+        if (e.shiftKey && isTextArea) {
+          inputRef.current?.blur();
+        } else if (!isTextArea) {
+          inputRef.current?.blur();
+        }
       }
-    }
-  }, []);
+    },
+    [isTextArea],
+  );
 
   useEffect(() => {
-    inputRef.current?.focus();
+    if (isInputBeingEdited) inputRef.current?.focus();
   }, [isInputBeingEdited]);
 
   useEffect(() => {
     setInputState(value);
   }, [value]);
 
-  let componentToBeRendered = null;
-  if (!isInputBeingEdited) {
-    componentToBeRendered = (
-      <Button
-        className={`${styles["auto-save-input-edit-btn"]} auto-save-input-edit-btn`}
-        rightSection={isSavingText ? <Loader size={"1rem"} /> : <IconPencil size={"1rem"} />}
-        onClick={handleEditBtnClick}
-        style={style}
-      >
-        {inputState}
-      </Button>
-    );
-  } else {
-    if (isTextArea) {
-      componentToBeRendered = (
-        <Textarea
-          className={`${styles["text-input"]} text-input`}
-          autosize
-          value={inputState}
-          onChange={handleInputChange}
-          onBlur={handleInputBlur}
-          ref={inputRef}
-          onKeyDown={handleKeyDown}
-          style={style}
-          autoComplete="off"
-        />
-      );
-    } else {
-      componentToBeRendered = (
-        <TextInput
-          className={`${styles["text-input"]} text-input`}
-          value={inputState}
-          onChange={handleInputChange}
-          onBlur={handleInputBlur}
-          ref={inputRef}
-          onKeyDown={handleKeyDown}
-          style={style}
-          autoComplete="off"
-        />
-      );
-    }
-  }
-
   return (
-    <Box className={`${styles["auto-save-input-div"]} auto-save-input-div  ${className}`}>
-      {componentToBeRendered}
-    </Box>
+    <div className={cn("auto-save-input-div flex w-full justify-center", className)}>
+      {!isInputBeingEdited ? (
+        <button
+          className="auto-save-input-edit-btn relative flex items-center gap-1 bg-transparent text-lg font-normal leading-normal text-black"
+          style={{ ...style, left: "1.125rem", whiteSpace: "pre" }}
+          onClick={handleEditBtnClick}
+        >
+          {inputState}
+          <span className="rounded-full bg-white p-1.5 text-black">
+            {isSavingText ? (
+              <IconLoader2 className="size-4 animate-spin" />
+            ) : (
+              <IconPencil size={"1rem"} />
+            )}
+          </span>
+        </button>
+      ) : isTextArea ? (
+        <Textarea
+          className="w-full cursor-pointer resize-none border-none bg-transparent px-0 text-center text-lg shadow-none focus-visible:ring-0"
+          style={style}
+          value={inputState}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+          ref={inputRef}
+          onKeyDown={handleKeyDown}
+          autoComplete="off"
+        />
+      ) : (
+        <Input
+          className="w-full border-none bg-transparent px-0 text-center text-lg shadow-none focus-visible:ring-0"
+          style={style}
+          value={inputState}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+          ref={inputRef}
+          onKeyDown={handleKeyDown}
+          autoComplete="off"
+        />
+      )}
+    </div>
   );
 }
 

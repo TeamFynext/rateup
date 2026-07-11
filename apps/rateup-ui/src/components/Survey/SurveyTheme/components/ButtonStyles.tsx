@@ -1,9 +1,15 @@
-import { Box, Flex, Stack } from "@mantine/core";
 import { useCallback } from "react";
 
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import { COORDINATESX, COORDINATESY } from "@/utils/constants.ts";
 
-import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput.tsx";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker/index.tsx";
 import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
 import { ThemeTabEnum } from "../SurveyTheme.enums";
@@ -51,63 +57,73 @@ function ButtonStyles() {
   }, []);
 
   return (
-    <Stack
-      className={`${styles["style-inputs-container"]} style-inputs-container ${styles["button-styles-div"]}`}
+    <div
+      className={`flex flex-col ${styles["style-inputs-container"]} style-inputs-container ${styles["button-styles-div"]}`}
     >
-      <Box className={"custom-color-picker-and-heading-container"}>
+      <div className={"custom-color-picker-and-heading-container"}>
         <h2>Background Color</h2>
         <CustomColorPicker
           value={button?.styles?.backgroundColor}
           onChange={handleBackgroundColorChange}
           withoutEyedropper
         />
-      </Box>
+      </div>
 
-      <Box className={"custom-color-picker-and-heading-container"}>
+      <div className={"custom-color-picker-and-heading-container"}>
         <h2>Text Color</h2>
         <CustomColorPicker
           value={button?.styles?.color}
           onChange={handleTextColorChange}
           withoutEyedropper
         />
-      </Box>
+      </div>
 
       {selectedPageTab === ThemeTabEnum.WELCOME && (
-        <Box className={"styles-section-div button-position-styles-div"}>
+        <div className={"styles-section-div button-position-styles-div"}>
           <h2>Button position</h2>
-          <Flex gap={"sm"}>
-            <ContainedSelection
-              className={styles["button-position-input"]}
-              data={COORDINATESX}
-              placeholder="X axis"
-              defaultValue={button?.position?.x ?? COORDINATESX?.[1]}
-              onChange={handleXCoOrdinateChange}
-              allowDeselect={false}
-              label={"x axis"}
-              comboboxProps={{
-                portalProps: {
-                  className: styles["button-position-input-container"],
-                },
-              }}
-            />
-            <ContainedSelection
-              className={styles["button-position-input"]}
-              data={COORDINATESY}
-              placeholder="Y axis"
-              defaultValue={button?.position?.y ?? COORDINATESY?.[3]}
-              onChange={handleYCoOrdinateChange}
-              allowDeselect={false}
-              label={"y axis"}
-              comboboxProps={{
-                portalProps: {
-                  className: styles["button-position-input-container"],
-                },
-              }}
-            />
-          </Flex>
-        </Box>
+          <div className="flex gap-3">
+            <Field>
+              <FieldLabel>x axis</FieldLabel>
+              <Select
+                value={button?.position?.x ?? COORDINATESX?.[1]}
+                onValueChange={handleXCoOrdinateChange}
+                items={COORDINATESX.map((c) => ({ value: c, label: c }))}
+              >
+                <SelectTrigger className="h-9 w-full text-xs">
+                  <SelectValue placeholder="X axis" />
+                </SelectTrigger>
+                <SelectContent className="min-w-[120px]">
+                  {COORDINATESX.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel>y axis</FieldLabel>
+              <Select
+                value={button?.position?.y ?? COORDINATESY?.[3]}
+                onValueChange={handleYCoOrdinateChange}
+                items={COORDINATESY.map((c) => ({ value: c, label: c }))}
+              >
+                <SelectTrigger className="h-9 w-full text-xs">
+                  <SelectValue placeholder="Y axis" />
+                </SelectTrigger>
+                <SelectContent className="min-w-[120px]">
+                  {COORDINATESY.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 }
 

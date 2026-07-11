@@ -1,6 +1,7 @@
-import { Center, Group, MultiSelect, Text } from "@mantine/core";
+import { Group, MultiSelect, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useParams, useSearch } from "@tanstack/react-router";
+import { BarChart3, FileText, MessageSquare, Settings, Share2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -18,8 +19,8 @@ import { getFromSessionStorage } from "@/utils/essential/index.ts";
 
 import ErrorComponent from "../404/ErrorComponent.tsx";
 import RateupLoader from "../Loaders/RateupLoader.tsx";
+import SurveyPageHeader, { type SurveyHeaderTab } from "./SurveyPageHeader.tsx";
 import TabPanelsComp from "./Tabs/TabPanels.tsx";
-import TabsListComp from "./Tabs/TabsList.tsx";
 
 import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
@@ -27,9 +28,21 @@ export enum TabEnum {
   Edit = "Edit",
   Settings = "Settings",
   Share = "Share",
-  // Theme = "Theme",
-  Result = "Result",
+  Responses = "Responses",
+  Analytics = "Analytics",
+  TeamAnalytics = "Team Analytics",
 }
+
+const RESULT_TABS: TabEnum[] = [TabEnum.Responses, TabEnum.Analytics, TabEnum.TeamAnalytics];
+
+const HEADER_TABS: SurveyHeaderTab<TabEnum>[] = [
+  { value: TabEnum.Edit, label: "Questions", icon: FileText },
+  { value: TabEnum.Settings, label: "Settings", icon: Settings },
+  { value: TabEnum.Share, label: "Share", icon: Share2 },
+  { value: TabEnum.Responses, label: "Responses", icon: MessageSquare },
+  { value: TabEnum.Analytics, label: "Analytics", icon: BarChart3 },
+  { value: TabEnum.TeamAnalytics, label: "Team Analytics", icon: Users },
+];
 
 export default function SurveyID() {
   const searchParams = useSearch({ strict: false });
@@ -133,7 +146,7 @@ export default function SurveyID() {
 
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
-      setActiveTab(TabEnum.Result);
+      setActiveTab(TabEnum.Responses);
     }
   }, [survey]);
 
@@ -145,7 +158,7 @@ export default function SurveyID() {
 
   useEffect(() => {
     if (survey) {
-      if (activeTab !== TabEnum.Result) {
+      if (!RESULT_TABS.includes(activeTab)) {
         setSelectedLanguage(selectedLanguage ? selectedLanguage : survey?.languages?.[0]);
       } else {
         setSelectedLanguage("");
@@ -216,17 +229,16 @@ export default function SurveyID() {
         >
           <div className="flex flex-col h-full">
             {user?.role !== UserRole.MEMBER && (
-              <Center mb={"xs"}>
-                <TabsListComp
-                  value={activeTab}
-                  onChange={handleTabChange}
-                  tabs={Object.values(TabEnum)}
-                />
-              </Center>
+              <SurveyPageHeader
+                title={survey?.title}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                tabs={HEADER_TABS}
+              />
             )}
             {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
             <div id="SurveyIssueAlert"> </div>
-            {activeTab === TabEnum.Result && (
+            {RESULT_TABS.includes(activeTab) && (
               <Group pos={"absolute"} right={30}>
                 <MultiSelect
                   radius={"10px"}

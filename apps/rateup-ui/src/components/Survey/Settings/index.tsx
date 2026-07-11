@@ -1,4 +1,3 @@
-import { Box } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 
@@ -31,6 +30,7 @@ const defaultEnabledModules = [
   "tickets",
   "uniqueDeviceResponse",
 ];
+
 interface SurveySettingsProps {
   surveyId: string;
   survey: any;
@@ -40,6 +40,7 @@ interface SurveySettingsProps {
   flowDbId?: string;
   anonymous?: boolean;
 }
+
 const SurveySettings = ({
   surveyId,
   survey,
@@ -72,60 +73,65 @@ const SurveySettings = ({
   }, [survey]);
 
   return (
-    <Box className={`${styles["survey-settings-root-div"]}`}>
-      <Box className={styles["panels-container"]}>
-        <Box className={`${styles["left-panel"]} ${styles["panel"]}`}>
-          <GeneralSettings
-            enabledModules={enabledModules}
-            survey={survey}
-            setSelectedLanguage={setSelectedLanguage}
-          />
+    <div className={styles["survey-settings-root-div"]}>
+      <div className={styles["settings-content"]}>
+        <GeneralSettings
+          enabledModules={enabledModules}
+          survey={survey}
+          setSelectedLanguage={setSelectedLanguage}
+        />
 
-          <SecuritySettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
-          <WebhookSettings
-            responseWebhookEndpoint={survey?.responseWebhookEndpoint}
-            editSurvey={editSurvey}
-            enabledModules={enabledModules}
-          />
-        </Box>
-        <Box className={`${styles["right-panel"]} ${styles["panel"]}`}>
-          <KioskFetchLocSkipPreview
-            enabledModules={enabledModules}
-            kioskMode={kioskMode}
-            setKioskMode={setKioskMode}
-            editSurvey={editSurvey}
-            hasGoogleReview={hasGoogleReview}
-            location={location}
-            setLocation={setLocation}
-            preview={preview}
-            setPreview={setPreview}
-            webSurveyAutoTransitionToNextQues={webSurveyAutoTransitionToNextQues}
-            setwebSurveyAutoTransitionToNextQues={setwebSurveyAutoTransitionToNextQues}
-            survey={survey}
-            surveyId={surveyId}
-          />
-          <RedirectSettings
-            enabledModules={enabledModules}
-            kioskMode={kioskMode}
-            editSurvey={editSurvey}
-            redirect={redirect}
-            setRedirect={setRedirect}
-            debounced={debounced}
-            redirectError={redirectError}
-            setRedirectError={setRedirectError}
-            survey={survey}
-          />
-          <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />
+        <SecuritySettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
+
+        <KioskFetchLocSkipPreview
+          enabledModules={enabledModules}
+          kioskMode={kioskMode}
+          setKioskMode={setKioskMode}
+          editSurvey={editSurvey}
+          hasGoogleReview={hasGoogleReview}
+          location={location}
+          setLocation={setLocation}
+          preview={preview}
+          setPreview={setPreview}
+          webSurveyAutoTransitionToNextQues={webSurveyAutoTransitionToNextQues}
+          setwebSurveyAutoTransitionToNextQues={setwebSurveyAutoTransitionToNextQues}
+          survey={survey}
+          surveyId={surveyId}
+        />
+
+        <RedirectSettings
+          enabledModules={enabledModules}
+          kioskMode={kioskMode}
+          editSurvey={editSurvey}
+          redirect={redirect}
+          setRedirect={setRedirect}
+          debounced={debounced}
+          redirectError={redirectError}
+          setRedirectError={setRedirectError}
+          survey={survey}
+        />
+
+        <WebhookSettings
+          responseWebhookEndpoint={survey?.responseWebhookEndpoint}
+          editSurvey={editSurvey}
+          enabledModules={enabledModules}
+        />
+
+        {survey?.spreadSheetId && <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />}
+
+        {enabledModules.includes("tickets") && (
           <TicketSettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
-          {enabledModules.includes("flow") && (
-            <FlowSettingsUpdate name={flowName} dbFlowId={flowDbId} anonymous={anonymous} />
-          )}
-        </Box>
-      </Box>
-      <Box className={styles["other-settings-container"]}>
-        <OtherSettings />
-      </Box>
-    </Box>
+        )}
+
+        {enabledModules.includes("flow") && (
+          <FlowSettingsUpdate name={flowName} dbFlowId={flowDbId} anonymous={anonymous} />
+        )}
+
+        <div className={styles["danger-zone"]}>
+          <OtherSettings />
+        </div>
+      </div>
+    </div>
   );
 };
 

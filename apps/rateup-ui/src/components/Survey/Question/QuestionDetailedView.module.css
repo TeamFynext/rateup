@@ -3,8 +3,12 @@
   box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
 }
 
-.editor-scroll-area-div > div > div {
+.editor-scroll-area-div [data-slot="scroll-area-viewport"] > div {
   display: block !important;
+}
+
+.editor-scroll-area-div [data-slot="scroll-area-viewport"] {
+  padding-right: 1rem;
 }
 
 .html-editor-div :global(.mantine-RichTextEditor-root),

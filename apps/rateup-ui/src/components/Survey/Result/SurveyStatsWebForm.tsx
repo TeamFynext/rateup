@@ -1,10 +1,4 @@
-import {
-  IconBrandGoogle,
-  IconMessageDots,
-  IconPlayerPlayFilled,
-  IconUsersGroup,
-} from "@tabler/icons-react";
-import { Percent } from "lucide-react";
+import { Globe, MessageCircle, Percent, Play, Users } from "lucide-react";
 import { useContext, useMemo } from "react";
 
 import { useResponseCount } from "@/backend/surveys/response/response.query";
@@ -53,25 +47,25 @@ const SurveyStatsWebForm = ({ surveyId }) => {
       title: "Total Responses",
       value: responseCount ?? 0,
       badge: null,
-      icon: <IconMessageDots className="text-[#2B82DE]" size={24} />,
+      icon: <MessageCircle className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Started",
       value: started ?? "NA",
       badge: null,
-      icon: <IconPlayerPlayFilled className="text-[#2B82DE]" size={24} />,
+      icon: <Play className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Total Visits",
       value: visited ?? "NA",
       badge: null,
-      icon: <IconUsersGroup className="text-[#2B82DE]" size={24} />,
+      icon: <Users className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Google Review Redirects",
       value: reviewLinkVisited ?? "NA",
       badge: null,
-      icon: <IconBrandGoogle className="text-[#2B82DE]" size={24} />,
+      icon: <Globe className="text-[#2B82DE]" size={24} />,
     },
     {
       title: "Response Rate",
@@ -89,7 +83,7 @@ const SurveyStatsWebForm = ({ surveyId }) => {
   ];
 
   return (
-    <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="pt-6 psw-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       {stats.map(({ title, value, badge, icon }) => (
         <div
           key={title}
@@ -97,7 +91,7 @@ const SurveyStatsWebForm = ({ surveyId }) => {
         >
           <div>
             <p className="text-xs font-bold text-[#343A40]">{title}</p>
-            <div className="text-3xl font-bold text-[#004F98] flex items-end">
+            <div className="text-3xl font-bold  flex items-end">
               <div>{value}</div>
               <div className="mb-1">{badge}</div>
             </div>

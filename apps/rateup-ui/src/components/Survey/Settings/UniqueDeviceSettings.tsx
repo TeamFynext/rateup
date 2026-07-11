@@ -12,32 +12,30 @@ const UniqueDeviceSettings = ({ survey, surveyId }) => {
   const [enableUniqueDevice, setEnableUniqueDevice] = useState(survey?.uniqueDeviceResponse);
   const editSurvey = useEditSurveyMutation(surveyId);
   const { t: translations } = useTranslation();
+
   return (
-    <div className="flex items-center space-x-4">
+    <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5">
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
           <Switch
             id="unique-device"
-            checked={enableUniqueDevice}
+            checked={!!enableUniqueDevice}
             onCheckedChange={() => updateUniqueDevice(setEnableUniqueDevice, editSurvey)}
           />
         </TooltipTrigger>
         <TooltipContent>
-          <span>
-            {enableUniqueDevice
-              ? translations("Click here to allow multiple user entry from a device")
-              : translations("Click here to allow only Single user entry from a device")}
-          </span>
+          {enableUniqueDevice
+            ? translations("Click here to allow multiple user entry from a device")
+            : translations("Click here to allow only Single user entry from a device")}
         </TooltipContent>
       </Tooltip>
-      <Label htmlFor="unique-device">
-        <div className={"switch-heading-and-desc-container"}>
-          <h3>{translations("Unique Device Entry")}</h3>
-          <p className="text-muted-foreground font-light text-xs">
-            {translations("Allow only Single user entry from a device")}
-          </p>
-        </div>
+      <Label htmlFor="unique-device" className="cursor-pointer text-sm font-medium">
+        {translations("Unique Device Entry")}
       </Label>
+      <div />
+      <p className="text-xs text-muted-foreground">
+        {translations("Allow only Single user entry from a device")}
+      </p>
     </div>
   );
 };

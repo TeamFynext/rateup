@@ -1,6 +1,5 @@
-import { ActionIcon, Box, Center, Flex, Stack, Tabs, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconLanguage } from "@tabler/icons-react";
+import { IconEye, IconLanguage } from "@tabler/icons-react";
 import { isEqual } from "lodash";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -10,16 +9,19 @@ import { v4 as uuidv4 } from "uuid";
 import { useQuestionCreateMutation } from "@/backend/surveys/questions/questions.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
+import { cn } from "@/lib/utils";
 import { PageType, QuestionType, SurveyType } from "@/types/enums.ts";
 import { QuestionTypesGroup, uniquePages, WaSurveyQuestionTypes } from "@/utils/constants.ts";
+import { getTypeLabel } from "@/utils/enums/index.ts";
 import {
   createBlankQuestion,
   createPage,
   validateAllLanguagesArePopulated,
 } from "@/utils/questions.ts";
 
-import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
 import PageTypeSelection from "./Page/PageTypeSelection.tsx";
 import GoogleReviewEditor from "./Question/GoogleReviewEditor.tsx";
 import LogicEditor from "./Question/LogicEditor.tsx";
@@ -159,8 +161,9 @@ export function EditSurvey({
     themeSelectorState,
     selectedQ,
     activeTab,
-    surveyThemeContextProviderValueRef.current,
-    questionDetailedViewFormRef.current,
+    // Note: ref.current values are intentionally NOT listed here.
+    // Refs are stable mutable containers — .current is always up-to-date
+    // when read inside the callback without needing to be a dependency.
   ]);
 
   useEffect(() => {
@@ -255,13 +258,18 @@ export function EditSurvey({
       editSurveySelectedQuestion={selectedQ}
       surveyThemeContextProviderValueRef={surveyThemeContextProviderValueRef}
     >
-      <Flex className={styles["edit-survey-div"]}>
+      <div
+        className={cn(
+          styles["edit-survey-div"],
+          "relative flex h-full w-full overflow-hidden bg-muted",
+        )}
+      >
         <LayoutGroup>
           <motion.div
-            className={styles["question-sidebar-container-motion-div"]}
+            className="h-full w-[290px] shrink-0 overflow-hidden border-r"
             layout={"position"}
           >
-            <Box className={styles["question-sidebar-container"]}>
+            <div className="h-full bg-background">
               <QuestionsSideBar
                 questions={questions}
                 selectedQ={selectedQ}
@@ -273,64 +281,77 @@ export function EditSurvey({
                 addQnTrigger={addQnTrigger}
                 survey={survey}
                 openStylesEditorDrawer={openStylesEditorDrawer}
-                openSurveyPreviewModal={openSurveyPreviewModal}
                 setSurveyThemeContextValue={setSurveyThemeContextValue}
                 setSelectedSurveyThemeTab={setSelectedSurveyThemeTab}
                 setThemeSelectorState={setThemeSelectorState}
                 checkForUnsavedChanges={checkForUnsavedChanges}
               />
-            </Box>
+            </div>
           </motion.div>
 
-          <motion.div
-            className={`${styles["question-editor-container-motion-div"]}`}
-            layout={"position"}
-          >
-            <Box
-              className={`${styles["question-editor-container"]} ${activeTab ? activeTab + "-QDV" : ""} ${selectedQ?.type ? selectedQ.type + "-QDV" : ""}`}
+          <motion.div className="h-full flex-1 overflow-hidden" layout={"position"}>
+            <div
+              className={cn(
+                "h-full bg-muted",
+                activeTab && `${activeTab}-QDV`,
+                selectedQ?.type && `${selectedQ.type}-QDV`,
+              )}
             >
-              <Tabs
-                value={activeTab}
-                onChange={(tab) => setActiveTab(tab as QuestionTabsEnum)}
-                style={{ height: "100%" }}
-                classNames={{
-                  panel: styles["panel"],
-                }}
-                keepMounted={false}
-              >
-                <Tabs.Panel
-                  value={QuestionTabsEnum.Edit}
-                  className={styles["question-detailed-view-panel"]}
-                >
-                  {selectedQ && (
-                    <>
-                      {uniquePages.includes(selectedQ?.type as PageType) ? (
-                        <Stack gap={"xs"} h={"100%"}>
-                          {survey && (
-                            <SurveyTheme
-                              survey={survey}
-                              previewId={`${selectedQ.type}-preview`}
-                              onEditPageBtnClick={openStylesEditorDrawer}
-                            />
-                          )}
-                        </Stack>
-                      ) : (
-                        <QuestionDetailedView
-                          survey={survey}
-                          question={selectedQ}
-                          setSelectedQ={setSelectedQ}
-                          setActiveTab={setActiveTab}
-                          surveyLanguages={surveyLanguages}
-                          setSelectedLanguage={setSelectedLanguage}
-                          key={selectedQ.id}
-                          questionDetailedViewFormRef={questionDetailedViewFormRef}
-                        />
-                      )}
-                    </>
-                  )}
-                </Tabs.Panel>
-                <Tabs.Panel value={QuestionTabsEnum.TypeSelection}>
-                  <Stack className={styles["type-selection-panel-child-div"]}>
+              <div className="h-full">
+                {activeTab === QuestionTabsEnum.Edit && (
+                  <div className="h-full [&>div]:h-full">
+                    {selectedQ && (
+                      <>
+                        {uniquePages.includes(selectedQ?.type as PageType) ? (
+                          <div className="flex flex-col h-full">
+                            <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-[#ECECEA] bg-white px-4">
+                              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-rateup-blue-4 font-nunito text-sm font-black text-white">
+                                {(survey?.questions?.findIndex((q: any) => q.id === selectedQ.id) ??
+                                  0) + 1}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-[13px] font-semibold text-[#1A1B1A]">
+                                  {getTypeLabel(selectedQ.type)}
+                                </div>
+                                <div className="text-[11px] text-[#8B8E8A]">Page Editor</div>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-1.5 rounded-[7px] border-[1.5px] border-[#ECECEA] px-3 text-xs font-semibold text-[#4A4C49] hover:bg-gray-50"
+                                onClick={() => openSurveyPreviewModal()}
+                              >
+                                <IconEye className="size-3.5" />
+                                {translations("Preview")}
+                              </Button>
+                            </div>
+                            {survey && (
+                              <SurveyTheme
+                                survey={survey}
+                                previewId={`${selectedQ.type}-preview`}
+                                onEditPageBtnClick={openStylesEditorDrawer}
+                              />
+                            )}
+                          </div>
+                        ) : (
+                          <QuestionDetailedView
+                            survey={survey}
+                            question={selectedQ}
+                            setSelectedQ={setSelectedQ}
+                            setActiveTab={setActiveTab}
+                            surveyLanguages={surveyLanguages}
+                            setSelectedLanguage={setSelectedLanguage}
+                            key={selectedQ.id}
+                            questionDetailedViewFormRef={questionDetailedViewFormRef}
+                            openSurveyPreviewModal={openSurveyPreviewModal}
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+                {activeTab === QuestionTabsEnum.TypeSelection && (
+                  <div className="h-full overflow-auto">
                     {survey?.type === SurveyType.Web && (
                       <PageTypeSelection
                         questions={questions}
@@ -338,7 +359,6 @@ export function EditSurvey({
                         subscription={subscription}
                       />
                     )}
-
                     <QuestionTypeSelection
                       questionTypeGroups={
                         survey?.type === SurveyType.WhatsApp
@@ -347,92 +367,90 @@ export function EditSurvey({
                       }
                       handleTypeSelection={handleTypeSelection}
                     />
-                  </Stack>
-                </Tabs.Panel>
-                <Tabs.Panel value={QuestionTabsEnum.LogicEditor}>
-                  {selectedQ && (
-                    <LogicEditor
-                      selectedQ={selectedQ}
-                      setActiveTab={setActiveTab}
-                      key={selectedQ.id}
-                    />
-                  )}
-                </Tabs.Panel>
-                <Tabs.Panel value={QuestionTabsEnum.GoogleReviewEditor}>
+                  </div>
+                )}
+                {activeTab === QuestionTabsEnum.LogicEditor && selectedQ && (
+                  <LogicEditor
+                    selectedQ={selectedQ}
+                    setActiveTab={setActiveTab}
+                    key={selectedQ.id}
+                  />
+                )}
+                {activeTab === QuestionTabsEnum.GoogleReviewEditor && (
                   <GoogleReviewEditor
                     selectedQ={selectedQ}
                     setSelectedQ={setSelectedQ}
                     setActiveTab={setActiveTab}
                   />
-                </Tabs.Panel>
-                <Tabs.Panel value={QuestionTabsEnum.QuestionReviewPageEditor}>
+                )}
+                {activeTab === QuestionTabsEnum.QuestionReviewPageEditor && (
                   <QuestionReviewPageEditor
                     selectedQ={selectedQ}
                     survey={survey}
                     setActiveTab={setActiveTab}
                   />
-                </Tabs.Panel>
-                <Tabs.Panel value={QuestionTabsEnum.TicketIssueEditor}>
+                )}
+                {activeTab === QuestionTabsEnum.TicketIssueEditor && (
                   <TicketIssueEditor
                     selectedQ={selectedQ}
                     setSelectedQ={setSelectedQ}
                     setActiveTab={setActiveTab}
                   />
-                </Tabs.Panel>
-                <Tabs.Panel value={QuestionTabsEnum.ValidationRulesEditor}>
+                )}
+                {activeTab === QuestionTabsEnum.ValidationRulesEditor && (
                   <ValidationRulesEditor
                     selectedQ={selectedQ}
                     setSelectedQ={setSelectedQ}
                     setActiveTab={setActiveTab}
                     activeTab={activeTab}
                   />
-                </Tabs.Panel>
-                <Tabs.Panel value={QuestionTabsEnum.VariableEditor}>
+                )}
+                {activeTab === QuestionTabsEnum.VariableEditor && (
                   <SurveyVariableEditor setActiveTab={setActiveTab} />
-                </Tabs.Panel>
-                <Tabs.Panel value={QuestionTabsEnum.None}>
-                  <Center style={{ height: "100%" }}>
-                    <Text c="dimmed">{translations("Select a question to edit")}</Text>
-                  </Center>
-                </Tabs.Panel>
-                <Tabs.Panel
-                  className={styles["survey-edit-view-panel"]}
-                  value={QuestionTabsEnum.SurveyPreview}
-                >
-                  {survey && (
-                    <SurveyTheme
-                      previewId={"survey-theme-edit-preview"}
-                      key={surveyPreviewCompKey}
-                      survey={survey}
-                      isSurveyThemeEditView={true}
-                      onEditPageBtnClick={openStylesEditorDrawer}
-                    />
-                  )}
-
-                  {
-                    <ActionIcon
-                      className={styles["ui-text-translations-modal-btn"]}
-                      onClick={() => {
-                        setIsUiTextTranlationsModalOpen(!isUiTextTranslationsModalOpen);
-                      }}
+                )}
+                {activeTab === QuestionTabsEnum.None && (
+                  <div className="flex items-center justify-center h-full">
+                    <span className="text-sm text-muted-foreground">
+                      {translations("Select a question to edit")}
+                    </span>
+                  </div>
+                )}
+                {activeTab === QuestionTabsEnum.SurveyPreview && (
+                  <div className="relative h-full">
+                    {survey && (
+                      <SurveyTheme
+                        previewId={"survey-theme-edit-preview"}
+                        key={surveyPreviewCompKey}
+                        survey={survey}
+                        isSurveyThemeEditView={true}
+                        onEditPageBtnClick={openStylesEditorDrawer}
+                      />
+                    )}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="absolute right-3 top-3 z-[100] h-auto w-auto p-[5px]"
+                      onClick={() =>
+                        setIsUiTextTranlationsModalOpen(!isUiTextTranslationsModalOpen)
+                      }
                     >
                       <IconLanguage size={20} />
-                    </ActionIcon>
-                  }
-                </Tabs.Panel>
-              </Tabs>
-            </Box>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
           </motion.div>
           {isStylesEditorDrawerOpen && (
             <AnimatePresence>
               <motion.div
                 layout
-                className={styles["edit-survey-theme-style-component-motion-div"]}
+                className="h-full w-80 shrink-0 border-l"
                 initial={{ x: 500 }}
                 animate={{ x: 0 }}
                 exit={{ x: 500 }}
               >
-                <PaperLayout className={styles["edit-survey-theme-style-component-div"]}>
+                <Card className="h-full rounded-none border-0 p-0">
                   <StylesComponent
                     survey={survey}
                     isThemeObjBeingEditedDefaultTheme={isThemeObjBeingEditedDefaultTheme}
@@ -445,27 +463,35 @@ export function EditSurvey({
                     setThemeSelectorState={setThemeSelectorState}
                     isAllThemesFetchPending={isAllThemesFetchPending}
                   />
-                </PaperLayout>
+                </Card>
               </motion.div>
             </AnimatePresence>
           )}
         </LayoutGroup>
 
-        <SurveyPreviewModal opened={isSurveyPreviewModalOpen} onClose={closeSurveyPreviewModal}>
-          <SurveyTheme
-            key={"preview" + surveyPreviewCompKey}
-            previewId={"survey-theme-prod-preview"}
-            survey={survey}
-            isSurveyThemePreview
-          />
-        </SurveyPreviewModal>
+        {/* absolute overlay: takes the in-place Mantine modal (withinPortal=false) out of flex flow */}
+        <div
+          className={cn(
+            "absolute inset-0 bg-background",
+            isSurveyPreviewModalOpen ? "z-[999] pointer-events-auto" : "-z-[1] pointer-events-none",
+          )}
+        >
+          <SurveyPreviewModal opened={isSurveyPreviewModalOpen} onClose={closeSurveyPreviewModal}>
+            <SurveyTheme
+              key={"preview" + surveyPreviewCompKey}
+              previewId={"survey-theme-prod-preview"}
+              survey={survey}
+              isSurveyThemePreview
+            />
+          </SurveyPreviewModal>
+        </div>
 
         <UiTextTranslationsModal
           survey={survey}
           opened={isUiTextTranslationsModalOpen}
           onClose={handleUiTextTranslationsModalClose}
         />
-      </Flex>
+      </div>
     </SurveyThemeContextProvider>
   );
 }

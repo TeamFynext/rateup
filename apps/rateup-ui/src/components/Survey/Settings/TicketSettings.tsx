@@ -1,4 +1,3 @@
-import { Box, Group, Select, Stack } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -6,9 +5,23 @@ import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import PremiumFeature from "@/components/Premium/PremiumFeature.tsx";
-import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 
-import PaperLayout from "../../styled/Layouts/PaperLayout.tsx";
 import NotificationEmailSettings from "./NotificationEmailSettings.tsx";
 
 const TicketSettings = ({ survey, surveyId, enabledModules }) => {
@@ -16,7 +29,6 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
   const [ticketBoardId, setTicketBoardId] = useState(survey?.ticketBoardId);
   const [ticketColumnId, setTicketColumnId] = useState(survey?.ticketColumnId);
   const [, setEnableTicketEmailAlerts] = useState(survey?.enableTicketEmailAlerts);
-  // ticket on every response
   const [enableAutoGenerateTicket, setEnableAutoGenerateTicket] = useState(
     survey?.enableAutoGenerateTicket,
   );
@@ -32,139 +44,135 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
     setTicketBoardId(survey?.ticketBoardId);
     setTicketColumnId(survey?.ticketColumnId);
   }, [survey]);
+
   const { data: options, isPending } = useBoardsQueries(enabledModules.includes("tickets"));
-  // Transform boards for Select component
+
   const boards = useMemo(
     () => options?.map((board) => ({ value: board.id, label: board.title })),
     [options],
   );
-  // Get columns for selected board
+
   const columns = useMemo(() => {
     const selectedBoard = options?.find((board) => board.id === ticketBoardId);
     return selectedBoard
-      ? selectedBoard.ticketColumns.map((col) => ({
-          value: col.id,
-          label: col.title,
-        }))
+      ? selectedBoard.ticketColumns.map((col) => ({ value: col.id, label: col.title }))
       : [];
   }, [options, ticketBoardId]);
+
   useEffect(() => {
     if (
       (ticketBoardId && ticketColumnId && survey?.ticketBoardId !== ticketBoardId) ||
       survey?.ticketColumnId !== ticketColumnId
     ) {
-      editSurvey.mutate({
-        ticketColumnId,
-        ticketBoardId,
-      });
+      editSurvey.mutate({ ticketColumnId, ticketBoardId });
     }
   }, [ticketBoardId, ticketColumnId]);
 
   if (enabledModules.includes("tickets") && isPending) return <RateupLoader />;
 
   return (
-    <PaperLayout className="section-div">
-      <Stack gap={"md"}>
-        <PremiumFeature isSubscribed={enabledModules.includes("tickets")}>
-          <Group>
-            <RateupSwitch
-              offMessage={translations("Click here to enable ticketing")}
-              onMessage={translations("Click here to disable ticketing")}
-              checked={enableTickets}
-              onChange={() => {
-                editSurvey.mutate({
-                  enableTickets: !enableTickets,
-                });
-              }}
-            />
-            <Box className={"switch-heading-and-desc-container"}>
-              <h3>{translations("Enable Ticketing")}</h3>
-            </Box>
-          </Group>
-          <Group>
-            <RateupSwitch
-              offMessage={translations("Click here to enable auto-generate Tickets on response")}
-              onMessage={translations("Click here to disable auto-generate Tickets on response")}
-              checked={enableAutoGenerateTicket}
-              onChange={() => {
-                editSurvey.mutate({
-                  enableAutoGenerateTicket: !enableAutoGenerateTicket,
-                });
-              }}
-            />
-            <Box className={"switch-heading-and-desc-container"}>
-              <h3>{translations("Enable Auto-Generate Ticket")}</h3>
-            </Box>
-          </Group>
-          {enableAutoGenerateTicket && (
-            <Group w={"100%"} py={"sm"}>
-              <Select
-                label="Select Board"
-                placeholder="Choose a board"
-                value={ticketBoardId}
-                data={boards}
-                onChange={(boardId) => {
-                  setTicketBoardId(boardId);
-                }}
-              />
+    <TooltipProvider>
+      <Card>
+        <CardHeader>
+          <CardTitle>{translations("Tickets")}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-5">
+          <PremiumFeature isSubscribed={enabledModules.includes("tickets")}>
+            <div className="flex flex-col gap-5">
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5">
+                <Tooltip>
+                  <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
+                    <Switch
+                      checked={!!enableTickets}
+                      onCheckedChange={() => editSurvey.mutate({ enableTickets: !enableTickets })}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {enableTickets
+                      ? translations("Click here to disable ticketing")
+                      : translations("Click here to enable ticketing")}
+                  </TooltipContent>
+                </Tooltip>
+                <span className="text-sm font-medium">{translations("Enable Ticketing")}</span>
+              </div>
 
-              <Select
-                label="Select Column"
-                placeholder="Choose a column"
-                value={ticketColumnId}
-                data={columns}
-                onChange={(columnId) => {
-                  setTicketColumnId(columnId);
-                }}
-              />
-            </Group>
-          )}
-          {/*
-          {enabledModules.includes("flow") && (
-            <Group>
-              <RateupSwitch
-                offMessage={
-                  translations("Click here to enable Ticket WhatsApp Message Alerts")                }
-                onMessage={
-                  translations("Click here to disable Ticket WhatsApp Message Alerts")                }
-                checked={enableTicketWaMessageAlerts}
-                onChange={() => {
-                  editSurvey.mutate({
-                    enableTicketWaMessageAlerts: !enableTicketWaMessageAlerts,
-                  });
-                }}
-              />
-              <Box className={"switch-heading-and-desc-container"}>
-                <h3>{translations("Enable Ticket WhatsApp Message Alerts")}</h3>
-              </Box>
-            </Group>
-          )}
-          <Group>
-            <RateupSwitch
-              offMessage={
-                translations("Click here to enable Ticket Email Alerts")
-              }
-              onMessage={
-                translations("Click here to disable Ticket Email Alerts")
-              }
-              checked={enableTicketEmailAlerts}
-              onChange={() => {
-                editSurvey.mutate({
-                  enableTicketEmailAlerts: !enableTicketEmailAlerts,
-                });
-              }}
-            />
-            <Box className={"switch-heading-and-desc-container"}>
-              <h3>{translations("Enable Ticket Email Alerts")}</h3>
-            </Box>
-          </Group> */}
-        </PremiumFeature>
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5">
+                <Tooltip>
+                  <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
+                    <Switch
+                      checked={!!enableAutoGenerateTicket}
+                      onCheckedChange={() =>
+                        editSurvey.mutate({
+                          enableAutoGenerateTicket: !enableAutoGenerateTicket,
+                        })
+                      }
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {enableAutoGenerateTicket
+                      ? translations("Click here to disable auto-generate Tickets on response")
+                      : translations("Click here to enable auto-generate Tickets on response")}
+                  </TooltipContent>
+                </Tooltip>
+                <span className="text-sm font-medium">
+                  {translations("Enable Auto-Generate Ticket")}
+                </span>
+              </div>
 
-        <PremiumFeature isSubscribed={enabledModules.includes("enableNotificationEmail")}>
-          <NotificationEmailSettings surveyId={surveyId} survey={survey} />
-        </PremiumFeature>
-      </Stack>
-    </PaperLayout>
+              {enableAutoGenerateTicket && (
+                <FieldGroup>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field>
+                      <FieldLabel>{translations("Select Board")}</FieldLabel>
+                      <Select
+                        value={ticketBoardId ?? ""}
+                        onValueChange={(v) => setTicketBoardId(v)}
+                        items={boards ?? []}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={translations("Choose a board")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {boards?.map((b) => (
+                            <SelectItem key={b.value} value={b.value}>
+                              {b.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel>{translations("Select Column")}</FieldLabel>
+                      <Select
+                        value={ticketColumnId ?? ""}
+                        onValueChange={(v) => setTicketColumnId(v)}
+                        items={columns}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={translations("Choose a column")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {columns.map((c) => (
+                            <SelectItem key={c.value} value={c.value}>
+                              {c.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </div>
+                </FieldGroup>
+              )}
+            </div>
+          </PremiumFeature>
+
+          <PremiumFeature isSubscribed={enabledModules.includes("enableNotificationEmail")}>
+            <NotificationEmailSettings surveyId={surveyId} survey={survey} />
+          </PremiumFeature>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 };
 

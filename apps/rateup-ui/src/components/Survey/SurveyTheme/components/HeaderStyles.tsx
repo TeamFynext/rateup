@@ -1,5 +1,14 @@
-import { Box, Group, NumberInput, Select, Stack } from "@mantine/core";
 import { useCallback } from "react";
+
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker/index.tsx";
 import { FontWeights, getSurveyThemeKeyOf } from "../SurveyTheme.constants";
@@ -40,44 +49,52 @@ function HeaderStyles() {
   }, []);
 
   return (
-    <Stack
-      className={`${styles["style-inputs-container"]} ${styles["header-styles"]} style-inputs-container header-style-inputs-container`}
+    <div
+      className={`flex flex-col ${styles["style-inputs-container"]} ${styles["header-styles"]} style-inputs-container header-style-inputs-container`}
     >
-      <Box className={"custom-color-picker-and-heading-container"}>
+      <div className={"custom-color-picker-and-heading-container"}>
         <h2>Text Color</h2>
         <CustomColorPicker
           value={title.styles.color}
           onChange={handleColorChange}
           withoutEyedropper
         />
-      </Box>
-      <Group wrap="nowrap" gap={"xs"}>
-        <Select
-          label="Font weight"
-          name="fontWeight"
-          data={FontWeights}
-          value={title.styles.fontWeight}
-          classNames={{ label: styles["label"] }}
-          onChange={handleFontWeightChange}
-          comboboxProps={{
-            portalProps: {
-              className: styles["font-weight-popover-container"],
-            },
-          }}
-        />
-        <NumberInput
-          min={10}
-          max={100}
-          defaultValue={18}
-          placeholder="size"
-          label="Font Size"
-          name="fontSize"
-          classNames={{ label: styles["label"] }}
-          value={title.styles.fontSize}
-          onChange={handleFontSizeChange}
-        />
-      </Group>
-    </Stack>
+      </div>
+      <div className="flex flex-nowrap gap-2.5">
+        <Field>
+          <FieldLabel className={styles["label"]}>Font weight</FieldLabel>
+          <Select
+            value={title.styles.fontWeight}
+            onValueChange={handleFontWeightChange}
+            items={FontWeights}
+          >
+            <SelectTrigger className="w-full rounded-xl">
+              <SelectValue placeholder="Font weight" />
+            </SelectTrigger>
+            <SelectContent className="min-w-[130px]">
+              {FontWeights.map((fw) => (
+                <SelectItem key={fw.value} value={fw.value}>
+                  {fw.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field>
+          <FieldLabel className={styles["label"]}>Font Size</FieldLabel>
+          <Input
+            type="number"
+            min={10}
+            max={100}
+            placeholder="size"
+            name="fontSize"
+            value={title.styles.fontSize}
+            onChange={(e) => handleFontSizeChange(e.target.value)}
+            className="rounded-xl"
+          />
+        </Field>
+      </div>
+    </div>
   );
 }
 

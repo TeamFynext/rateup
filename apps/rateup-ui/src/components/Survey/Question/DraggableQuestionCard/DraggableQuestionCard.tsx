@@ -1,22 +1,65 @@
 import { Draggable } from "@hello-pangea/dnd";
-import { ActionIcon, Badge, Box, Flex, Group, Image, Text } from "@mantine/core";
-import { useHover } from "@mantine/hooks";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import cx from "clsx";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
-import { PageType } from "@/types/enums.ts";
+import { PageType, QuestionType } from "@/types/enums.ts";
 import { extractText } from "@/utils/index.ts";
 
 import { pageIcons } from "../../Page/PageIcons.ts";
 import { getReplacedTitleFromVariable } from "../../TakeSurvey/TakeSurveyComponent/util.tsx";
 import { reviewPageLogosObj } from "../QuestionReviewPageEditor/constants.tsx";
 import { questionIcons } from "../QuestionTypeSelection.tsx";
+
+const questionTypeColors: Record<string, string> = {
+  // Page types
+  [PageType.Welcome]: "#3B82F6",
+  [PageType.ThankYou]: "#3B82F6",
+  [PageType.Language]: "#6366F1",
+  [PageType.Custom]: "#14B8A6",
+  [PageType.GoogleReview]: "#EF4444",
+  // Question types
+  [QuestionType.Text]: "#8B5CF6",
+  [QuestionType.TextArea]: "#EC4899",
+  [QuestionType.Number]: "#F59E0B",
+  [QuestionType.Email]: "#3B82F6",
+  [QuestionType.Phone]: "#10B981",
+  [QuestionType.Photo]: "#6366F1",
+  [QuestionType.Date]: "#06B6D4",
+  [QuestionType.LD]: "#14B8A6",
+  [QuestionType.YN]: "#10B981",
+  [QuestionType.Rating]: "#22C55E",
+  [QuestionType.Smiley]: "#EAB308",
+  [QuestionType.Opinion]: "#F97316",
+  [QuestionType.MCQ]: "#6366F1",
+  [QuestionType.MSQ]: "#8B5CF6",
+  [QuestionType.CustomNPS]: "#F97316",
+  [QuestionType.PCQ]: "#A855F7",
+  [QuestionType.Testimonial]: "#10B981",
+  [QuestionType.EmailPhone]: "#3B82F6",
+  [QuestionType.DDSS]: "#64748B",
+  [QuestionType.DDMS]: "#64748B",
+  [QuestionType.Contact]: "#14B8A6",
+  [QuestionType.TnC]: "#EF4444",
+  [QuestionType.InfoMessage]: "#0EA5E9",
+  [QuestionType.MultiTextInput]: "#7C3AED",
+  [QuestionType.MCQGrid]: "#6366F1",
+  [QuestionType.File]: "#78716C",
+  [QuestionType.EmailOtp]: "#EF4444",
+  [QuestionType.WOP]: "#F97316",
+  [QuestionType.WaList]: "#22C55E",
+  [QuestionType.WaButtons]: "#3B82F6",
+  [QuestionType.WaTimeSlot]: "#06B6D4",
+  [QuestionType.PhotoPicker]: "#6366F1",
+  [QuestionType.DocumentPicker]: "#78716C",
+};
+
+import { Button } from "@/components/ui/button.tsx";
 
 import classes from "./DraggableQuestionCard.module.css";
 
@@ -37,8 +80,7 @@ export function DraggableQuestionCard({
   onDelete,
   isWaSurvey,
 }: DraggableQuestionCardProps) {
-  // TODO: ref lost when card is dragged to new place
-  const { ref: hoverRef } = useHover();
+  const [hovered, setHovered] = useState(false);
   const params = useParams({
     strict: false,
   });
@@ -83,8 +125,8 @@ export function DraggableQuestionCard({
         // isDragDisabled={question.type in PageType}
       >
         {(provided, snapshot) => (
-          <div ref={hoverRef}>
-            <Box
+          <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+            <div
               className={cx(
                 classes.item,
                 {
@@ -105,63 +147,52 @@ export function DraggableQuestionCard({
               }}
             >
               <div {...provided.dragHandleProps} className={classes.dragHandle}>
-                <IconGripVertical size={20} stroke={1.5} />
+                <IconGripVertical size={14} stroke={1.5} />
               </div>
-              <Badge
-                style={{ minWidth: "30px" }}
-                c={"white"}
-                variant={selected ? "filled" : "filled"}
+              <div
+                className={classes.questionIconBox}
+                style={{ backgroundColor: questionTypeColors[question.type] ?? "#1c518e" }}
               >
-                <Flex style={{ marginTop: "0.5rem", marginBottom: "0.5rem" }}>
-                  {pageIcons[question.type] &&
-                    React.createElement(pageIcons[question.type], {
-                      size: 15,
-                      strokeWidth: 2,
-                      style: { marginRight: "0.5rem" },
-                    })}
-
-                  {questionIcons[question.type] &&
-                    React.createElement(questionIcons[question.type], {
-                      size: 15,
-                      strokeWidth: 2,
-                      style: { marginRight: "0.5rem" },
-                    })}
-                  {index + 1}
-                </Flex>
-              </Badge>
-              <Text px="xs" fz={14} truncate style={{ flex: 1 }}>
+                {(pageIcons[question.type] || questionIcons[question.type]) &&
+                  React.createElement(pageIcons[question.type] ?? questionIcons[question.type], {
+                    size: 18,
+                    strokeWidth: 2,
+                  })}
+              </div>
+              <span className="truncate text-[13px] px-2" style={{ flex: 1, color: "#2e302e" }}>
                 {extractText(questionTitle)}
-              </Text>
+              </span>
 
-              <Group justify={"flex-end"} gap={4} ml={"auto"}>
+              <div className="flex items-center justify-end gap-1 ml-auto">
                 {question?.logic?.length && (
-                  <Image
+                  <img
                     src={
                       isWaSurvey == true
                         ? `${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump-whatsapp.svg`
                         : `${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump.svg`
                     }
-                    w={30}
-                    h={30}
-                    fit="contain"
-                    alt="image of logic jump"
+                    width={30}
+                    height={30}
+                    className="object-contain"
+                    alt="logic jump"
                   />
                 )}
                 {question.reviewPageOptions && reviewPageLogosObj[question.reviewPagePlatform]}
 
-                {!nonDeletablePagetypeStrs.includes(question.type) && (
-                  <ActionIcon
+                {!nonDeletablePagetypeStrs.includes(question.type) && hovered && (
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-destructive"
                     onClick={(e) => {
                       handleDelete(e);
                     }}
-                    variant="subtle"
-                    color="gray"
                   >
-                    <IconTrash />
-                  </ActionIcon>
+                    <IconTrash className="size-4" />
+                  </Button>
                 )}
-              </Group>
-            </Box>
+              </div>
+            </div>
           </div>
         )}
       </Draggable>

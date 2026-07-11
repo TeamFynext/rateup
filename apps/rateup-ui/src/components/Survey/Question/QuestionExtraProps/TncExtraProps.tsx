@@ -1,14 +1,15 @@
-import { Group, Input, Stack, Text, Textarea } from "@mantine/core";
 import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
-
-import classes from "./Style.module.css";
 
 const TncExtraProps = ({ form }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const { t: translations } = useTranslation();
+
   const tnc = form.values.tnc?.[selectedLanguage] || {
     title: translations("I agree to"),
     urlTitle: translations("terms and conditions"),
@@ -16,6 +17,7 @@ const TncExtraProps = ({ form }) => {
       "Terms & conditions.... \n conditions 1....\n conditions 3.... \n conditions 3....",
     ),
   };
+
   const [title, setTitle] = useState(tnc?.title);
   const [urlTitle, setUrlTitle] = useState(tnc?.urlTitle);
   const [content, setContent] = useState(tnc?.content);
@@ -28,46 +30,35 @@ const TncExtraProps = ({ form }) => {
   }, [title, urlTitle, content]);
 
   return (
-    <Stack>
-      <Group>
-        <Text className={classes["labels"]} fw={600}>
-          {translations("Title :")}{" "}
-        </Text>
+    <FieldGroup>
+      <Field>
+        <FieldLabel>{translations("Title")}</FieldLabel>
         <Input
-          placeholder={translations("eg:  I agree to")}
+          placeholder={translations("eg: I agree to")}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          radius="sm"
-          size="sm"
-          className={classes["inputs"]}
         />
-      </Group>
-      <Group>
-        <Text className={classes["labels"]} fw={600}>
-          {translations("Url Text :")}{" "}
-        </Text>
+      </Field>
+
+      <Field>
+        <FieldLabel>{translations("URL Text")}</FieldLabel>
         <Input
-          placeholder={translations("eg:  terms and conditions")}
+          placeholder={translations("eg: terms and conditions")}
           value={urlTitle}
           onChange={(e) => setUrlTitle(e.target.value)}
-          radius="sm"
-          size="sm"
-          className={classes["inputs"]}
         />
-      </Group>
-      <Group>
-        <Text className={classes["labels"]} fw={600}>
-          {translations("Terms Content :")}{" "}
-        </Text>
+      </Field>
+
+      <Field>
+        <FieldLabel>{translations("Terms Content")}</FieldLabel>
         <Textarea
           placeholder={translations("Terms & Conditions ..........")}
           value={content}
+          rows={4}
           onChange={(e) => setContent(e.target.value)}
-          className={classes["inputs"]}
-          size="sm"
         />
-      </Group>
-    </Stack>
+      </Field>
+    </FieldGroup>
   );
 };
 

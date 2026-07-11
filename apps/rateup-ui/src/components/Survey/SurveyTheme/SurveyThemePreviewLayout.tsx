@@ -1,13 +1,9 @@
-import { Box, Stack, Tabs } from "@mantine/core";
-
 import LanguagePageThemeView from "./components/previewcomponents/languagePage/index.tsx";
 import SurveyThemeView from "./components/previewcomponents/surveytheme/index.tsx";
 import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage/index.tsx";
 import WelcomePageThemeView from "./components/previewcomponents/welcomepage/index.tsx";
 import { PreviewTypeEnum, ThemeTabEnum } from "./SurveyTheme.enums";
 import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext.tsx";
-
-import styles from "./SurveyTheme.module.css";
 
 function SurveyThemePreviewLayout({
   survey,
@@ -22,45 +18,27 @@ function SurveyThemePreviewLayout({
     selectedPageTab = ThemeTabEnum.SURVEY;
   }
 
+  const isMobile = selectedPreview === PreviewTypeEnum.MOBILE;
+
   return (
-    <Stack
-      className={`${styles["survey-theme-preview-layout-div"]} survey-theme-preview-layout-div`}
-    >
-      <Box
-        style={{
-          display: "flex",
-          justifyContent: "center",
-        }}
-        h={"100%"}
-      >
-        <Box h={"100%"} w={selectedPreview === PreviewTypeEnum.MOBILE ? 380 : "100%"}>
-          <Tabs
-            value={selectedPageTab}
-            classNames={{
-              root: styles["survey-theme-preview-tab-panels-root"],
-            }}
-            keepMounted={false}
-          >
-            <Tabs.Panel value={ThemeTabEnum.LANGUAGE}>
-              <LanguagePageThemeView survey={survey} />
-            </Tabs.Panel>
-            <Tabs.Panel value={ThemeTabEnum.WELCOME}>
-              <WelcomePageThemeView survey={survey} />
-            </Tabs.Panel>
-            <Tabs.Panel value={ThemeTabEnum.SURVEY}>
+    <div className="survey-theme-preview-layout-div h-full w-full">
+      <div className="flex h-full justify-center">
+        <div className="h-full" style={{ width: isMobile ? 380 : "100%" }}>
+          <div className="h-full overflow-hidden rounded-2xl">
+            {selectedPageTab === ThemeTabEnum.LANGUAGE && <LanguagePageThemeView survey={survey} />}
+            {selectedPageTab === ThemeTabEnum.WELCOME && <WelcomePageThemeView survey={survey} />}
+            {selectedPageTab === ThemeTabEnum.SURVEY && (
               <SurveyThemeView
                 previewId={previewId}
                 survey={survey}
                 isSurveyThemeEditView={isSurveyThemeEditView}
               />
-            </Tabs.Panel>
-            <Tabs.Panel value={ThemeTabEnum.THANKYOU}>
-              <ThankyouPageThemeView survey={survey} />
-            </Tabs.Panel>
-          </Tabs>
-        </Box>
-      </Box>
-    </Stack>
+            )}
+            {selectedPageTab === ThemeTabEnum.THANKYOU && <ThankyouPageThemeView survey={survey} />}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

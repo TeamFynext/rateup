@@ -1,28 +1,24 @@
-import { Box, Group, isLightColor, useMantineTheme } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import { isLightColor } from "@mantine/core";
 import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 import { useAnimate } from "motion/react";
 import { useContext } from "react";
 
+import { Button } from "@/components/ui/button.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+import { useMediaQuery } from "@/hooks/use-media-querry.ts";
 import { LDResponse } from "@/types/enums.ts";
 
-import { RateupButtonBlue } from "../../../../Button/RateupButtons.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
-
-import styles from "./LDForm.module.css";
+import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 export function LDForm() {
   const selectedPreview = useSelectedPreview();
   const isMobile = useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
-  const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor
-    ? mantineTheme.colors.primaryColor[5]
-    : "#1C518E";
+  const themePrimaryColor = useThemePrimaryColor();
 
   const [, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
@@ -44,38 +40,37 @@ export function LDForm() {
 
   const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
+  const getButtonStyle = (isSelected: boolean) =>
+    isSelected
+      ? { backgroundColor: themePrimaryColor, color: foregroundColor }
+      : { color: themePrimaryColor, borderColor: themePrimaryColor };
+
   return (
-    <Group onClick={handleLikeOrDislikeClick}>
-      <Box w={150}>
-        <RateupButtonBlue
-          size="md"
-          variant={response === LDResponse.Dislike ? "filled" : "outline"}
-          sx={{
-            color: response === LDResponse.Dislike ? foregroundColor : themePrimaryColor,
-          }}
-          radius="xl"
-          title="Dislike"
-          leftIcon={<IconThumbDownFilled />}
-          fullWidth
-          className={styles["like-dislike-btn"]}
+    <div className="flex gap-4" onClick={handleLikeOrDislikeClick}>
+      <div className="w-[150px]">
+        <Button
+          size="lg"
+          variant={response === LDResponse.Dislike ? "default" : "outline"}
+          style={getButtonStyle(response === LDResponse.Dislike)}
+          className="w-full rounded-full [&_*]:pointer-events-none"
           data-name={"dislike"}
-        />
-      </Box>
-      <Box w={150} ml={!isMobile && "sm"}>
-        <RateupButtonBlue
-          size="md"
-          variant={response === LDResponse.Like ? "filled" : "outline"}
-          sx={{
-            color: response === LDResponse.Like ? foregroundColor : themePrimaryColor,
-          }}
-          radius="xl"
-          title="Like"
-          fullWidth
-          leftIcon={<IconThumbUpFilled />}
-          className={styles["like-dislike-btn"]}
+        >
+          <IconThumbDownFilled data-icon="inline-start" />
+          Dislike
+        </Button>
+      </div>
+      <div className={`w-[150px] ${!isMobile ? "ml-3" : ""}`}>
+        <Button
+          size="lg"
+          variant={response === LDResponse.Like ? "default" : "outline"}
+          style={getButtonStyle(response === LDResponse.Like)}
+          className="w-full rounded-full [&_*]:pointer-events-none"
           data-name={"like"}
-        />
-      </Box>
-    </Group>
+        >
+          <IconThumbUpFilled data-icon="inline-start" />
+          Like
+        </Button>
+      </div>
+    </div>
   );
 }

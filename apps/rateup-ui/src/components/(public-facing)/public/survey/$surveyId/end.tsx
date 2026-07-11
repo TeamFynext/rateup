@@ -1,15 +1,29 @@
-import { Flex, ScrollAreaAutosize, Stack, Title } from "@mantine/core";
-import { useMediaQuery, useViewportSize } from "@mantine/hooks";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Confetti from "react-confetti";
 import { useTranslation } from "react-i18next";
 
 import { CreditsCard } from "@/components/Card/CreditsCard.tsx";
 import { getBgImgAndBgColor } from "@/components/Layout/TakeSurveyLayout/utils.ts";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
+import { useMediaQuery } from "@/hooks/use-media-querry.ts";
 
 import BodyComp from "./BodyComp.tsx";
+
+function useViewportSize() {
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const setViewportSize = () => setSize({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener("resize", setViewportSize);
+    window.addEventListener("orientationchange", setViewportSize);
+    setViewportSize();
+    return () => {
+      window.removeEventListener("resize", setViewportSize);
+      window.removeEventListener("orientationchange", setViewportSize);
+    };
+  }, []);
+  return size;
+}
 
 export default function ThankYou({
   enableGoogleReview = false,
@@ -133,7 +147,8 @@ export default function ThankYou({
       enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
       url={backgroundImageSrc}
     >
-      <Flex
+      <div
+        className="flex flex-col items-center justify-center overflow-hidden"
         style={{
           ...surveyThemeData?.thankyouTheme?.bg?.styles,
           height: isSurveyPreview ? "100%" : "100dvh",
@@ -144,36 +159,26 @@ export default function ThankYou({
           backgroundPosition: "center",
           padding: "1.25rem",
           paddingBottom: 0,
-          overflow: "hidden",
         }}
-        direction={"column"}
-        justify={"center"}
-        align={"center"}
       >
-        <Stack
-          maw={1920}
-          mih={100}
-          flex={1}
-          justify="center"
-          style={{
-            overflow: "hidden",
-          }}
+        <div
+          className="flex flex-1 flex-col justify-center overflow-hidden"
+          style={{ maxWidth: 1920, minHeight: 100 }}
         >
           {confettiEnabled && <Confetti width={width - 1} height={height - 1} />}
 
           {!enableGoogleReview && (
-            <ScrollAreaAutosize p="sm">
-              <Stack gap={"1.5rem"}>
+            <div className="overflow-auto p-3">
+              <div className="flex flex-col gap-6">
                 {err ? (
-                  <Title
-                    order={1}
+                  <h1
                     style={{
                       ...titleStyles,
                       textAlign: "center",
                     }}
                   >
                     {translations("Thank You!")}
-                  </Title>
+                  </h1>
                 ) : (
                   <div
                     dangerouslySetInnerHTML={{
@@ -182,8 +187,8 @@ export default function ThankYou({
                     style={{ color: titleStyles?.color }}
                   />
                 )}
-              </Stack>
-            </ScrollAreaAutosize>
+              </div>
+            </div>
           )}
           {enableBody && (
             <BodyComp
@@ -196,9 +201,9 @@ export default function ThankYou({
               reviewPageLinks={reviewPageLinks}
             />
           )}
-        </Stack>
+        </div>
         <div className="flex">{/* {!enableGoogleReview && <RateupRedirectCard />} */}</div>
-      </Flex>
+      </div>
     </CreditsCard>
   );
 }

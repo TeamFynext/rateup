@@ -1,87 +1,92 @@
-import { Box, Button, Modal, TextInput } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useRenameSurveyThemeMutation } from "@/backend/surveyTheme/surveyTheme.query";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
 
-import modalStyles from "@/styles/commonCssModules/modal.module.css";
+const NAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_\s]{5,}$/;
 
 function RenameThemeModal({ opened, onClose, themeId, oldName }) {
-  const form = useForm({
-    initialValues: {
-      name: oldName,
-    },
-    validate: {
-      // must start with a letter, can contain underscores, numbers, spaces, length must be 6 or more characters.
-      name: (value) =>
-        /^[a-zA-Z][a-zA-Z0-9_\s]{5,}$/.test(value)
-          ? null
-          : "Name should be alphanumeric, should start with a letter, length should be greater than 5 characters",
-    },
-  });
-
+  const [name, setName] = useState(oldName);
+  const [error, setError] = useState("");
   const [isRenaming, setIsRenaming] = useState(false);
 
   const { mutateAsync: renameThemeMutationAsync } = useRenameSurveyThemeMutation();
 
-  const submitBtnRef = useRef(null);
+  useEffect(() => {
+    if (!opened) {
+      setName(oldName);
+      setError("");
+    }
+  }, [opened, oldName]);
 
   const handleFormSubmit = useCallback(
-    async ({ name }) => {
-      await setIsRenaming(true);
-      if (name && themeId) {
-        try {
-          await renameThemeMutationAsync({
-            surveyThemeId: themeId,
-            body: { name },
-          });
-          onClose();
-        } catch (err) {
-          console.log(err);
-        }
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!NAME_REGEX.test(name)) {
+        setError(
+          "Name should be alphanumeric, should start with a letter, length should be greater than 5 characters",
+        );
+        return;
       }
-      await setIsRenaming(false);
+      if (!name || !themeId) return;
+      setIsRenaming(true);
+      try {
+        await renameThemeMutationAsync({ surveyThemeId: themeId, body: { name } });
+        onClose();
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setIsRenaming(false);
+      }
     },
-    [themeId],
+    [name, themeId],
   );
 
-  const handleCreateLinkBtnClick = useCallback(() => {
-    submitBtnRef?.current.click();
-  }, []);
-
-  useEffect(() => {
-    if (!opened) form.reset();
-  }, [opened]);
-
   return (
-    <Modal
-      title={"Rename Theme"}
-      opened={opened}
-      onClose={onClose}
-      centered
-      classNames={{
-        header: modalStyles["modal-header"],
-        body: modalStyles["modal-body"],
-        content: modalStyles["modal-content"],
+    <Dialog
+      open={opened}
+      onOpenChange={(o) => {
+        if (!o) onClose();
       }}
     >
-      <form onSubmit={form.onSubmit(handleFormSubmit)}>
-        <TextInput
-          label="Theme Name"
-          placeholder="Enter New Theme Name"
-          {...form.getInputProps("name")}
-        />
-        <Button style={{ display: "none" }} type="submit" ref={submitBtnRef} />
-      </form>
-      <Box className={modalStyles["cancel-save-btns-container"]}>
-        <Button onClick={onClose} className={modalStyles["cancel-btn"]}>
-          Cancel
-        </Button>
-        <Button onClick={handleCreateLinkBtnClick} loading={isRenaming}>
-          Save
-        </Button>
-      </Box>
-    </Modal>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Rename Theme</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleFormSubmit}>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="rename-theme-input">Theme Name</Label>
+            <Input
+              id="rename-theme-input"
+              placeholder="Enter New Theme Name"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setError("");
+              }}
+            />
+            {error && <p className="text-xs text-destructive">{error}</p>}
+          </div>
+          <DialogFooter className="mt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isRenaming}>
+              {isRenaming ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

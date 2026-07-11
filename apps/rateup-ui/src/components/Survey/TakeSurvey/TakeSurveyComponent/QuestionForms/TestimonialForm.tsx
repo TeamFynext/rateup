@@ -1,50 +1,46 @@
-import {
-  Box,
-  FileButton,
-  Group,
-  Image,
-  Rating,
-  Skeleton,
-  Stack,
-  Text,
-  Textarea,
-  TextInput,
-  useMantineTheme,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { useContext, useEffect, useState } from "react";
+import { IconStar } from "@tabler/icons-react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { cn } from "@/lib/utils.ts";
 import { fallbackImage } from "@/utils/constants.ts";
 import { dataURItoBlob, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
-import { RateupButtonBlue } from "../../../../Button/RateupButtons.tsx";
 import WebcamCapture from "../../../../input/WebCamCapture.tsx";
 import FormModalLayout from "../../../../Modal/FormModalLayout.tsx";
 import { ImageCropModal } from "../../../../Modal/ImageCropModal.tsx";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
-import classes from "../TakeSurvey.module.css";
-
 interface TestimonialProps {
   features;
   isPreview?;
 }
+
+const unstyledInputClassName =
+  "border-none bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0";
 
 export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, setOpened] = useState(false);
   const [capturedImg, setCapturedImg] = useState(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [openedCropDialog, { toggle: toggleCropDialog, close: closeCropDialog }] =
-    useDisclosure(false);
+  const [openedCropDialog, setOpenedCropDialog] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const open = () => setOpened(true);
+  const close = () => setOpened(false);
+  const closeCropDialog = () => setOpenedCropDialog(false);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateResponse({ ...response, name: e.currentTarget.value });
@@ -66,7 +62,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         lastModified: new Date().getTime(),
       });
       setSelectedImage(capturedImageFile);
-      toggleCropDialog();
+      setOpenedCropDialog(true);
     }
   }, [capturedImg]);
 
@@ -91,12 +87,11 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   const onChangePicture = (event: File) => {
     if (!event) return;
     setSelectedImage(event);
-    toggleCropDialog();
+    setOpenedCropDialog(true);
   };
-  const theme = useMantineTheme();
 
   return (
-    <Stack miw={`min(100%,411px)`}>
+    <div className="flex flex-col gap-4" style={{ minWidth: "min(100%,411px)" }}>
       {selectedImage && (
         <ImageCropModal
           opened={openedCropDialog}
@@ -107,128 +102,147 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
           aspect={4 / 3}
         />
       )}
-      <Stack gap={"xs"}>
-        <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
+      <div className="flex flex-col gap-2.5">
+        <p className="text-sm" style={{ color: "var(--tertiary-color)" }}>
           {features?.[selectedLanguage]?.nameQn}
-        </Text>
+        </p>
         <FormPaperLayout>
-          <TextInput
+          <Input
             placeholder={translations("Enter name")}
             value={response?.name}
             onChange={handleNameChange}
             style={{ maxWidth: "400px" }}
-            variant="unstyled"
-            classNames={{
-              input: classes.input,
-            }}
+            className={cn(unstyledInputClassName, "text-base")}
             onClick={handleInputScrollIntoView}
           />
         </FormPaperLayout>
-      </Stack>
+      </div>
       {features?.[selectedLanguage]?.jobTitle && (
-        <Stack gap={"xs"}>
-          <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
+        <div className="flex flex-col gap-2.5">
+          <p className="text-sm" style={{ color: "var(--tertiary-color)" }}>
             {features?.[selectedLanguage]?.jobTitleQn}
-          </Text>
+          </p>
           <FormPaperLayout>
-            <TextInput
+            <Input
               placeholder={translations("Enter job title")}
               value={response?.jobTitle}
               onChange={handleJobTitleChange}
               style={{ maxWidth: "400px" }}
-              variant="unstyled"
-              classNames={{
-                input: classes.input,
-              }}
+              className={cn(unstyledInputClassName, "text-base")}
               onClick={handleInputScrollIntoView}
             />
           </FormPaperLayout>
-        </Stack>
+        </div>
       )}
-      <Stack gap={"xs"}>
-        <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
+      <div className="flex flex-col gap-2.5">
+        <p className="text-sm" style={{ color: "var(--tertiary-color)" }}>
           {features?.[selectedLanguage]?.testimonialQn}
-        </Text>
+        </p>
         <FormPaperLayout>
           <Textarea
             placeholder={translations("Enter testimonial")}
             value={response?.testimonial}
             onChange={handleTestimonialChange}
             style={{ maxWidth: "400px" }}
-            variant="unstyled"
-            classNames={{
-              input: classes.input,
-            }}
+            className={cn(unstyledInputClassName, "text-base min-h-0")}
             onClick={handleInputScrollIntoView}
           />
         </FormPaperLayout>
-      </Stack>
+      </div>
       {features?.[selectedLanguage]?.rating && (
-        <Stack gap={"xs"}>
-          <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
+        <div className="flex flex-col gap-2.5">
+          <p className="text-sm" style={{ color: "var(--tertiary-color)" }}>
             {features?.[selectedLanguage]?.ratingQn || "Give rating"}
-          </Text>
-          <Rating
-            value={response?.rating}
-            onChange={(value) => updateResponse({ ...response, rating: value })}
-            size={"xl"}
-            color={theme.primaryColor}
-          />
-        </Stack>
+          </p>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => updateResponse({ ...response, rating: star })}
+                className="p-0.5"
+              >
+                <IconStar
+                  size={32}
+                  className={
+                    response?.rating >= star
+                      ? "fill-[var(--tertiary-color)] text-[var(--tertiary-color)]"
+                      : "text-gray-300"
+                  }
+                />
+              </button>
+            ))}
+          </div>
+        </div>
       )}
       {features?.[selectedLanguage]?.photo && (
-        <>
-          <Stack gap={"xs"}>
-            <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
-              {features?.[selectedLanguage]?.photoQn || translations("Upload Photo")}
-            </Text>
-            <Group>
-              <Box style={{ border: "1px solid grey", borderRadius: "10px" }} w={200} h={150}>
-                <FormModalLayout
-                  title={translations("Camera")}
-                  onClose={close}
-                  opened={opened}
-                  centered
-                >
-                  <Box>
-                    <WebcamCapture
-                      height={"100%"}
-                      width={"100%"}
-                      setCapturedImg={setCapturedImg}
-                      close={close}
-                    />
-                  </Box>
-                </FormModalLayout>
-                <Skeleton visible={isUploading} height={"100%"} width={"100%"}>
-                  <Image
-                    src={getFileUrlFromKey(response?.photo)}
-                    alt="Your uploaded image"
-                    radius={"10px"}
-                    fallbackSrc={fallbackImage}
-                    h={fallbackImage ? 148 : 200}
+        <div className="flex flex-col gap-2.5">
+          <p className="text-sm" style={{ color: "var(--tertiary-color)" }}>
+            {features?.[selectedLanguage]?.photoQn || translations("Upload Photo")}
+          </p>
+          <div className="flex items-center gap-4">
+            <div
+              className="relative rounded-[10px]"
+              style={{ border: "1px solid grey", width: 200, height: 150 }}
+            >
+              <FormModalLayout
+                title={translations("Camera")}
+                onClose={close}
+                opened={opened}
+                centered
+              >
+                <div>
+                  <WebcamCapture
+                    height={"100%"}
+                    width={"100%"}
+                    setCapturedImg={setCapturedImg}
+                    close={close}
                   />
-                </Skeleton>
-              </Box>
-              <Stack>
-                <FileButton
-                  onChange={onChangePicture}
-                  accept="image/png,image/jpeg"
-                  disabled={isPreview}
-                >
-                  {(props) => (
-                    <RateupButtonBlue {...props} title={translations("Browse from device")} />
-                  )}
-                </FileButton>
-                <RateupButtonBlue
-                  title={translations("Capture Photo")}
-                  onClick={() => open()}
-                  disabled={isPreview}
-                />
-              </Stack>
-            </Group>
-          </Stack>
-        </>
+                </div>
+              </FormModalLayout>
+              {isUploading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[10px] bg-white/60 backdrop-blur-sm">
+                  <Spinner />
+                </div>
+              )}
+              <img
+                src={getFileUrlFromKey(response?.photo)}
+                alt="Your uploaded image"
+                className="size-full rounded-[10px] object-cover"
+                style={{ height: fallbackImage ? 148 : 200 }}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = fallbackImage;
+                }}
+              />
+            </div>
+            <div className="flex flex-col gap-4">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg"
+                className="hidden"
+                disabled={isPreview}
+                onChange={(e) => {
+                  const selected = e.target.files?.[0];
+                  if (selected) onChangePicture(selected);
+                  e.target.value = "";
+                }}
+              />
+              <Button
+                type="button"
+                disabled={isPreview}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {translations("Browse from device")}
+              </Button>
+              <Button type="button" onClick={() => open()} disabled={isPreview}>
+                {translations("Capture Photo")}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 }

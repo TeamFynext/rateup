@@ -1,26 +1,27 @@
-import {
-  CheckIcon,
-  Divider,
-  isLightColor,
-  Radio,
-  ScrollArea,
-  ScrollAreaAutosize,
-  Stack,
-  Table,
-  Title,
-  UnstyledButton,
-  useMantineTheme,
-} from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import { isLightColor } from "@mantine/core";
 import { useContext, useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
+import { useMediaQuery } from "@/hooks/use-media-querry.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
+import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 interface MCQGridFormProps {
   features: any;
@@ -37,10 +38,13 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
   const tableRef = useRef(null);
-  const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor
-    ? mantineTheme.colors.primaryColor[5]
-    : "#1C518E";
+  const themePrimaryColor = useThemePrimaryColor();
+
+  const { control } = useForm<Record<string, string>>({
+    values: Object.fromEntries(
+      (questions ?? []).map((question) => [question, response?.[question]?.value ?? ""]),
+    ),
+  });
 
   const handleUpdateResponse = (value, question) => {
     const choice = choices?.find((ch) => ch.value === value);
@@ -68,78 +72,92 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
         choices={choices}
         questions={questions}
         handleUpdateResponse={handleUpdateResponse}
+        control={control}
+        themePrimaryColor={themePrimaryColor}
       />
     );
 
-  const TableComponent = () => {
-    const rows = questions?.map((question) => (
-      <Table.Tr key={question}>
-        <Table.Td style={{ position: "sticky", left: 0, top: 0, zIndex: 1 }} bg={`#E4E6ED`}>
-          {question}
-        </Table.Td>
-        {choices?.map((choice) => (
-          <Table.Td key={choice?.value}>
-            <Radio
-              value={choice?.value}
-              checked={response?.[question]?.value == choice?.value}
-              onChange={(e) => handleUpdateResponse(e.currentTarget.value, question)}
-              size="md"
-              icon={CheckIcon}
-              color={themePrimaryColor}
-              iconColor={isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF"}
-            />
-          </Table.Td>
+  const TableComponent = () => (
+    <Table className="border-separate border-spacing-0">
+      <TableHeader>
+        <TableRow>
+          <TableHead className="sticky top-0 left-0 z-[3] bg-[#CDCDCD] px-4 py-4" />
+          {choices?.map((choice) => (
+            <TableHead
+              key={choice?.value}
+              className="sticky top-0 z-[2] w-[100px] bg-[#CDCDCD] px-4 py-4"
+            >
+              {choice?.value}
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody className="[&_tr]:border-b-0">
+        {questions?.map((question) => (
+          <TableRow key={question}>
+            <TableCell className="sticky top-0 left-0 z-[1] bg-[#E4E6ED] px-4 py-4">
+              {question}
+            </TableCell>
+            {choices?.map((choice) => {
+              const isSelected = response?.[question]?.value == choice?.value;
+              return (
+                <TableCell key={choice?.value} className="px-4 py-4">
+                  <Controller
+                    name={question}
+                    control={control}
+                    render={({ field }) => (
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          handleUpdateResponse(value, question);
+                        }}
+                      >
+                        <RadioGroupItem
+                          value={choice?.value}
+                          style={
+                            isSelected
+                              ? {
+                                  backgroundColor: themePrimaryColor,
+                                  borderColor: themePrimaryColor,
+                                }
+                              : { borderColor: themePrimaryColor }
+                          }
+                        />
+                      </RadioGroup>
+                    )}
+                  />
+                </TableCell>
+              );
+            })}
+          </TableRow>
         ))}
-      </Table.Tr>
-    ));
-
-    const columns = choices?.map((choice) => (
-      <Table.Th
-        key={choice?.value}
-        w={100}
-        style={{ position: "sticky", top: 0, zIndex: 2 }}
-        bg={"#CDCDCD"}
-      >
-        {choice?.value}
-      </Table.Th>
-    ));
-
-    return (
-      <Table
-        horizontalSpacing={"md"}
-        verticalSpacing={"md"}
-        withRowBorders={false}
-        highlightOnHover
-        ref={tableRef}
-      >
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th
-              style={{ position: "sticky", top: 0, left: 0, zIndex: 3 }}
-              bg={"#CDCDCD"}
-            ></Table.Th>
-            {columns}
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>{rows}</Table.Tbody>
-      </Table>
-    );
-  };
+      </TableBody>
+    </Table>
+  );
 
   return (
-    <Stack justify="center" w={isPreview ? 700 : "100%"}>
+    <div
+      className="flex w-full flex-col justify-center"
+      style={{ width: isPreview ? 700 : "100%" }}
+    >
       {tableHeight > 450 || tableWidth > 900 ? (
         <ScrollArea
-          scrollbarSize={6}
-          h={tableHeight > 450 ? "65vh" : "100%"}
-          w={isPreview ? 700 : 900}
+          style={{
+            height: tableHeight > 450 ? "65vh" : "100%",
+            width: isPreview ? 700 : 900,
+          }}
         >
-          <TableComponent />
+          <div ref={tableRef}>
+            <TableComponent />
+          </div>
         </ScrollArea>
       ) : (
-        <TableComponent />
+        <div ref={tableRef}>
+          <TableComponent />
+        </div>
       )}
-    </Stack>
+    </div>
   );
 };
 
@@ -147,61 +165,70 @@ interface MCQGridMobileFormProps {
   choices: Choice[];
   questions: string[];
   handleUpdateResponse: (value, question) => void;
+  control: ReturnType<typeof useForm<Record<string, string>>>["control"];
+  themePrimaryColor: string;
 }
 const MCQGridMobileForm = ({
   choices,
   questions,
   handleUpdateResponse,
+  control,
+  themePrimaryColor,
 }: MCQGridMobileFormProps) => {
   const { response } = useContext(CurrentResponsesContext);
-  const theme = useMantineTheme();
-  const themePrimaryColor = theme.colors.primaryColor ? theme.colors.primaryColor[5] : "#1C518E";
   const textColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
   const surveyTheme = useSurveyThemeData()?.surveyTheme;
   const titleColor = surveyTheme?.title.styles?.color;
 
   return (
-    <ScrollAreaAutosize mah={"100%"} w={"100%"} scrollbarSize={4} offsetScrollbars p={"sm"}>
+    <ScrollArea className="max-h-full w-full p-3">
       {questions?.map((question, index) => (
-        <Stack key={index}>
-          <Title order={5} c={titleColor || "black"}>
+        <div className="flex flex-col gap-4" key={index}>
+          <h5 className="text-base font-medium" style={{ color: titleColor || "black" }}>
             {question}
-          </Title>
-          <Stack>
-            {choices?.map((choice) => {
-              const isSelected = response?.[question]?.value == choice?.value;
-              return (
-                <UnstyledButton
-                  key={choice?.value as string}
-                  onClick={() => handleUpdateResponse(choice?.value, question)}
-                  bg={isSelected ? themePrimaryColor : "transparent"}
-                  style={{
-                    borderRadius: "5px",
-                    border: `1px solid ${themePrimaryColor}`,
+          </h5>
+          <div className="flex flex-col gap-4">
+            <Controller
+              name={question}
+              control={control}
+              render={({ field }) => (
+                <RadioGroup
+                  value={field.value}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    handleUpdateResponse(value, question);
                   }}
-                  p={"xs"}
                 >
-                  <Radio
-                    value={choice?.value as string}
-                    checked={response?.[question]?.value == choice?.value}
-                    onChange={(e) => handleUpdateResponse(e.currentTarget.value, question)}
-                    size="md"
-                    icon={CheckIcon}
-                    label={choice?.value as string}
-                    c={isSelected ? textColor : themePrimaryColor}
-                    variant="outline"
-                    color={textColor}
-                  />
-                </UnstyledButton>
-              );
-            })}
-          </Stack>
+                  {choices?.map((choice) => {
+                    const isSelected = response?.[question]?.value == choice?.value;
+                    return (
+                      <label
+                        key={choice?.value as string}
+                        className="flex cursor-pointer items-center gap-3 rounded-[5px] p-2"
+                        style={{
+                          backgroundColor: isSelected ? themePrimaryColor : "transparent",
+                          border: `1px solid ${themePrimaryColor}`,
+                          color: isSelected ? textColor : themePrimaryColor,
+                        }}
+                      >
+                        <RadioGroupItem
+                          value={choice?.value as string}
+                          style={{ borderColor: textColor }}
+                        />
+                        {choice?.value as string}
+                      </label>
+                    );
+                  })}
+                </RadioGroup>
+              )}
+            />
+          </div>
           {index + 1 < questions?.length && (
-            <Divider my={"sm"} c={"var(--mantine-color-gray-6)"} size={"sm"} />
+            <Separator className="my-3 bg-[var(--mantine-color-gray-6)]" />
           )}
-        </Stack>
+        </div>
       ))}
-    </ScrollAreaAutosize>
+    </ScrollArea>
   );
 };
 

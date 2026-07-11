@@ -1,25 +1,29 @@
-import {
-  alpha,
-  Checkbox,
-  Image,
-  isLightColor,
-  Radio,
-  SimpleGrid,
-  Stack,
-  Text,
-  UnstyledButton,
-  useMantineTheme,
-} from "@mantine/core";
-import { useHover, useUncontrolled } from "@mantine/hooks";
-import cx from "clsx";
-import React, { useRef } from "react";
+import { useMantineTheme } from "@mantine/core";
+import React, { useState } from "react";
 
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 import { getImageValue } from "@/utils/file-upload/upload.ts";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 
-import classes from "./ImageCheckboxes.module.css";
+function isLightColor(hex: string): boolean {
+  const h = hex.replace("#", "");
+  if (h.length < 6) return false;
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5;
+}
+
+function hexAlpha(hex: string, opacity: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
 
 interface ImageCheckboxProps {
   checked?: boolean;
@@ -45,130 +49,136 @@ function ImageCheckbox({
   dataValue,
   ...others
 }: ImageCheckboxProps & Omit<React.ComponentPropsWithoutRef<"button">, keyof ImageCheckboxProps>) {
-  const [value, handleChange] = useUncontrolled({
-    value: checked,
-    defaultValue: defaultChecked,
-    finalValue: false,
-    onChange,
-  });
-  const radioButtonRef = useRef(null);
+  const [internalValue, setInternalValue] = useState(defaultChecked ?? false);
+  const value = checked !== undefined ? checked : internalValue;
+
+  const handleChange = (newValue: boolean) => {
+    if (checked === undefined) setInternalValue(newValue);
+    onChange?.(newValue);
+  };
+
+  const [hovered, setHovered] = useState(false);
   const titleTypeString = typeof title === "string";
-  const { hovered, ref } = useHover();
 
   const mantineTheme = useMantineTheme();
-
   const themePrimaryColor = mantineTheme.colors.primaryColor
     ? mantineTheme.colors.primaryColor[5]
     : "#1C518E";
 
   const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
+  const isSelected = titleTypeString ? selectedValue === title : selectedValue === title.value;
 
-  const optionStylesObj = {
+  const buttonStyle: React.CSSProperties = {
     border: `1px solid ${themePrimaryColor}`,
-    backgroundColor: !hovered ? "transparent" : `${alpha(themePrimaryColor, 0.15)}`,
-    color: themePrimaryColor,
+    backgroundColor: isSelected
+      ? themePrimaryColor
+      : hovered
+        ? hexAlpha(themePrimaryColor, 0.15)
+        : "transparent",
+    color: isSelected ? foregroundColor : themePrimaryColor,
+    boxShadow: hovered
+      ? "rgba(0,0,0,0.05) 1px 1px 1px, rgba(0,0,0,0.11) 1px 1px 10px"
+      : "rgba(0,0,0,0.05) 0px 1px 0px, rgba(0,0,0,0.11) 0px 0px 8px",
   };
 
-  const isSelected = titleTypeString ? selectedValue === title : selectedValue === title.value;
-  const selectedOptionStylesObj = isSelected
-    ? {
-        backgroundColor: themePrimaryColor,
-        color: foregroundColor,
-      }
-    : {};
-
   return (
-    <UnstyledButton
+    <button
       {...others}
-      ref={ref}
-      style={{
-        ...optionStylesObj,
-        ...selectedOptionStylesObj,
-      }}
-      onClick={() => {
-        handleChange(true);
-        radioButtonRef?.current?.click();
-      }}
-      data-checked={
-        (titleTypeString ? selectedValue === title : selectedValue === title?.value) || undefined
-      }
-      className={cx("p-4!", classes.button, titleTypeString && classes.buttonWithOutImage)}
+      type="button"
+      style={buttonStyle}
+      onClick={() => handleChange(true)}
+      data-checked={isSelected || undefined}
       data-value={dataValue}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={cn(
+        "flex w-full cursor-pointer rounded-sm p-4 transition-[background-color,border-color] duration-150",
+        titleTypeString ? "items-center" : "items-start",
+      )}
     >
-      <Checkbox
-        checked={selectedValue === title && value}
-        display={checkBoxEnable ? "block" : "none"}
-        onChange={() => {}}
-      />
+      {checkBoxEnable && (
+        <Checkbox
+          checked={selectedValue === title && value}
+          onCheckedChange={() => {}}
+          className="pointer-events-none shrink-0"
+          tabIndex={-1}
+        />
+      )}
       {!titleTypeString ? (
-        <Stack w={"100%"} gap={0}>
-          <Image
+        <div className="flex w-full flex-col">
+          <img
             src={getImageValue(title.image, fallbackEnable)}
-            style={{ aspectRatio: 4 / 3 }}
-            alt={"image of pcq"}
+            style={{ aspectRatio: "4 / 3" }}
+            alt="image of pcq"
+            className="w-full object-cover"
           />
-          <Text size="sm" lh={1.5} ml={checkBoxEnable ? "xs" : 0}>
+          <span className={cn("text-sm leading-[1.5]", checkBoxEnable && "ml-2")}>
             {title.value}
-          </Text>
-        </Stack>
+          </span>
+        </div>
       ) : (
-        <Text
-          size="sm"
-          lh={1.5}
-          ml={checkBoxEnable ? "xs" : 0}
-          w={"100%"}
-          ta={sizeTrim ? "center" : "left"}
+        <span
+          className={cn(
+            "w-full text-sm leading-[1.5]",
+            checkBoxEnable && "ml-2",
+            sizeTrim ? "text-center" : "text-left",
+          )}
         >
           {title}
-        </Text>
+        </span>
       )}
-
-      <Radio
-        ref={radioButtonRef}
-        value={titleTypeString ? title : title?.value}
-        checked={value}
-        onChange={() => {}}
-        tabIndex={-1}
-        name="test"
-        display={"none"}
-      />
-    </UnstyledButton>
+    </button>
   );
 }
 
 export function SingleSelectCard({
   data,
   selectedValue,
+  onChange,
   checkBoxEnable = false,
   includeImage = false,
   fallbackEnable = true,
   sizeTrim = false,
+}: {
+  data: Array<string | { value: string; image: string }>;
+  selectedValue: string;
+  onChange?: (value: string) => void;
+  checkBoxEnable?: boolean;
+  includeImage?: boolean;
+  fallbackEnable?: boolean;
+  sizeTrim?: boolean;
 }) {
-  const items = data?.map((item: string | { value: string; image: string }) => (
-    <ImageCheckbox
-      title={item}
-      key={typeof item === "string" ? item : item.value}
-      checkBoxEnable={checkBoxEnable}
-      selectedValue={selectedValue}
-      fallbackEnable={fallbackEnable}
-      sizeTrim={sizeTrim}
-      dataValue={typeof item === "string" ? item : item.value}
-    />
-  ));
-
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const selectedPreview = useSelectedPreview();
   const surveyThemeMobilePreview = isSurveyThemePreview && selectedPreview === "mobile";
 
-  const colsCount = includeImage
-    ? { base: 2, xs: 3, sm: 4, md: 5 }
-    : { base: 1, xs: 2, sm: 3, md: 4 };
-
-  const columnsCount = surveyThemeMobilePreview ? (includeImage ? 2 : 1) : colsCount;
+  const gridCols = surveyThemeMobilePreview
+    ? includeImage
+      ? "grid-cols-2"
+      : "grid-cols-1"
+    : includeImage
+      ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+      : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
 
   return (
-    <SimpleGrid cols={sizeTrim ? 1 : columnsCount} spacing={16}>
-      {items}
-    </SimpleGrid>
+    <div className={cn("grid gap-4", sizeTrim ? "grid-cols-1" : gridCols)}>
+      {data?.map((item: string | { value: string; image: string }) => {
+        const itemValue = typeof item === "string" ? item : item.value;
+        return (
+          <ImageCheckbox
+            title={item}
+            key={itemValue}
+            onChange={(checked) => {
+              if (checked) onChange?.(itemValue);
+            }}
+            checkBoxEnable={checkBoxEnable}
+            selectedValue={selectedValue}
+            fallbackEnable={fallbackEnable}
+            sizeTrim={sizeTrim}
+            dataValue={itemValue}
+          />
+        );
+      })}
+    </div>
   );
 }

@@ -1,8 +1,7 @@
 import { lazy, Suspense } from "react";
-import { useTranslation } from "react-i18next";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
 import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
@@ -27,7 +26,6 @@ function TabPanelsComp({
   setActiveTab,
   setFunToRunBeforeSurveyIdPageHeaderTabsChange,
 }) {
-  const { t: translations } = useTranslation();
   const { data: subscription } = useSubscription();
 
   return (

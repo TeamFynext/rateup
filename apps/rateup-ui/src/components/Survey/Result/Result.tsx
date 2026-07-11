@@ -7,14 +7,15 @@ import { toast } from "sonner";
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { QuestionType2 } from "@/types/enums.ts";
 import { decryptPrivateKey } from "@/utils/encryption/index.ts";
 import { pushToSessionStorage } from "@/utils/essential/index.ts";
 
-import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
-import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput.tsx";
 import SimpleModalLayout from "../../Modal/SimpleModalLayout.tsx";
 import Responses from "../Response/Responses.tsx";
 import WaResponses from "../Response/WaResponses.tsx";
@@ -128,18 +129,20 @@ function EncryptionPasswordModal({
         <p className="text-sm text-gray-600 dark:text-gray-400">
           {translations("Enter the password to view the survey data")}
         </p>
-        <ContainedPasswordInput
-          label={translations("Password")}
-          value={encryptionpassword}
-          onChange={(e) => setEncryptionPassword(e.target.value)}
-        />
-        <div className="flex justify-center gap-10">
-          <RateupButtonSecondary
-            title={translations("Go back")}
-            leftIcon={<IconArrowLeft />}
-            onClick={handleGoback}
+        <Field>
+          <FieldLabel>{translations("Password")}</FieldLabel>
+          <Input
+            type="password"
+            value={encryptionpassword}
+            onChange={(e) => setEncryptionPassword(e.target.value)}
           />
-          <RateupButtonBlue title={translations("Submit")} onClick={onSubmitPassword} />
+        </Field>
+        <div className="flex justify-center gap-10">
+          <Button variant="outline" onClick={handleGoback}>
+            <IconArrowLeft data-icon="inline-start" />
+            {translations("Go back")}
+          </Button>
+          <Button onClick={onSubmitPassword}>{translations("Submit")}</Button>
         </div>
       </div>
     </SimpleModalLayout>

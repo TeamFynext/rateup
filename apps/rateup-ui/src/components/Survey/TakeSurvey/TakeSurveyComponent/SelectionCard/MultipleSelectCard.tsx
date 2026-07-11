@@ -1,120 +1,95 @@
-import { Box, Checkbox, isLightColor, SimpleGrid, Text, useMantineTheme } from "@mantine/core";
-import { useHover, useUncontrolled } from "@mantine/hooks";
-import React, { useRef } from "react";
+import { isLightColor } from "@mantine/core";
+import { useState } from "react";
+
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
-
-import classes from "./ImageCheckboxes.module.css";
+import { useThemePrimaryColor } from "../QuestionForms/useThemePrimaryColor.ts";
 
 interface ImageCheckboxProps {
-  checked?: boolean;
-  defaultChecked?: boolean;
-  onChange?: (checked: boolean) => void;
+  checked: boolean;
+  onClick: () => void;
   title: string;
   checkBoxEnable: boolean;
-  selectedValue: any;
 }
 
-function ImageCheckbox({
-  checked,
-  defaultChecked,
-  onChange,
-  title,
-  checkBoxEnable,
-  selectedValue,
-}: ImageCheckboxProps & Omit<React.ComponentPropsWithoutRef<"button">, keyof ImageCheckboxProps>) {
-  const [value, handleChange] = useUncontrolled({
-    value: checked,
-    defaultValue: defaultChecked,
-    finalValue: false,
-    onChange,
-  });
-  const checkBoxRef = useRef(null);
-  const theme = useMantineTheme();
-  const { hovered, ref } = useHover();
-
-  const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor
-    ? mantineTheme.colors.primaryColor[5]
-    : "#1C518E";
+function ImageCheckbox({ checked, onClick, title, checkBoxEnable }: ImageCheckboxProps) {
+  const [hovered, setHovered] = useState(false);
+  const themePrimaryColor = useThemePrimaryColor();
 
   const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
-  const optionStylesObj = {
-    height: "auto",
-    border: `1px solid ${themePrimaryColor}`,
-    backgroundColor: !hovered
-      ? "transparent"
-      : `var(--mantine-color-${theme.primaryColor}-outline-hover)`,
-    color: themePrimaryColor,
-  };
-
-  const isSelected = selectedValue.includes(title);
-  const selectedOptionStylesObj = isSelected
-    ? {
-        backgroundColor: themePrimaryColor,
-        color: foregroundColor,
-      }
-    : {};
+  const style: React.CSSProperties = checked
+    ? { backgroundColor: themePrimaryColor, color: foregroundColor }
+    : {
+        backgroundColor: hovered ? `${themePrimaryColor}26` : "white",
+        color: themePrimaryColor,
+      };
 
   return (
-    <Box
-      ref={ref}
-      style={{
-        ...optionStylesObj,
-        ...selectedOptionStylesObj,
-        display: "flex",
-        gap: "0.625rem",
-        alignItems: "center",
-        userSelect: "none",
-      }}
-      onClick={() => {
-        handleChange(!value);
-        checkBoxRef?.current?.click();
-      }}
-      data-checked={selectedValue.includes(title) || undefined}
-      className={classes.button}
+    <button
+      type="button"
+      style={{ border: `1px solid ${themePrimaryColor}`, ...style }}
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      data-checked={checked || undefined}
+      className={cn(
+        "flex w-full cursor-pointer items-center gap-2.5 rounded-sm p-3 shadow-[0px_1px_0px_rgba(0,0,0,0.05),0px_0px_8px_rgba(0,0,0,0.11)] transition-[background-color,border-color] duration-150 select-none hover:shadow-[1px_1px_1px_rgba(0,0,0,0.05),1px_1px_10px_rgba(0,0,0,0.11)]",
+      )}
     >
-      <Checkbox
-        ref={checkBoxRef}
-        value={title}
-        checked={value}
-        onChange={() => {}}
-        tabIndex={-1}
-        styles={{ input: { cursor: "pointer" } }}
-        display={checkBoxEnable ? "block" : "none"}
-        color={themePrimaryColor}
-        iconColor={foregroundColor}
-        size="1rem"
-      />
-      <Text size="sm" lh={1.5}>
-        {title}
-      </Text>
-    </Box>
+      {checkBoxEnable && (
+        <Checkbox
+          checked={checked}
+          onCheckedChange={() => {}}
+          className="pointer-events-none shrink-0"
+          tabIndex={-1}
+        />
+      )}
+      <span className="text-sm leading-[1.5]">{title}</span>
+    </button>
   );
 }
 
-export function MultipleSelectCard({ data, selectedValue, checkBoxEnable = false }) {
-  const items = data.map((item: string, index: number) => (
-    <ImageCheckbox
-      title={item}
-      key={item + index}
-      checkBoxEnable={checkBoxEnable}
-      selectedValue={selectedValue}
-    />
-  ));
-
-  const colsCount = { base: 1, xs: 2, sm: 3, md: 4 };
+export function MultipleSelectCard({
+  data,
+  selectedValue,
+  onChange,
+  checkBoxEnable = false,
+}: {
+  data: string[];
+  selectedValue: string[];
+  onChange: (values: string[]) => void;
+  checkBoxEnable?: boolean;
+}) {
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const selectedPreview = useSelectedPreview();
   const surveyThemeMobilePreview = isSurveyThemePreview && selectedPreview === "mobile";
 
-  const columnsCount = surveyThemeMobilePreview ? 1 : colsCount;
+  const gridCols = surveyThemeMobilePreview
+    ? "grid-cols-1"
+    : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
+
+  const handleToggle = (value: string) => {
+    const next = selectedValue.includes(value)
+      ? selectedValue.filter((v) => v !== value)
+      : [...selectedValue, value];
+    onChange(next);
+  };
 
   return (
-    <SimpleGrid cols={columnsCount} spacing={16}>
-      {items}
-    </SimpleGrid>
+    <div className={cn("grid gap-4", gridCols)}>
+      {data.map((item: string, index: number) => (
+        <ImageCheckbox
+          title={item}
+          key={item + index}
+          checkBoxEnable={checkBoxEnable}
+          checked={selectedValue.includes(item)}
+          onClick={() => handleToggle(item)}
+        />
+      ))}
+    </div>
   );
 }

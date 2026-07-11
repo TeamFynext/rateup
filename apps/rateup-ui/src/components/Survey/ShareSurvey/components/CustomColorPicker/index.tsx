@@ -1,15 +1,19 @@
-import { Button, ColorPicker, Flex, Popover } from "@mantine/core";
-import { useEyeDropper } from "@mantine/hooks";
 import { IconColorPicker } from "@tabler/icons-react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import styles from "./CustomColorPicker.module.css";
-import buttonStyles from "./MantineButtonStyles.module.css";
+import { Button } from "@/components/ui/button.tsx";
+import { cn } from "@/lib/utils.ts";
 
 enum Size {
   md = "md",
   lg = "lg",
+}
+
+function useEyeDropper() {
+  const supported = typeof window !== "undefined" && "EyeDropper" in window;
+  const open = () => new (window as any).EyeDropper().open();
+  return { supported, open };
 }
 
 interface CustomColorPickerProps {
@@ -29,11 +33,13 @@ function CustomColorPicker({
   elementToBeDisplayed,
   withoutEyedropper,
 }: CustomColorPickerProps) {
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const { supported: isEyeDroppersupported, open } = useEyeDropper();
+  const colorInputRef = useRef<HTMLInputElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+
   const handleBlur = useCallback(
     (_e) => {
-      setIsColorPickerOpen(false);
+      setIsFocused(false);
       if (!value?.length) {
         handleInputChange("#000000");
       }
@@ -42,7 +48,7 @@ function CustomColorPicker({
   );
 
   const handleFocus = useCallback(() => {
-    setIsColorPickerOpen(true);
+    setIsFocused(true);
   }, []);
 
   const handleInputChange = useCallback(
@@ -66,76 +72,71 @@ function CustomColorPicker({
     } catch {}
   };
   const { t: translations } = useTranslation();
+
+  const colorInput = (
+    <input
+      ref={colorInputRef}
+      type="color"
+      value={!value?.length ? "#000000" : value}
+      onChange={handleInputChange}
+      className={cn(
+        "shrink-0 cursor-pointer rounded-[0.875rem] border-2 border-[var(--mantine-color-gray-6)] p-[3px]",
+        size === Size.md ? "h-9 w-10" : "h-[50px] w-[60px]",
+        elementToBeDisplayed && "sr-only",
+      )}
+    />
+  );
+
+  if (elementToBeDisplayed) {
+    return (
+      <div
+        className="custom-element-from-props cursor-pointer"
+        onClick={() => colorInputRef.current?.click()}
+      >
+        {elementToBeDisplayed}
+        {colorInput}
+      </div>
+    );
+  }
+
   return (
-    <Popover opened={isColorPickerOpen} onChange={setIsColorPickerOpen}>
-      <Popover.Target>
-        {elementToBeDisplayed ? (
-          <Flex
-            className={"custom-element-from-props"}
-            onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
-          >
-            {elementToBeDisplayed}
-          </Flex>
-        ) : (
-          <Flex
-            className={`${styles["custom-color-picker-container"]} custom-color-picker-container ${size === Size.md ? styles["size-md"] : ""} ${className}`}
-          >
-            <Button
-              className={`${styles["color-indicator"]} color-indicator`}
-              style={{ backgroundColor: value }}
-              onBlur={handleBlur}
-              onFocus={handleFocus}
-              color={`${value}`}
-            />
+    <div
+      className={cn(
+        "custom-color-picker-container flex gap-2.5",
+        size === Size.md && "w-full",
+        className,
+      )}
+    >
+      {colorInput}
 
-            <input
-              type="text"
-              className={`${styles["text-input-for-picking-color"]} text-input-for-picking-color`}
-              size={7}
-              maxLength={7}
-              value={!value?.length ? "#000000" : value}
-              onBlur={handleBlur}
-              onFocus={handleFocus}
-              onChange={handleInputChange}
-            />
-
-            {!isEyeDroppersupported || withoutEyedropper ? null : (
-              <Button
-                className={`${styles["eye-dropper-btn"]} eye-dropper-btn`}
-                leftSection={<IconColorPicker />}
-                onClick={pickEyeDropperColor}
-                classNames={buttonStyles}
-              >
-                {translations("Eye Dropper")}
-              </Button>
-            )}
-          </Flex>
+      <input
+        type="text"
+        className={cn(
+          "flex-none rounded-2xl border-2 border-[var(--mantine-color-gray-6)] text-center uppercase outline-none",
+          size === Size.md ? "h-9 flex-1 p-2.5 text-sm" : "px-3.5 py-2.5 text-base",
+          isFocused && "border-[var(--tertiary-color)]",
         )}
-      </Popover.Target>
-      <Popover.Dropdown>
-        <ColorPicker
-          format="hex"
-          value={!value?.length ? "#000000" : value}
-          onChange={handleInputChange}
-          swatches={[
-            "#25262b",
-            "#868e96",
-            "#fa5252",
-            "#e64980",
-            "#be4bdb",
-            "#7950f2",
-            "#4c6ef5",
-            "#228be6",
-            "#15aabf",
-            "#12b886",
-            "#40c057",
-            "#82c91e",
-            "#fab005",
-            "#fd7e14",
-          ]}
-        />
-      </Popover.Dropdown>
-    </Popover>
+        size={7}
+        maxLength={7}
+        value={!value?.length ? "#000000" : value}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        onChange={handleInputChange}
+      />
+
+      {!isEyeDroppersupported || withoutEyedropper ? null : (
+        <Button
+          className={cn(
+            "h-auto rounded-2xl",
+            size === Size.md && "h-9 p-2.5 text-xs [&_svg]:size-[1.125rem]",
+          )}
+          onClick={pickEyeDropperColor}
+        >
+          <IconColorPicker data-icon="inline-start" />
+          {translations("Eye Dropper")}
+        </Button>
+      )}
+    </div>
   );
 }
 

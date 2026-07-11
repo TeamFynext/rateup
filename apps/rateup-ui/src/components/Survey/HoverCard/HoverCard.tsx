@@ -1,94 +1,68 @@
-import { Badge, Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
+import { Badge } from "@/components/ui/badge.tsx";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { QuestionType } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";
 
-export const HoverCardComponent = ({
-  content,
-  fw = 300,
-  fz = "md",
-  c = "",
-  lineClamp = 1,
-  questionType = null,
-}) => {
+export const HoverCardComponent = ({ content, questionType = null }) => {
   const { t: translations } = useTranslation();
+
   if (questionType && !Object.values(QuestionType).includes(questionType))
-    return (
-      <Badge variant={"light"} color="red">
-        {translations("Not Available")}
-      </Badge>
-    );
+    return <Badge variant="destructive">{translations("Not Available")}</Badge>;
+
+  const isMultiType = [QuestionType.MultiTextInput, QuestionType.MCQGrid].includes(questionType);
+  const isObjectContent = typeof content === "object";
+
   return (
-    <HoverCard
-      width={"fit-content"}
-      shadow="md"
-      withArrow
-      styles={{ dropdown: { maxWidth: 400 } }}
-      position="bottom-start"
-    >
-      {[QuestionType.MultiTextInput, QuestionType.MCQGrid].includes(questionType) &&
-      content?.length > 0 ? (
-        <HoverCard.Target>
-          <Text c={c} miw={200} maw={200} fw={fw} fz={fz} lineClamp={lineClamp}>
-            {content[0]}
-          </Text>
-        </HoverCard.Target>
-      ) : (
-        <HoverCard.Target>
-          {typeof content === "object" ? (
-            <Image
-              src={getFileUrlFromKey(content?.value?.image)}
-              w={30}
-              alt={translations("answer image of question")}
-            />
-          ) : (
-            <Text c={c} miw={200} maw={200} fw={fw} fz={fz} lineClamp={lineClamp}>
-              {getContent(content)}
-            </Text>
-          )}
-        </HoverCard.Target>
-      )}
-      <HoverCard.Dropdown>
-        <ScrollAreaAutosize>
-          <Box
-            c={c}
-            size="sm"
-            style={{
-              wordBreak: "break-word",
-            }}
-            mah={250}
-          >
-            {[QuestionType.MultiTextInput, QuestionType.MCQGrid].includes(questionType) ? (
+    <HoverCard>
+      <HoverCardTrigger className="cursor-default">
+        {isMultiType && content?.length > 0 ? (
+          <p className="line-clamp-1 min-w-[200px] max-w-[200px] font-light">{content[0]}</p>
+        ) : isObjectContent ? (
+          <img
+            src={getFileUrlFromKey(content?.value?.image)}
+            className="w-[30px]"
+            alt={translations("answer image of question")}
+          />
+        ) : (
+          <p className="line-clamp-1 min-w-[200px] max-w-[200px] font-light">
+            {getContent(content)}
+          </p>
+        )}
+      </HoverCardTrigger>
+
+      <HoverCardContent className="w-fit max-w-[400px] p-3" side="bottom" align="start">
+        <ScrollArea className="max-h-[250px]">
+          <div className="break-words font-light">
+            {isMultiType ? (
               content?.length > 0 &&
-              content?.map((c) => (
-                <Text c={c} miw={200} maw={200} fw={fw} fz={fz} key={c}>
-                  {c}
-                </Text>
+              content?.map((item: string) => (
+                <p key={item} className="min-w-[200px] max-w-[200px]">
+                  {item}
+                </p>
               ))
-            ) : typeof content === "object" ? (
+            ) : isObjectContent ? (
               <>
-                <Image
+                <img
                   src={getFileUrlFromKey(content?.value?.image)}
-                  w={200}
+                  className="w-[200px]"
                   alt={translations("answer image of question")}
                 />
-                <Text c={c} truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
-                  {content?.value?.value}
-                </Text>
+                <p className="max-w-[200px] truncate">{content?.value?.value}</p>
               </>
             ) : (
-              <Text c={c} miw={200} fw={fw} fz={fz}>
-                {getContent(content)}
-              </Text>
+              <p className="min-w-[200px]">{getContent(content)}</p>
             )}
-          </Box>
-        </ScrollAreaAutosize>
-      </HoverCard.Dropdown>
+          </div>
+        </ScrollArea>
+      </HoverCardContent>
     </HoverCard>
   );
 };
+
 const getContent = (title: string | boolean) => {
   if (typeof title === "boolean") return title?.toString();
   else if (isHtml(title)) return extractText(title);

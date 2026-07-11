@@ -1,9 +1,16 @@
-import { useIsFirstRender } from "@mantine/hooks";
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { useImmerReducer } from "use-immer";
 
 import { ThemeTabEnum } from "./SurveyTheme.enums";
 import surveyThemeReducer from "./surveyThemeReducer.ts";
+
+function useIsFirstRender(): boolean {
+  const renderRef = useRef(true);
+  useEffect(() => {
+    renderRef.current = false;
+  }, []);
+  return renderRef.current;
+}
 
 const SurveyThemeContext = createContext(null);
 const SelectedPageTabContext = createContext(null);

@@ -1,18 +1,22 @@
-import { Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
+import { Badge } from "@/components/ui/badge.tsx";
 import { getTypeLabel } from "@/utils/enums/index.ts";
 
 function QuestionDetailedViewBadge({ question }) {
   const { t: translations } = useTranslation();
-  return (
+  const label = getTypeLabel(question.type);
+
+  return label ? (
     <Badge
-      variant={getTypeLabel(question.type) ? "outline" : "light"}
-      size="lg"
-      style={{ overflow: "visible" }}
-      color={getTypeLabel(question.type) ? "var(--tertiary-color)" : "red"}
+      variant="outline"
+      className="overflow-visible border-[var(--tertiary-color)] text-[var(--tertiary-color)]"
     >
-      {getTypeLabel(question.type) ? getTypeLabel(question.type) : translations("Not Available")}
+      {label}
+    </Badge>
+  ) : (
+    <Badge variant="destructive" className="overflow-visible">
+      {translations("Not Available")}
     </Badge>
   );
 }

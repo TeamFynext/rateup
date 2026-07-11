@@ -1,11 +1,12 @@
-import { Box, Button, Image, Modal, Skeleton, Stack, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateReviewLinkStatsOnSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useDeleteReviewSuggestionMutation } from "@/backend/team/reviewSuggestion/reviewSuggestion.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import type { ReviewSuggestion } from "@/types/global";
 import { shuffleArray } from "@/utils/index.ts";
 
@@ -15,8 +16,6 @@ import { reviewPageLogosObj } from "../../Question/QuestionReviewPageEditor/cons
 import { ReviewPagePlatform } from "../../Question/QuestionReviewPageEditor/index.tsx";
 import WandIcon from "./WandIcon.tsx";
 
-import styles from "./GoogleReview.module.css";
-
 function GoogleReview({
   reviewSuggestions = [],
   orgLogoUrl = "",
@@ -25,10 +24,9 @@ function GoogleReview({
   survey,
   reviewPageLinks = null,
 }) {
-  const [
-    isSuggestionCopiedModalOpen,
-    { open: openSuggestionCopiedModal, close: closeSuggestionCopiedModal },
-  ] = useDisclosure(false);
+  const [isSuggestionCopiedModalOpen, setIsSuggestionCopiedModalOpen] = useState(false);
+  const openSuggestionCopiedModal = () => setIsSuggestionCopiedModalOpen(true);
+  const closeSuggestionCopiedModal = () => setIsSuggestionCopiedModalOpen(false);
 
   const [reviewIndex, setReviewIndex] = useState<number>(null);
   const [shuffledArray, setShuffledArray] = useState<Array<ReviewSuggestion>>(null);
@@ -99,116 +97,114 @@ function GoogleReview({
   const reviewLink = link?.trim();
 
   return (
-    <Stack mih={isSurveyPreview ? "100%" : "100dvh"}>
-      <Box className={styles["google-review-div"]}>
+    <div className="flex flex-col" style={{ minHeight: isSurveyPreview ? "100%" : "100dvh" }}>
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 overflow-auto p-4">
         {orgLogoUrl && (
-          <Box className={styles["org-logo-container"]}>
-            <Image src={orgLogoUrl} alt="Organization Logo" />
-          </Box>
+          <div>
+            <img src={orgLogoUrl} alt="Organization Logo" className="h-[60px] w-[60px]" />
+          </div>
         )}
-        <Box className={styles["happy-text-div"]}>
-          <h2
-            style={{
-              fontWeight: 500,
-            }}
-          >
-            Make us more happy!
-          </h2>
-          <Box className={styles["leave-review-paras-container"]}>
-            <p>{`Leave us a review on ${reviewPagePlatform}`}</p>
-          </Box>
-        </Box>
+        <div>
+          <h2 className="m-0 mb-4 text-center text-2xl font-medium">Make us more happy!</h2>
+          <p className="m-0 text-center">{`Leave us a review on ${reviewPagePlatform}`}</p>
+        </div>
         {reviewSuggestions?.length >= 3 && (
-          <Box className={styles["review-suggestions-container"]}>
-            <p>{translations("Need Inspirations?")}</p>
-            <Box className={styles["suggestions-div"]}>
+          <div className="w-full max-w-[320px]">
+            <p className="mb-2.5 text-center font-bold text-[var(--grey-color-2)]">
+              {translations("Need Inspirations?")}
+            </p>
+            <div className="flex w-full flex-col items-center justify-center gap-4 rounded-[0.625rem] border border-[var(--mantine-color-gray-5)] p-4">
               <Button
-                className={styles["generate-suggestions-btn"]}
-                leftSection={<WandIcon />}
+                variant="outline"
+                className="rounded-[1.25rem] border-[var(--tertiary-color)] bg-[whitesmoke] text-[var(--tertiary-color)] hover:bg-[whitesmoke]"
                 onClick={handleRegenerate}
               >
+                <WandIcon data-icon="inline-start" />
                 {translations("Regenerate Suggestions")}
               </Button>
               {fakeLoading || !shuffledArray ? (
-                <Box className={styles["review-suggestion-skeleton-container"]}>
-                  <Box className={styles["skeleton-divs-conainer"]}>
-                    <Skeleton height={10} radius="xl" />
-                    <Skeleton height={10} mt={6} radius="xl" />
-                    <Skeleton height={10} mt={6} radius="xl" />
-                    <Skeleton height={10} mt={6} radius="xl" />
-                    <Skeleton height={10} mt={6} radius="xl" />
-                    <Skeleton height={10} mt={6} radius="xl" />
-                    <Skeleton height={10} mt={6} radius="xl" />
-                    <Skeleton height={10} mt={6} radius="xl" />
-                    <Skeleton height={10} mt={6} width="70%" radius="xl" />
-                  </Box>
+                <div className="flex w-full flex-col items-center justify-center gap-4">
+                  <div className="flex h-[150px] w-full flex-col justify-center gap-1.5 px-2.5">
+                    <Skeleton className="h-2.5 rounded-full" />
+                    <Skeleton className="h-2.5 rounded-full" />
+                    <Skeleton className="h-2.5 rounded-full" />
+                    <Skeleton className="h-2.5 rounded-full" />
+                    <Skeleton className="h-2.5 rounded-full" />
+                    <Skeleton className="h-2.5 rounded-full" />
+                    <Skeleton className="h-2.5 rounded-full" />
+                    <Skeleton className="h-2.5 w-[70%] rounded-full" />
+                  </div>
 
-                  <Button className={styles["copy-btn"]} disabled>
+                  <Button className="rounded-[1.25rem] px-6 py-2.5" disabled>
                     {translations("Copy")}
                   </Button>
-                </Box>
+                </div>
               ) : (
-                <Box className={styles["suggestion-content"]}>
-                  <Text
-                    h="150px"
-                    style={{
-                      overflow: "auto",
-                      wordBreak: "break-word",
-                    }}
-                    className={styles["suggestion-p"]}
-                  >
+                <div className="flex flex-col items-center gap-4">
+                  <p className="h-[150px] w-full overflow-auto px-2.5 text-center break-words">
                     {shuffledArray?.[reviewIndex]?.review}
-                  </Text>
-                  <Button className={styles["copy-btn"]} onClick={handleCopyBtnClick}>
+                  </p>
+                  <Button className="rounded-[1.25rem] px-6 py-2.5" onClick={handleCopyBtnClick}>
                     {translations("Copy")}
                   </Button>
-                </Box>
+                </div>
               )}
-            </Box>
-          </Box>
+            </div>
+          </div>
         )}
-        <Box className={styles["google-review-link-container"]}>
+        <div>
           {reviewLink ? (
-            <Link to={reviewLink} target="_blank" onClick={handleGoToReviewPage}>
+            <Link
+              to={reviewLink}
+              target="_blank"
+              onClick={handleGoToReviewPage}
+              className="flex w-[320px] max-w-[320px] items-center justify-center gap-2.5 rounded-[0.625rem] bg-[#0a000d] px-4 py-2.5 text-base text-white no-underline"
+            >
               <span>{translations("Go to Review Page")}</span>
-              <span className={styles["google-review-link-img-span"]}>
+              <span className="flex items-center">
                 {reviewPageLogosObj[reviewPagePlatform] || null}
               </span>
             </Link>
           ) : (
             <span>{translations("Review link unavailable")}</span>
           )}
-        </Box>
+        </div>
 
-        <Modal
-          className={styles["suggestion-copied-modal"]}
-          opened={isSuggestionCopiedModalOpen}
-          onClose={closeSuggestionCopiedModal}
-          centered
-          withCloseButton={false}
-          title={false}
+        <Dialog
+          open={isSuggestionCopiedModalOpen}
+          onOpenChange={(open) => {
+            if (!open) closeSuggestionCopiedModal();
+          }}
         >
-          <p className={styles["suggestion-copied-text-p"]}>
-            {translations("Your Suggestion is copied!")}
-          </p>
-          <Box className={styles["google-review-link-container"]}>
-            {reviewLink ? (
-              <Link to={reviewLink} target="_blank" onClick={handleGoToReviewPage}>
-                <span>{translations("Go to Review Page")}</span>
-                <span>
-                  <GoogleIcon />
-                </span>
-              </Link>
-            ) : (
-              <span>{translations("Review link unavailable")}</span>
-            )}
-          </Box>
-        </Modal>
-      </Box>
-      <Box>
-        <RateupRedirectCard className={styles["powered-by-container"]} />
-      </Box>
-    </Stack>
+          <DialogContent showCloseButton={false} className="gap-0 bg-[brown] px-6 py-10">
+            <DialogTitle className="sr-only">
+              {translations("Your Suggestion is copied!")}
+            </DialogTitle>
+            <p className="mb-8 text-center">{translations("Your Suggestion is copied!")}</p>
+            <div className="flex justify-center">
+              {reviewLink ? (
+                <Link
+                  to={reviewLink}
+                  target="_blank"
+                  onClick={handleGoToReviewPage}
+                  className="flex w-[320px] max-w-[320px] items-center justify-center gap-2.5 rounded-[0.625rem] bg-[#0a000d] px-4 py-2.5 text-base text-white no-underline"
+                >
+                  <span>{translations("Go to Review Page")}</span>
+                  <span>
+                    <GoogleIcon />
+                  </span>
+                </Link>
+              ) : (
+                <span>{translations("Review link unavailable")}</span>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+      <div>
+        <RateupRedirectCard className="!m-0" />
+      </div>
+    </div>
   );
 }
 

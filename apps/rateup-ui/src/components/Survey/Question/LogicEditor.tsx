@@ -1,17 +1,3 @@
-import {
-  ActionIcon,
-  Button,
-  Center,
-  Flex,
-  Group,
-  MultiSelect,
-  ScrollAreaAutosize,
-  Select,
-  Stack,
-  Text,
-  useMantineTheme,
-} from "@mantine/core";
-import { useListState } from "@mantine/hooks";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
@@ -23,6 +9,18 @@ import {
   useQuestions,
   useQuestionUpdateMutation,
 } from "@/backend/surveys/questions/questions.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { LogicAction, LogicCondition, QuestionType as Q } from "@/types/enums.ts";
@@ -30,40 +28,35 @@ import { logicSupportedTypes } from "@/utils/data.ts";
 import { getContent } from "@/utils/index.ts";
 import { getConditions, getResponses } from "@/utils/survey/logic/logic.utils";
 
-import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
+const normalizeOptions = (responses: Array<string | { label: string; value: string }>) =>
+  responses.map((r) => (typeof r === "string" ? { label: r, value: r } : r));
+
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 
 interface LogicEditorProps {
   selectedQ: Question;
   setActiveTab: React.Dispatch<React.SetStateAction<QuestionTabsEnum>>;
 }
+
 const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
-  const params = useParams({
-    strict: false,
-  });
+  const params = useParams({ strict: false });
   const surveyId = params.surveyId as string;
   const { isLoading, isError, data: questions } = useQuestions(surveyId);
-  const questionUpdateMutation = useQuestionUpdateMutation({
-    surveyId,
-  });
-  const [currentLogicJumps, handlers] = useListState<LogicJump>([]);
+  const questionUpdateMutation = useQuestionUpdateMutation({ surveyId });
+  const [currentLogicJumps, setCurrentLogicJumps] = useState<LogicJump[]>([]);
   const { t: translations } = useTranslation();
+
   useEffect(() => {
-    if (selectedQ && selectedQ.logic) {
-      handlers.setState(selectedQ.logic);
-    } else {
-      handlers.setState([]);
-    }
+    setCurrentLogicJumps(selectedQ?.logic ?? []);
   }, [selectedQ]);
 
   if (!selectedQ || isLoading || isError) return <></>;
 
   const handleAddNewJump = () => {
-    handlers.append({
-      condition: LogicCondition.Submitted,
-      action: LogicAction.NextQ,
-      response: null,
-    });
+    setCurrentLogicJumps((prev) => [
+      ...prev,
+      { condition: LogicCondition.Submitted, action: LogicAction.NextQ, response: null },
+    ]);
   };
 
   const handleSave = () => {
@@ -71,72 +64,56 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
       id: "load-data",
     });
     questionUpdateMutation
-      .mutateAsync({
-        qId: selectedQ.id,
-        data: { logic: currentLogicJumps },
-      })
-      .then(() => {
-        setActiveTab(QuestionTabsEnum.Edit);
-      });
+      .mutateAsync({ qId: selectedQ.id, data: { logic: currentLogicJumps } })
+      .then(() => setActiveTab(QuestionTabsEnum.Edit));
   };
 
   if (!logicSupportedTypes.includes(selectedQ.type as QuestionType)) {
     return (
-      <Center style={{ height: "100%" }}>
-        <Stack>
+      <div className="flex h-full items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
           <p>{translations("Logic is not supported for this question type")}</p>
-          <RateupButtonSecondary
-            title={translations("Go Back")}
-            size="sm"
-            onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
-          />
-        </Stack>
-      </Center>
+          <Button variant="outline" onClick={() => setActiveTab(QuestionTabsEnum.Edit)}>
+            {translations("Go Back")}
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Stack justify="space-between" style={{ height: "100%" }}>
-      <ScrollAreaAutosize mah={"80dvh"}>
-        <Stack gap={"xs"} mr={"sm"}>
+    <div className="flex h-full flex-col">
+      <ScrollArea className="flex-1">
+        <div className="flex flex-col gap-3 p-4">
           {currentLogicJumps.map((currentLogic, index) => (
             <ConditionBlock
               key={index}
               selectedQ={selectedQ}
               questions={questions}
               currentLogicJump={currentLogic}
-              setCurrentLogicJump={(newLogicJump) => handlers.setItem(index, newLogicJump)}
-              handleDelete={() => handlers.remove(index)}
+              setCurrentLogicJump={(newLogicJump) =>
+                setCurrentLogicJumps((prev) => prev.map((v, i) => (i === index ? newLogicJump : v)))
+              }
+              handleDelete={() =>
+                setCurrentLogicJumps((prev) => prev.filter((_, i) => i !== index))
+              }
             />
           ))}
-          <Button
-            variant="outline"
-            leftSection={<IconPlus />}
-            maw={200}
-            color="var(--tertiary-color)"
-            onClick={handleAddNewJump}
-            mb={4}
-          >
+          <Button variant="outline" size="sm" className="w-40  " onClick={handleAddNewJump}>
+            <IconPlus />
             {translations("Add Logic Jump")}
           </Button>
-        </Stack>
-      </ScrollAreaAutosize>
-      <Group justify="space-between">
-        <RateupButtonSecondary
-          title={translations("Cancel")}
-          size="md"
-          variant="outline"
-          color="var(--tertiary-color)"
-          onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
-        />
-        <RateupButtonBlue
-          title={translations("Save")}
-          size="md"
-          onClick={handleSave}
-          loading={questionUpdateMutation.isPending}
-        />
-      </Group>
-    </Stack>
+        </div>
+      </ScrollArea>
+      <div className="flex justify-between border-t px-4 py-3">
+        <Button variant="outline" onClick={() => setActiveTab(QuestionTabsEnum.Edit)}>
+          {translations("Cancel")}
+        </Button>
+        <Button onClick={handleSave} disabled={questionUpdateMutation.isPending}>
+          {translations("Save")}
+        </Button>
+      </div>
+    </div>
   );
 };
 
@@ -147,6 +124,7 @@ interface ConditionBlockProps {
   setCurrentLogicJump: (newLogicJump: LogicJump) => void;
   handleDelete: () => void;
 }
+
 function ConditionBlock({
   selectedQ,
   questions,
@@ -154,14 +132,9 @@ function ConditionBlock({
   setCurrentLogicJump,
   handleDelete,
 }: ConditionBlockProps) {
-  // Renders a single logic condition block of the form below
-  // If answer {CONDITION SELECTOR} {DATA SELECTTOR} then {ACTION SELECTOR}
-
-  const { colors } = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
 
   const currentIndex = questions.findIndex((q) => q.id === selectedQ.id);
-  // Only allow jumping to questions after the current one
   const possibleQuestions = questions.slice(currentIndex + 1);
   const possibleActions = [
     { label: "Next Question", value: LogicAction.NextQ },
@@ -169,7 +142,7 @@ function ConditionBlock({
     ...possibleQuestions.map((q) => ({
       label: `JUMP TO => ${questions.findIndex((q1) => q1.id === q.id) + 1}) ${
         getContent(q.title[selectedLanguage]) || q.description[selectedLanguage]
-      }`, // TODO: truncate
+      }`,
       value: q.id,
     })),
   ];
@@ -178,95 +151,150 @@ function ConditionBlock({
   const [selectedAction, setSelectedAction] = useState(currentLogicJump.action);
   const [matchData, setMatchData] = useState(currentLogicJump.response);
   const { t: translations } = useTranslation();
-  useEffect(() => {
-    setCurrentLogicJump({
-      condition: selectedCondition,
-      action: selectedAction,
-      response: matchData,
-    });
-  }, [selectedCondition, selectedAction, matchData]);
 
+  // Initialise local state from prop on mount only.
+  // We intentionally do NOT sync back via an effect — changes are pushed to the
+  // parent directly in each onChange handler below, breaking the ping-pong loop.
   useEffect(() => {
     setSelectedCondition(currentLogicJump.condition);
     setMatchData(currentLogicJump.response);
     setSelectedAction(currentLogicJump.action);
-  }, [currentLogicJump]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const isArrayCondition =
+    [
+      LogicCondition.IncludesAllOf,
+      LogicCondition.IncludesAnyOf,
+      LogicCondition.IncludesNoneOf,
+    ].includes(selectedCondition) ||
+    ((selectedQ.type === Q.MSQ || selectedQ.type === Q.DDMS) &&
+      selectedCondition === LogicCondition.Equals);
+
+  const conditionItems = getConditions(selectedQ.type as QuestionType).map((c: string) => ({
+    label: c,
+    value: c,
+  }));
+
   return (
-    <Flex>
-      <Group
-        style={{
-          backgroundColor: `light-dark(${colors.blue[0]},var(--mantine-color-dark-7))`,
-          borderRadius: "12px",
-          position: "relative",
-          flex: 1,
-        }}
-        p="md"
-      >
-        <Text style={{ marginLeft: "10px" }}>If answer</Text>
-        {/* Condition Selector */}
-        <Select
-          data={getConditions(selectedQ.type as QuestionType)}
-          value={selectedCondition}
-          onChange={setSelectedCondition as any}
-          maw={150}
-          label={translations("Condition")}
-          mb={"md"}
-        />
+    <Card>
+      <CardContent className="flex flex-wrap items-end gap-3 ">
+        <p>If answer</p>
 
-        {/* Match Data */}
-        {selectedCondition === LogicCondition.Submitted ? (
-          <></>
-        ) : [
-            LogicCondition.IncludesAllOf,
-            LogicCondition.IncludesAnyOf,
-            LogicCondition.IncludesNoneOf,
-          ].includes(selectedCondition) ||
-          ((selectedQ.type === Q.MSQ || selectedQ.type === Q.DDMS) &&
-            selectedCondition === LogicCondition.Equals) ? (
-          // Array Selector
-          <MultiSelect
-            label={translations("Match Data")}
-            data={getResponses(selectedQ, selectedLanguage)}
-            value={Array.isArray(matchData) ? matchData : []}
-            onChange={setMatchData}
-            placeholder={translations("Select Responses")}
-            searchable
-            w={155}
-            mb={"md"}
-          />
-        ) : (
+        <div className="flex flex-col gap-1">
+          <Label>{translations("Condition")}</Label>
           <Select
-            label={translations("Match Data")}
-            value={Array.isArray(matchData) ? "" : matchData}
-            data={getResponses(selectedQ, selectedLanguage)}
-            onChange={(value) => setMatchData(value)}
-            w={165}
-            mb={"md"}
-          />
-        )}
-        <Text>then</Text>
+            value={selectedCondition}
+            onValueChange={(value) => {
+              setSelectedCondition(value as any);
+              setCurrentLogicJump({
+                condition: value as any,
+                action: selectedAction,
+                response: matchData,
+              });
+            }}
+            items={conditionItems}
+          >
+            <SelectTrigger className="w-[150px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {conditionItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        {/* Action Selector */}
-        <Select
-          label={translations("Action")}
-          data={possibleActions}
-          value={selectedAction}
-          onChange={(value) => setSelectedAction(value as any)}
-          style={{
-            flex: 1,
-          }}
-          mb={"md"}
-        />
-        <ActionIcon
-          style={{ marginLeft: "10px", marginRight: "1rem" }}
-          onClick={handleDelete}
+        {selectedCondition !== LogicCondition.Submitted &&
+          (isArrayCondition ? (
+            <div className="flex flex-col gap-1">
+              <Label>{translations("Match Data")}</Label>
+              <MultiSelect
+                options={normalizeOptions(getResponses(selectedQ, selectedLanguage))}
+                value={Array.isArray(matchData) ? matchData : []}
+                onValueChange={(value) => {
+                  setMatchData(value);
+                  setCurrentLogicJump({
+                    condition: selectedCondition,
+                    action: selectedAction,
+                    response: value,
+                  });
+                }}
+                placeholder={translations("Select Responses")}
+                className="w-[155px]"
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <Label>{translations("Match Data")}</Label>
+              <Select
+                value={Array.isArray(matchData) ? "" : matchData}
+                onValueChange={(value) => {
+                  setMatchData(value);
+                  setCurrentLogicJump({
+                    condition: selectedCondition,
+                    action: selectedAction,
+                    response: value,
+                  });
+                }}
+                items={normalizeOptions(getResponses(selectedQ, selectedLanguage))}
+              >
+                <SelectTrigger className="w-[165px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {normalizeOptions(getResponses(selectedQ, selectedLanguage)).map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
+
+        <p>then</p>
+
+        <div className="flex flex-1 flex-col gap-1">
+          <Label>{translations("Action")}</Label>
+          <Select
+            value={selectedAction}
+            onValueChange={(value) => {
+              setSelectedAction(value as any);
+              setCurrentLogicJump({
+                condition: selectedCondition,
+                action: value as any,
+                response: matchData,
+              });
+            }}
+            items={possibleActions}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {possibleActions.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Button
+          size="icon-xs"
           variant="outline"
-          color="red"
+          className="border-red-300 text-red-500 hover:bg-red-50 hover:text-red-500"
+          onClick={handleDelete}
         >
           <IconTrash />
-        </ActionIcon>
-      </Group>
-    </Flex>
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 

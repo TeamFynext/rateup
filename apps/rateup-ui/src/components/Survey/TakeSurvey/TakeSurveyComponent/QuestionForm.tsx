@@ -1,4 +1,3 @@
-import { Group } from "@mantine/core";
 import { useContext } from "react";
 
 import { SelectedQContext } from "@/context/SelectedQ.ts";
@@ -6,14 +5,11 @@ import { PageType, QuestionType as Q } from "@/types/enums.ts";
 
 import { getQuestionForm } from "./util.tsx";
 
-import classes from "./TakeSurvey.module.css";
-
 function QuestionForm() {
   const { selectedQ, alignment } = useContext(SelectedQContext);
   const { type } = selectedQ;
-  const className = type.toLowerCase().replaceAll(" ", "-") + "-container";
   return (
-    <Group className={classes[className]} justify={getFormAlignment(alignment)}>
+    <div className="flex gap-4" style={{ justifyContent: getFormAlignment(alignment) }}>
       {(() => {
         if (type in PageType) {
           return <></>;
@@ -25,7 +21,7 @@ function QuestionForm() {
             return getQuestionForm(type, selectedQ);
         }
       })()}
-    </Group>
+    </div>
   );
 }
 

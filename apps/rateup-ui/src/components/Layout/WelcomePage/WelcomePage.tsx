@@ -1,6 +1,6 @@
-import { Button, Image, Stack } from "@mantine/core";
-
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { cn } from "@/lib/utils.ts";
 import { PageType } from "@/types/enums.ts";
 import { cordinateStyle } from "@/utils/index.ts";
 
@@ -71,17 +71,19 @@ function WelcomePage({
 
   return (
     <div className="flex justify-center items-center h-full">
-      <Stack
-        align="center"
-        justify="center"
-        h={"100%"}
-        p={"lg"}
-        gap={"xl"}
-        maw={1920}
-        w={isMobile ? "100%" : "80%"}
+      <div
+        className={cn(
+          "flex h-full max-w-[1920px] flex-col items-center justify-center gap-8 p-5",
+          isMobile ? "w-full" : "w-[80%]",
+        )}
       >
         {orgLogoSrc && (
-          <Image fit="contain" src={orgLogoSrc} alt="Logo" style={{ ...orgLogoStyles }} />
+          <img
+            src={orgLogoSrc}
+            alt="Logo"
+            className="object-contain"
+            style={{ ...orgLogoStyles }}
+          />
         )}
         <div
           dangerouslySetInnerHTML={{
@@ -105,16 +107,16 @@ function WelcomePage({
                     fontSize: "1.125rem",
                     borderRadius: "0.625rem",
                     padding: "0.75rem 1.5rem",
+                    fontFamily: "inherit",
                   }
-                : { ..._buttonStyles }
+                : { ..._buttonStyles, fontFamily: "inherit" }
             }
             onClick={onStart}
-            ff={"inherit"}
           >
             {startButtonText}
           </Button>
         </div>
-      </Stack>
+      </div>
     </div>
   );
 }

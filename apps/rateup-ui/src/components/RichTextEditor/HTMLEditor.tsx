@@ -8,10 +8,21 @@ import { useEffect } from "react";
 
 import CustomImageExtension from "./InsertImage/CustomImageExtenstion.tsx";
 
-function HTMLEditor({ form, selectedLanguage, className = "" }) {
-  const content = form.values?.title?.[selectedLanguage];
-  const htmlContent = form.values?.description?.[selectedLanguage];
+interface HTMLEditorProps {
+  titleValue?: string;
+  descriptionValue?: string;
+  onTitleChange: (value: string) => void;
+  onDescriptionChange: (value: string) => void;
+  className?: string;
+}
 
+function HTMLEditor({
+  titleValue,
+  descriptionValue,
+  onTitleChange,
+  onDescriptionChange,
+  className = "",
+}: HTMLEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ link: false }),
@@ -23,9 +34,9 @@ function HTMLEditor({ form, selectedLanguage, className = "" }) {
     ],
     immediatelyRender: false,
     shouldRerenderOnTransaction: true,
-    content: content,
+    content: titleValue,
     onUpdate: ({ editor }) => {
-      form.setFieldValue(`title.${selectedLanguage}`, editor.getHTML());
+      onTitleChange(editor.getHTML());
     },
   });
 
@@ -39,33 +50,33 @@ function HTMLEditor({ form, selectedLanguage, className = "" }) {
     ],
     immediatelyRender: false,
     shouldRerenderOnTransaction: true,
-    content: htmlContent,
+    content: descriptionValue,
     onUpdate: ({ editor }) => {
-      form.setFieldValue(`description.${selectedLanguage}`, editor.getHTML());
+      onDescriptionChange(editor.getHTML());
     },
   });
 
   useEffect(() => {
     if (editor) {
       const selection = editor.state.selection;
-      editor.commands.setContent(content, {
+      editor.commands.setContent(titleValue, {
         parseOptions: { preserveWhitespace: "full" },
       });
       editor.commands.setTextSelection(selection);
-      form.setFieldValue(`title.${selectedLanguage}`, editor.getHTML());
+      onTitleChange(editor.getHTML());
     }
-  }, [content, editor]);
+  }, [titleValue, editor]);
 
   useEffect(() => {
     if (codeEditor) {
       const selection = codeEditor.state.selection;
-      codeEditor.commands.setContent(htmlContent, {
+      codeEditor.commands.setContent(descriptionValue, {
         parseOptions: { preserveWhitespace: "full" },
       });
       codeEditor.commands.setTextSelection(selection);
-      form.setFieldValue(`description.${selectedLanguage}`, codeEditor.getHTML());
+      onDescriptionChange(codeEditor.getHTML());
     }
-  }, [htmlContent, codeEditor]);
+  }, [descriptionValue, codeEditor]);
 
   return (
     <Stack style={{ width: "100%" }} className={className}>

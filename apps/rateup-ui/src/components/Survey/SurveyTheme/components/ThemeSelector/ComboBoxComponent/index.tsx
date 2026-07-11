@@ -1,96 +1,66 @@
-import { Combobox, Input, InputBase, Loader, ScrollArea, useCombobox } from "@mantine/core";
+import { ChevronDown, Loader2 } from "lucide-react";
+import { useState } from "react";
+
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import RenderOption from "../RenderOption.tsx";
 
-import styles from "./ComboBoxComponent.module.css";
-
 function ComboBoxComponent({
   className = "",
-  classNames = {},
+  classNames = {} as { option?: string },
   value,
   data = [],
   onChange,
-  renderOptionProps = {},
+  renderOptionProps = {} as any,
   isLoading = false,
 }) {
-  const combobox = useCombobox({
-    onDropdownClose: () => combobox.resetSelectedOption(),
-    onDropdownOpen: (eventSource) => {
-      if (eventSource === "keyboard") {
-        combobox.selectActiveOption();
-      } else {
-        combobox.updateSelectedOptionIndex("active");
-      }
-    },
-  });
+  const [open, setOpen] = useState(false);
 
-  const selectedOption = data.find((obj) => {
-    return obj.value === value;
-  });
-
-  const options = data.map((optionObj) => {
-    return (
-      <Combobox.Option
-        value={optionObj.value}
-        key={optionObj.value}
-        active={optionObj.value === value}
-      >
-        {/* @ts-ignore */}
-        <RenderOption option={optionObj} {...renderOptionProps} />
-      </Combobox.Option>
-    );
-  });
+  const selectedOption = data.find((obj) => obj.value === value);
 
   return (
-    <Combobox
-      classNames={{
-        dropdown: `${styles["dropdown"]}`,
-        ...classNames,
-      }}
-      store={combobox}
-      resetSelectionOnOptionHover
-      withinPortal={false}
-      onOptionSubmit={(val) => {
-        onChange(val);
-        combobox.closeDropdown();
-      }}
-      zIndex={200}
-    >
-      <Combobox.Target targetType="button">
-        <InputBase
-          label={"Select Theme: "}
-          component="button"
-          type="button"
-          pointer
-          rightSection={isLoading ? <Loader size={"1rem"} /> : <Combobox.Chevron />}
-          rightSectionPointerEvents="none"
-          onClick={() => combobox.toggleDropdown()}
-          className={`${styles["combobox-input-base-root"]} ${className}`}
-        >
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        className={cn(
+          "flex w-full items-center justify-between gap-2 overflow-hidden rounded-xl border border-input bg-background px-3 py-2 text-left text-sm",
+          className,
+        )}
+      >
+        <span className="flex-1 truncate">
           {selectedOption ? (
             selectedOption.label
           ) : (
-            <Input.Placeholder>Pick value</Input.Placeholder>
+            <span className="text-muted-foreground">Pick value</span>
           )}
-        </InputBase>
-      </Combobox.Target>
-
-      <Combobox.Dropdown miw={300}>
-        <Combobox.Options className={styles["combobox-options-div"]}>
-          <ScrollArea.Autosize
-            scrollbarSize={"0.4375rem"}
-            className={styles["scroll-area-div"]}
-            type="hover"
-            classNames={{
-              viewport: styles["options-scroll-area-viewport"],
-            }}
-            scrollbars={"y"}
-          >
-            {options}
-          </ScrollArea.Autosize>
-        </Combobox.Options>
-      </Combobox.Dropdown>
-    </Combobox>
+        </span>
+        {isLoading ? (
+          <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
+        ) : (
+          <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+        )}
+      </PopoverTrigger>
+      <PopoverContent className="min-w-[18.75rem] overflow-hidden p-0" align="start" side="bottom">
+        <ScrollArea className="max-h-[45vh]">
+          <div className="p-1">
+            {data.map((optionObj) => (
+              <div
+                key={optionObj.value}
+                data-combobox-active={String(optionObj.value === value)}
+                className={cn("cursor-pointer rounded-sm px-2 py-1.5", classNames.option)}
+                onClick={() => {
+                  onChange(optionObj.value);
+                  setOpen(false);
+                }}
+              >
+                <RenderOption option={optionObj} {...renderOptionProps} />
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
   );
 }
 
