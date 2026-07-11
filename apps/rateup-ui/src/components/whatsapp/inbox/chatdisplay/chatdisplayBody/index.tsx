@@ -1,4 +1,3 @@
-import { ActionIcon, Center, Loader } from "@mantine/core";
 import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import dayjs from "dayjs";
@@ -7,6 +6,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { getMessagesFromIDB } from "@/components/dashboard/inbox/idb.ts";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
+import { Button } from "@/components/ui/button.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { MessagePlatform } from "@/types/enums.ts";
 import type { IgReceiveMessageBody } from "@/types/global";
 import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
@@ -185,9 +186,9 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened }) => {
                 className="gap-4 pb-4 pr-4 pl-6"
               >
                 {isLoaderRow && (
-                  <Center>
-                    <Loader size={16}></Loader>
-                  </Center>
+                  <div className="flex items-center justify-center">
+                    <Spinner className="size-4 text-muted-foreground" />
+                  </div>
                 )}
                 {isEndofConversation && (
                   <div className="mb-6">
@@ -214,9 +215,14 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened }) => {
             bottom: isContactDetailsOpened ? "180px" : "155px",
           }}
         >
-          <ActionIcon variant="transparent" onClick={() => rowVirtualizer.scrollToIndex(0)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-transparent p-0 h-auto w-auto text-primary"
+            onClick={() => rowVirtualizer.scrollToIndex(0)}
+          >
             <IconSquareRoundedChevronDown size={20} />
-          </ActionIcon>
+          </Button>
         </div>
       )}
     </>

@@ -1,22 +1,9 @@
-import {
-  ActionIcon,
-  Badge,
-  Divider,
-  Group,
-  Paper,
-  Radio,
-  RadioGroup,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import { Dropzone, IMAGE_MIME_TYPE, PDF_MIME_TYPE } from "@mantine/dropzone";
-import { useForm } from "@mantine/form";
-import { useListState } from "@mantine/hooks";
-import { IconPhoto, IconRefresh, IconUpload, IconX } from "@tabler/icons-react";
+import { IconPhoto, IconRefresh } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import type { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
@@ -24,14 +11,26 @@ import {
   useSyncLeadgenFormQuestions,
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
-import {
-  ContainedSelection,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 import type { LeadgenNodeData } from "@/components/whatsapp/automation/types/node-types.ts";
-
-import classes from "./styles.module.css";
+import { cn } from "@/lib/utils.ts";
 
 interface Props {
   type: "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION" | "TEXT";
@@ -46,6 +45,7 @@ interface Props {
     formQuestions: MetaAssets["leadgenForms"][number]["questions"];
   };
 }
+
 export default function WaTemplateFormComponents(props: Props) {
   const header = props.exampleParams?.find(
     (item) => typeof item === "object" && item.type === props?.type?.toLowerCase(),
@@ -56,83 +56,124 @@ export default function WaTemplateFormComponents(props: Props) {
     case "VIDEO":
     case "DOCUMENT":
       return (
-        <Paper className={classes.paper_wrapper}>
-          <Badge variant="light">{props?.type}</Badge>
-          <Divider variant="dotted" />
+        <div className="shadow-xs p-3 bg-card border rounded-lg flex flex-col gap-2.5">
+          <Badge variant="secondary" className="w-fit">
+            {props?.type}
+          </Badge>
+          <div className="border-t border-dotted border-border" />
           <WaDropZoneInputComponent
             type={props?.type}
             buildtemplatequerycomponent={props?.buildtemplatequerycomponent}
           />
-        </Paper>
+        </div>
       );
     case "LOCATION":
       return (
-        <Paper className={classes.paper_wrapper}>
-          <Badge variant="light">{props?.type}</Badge>
-          <Divider variant="dotted" />
+        <div className="shadow-xs p-3 bg-card border rounded-lg flex flex-col gap-2.5">
+          <Badge variant="secondary" className="w-fit">
+            {props?.type}
+          </Badge>
+          <div className="border-t border-dotted border-border" />
           <WaLocationInputComponent
             buildtemplatequerycomponent={props?.buildtemplatequerycomponent}
             defaultValue={header}
           />
-        </Paper>
+        </div>
       );
     case "TEXT":
       return (
-        <Paper className={classes.paper_wrapper}>
-          <Badge variant="light">{props?.type}</Badge>
-          <Divider variant="dotted" />
+        <div className="shadow-xs p-3 bg-card border rounded-lg flex flex-col gap-2.5">
+          <Badge variant="secondary" className="w-fit">
+            {props?.type}
+          </Badge>
+          <div className="border-t border-dotted border-border" />
           <WaBodyVariableInputComponent
             buildtemplatequerycomponent={props?.buildtemplatequerycomponent}
             exampleParams={props.exampleParams}
             leadgenData={props?.leadgenData}
           />
-        </Paper>
+        </div>
       );
   }
 }
 
 function WaDropZoneInputComponent(props: Props) {
-  function getDropZoneMimeType() {
-    if (props?.type === "IMAGE") {
-      return IMAGE_MIME_TYPE;
-    } else if (props?.type === "DOCUMENT") {
-      return PDF_MIME_TYPE;
-    }
-  }
   const { t: translations } = useTranslation();
-  return (
-    <Dropzone
-      maxFiles={1}
-      onDrop={(files) =>
-        props?.buildtemplatequerycomponent("HEADER", props?.type, {
-          link: files[0],
-        })
+  const [dragActive, setDragActive] = useState(false);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.size <= 5 * 1024 * 1024) {
+        props?.buildtemplatequerycomponent("HEADER", props?.type as any, {
+          link: file,
+        });
+      } else {
+        toast.error("File size exceeds 5MB");
       }
-      onReject={(files) => console.log("rejected files", files)}
-      maxSize={5 * 1024 ** 2}
-      accept={getDropZoneMimeType()}
-      {...props}
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size <= 5 * 1024 * 1024) {
+        props?.buildtemplatequerycomponent("HEADER", props?.type as any, {
+          link: file,
+        });
+      } else {
+        toast.error("File size exceeds 5MB");
+      }
+    }
+  };
+
+  return (
+    <div
+      onDragEnter={handleDrag}
+      onDragOver={handleDrag}
+      onDragLeave={handleDrag}
+      onDrop={handleDrop}
+      className={cn(
+        "relative border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all hover:bg-muted/30 min-h-[100px]",
+        dragActive && "border-primary bg-primary/5",
+      )}
     >
-      <Group justify="center" gap="xl" mih={100} style={{ pointerEvents: "none" }}>
-        <Dropzone.Accept>
-          <IconUpload size={30} color={"var(--mantine-primary-color-6)"} stroke={1.5} />
-        </Dropzone.Accept>
-        <Dropzone.Reject>
-          <IconX size={30} color="var(--mantine-color-red-6)" stroke={1.5} />
-        </Dropzone.Reject>
-        <Dropzone.Idle>
-          <IconPhoto size={30} color="var(--mantine-color-dimmed)" stroke={1.5} />
-        </Dropzone.Idle>
-        <div>
-          <Text className={classes.dropzone_text}>
-            {translations("Drag")} {props?.type} {translations("here or click to select files")}
-          </Text>
-          <Text className={classes.dropzone_text_note}>
-            {translations("Attach as many files as you like, each file should not exceed 5mb")}
-          </Text>
-        </div>
-      </Group>
-    </Dropzone>
+      <input
+        type="file"
+        className="absolute inset-0 opacity-0 cursor-pointer"
+        accept={
+          props?.type === "IMAGE"
+            ? "image/*"
+            : props?.type === "DOCUMENT"
+              ? "application/pdf"
+              : "*/*"
+        }
+        onChange={handleChange}
+      />
+      <IconPhoto size={32} className="text-muted-foreground" />
+      <div className="text-center">
+        <p className="text-sm font-medium">
+          {translations("Drag")} {props?.type} {translations("here or click to select files")}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {translations("Attach as many files as you like, each file should not exceed 5mb")}
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -154,58 +195,78 @@ function WaLocationInputComponent({
   const { t: translations } = useTranslation();
   return (
     <>
-      <ContainedTextField
-        label={translations("Latitude")}
-        value={latitude}
-        onChange={(e) => {
-          setLatitude(e.currentTarget.value);
-          buildtemplatequerycomponent("HEADER", "LOCATION", {
-            latitude: e.currentTarget.value,
-            longitude,
-            name,
-            address,
-          });
-        }}
-      />
-      <ContainedTextField
-        label={translations("Longitude")}
-        value={longitude}
-        onChange={(e) => {
-          setLongitude(e.currentTarget.value);
-          buildtemplatequerycomponent("HEADER", "LOCATION", {
-            latitude,
-            longitude: e.currentTarget.value,
-            name,
-            address,
-          });
-        }}
-      />
-      <ContainedTextField
-        label={translations("Name")}
-        value={name}
-        onChange={(e) => {
-          setName(e.currentTarget.value);
-          buildtemplatequerycomponent("HEADER", "LOCATION", {
-            latitude,
-            longitude,
-            name: e.currentTarget.value,
-            address,
-          });
-        }}
-      />
-      <ContainedTextField
-        label={translations("Address")}
-        value={address}
-        onChange={(e) => {
-          setAddress(e.currentTarget.value);
-          buildtemplatequerycomponent("HEADER", "LOCATION", {
-            latitude,
-            longitude,
-            name,
-            address: e.currentTarget.value,
-          });
-        }}
-      />
+      <div className="flex flex-col gap-1 w-full">
+        <label className="text-xs font-semibold text-muted-foreground">
+          {translations("Latitude")}
+        </label>
+        <Input
+          type="text"
+          value={latitude}
+          onChange={(e) => {
+            setLatitude(e.currentTarget.value);
+            buildtemplatequerycomponent("HEADER", "LOCATION", {
+              latitude: e.currentTarget.value,
+              longitude,
+              name,
+              address,
+            });
+          }}
+        />
+      </div>
+      <div className="flex flex-col gap-1 w-full">
+        <label className="text-xs font-semibold text-muted-foreground">
+          {translations("Longitude")}
+        </label>
+        <Input
+          type="text"
+          value={longitude}
+          onChange={(e) => {
+            setLongitude(e.currentTarget.value);
+            buildtemplatequerycomponent("HEADER", "LOCATION", {
+              latitude,
+              longitude: e.currentTarget.value,
+              name,
+              address,
+            });
+          }}
+        />
+      </div>
+      <div className="flex flex-col gap-1 w-full">
+        <label className="text-xs font-semibold text-muted-foreground">
+          {translations("Name")}
+        </label>
+        <Input
+          type="text"
+          value={name}
+          onChange={(e) => {
+            setName(e.currentTarget.value);
+            buildtemplatequerycomponent("HEADER", "LOCATION", {
+              latitude,
+              longitude,
+              name: e.currentTarget.value,
+              address,
+            });
+          }}
+        />
+      </div>
+      <div className="flex flex-col gap-1 w-full">
+        <label className="text-xs font-semibold text-muted-foreground">
+          {translations("Address")}
+        </label>
+        <Input
+          type="text"
+          value={address}
+          onChange={(e) => {
+            setAddress(e.currentTarget.value);
+            buildtemplatequerycomponent("HEADER", "LOCATION", {
+              latitude,
+              longitude,
+              name,
+              address: e.currentTarget.value,
+            });
+          }}
+        />
+      </div>
     </>
   );
 }
@@ -226,58 +287,92 @@ function WaBodyVariableInputComponent({
     formQuestions: MetaAssets["leadgenForms"][number]["questions"];
   };
 }) {
-  const [paramChoice, setParamChoice] = useListState([]);
-  const form = useForm({
-    initialValues: {
-      dynamicTags: exampleParams || [],
-    },
-    onValuesChange: (e) => {
-      buildtemplatequerycomponent("BODY", "TEXT", e.dynamicTags);
-    },
-  });
+  const [paramChoice, setParamChoice] = useState<string[]>([]);
+  const [dynamicTags, setDynamicTags] = useState<any[]>(exampleParams || []);
+
+  const updateParamChoice = (index: number, value: string) => {
+    setParamChoice((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  };
+
+  const updateDynamicTag = (index: number, value: any) => {
+    const nextTags = [...dynamicTags];
+    nextTags[index] = value;
+    setDynamicTags(nextTags);
+    buildtemplatequerycomponent("BODY", "TEXT", nextTags);
+  };
+
   useEffect(() => {
-    if (exampleParams.length) {
-      exampleParams.forEach((param, index) => {
-        if (typeof param === "string" || param.type !== "leadgenform-question-key") {
-          setParamChoice.setItem(index, "default");
-        } else {
-          setParamChoice.setItem(index, "leadgenform-question-key");
-        }
-      });
+    setDynamicTags(exampleParams || []);
+  }, [exampleParams]);
+
+  useEffect(() => {
+    if (exampleParams?.length) {
+      setParamChoice(
+        exampleParams.map((param) => {
+          if (typeof param === "string" || param?.type !== "leadgenform-question-key") {
+            return "default";
+          }
+          return "leadgenform-question-key";
+        }),
+      );
     }
   }, [exampleParams]);
+
   const { t: translations } = useTranslation();
   return (
     <>
       {exampleParams?.map((_, i) => {
         if (leadgenData)
           return (
-            <Stack key={i}>
+            <div className="flex flex-col gap-2" key={i}>
               <RadioGroup
                 value={paramChoice[i]}
-                onChange={(value) => {
-                  form.setFieldValue(`dynamicTags.${i}`, "");
-                  setParamChoice.setItem(i, value);
+                onValueChange={(val) => {
+                  updateDynamicTag(i, "");
+                  updateParamChoice(i, val);
                 }}
+                className="flex flex-row gap-4 items-center"
               >
-                <Group>
-                  <Radio value={"default"} label={"Manual"} />
-                  <Radio value={"leadgenform-question-key"} label={"Select from lead form"} />
-                </Group>
+                <div className="flex items-center gap-1.5">
+                  <RadioGroupItem value="default" id={`radio-default-${i}`} />
+                  <label
+                    htmlFor={`radio-default-${i}`}
+                    className="text-xs text-muted-foreground cursor-pointer select-none"
+                  >
+                    Manual
+                  </label>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <RadioGroupItem value="leadgenform-question-key" id={`radio-leadgen-${i}`} />
+                  <label
+                    htmlFor={`radio-leadgen-${i}`}
+                    className="text-xs text-muted-foreground cursor-pointer select-none"
+                  >
+                    Select from lead form
+                  </label>
+                </div>
               </RadioGroup>
               {paramChoice[i] === "default" && (
-                <ContainedTextField
-                  label={`{{${i + 1}}}`}
-                  placeholder={translations("select a dynamic tag value")}
-                  {...form.getInputProps(`dynamicTags.${i}`)}
-                />
+                <div className="flex flex-col gap-1 w-full">
+                  <label className="text-xs font-semibold text-muted-foreground">{`{{${i + 1}}}`}</label>
+                  <Input
+                    type="text"
+                    placeholder={translations("select a dynamic tag value")}
+                    value={dynamicTags[i] || ""}
+                    onChange={(e) => updateDynamicTag(i, e.target.value)}
+                  />
+                </div>
               )}
               {paramChoice[i] === "leadgenform-question-key" && (
                 <LeadFormQuestionsInputComponent
                   leadgenData={leadgenData}
-                  value={form.values.dynamicTags[i]["value"] ?? ""}
+                  value={dynamicTags[i]?.value ?? ""}
                   onChange={(value) =>
-                    form.setFieldValue(`dynamicTags.${i}`, {
+                    updateDynamicTag(i, {
                       type: "leadgenform-question-key",
                       value,
                     })
@@ -285,15 +380,18 @@ function WaBodyVariableInputComponent({
                   label={`{{${i + 1}}}`}
                 />
               )}
-            </Stack>
+            </div>
           );
         return (
-          <ContainedTextField
-            key={i}
-            label={`{{${i + 1}}}`}
-            placeholder={translations("select a dynamic tag value")}
-            {...form.getInputProps(`dynamicTags.${i}`)}
-          />
+          <div className="flex flex-col gap-1 w-full" key={i}>
+            <label className="text-xs font-semibold text-muted-foreground">{`{{${i + 1}}}`}</label>
+            <Input
+              type="text"
+              placeholder={translations("select a dynamic tag value")}
+              value={dynamicTags[i] || ""}
+              onChange={(e) => updateDynamicTag(i, e.target.value)}
+            />
+          </div>
         );
       })}
     </>
@@ -309,6 +407,7 @@ interface LeadFormQuestionsInputComponentProps {
   onChange: (value) => void;
   label: string;
 }
+
 function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentProps) {
   const params = useParams({
     strict: false,
@@ -326,32 +425,57 @@ function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentP
     waSettingsId,
   );
   const data = props.leadgenData.formQuestions.map((q) => q.key);
+
   if (isPending || isSettingsLoading) return <RateupLoader />;
+
   return (
-    <Group gap={2} w={"100%"}>
-      <ContainedSelection
-        label={"Form question key for " + props.label}
-        data={data}
-        value={props.value}
-        onChange={props.onChange}
-        w={"80%"}
-        placeholder="Click to select"
-      />
-      <Tooltip label={"Sync form questions if not found."}>
-        <ActionIcon
-          onClick={() =>
-            syncformQuestionsMut.mutate({
-              fbPageId: props.leadgenData.data.fbPageId,
-              pageAccessToken: props.leadgenData.data.pageAccessToken,
-            })
-          }
-          mt={25}
-          variant="light"
-          loading={syncformQuestionsMut.isPending}
-        >
-          <IconRefresh />
-        </ActionIcon>
-      </Tooltip>
-    </Group>
+    <div className="flex items-end gap-1.5 w-full">
+      <div className="flex flex-col gap-1 flex-1">
+        <label className="text-xs font-semibold text-muted-foreground">
+          {"Form question key for " + props.label}
+        </label>
+        <Select value={props.value} onValueChange={props.onChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Click to select" />
+          </SelectTrigger>
+          <SelectContent>
+            {data.map((item) => (
+              <SelectItem key={item} value={item}>
+                {item}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="outline"
+                size="icon"
+                className="mt-6 h-9 w-9 shrink-0"
+                disabled={syncformQuestionsMut.isPending}
+                onClick={() =>
+                  syncformQuestionsMut.mutate({
+                    fbPageId: props.leadgenData.data.fbPageId,
+                    pageAccessToken: props.leadgenData.data.pageAccessToken,
+                  })
+                }
+              />
+            }
+          >
+            {syncformQuestionsMut.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <IconRefresh size={16} />
+            )}
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Sync form questions if not found.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   );
 }

@@ -1,10 +1,6 @@
-import { Box } from "@mantine/core";
-
 import type { WaTemplateComponent, WaTemplateFetchBody } from "@/types/global";
 
 import WaInboxTemplateComponents from "./components/index.tsx";
-
-import classes from "./styles.module.css";
 
 interface Props {
   templateBody: WaTemplateFetchBody;
@@ -12,7 +8,7 @@ interface Props {
 }
 export default function WaInboxTemplate(props: Props) {
   return (
-    <Box className={classes.template_wrapper}>
+    <div className="w-[298px] flex flex-col gap-2">
       {props?.templateBody?.components?.map((component, i) => (
         <WaInboxTemplateComponents
           key={i}
@@ -22,6 +18,6 @@ export default function WaInboxTemplate(props: Props) {
           templateComponent={component}
         />
       ))}
-    </Box>
+    </div>
   );
 }

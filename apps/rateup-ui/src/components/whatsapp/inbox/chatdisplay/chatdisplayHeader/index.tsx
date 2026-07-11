@@ -1,4 +1,3 @@
-import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronDown, IconTags } from "@tabler/icons-react";
 import { ArrowLeft, Ban, BellOff, CircleCheckBig, FolderClosed } from "lucide-react";
 import { useMemo } from "react";
@@ -31,6 +30,7 @@ import {
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { cn } from "@/lib/utils.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";

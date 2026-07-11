@@ -1,10 +1,11 @@
-import { ActionIcon, Group } from "@mantine/core";
 import { IconDownload } from "@tabler/icons-react";
+import { Loader2 } from "lucide-react";
 import type { JSX } from "react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useGetMediaFile } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { Button } from "@/components/ui/button.tsx";
 
 interface Props {
   messageContent: string;
@@ -14,6 +15,7 @@ export default function WaInboxAudio({ messageContent }: Props): JSX.Element {
   const { mutate, isPending } = useGetMediaFile();
   const [id] = messageContent.split("_caption_");
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [audioLoaded, setAudioLoaded] = useState(false);
   const link = messageContent.startsWith("http")
     ? messageContent
     : id.startsWith("http")
@@ -29,17 +31,16 @@ export default function WaInboxAudio({ messageContent }: Props): JSX.Element {
   const handleDownload = () => {
     mutate(id, {
       onSuccess: (fileData) => {
-        // Create a Blob URL from the fetched audio data
         const blob = new Blob([fileData], { type: "audio/ogg" });
         const url = URL.createObjectURL(blob);
 
-        // Play the audio automatically
         if (audioRef.current) {
           audioRef.current.src = url;
           audioRef.current.load();
           audioRef.current.play().catch((err) => {
             console.error("Failed to play audio:", err);
           });
+          setAudioLoaded(true);
         }
       },
       onError: (error) => {
@@ -51,30 +52,27 @@ export default function WaInboxAudio({ messageContent }: Props): JSX.Element {
   };
 
   return (
-    <Group pt={"xs"} align="center" pos={"relative"}>
+    <div className="relative flex items-center pt-2 w-full gap-2">
       <audio
         ref={audioRef}
         controls
-        style={{ flex: 1 }}
+        className="flex-1"
         onError={audioRef?.current?.src ? handleAudioError : undefined}
       >
-        <source type="audio/ogg" src={link} />
+        <source type="audio/ogg" src={link ?? ""} />
         Your browser does not support the audio element.
       </audio>
-      {!link && (
-        <ActionIcon
-          pos={"absolute"}
-          right={10}
-          radius={"xl"}
-          size={"lg"}
+      {!link && !audioLoaded && (
+        <Button
+          size="icon"
+          className="absolute right-2 rounded-full h-8 w-8 shrink-0"
           onClick={handleDownload}
           aria-label="Download Audio"
-          loading={isPending}
-          display={audioRef?.current?.src ? "none" : "flex"}
+          disabled={isPending}
         >
-          <IconDownload />
-        </ActionIcon>
+          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <IconDownload size={16} />}
+        </Button>
       )}
-    </Group>
+    </div>
   );
 }

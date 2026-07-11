@@ -1,24 +1,37 @@
-import { Image, Modal, Stack, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useState } from "react";
 
+import { Dialog, DialogContent } from "@/components/ui/dialog.tsx";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 interface Props {
   messageContent: string;
 }
+
 export default function WaInboxImage(props: Props) {
   const [link, caption] = props?.messageContent?.split("_caption_") ?? ["", ""];
   const imageUrl = link ? (link.startsWith("http") ? link : `${getFileUrlFromKey(link)}`) : "";
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, setOpened] = useState(false);
+
   return (
     <>
-      <Stack gap={1} p={0}>
-        <Image src={imageUrl} alt="image" maw={"150px"} radius={"sm"} onClick={open} />
-        <Text size="sm">{caption}</Text>
-      </Stack>
-      <Modal onClose={close} opened={opened} centered>
-        <Image src={imageUrl} alt="image" w={"100%"} h={"100%"} radius={"sm"} />
-      </Modal>
+      <div className="flex flex-col gap-1 p-0">
+        <img
+          src={imageUrl}
+          alt="chat media image"
+          className="max-w-[150px] rounded-md cursor-pointer hover:opacity-90 transition-opacity"
+          onClick={() => setOpened(true)}
+        />
+        {caption && <p className="text-sm mt-1">{caption}</p>}
+      </div>
+      <Dialog open={opened} onOpenChange={setOpened}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden border-none bg-transparent shadow-none [&>button]:text-white">
+          <img
+            src={imageUrl}
+            alt="chat media expanded"
+            className="w-full h-auto max-h-[85vh] object-contain rounded-md"
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

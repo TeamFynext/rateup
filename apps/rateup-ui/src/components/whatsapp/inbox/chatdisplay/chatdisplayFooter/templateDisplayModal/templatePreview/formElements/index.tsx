@@ -1,4 +1,3 @@
-import { Divider, Paper, Stack, Text } from "@mantine/core";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { Updater } from "use-immer";
@@ -8,8 +7,6 @@ import type { LeadgenNodeData } from "@/components/whatsapp/automation/types/nod
 import type { WaTemplateFetchBody } from "@/types/global";
 
 import WaTemplateFormComponents from "./components/index.tsx";
-
-import classes from "./styles.module.css";
 
 interface Props {
   setParameterData: Updater<any>;
@@ -75,10 +72,11 @@ export default function WaTemplateFormElements(props: Props) {
           break;
       }
     },
-    [],
+    [props],
   );
+
   return (
-    <Stack className={classes.wrapper}>
+    <div className="w-full h-full flex flex-col gap-4">
       {props?.template?.components?.map((component, i) => {
         const exampleParams = props.parameters?.find(
           (data) => data.type === component.type?.toLowerCase(),
@@ -86,12 +84,13 @@ export default function WaTemplateFormElements(props: Props) {
         switch (component.type) {
           case "HEADER":
             return (
-              <Stack gap={"xs"} key={i}>
-                <Divider
-                  label={translations("Header parameters")}
-                  labelPosition="left"
-                  className={classes.divider}
-                />
+              <div className="flex flex-col gap-2" key={i}>
+                <div className="relative flex py-2 items-center sticky top-0 bg-background z-10">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide bg-background pr-3 shrink-0">
+                    {translations("Header parameters")}
+                  </span>
+                  <div className="flex-grow border-t border-border" />
+                </div>
                 {component?.format === "IMAGE" ||
                 component?.format === "VIDEO" ||
                 component?.format === "DOCUMENT" ? (
@@ -109,16 +108,17 @@ export default function WaTemplateFormElements(props: Props) {
                 ) : (
                   <NoParams type={"Header"} />
                 )}
-              </Stack>
+              </div>
             );
           case "BODY":
             return (
-              <Stack gap={"xs"} key={i}>
-                <Divider
-                  label={translations("Body parameters")}
-                  labelPosition="left"
-                  className={classes.divider}
-                />
+              <div className="flex flex-col gap-2" key={i}>
+                <div className="relative flex py-2 items-center sticky top-0 bg-background z-10">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide bg-background pr-3 shrink-0">
+                    {translations("Body parameters")}
+                  </span>
+                  <div className="flex-grow border-t border-border" />
+                </div>
                 {component?.example?.body_text?.[0]?.length ? (
                   <WaTemplateFormComponents
                     type={"TEXT"}
@@ -133,41 +133,44 @@ export default function WaTemplateFormElements(props: Props) {
                 ) : (
                   <NoParams type={"Body"} />
                 )}
-              </Stack>
+              </div>
             );
           case "FOOTER":
             return (
-              <Stack gap={"xs"} key={i}>
-                <Divider
-                  label={translations("Footer parameters")}
-                  labelPosition="left"
-                  className={classes.divider}
-                />
+              <div className="flex flex-col gap-2" key={i}>
+                <div className="relative flex py-2 items-center sticky top-0 bg-background z-10">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide bg-background pr-3 shrink-0">
+                    {translations("Footer parameters")}
+                  </span>
+                  <div className="flex-grow border-t border-border" />
+                </div>
                 <NoParams type={"Footer"} />
-              </Stack>
+              </div>
             );
           case "BUTTONS":
             return (
-              <Stack gap={"xs"} key={i}>
-                <Divider
-                  label={translations("Button parameters")}
-                  labelPosition="left"
-                  className={classes.divider}
-                />
+              <div className="flex flex-col gap-2" key={i}>
+                <div className="relative flex py-2 items-center sticky top-0 bg-background z-10">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide bg-background pr-3 shrink-0">
+                    {translations("Button parameters")}
+                  </span>
+                  <div className="flex-grow border-t border-border" />
+                </div>
                 <NoParams type={"Button"} />
-              </Stack>
+              </div>
             );
           default:
+            return null;
         }
       })}
-    </Stack>
+    </div>
   );
 }
 
 export function NoParams({ type }: { type: "Header" | "Body" | "Footer" | "Button" }) {
   return (
-    <Paper className={classes.no_params_wrapper}>
-      <Text className={classes.no_params_text}>No {type} Parameters</Text>
-    </Paper>
+    <div className="shadow-xs p-3 bg-muted/40 rounded-lg border border-border/40">
+      <p className="text-center text-xs text-muted-foreground">No {type} Parameters</p>
+    </div>
   );
 }

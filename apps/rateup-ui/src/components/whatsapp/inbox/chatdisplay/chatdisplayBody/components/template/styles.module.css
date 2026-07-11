@@ -1,7 +1,0 @@
-.template_wrapper {
-  min-width: calc(330px - 2 * var(--mantine-spacing-sm));
-  max-width: calc(330px - 2 * var(--mantine-spacing-sm));
-  display: flex;
-  flex-direction: column;
-  gap: var(--mantine-spacing-xs);
-}
