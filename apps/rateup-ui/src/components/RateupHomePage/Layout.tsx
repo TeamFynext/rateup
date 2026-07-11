@@ -19,6 +19,7 @@ interface LayoutProps {
   contentClassName?: string;
   navbarClassName?: string;
   footer?: React.ReactNode;
+  darkNavbar?: boolean;
 }
 
 export default function Layout({
@@ -26,6 +27,7 @@ export default function Layout({
   contentClassName,
   navbarClassName,
   footer = <HomePageFooter />,
+  darkNavbar = false,
 }: Readonly<LayoutProps>) {
   const [likeWhatOpen, setLikeWhatOpen] = useState(false);
   const [bookDemoOpen, setBookDemoOpen] = useState(false);
@@ -89,7 +91,7 @@ export default function Layout({
   return (
     <div className={`relative w-full ${contentClassName} ${navbarClassName}`}>
       <header className={`sticky top-0 z-50 ${contentClassName ? "" : styles.themeDefault}`}>
-        <RateupNavbar />
+        <RateupNavbar darkNavbar={darkNavbar} />
       </header>
       <main>{children}</main>
       {footer}

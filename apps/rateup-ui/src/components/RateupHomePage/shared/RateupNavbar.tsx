@@ -12,7 +12,11 @@ import {
   NavItems,
 } from "@/components/ui/resizable-navbar.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
-import { imagesPath, rateupLogoHorizontalTransparent } from "@/utils/constants.ts";
+import {
+  imagesPath,
+  rateupLogoHorizontalTransparent,
+  rateupLogoHorizontalWhiteTransparent,
+} from "@/utils/constants.ts";
 
 import { RateupStar } from "../../integrations/logos.tsx";
 import { BookDemoModal } from "../helper/BookDemoModal.tsx";
@@ -20,8 +24,15 @@ import DropDownMobileNavItems from "../helpers/DropDownMobileNavItems.tsx";
 
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
-export default function RateupNavbar() {
+interface RateupNavbarProps {
+  darkNavbar?: boolean;
+}
+
+export default function RateupNavbar({ darkNavbar = false }: Readonly<RateupNavbarProps>) {
   const hasSession = useCheckSession();
+  const mobileLogo = darkNavbar
+    ? rateupLogoHorizontalTransparent
+    : rateupLogoHorizontalWhiteTransparent;
   const rateupLogoUrl = `${imagesPath}/rateupLogo.svg`;
   const navItems = [
     {
@@ -156,7 +167,7 @@ export default function RateupNavbar() {
             className="relative z-20 mr-4 flex items-center 
           space-x-2 lg:px-8 px-2 py-1 text-sm font-normal text-black"
           >
-            <Image src={rateupLogoHorizontalTransparent} alt="logo" width={100} height={30} />
+            <Image src={mobileLogo} alt="logo" width={100} height={30} />
           </Link>
           <MobileNavToggle
             isOpen={isMobileMenuOpen}
