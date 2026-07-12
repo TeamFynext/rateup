@@ -1,7 +1,7 @@
-import { Radio, ScrollArea } from "@mantine/core";
 import { useAnimate } from "motion/react";
 import { useContext, useEffect, useState } from "react";
 
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
@@ -42,7 +42,7 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
   const handleSelectedOp = async (value) => {
     const res = options?.find((op) => op?.value === value);
     updateResponse(res);
-    const selectedEle = scope.current?.querySelector(`.mantine-focus-auto[data-value="${value}"]`);
+    const selectedEle = scope.current?.querySelector(`[data-value="${value}"]`);
     if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
       if (selectedEle) {
         await animate(selectedEle, { opacity: [0, 1, 0, 1] }, { duration: 0.75 });
@@ -52,10 +52,10 @@ export function CustomNPSForm({ previewChoices }: MCQFormProps) {
   };
 
   return (
-    <ScrollArea.Autosize mah={"40vh"} p={0} m={0} w={"100%"}>
-      <Radio.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"} ref={scope}>
-        <SingleSelectCard data={data} selectedValue={selectedOp} />
-      </Radio.Group>
-    </ScrollArea.Autosize>
+    <ScrollArea className="mr-3 max-h-[40vh] w-full">
+      <div ref={scope}>
+        <SingleSelectCard data={data} selectedValue={selectedOp} onChange={handleSelectedOp} />
+      </div>
+    </ScrollArea>
   );
 }

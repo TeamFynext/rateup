@@ -1,17 +1,9 @@
-.survey-settings-root-div {
-  min-height: 100%;
-  overflow: auto;
-  background-color: #f4f5f2;
-  padding: 24px 22px;
-}
-
-.settings-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 64rem;
-  margin: 0 auto;
-}
+/*
+ * .survey-settings-root-div carries no local rules of its own here — it exists purely
+ * as an anchor class so the :global() descendant selectors below can still target
+ * Mantine Paper/heading markup rendered by not-yet-converted child settings components.
+ * Do not remove this class name from index.tsx's JSX.
+ */
 
 /* Clean card styling for all PaperLayout (Mantine Paper) inside settings */
 .survey-settings-root-div :global(.mantine-Paper-root) {
@@ -20,13 +12,6 @@
     0 1px 2px rgba(11, 31, 72, 0.06),
     0 1px 4px rgba(11, 31, 72, 0.04) !important;
   border: 1px solid #e8e8e5 !important;
-}
-
-/* Danger Zone card — red-tinted background */
-.danger-zone :global(.mantine-Paper-root) {
-  background: #fff5f5 !important;
-  border-color: #fecaca !important;
-  box-shadow: none !important;
 }
 
 /* Section headings */

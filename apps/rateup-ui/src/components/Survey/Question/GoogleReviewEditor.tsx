@@ -1,17 +1,5 @@
-import {
-  Button,
-  Divider,
-  Group,
-  Rating,
-  ScrollAreaAutosize,
-  SimpleGrid,
-  Stack,
-  Switch,
-  Text,
-  Title,
-  useMantineTheme,
-} from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
+import { Star } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -19,10 +7,15 @@ import { toast } from "sonner";
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
+import { Button } from "@/components/ui/button.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 import useFlowStore, { EditorType } from "@/components/whatsapp/flow-v2/utils/store.ts";
+import { cn } from "@/lib/utils";
 import { QuestionType as Q, SmileyResponse } from "@/types/enums.ts";
 
-import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
 import AddGoogleReviewLinkForTeamModal from "./AddGoogleReviewLinkForTeamModal.tsx";
@@ -58,6 +51,7 @@ const GoogleReviewEditor = ({
 
   const [enableGoogleReview, setEnableGoogleReview] = useState(!!selectedQ?.googleReview);
   const [minRating, setMinRating] = useState(selectedQ?.googleReview?.minRating || 3);
+  const [hoveredRating, setHoveredRating] = useState(-1);
   const [minOpinion, setMinOpinion] = useState(selectedQ?.googleReview?.minOpinion || 6);
   const [selectedSmileys, setSelectedSmileys] = useState(
     selectedQ?.googleReview?.reqOptions || ["VeryHappy", "Happy"],
@@ -111,8 +105,7 @@ const GoogleReviewEditor = ({
     updateGoogleReview(googleReview);
   }, [enableGoogleReview, minRating, minOpinion, selectedSmileys]);
 
-  const handleSwitch = (event: any) => {
-    const isChecked = event.currentTarget.checked;
+  const handleSwitch = (isChecked: boolean) => {
     setEnableGoogleReview(isChecked);
     if (isChecked) {
       toast.error(translations("Enter condition and Google page URL"), {
@@ -176,163 +169,157 @@ const GoogleReviewEditor = ({
     setLinkUpdateStatus(false);
   };
 
-  const { primaryColor } = useMantineTheme();
   return (
-    <Stack justify="space-between" style={{ height: "100%" }}>
-      <ScrollAreaAutosize>
-        <Title order={3}>Google Reviews Setup</Title>
-        <Stack px="lg" h="100%">
-          <>
-            <Switch
-              label={translations("Google Reviews")}
-              description={translations("Setup Google Page review for users.")}
-              labelPosition="left"
-              checked={enableGoogleReview}
-              onChange={(event) => handleSwitch(event)}
-              size="lg"
-              styles={{
-                body: {
-                  width: "100%",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                },
-              }}
-            />
-            {enableGoogleReview && (
-              <>
-                <Stack>
-                  <Group>
-                    {(() => {
-                      switch (switchCondition) {
-                        case Q.Smiley:
-                          return (
-                            <SimpleGrid cols={3} spacing={30}>
-                              <Text fw={500}>
-                                {translations(
-                                  "Select the emojis for which Google Review to be enabled:",
+    <div className="flex h-full flex-col justify-between">
+      <ScrollArea className="h-full">
+        <h3 className="text-xl font-semibold">Google Reviews Setup</h3>
+        <div className="flex h-full flex-col gap-4 px-5">
+          <div className="flex w-full items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium">{translations("Google Reviews")}</span>
+              <span className="text-sm text-muted-foreground">
+                {translations("Setup Google Page review for users.")}
+              </span>
+            </div>
+            <Switch checked={enableGoogleReview} onCheckedChange={handleSwitch} />
+          </div>
+          {enableGoogleReview && (
+            <>
+              <div className="flex items-center gap-8">
+                {(() => {
+                  switch (switchCondition) {
+                    case Q.Smiley:
+                      return (
+                        <>
+                          <span className="font-medium">
+                            {translations(
+                              "Select the emojis for which Google Review to be enabled:",
+                            )}
+                          </span>
+                          <span className="font-medium">:</span>
+                          <div className="flex items-center gap-2">
+                            {Object.values(SmileyResponse).map((value) => (
+                              <Button
+                                key={value}
+                                type="button"
+                                variant="ghost"
+                                size="icon-lg"
+                                onClick={() => updateSmileyResponse(value)}
+                              >
+                                {mapSmileyIcon(
+                                  value,
+                                  selectedSmileys.includes(value) ? "red" : "dark",
                                 )}
-                              </Text>
-                              <Text fw={500}> : </Text>
-                              <Group style={{ minWidth: "250px" }}>
-                                {Object.values(SmileyResponse).map((value) => (
-                                  <Button
-                                    key={value}
-                                    variant={selectedSmileys.includes(value) ? "light" : "default"}
-                                    gradient={{
-                                      from: "#62CBE6",
-                                      to: "#3F5BA9",
-                                    }}
-                                    onClick={() => updateSmileyResponse(value)}
-                                    style={{
-                                      minHeight: "20px",
-                                      maxWidth: "70px",
-                                    }}
+                              </Button>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    case Q.Rating:
+                      return (
+                        <>
+                          <span className="font-medium">
+                            {translations("Select minimum rating for enabling Google Review:")}
+                          </span>
+                          <span className="font-medium">:</span>
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: 5 }, (_, i) => {
+                                const starValue = i + 1;
+                                const filled =
+                                  hoveredRating !== -1
+                                    ? starValue <= hoveredRating
+                                    : starValue <= minRating;
+                                return (
+                                  <button
+                                    key={starValue}
+                                    type="button"
+                                    onClick={() => setMinRating(starValue)}
+                                    onMouseEnter={() => setHoveredRating(starValue)}
+                                    onMouseLeave={() => setHoveredRating(-1)}
+                                    className="flex items-center justify-center p-0.5"
                                   >
-                                    {mapSmileyIcon(value, primaryColor)}
-                                  </Button>
-                                ))}
-                              </Group>
-                            </SimpleGrid>
-                          );
-                        case Q.Rating:
-                          return (
-                            <SimpleGrid cols={3} spacing={30}>
-                              <Text fw={500}>
-                                {translations("Select minimum rating for enabling Google Review:")}
-                              </Text>
-                              <Text fw={500}> : </Text>
-                              <Stack align="center">
-                                <Rating value={minRating} onChange={setMinRating} size="xl" />
-                                <Text>
-                                  {" "}
-                                  {minRating} {translations("stars and above.")}
-                                </Text>
-                              </Stack>
-                            </SimpleGrid>
-                          );
-                        case Q.Opinion:
-                          return (
-                            <SimpleGrid cols={3} spacing={30}>
-                              <Text fw={500}>
-                                {" "}
-                                {translations(
-                                  "Select minimum scale value for enabling Google Review:",
-                                )}{" "}
-                              </Text>
-                              <Text fw={500}> : </Text>
-                              <Stack>
-                                <Group style={{ minWidth: "250px" }}>
-                                  {(() => {
-                                    const buttons = [];
-                                    for (let i = 1; i <= 10; i++) {
-                                      buttons.push(
-                                        <Button
-                                          key={i}
-                                          radius="xl"
-                                          size="xs"
-                                          onClick={() => setMinOpinion(i)}
-                                          color={minOpinion === i ? "blue" : "blue.9"}
-                                          variant={minOpinion === i ? "gradient" : "default"}
-                                          gradient={{
-                                            from: "#62CBE6",
-                                            to: "#3F5BA9",
-                                          }}
-                                        >
-                                          {i}
-                                        </Button>,
-                                      );
-                                    }
-                                    return buttons;
-                                  })()}
-                                </Group>
-                                <Text pt="sm" fz="sm" c="dimmed">
-                                  {" "}
-                                  For {minOpinion} and above.
-                                </Text>
-                              </Stack>
-                            </SimpleGrid>
-                          );
-                        default:
-                          return null;
-                      }
-                    })()}
-                  </Group>
-                </Stack>
-                <Divider m="sm" />
-                <Text fw={600} size="1.1rem" my="xs">
-                  {translations("Google Review Links")}
-                </Text>
-                <Stack p="sm">
-                  {teamsToDisplay &&
-                    teamsToDisplay.map((team) => (
-                      <AddGoogleReviewLinkForTeamModal
-                        team={team}
-                        surveyId={surveyId}
-                        key={team?.id}
-                        platform={ReviewPagePlatform.Google}
-                      />
-                    ))}
-                </Stack>
-              </>
-            )}
-          </>
-        </Stack>
-      </ScrollAreaAutosize>
-      <Divider m="xs" />
-      <Group justify="space-between" pb={"sm"} px={"sm"}>
-        <RateupButtonSecondary
-          title={translations("Cancel")}
-          size="md"
-          onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
-        />
-        <RateupButtonBlue
-          title={translations("Save")}
-          size="md"
-          onClick={handleSave}
-          loading={questionUpdateMutation.isPending}
-        />
-      </Group>
-    </Stack>
+                                    <Star
+                                      className={cn(
+                                        "size-6",
+                                        filled
+                                          ? "fill-amber-400 text-amber-400"
+                                          : "text-muted-foreground",
+                                      )}
+                                    />
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <span>
+                              {minRating} {translations("stars and above.")}
+                            </span>
+                          </div>
+                        </>
+                      );
+                    case Q.Opinion:
+                      return (
+                        <>
+                          <span className="font-medium">
+                            {translations("Select minimum scale value for enabling Google Review:")}
+                          </span>
+                          <span className="font-medium">:</span>
+                          <div className="flex flex-col gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {Array.from({ length: 10 }, (_, i) => i + 1).map((i) => (
+                                <Button
+                                  key={i}
+                                  type="button"
+                                  size="sm"
+                                  variant={minOpinion === i ? "default" : "outline"}
+                                  className="rounded-full"
+                                  onClick={() => setMinOpinion(i)}
+                                >
+                                  {i}
+                                </Button>
+                              ))}
+                            </div>
+                            <span className="pt-3 text-sm text-muted-foreground">
+                              For {minOpinion} and above.
+                            </span>
+                          </div>
+                        </>
+                      );
+                    default:
+                      return null;
+                  }
+                })()}
+              </div>
+              <Separator className="my-3" />
+              <span className="my-2.5 text-lg font-semibold">
+                {translations("Google Review Links")}
+              </span>
+              <div className="flex flex-col gap-4">
+                {teamsToDisplay &&
+                  teamsToDisplay.map((team) => (
+                    <AddGoogleReviewLinkForTeamModal
+                      team={team}
+                      surveyId={surveyId}
+                      key={team?.id}
+                      platform={ReviewPagePlatform.Google}
+                    />
+                  ))}
+              </div>
+            </>
+          )}
+        </div>
+      </ScrollArea>
+      <Separator className="my-2.5" />
+      <div className="flex items-center justify-between px-3 pb-3">
+        <Button variant="outline" onClick={() => setActiveTab(QuestionTabsEnum.Edit)}>
+          {translations("Cancel")}
+        </Button>
+        <Button onClick={handleSave} disabled={questionUpdateMutation.isPending}>
+          {questionUpdateMutation.isPending && <Spinner data-icon="inline-start" />}
+          {translations("Save")}
+        </Button>
+      </div>
+    </div>
   );
 };
 

@@ -35,7 +35,7 @@
 
 .theme-preview-container {
   box-shadow: none;
-  flex: 0.72 0 0;
+  flex: 1 1 0;
 }
 
 .theme-preview-container :global(.mantine-Overlay-root) {
@@ -118,11 +118,6 @@
 }
 
 /* styles for different preview view components */
-.parentContainer {
-  position: relative;
-  padding: 25px;
-}
-
 .titleBox {
   position: relative;
   padding: 5px;

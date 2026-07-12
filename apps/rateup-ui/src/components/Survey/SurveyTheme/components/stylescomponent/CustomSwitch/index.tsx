@@ -1,21 +1,15 @@
-import { Switch } from "@mantine/core";
-
-import styles from "./CustomSwitch.module.css";
+import { Switch } from "@/components/ui/switch.tsx";
+import { cn } from "@/lib/utils";
 
 function CustomSwitch({ className = "", checked, onChange, label }) {
   return (
-    <Switch
-      className={className}
-      checked={checked}
-      label={label}
-      classNames={{
-        track: `${!checked ? styles["switch-disabled-track"] : ""}`,
-        body: styles["switch-body"],
-      }}
-      labelPosition="left"
-      size="md"
-      onChange={onChange}
-    />
+    <label className={cn("flex w-fit cursor-pointer items-center gap-2.5", className)}>
+      <span>{label}</span>
+      <Switch
+        checked={checked}
+        onCheckedChange={(value) => onChange?.({ target: { checked: value } })}
+      />
+    </label>
   );
 }
 

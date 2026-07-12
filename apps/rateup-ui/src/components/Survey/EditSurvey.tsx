@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { IconEye, IconLanguage } from "@tabler/icons-react";
 import { isEqual } from "lodash";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
@@ -42,8 +41,6 @@ import {
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext.tsx";
 import UiTextTranslationsModal from "./UiTextTranslationsModal/index.tsx";
-
-import styles from "./EditSurvey.module.css";
 
 const isQuestionType = (type: QuestionType | PageType | undefined): type is QuestionType =>
   Object.values(QuestionType).includes(type as QuestionType);
@@ -98,10 +95,9 @@ export function EditSurvey({
     setIsUiTextTranlationsModalOpen(false);
   }, [isUiTextTranslationsModalOpen]);
 
-  const [
-    isSurveyPreviewModalOpen,
-    { open: openSurveyPreviewModal, close: closeSurveyPreviewModal },
-  ] = useDisclosure(false);
+  const [isSurveyPreviewModalOpen, setIsSurveyPreviewModalOpen] = useState(false);
+  const openSurveyPreviewModal = () => setIsSurveyPreviewModalOpen(true);
+  const closeSurveyPreviewModal = () => setIsSurveyPreviewModalOpen(false);
   const { t: translations } = useTranslation();
   // used to rerender survey theme preview, when questions reoredered or deleted and when survey changes.
   const [surveyPreviewCompKey, setSurveyPreveiwCompKey] = useState(uuidv4());
@@ -114,10 +110,9 @@ export function EditSurvey({
   const themeObjBeingEdited = allThemesArr?.find((obj) => obj.id === themeSelectorState);
   const isThemeObjBeingEditedDefaultTheme = themeObjBeingEdited?.name === "Default Theme";
 
-  const [
-    isStylesEditorDrawerOpen,
-    { open: openStylesEditorDrawer, close: closeStylesEditorDrawer },
-  ] = useDisclosure(false);
+  const [isStylesEditorDrawerOpen, setIsStylesEditorDrawerOpen] = useState(false);
+  const openStylesEditorDrawer = () => setIsStylesEditorDrawerOpen(true);
+  const closeStylesEditorDrawer = () => setIsStylesEditorDrawerOpen(false);
 
   const checkForUnsavedChanges = useCallback(() => {
     if (!selectedQ && activeTab === QuestionTabsEnum.SurveyPreview) {
@@ -260,8 +255,11 @@ export function EditSurvey({
     >
       <div
         className={cn(
-          styles["edit-survey-div"],
           "relative flex h-full w-full overflow-hidden bg-muted",
+          "[&_.survey-theme-root-div]:gap-2.5 [&_.survey-theme-root-div]:overflow-auto",
+          "[&_.survey-theme-root-div_.selected-page-tab-panels-and-styles-div-container]:h-full",
+          "[&_.survey-theme-root-div_.selected-page-tab-panels-and-styles-div-container]:flex-initial",
+          "[&_.theme-preview-container]:w-full [&_.theme-preview-container]:flex-initial",
         )}
       >
         <LayoutGroup>

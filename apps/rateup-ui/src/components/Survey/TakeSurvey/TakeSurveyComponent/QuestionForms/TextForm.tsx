@@ -1,13 +1,11 @@
-import { Input } from "@mantine/core";
 import { useContext } from "react";
 
+import { Input } from "@/components/ui/input.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
-
-import classes from "../TakeSurvey.module.css";
 
 export function TextForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -18,16 +16,10 @@ export function TextForm() {
     <FormPaperLayout>
       <Input
         value={response || ""}
-        onChange={(e) => updateResponse(e.currentTarget.value)}
-        variant="unstyled"
-        radius="xl"
-        size="sm"
-        classNames={{
-          input: classes.input,
-        }}
+        onChange={(e) => updateResponse(e.target.value)}
+        className="h-auto w-full max-w-[400px] rounded-full border-none bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
         onClick={handleInputScrollIntoView}
-        style={{ maxWidth: "400px" }}
-        onKeyDown={(e: any) => {
+        onKeyDown={(e) => {
           if (e.key === "Enter" && !isLastQuestion) {
             nextFn?.(e.currentTarget.value);
           }

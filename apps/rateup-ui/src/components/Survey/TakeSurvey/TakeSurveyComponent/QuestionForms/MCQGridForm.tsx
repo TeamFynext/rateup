@@ -1,4 +1,3 @@
-import { isLightColor } from "@mantine/core";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -21,6 +20,7 @@ import { useMediaQuery } from "@/hooks/use-media-querry.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
+import { isLightColor } from "./isLightColor.ts";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 interface MCQGridFormProps {

@@ -1,5 +1,3 @@
-import { Group, MultiSelect, Text } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { BarChart3, FileText, MessageSquare, Settings, Share2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -8,6 +6,17 @@ import { toast } from "sonner";
 
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import { useGetSurveyVariables, useSurvey } from "@/backend/surveys/surveys.query";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { useNavControlContext } from "@/context/NavControlContext.ts";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
@@ -21,8 +30,6 @@ import ErrorComponent from "../404/ErrorComponent.tsx";
 import RateupLoader from "../Loaders/RateupLoader.tsx";
 import SurveyPageHeader, { type SurveyHeaderTab } from "./SurveyPageHeader.tsx";
 import TabPanelsComp from "./Tabs/TabPanels.tsx";
-
-import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 export enum TabEnum {
   Edit = "Edit",
@@ -101,6 +108,11 @@ export default function SurveyID() {
     setFunToRunBeforeSurveyIdPageHeaderTabsChange,
   ] = useState(null);
 
+  const [discardTabChangeDialog, setDiscardTabChangeDialog] = useState<{
+    open: boolean;
+    value: TabEnum | null;
+  }>({ open: false, value: null });
+
   const { setNavOpened } = useNavControlContext();
 
   const handleTabChange = useCallback(
@@ -108,29 +120,7 @@ export default function SurveyID() {
       const data = funToRunBeforeSurveyIdPageHeaderTabsChange?.();
       const { haveUnsavedChanges, feedbackElement, toastMessage } = data || {};
       if (haveUnsavedChanges && feedbackElement === "modal") {
-        modals.openConfirmModal({
-          title: translations("Discard unsaved changes?"),
-          children: (
-            <Text className={modalStyles["are-you-sure-text"]}>
-              {translations("Are you sure, you want to discard unsaved changes?")}
-            </Text>
-          ),
-          labels: {
-            confirm: translations("Discard"),
-            cancel: translations("Cancel"),
-          },
-          className: modalStyles["delete-confirmation-modal"],
-          centered: true,
-          classNames: {
-            header: modalStyles["modal-header"],
-            body: modalStyles["modal-body"],
-            content: modalStyles["modal-content"],
-          },
-          onConfirm: () => {
-            setActiveTab(value);
-            setFunToRunBeforeSurveyIdPageHeaderTabsChange(null);
-          },
-        });
+        setDiscardTabChangeDialog({ open: true, value });
         return;
       } else if (haveUnsavedChanges && feedbackElement === "toast") {
         toast.error(toastMessage, {
@@ -239,18 +229,42 @@ export default function SurveyID() {
             {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
             <div id="SurveyIssueAlert"> </div>
             {RESULT_TABS.includes(activeTab) && (
-              <Group pos={"absolute"} right={30}>
+              <div className="absolute right-[30px]">
                 <MultiSelect
-                  radius={"10px"}
-                  searchable
-                  clearable
-                  data={multiSelectOptions}
+                  className="w-56 rounded-[10px]"
+                  options={multiSelectOptions}
                   value={filterTeams}
-                  onChange={setFilterTeams}
+                  onValueChange={setFilterTeams}
                   placeholder={filterTeams.length > 0 ? "" : translations("All Teams")}
                 />
-              </Group>
+              </div>
             )}
+
+            <AlertDialog
+              open={discardTabChangeDialog.open}
+              onOpenChange={(open) => setDiscardTabChangeDialog((prev) => ({ ...prev, open }))}
+            >
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{translations("Discard unsaved changes?")}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {translations("Are you sure, you want to discard unsaved changes?")}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{translations("Cancel")}</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      setActiveTab(discardTabChangeDialog.value);
+                      setFunToRunBeforeSurveyIdPageHeaderTabsChange(null);
+                      setDiscardTabChangeDialog({ open: false, value: null });
+                    }}
+                  >
+                    {translations("Discard")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             <TabPanelsComp
               value={activeTab}

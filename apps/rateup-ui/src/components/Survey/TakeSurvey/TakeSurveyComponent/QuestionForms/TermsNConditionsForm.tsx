@@ -1,22 +1,23 @@
-import { Anchor, Checkbox, Group, luminance, Modal, Text, useMantineTheme } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
-import { RateupButtonPrimary } from "../../../../Button/RateupButtons.tsx";
+import { luminance } from "./isLightColor.ts";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
+import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 export function TermsNConditionsForm({ tncData }) {
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, setOpened] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const theme = useMantineTheme();
-  const primaryColor = theme.colors[theme.primaryColor][8];
+  const themePrimaryColor = useThemePrimaryColor();
   const { t: translations } = useTranslation();
-  const textColor = luminance(primaryColor) > 0.8 ? `var(--mantine-color-gray-7)` : primaryColor;
+  const textColor = luminance(themePrimaryColor) > 0.8 ? "var(--foreground)" : themePrimaryColor;
 
   const tnc = tncData?.[selectedLanguage] || {
     title: translations("I agree to"),
@@ -27,44 +28,48 @@ export function TermsNConditionsForm({ tncData }) {
   return (
     <>
       <FormPaperLayout>
-        <Checkbox
-          p="sm"
-          labelPosition="right"
-          checked={response || false}
-          onChange={(e) => updateResponse(e.currentTarget.checked)}
-          color={textColor}
-          label={
-            <>
-              <Group mt="-2px" p="0" gap={0}>
-                <Text c={textColor}>{tnc?.title} </Text>
-                <Anchor
-                  ml="6px"
-                  underline="always"
-                  href="#"
-                  onClick={open}
-                  inherit
-                  c={"var(--tertiary-color)"}
-                >
-                  {tnc?.urlTitle}
-                </Anchor>
-              </Group>
-            </>
-          }
-        />
-      </FormPaperLayout>
-      <Modal opened={opened} onClose={close} title={translations("Terms & Conditions")} centered>
-        <Text pb="50px">{tnc?.content}</Text>
-
-        <Group justify="flex-end">
-          <RateupButtonPrimary
-            title={translations("Accept")}
-            onClick={() => {
-              updateResponse(true);
-              close();
+        <label htmlFor="tnc-checkbox" className="flex items-center gap-2 p-3">
+          <Checkbox
+            id="tnc-checkbox"
+            checked={response || false}
+            onCheckedChange={(checked) => updateResponse(!!checked)}
+            style={{
+              borderColor: textColor,
+              backgroundColor: response ? textColor : undefined,
             }}
           />
-        </Group>
-      </Modal>
+          <span className="-mt-0.5 flex items-center gap-1.5" style={{ color: textColor }}>
+            {tnc?.title}
+            <a
+              href="#"
+              onClick={() => setOpened(true)}
+              className="underline"
+              style={{ color: "var(--tertiary-color)" }}
+            >
+              {tnc?.urlTitle}
+            </a>
+          </span>
+        </label>
+      </FormPaperLayout>
+      <Dialog open={opened} onOpenChange={setOpened}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{translations("Terms & Conditions")}</DialogTitle>
+          </DialogHeader>
+          <p className="pb-[50px]">{tnc?.content}</p>
+
+          <div className="flex justify-end">
+            <Button
+              onClick={() => {
+                updateResponse(true);
+                setOpened(false);
+              }}
+            >
+              {translations("Accept")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

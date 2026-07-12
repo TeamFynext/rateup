@@ -1,4 +1,3 @@
-import { isLightColor } from "@mantine/core";
 import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 import { useAnimate } from "motion/react";
 import { useContext } from "react";
@@ -11,6 +10,7 @@ import { useMediaQuery } from "@/hooks/use-media-querry.ts";
 import { LDResponse } from "@/types/enums.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
+import { isLightColor } from "./isLightColor.ts";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 export function LDForm() {

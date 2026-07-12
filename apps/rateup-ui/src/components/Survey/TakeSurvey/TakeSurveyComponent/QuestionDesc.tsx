@@ -1,22 +1,19 @@
-import { Text } from "@mantine/core";
 import { useContext } from "react";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
-
-import classes from "./TakeSurvey.module.css";
+import { cn } from "@/lib/utils";
 
 function QuestionDesc({ largeScreen, themeStyles }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   return (
-    <Text
-      size={largeScreen ? "15px" : "16px"}
-      className={classes.questionTitle}
+    <p
+      className={cn("mt-2.5 leading-[1.2]", largeScreen ? "text-[15px]" : "text-base")}
       style={themeStyles}
     >
       {selectedQ.description[selectedLanguage]}
-    </Text>
+    </p>
   );
 }
 

@@ -1,19 +1,3 @@
-import {
-  ActionIcon,
-  Divider,
-  Group,
-  Paper,
-  ScrollArea,
-  ScrollAreaAutosize,
-  Select,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-  useMantineTheme,
-} from "@mantine/core";
-import { isNotEmpty, useForm } from "@mantine/form";
-import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { isEmptyObject } from "@tiptap/react";
@@ -22,18 +6,25 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";
-import { SAVE_HOTKEY } from "@/utils/constants.ts";
 
-import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
-import {
-  ContainedNumberInput,
-  ContainedSelection,
-  ContainedTextField,
-} from "../../input/ContainedInput/ContainedInput.tsx";
-import FormModalLayout from "../../Modal/FormModalLayout.tsx";
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 
 interface IProps {
@@ -67,15 +58,18 @@ interface FormValues {
   [ruleType: string]: RuleValue;
 }
 
+const TEXT_TYPE_OPTIONS = ["Letters", "Letters_&_Numbers", "Numbers"];
+
 const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTab }: IProps) => {
   const params = useParams({
     strict: false,
   });
   const surveyId = params.surveyId as string;
-  const { colors } = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [selectedFieldKey, setSelectedFieldKey] = useState("");
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, setOpened] = useState(false);
+  const open = () => setOpened(true);
+  const close = () => setOpened(false);
   const [ruleList, setRuleList] = useState(["length", "wordCount", "textType"]);
 
   const [multiInputRules, setMultiInputRules] = useState<Record<string, Rule[]>>(null);
@@ -85,33 +79,37 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
     surveyId,
   });
   const { t: translations } = useTranslation();
-  const form = useForm<FormValues>({
-    initialValues: {},
-    validate: (values) => {
-      const errors = {};
 
-      for (const ruleType of Object.keys(values)) {
-        const ruleData = values[ruleType];
+  const [values, setValuesState] = useState<FormValues>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-        if ("min" in ruleData && !ruleData.min) {
-          errors[`${ruleType}.min`] = "Required";
-        }
-        if ("max" in ruleData && !ruleData.max) {
-          errors[`${ruleType}.max`] = "Required";
-        }
-        if ("type" in ruleData && !ruleData.type) {
-          errors[`${ruleType}.type`] = "Required";
-        }
-        if (!ruleData.errorMessage) {
-          errors[`${ruleType}.errorMessage`] = "Required";
-        }
-      }
+  const setFieldValue = (ruleType: string, value: RuleValue) => {
+    setValuesState((prev) => ({ ...prev, [ruleType]: value }));
+  };
 
-      return errors;
-    },
-  });
+  const setValues = (newValues: FormValues) => {
+    setValuesState(newValues);
+  };
 
-  const { values, setFieldValue, setValues, errors } = form;
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    for (const ruleType of Object.keys(values)) {
+      const ruleData = values[ruleType];
+      if ("min" in ruleData && !ruleData.min) newErrors[`${ruleType}.min`] = "Required";
+      if ("max" in ruleData && !ruleData.max) newErrors[`${ruleType}.max`] = "Required";
+      if ("type" in ruleData && !ruleData.type) newErrors[`${ruleType}.type`] = "Required";
+      if (!ruleData.errorMessage) newErrors[`${ruleType}.errorMessage`] = "Required";
+    }
+    setErrors(newErrors);
+    return { hasErrors: Object.keys(newErrors).length > 0 };
+  };
+
+  const reset = () => {
+    setValuesState({});
+    setErrors({});
+  };
+
+  const form = { values, setFieldValue, setValues, errors, validate, reset };
 
   function ruleTitle(ruleType: string) {
     switch (ruleType) {
@@ -282,70 +280,111 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
   };
 
   const MultiInputValidationRules = () => {
-    const ruleForm = useForm({
-      initialValues: selectedRule,
-      validate: {
-        min: selectedRule?.ruleType === "length" ? isNotEmpty("required") : null,
-        max: selectedRule?.ruleType === "length" ? isNotEmpty("required") : null,
-        type: selectedRule?.ruleType === "textType" ? isNotEmpty("required") : null,
-        errorMessage: isNotEmpty("required"),
-      },
-    });
+    const [ruleValues, setRuleValues] = useState<Rule & { fieldKey?: string }>(selectedRule);
+    const [ruleErrors, setRuleErrors] = useState<Record<string, string>>({});
+
+    const setRuleField = (name: string, value: any) => {
+      setRuleValues((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const validateRuleForm = () => {
+      const newErrors: Record<string, string> = {};
+      if (ruleValues?.ruleType === "length") {
+        if (!ruleValues?.min) newErrors.min = translations("required");
+        if (!ruleValues?.max) newErrors.max = translations("required");
+      }
+      if (ruleValues?.ruleType === "textType" && !ruleValues?.type) {
+        newErrors.type = translations("required");
+      }
+      if (!ruleValues?.errorMessage) newErrors.errorMessage = translations("required");
+      setRuleErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
+
     const handleUpdateRule = async () => {
-      const validationRes = await ruleForm.validate();
-      if (validationRes.hasErrors) return;
-      const newRules = multiInputRules?.[ruleForm.values.fieldKey];
-      const rule = newRules.find((r) => r.ruleType == ruleForm.values.ruleType);
+      if (!validateRuleForm()) return;
+      const newRules = multiInputRules?.[ruleValues.fieldKey];
+      const rule = newRules.find((r) => r.ruleType == ruleValues.ruleType);
       if (rule.ruleType == "length") {
-        rule.min = ruleForm.values.min;
-        rule.max = ruleForm.values.max;
+        rule.min = ruleValues.min;
+        rule.max = ruleValues.max;
       }
       if (rule.ruleType == "textType") {
-        rule.type = ruleForm.values.type;
+        rule.type = ruleValues.type;
       }
-      rule.errorMessage = ruleForm.values.errorMessage;
+      rule.errorMessage = ruleValues.errorMessage;
       setMultiInputRules({
         ...multiInputRules,
-        [ruleForm.values.fieldKey]: newRules,
+        [ruleValues.fieldKey]: newRules,
       });
       setSelectedRule(null);
       close();
     };
 
     useEffect(() => {
-      ruleForm.setValues(selectedRule);
+      setRuleValues(selectedRule);
+      setRuleErrors({});
     }, [selectedRule]);
+
+    const fieldKeyOptions =
+      selectedQ?.features?.[selectedLanguage]?.fields?.map((f) => f?.fieldKey) ?? [];
+    const availableRuleTypes =
+      ruleList?.filter(
+        (ruleType) => !multiInputRules?.[selectedFieldKey]?.some((r) => r.ruleType == ruleType),
+      ) ?? [];
 
     return (
       <>
-        <Paper bg={colors.yellow[0]} p="sm">
-          <Group>
-            <Select
-              data={selectedQ?.features?.[selectedLanguage]?.fields?.map((f) => f?.fieldKey)}
-              onChange={(value) => setSelectedFieldKey(value)}
-              label={translations("select field Key")}
-              placeholder={translations("select key")}
-              value={selectedFieldKey}
-            />
-            <Select
-              label={translations("select rule type")}
-              placeholder={translations("Select rule type")}
-              data={ruleList?.filter(
-                (ruleType) =>
-                  !multiInputRules?.[selectedFieldKey]?.some((r) => r.ruleType == ruleType),
-              )}
-              onChange={(ruleType) => addRule(ruleType)}
-            />
-          </Group>
-        </Paper>
-        <ScrollAreaAutosize h={230} scrollbarSize={8}>
+        <Card className="bg-yellow-50 p-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <Field>
+              <FieldLabel htmlFor="field-key-select">{translations("select field Key")}</FieldLabel>
+              <Select
+                value={selectedFieldKey}
+                onValueChange={setSelectedFieldKey}
+                items={fieldKeyOptions.map((key) => ({ value: key, label: key }))}
+              >
+                <SelectTrigger id="field-key-select" className="w-fit">
+                  <SelectValue placeholder={translations("select key")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {fieldKeyOptions.map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {key}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="rule-type-select">{translations("select rule type")}</FieldLabel>
+              <Select
+                onValueChange={(ruleType) => addRule(ruleType as string)}
+                items={availableRuleTypes.map((rt) => ({ value: rt, label: ruleTitle(rt) || rt }))}
+              >
+                <SelectTrigger id="rule-type-select" className="w-fit">
+                  <SelectValue placeholder={translations("Select rule type")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableRuleTypes.map((rt) => (
+                    <SelectItem key={rt} value={rt}>
+                      {ruleTitle(rt) || rt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+        </Card>
+        <ScrollArea className="h-[230px]">
           {multiInputRules &&
             Object.entries(multiInputRules)?.map(([fieldKey, rules], index) => (
-              <Paper bg={colors.blue[0]} p={"sm"} my={"xs"} key={index}>
-                <Group>
-                  <Title order={6}>{fieldKey}</Title>
-                  <ActionIcon
-                    variant="subtle"
+              <Card key={index} className="my-2.5 bg-blue-50 p-3">
+                <div className="flex items-center gap-2">
+                  <h6 className="text-sm font-semibold">{fieldKey}</h6>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
                     onClick={() => {
                       const updatedMultiInputRules = { ...multiInputRules };
                       if (fieldKey in updatedMultiInputRules)
@@ -354,41 +393,50 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                       setMultiInputRules(updatedMultiInputRules);
                     }}
                   >
-                    <IconTrash color={colors.red[5]} />
-                  </ActionIcon>
-                </Group>
-                {rules?.map((r: Rule, _ruleIndex) => (
-                  <Group py={"xs"} key={r?.ruleType}>
-                    <Text w={80}>{r?.ruleType}:</Text>
+                    <IconTrash className="text-destructive" />
+                  </Button>
+                </div>
+                {rules?.map((r: Rule) => (
+                  <div key={r?.ruleType} className="flex flex-wrap items-center gap-2 py-2.5">
+                    <span className="w-20">{r?.ruleType}:</span>
                     {r?.ruleType === "length" && (
                       <>
-                        <ContainedNumberInput value={r?.min} readOnly label={"Min"} w={100} />
-                        <ContainedNumberInput value={r?.max} readOnly label={"Max"} w={100} />
+                        <Field className="w-[100px]">
+                          <FieldLabel>{translations("Min")}</FieldLabel>
+                          <Input value={r?.min} readOnly />
+                        </Field>
+                        <Field className="w-[100px]">
+                          <FieldLabel>{translations("Max")}</FieldLabel>
+                          <Input value={r?.max} readOnly />
+                        </Field>
                       </>
                     )}
                     {r?.ruleType === "textType" && (
-                      <ContainedTextField value={r?.type} readOnly label={translations("Type")} />
+                      <Field>
+                        <FieldLabel>{translations("Type")}</FieldLabel>
+                        <Input value={r?.type} readOnly />
+                      </Field>
                     )}
-                    <ContainedTextField
-                      value={r?.errorMessage}
-                      readOnly
-                      description={translations(
-                        "please change according to display text of the field",
-                      )}
-                      label={translations("Error Message")}
-                      mb={"md"}
-                    />
-                    <ActionIcon
-                      variant="subtle"
+                    <Field>
+                      <FieldLabel>{translations("Error Message")}</FieldLabel>
+                      <Input value={r?.errorMessage} readOnly />
+                      <p className="text-sm text-muted-foreground">
+                        {translations("please change according to display text of the field")}
+                      </p>
+                    </Field>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={() => {
                         setSelectedRule({ ...r, fieldKey });
                         open();
                       }}
                     >
                       <IconEdit />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="subtle"
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={() => {
                         const newRules = rules?.filter((rule) => rule?.ruleType !== r?.ruleType);
                         if (!newRules.length) {
@@ -402,92 +450,130 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                         });
                       }}
                     >
-                      <IconTrash color={colors.red[5]} />
-                    </ActionIcon>
-                  </Group>
+                      <IconTrash className="text-destructive" />
+                    </Button>
+                  </div>
                 ))}
-              </Paper>
+              </Card>
             ))}
-          <FormModalLayout
-            opened={opened}
-            onClose={close}
-            title={translations("Update Automation")}
-            centered
+          <Dialog
+            open={opened}
+            onOpenChange={(next) => {
+              if (!next) close();
+            }}
           >
-            <Text>
-              {translations("Field Key: ")}
-              {selectedRule?.fieldKey}
-            </Text>
-            {selectedRule?.ruleType === "length" && (
-              <>
-                <ContainedNumberInput
-                  {...ruleForm.getInputProps("min")}
-                  label={translations("Min")}
-                  w={"fit-content"}
-                />
-                <ContainedNumberInput
-                  {...ruleForm.getInputProps("max")}
-                  label={translations("Max")}
-                />
-              </>
-            )}
-            {selectedRule?.ruleType === "textType" && (
-              <ContainedSelection
-                {...ruleForm.getInputProps("type")}
-                label={translations("Type")}
-                data={["Letters", "Letters_&_Numbers", "Numbers"]}
-              />
-            )}
-            <ContainedTextField
-              {...ruleForm.getInputProps("errorMessage")}
-              label={translations("Error Message")}
-              description={translations("please change according to display text of the field")}
-            />
-            <RateupButtonBlue title={translations("update")} onClick={handleUpdateRule} mt="sm" />
-          </FormModalLayout>
-        </ScrollAreaAutosize>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{translations("Update Automation")}</DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col gap-4">
+                <p className="text-sm">
+                  {translations("Field Key: ")}
+                  {selectedRule?.fieldKey}
+                </p>
+                {selectedRule?.ruleType === "length" && (
+                  <>
+                    <Field data-invalid={!!ruleErrors.min}>
+                      <FieldLabel>{translations("Min")}</FieldLabel>
+                      <Input
+                        type="number"
+                        value={ruleValues?.min ?? ""}
+                        onChange={(e) => setRuleField("min", e.target.value)}
+                        aria-invalid={!!ruleErrors.min}
+                      />
+                      {ruleErrors.min && <FieldError>{ruleErrors.min}</FieldError>}
+                    </Field>
+                    <Field data-invalid={!!ruleErrors.max}>
+                      <FieldLabel>{translations("Max")}</FieldLabel>
+                      <Input
+                        type="number"
+                        value={ruleValues?.max ?? ""}
+                        onChange={(e) => setRuleField("max", e.target.value)}
+                        aria-invalid={!!ruleErrors.max}
+                      />
+                      {ruleErrors.max && <FieldError>{ruleErrors.max}</FieldError>}
+                    </Field>
+                  </>
+                )}
+                {selectedRule?.ruleType === "textType" && (
+                  <Field data-invalid={!!ruleErrors.type}>
+                    <FieldLabel>{translations("Type")}</FieldLabel>
+                    <Select
+                      value={ruleValues?.type}
+                      onValueChange={(value) => setRuleField("type", value)}
+                      items={TEXT_TYPE_OPTIONS.map((t) => ({ value: t, label: t }))}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TEXT_TYPE_OPTIONS.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {ruleErrors.type && <FieldError>{ruleErrors.type}</FieldError>}
+                  </Field>
+                )}
+                <Field data-invalid={!!ruleErrors.errorMessage}>
+                  <FieldLabel>{translations("Error Message")}</FieldLabel>
+                  <Input
+                    value={ruleValues?.errorMessage ?? ""}
+                    onChange={(e) => setRuleField("errorMessage", e.target.value)}
+                    aria-invalid={!!ruleErrors.errorMessage}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {translations("please change according to display text of the field")}
+                  </p>
+                  {ruleErrors.errorMessage && <FieldError>{ruleErrors.errorMessage}</FieldError>}
+                </Field>
+                <Button onClick={handleUpdateRule}>{translations("update")}</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </ScrollArea>
       </>
     );
   };
   return (
-    <Stack justify="space-between" style={{ height: "100%" }}>
-      <Stack>
-        <Title order={3}>{translations("Validation Editor")}</Title>
-        <Text c="gray">
-          {" "}
+    <div className="flex h-full flex-col justify-between">
+      <div className="flex flex-col gap-4">
+        <h3 className="text-xl font-semibold">{translations("Validation Editor")}</h3>
+        <span className="text-sm text-muted-foreground">
           {translations("Add validation rules to the user input for this question.")}
-        </Text>
-        <Divider />
+        </span>
+        <Separator />
         {[Q.MultiTextInput].includes(selectedQ?.type as QuestionType) ? (
           <MultiInputValidationRules />
         ) : (
-          <Paper style={{ minHeight: "300px", minWidth: "650px", maxWidth: "650px" }}>
-            <ScrollArea h={400}>
-              <form onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSave]])}>
+          <Card className="min-h-[300px] min-w-[650px] max-w-[650px]">
+            <ScrollArea className="h-[400px]">
+              <form
+                onKeyDown={(e) => {
+                  const isSave = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s";
+                  if (isSave) {
+                    e.preventDefault();
+                    handleSave();
+                  }
+                }}
+              >
                 {Object.entries(values).map(([ruleType, ruleValues]) => {
                   const ruleData = ruleValues;
 
                   return (
                     <div key={ruleType}>
-                      <Group
-                        align="center"
-                        mb="sm"
-                        px="lg"
-                        py="sm"
-                        style={{
-                          backgroundColor: colors.blue[0],
-                          borderRadius: "12px",
-                        }}
-                      >
-                        <Title order={4} style={{ maxWidth: "100px", minWidth: "100px" }}>
+                      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl bg-blue-50 px-5 py-3">
+                        <h4 className="w-[100px] max-w-[100px] text-base font-semibold">
                           {ruleTitle(ruleType) || ruleType}
-                        </Title>
+                        </h4>
                         {"min" in ruleData && "max" in ruleData ? (
-                          <>
-                            <Group>
-                              <TextInput
-                                style={{ maxWidth: "100px" }}
-                                label={translations("Min")}
+                          <div className="flex items-center gap-3">
+                            <Field data-invalid={!!errors[`${ruleType}.min`]}>
+                              <FieldLabel>{translations("Min")}</FieldLabel>
+                              <Input
+                                className="max-w-[100px]"
                                 value={ruleData.min}
                                 onChange={(event) => {
                                   const newValue: RuleValue = {
@@ -496,12 +582,16 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                                   };
                                   setFieldValue(ruleType, newValue);
                                 }}
-                                required
-                                error={errors[`${ruleType}.min`]}
+                                aria-invalid={!!errors[`${ruleType}.min`]}
                               />
-                              <TextInput
-                                label={translations("Max")}
-                                style={{ maxWidth: "100px" }}
+                              {errors[`${ruleType}.min`] && (
+                                <FieldError>{errors[`${ruleType}.min`]}</FieldError>
+                              )}
+                            </Field>
+                            <Field data-invalid={!!errors[`${ruleType}.max`]}>
+                              <FieldLabel>{translations("Max")}</FieldLabel>
+                              <Input
+                                className="max-w-[100px]"
                                 value={ruleData.max}
                                 onChange={(event) => {
                                   const newValue: RuleValue = {
@@ -510,92 +600,117 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                                   };
                                   setFieldValue(ruleType, newValue);
                                 }}
-                                required
-                                error={errors[`${ruleType}.max`]}
+                                aria-invalid={!!errors[`${ruleType}.max`]}
                               />
-                            </Group>
-                          </>
+                              {errors[`${ruleType}.max`] && (
+                                <FieldError>{errors[`${ruleType}.max`]}</FieldError>
+                              )}
+                            </Field>
+                          </div>
                         ) : (
-                          <Select
-                            label={translations("Input type:")}
-                            placeholder={translations("Select rule type")}
-                            data={["Letters", "Letters_&_Numbers"]}
-                            defaultValue="Letters_&_Numbers"
+                          <Field data-invalid={!!errors[`${ruleType}.type`]}>
+                            <FieldLabel>{translations("Input type:")}</FieldLabel>
+                            <Select
+                              defaultValue="Letters_&_Numbers"
+                              onValueChange={(event) => {
+                                const newValue: RuleValue = {
+                                  ...(ruleData as RuleValue),
+                                  type: event,
+                                  errorMessage: `${event} only allowed.`,
+                                };
+                                setFieldValue(ruleType, newValue);
+                              }}
+                              items={["Letters", "Letters_&_Numbers"].map((t) => ({
+                                value: t,
+                                label: t,
+                              }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={translations("Select rule type")} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Letters">Letters</SelectItem>
+                                <SelectItem value="Letters_&_Numbers">Letters_&_Numbers</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {errors[`${ruleType}.type`] && (
+                              <FieldError>{errors[`${ruleType}.type`]}</FieldError>
+                            )}
+                          </Field>
+                        )}
+                        <Field data-invalid={!!errors[`${ruleType}.errorMessage`]}>
+                          <FieldLabel>{translations("Error Message")}</FieldLabel>
+                          <Input
+                            className="max-w-[300px]"
+                            value={ruleData.errorMessage}
                             onChange={(event) => {
                               const newValue: RuleValue = {
-                                ...(ruleData as RuleValue),
-                                type: event,
-                                errorMessage: `${event} only allowed.`,
+                                ...ruleData,
+                                errorMessage: event.target.value,
                               };
                               setFieldValue(ruleType, newValue);
                             }}
-                            error={errors[`${ruleType}.type`]}
+                            aria-invalid={!!errors[`${ruleType}.errorMessage`]}
                           />
-                        )}
-                        <TextInput
-                          style={{ maxWidth: "300px" }}
-                          label={translations("Error Message")}
-                          value={ruleData.errorMessage}
-                          onChange={(event) => {
-                            const newValue: RuleValue = {
-                              ...ruleData,
-                              errorMessage: event.target.value,
-                            };
-                            setFieldValue(ruleType, newValue);
-                          }}
-                          required
-                          error={errors[`${ruleType}.errorMessage`]}
-                        />
+                          {errors[`${ruleType}.errorMessage`] && (
+                            <FieldError>{errors[`${ruleType}.errorMessage`]}</FieldError>
+                          )}
+                        </Field>
 
-                        <Group px="xl">
-                          <ActionIcon variant="subtle" onClick={() => deleteRule(ruleType)}>
-                            <IconTrash color={colors.red[5]} />
-                          </ActionIcon>
-                        </Group>
-                      </Group>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          className="px-8"
+                          onClick={() => deleteRule(ruleType)}
+                        >
+                          <IconTrash className="text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}
 
                 {Object.keys(values).length < 3 && (
-                  <Group
-                    p="md"
-                    mt="xl"
-                    style={{
-                      maxWidth: "350px",
-                      backgroundColor: colors.yellow[0],
-                      borderRadius: "12px",
-                    }}
-                  >
-                    <Title order={4} style={{ maxWidth: "120px" }}>
+                  <div className="mt-8 flex max-w-[350px] items-center gap-3 rounded-xl bg-yellow-50 p-4">
+                    <h4 className="max-w-[120px] text-base font-semibold">
                       {translations("Add Rule :")}
-                    </Title>
+                    </h4>
                     <Select
-                      placeholder={translations("Select rule type")}
-                      data={ruleList?.filter((ruleType) => !(ruleType in values))}
-                      onChange={(ruleType) => addRule(ruleType)}
-                    />
-                  </Group>
+                      onValueChange={(ruleType) => addRule(ruleType as string)}
+                      items={ruleList
+                        ?.filter((ruleType) => !(ruleType in values))
+                        .map((rt) => ({ value: rt, label: ruleTitle(rt) || rt }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={translations("Select rule type")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ruleList
+                          ?.filter((ruleType) => !(ruleType in values))
+                          .map((rt) => (
+                            <SelectItem key={rt} value={rt}>
+                              {ruleTitle(rt) || rt}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
               </form>
             </ScrollArea>
-          </Paper>
+          </Card>
         )}
-      </Stack>
-      <Group justify="space-between">
-        <RateupButtonSecondary
-          title={translations("Cancel")}
-          size="md"
-          onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
-        />
-        <RateupButtonBlue
-          title={translations("Save")}
-          size="md"
-          onClick={handleSave}
-          loading={questionUpdateMutation.isPending}
-        />
-      </Group>
-    </Stack>
+      </div>
+      <div className="flex items-center justify-between">
+        <Button variant="outline" onClick={() => setActiveTab(QuestionTabsEnum.Edit)}>
+          {translations("Cancel")}
+        </Button>
+        <Button onClick={handleSave} disabled={questionUpdateMutation.isPending}>
+          {questionUpdateMutation.isPending && <Spinner data-icon="inline-start" />}
+          {translations("Save")}
+        </Button>
+      </div>
+    </div>
   );
 };
 

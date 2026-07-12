@@ -1,28 +1,25 @@
-import type { TextareaProps, TextInputProps } from "@mantine/core";
-import { Box, Button, FileButton, Group, Stack, Text, Textarea, Title } from "@mantine/core";
-import type { UseFormReturnType } from "@mantine/form";
-import { useForm } from "@mantine/form";
 import { IconCircleCheck, IconRefresh } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
+import { cn } from "@/lib/utils";
 import { SaveStatus } from "@/types/enums.ts";
 import type { WaFlowStartMessageConfig } from "@/types/global";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 import { generateWaSurveyIdentifier_byName } from "@/utils/whatsapp/wa_url.tsx";
 
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
 import type { LengthTrackerProps } from "../../input/LengthTracker.tsx";
 import { LengthTracker } from "../../input/LengthTracker.tsx";
-import PaperLayout from "../../styled/Layouts/PaperLayout.tsx";
 import { SentMessageContainer, WaResponseMessage } from "../../whatsapp/MessageComponents.tsx";
-
-import templateStyles from "../../whatsapp/templates/template.module.css";
-import whatsappStyles from "../../whatsapp/whatsapp.module.css";
 
 const exceed = (l: number) => `Cannot exceed ${l} characters.`;
 const empty = `Cannot be empty.`;
@@ -35,9 +32,54 @@ function isEqual(ob1: object, ob2: object): boolean {
   });
 }
 
+interface SimpleForm<T> {
+  values: T;
+  setValues: (values: T) => void;
+  setFieldValue: (name: keyof T, value: any) => void;
+  setInitialValues: (values: T) => void;
+  reset: () => void;
+  getInputProps: (name: keyof T) => { value: any; onChange: (e: any) => void };
+  errors: Partial<Record<keyof T, string>>;
+}
+
+function useSimpleForm<T extends object>(opts: {
+  initialValues: T;
+  validate?: Partial<Record<keyof T, (value: any) => string | undefined | false>>;
+}): SimpleForm<T> {
+  const [values, setValues] = useState<T>(opts.initialValues);
+  const initialRef = useRef<T>(opts.initialValues);
+  const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
+
+  const setInitialValues = (newInitial: T) => {
+    initialRef.current = newInitial;
+  };
+
+  const setFieldValue = (name: keyof T, value: any) => {
+    setValues((prev) => ({ ...prev, [name]: value }));
+    const validator = opts.validate?.[name];
+    if (validator) {
+      setErrors((prev) => ({ ...prev, [name]: validator(value) || undefined }));
+    }
+  };
+
+  const reset = () => {
+    setValues(initialRef.current);
+    setErrors({});
+  };
+
+  const getInputProps = (name: keyof T) => ({
+    value: (values[name] as any) ?? "",
+    onChange: (e: any) =>
+      setFieldValue(name, e && typeof e === "object" && "target" in e ? e.target.value : e),
+  });
+
+  return { values, setValues, setFieldValue, setInitialValues, reset, getInputProps, errors };
+}
+
 function FlowShareTemplateEditor({ form, dbFlowId, updateMutation, initialValues }) {
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const [status, setStatus] = useState(SaveStatus.saved);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   form.setInitialValues(initialValues);
 
@@ -73,13 +115,13 @@ function FlowShareTemplateEditor({ form, dbFlowId, updateMutation, initialValues
   }, [form.values]);
 
   const max_mb = 1;
-  const onImageUpload = (event: File) => {
-    if (!event) return;
-    if (event.size > max_mb * 1024 * 1024) {
+  const onImageUpload = (file: File) => {
+    if (!file) return;
+    if (file.size > max_mb * 1024 * 1024) {
       toast.error(`Max file size is ${max_mb} MB`);
       return;
     }
-    setImageToUpload(event);
+    setImageToUpload(file);
   };
   const { t: translations } = useTranslation();
   const [imageToUpload, setImageToUpload] = useState(null);
@@ -101,37 +143,32 @@ function FlowShareTemplateEditor({ form, dbFlowId, updateMutation, initialValues
   }
 
   return (
-    <Stack gap={0}>
-      <Group mb="4">
-        <Title order={4}>{translations("Edit Template Message")}</Title>
+    <div className="flex flex-col">
+      <div className="mb-1 flex items-center gap-4">
+        <h4 className="text-lg font-semibold">{translations("Edit Template Message")}</h4>
         <SaveStatusIndicator status={status} />
-      </Group>
-      <Stack
-        bg={"whitesmoke"}
-        p="md"
-        style={{
-          borderRadius: "8px",
-          flex: 1,
-        }}
-      >
-        <Group>
-          <FileButton
-            onChange={onImageUpload}
+      </div>
+      <div className="flex flex-1 flex-col gap-4 rounded-lg bg-neutral-100 p-4">
+        <div className="flex items-center gap-4">
+          <input
+            ref={fileInputRef}
+            type="file"
             accept="image/png,image/jpeg,image/svg+xml,image/webp"
-          >
-            {(props) => {
-              return (
-                <Button {...props}>
-                  {imageToUpload ? translations("Change Image") : translations("Upload Image")}
-                </Button>
-              );
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onImageUpload(file);
+              e.target.value = "";
             }}
-          </FileButton>
+          />
+          <Button type="button" onClick={() => fileInputRef.current?.click()}>
+            {imageToUpload ? translations("Change Image") : translations("Upload Image")}
+          </Button>
 
-          <Button variant="outline" onClick={handleRemoveImage}>
+          <Button type="button" variant="outline" onClick={handleRemoveImage}>
             {translations("Remove Image")}
           </Button>
-        </Group>
+        </div>
 
         <TextareaWithLengthTracker
           label={translations("Body")}
@@ -144,13 +181,13 @@ function FlowShareTemplateEditor({ form, dbFlowId, updateMutation, initialValues
           maxValue={60}
         />
         <TextInputWithLengthTracker label={"CTA"} maxValue={20} {...form.getInputProps("cta")} />
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   );
 }
 
 interface FlowStartMessageEditorProps {
-  form: UseFormReturnType<WaFlowStartMessageConfig>;
+  form: SimpleForm<WaFlowStartMessageConfig>;
   dbFlowId: string;
   updateMutation: any;
   initialValues: WaFlowStartMessageConfig;
@@ -198,19 +235,12 @@ function FlowStartMessageEditor({
   }, [form.values]);
   const { t: translations } = useTranslation();
   return (
-    <Stack gap={0}>
-      <Group mb="4">
-        <Title order={4}>{translations("Edit Start Message")}</Title>
+    <div className="flex flex-col">
+      <div className="mb-1 flex items-center gap-4">
+        <h4 className="text-lg font-semibold">{translations("Edit Start Message")}</h4>
         <SaveStatusIndicator status={status} />
-      </Group>
-      <Stack
-        bg={"whitesmoke"}
-        p="md"
-        style={{
-          borderRadius: "8px",
-          flex: 1,
-        }}
-      >
+      </div>
+      <div className="flex flex-1 flex-col gap-4 rounded-lg bg-neutral-100 p-4">
         <TextareaWithLengthTracker
           label={translations("Body")}
           {...form.getInputProps("prefix")}
@@ -221,8 +251,8 @@ function FlowStartMessageEditor({
           {...form.getInputProps("suffix")}
           maxValue={1024}
         />
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   );
 }
 
@@ -237,32 +267,20 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
   const updateMutation = useUpdateFlowMutation();
   const templateInitialValues = generateTemplateInitialValues(dbFlow);
 
-  const templateForm = useForm({
+  const templateForm = useSimpleForm({
     initialValues: templateInitialValues,
     validate: templateFormValidation,
-    validateInputOnChange: true,
   });
 
   const startMessageInitialValues = generateStartMessageInitialValues(dbFlow);
-  const startMessageForm = useForm<WaFlowStartMessageConfig>({
+  const startMessageForm = useSimpleForm<WaFlowStartMessageConfig>({
     initialValues: startMessageInitialValues,
   });
   const { t: translations } = useTranslation();
   return (
-    <PaperLayout
-      p="30px"
-      style={{
-        boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
-        overflowX: "auto",
-      }}
-    >
-      <Group align={"stretch"} h={"100%"}>
-        <Stack
-          style={{
-            flex: 1,
-          }}
-          gap={"xl"}
-        >
+    <Card className="overflow-x-auto p-[30px] shadow-[rgba(99,99,99,0.2)_0px_2px_8px_0px]">
+      <div className="flex h-full items-stretch gap-4">
+        <div className="flex flex-1 flex-col gap-8">
           <FlowStartMessageEditor
             form={startMessageForm}
             dbFlowId={dbFlowId}
@@ -275,33 +293,15 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
             updateMutation={updateMutation}
             initialValues={templateInitialValues}
           />
-        </Stack>
-        <Stack
-          gap={0}
-          style={{
-            flex: 1,
-            maxWidth: "400px",
-          }}
-        >
-          <Group mb="4" justify={"center"}>
-            <Title order={4}>{translations("Preview")}</Title>
-          </Group>
-          <Box
-            className={whatsappStyles.chatBg}
-            p="lg"
-            style={{
-              borderRadius: "8px",
-              overflow: "hidden",
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "end",
-            }}
-            mx={"sm"}
-          >
-            <Stack>
+        </div>
+        <div className="flex max-w-[400px] flex-1 flex-col">
+          <div className="mb-1 flex items-center justify-center gap-4">
+            <h4 className="text-lg font-semibold">{translations("Preview")}</h4>
+          </div>
+          <div className="relative mx-3 flex flex-1 flex-col justify-end overflow-hidden rounded-lg bg-white p-5 before:absolute before:inset-0 before:bg-[#efeae2] before:bg-[url('https://djd7kjh9uwow0.cloudfront.net/images/whatsapp/whatsapp_chat_bg.jpg')] before:opacity-60 before:content-['']">
+            <div className="flex flex-col gap-4">
               <SentMessageContainer>
-                <Group align={"center"} pl={"xs"} h={"100%"}>
+                <div className="flex h-full items-center pl-2.5">
                   <div>
                     <RenderNewLine text={startMessageForm.values.prefix} />
                     <code
@@ -320,7 +320,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
                     </code>
                     <RenderNewLine text={startMessageForm.values.suffix} />
                   </div>
-                </Group>
+                </div>
               </SentMessageContainer>
 
               <WaResponseMessage
@@ -330,11 +330,11 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
                 quickReplyButtons={[templateForm.values.cta]}
                 image={getFileUrlFromKey(templateForm.values.headerImage)}
               />
-            </Stack>
-          </Box>
-        </Stack>
-      </Group>
-    </PaperLayout>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }
 
@@ -344,64 +344,63 @@ function RenderNewLine({ text }) {
   });
 }
 
-type TextInputWithLengthTrackerProps = TextInputProps &
-  Omit<LengthTrackerProps, "length"> & {
-    value?: string;
-  };
+interface TextInputWithLengthTrackerProps
+  extends Omit<React.ComponentProps<"input">, "value">, Omit<LengthTrackerProps, "length"> {
+  label?: string;
+  value?: string;
+}
 
 function TextInputWithLengthTracker(props: TextInputWithLengthTrackerProps) {
-  const { maxValue, styles, ...restOfProps } = props;
-  const length = props.value?.length || 0;
-  const { input, ...restOfStyles } = styles || ({} as any);
+  const { maxValue, label, value, ...restOfProps } = props;
+  const length = value?.length || 0;
 
   return (
-    <ContainedTextField
-      rightSection={<LengthTracker length={length} maxValue={maxValue} />}
-      styles={{
-        input: {
-          paddingRight: "80px",
-          ...input,
-        },
-        ...restOfStyles,
-      }}
-      rightSectionProps={{
-        style: {
-          width: "80px",
-        },
-      }}
-      {...restOfProps}
-    />
+    <Field>
+      {label && <FieldLabel>{label}</FieldLabel>}
+      <div className="relative">
+        <Input className="pr-20" value={value} {...restOfProps} />
+        <div className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2">
+          <LengthTracker length={length} maxValue={maxValue} />
+        </div>
+      </div>
+    </Field>
   );
 }
 
-type TextareaWithLengthTrackerProps = TextareaProps &
-  Omit<LengthTrackerProps, "length"> & {
-    value?: string;
-  };
+interface TextareaWithLengthTrackerProps
+  extends
+    Omit<React.ComponentProps<"textarea">, "value" | "style">,
+    Omit<LengthTrackerProps, "length"> {
+  label?: string;
+  value?: string;
+  error?: React.ReactNode;
+  /** Style applied to the outer field wrapper (e.g. margin). */
+  style?: React.CSSProperties;
+  /** Style applied directly to the textarea element (e.g. font-size/weight). */
+  inputStyle?: React.CSSProperties;
+}
 
 export function TextareaWithLengthTracker(props: TextareaWithLengthTrackerProps) {
-  const { maxValue, styles, ...restOfProps } = props;
-  const length = props.value?.length || 0;
-  const { input, ...restOfStyles } = styles || ({} as any);
+  const { maxValue, label, value, error, className, style, inputStyle, ...restOfProps } = props;
+  const length = value?.length || 0;
 
   return (
-    <Textarea
-      rightSection={<LengthTracker length={length} maxValue={maxValue} />}
-      styles={{
-        input: {
-          paddingRight: "80px",
-          borderRadius: "12px",
-          ...input,
-        },
-        ...restOfStyles,
-      }}
-      rightSectionProps={{
-        style: {
-          width: "80px",
-        },
-      }}
-      {...restOfProps}
-    />
+    <Field data-invalid={!!error} style={style}>
+      {label && <FieldLabel>{label}</FieldLabel>}
+      <div className="relative">
+        <Textarea
+          className={cn("rounded-xl pr-20", className)}
+          style={inputStyle}
+          value={value}
+          aria-invalid={!!error}
+          {...restOfProps}
+        />
+        <div className="pointer-events-none absolute right-2 bottom-2">
+          <LengthTracker length={length} maxValue={maxValue} />
+        </div>
+      </div>
+      {error && <FieldError>{error}</FieldError>}
+    </Field>
   );
 }
 
@@ -410,21 +409,14 @@ interface SaveStatusProps {
 }
 function SaveStatusIndicator({ status }: SaveStatusProps) {
   return (
-    <Group
-      style={{
-        color: "gray",
-      }}
-      gap={"4px"}
-    >
+    <div className="flex items-center gap-1 text-gray-500">
       {status === SaveStatus.saved ? (
         <IconCircleCheck />
       ) : (
-        <IconRefresh
-          className={status === SaveStatus.saving ? templateStyles.rotateInfinitely : ""}
-        />
+        <IconRefresh className={status === SaveStatus.saving ? "animate-spin" : ""} />
       )}
-      <Text>{status}</Text>
-    </Group>
+      <span>{status}</span>
+    </div>
   );
 }
 

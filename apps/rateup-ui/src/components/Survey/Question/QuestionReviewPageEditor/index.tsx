@@ -1,15 +1,25 @@
-import type { SelectProps } from "@mantine/core";
-import { Divider, Group, Loader, Select, Stack, Switch, TextInput } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { IconCheck } from "@tabler/icons-react";
-import classNames from "classnames/bind";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { RateupButtonBlue, RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 import { QuestionType } from "@/types/enums.ts";
 
 import { QuestionTabsEnum } from "../../EditSurvey.tsx";
@@ -19,39 +29,34 @@ import OpinionQuestionCondition from "./OpinionQuestionCondition/index.tsx";
 import RatingQuestionCondition from "./RatingQuestionCondition/index.tsx";
 import SmileyQuestionCondition from "./SmileyQuestionCondition/index.tsx";
 
-import styles from "./QuestionReviewPageEditor.module.css";
-
-const cx = classNames.bind(styles);
-
 export enum ReviewPagePlatform {
   Google = "Google",
   Custom = "Custom",
 }
 
-const renderSelectOption: SelectProps["renderOption"] = ({ option, checked }) => (
-  <Group flex="1" gap="xs">
-    {reviewPageLogosObj[option.value]}
-    {option.label}
-    {checked && <IconCheck style={{ marginInlineStart: "auto" }} size={"1rem"} />}
-  </Group>
-);
+const platformSelectItems = Object.values(ReviewPagePlatform).map((platform) => ({
+  value: platform,
+  label: (
+    <span className="flex items-center gap-2">
+      {reviewPageLogosObj[platform]}
+      {platform}
+    </span>
+  ),
+}));
+
+const customPlatformSchema = z.object({
+  platformName: z.string().trim().min(1, "Please enter platform name."),
+});
+type CustomPlatformFormValues = z.infer<typeof customPlatformSchema>;
 
 function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
   const [state, setState] = useState(selectedQ?.reviewPageOptions);
   const [reviewPagePlatformDDState, setReviewPageDDState] = useState(selectedQ?.reviewPagePlatform);
   const [isSwitchStateSaving, setIsSwitchStateSaving] = useState(false);
 
-  const customPlatformForm = useForm({
-    initialValues: {
-      platformName: "",
-    },
-    validate: {
-      platformName: (value) => {
-        if (!(value?.trim()?.length > 0)) {
-          return "Please enter platform name.";
-        }
-      },
-    },
+  const customPlatformForm = useForm<CustomPlatformFormValues>({
+    resolver: zodResolver(customPlatformSchema),
+    defaultValues: { platformName: "" },
   });
 
   const { t: translations } = useTranslation();
@@ -84,8 +89,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
     }
   }
 
-  const handleSwitchChange = async (event) => {
-    const isChecked = event?.currentTarget?.checked;
+  const handleSwitchChange = async (isChecked: boolean) => {
     if (isChecked) {
       if (survey.kioskMode) {
         toast.warning(
@@ -127,10 +131,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
     setState(selectedQ?.reviewPageOptions);
     setReviewPageDDState(selectedQ?.reviewPagePlatform);
     if (selectedQ?.reviewPagePlatform === ReviewPagePlatform.Custom) {
-      customPlatformForm.setFieldValue(
-        "platformName",
-        selectedQ?.reviewPageOptions?.customPlatformName,
-      );
+      customPlatformForm.setValue("platformName", selectedQ?.reviewPageOptions?.customPlatformName);
     } else {
       customPlatformForm.reset();
     }
@@ -138,7 +139,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
 
   useEffect(() => {
     if (reviewPagePlatformDDState === ReviewPagePlatform.Custom) {
-      customPlatformForm.setFieldValue(
+      customPlatformForm.setValue(
         "platformName",
         selectedQ?.reviewPageOptions?.customPlatformName || "",
       );
@@ -153,9 +154,9 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
       return;
     }
 
-    const { hasErrors } = customPlatformForm.validate();
-    if (hasErrors && reviewPagePlatformDDState === ReviewPagePlatform.Custom) {
-      return;
+    if (reviewPagePlatformDDState === ReviewPagePlatform.Custom) {
+      const isValid = await customPlatformForm.trigger("platformName");
+      if (!isValid) return;
     }
 
     try {
@@ -166,7 +167,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
       };
       if (reviewPagePlatformDDState === ReviewPagePlatform.Custom) {
         data["reviewPageOptions"]["customPlatformName"] =
-          customPlatformForm.getValues().platformName;
+          customPlatformForm.getValues("platformName");
       }
       await questionUpdateMutation.mutateAsync({
         qId: selectedQ?.id,
@@ -180,47 +181,66 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
   };
 
   return (
-    <Stack className={cx("question-review-page-editor-root-div")}>
-      <h1 className={cx("heading")}>Review Page Settings</h1>
-      <Switch
-        className={cx("switch")}
-        size="lg"
-        label={`${selectedQ?.reviewPageOptions ? "Disable" : "Enable"} Review Page: `}
-        labelPosition="left"
-        checked={Boolean(selectedQ?.reviewPageOptions)}
-        onChange={handleSwitchChange}
-        offLabel={isSwitchStateSaving ? <Loader size={"1rem"} /> : null}
-        onLabel={isSwitchStateSaving ? <Loader size={"1rem"} color="white" /> : null}
-      />
-      <Stack className={cx("dropdown-and-conditon-comp-container")}>
+    <div className="flex h-full flex-col gap-4 p-4">
+      <h1 className="text-2xl">Review Page Settings</h1>
+      <div className=" flex w-fit items-center gap-3 text-lg">
+        <span>{selectedQ?.reviewPageOptions ? "Disable" : "Enable"} Review Page: </span>
+        <Switch
+          checked={Boolean(selectedQ?.reviewPageOptions)}
+          onCheckedChange={handleSwitchChange}
+        />
+        {isSwitchStateSaving && <Spinner className="size-4" />}
+      </div>
+      <div className="flex flex-1 flex-col gap-4 overflow-auto">
         {selectedQ?.reviewPageOptions && (
           <>
-            <Group className={cx("platform-dd-and-platform-name-input-container")}>
-              <Select
-                label="Choose Platform"
-                placeholder="Choose Platform"
-                data={Object.values(ReviewPagePlatform)}
-                value={reviewPagePlatformDDState}
-                onChange={setReviewPageDDState}
-                w={"max-content"}
-                allowDeselect={false}
-                renderOption={renderSelectOption}
-                leftSection={reviewPageLogosObj[reviewPagePlatformDDState]}
-              />
+            <div className="flex flex-row items-start gap-8">
+              <Field>
+                <FieldLabel htmlFor="review-page-platform">Choose Platform</FieldLabel>
+                <Select
+                  value={reviewPagePlatformDDState}
+                  onValueChange={setReviewPageDDState}
+                  items={platformSelectItems}
+                >
+                  <SelectTrigger id="review-page-platform">
+                    <SelectValue placeholder="Choose Platform" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(ReviewPagePlatform).map((platform) => (
+                      <SelectItem key={platform} value={platform}>
+                        {reviewPageLogosObj[platform]}
+                        {platform}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
               {reviewPagePlatformDDState === ReviewPagePlatform.Custom && (
-                <TextInput
-                  label={"Custom Platform Name"}
-                  placeholder="Enter Custom Platform Name"
-                  withAsterisk
-                  {...customPlatformForm.getInputProps("platformName")}
+                <Controller
+                  name="platformName"
+                  control={customPlatformForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>
+                        Custom Platform Name<span className="text-destructive"> *</span>
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        placeholder="Enter Custom Platform Name"
+                        aria-invalid={fieldState.invalid}
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
                 />
               )}
-            </Group>
+            </div>
             {componentToBeRendered}
-            <Divider />
-            <Stack className={cx("team-link-inputs-container")}>
-              <h1 className={cx("heading")}>Review Page Links</h1>
-              <Stack p={"1rem"}>
+            <Separator />
+            <div className="flex flex-col gap-4">
+              <h1 className="text-2xl">Review Page Links</h1>
+              <div className="flex flex-col gap-4 ">
                 {teamsToDisplay &&
                   teamsToDisplay.map((team) => (
                     <AddGoogleReviewLinkForTeamModal
@@ -230,27 +250,25 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
                       platform={reviewPagePlatformDDState}
                     />
                   ))}
-              </Stack>
-            </Stack>
+              </div>
+            </div>
           </>
         )}
-      </Stack>
-      <Divider />
-      <Group className={cx("save-cancel-btns-container")} justify="space-between">
-        <RateupButtonSecondary
-          title={translations("Cancel")}
-          size="md"
-          onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
-        />
-        <RateupButtonBlue
-          title={translations("Save")}
-          size="md"
+      </div>
+      <Separator />
+      <div className="flex flex-row items-center justify-between">
+        <Button variant="outline" onClick={() => setActiveTab(QuestionTabsEnum.Edit)}>
+          {translations("Cancel")}
+        </Button>
+        <Button
           onClick={handleSave}
-          disabled={!selectedQ?.reviewPageOptions}
-          loading={questionUpdateMutation.isPending}
-        />
-      </Group>
-    </Stack>
+          disabled={!selectedQ?.reviewPageOptions || questionUpdateMutation.isPending}
+        >
+          {questionUpdateMutation.isPending && <Spinner data-icon="inline-start" />}
+          {translations("Save")}
+        </Button>
+      </div>
+    </div>
   );
 }
 

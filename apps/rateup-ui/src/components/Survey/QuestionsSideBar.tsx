@@ -32,8 +32,6 @@ import { DraggableQuestionCard } from "./Question/DraggableQuestionCard/index.ts
 import { getSurveyThemeTabValueFromPageType } from "./SurveyTheme/SurveyTheme.constants";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 
-import styles from "./QuestionsSideBar.module.css";
-
 interface QuestionsSideBarProps {
   questions: Question[];
   selectedQ: Question;
@@ -217,16 +215,20 @@ export function QuestionsSideBar({
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className={`flex flex-col ${styles["add-question-btn-questions-list-container"]}`}>
+      <div className="flex h-full flex-col gap-0">
         {questionsState?.length > 0 && (
-          <div className={styles["add-question-btn-more-than-1-que"]}>
-            <Button className={styles["add-content-btn"]} onClick={handleAddQn}>
+          <div className="flex shrink-0 flex-col gap-2 border-b border-[#ececea] p-3.5">
+            <Button
+              className="h-10 w-full gap-[7px] rounded-[10px] text-[13px] font-semibold"
+              onClick={handleAddQn}
+            >
               <IconPlus size={16} />
               {translations("Add Question")}
             </Button>
 
-            <button
-              className={styles["edit-theme-btn-wrapper"]}
+            <Button
+              variant="outline"
+              className="h-[38px] w-full gap-[7px] rounded-[10px] border-[1.5px] border-[#ececea] bg-white text-[13px] font-semibold text-[#4a4c49] hover:bg-[#f4f5f2]"
               onClick={() => {
                 if (activeTab === QuestionTabsEnum.SurveyPreview) return;
                 const haveUnsavedChanges = checkForUnsavedChanges();
@@ -247,7 +249,7 @@ export function QuestionsSideBar({
             >
               <IconPalette size={16} />
               {translations("Edit Theme")}
-            </button>
+            </Button>
           </div>
         )}
         {!questionsState?.length && (
@@ -262,7 +264,7 @@ export function QuestionsSideBar({
             </div>
           </div>
         )}
-        <ScrollArea className={styles["questions-list-container"]}>
+        <ScrollArea className="flex-1 overflow-auto pb-2.5 [&_[data-slot=scroll-area-viewport]>div]:block!">
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="dnd-list" direction="vertical">
               {(provided) => (

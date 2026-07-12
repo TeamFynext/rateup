@@ -1,14 +1,11 @@
-import { Stack } from "@mantine/core";
 import { useContext, useEffect } from "react";
 
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
-
-import classes from "../TakeSurvey.module.css";
 
 interface CustomInputFields {
   fieldKey: string;
@@ -25,27 +22,24 @@ const MultiTextInputForm = ({ features }) => {
   }, [response]);
 
   return (
-    <Stack w={"100%"} gap={"xs"}>
+    <div className="flex w-full flex-col gap-2.5">
       {fields?.map((field, index) => (
         <FormPaperLayout key={index}>
-          <ContainedTextField
+          <Input
             placeholder={field.placeholderText}
             value={response?.[field.fieldKey] || ""}
-            variant="unstyled"
             onChange={(e) => {
               updateResponse({
                 ...response,
-                [field.fieldKey]: e.currentTarget.value,
+                [field.fieldKey]: e.target.value,
               });
             }}
-            classNames={{
-              input: classes.input,
-            }}
+            className="h-auto w-full border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
             onClick={handleInputScrollIntoView}
           />
         </FormPaperLayout>
       ))}
-    </Stack>
+    </div>
   );
 };
 

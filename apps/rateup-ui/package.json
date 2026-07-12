@@ -85,6 +85,7 @@
     "i18next-icu": "^2.4.4",
     "idb": "^8.0.3",
     "immer": "^11.1.11",
+    "input-otp": "^1.4.2",
     "intl-messageformat": "^11.2.10",
     "keen-slider": "^6.8.6",
     "libphonenumber-js": "^1.13.8",

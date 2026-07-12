@@ -1,4 +1,3 @@
-import { MantineProvider } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -19,9 +18,6 @@ import ThemeTitle from "../../ThemeTitle.tsx";
 import { getInlineStyleFromStyleObj } from "../welcomepage/index.tsx";
 
 import startBtnWrapperStyles from "@/components/Survey/SurveyTheme/SurveyTheme.module.css";
-
-// Stable class name used as the MantineProvider cssVariablesSelector scope
-const LANG_LIST_CLASS = "survey-lang-list-container";
 
 function LanguagePage({ survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
@@ -69,7 +65,6 @@ function LanguagePage({ survey }) {
     };
   }
   const buttonStyles = requiredThemeObj?.button?.styles;
-  const inputPrimaryColor = requiredThemeObj?.input?.primaryColor;
 
   const {
     titleText: title,
@@ -154,36 +149,10 @@ function LanguagePage({ survey }) {
             </div>
           </div>
 
-          <div
-            className={cn(
-              "flex shrink overflow-hidden items-center justify-center",
-              LANG_LIST_CLASS,
-            )}
-          >
-            <MantineProvider
-              getRootElement={() =>
-                typeof window === "undefined"
-                  ? undefined
-                  : document.querySelector(`.${LANG_LIST_CLASS}`)
-              }
-              cssVariablesSelector={`.${LANG_LIST_CLASS}`}
-              theme={{
-                colors: {
-                  // @ts-ignore
-                  primaryColor: Array(10).fill(inputPrimaryColor),
-                },
-                primaryColor: "primaryColor",
-              }}
-            >
-              <ScrollArea className="max-h-full">
-                <SingleSelectCard
-                  data={languages}
-                  selectedValue={lang}
-                  onChange={setLang}
-                  sizeTrim
-                />
-              </ScrollArea>
-            </MantineProvider>
+          <div className="flex shrink items-center justify-center overflow-hidden">
+            <ScrollArea className="max-h-full">
+              <SingleSelectCard data={languages} selectedValue={lang} onChange={setLang} sizeTrim />
+            </ScrollArea>
           </div>
 
           <div className={cn(startBtnWrapperStyles["titleBox"], "flex justify-center")}>

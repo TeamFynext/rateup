@@ -1,4 +1,3 @@
-import { isLightColor } from "@mantine/core";
 import { useState } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -6,6 +5,7 @@ import { cn } from "@/lib/utils";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
+import { isLightColor } from "../QuestionForms/isLightColor.ts";
 import { useThemePrimaryColor } from "../QuestionForms/useThemePrimaryColor.ts";
 
 interface ImageCheckboxProps {

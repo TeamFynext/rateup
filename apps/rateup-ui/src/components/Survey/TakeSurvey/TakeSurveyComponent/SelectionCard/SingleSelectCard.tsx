@@ -1,4 +1,3 @@
-import { useMantineTheme } from "@mantine/core";
 import React, { useState } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,15 +6,8 @@ import { getImageValue } from "@/utils/file-upload/upload.ts";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
-
-function isLightColor(hex: string): boolean {
-  const h = hex.replace("#", "");
-  if (h.length < 6) return false;
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5;
-}
+import { isLightColor } from "../QuestionForms/isLightColor.ts";
+import { useThemePrimaryColor } from "../QuestionForms/useThemePrimaryColor.ts";
 
 function hexAlpha(hex: string, opacity: number): string {
   const h = hex.replace("#", "");
@@ -60,10 +52,7 @@ function ImageCheckbox({
   const [hovered, setHovered] = useState(false);
   const titleTypeString = typeof title === "string";
 
-  const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor
-    ? mantineTheme.colors.primaryColor[5]
-    : "#1C518E";
+  const themePrimaryColor = useThemePrimaryColor();
 
   const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
   const isSelected = titleTypeString ? selectedValue === title : selectedValue === title.value;

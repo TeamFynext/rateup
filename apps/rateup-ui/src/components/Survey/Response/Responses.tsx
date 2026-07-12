@@ -1,4 +1,3 @@
-import { useDebouncedState } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -17,15 +16,30 @@ import {
   useSyncResponseToGoogleSheet,
 } from "@/backend/surveys/response/response.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
-import { IntegratedApps, PageType, QuestionType, SurveyType } from "@/types/enums.ts";
+import { useDebounce } from "@/hooks/use-debounce.ts";
+import {
+  IntegratedApps,
+  PageType,
+  QuestionType,
+  SubscriptionFeaturePathName,
+  SurveyType,
+} from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
 
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
-import FormModalLayout from "../../Modal/FormModalLayout.tsx";
 import { DataTable } from "../../Table/data-table.tsx";
 import CreateTicketModal from "../../Tickets/CreateTicketModal.tsx";
 import { useSurveyResponseColumns } from "./Columns.tsx";
@@ -60,7 +74,8 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
       key: "selection",
     },
   ]);
-  const [columnFilters, setColumnFilters] = useDebouncedState<ColumnFiltersState>([], 200);
+  const [rawColumnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const columnFilters = useDebounce(rawColumnFilters, 200);
   const navigate = useNavigate();
   const [campaignIds, setSelectedCampaignIds] = useState([]);
 
@@ -328,35 +343,65 @@ export default React.memo(Responses);
 const DeleteModal = ({ confirmDelete, opened, close }) => {
   const { t: translations } = useTranslation();
   const [verifyEmail, setVerifyEmail] = useState("");
+
+  const handleSubmit = () => {
+    confirmDelete(verifyEmail);
+    setVerifyEmail("");
+  };
+
   return (
-    <FormModalLayout
-      opened={opened}
-      onClose={close}
-      title={translations("Delete Response")}
-      centered
-      buttonTitle={translations("Delete")}
-      includeCancelButton
-      onSubmit={() => {
-        confirmDelete(verifyEmail);
-        setVerifyEmail("");
+    <Dialog
+      open={opened}
+      onOpenChange={(next) => {
+        if (!next) close();
       }}
     >
-      <div className="flex flex-col gap-4 py-2">
-        <p className="text-sm text-gray-700 dark:text-gray-300">
-          {translations("To proceed further, verify your email id.")}
-        </p>
-        <ContainedTextField
-          withAsterisk
-          label={translations("Verify email")}
-          placeholder={translations("Enter your login email")}
-          required
-          value={verifyEmail}
-          onChange={(e: any) => setVerifyEmail(e.target.value)}
-        />
-        <p className="text-sm text-red-600 dark:text-red-400">
-          {translations("Once deleted, response entry data will be lost.")}
-        </p>
-      </div>
-    </FormModalLayout>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{translations("Delete Response")}</DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+          onKeyDown={(e) => {
+            const isSave = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s";
+            if (isSave) {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
+        >
+          <div className="flex flex-col gap-4 py-2">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              {translations("To proceed further, verify your email id.")}
+            </p>
+            <Field>
+              <FieldLabel htmlFor="verify-email">
+                {translations("Verify email")}
+                <span className="text-destructive"> *</span>
+              </FieldLabel>
+              <Input
+                id="verify-email"
+                required
+                placeholder={translations("Enter your login email")}
+                value={verifyEmail}
+                onChange={(e) => setVerifyEmail(e.target.value)}
+              />
+            </Field>
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {translations("Once deleted, response entry data will be lost.")}
+            </p>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button type="button" variant="outline" onClick={close}>
+              {translations("Cancel")}
+            </Button>
+            <Button type="submit">{translations("Delete")}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };

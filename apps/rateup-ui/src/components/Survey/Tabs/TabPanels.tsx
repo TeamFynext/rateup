@@ -30,7 +30,7 @@ function TabPanelsComp({
 
   return (
     <Tabs value={value} className="h-full min-h-0">
-      <TabsContent value={TabEnum.Edit}>
+      <TabsContent value={TabEnum.Edit} className="h-full min-h-0">
         <EditSurvey
           questions={questions}
           addQnTrigger={addQnTrigger}

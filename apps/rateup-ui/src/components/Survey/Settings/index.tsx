@@ -1,7 +1,8 @@
-import { useDebouncedValue } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
+import { useDebounce } from "@/hooks/use-debounce.ts";
+import { cn } from "@/lib/utils";
 
 import FlowSettingsUpdate from "./FlowSettingsUpdate.tsx";
 import GeneralSettings from "./GeneralSettings/index.tsx";
@@ -60,7 +61,7 @@ const SurveySettings = ({
   const [redirect, setRedirect] = useState(survey?.redirect);
   const [redirectError, setRedirectError] = useState({ url: "", time: "" });
   const editSurvey = useEditSurveyMutation(surveyId);
-  const [debounced] = useDebouncedValue(redirect?.url, 200);
+  const debounced = useDebounce(redirect?.url, 200);
 
   useEffect(() => {
     setHasGoogleReview(
@@ -73,8 +74,13 @@ const SurveySettings = ({
   }, [survey]);
 
   return (
-    <div className={styles["survey-settings-root-div"]}>
-      <div className={styles["settings-content"]}>
+    <div
+      className={cn(
+        styles["survey-settings-root-div"],
+        "min-h-full overflow-auto bg-[#f4f5f2] px-[22px] py-6",
+      )}
+    >
+      <div className={cn(styles["settings-content"], "mx-auto flex max-w-5xl flex-col gap-4")}>
         <GeneralSettings
           enabledModules={enabledModules}
           survey={survey}
@@ -127,7 +133,7 @@ const SurveySettings = ({
           <FlowSettingsUpdate name={flowName} dbFlowId={flowDbId} anonymous={anonymous} />
         )}
 
-        <div className={styles["danger-zone"]}>
+        <div className="rounded-xl border border-red-200 bg-red-50 shadow-none [&_.mantine-Paper-root]:border-none [&_.mantine-Paper-root]:bg-transparent [&_.mantine-Paper-root]:shadow-none">
           <OtherSettings />
         </div>
       </div>
