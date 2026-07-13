@@ -1,11 +1,13 @@
-import { View, Text as RNText, useColorScheme } from "react-native";
+import { useColorScheme } from "nativewind";
+import { View, Text as RNText } from "react-native";
 import React from "react";
 import { useHappyIndex } from "@/api/response/response.query";
 import { AngryIcon, LaughIcon, MehIcon } from "lucide-react-native";
 import Svg, { Path, G, Circle, Text as SvgText } from "react-native-svg";
 
 const NpsOverview = ({ surveyId }: { surveyId: string }) => {
-  const isDark = useColorScheme() === "dark";
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const { data, isLoading } = useHappyIndex(surveyId);
 

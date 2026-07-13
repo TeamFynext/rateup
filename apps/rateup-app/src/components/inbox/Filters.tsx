@@ -1,13 +1,11 @@
-import {
-  View,
+import { useColorScheme } from "nativewind";
+import { View,
   Text,
   KeyboardAvoidingView,
   Pressable,
   TouchableOpacity,
   Platform,
-  ScrollView,
-  useColorScheme,
-} from "react-native";
+  ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import {
   useChatFilterStore,
@@ -24,7 +22,7 @@ import { WaMessageClosedStatus } from "@/constants/constants";
 import { Colors } from "@/constants/colors";
 
 const FiltersScreen = () => {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { selectedTab } = useSelectedTabStore();
   const insets = useSafeAreaInsets();

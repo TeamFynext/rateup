@@ -1,10 +1,8 @@
-import {
-  View,
+import { useColorScheme } from "nativewind";
+import { View,
   Text,
   ScrollView,
-  Pressable,
-  useColorScheme,
-} from "react-native";
+  Pressable } from "react-native";
 import React, { useMemo, useState } from "react";
 import {
   AngryIcon,
@@ -33,7 +31,8 @@ const SurveyQuestions = ({
   version,
   questions,
 }: SurveyQuestionProps) => {
-  const isDark = useColorScheme() === "dark";
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 

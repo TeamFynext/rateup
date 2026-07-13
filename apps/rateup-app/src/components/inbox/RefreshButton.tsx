@@ -1,5 +1,6 @@
+import { useColorScheme } from "nativewind";
 import React, { useEffect } from "react";
-import { Pressable, View, useColorScheme } from "react-native";
+import { Pressable, View } from "react-native";
 import { RefreshCcw } from "lucide-react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import Animated, {
@@ -11,7 +12,7 @@ import Animated, {
 
 export default function RefreshButton() {
   const refreshRotation = useSharedValue(0);
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const iconColor = isDark
     ? "rgba(255,255,255,0.85)"

@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Stack } from "expo-router";
-import { StatusBar, useColorScheme, Text, TextInput } from "react-native";
+import { StatusBar, Text, TextInput } from "react-native";
+import { useColorScheme } from "nativewind";
+import { getThemePreference } from "@/utils/theme";
 import { Colors } from "@/constants/colors";
 import ToastManager from "toastify-react-native";
 import { CheckCircle, XCircle, Info, AlertTriangle } from "lucide-react-native";
@@ -49,7 +51,7 @@ if ((TextInput as any).defaultProps) {
 export const queryClient = new QueryClient();
 
 function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   return (
     <>
@@ -75,6 +77,7 @@ function RootLayout() {
 }
 
 export default function LayoutWrapper() {
+  const { setColorScheme } = useColorScheme();
   const [fontsLoaded] = useFonts({
     Nunito_300Light,
     Nunito_400Regular,
@@ -85,6 +88,14 @@ export default function LayoutWrapper() {
     Nunito_900Black,
     Geist: require("@/assets/fonts/Geist-Regular.ttf"),
   });
+
+  useEffect(() => {
+    async function initTheme() {
+      const savedTheme = await getThemePreference();
+      setColorScheme(savedTheme);
+    }
+    initTheme();
+  }, [setColorScheme]);
 
   if (!fontsLoaded) {
     return null;

@@ -5,14 +5,14 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "expo-router/react-navigation";
-import { useColorScheme } from "react-native";
+import { useColorScheme } from "nativewind";
 import { Colors } from "@/constants/colors";
 import { useSubscription } from "@/api/sunscription/subscription.query";
 import { hasFeature } from "@/utils/subscription";
 import { SubscriptionFeaturePathName } from "../../../../enums";
 
 function ProtectedLayout() {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const { data: sub, isPending } = useSubscription();
 
   const hasLoyalty = hasFeature(sub, SubscriptionFeaturePathName.Loyalty);

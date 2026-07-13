@@ -1,4 +1,5 @@
-import { View, Text, useColorScheme } from "react-native";
+import { useColorScheme } from "nativewind";
+import { View, Text } from "react-native";
 import React from "react";
 import {
   FrownIcon,
@@ -12,7 +13,8 @@ import { AnimatedCircularProgress } from "react-native-circular-progress";
 import { ProgressBar } from "react-native-paper";
 
 const HappyIndex = ({ surveyId }: { surveyId: string }) => {
-  const isDark = useColorScheme() === "dark";
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const { data, isLoading } = useHappyIndex(surveyId);
 

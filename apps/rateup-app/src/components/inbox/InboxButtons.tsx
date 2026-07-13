@@ -1,4 +1,5 @@
-import { View, Pressable, Text, useColorScheme } from "react-native";
+import { useColorScheme } from "nativewind";
+import { View, Pressable, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { Filter } from "lucide-react-native";
 
@@ -8,7 +9,7 @@ const InboxButtons = ({
   activeFilterCount?: number;
 }) => {
   const router = useRouter();
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const iconColor = isDark
     ? "rgba(255,255,255,0.85)"

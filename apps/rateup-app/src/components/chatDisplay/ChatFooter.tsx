@@ -1,9 +1,7 @@
+import { useColorScheme } from "nativewind";
 import { useMemo } from "react";
-import {
-  View,
-  Text,
-  useColorScheme,
-} from "react-native";
+import { View,
+  Text } from "react-native";
 import NotAssigned from "./chatFooter/NotAssigned";
 import MessageSendPanel from "./chatFooter/MessageSendPanel";
 import { useAuth } from "@/context/AuthContext";
@@ -18,7 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
 
 const ChatFooter = ({ id }: { id: string }) => {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const insets = useSafeAreaInsets();
   const waAssignStatus = useChatAssignStatusStore(

@@ -1,11 +1,9 @@
-import {
-  View,
+import { useColorScheme } from "nativewind";
+import { View,
   TextInput,
   TouchableOpacity,
   Text,
-  useColorScheme,
-  Platform,
-} from "react-native";
+  Platform } from "react-native";
 import React from "react";
 import { Search, SlidersHorizontal } from "lucide-react-native";
 import { useRouter } from "expo-router";
@@ -14,7 +12,7 @@ import { colors } from "@/constants/constants";
 import { Colors } from "@/constants/colors";
 
 const FlowSearchBar = () => {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
 
   const isDark = colorScheme === "dark";
 

@@ -1,5 +1,6 @@
+import { useColorScheme } from "nativewind";
 import React, { memo, useMemo } from "react";
-import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { Image as ImageIcon } from "lucide-react-native";
 import { ContactsWithLastMessage } from "@/api/inbox/types";
@@ -54,7 +55,7 @@ const ChatBox: React.FC<
   lifecycleId,
   onPress,
 }) => {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
   const isUnread = unReadMessageCount > 0;

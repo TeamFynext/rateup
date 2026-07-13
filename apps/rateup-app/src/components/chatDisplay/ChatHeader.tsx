@@ -1,12 +1,10 @@
-import {
-  View,
+import { useColorScheme } from "nativewind";
+import { View,
   Text,
   TouchableOpacity,
   Pressable,
   Modal,
-  Dimensions,
-  useColorScheme,
-} from "react-native";
+  Dimensions } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import {
@@ -45,7 +43,7 @@ const MoreOptions = ({
   onCloseChatPress: () => void;
   contactId: string;
 }) => {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const router = useRouter();
   const modalWidth = screenWidth * 0.4;
@@ -142,7 +140,7 @@ const ConfirmationModal = ({
   onCancel: () => void;
   contactId: string;
 }) => {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const queryClient = useQueryClient();
   const editContactMutation = useEditContactMutation();
@@ -301,7 +299,7 @@ const ChatHeader = ({
         return <FontAwesome name="whatsapp" size={14} color="#25D366" />;
     }
   };
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const hoursLeft = Math.floor(diffInMinutes / 60);
   const minutesLeft = diffInMinutes % 60;

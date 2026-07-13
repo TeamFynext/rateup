@@ -1,17 +1,15 @@
+import { useColorScheme } from "nativewind";
 import { Toast } from "toastify-react-native";
-import {
-  View,
+import { View,
   Text,
   Pressable,
   useWindowDimensions,
   FlatList,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
   ScrollView,
   Modal,
-  RefreshControl,
-} from "react-native";
+  RefreshControl } from "react-native";
 import { useMemo, useState, useCallback } from "react";
 import { countries } from "@/constants/countries";
 import {
@@ -58,7 +56,7 @@ const ActionCard = ({
   border,
   onPress,
 }: ActionCardProps) => {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   return (
     <Pressable
@@ -130,7 +128,7 @@ const CashierPortal = () => {
   const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null);
   const [assignRewardNotes, setAssignRewardNotes] = useState("");
 
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const textColor = isDark ? "white" : colors["slate-950"];
 

@@ -1,9 +1,7 @@
-import {
-  View,
+import { useColorScheme } from "nativewind";
+import { View,
   TextInput,
-  Pressable,
-  useColorScheme,
-} from "react-native";
+  Pressable } from "react-native";
 import { useRef, useState } from "react";
 import { Search, X } from "lucide-react-native";
 import { Colors } from "@/constants/colors";
@@ -20,7 +18,7 @@ export default function SearchBar({
   const [open, setOpen] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const textColor = isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
   const bgColor = isDark ? Colors.dark.surface : Colors.light.inputBg;

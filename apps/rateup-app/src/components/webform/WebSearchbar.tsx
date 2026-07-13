@@ -1,11 +1,9 @@
-import {
-  View,
+import { useColorScheme } from "nativewind";
+import { View,
   TextInput,
   TouchableOpacity,
   Text,
-  useColorScheme,
-  Platform,
-} from "react-native";
+  Platform } from "react-native";
 import React from "react";
 import { Search, SlidersHorizontal } from "lucide-react-native";
 import { useRouter } from "expo-router";
@@ -16,7 +14,7 @@ import { Colors } from "@/constants/colors";
 const WebFormSearchBar = () => {
   const router = useRouter();
 
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
   const textColor = isDark ? Colors.dark.textPrimary : Colors.light.textPrimary;
