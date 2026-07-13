@@ -39,6 +39,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilter/index.tsx";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
@@ -292,18 +293,22 @@ function NavLink({
   onClick?: () => void;
   showDescription?: boolean;
 }>) {
+  const { state, isMobile } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
   if (item.variant === "inbox-tab") {
-    return (
+    const linkElement = (
       <Link
         to={item.url || "#"}
-        title={item.title}
+        title={isCollapsed ? undefined : item.title}
         aria-label={item.title}
         onClick={(e) => {
           if (!onRouteGuard(item.url)) e.preventDefault();
           onClick?.();
         }}
         className={cn(
-          "flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-[9px] transition-colors",
+          "flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-[9px] transition-colors w-full",
+          "group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:justify-center",
           isActive
             ? "bg-blue-50 dark:bg-blue-500/20"
             : "bg-transparent hover:bg-blue-50/50 dark:hover:bg-blue-500/10",
@@ -311,13 +316,18 @@ function NavLink({
       >
         <span
           className={cn(
-            "flex items-center justify-center [&>svg]:size-[17px]",
+            "relative flex items-center justify-center [&>svg]:size-[17px]",
             isActive ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-300",
           )}
         >
           {item.icon && <item.icon />}
+          {item.count != null && item.count > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 hidden group-data-[collapsible=icon]:flex items-center justify-center min-w-[14px] h-[14px] px-0.5 rounded-full bg-primary text-[8px] font-bold text-white leading-none border border-background">
+              {item.count}
+            </span>
+          )}
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
           <div
             className={cn(
               "text-sm",
@@ -333,12 +343,25 @@ function NavLink({
           ) : null}
         </div>
         {item.count != null && (
-          <span className="rounded-full px-2 py-0.5 text-[11px] font-bold bg-slate-50 dark:bg-white/10">
+          <span className="rounded-full px-2 py-0.5 text-[11px] font-bold bg-slate-50 dark:bg-white/10 group-data-[collapsible=icon]:hidden">
             {item.count}
           </span>
         )}
       </Link>
     );
+
+    if (isCollapsed) {
+      return (
+        <Tooltip>
+          <TooltipTrigger render={linkElement} />
+          <TooltipContent side="right" align="center" hidden={isMobile}>
+            {item.title} {item.count != null ? `(${item.count})` : ""}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return linkElement;
   }
 
   return (
@@ -790,7 +813,7 @@ export default function AppSidebar({
       {/* Expanded nav panel */}
       {activeItem?.items && activeItem.items.length > 0 && (
         <Sidebar className="w-56 border-r relative hidden md:flex" collapsible="icon">
-          <SidebarHeader className="gap-3.5 border-b bg-background p-3 group-data-[collapsible=icon]:px-2">
+          <SidebarHeader className="h-14 justify-center border-b bg-background p-0 px-3 group-data-[collapsible=icon]:px-2">
             <div className="flex w-full items-center justify-between group-data-[collapsible=icon]:justify-center">
               <h2 className="flex text-foreground text-lg gap-1 font-bold group-data-[collapsible=icon]:hidden">
                 {activeItem.icon && (
