@@ -12,6 +12,7 @@ import {
   syncTeamFeaturesFromSubscription,
   seedInboxStatsAutomation,
   reconcileInboxStatus,
+  backfillConversationsFromMessages,
 } from "./update.service.js";
 import prisma from "../../utils/prisma.js";
 import { StageCategory } from "../../../generated/prisma/enums.js";
@@ -332,6 +333,31 @@ export async function seedInboxStatsAutomationHandler(
       .send(
         `Seeded inbox stats successfully. Seeded ${result.seeded} out of ${result.total} orgs.`,
       );
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+// Dry run by default; pass ?apply=true to create the conversations.
+export async function backfillConversationsHandler(
+  request: FastifyRequest<{ Querystring: { apply?: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const apply = request.query.apply === "true";
+    const result = await backfillConversationsFromMessages(apply);
+    const summary =
+      `${result.conversationsCreated} missing conversation(s) created, ` +
+      `${result.messagesLinked} message(s) linked, ${result.assigneesBackfilled} assignee(s) copied`;
+    reply.code(200).send({
+      message: apply
+        ? result.done
+          ? `Backfill complete: ${summary}.`
+          : `Backfill batch done (${summary}). More work remains — run again to continue.`
+        : `Dry run: ${summary} would be written. Re-run with ?apply=true to write.`,
+      ...result,
+    });
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
