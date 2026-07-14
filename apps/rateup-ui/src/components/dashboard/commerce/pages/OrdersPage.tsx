@@ -1,3 +1,4 @@
+import { useDebouncedValue } from "@mantine/hooks";
 import dayjs from "dayjs";
 import {
   Banknote,
@@ -5,17 +6,20 @@ import {
   ChevronDown,
   Clock,
   CreditCard,
-  Download,
   Loader2,
   MessageCircle,
   Package,
   Search,
   Smartphone,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
-import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
+import type { CommerceOrder, SpreadsheetFormat } from "@/backend/commerce/commerce.api";
+import {
+  useCommerceOrders,
+  useExportCommerceOrdersMutation,
+} from "@/backend/commerce/commerce.query";
+import OrderDetailsDialog from "@/components/dashboard/whatsapp/orders-and-payments/components/OrderDetailsDialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,9 +30,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 import { useCommerce } from "../CommerceContext";
+import { CommerceDateFilter, CommerceExportButton } from "../CommerceFilters";
 import { CommerceShell } from "../CommerceShell";
 import { STAGE_META, avatarClass } from "../orderMeta";
 import { initials, money } from "../utils";
@@ -50,7 +56,9 @@ const FILTERS = [
   { id: "COMPLETED", label: "Delivered" },
 ];
 
-function payMeta(method?: string) {
+const PAGE_SIZE = 10;
+
+function payMeta(method?: string | null) {
   const m = (method ?? "").toLowerCase();
   if (m.includes("upi")) return { icon: Smartphone, label: "UPI", cls: "text-foreground" };
   if (m.includes("cod") || m.includes("cash"))
@@ -63,53 +71,65 @@ function payMeta(method?: string) {
   return { icon: CreditCard, label: method, cls: "text-foreground" };
 }
 
-function orderTotal(o: any) {
-  const items = (o.products ?? []).reduce(
-    (s: number, p: any) =>
-      s + (parseFloat(p.price ?? "0") || 0) * (parseInt(p.quantity ?? "1") || 1),
-    0,
-  );
-  return items + (o.deliveryOption?.charge ?? 0);
-}
-
 export function OrdersPage() {
-  const { phoneId, currencySymbol: sym, currentSetting } = useCommerce();
-  const { data: connectedCatalog, isLoading: loadingCatalog } = useConnectedWaCatalog(phoneId);
-  const catalogId = connectedCatalog?.catalogId;
+  const { currencySymbol: sym, currentSetting, filter: baseFilter } = useCommerce();
 
   const [page, setPage] = useState(0);
-  const pageSize = 10;
-  const [filter, setFilter] = useState("all");
+  const [stage, setStage] = useState("all");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch] = useDebouncedValue(search, 400);
   const [overrides, setOverrides] = useState<Record<string, string>>({});
+  const [selectedOrder, setSelectedOrder] = useState<CommerceOrder | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const { data: ordersData, isLoading } = useWaCatalogOrders(catalogId, {
-    pageIndex: page,
-    pageSize,
-    storeType: "standard",
+  // Stage/search/date/channel are all applied server-side now, so any change
+  // invalidates the current page offset.
+  useEffect(() => {
+    setPage(0);
+  }, [stage, debouncedSearch, baseFilter]);
+
+  const queryFilter = {
+    ...baseFilter,
+    ...(stage !== "all" && { orderStage: stage }),
+    ...(debouncedSearch && { search: debouncedSearch }),
+  };
+
+  const { data: ordersData, isLoading } = useCommerceOrders({
+    ...queryFilter,
+    page,
+    limit: PAGE_SIZE,
   });
+  const exportOrders = useExportCommerceOrdersMutation();
 
-  const allOrders: any[] = ordersData?.data ?? [];
+  const rows = ordersData?.data ?? [];
   const totalCount = ordersData?.totalCount ?? 0;
-  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
-  const rows = allOrders.filter((o) =>
-    filter === "all" ? true : (overrides[o.id] ?? o.orderStage) === filter,
-  );
+  const handleExport = (format: SpreadsheetFormat) =>
+    exportOrders.mutate({ ...queryFilter, format });
 
   return (
     <CommerceShell
       title="Orders"
       description="Track and fulfil orders placed through chat."
+      showCatalogSwitcher
       actions={
         <>
-          <div className="hidden min-w-[200px] items-center gap-1.5 rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground sm:flex">
-            <Search className="size-4" />
-            Search orders…
+          <div className="relative hidden min-w-[200px] sm:block">
+            <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search orders…"
+              className="pl-8"
+            />
           </div>
-          <Button variant="outline" size="sm">
-            <Download data-icon="inline-start" />
-            Export
-          </Button>
+          <CommerceDateFilter />
+          <CommerceExportButton
+            onExport={handleExport}
+            isPending={exportOrders.isPending}
+            disabled={totalCount === 0}
+          />
         </>
       }
     >
@@ -122,12 +142,12 @@ export function OrdersPage() {
           {/* Filter pills */}
           <div className="flex flex-wrap items-center gap-2">
             {FILTERS.map((f) => {
-              const active = filter === f.id;
+              const active = stage === f.id;
               return (
                 <button
                   key={f.id}
                   type="button"
-                  onClick={() => setFilter(f.id)}
+                  onClick={() => setStage(f.id)}
                   className={cn(
                     "rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
                     active
@@ -151,29 +171,26 @@ export function OrdersPage() {
               <span className="hidden w-[120px] shrink-0 lg:block">Payment</span>
               <span className="w-[132px] shrink-0">Status</span>
               <span className="hidden w-16 shrink-0 text-right sm:block">Date</span>
+              <span className="w-20 shrink-0 text-right">Action</span>
             </div>
 
-            {loadingCatalog || isLoading ? (
+            {isLoading ? (
               <div className="flex justify-center py-14">
                 <Loader2 className="size-6 animate-spin text-muted-foreground" />
               </div>
-            ) : !catalogId ? (
+            ) : rows.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-14 text-center">
                 <Package className="size-7 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">No catalog connected to this store.</p>
+                <p className="text-sm text-muted-foreground">
+                  No orders match the current filters.
+                </p>
               </div>
-            ) : rows.length === 0 ? (
-              <div className="py-14 text-center text-sm text-muted-foreground">No orders.</div>
             ) : (
               rows.map((o) => {
                 const name = o.contact?.name || "Unknown";
-                const curStage = overrides[o.id] ?? o.orderStage;
-                const stage = STAGE_META[curStage] ?? STAGE_META.DEFAULT;
+                const curStage = overrides[o.id] ?? o.orderStage ?? "DEFAULT";
+                const stageMeta = STAGE_META[curStage] ?? STAGE_META.DEFAULT;
                 const pm = payMeta(o.paymentMethod);
-                const items = (o.products ?? []).reduce(
-                  (a: number, p: any) => a + (parseInt(p.quantity ?? "1") || 1),
-                  0,
-                );
                 return (
                   <div
                     key={o.id}
@@ -191,10 +208,10 @@ export function OrdersPage() {
                       <span className="truncate text-sm text-foreground">{name}</span>
                     </div>
                     <span className="hidden w-[70px] shrink-0 text-center text-sm text-muted-foreground md:block">
-                      {items} {items === 1 ? "item" : "items"}
+                      {o.itemCount} {o.itemCount === 1 ? "item" : "items"}
                     </span>
                     <span className="w-24 shrink-0 text-right text-sm font-semibold text-foreground">
-                      {money(orderTotal(o), sym)}
+                      {money(o.total, sym)}
                     </span>
                     <span className="hidden w-[120px] shrink-0 lg:block">
                       <span
@@ -215,13 +232,13 @@ export function OrdersPage() {
                               type="button"
                               className={cn(
                                 "inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                                stage.cls,
+                                stageMeta.cls,
                               )}
                             />
                           }
                         >
                           <span className="size-1.5 rounded-full bg-current" />
-                          {stage.label}
+                          {stageMeta.label}
                           <ChevronDown className="size-3" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-40">
@@ -248,11 +265,29 @@ export function OrdersPage() {
                     <span className="hidden w-16 shrink-0 text-right text-xs text-muted-foreground sm:block">
                       {o.createdAt ? dayjs(o.createdAt).format("MMM D") : ""}
                     </span>
+                    <span className="flex w-20 shrink-0 justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedOrder(o);
+                          setDetailsOpen(true);
+                        }}
+                      >
+                        Details
+                      </Button>
+                    </span>
                   </div>
                 );
               })
             )}
           </Card>
+
+          <OrderDetailsDialog
+            open={detailsOpen}
+            onOpenChange={setDetailsOpen}
+            order={selectedOrder}
+          />
 
           {/* pagination */}
           <div className="flex items-center justify-between">

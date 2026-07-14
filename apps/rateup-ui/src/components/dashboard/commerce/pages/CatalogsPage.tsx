@@ -1,9 +1,20 @@
-import { ChevronRight, LayoutGrid, Package, Plus, RefreshCw, ShoppingBag } from "lucide-react";
+import {
+  ChevronRight,
+  Ellipsis,
+  LayoutGrid,
+  Package,
+  Plus,
+  RefreshCw,
+  Settings2,
+  ShoppingBag,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import {
+  useDeletCatalogProducts,
   useSyncCatalogProducts,
   useWaCatalogProducts,
 } from "@/backend/whatsapp/catalog/products/products.query";
@@ -15,6 +26,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -24,9 +42,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AddCatalogProductModal } from "@/components/whatsapp/catalog/products/AddCatalogProduct";
+import { useConfirm } from "@/context/confirm-provider";
 import { cn } from "@/lib/utils";
+import { fallbackImage } from "@/utils/constants";
 
-import { AddProductModal } from "../AddProductModal";
+import CatalogSettingsTab from "../CatalogSettingsTab";
 import { useCommerce } from "../CommerceContext";
 import { CommerceShell } from "../CommerceShell";
 
@@ -54,19 +75,42 @@ function stockMeta(props: any) {
       };
 }
 
+/** Flatten a catalog product into the shape AddCatalogProduct's form expects. */
+function toFormValues(product: any) {
+  const { currency, price, base_price, sale_price, image, image_link, url, ...rest } =
+    product.productProps ?? {};
+  const num = (v: any) => (v ? parseFloat(String(v).replace(/[^0-9.-]+/g, "")) : undefined);
+
+  return {
+    ...product,
+    currencyCode: currency,
+    ...(price ? { price: num(price) } : {}),
+    ...(base_price ? { base_price: num(base_price) } : {}),
+    ...(sale_price ? { sale_price: num(sale_price) } : {}),
+    ...(image?.length || image_link ? { image: image ?? [{ url: image_link, tag: [] }] } : {}),
+    link: url,
+    ...rest,
+  };
+}
+
 export function CatalogsPage() {
   const { catalogId, isCatalogConnected, currencySymbol: sym } = useCommerce();
+  const confirm = useConfirm();
+
   const { data: catalogData } = useWaCatalog(catalogId);
   const { data: products, isPending: loadingProducts } = useWaCatalogProducts(catalogId);
   const { data: productSets } = useProductSetsByCatalog(catalogId);
 
   const syncProducts = useSyncCatalogProducts(catalogId);
   const syncSets = useSyncProductSets();
+  const deleteProducts = useDeletCatalogProducts(catalogId);
 
-  const [addOpen, setAddOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editProduct, setEditProduct] = useState<any>(null);
 
   const productList: any[] = products ?? [];
   const collectionList: any[] = productSets ?? [];
+  const vertical = catalogData?.vertical;
 
   const handleSync = () => {
     if (!catalogId) return;
@@ -77,10 +121,51 @@ export function CatalogsPage() {
     });
   };
 
+  const openCreate = () => {
+    setEditProduct(null);
+    setModalOpen(true);
+  };
+
+  const openEdit = (product: any) => {
+    setEditProduct(toFormValues(product));
+    setModalOpen(true);
+  };
+
+  const handleDelete = async (product: any) => {
+    const title = product.productProps?.title ?? product.productProps?.name ?? "this product";
+    const ok = await confirm({
+      title: "Delete product",
+      description: `Are you sure you want to delete "${title}"?`,
+      warning: "This removes the product from your Meta catalog and cannot be undone.",
+      confirmText: "Delete",
+    });
+    if (!ok) return;
+
+    let productIds: { id: string; hotel_reatiler_id?: string }[] = [];
+    if (vertical === "commerce") {
+      productIds = [{ id: product.retailer_id }];
+    } else if (vertical === "hotels") {
+      productIds = [{ id: product.hotel_id }];
+    } else if (vertical === "hotel_room") {
+      productIds = [{ id: product.hotel_room_id, hotel_reatiler_id: product.hotel_retailer_id }];
+    }
+
+    toast.loading("Deleting product…", { id: "cx-delete-product" });
+    deleteProducts.mutate(
+      { productIds },
+      {
+        onSuccess: () => toast.success("Product deleted", { id: "cx-delete-product" }),
+        onError: (e: any) =>
+          toast.error(e?.message || "Deletion failed", { id: "cx-delete-product" }),
+      },
+    );
+  };
+
   return (
     <CommerceShell
       title="Catalogs"
       description="Manage products and collections synced to WhatsApp & Instagram."
+      showCatalogSwitcher
       actions={
         <>
           <Button
@@ -96,7 +181,7 @@ export function CatalogsPage() {
             )}
             Sync with Meta
           </Button>
-          <Button size="sm" onClick={() => setAddOpen(true)} disabled={!catalogId}>
+          <Button size="sm" onClick={openCreate} disabled={!catalogId}>
             <Plus data-icon="inline-start" />
             Add Product
           </Button>
@@ -126,6 +211,10 @@ export function CatalogsPage() {
               <LayoutGrid data-icon="inline-start" />
               Collections · {collectionList.length}
             </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings2 data-icon="inline-start" />
+              Settings
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="products" className="mt-0">
@@ -147,29 +236,52 @@ export function CatalogsPage() {
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
+            ) : vertical !== "commerce" ? (
+              <Empty className="rounded-xl border">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Package />
+                  </EmptyMedia>
+                  <EmptyTitle>Unsupported catalog type</EmptyTitle>
+                  <EmptyDescription>{vertical} items are not supported yet.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
                 {productList.map((p, i) => {
                   const props = p.productProps ?? {};
-                  const title = props.title ?? p.name ?? "Untitled product";
-                  const image = props.image_link ?? props.image?.[0]?.url;
+                  const title = props.title ?? props.name ?? "Untitled product";
+                  const image = props.image_link || props.image?.[0]?.url;
                   const price = props.sale_price || props.price;
-                  const cat = props.brand ?? catalogData?.vertical ?? "Product";
+                  const hasSale = props.sale_price && props.sale_price !== props.price;
+                  const cat = props.brand ?? "Product";
                   const sm = stockMeta(props);
                   const tile = TILE_CLASSES[i % TILE_CLASSES.length];
+
                   return (
-                    <Card key={p.id ?? i} className="flex flex-col gap-0 overflow-hidden py-0">
+                    <Card
+                      key={p.id ?? p.retailer_id ?? i}
+                      className="group flex flex-col gap-0 overflow-hidden py-0"
+                    >
                       <div
                         className={cn(
-                          "relative flex h-[132px] items-center justify-center",
+                          "relative flex h-[132px] items-center justify-center overflow-hidden",
                           image ? "bg-muted" : tile,
                         )}
                       >
                         {image ? (
-                          <img src={image} alt={title} className="size-full object-cover" />
+                          <img
+                            src={image}
+                            alt={title}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = fallbackImage;
+                            }}
+                            className="size-full object-cover"
+                          />
                         ) : (
                           <Package className="size-11" />
                         )}
+
                         <Badge
                           variant="secondary"
                           className="absolute left-2.5 top-2.5 bg-background/85"
@@ -180,15 +292,60 @@ export function CatalogsPage() {
                           {sm.label}
                         </Badge>
                       </div>
+
                       <div className="flex flex-1 flex-col gap-1.5 p-3.5">
                         <div className="line-clamp-2 text-sm font-semibold text-foreground">
                           {title}
                         </div>
                         <div className="mt-auto flex items-center justify-between">
-                          <span className="text-base font-bold text-foreground">
-                            {price ? `${sym}${price}` : "—"}
+                          <span className="flex items-baseline gap-1.5">
+                            <span className="text-base font-bold text-foreground">
+                              {price ? `${sym}${price}` : "—"}
+                            </span>
+                            {hasSale && (
+                              <span className="text-xs text-muted-foreground line-through">
+                                {props.price}
+                              </span>
+                            )}
                           </span>
                           <span className={cn("text-xs", sm.stockCls)}>{sm.stockText}</span>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="mt-2.5 flex items-center gap-2 border-t pt-2.5">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => openEdit(p)}
+                          >
+                            Edit
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              render={
+                                <Button
+                                  variant="secondary"
+                                  size="icon-sm"
+                                  aria-label="More actions"
+                                />
+                              }
+                            >
+                              <Ellipsis />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuGroup>
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onClick={() => handleDelete(p)}
+                                  disabled={deleteProducts.isPending}
+                                >
+                                  <Trash2 />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                     </Card>
@@ -235,7 +392,7 @@ export function CatalogsPage() {
                         {c.name ?? "Collection"}
                       </div>
                       <div className="mt-0.5 text-xs text-muted-foreground">
-                        {c.productCount ?? c.product_count ?? 0} products
+                        {c.productIds?.length ?? 0} products
                       </div>
                     </div>
                     <ChevronRight className="size-4 text-muted-foreground" />
@@ -248,14 +405,21 @@ export function CatalogsPage() {
               </div>
             </div>
           </TabsContent>
+
+          <TabsContent value="settings" className="mt-0">
+            <CatalogSettingsTab catalogData={catalogData} />
+          </TabsContent>
         </Tabs>
       )}
 
-      <AddProductModal
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        catalogId={catalogId}
-        currencySymbol={sym}
+      <AddCatalogProductModal
+        catalogData={catalogData}
+        opened={modalOpen}
+        close={() => {
+          setModalOpen(false);
+          setEditProduct(null);
+        }}
+        productData={editProduct}
       />
     </CommerceShell>
   );

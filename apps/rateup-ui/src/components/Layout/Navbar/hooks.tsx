@@ -404,11 +404,12 @@ export function useNavMain({
                   url: "/dashboard/commerce/payments",
                   icon: IconCreditCard,
                 },
-                {
-                  title: t("Coupons"),
-                  url: "/dashboard/commerce/coupons",
-                  icon: IconTicket,
-                },
+                // TODO:commerce
+                // {
+                //   title: t("Coupons"),
+                //   url: "/dashboard/commerce/coupons",
+                //   icon: IconTicket,
+                // },
                 {
                   title: t("Checkout Settings"),
                   url: "/dashboard/commerce/settings",

@@ -1,4 +1,4 @@
-import { Store } from "lucide-react";
+import { BookOpen, Store } from "lucide-react";
 import type { ReactNode } from "react";
 
 import {
@@ -40,17 +40,47 @@ function StoreSwitcher() {
   );
 }
 
+function CatalogSwitcher() {
+  const { catalogs, catalogId, setCatalogId, connectedCatalogId } = useCommerce();
+  if (catalogs.length === 0) return null;
+
+  return (
+    <Select
+      value={catalogId}
+      onValueChange={setCatalogId}
+      items={catalogs.map((c) => ({ value: c.catalogId, label: c.name || c.catalogId }))}
+    >
+      <SelectTrigger aria-label="Select catalog" className="w-[220px]">
+        <BookOpen className="size-4 text-muted-foreground" data-icon="inline-start" />
+        <SelectValue placeholder="Select catalog" />
+      </SelectTrigger>
+      <SelectContent>
+        {catalogs.map((c) => (
+          <SelectItem key={c.catalogId} value={c.catalogId}>
+            {c.name || c.catalogId}
+            {c.catalogId === connectedCatalogId && (
+              <span className="ml-2 text-xs text-muted-foreground">Connected</span>
+            )}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export function CommerceShell({
   title,
   description,
   actions,
   showStoreSwitcher = true,
+  showCatalogSwitcher = false,
   children,
 }: Readonly<{
   title: string;
   description?: string;
   actions?: ReactNode;
   showStoreSwitcher?: boolean;
+  showCatalogSwitcher?: boolean;
   children: ReactNode;
 }>) {
   return (
@@ -62,6 +92,7 @@ export function CommerceShell({
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
           {showStoreSwitcher && <StoreSwitcher />}
+          {showCatalogSwitcher && <CatalogSwitcher />}
           {actions}
         </div>
       </div>

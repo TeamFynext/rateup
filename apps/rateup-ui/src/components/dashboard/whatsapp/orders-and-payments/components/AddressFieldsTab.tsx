@@ -15,6 +15,7 @@ import { useCatalogSettings, useCreateAddressFlow } from "@/backend/whatsapp/cat
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PhonePreviewButton } from "@/components/ui/phone-preview";
 import { WaQuestions } from "@/types/enums";
 
 const SHOPIFY_FIELDS = [
@@ -34,6 +35,63 @@ const SHOPIFY_FIELDS = [
     value: "IN (Auto)",
   },
 ];
+
+/**
+ * WhatsApp Flow sheet as the customer sees it — rendered inside the global phone
+ * preview. Uses semantic tokens so it follows the app's light/dark theme; only the
+ * WhatsApp green CTA is a fixed brand color (it reads on both themes).
+ */
+function AddressFlowPreview() {
+  return (
+    <div className="flex h-full flex-col bg-background text-foreground">
+      {/* Drag handle */}
+      <div className="mx-auto my-2 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/30" />
+
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between border-b px-4 py-3">
+        <X className="size-5 text-muted-foreground" />
+        <span className="text-sm font-semibold text-foreground">Shipping Address</span>
+        <MoreVertical className="size-5 text-muted-foreground" />
+      </div>
+
+      {/* Fields */}
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3">
+        {SHOPIFY_FIELDS.map((field) => {
+          const displayLabel = field.value
+            ? `${field.label}: ${field.value}`
+            : field.required
+              ? field.label
+              : `${field.label} (optional)`;
+
+          return (
+            <div key={field.shopifyKey} className="flex flex-col gap-1">
+              <div className="flex items-center justify-between rounded-xl border bg-muted px-3 py-2.5 text-xs font-medium text-muted-foreground">
+                <span>{displayLabel}</span>
+                {field.fixed && (
+                  <span className="rounded bg-foreground/10 px-1.5 py-0.5 text-[9px] text-muted-foreground">
+                    Fixed
+                  </span>
+                )}
+              </div>
+              {field.shopifyKey === "address2" && (
+                <p className="px-1 text-[10px] italic text-muted-foreground">
+                  Optional — landmark, apartment, etc.
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Confirm */}
+      <div className="shrink-0 border-t p-3">
+        <div className="flex w-full items-center justify-center rounded-full bg-[#00a884] py-2.5 text-xs font-semibold text-white">
+          Confirm Address
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const STATUS_CONFIG = {
   idle: {
@@ -158,9 +216,14 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      {/* Left Column: Management Controls & Info Cards */}
-      <div className="lg:col-span-7 space-y-6">
+    <div className="flex max-w-[760px] flex-col gap-4">
+      <div className="flex items-center justify-end">
+        <PhonePreviewButton platform="whatsapp" label="Preview form">
+          <AddressFlowPreview />
+        </PhonePreviewButton>
+      </div>
+
+      <div className="flex flex-col gap-4">
         {/* Flow status panel */}
         <Card
           className={`${status === "approved" ? "border-green-300 bg-green-50/40 dark:bg-green-950/20" : status === "rejected" ? "border-red-300 bg-red-50/40 dark:bg-red-950/20" : status === "review" ? "border-amber-300 bg-amber-50/40 dark:bg-amber-950/20" : ""}`}
@@ -255,110 +318,6 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Right Column: Live Mobile Preview */}
-      <div className="lg:col-span-5 bg-gradient-to-b from-muted/30 to-muted/10 border rounded-2xl p-6 flex flex-col items-center justify-center shadow-sm">
-        <div className="w-full flex items-center justify-between border-b pb-3 mb-6">
-          <div>
-            <h3 className="text-sm font-semibold tracking-tight">Address Form Preview</h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Live smartphone simulation</p>
-          </div>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold bg-background shadow-sm border px-2.5 py-1 rounded-full">
-            Mobile Preview
-          </span>
-        </div>
-
-        {/* Smartphone Outer Frame */}
-        <div className="w-[310px] sm:w-[330px] bg-[#0b141a] text-[#e9edef] rounded-[50px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border-[14px] border-[#22272e] relative overflow-hidden flex flex-col font-sans ring-1 ring-black/20 my-2">
-          {/* Hardware Side Buttons */}
-          <div className="absolute -left-[17px] top-24 w-[3px] h-6 bg-[#22272e] rounded-l-md" />
-          <div className="absolute -left-[17px] top-36 w-[3px] h-12 bg-[#22272e] rounded-l-md" />
-          <div className="absolute -left-[17px] top-52 w-[3px] h-12 bg-[#22272e] rounded-l-md" />
-          <div className="absolute -right-[17px] top-36 w-[3px] h-16 bg-[#22272e] rounded-r-md" />
-
-          {/* Dynamic Island */}
-          <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-28 h-7 bg-black rounded-full z-50 flex items-center justify-between px-2.5 shadow-md">
-            <div className="w-3 h-3 bg-[#111] rounded-full border border-gray-800 flex items-center justify-center">
-              <div className="w-1 h-1 bg-emerald-500 rounded-full" />
-            </div>
-            <div className="w-1.5 h-1.5 bg-gray-900 rounded-full" />
-          </div>
-
-          {/* Status Bar */}
-          <div className="flex items-center justify-between px-6 pt-3.5 pb-2 bg-[#0b141a] text-white text-xs font-semibold select-none">
-            <span>9:41</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold scale-90">5G</span>
-              {/* Battery Icon */}
-              <div className="w-5 h-2.5 border border-white/80 rounded-[3px] p-[1px] flex items-center">
-                <div className="h-full w-3.5 bg-white rounded-[1px]" />
-                <div className="w-[2px] h-1 bg-white/80 rounded-r-sm ml-[1px]" />
-              </div>
-            </div>
-          </div>
-
-          {/* WhatsApp Flow Sheet Container */}
-          <div className="flex-1 flex flex-col bg-[#0b141a]">
-            {/* Top drag handle */}
-            <div className="w-10 h-1 bg-[#3b4a54] rounded-full mx-auto my-2" />
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#222e35]">
-              <X className="h-5 w-5 text-[#8696a0] cursor-pointer hover:text-[#e9edef] transition-colors" />
-              <span className="font-semibold text-base text-[#e9edef]">Shipping Address</span>
-              <MoreVertical className="h-5 w-5 text-[#8696a0] cursor-pointer hover:text-[#e9edef] transition-colors" />
-            </div>
-
-            {/* Form Body */}
-            <div className="p-4 space-y-3.5 max-h-[380px] overflow-y-auto custom-scrollbar">
-              {SHOPIFY_FIELDS.map((field) => {
-                const displayLabel = field.value
-                  ? `${field.label}: ${field.value}`
-                  : field.required
-                    ? field.label
-                    : `${field.label} (optional)`;
-
-                return (
-                  <div key={field.shopifyKey} className="space-y-1">
-                    <div className="rounded-xl bg-[#1f2c34] border border-[#2f3e46] px-4 py-3 text-sm font-medium text-[#8696a0] flex items-center justify-between shadow-inner">
-                      <span>{displayLabel}</span>
-                      {field.fixed && (
-                        <span className="text-[10px] bg-[#3b4a54]/50 text-[#8696a0] px-1.5 py-0.5 rounded">
-                          Fixed
-                        </span>
-                      )}
-                    </div>
-                    {field.shopifyKey === "address2" && (
-                      <p className="text-[11px] text-[#8696a0] px-1 italic">
-                        Optional — landmark, apartment, etc.
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Bottom Bar */}
-            <div className="p-4 border-t border-[#222e35] bg-[#0b141a]">
-              <button
-                type="button"
-                className="w-full py-3 bg-[#00a884] text-[#111b21] font-semibold text-sm rounded-full flex items-center justify-center shadow-md hover:bg-[#06cf9c] transition-colors"
-              >
-                Confirm Address
-              </button>
-            </div>
-
-            {/* Home Indicator */}
-            <div className="pb-2.5 pt-1 bg-[#0b141a] flex justify-center">
-              <div className="w-32 h-1 bg-[#ffffff]/30 rounded-full" />
-            </div>
-          </div>
-        </div>
-
-        <p className="text-[10px] text-muted-foreground text-center italic mt-6">
-          * Fields are pre-configured to ensure 1:1 compatibility with Shopify order fulfillment.
-        </p>
       </div>
     </div>
   );

@@ -44,7 +44,13 @@ const defaultFormValues: WaManualConfigFormValues = {
 
 export function WhatsAppManualConfiguration({
   waSettings,
-}: Readonly<{ waSettings: WaSetting | undefined }>) {
+  onCancel,
+  onSaved,
+}: Readonly<{
+  waSettings: WaSetting | undefined;
+  onCancel?: () => void;
+  onSaved?: () => void;
+}>) {
   const { t: translations } = useTranslation();
 
   const waManualConfigSchema = z.object({
@@ -80,7 +86,7 @@ export function WhatsAppManualConfiguration({
     let payload: Record<string, unknown> = { ...values };
     if (waSettings) payload = { ...waSettings, ...values };
     if ("teams" in payload) delete payload.teams;
-    upsertMutation.mutate(payload);
+    upsertMutation.mutate(payload, { onSuccess: () => onSaved?.() });
   };
 
   const handleDelete = () => deleteMutation.mutate(waSettings?.phoneId);
@@ -199,15 +205,16 @@ export function WhatsAppManualConfiguration({
           />
 
           <div className="flex justify-between pt-2">
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={!waSettings}
-            >
-              <IconTrash size={18} className="mr-2" />
-              {translations("Delete Configuration")}
-            </Button>
+            {waSettings ? (
+              <Button type="button" variant="destructive" onClick={handleDelete}>
+                <IconTrash size={18} className="mr-2" />
+                {translations("Delete Configuration")}
+              </Button>
+            ) : (
+              <Button type="button" variant="outline" onClick={onCancel} disabled={!onCancel}>
+                {translations("Cancel")}
+              </Button>
+            )}
             <Button type="submit" disabled={upsertMutation.isPending}>
               {upsertMutation.isPending ? "Saving" : translations("Save Changes")}
             </Button>

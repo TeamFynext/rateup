@@ -5,6 +5,7 @@ import {
   IconDeviceMobile,
   IconX,
 } from "@tabler/icons-react";
+import { useRouterState } from "@tanstack/react-router";
 import {
   type ReactNode,
   createContext,
@@ -59,6 +60,16 @@ export function PhonePreviewProvider({ children }: Readonly<{ children: ReactNod
   const [screen, setScreen] = useState<"home" | PhonePlatform>("home");
   const [appContent, setAppContent] = useState<ReactNode | null>(null);
   const [platform, setPlatform] = useState<PhonePlatform | null>(null);
+
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // The preview content belongs to the page that opened it, so drop it on navigation.
+  useEffect(() => {
+    setOpen(false);
+    setAppContent(null);
+    setPlatform(null);
+    setScreen("home");
+  }, [pathname]);
 
   const openPreview = useCallback((p: PhonePlatform, content: ReactNode) => {
     setPlatform(p);
@@ -176,9 +187,8 @@ export function PhonePreviewButton({
   return (
     <Button
       type="button"
-      variant="outline"
+      variant={isActive ? "default" : "outline"}
       size="sm"
-      className={cn("gap-1.5", isActive && "text-primary")}
       onClick={() => {
         if (isActive) {
           closePreview();
