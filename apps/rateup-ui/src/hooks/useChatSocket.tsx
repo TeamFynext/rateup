@@ -5,8 +5,13 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
-import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
+import {
+  useChatContactCountStore,
+  useContactsStore,
+  useMessagesStore,
+} from "@/components/dashboard/inbox/store.ts";
 import { getBrowserId } from "@/lib/browserId.ts";
+import { WaMessageAssignStatus } from "@/types/enums.ts";
 
 export const useChatSocket = () => {
   const socketRef = useRef<WebSocket | null>(null);
@@ -16,6 +21,7 @@ export const useChatSocket = () => {
   const navigate = useNavigate();
   const messageStore = useMessagesStore.getState();
   const { updateContactById, addContactsForFilter } = useContactsStore();
+  const bumpSectionCounts = useChatContactCountStore((state) => state.bumpSectionCounts);
   useEffect(() => {
     if (!browserId) return;
 
@@ -84,6 +90,20 @@ export const useChatSocket = () => {
                 ],
                 true,
               );
+
+              // Optimistically bump the sidebar counts; the next backend fetch
+              // (see useGetInboxUserCount) will overwrite this with the authoritative value.
+              if (
+                [WaMessageAssignStatus.ASSIGNED, WaMessageAssignStatus.UNASSIGNED].includes(
+                  incomingContact.waMessageAssignStatus,
+                )
+              ) {
+                bumpSectionCounts({ openCount: 1, allCount: 1 });
+              } else if (incomingContact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
+                bumpSectionCounts({ closedCount: 1, allCount: 1 });
+              } else {
+                bumpSectionCounts({ allCount: 1 });
+              }
             }
 
             for (const key of [
