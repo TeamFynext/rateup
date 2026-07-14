@@ -46,6 +46,8 @@ interface ChatContactCountStore {
     allCount: number;
   };
   setSectionCounts: (value: ChatContactCountStore["sectionCounts"]) => void;
+  /** Applies a local delta (e.g. from a socket event) without waiting for a backend refetch. */
+  bumpSectionCounts: (delta: Partial<ChatContactCountStore["sectionCounts"]>) => void;
 }
 
 const useContactStore = create<ContactStore>((set) => ({
@@ -66,6 +68,14 @@ export const useChatContactCountStore = create<ChatContactCountStore>((set) => (
     allCount: 0,
   },
   setSectionCounts: (value) => set({ sectionCounts: value }),
+  bumpSectionCounts: (delta) =>
+    set((state) => ({
+      sectionCounts: {
+        openCount: state.sectionCounts.openCount + (delta.openCount ?? 0),
+        closedCount: state.sectionCounts.closedCount + (delta.closedCount ?? 0),
+        allCount: state.sectionCounts.allCount + (delta.allCount ?? 0),
+      },
+    })),
 }));
 
 export default useContactStore;
@@ -266,15 +276,15 @@ export const useContactsStore = create<ContactsStoreState>()(
               updatedContact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED;
             assignStatusChanged =
               updatedContact.waMessageAssignStatus !== contact.waMessageAssignStatus;
-            const status = currentFilterKey?.match(/status:[^|]*\|/) || [];
-            const filterExcludesAll =
-              (!currentFilterKey?.includes("messageType:all") ||
-                (currentFilterKey?.includes("messageType:all") &&
-                  status.length &&
-                  !status[0].includes(updatedContact.waMessageAssignStatus))) &&
-              (!currentFilterKey?.includes("waMessageAssignStatus:New") ||
-                (currentFilterKey?.includes("waMessageAssignStatus:New") && !isUnassigned));
-            const shouldFilterOut = assignStatusChanged && filterExcludesAll;
+            const statusMatch = currentFilterKey?.match(/status:([^|]*)/);
+            const statuses = statusMatch ? statusMatch[1].split(",") : [];
+            const belongsToCurrentFilter =
+              (statuses.length === 0 || statuses.includes(updatedContact.waMessageAssignStatus)) &&
+              (!currentFilterKey?.includes("waMessageAssignStatus:mine") ||
+                (updatedContact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED &&
+                  updatedContact.assignedUsers?.some((u) => u.id === state.currentUser?.userId)));
+
+            const shouldFilterOut = contactIncluded && !belongsToCurrentFilter;
             const prevWaCreated = contact.lastMessage?.waCreatedAt ?? 0;
             const newWaCreated = updatedContact.lastMessage?.waCreatedAt ?? 0;
             messageUpdated = newWaCreated > prevWaCreated;
@@ -345,7 +355,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         try {
           Promise.all(
             updateIdb.map(async (i) => {
-              saveContactIdsForFilter(i.key, i.contatIds);
+              saveContactIdsForFilter(i.key, i.contactIds);
             }),
           );
           if (contactId === get().selectedContact?.id && markUnread) {
@@ -423,22 +433,35 @@ export const useContactsStore = create<ContactsStoreState>()(
             );
             break;
           case "open":
-            // Open = Assigned contacts (not Unassigned)
+            // Open = Assigned and Unassigned contacts (not Closed/Addressed)
             set(
               produce((draft) => {
                 const state = get();
                 const contact = state.contactsById.get(contactId);
-                const isAssigned = contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED;
 
-                const filterList = Object.keys(draft.contactsByFilter).filter((key) =>
-                  key.includes("waMessageAssignStatus:Assigned"),
+                const filterList = Object.keys(draft.contactsByFilter).filter(
+                  (key) =>
+                    key.includes("messageType:usermessages") &&
+                    !key.includes("waMessageAssignStatus:mine") &&
+                    (key.includes("waMessageAssignStatus:undefined") ||
+                      key.includes("waMessageAssignStatus:null") ||
+                      !key.includes("waMessageAssignStatus:")),
                 );
                 filterList.forEach((filterKey) => {
                   const contactIds = draft.contactsByFilter[filterKey] || [];
                   const isInFilter = contactIds.includes(contactId);
                   let newList = [...contactIds];
                   let changed = false;
-                  if (isAssigned) {
+
+                  const statusMatch = filterKey.match(/status:([^|]*)/);
+                  const statuses = statusMatch ? statusMatch[1].split(",") : [];
+                  const matchesStatus = statuses.length
+                    ? statuses.includes(contact.waMessageAssignStatus)
+                    : [WaMessageAssignStatus.ASSIGNED, WaMessageAssignStatus.UNASSIGNED].includes(
+                        contact.waMessageAssignStatus as WaMessageAssignStatus,
+                      );
+
+                  if (matchesStatus) {
                     if (!isInFilter) {
                       newList.push(contactId);
                       changed = true;
@@ -541,7 +564,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         }
         Promise.all(
           updateIdb.map(async (i) => {
-            saveContactIdsForFilter(i.key, i.contatIds);
+            saveContactIdsForFilter(i.key, i.contactIds);
           }),
         );
       },
