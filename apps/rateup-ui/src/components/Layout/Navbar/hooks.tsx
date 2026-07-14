@@ -348,21 +348,6 @@ export function useNavMain({
                     ]
                   : []),
                 {
-                  title: "Catalog",
-                  url: "/dashboard/whatsapp/catalog",
-                  icon: IconBuildingStore,
-                },
-                {
-                  title: t("Orders"),
-                  url: "/dashboard/whatsapp/orders",
-                  icon: IconShoppingCart,
-                },
-                {
-                  title: t("Payments"),
-                  url: "/dashboard/whatsapp/payments",
-                  icon: IconCreditCard,
-                },
-                {
                   title: t("Conversational"),
                   url: "/dashboard/whatsapp/conversational-components",
                   icon: IconMessage,
@@ -392,6 +377,48 @@ export function useNavMain({
           ]
         : []),
 
+      ...(hasFeature(subscription, sfpn.Whatsapp)
+        ? [
+            {
+              title: t("Commerce"),
+              url: "/dashboard/commerce/overview",
+              icon: IconBuildingStore,
+              items: [
+                {
+                  title: t("Overview"),
+                  url: "/dashboard/commerce/overview",
+                  icon: IconDashboard,
+                },
+                {
+                  title: t("Catalogs"),
+                  url: "/dashboard/commerce/catalogs",
+                  icon: IconBuildingStore,
+                },
+                {
+                  title: t("Orders"),
+                  url: "/dashboard/commerce/orders",
+                  icon: IconShoppingCart,
+                },
+                {
+                  title: t("Payments"),
+                  url: "/dashboard/commerce/payments",
+                  icon: IconCreditCard,
+                },
+                // TODO:commerce
+                // {
+                //   title: t("Coupons"),
+                //   url: "/dashboard/commerce/coupons",
+                //   icon: IconTicket,
+                // },
+                {
+                  title: t("Checkout Settings"),
+                  url: "/dashboard/commerce/settings",
+                  icon: IconSettings,
+                },
+              ],
+            },
+          ]
+        : []),
       ...(hasFeature(subscription, sfpn.Loyalty) && hasTeamFeature(TeamFeature.Loyalty)
         ? [
             {

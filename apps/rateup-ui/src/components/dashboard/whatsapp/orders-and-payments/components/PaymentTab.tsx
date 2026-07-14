@@ -4,14 +4,11 @@ import {
   CreditCard,
   ExternalLink,
   HandHelping,
-  Info,
   Landmark,
   Loader2,
-  MapPin,
   Save,
   ShoppingBag,
   Smartphone,
-  Truck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -21,9 +18,10 @@ import {
 } from "@/backend/whatsapp/catalog/catalog.query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 // ─── Shopify payment options ─────────────────────────────────────────────────
@@ -183,111 +181,6 @@ const STANDARD_METHODS = [
   },
 ];
 
-function CollectToggles({
-  collectAddress,
-  collectDelivery,
-  onAddressChange,
-  onDeliveryChange,
-  addressApplicable,
-  deliveryApplicable,
-  hasApprovedFlow,
-  fixedDeliveryCharge,
-  fixedDeliveryAmount,
-  onFixedChargeChange,
-  onFixedAmountChange,
-}: Readonly<{
-  collectAddress: boolean;
-  collectDelivery: boolean;
-  onAddressChange: (v: boolean) => void;
-  onDeliveryChange: (v: boolean) => void;
-  addressApplicable: boolean;
-  deliveryApplicable: boolean;
-  hasApprovedFlow: boolean;
-  fixedDeliveryCharge: boolean;
-  fixedDeliveryAmount: number;
-  onFixedChargeChange: (v: boolean) => void;
-  onFixedAmountChange: (v: number) => void;
-}>) {
-  if (!addressApplicable && !deliveryApplicable) return null;
-  return (
-    <div className="space-y-4 rounded-xl border bg-muted/20 p-4">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-        Collection Options
-      </p>
-      {addressApplicable && (
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-start gap-2">
-            <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-            <div>
-              <p className="text-sm font-medium">Collect Shipping Address</p>
-              <p className="text-xs text-muted-foreground">
-                Send a WhatsApp Flow form to collect the customer's address.
-                {!hasApprovedFlow && (
-                  <span className="text-amber-500">
-                    {" "}
-                    ⚠️ Requires an approved address flow (see Address Fields tab).
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
-          <Switch
-            checked={collectAddress}
-            onCheckedChange={onAddressChange}
-            disabled={!hasApprovedFlow}
-          />
-        </div>
-      )}
-      {deliveryApplicable && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-start gap-2">
-              <Truck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium">Add Delivery Charge</p>
-                <p className="text-xs text-muted-foreground">
-                  Enable delivery charges for catalog orders. Price is added to the total.
-                </p>
-              </div>
-            </div>
-            <Switch checked={collectDelivery} onCheckedChange={onDeliveryChange} />
-          </div>
-
-          {collectDelivery && (
-            <div className="ml-6 space-y-3 p-3 rounded-lg bg-muted/30 border border-border">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-medium">
-                    Fixed Delivery Charge (Skip Customer Selection)
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Automatically apply a fixed delivery charge without asking the customer to
-                    select a delivery partner.
-                  </p>
-                </div>
-                <Switch checked={fixedDeliveryCharge} onCheckedChange={onFixedChargeChange} />
-              </div>
-
-              {fixedDeliveryCharge && (
-                <div className="space-y-1.5 pt-1.5 border-t border-border/40">
-                  <Label className="text-xs font-medium">Fixed Delivery Amount (₹)</Label>
-                  <Input
-                    type="number"
-                    value={fixedDeliveryAmount}
-                    onChange={(e) => onFixedAmountChange(Number(e.target.value))}
-                    placeholder="40"
-                    className="h-8 text-sm w-36"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function PaymentTab({
   catalogId,
   isShopifyConnected,
@@ -343,75 +236,87 @@ export default function PaymentTab({
   //   );
   // }
 
-  const hasApprovedFlow = settings?.addressFlowStatus === "approved";
   const methods = storeType === "shopify" ? SHOPIFY_METHODS : STANDARD_METHODS;
-  const selectedMethod = methods.find((m) => m.id === paymentMethod);
+
+  const STORE_TYPES = [
+    {
+      key: "standard" as const,
+      Icon: Building2,
+      tile: "bg-primary/10 text-primary",
+      label: "Standard",
+      sub: "No Shopify required",
+    },
+    {
+      key: "shopify" as const,
+      Icon: ShoppingBag,
+      tile: "bg-emerald-500/10 text-emerald-600",
+      label: "Shopify Store",
+      sub: "Connected to Shopify",
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* ── Store Type ──────────────────────────────────────────────────────── */}
-      <div>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Store Type
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[
-            {
-              key: "standard" as const,
-              Icon: Building2,
-              bg: "bg-blue-100 dark:bg-blue-950",
-              color: "text-blue-600",
-              label: "Standard",
-              sub: "No Shopify required",
-            },
-            {
-              key: "shopify" as const,
-              Icon: ShoppingBag,
-              bg: "bg-green-100 dark:bg-green-950",
-              color: "text-green-600",
-              label: "Shopify Store",
-              sub: "Connected to Shopify",
-            },
-          ].map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => {
-                if (opt.key === "shopify" && !isShopifyConnected) return;
-                setStoreType(opt.key);
-                setPaymentMethod(opt.key === "shopify" ? "shopify_checkout" : "manual");
-              }}
-              className={`relative flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200
-                ${opt.key === "shopify" && !isShopifyConnected ? "opacity-50 cursor-not-allowed" : ""}
-                ${storeType === opt.key ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/40 hover:bg-muted/30"}`}
-            >
-              {storeType === opt.key && (
-                <span className="absolute top-3 right-3 h-2.5 w-2.5 rounded-full bg-primary" />
-              )}
-              <div
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${opt.bg}`}
+    <div className="flex max-w-[760px] flex-col gap-4">
+      {/* Store type */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Store type</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Where orders are fulfilled and how checkout is handled.
+          </p>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {STORE_TYPES.map((opt) => {
+            const selected = storeType === opt.key;
+            const locked = opt.key === "shopify" && !isShopifyConnected;
+            return (
+              <button
+                key={opt.key}
+                type="button"
+                disabled={locked}
+                onClick={() => {
+                  setStoreType(opt.key);
+                  setPaymentMethod(opt.key === "shopify" ? "shopify_checkout" : "manual");
+                }}
+                className={cn(
+                  "relative flex items-center gap-3 rounded-lg border p-4 text-left transition-colors",
+                  locked && "cursor-not-allowed opacity-50",
+                  selected ? "border-primary bg-primary/5" : "hover:bg-accent",
+                )}
               >
-                <opt.Icon className={`h-5 w-5 ${opt.color}`} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">{opt.label}</p>
-                <p className="text-xs text-muted-foreground">{opt.sub}</p>
-              </div>
-              {opt.key === "shopify" && !isShopifyConnected && (
-                <Badge variant="secondary" className="ml-auto text-[10px] shrink-0">
-                  Requires Shopify
-                </Badge>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+                {selected && (
+                  <span className="absolute right-3 top-3 size-2.5 rounded-full bg-primary" />
+                )}
+                <span
+                  className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-lg",
+                    opt.tile,
+                  )}
+                >
+                  <opt.Icon className="size-4.5" />
+                </span>
+                <div>
+                  <div className="text-sm font-semibold text-foreground">{opt.label}</div>
+                  <div className="text-xs text-muted-foreground">{opt.sub}</div>
+                </div>
+                {locked && (
+                  <Badge variant="secondary" className="ml-auto shrink-0 text-[10px]">
+                    Requires Shopify
+                  </Badge>
+                )}
+              </button>
+            );
+          })}
+        </CardContent>
+      </Card>
 
-      {/* ── Payment Method ───────────────────────────────────────────────────── */}
-      <div>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Payment Method
-        </h3>
-        <div className="rounded-lg border border-border bg-card overflow-hidden shadow-xs">
+      {/* Payment method */}
+      <Card className="gap-0 py-0">
+        <CardHeader className="py-5">
+          <CardTitle className="text-sm">Payment method</CardTitle>
+          <p className="text-xs text-muted-foreground">How the customer pays for their order.</p>
+        </CardHeader>
+        <CardContent className="flex flex-col p-0">
           {methods.map((method) => {
             const isSelected = paymentMethod === method.id;
             const fields = method.fields ?? [];
@@ -420,116 +325,88 @@ export default function PaymentTab({
             return (
               <div
                 key={method.id}
-                className={`border-b border-border last:border-b-0 transition-colors ${isSelected ? "bg-primary/5" : "hover:bg-muted/30"}`}
+                className={cn(
+                  "border-t transition-colors",
+                  isSelected ? "bg-primary/5" : "hover:bg-accent/50",
+                )}
               >
                 <button
+                  type="button"
                   onClick={() => setPaymentMethod(method.id)}
-                  className="w-full flex items-center gap-3 p-4 text-left"
+                  className="flex w-full items-center gap-3 p-4 text-left"
                 >
-                  {/* Proper Radio Button */}
-                  <div
-                    className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? "border-2 border-primary" : "border-muted-foreground/40"}`}
+                  <span
+                    className={cn(
+                      "flex size-4 shrink-0 items-center justify-center rounded-full border",
+                      isSelected ? "border-2 border-primary" : "border-muted-foreground/40",
+                    )}
                   >
-                    {isSelected && <div className="h-2 w-2 rounded-full bg-primary" />}
-                  </div>
+                    {isSelected && <span className="size-2 rounded-full bg-primary" />}
+                  </span>
 
-                  {/* Icon */}
-                  <method.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <method.icon className="size-4 shrink-0 text-muted-foreground" />
 
-                  {/* Label & Description */}
-                  <div className="flex-1 min-w-0 pr-2">
-                    <p className="text-sm font-semibold text-foreground">{method.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-normal">
+                  <div className="min-w-0 flex-1 pr-2">
+                    <div className="text-sm font-semibold text-foreground">{method.label}</div>
+                    <div className="mt-0.5 text-xs leading-normal text-muted-foreground">
                       {method.desc}
-                    </p>
+                    </div>
                   </div>
 
-                  {/* Payment Logos & Badges on the right */}
                   {(logos.length > 0 || badges.length > 0) && (
-                    <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                    <div className="flex shrink-0 items-center gap-1.5 pl-2">
                       {logos.map((logo: any) => (
-                        <div
+                        <span
                           key={logo.src}
-                          className="h-6 px-1.5 rounded border border-border bg-background shadow-2xs flex items-center justify-center"
+                          className="flex h-6 items-center justify-center rounded border bg-background px-1.5"
                         >
                           <img
                             src={logo.src}
                             alt={logo.alt}
                             className="h-3.5 w-auto object-contain"
                           />
-                        </div>
+                        </span>
                       ))}
                       {badges.map((b: any) => (
-                        <span
-                          key={b.label}
-                          className={`px-1.5 py-0.5 rounded border text-[10px] font-bold tracking-tight bg-background shadow-2xs ${b.className}`}
-                        >
+                        <Badge key={b.label} variant="outline" className="text-[10px]">
                           {b.label}
-                        </span>
+                        </Badge>
                       ))}
                     </div>
                   )}
                 </button>
 
-                {/* Configuration fields */}
                 {isSelected && fields.length > 0 && (
-                  <div className="p-4 border-t border-border/60 bg-muted/10">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="border-t bg-muted/30 p-4">
+                    <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       {fields.map((f: any) => (
-                        <div key={f.key} className="space-y-1.5">
-                          <Label className="text-xs font-medium text-foreground">{f.label}</Label>
+                        <Field key={f.key}>
+                          <FieldLabel htmlFor={`pay-${f.key}`}>{f.label}</FieldLabel>
                           <Input
+                            id={`pay-${f.key}`}
                             value={paymentConfig[f.key] ?? ""}
                             onChange={(e) =>
-                              setPaymentConfig((p) => ({
-                                ...p,
-                                [f.key]: e.target.value,
-                              }))
+                              setPaymentConfig((p) => ({ ...p, [f.key]: e.target.value }))
                             }
                             placeholder={f.placeholder}
-                            className="h-8 text-sm bg-background font-medium"
                           />
-                        </div>
+                        </Field>
                       ))}
-                    </div>
+                    </FieldGroup>
                   </div>
                 )}
               </div>
             );
           })}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* ── Collection Options (address + delivery toggles) ──────────────────── */}
-      {selectedMethod && (
-        <CollectToggles
-          collectAddress={collectAddress}
-          collectDelivery={collectDelivery}
-          onAddressChange={setCollectAddress}
-          onDeliveryChange={setCollectDelivery}
-          addressApplicable={selectedMethod.collectAddressApplicable}
-          deliveryApplicable={selectedMethod.collectDeliveryApplicable}
-          hasApprovedFlow={hasApprovedFlow}
-          fixedDeliveryCharge={fixedDeliveryCharge}
-          fixedDeliveryAmount={fixedDeliveryAmount}
-          onFixedChargeChange={setFixedDeliveryCharge}
-          onFixedAmountChange={setFixedDeliveryAmount}
-        />
-      )}
-
-      {/* ── Info tip ────────────────────────────────────────────────────────── */}
-      {collectDelivery && !collectAddress && (
-        <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-900 p-3 text-xs text-blue-800 dark:text-blue-300">
-          <Info className="h-4 w-4 shrink-0 mt-0.5" />
-          <p>
-            Delivery selection is on but address collection is off. The delivery charge will be
-            added to the total but no address will be collected.
-          </p>
-        </div>
-      )}
-
-      <Button onClick={handleSave} disabled={isSaving || !catalogId} className="gap-2">
-        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+      <Button onClick={handleSave} disabled={isSaving || !catalogId} className="w-fit">
+        {isSaving ? (
+          <Loader2 data-icon="inline-start" className="animate-spin" />
+        ) : (
+          <Save data-icon="inline-start" />
+        )}
         Save Settings
       </Button>
     </div>

@@ -17,6 +17,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as marketingIndexRouteImport } from './routes/(marketing)/index'
 import { Route as DotwellKnownApiCatalogRouteImport } from './routes/[.]well-known/api-catalog'
+import { Route as DashboardCommerceRouteRouteImport } from './routes/dashboard/commerce/route'
 import { Route as marketingBlogRouteRouteImport } from './routes/(marketing)/blog/route'
 import { Route as DashboardWhatsappIndexRouteImport } from './routes/dashboard/whatsapp/index'
 import { Route as DashboardTicketsIndexRouteImport } from './routes/dashboard/tickets/index'
@@ -29,6 +30,7 @@ import { Route as DashboardMetaAgentIndexRouteImport } from './routes/dashboard/
 import { Route as DashboardInstagramIndexRouteImport } from './routes/dashboard/instagram/index'
 import { Route as DashboardInboxIndexRouteImport } from './routes/dashboard/inbox/index'
 import { Route as DashboardContactsIndexRouteImport } from './routes/dashboard/contacts/index'
+import { Route as DashboardCommerceIndexRouteImport } from './routes/dashboard/commerce/index'
 import { Route as DashboardCampaignIndexRouteImport } from './routes/dashboard/campaign/index'
 import { Route as DashboardAutomationIndexRouteImport } from './routes/dashboard/automation/index'
 import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard/analytics/index'
@@ -94,6 +96,12 @@ import { Route as DashboardContactsLifecycleIndexRouteImport } from './routes/da
 import { Route as DashboardContactsLabelsIndexRouteImport } from './routes/dashboard/contacts/labels/index'
 import { Route as DashboardContactsGroupsIndexRouteImport } from './routes/dashboard/contacts/groups/index'
 import { Route as DashboardContactsCustomFieldsIndexRouteImport } from './routes/dashboard/contacts/custom-fields/index'
+import { Route as DashboardCommerceSettingsIndexRouteImport } from './routes/dashboard/commerce/settings/index'
+import { Route as DashboardCommercePaymentsIndexRouteImport } from './routes/dashboard/commerce/payments/index'
+import { Route as DashboardCommerceOverviewIndexRouteImport } from './routes/dashboard/commerce/overview/index'
+import { Route as DashboardCommerceOrdersIndexRouteImport } from './routes/dashboard/commerce/orders/index'
+import { Route as DashboardCommerceCouponsIndexRouteImport } from './routes/dashboard/commerce/coupons/index'
+import { Route as DashboardCommerceCatalogsIndexRouteImport } from './routes/dashboard/commerce/catalogs/index'
 import { Route as DashboardCampaignCampaignIdIndexRouteImport } from './routes/dashboard/campaign/$campaignId/index'
 import { Route as DashboardAutomationAutomationIdIndexRouteImport } from './routes/dashboard/automation/$automationId/index'
 import { Route as DashboardAnalyticsAuditLogIndexRouteImport } from './routes/dashboard/analytics/audit-log/index'
@@ -195,6 +203,11 @@ const DotwellKnownApiCatalogRoute = DotwellKnownApiCatalogRouteImport.update({
   path: '/.well-known/api-catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardCommerceRouteRoute = DashboardCommerceRouteRouteImport.update({
+  id: '/commerce',
+  path: '/commerce',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const marketingBlogRouteRoute = marketingBlogRouteRouteImport.update({
   id: '/(marketing)/blog',
   path: '/blog',
@@ -256,6 +269,11 @@ const DashboardContactsIndexRoute = DashboardContactsIndexRouteImport.update({
   id: '/contacts/',
   path: '/contacts/',
   getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardCommerceIndexRoute = DashboardCommerceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardCommerceRouteRoute,
 } as any)
 const DashboardCampaignIndexRoute = DashboardCampaignIndexRouteImport.update({
   id: '/campaign/',
@@ -621,6 +639,42 @@ const DashboardContactsCustomFieldsIndexRoute =
     path: '/contacts/custom-fields/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardCommerceSettingsIndexRoute =
+  DashboardCommerceSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommercePaymentsIndexRoute =
+  DashboardCommercePaymentsIndexRouteImport.update({
+    id: '/payments/',
+    path: '/payments/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceOverviewIndexRoute =
+  DashboardCommerceOverviewIndexRouteImport.update({
+    id: '/overview/',
+    path: '/overview/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceOrdersIndexRoute =
+  DashboardCommerceOrdersIndexRouteImport.update({
+    id: '/orders/',
+    path: '/orders/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceCouponsIndexRoute =
+  DashboardCommerceCouponsIndexRouteImport.update({
+    id: '/coupons/',
+    path: '/coupons/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceCatalogsIndexRoute =
+  DashboardCommerceCatalogsIndexRouteImport.update({
+    id: '/catalogs/',
+    path: '/catalogs/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
 const DashboardCampaignCampaignIdIndexRoute =
   DashboardCampaignCampaignIdIndexRouteImport.update({
     id: '/campaign/$campaignId/',
@@ -983,6 +1037,7 @@ export interface FileRoutesByFullPath {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/blog': typeof marketingBlogRouteRouteWithChildren
+  '/dashboard/commerce': typeof DashboardCommerceRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/': typeof marketingIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -1018,6 +1073,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation/': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign/': typeof DashboardCampaignIndexRoute
+  '/dashboard/commerce/': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
@@ -1063,6 +1119,12 @@ export interface FileRoutesByFullPath {
   '/dashboard/analytics/audit-log/': typeof DashboardAnalyticsAuditLogIndexRoute
   '/dashboard/automation/$automationId/': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId/': typeof DashboardCampaignCampaignIdIndexRoute
+  '/dashboard/commerce/catalogs/': typeof DashboardCommerceCatalogsIndexRoute
+  '/dashboard/commerce/coupons/': typeof DashboardCommerceCouponsIndexRoute
+  '/dashboard/commerce/orders/': typeof DashboardCommerceOrdersIndexRoute
+  '/dashboard/commerce/overview/': typeof DashboardCommerceOverviewIndexRoute
+  '/dashboard/commerce/payments/': typeof DashboardCommercePaymentsIndexRoute
+  '/dashboard/commerce/settings/': typeof DashboardCommerceSettingsIndexRoute
   '/dashboard/contacts/custom-fields/': typeof DashboardContactsCustomFieldsIndexRoute
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
@@ -1162,6 +1224,7 @@ export interface FileRoutesByTo {
   '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign': typeof DashboardCampaignIndexRoute
+  '/dashboard/commerce': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts': typeof DashboardContactsIndexRoute
   '/dashboard/inbox': typeof DashboardInboxIndexRoute
   '/dashboard/instagram': typeof DashboardInstagramIndexRoute
@@ -1207,6 +1270,12 @@ export interface FileRoutesByTo {
   '/dashboard/analytics/audit-log': typeof DashboardAnalyticsAuditLogIndexRoute
   '/dashboard/automation/$automationId': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId': typeof DashboardCampaignCampaignIdIndexRoute
+  '/dashboard/commerce/catalogs': typeof DashboardCommerceCatalogsIndexRoute
+  '/dashboard/commerce/coupons': typeof DashboardCommerceCouponsIndexRoute
+  '/dashboard/commerce/orders': typeof DashboardCommerceOrdersIndexRoute
+  '/dashboard/commerce/overview': typeof DashboardCommerceOverviewIndexRoute
+  '/dashboard/commerce/payments': typeof DashboardCommercePaymentsIndexRoute
+  '/dashboard/commerce/settings': typeof DashboardCommerceSettingsIndexRoute
   '/dashboard/contacts/custom-fields': typeof DashboardContactsCustomFieldsIndexRoute
   '/dashboard/contacts/groups': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels': typeof DashboardContactsLabelsIndexRoute
@@ -1275,6 +1344,7 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap_index.xml': typeof Sitemap_indexDotxmlRoute
   '/(marketing)/blog': typeof marketingBlogRouteRouteWithChildren
+  '/dashboard/commerce': typeof DashboardCommerceRouteRouteWithChildren
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/(marketing)/': typeof marketingIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -1310,6 +1380,7 @@ export interface FileRoutesById {
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/automation/': typeof DashboardAutomationIndexRoute
   '/dashboard/campaign/': typeof DashboardCampaignIndexRoute
+  '/dashboard/commerce/': typeof DashboardCommerceIndexRoute
   '/dashboard/contacts/': typeof DashboardContactsIndexRoute
   '/dashboard/inbox/': typeof DashboardInboxIndexRoute
   '/dashboard/instagram/': typeof DashboardInstagramIndexRoute
@@ -1355,6 +1426,12 @@ export interface FileRoutesById {
   '/dashboard/analytics/audit-log/': typeof DashboardAnalyticsAuditLogIndexRoute
   '/dashboard/automation/$automationId/': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId/': typeof DashboardCampaignCampaignIdIndexRoute
+  '/dashboard/commerce/catalogs/': typeof DashboardCommerceCatalogsIndexRoute
+  '/dashboard/commerce/coupons/': typeof DashboardCommerceCouponsIndexRoute
+  '/dashboard/commerce/orders/': typeof DashboardCommerceOrdersIndexRoute
+  '/dashboard/commerce/overview/': typeof DashboardCommerceOverviewIndexRoute
+  '/dashboard/commerce/payments/': typeof DashboardCommercePaymentsIndexRoute
+  '/dashboard/commerce/settings/': typeof DashboardCommerceSettingsIndexRoute
   '/dashboard/contacts/custom-fields/': typeof DashboardContactsCustomFieldsIndexRoute
   '/dashboard/contacts/groups/': typeof DashboardContactsGroupsIndexRoute
   '/dashboard/contacts/labels/': typeof DashboardContactsLabelsIndexRoute
@@ -1424,6 +1501,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap_index.xml'
     | '/blog'
+    | '/dashboard/commerce'
     | '/.well-known/api-catalog'
     | '/'
     | '/admin/'
@@ -1459,6 +1537,7 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/'
     | '/dashboard/automation/'
     | '/dashboard/campaign/'
+    | '/dashboard/commerce/'
     | '/dashboard/contacts/'
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
@@ -1504,6 +1583,12 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/audit-log/'
     | '/dashboard/automation/$automationId/'
     | '/dashboard/campaign/$campaignId/'
+    | '/dashboard/commerce/catalogs/'
+    | '/dashboard/commerce/coupons/'
+    | '/dashboard/commerce/orders/'
+    | '/dashboard/commerce/overview/'
+    | '/dashboard/commerce/payments/'
+    | '/dashboard/commerce/settings/'
     | '/dashboard/contacts/custom-fields/'
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
@@ -1603,6 +1688,7 @@ export interface FileRouteTypes {
     | '/dashboard/analytics'
     | '/dashboard/automation'
     | '/dashboard/campaign'
+    | '/dashboard/commerce'
     | '/dashboard/contacts'
     | '/dashboard/inbox'
     | '/dashboard/instagram'
@@ -1648,6 +1734,12 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/audit-log'
     | '/dashboard/automation/$automationId'
     | '/dashboard/campaign/$campaignId'
+    | '/dashboard/commerce/catalogs'
+    | '/dashboard/commerce/coupons'
+    | '/dashboard/commerce/orders'
+    | '/dashboard/commerce/overview'
+    | '/dashboard/commerce/payments'
+    | '/dashboard/commerce/settings'
     | '/dashboard/contacts/custom-fields'
     | '/dashboard/contacts/groups'
     | '/dashboard/contacts/labels'
@@ -1715,6 +1807,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap_index.xml'
     | '/(marketing)/blog'
+    | '/dashboard/commerce'
     | '/.well-known/api-catalog'
     | '/(marketing)/'
     | '/admin/'
@@ -1750,6 +1843,7 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/'
     | '/dashboard/automation/'
     | '/dashboard/campaign/'
+    | '/dashboard/commerce/'
     | '/dashboard/contacts/'
     | '/dashboard/inbox/'
     | '/dashboard/instagram/'
@@ -1795,6 +1889,12 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/audit-log/'
     | '/dashboard/automation/$automationId/'
     | '/dashboard/campaign/$campaignId/'
+    | '/dashboard/commerce/catalogs/'
+    | '/dashboard/commerce/coupons/'
+    | '/dashboard/commerce/orders/'
+    | '/dashboard/commerce/overview/'
+    | '/dashboard/commerce/payments/'
+    | '/dashboard/commerce/settings/'
     | '/dashboard/contacts/custom-fields/'
     | '/dashboard/contacts/groups/'
     | '/dashboard/contacts/labels/'
@@ -1975,6 +2075,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotwellKnownApiCatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/commerce': {
+      id: '/dashboard/commerce'
+      path: '/commerce'
+      fullPath: '/dashboard/commerce'
+      preLoaderRoute: typeof DashboardCommerceRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/(marketing)/blog': {
       id: '/(marketing)/blog'
       path: '/blog'
@@ -2058,6 +2165,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/contacts/'
       preLoaderRoute: typeof DashboardContactsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/commerce/': {
+      id: '/dashboard/commerce/'
+      path: '/'
+      fullPath: '/dashboard/commerce/'
+      preLoaderRoute: typeof DashboardCommerceIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
     }
     '/dashboard/campaign/': {
       id: '/dashboard/campaign/'
@@ -2513,6 +2627,48 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/contacts/custom-fields/'
       preLoaderRoute: typeof DashboardContactsCustomFieldsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/commerce/settings/': {
+      id: '/dashboard/commerce/settings/'
+      path: '/settings'
+      fullPath: '/dashboard/commerce/settings/'
+      preLoaderRoute: typeof DashboardCommerceSettingsIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/payments/': {
+      id: '/dashboard/commerce/payments/'
+      path: '/payments'
+      fullPath: '/dashboard/commerce/payments/'
+      preLoaderRoute: typeof DashboardCommercePaymentsIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/overview/': {
+      id: '/dashboard/commerce/overview/'
+      path: '/overview'
+      fullPath: '/dashboard/commerce/overview/'
+      preLoaderRoute: typeof DashboardCommerceOverviewIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/orders/': {
+      id: '/dashboard/commerce/orders/'
+      path: '/orders'
+      fullPath: '/dashboard/commerce/orders/'
+      preLoaderRoute: typeof DashboardCommerceOrdersIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/coupons/': {
+      id: '/dashboard/commerce/coupons/'
+      path: '/coupons'
+      fullPath: '/dashboard/commerce/coupons/'
+      preLoaderRoute: typeof DashboardCommerceCouponsIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/catalogs/': {
+      id: '/dashboard/commerce/catalogs/'
+      path: '/catalogs'
+      fullPath: '/dashboard/commerce/catalogs/'
+      preLoaderRoute: typeof DashboardCommerceCatalogsIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
     }
     '/dashboard/campaign/$campaignId/': {
       id: '/dashboard/campaign/$campaignId/'
@@ -2975,7 +3131,34 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
   AdminRouteRouteChildren,
 )
 
+interface DashboardCommerceRouteRouteChildren {
+  DashboardCommerceIndexRoute: typeof DashboardCommerceIndexRoute
+  DashboardCommerceCatalogsIndexRoute: typeof DashboardCommerceCatalogsIndexRoute
+  DashboardCommerceCouponsIndexRoute: typeof DashboardCommerceCouponsIndexRoute
+  DashboardCommerceOrdersIndexRoute: typeof DashboardCommerceOrdersIndexRoute
+  DashboardCommerceOverviewIndexRoute: typeof DashboardCommerceOverviewIndexRoute
+  DashboardCommercePaymentsIndexRoute: typeof DashboardCommercePaymentsIndexRoute
+  DashboardCommerceSettingsIndexRoute: typeof DashboardCommerceSettingsIndexRoute
+}
+
+const DashboardCommerceRouteRouteChildren: DashboardCommerceRouteRouteChildren =
+  {
+    DashboardCommerceIndexRoute: DashboardCommerceIndexRoute,
+    DashboardCommerceCatalogsIndexRoute: DashboardCommerceCatalogsIndexRoute,
+    DashboardCommerceCouponsIndexRoute: DashboardCommerceCouponsIndexRoute,
+    DashboardCommerceOrdersIndexRoute: DashboardCommerceOrdersIndexRoute,
+    DashboardCommerceOverviewIndexRoute: DashboardCommerceOverviewIndexRoute,
+    DashboardCommercePaymentsIndexRoute: DashboardCommercePaymentsIndexRoute,
+    DashboardCommerceSettingsIndexRoute: DashboardCommerceSettingsIndexRoute,
+  }
+
+const DashboardCommerceRouteRouteWithChildren =
+  DashboardCommerceRouteRoute._addFileChildren(
+    DashboardCommerceRouteRouteChildren,
+  )
+
 interface DashboardRouteRouteChildren {
+  DashboardCommerceRouteRoute: typeof DashboardCommerceRouteRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardAnalyticsIndexRoute: typeof DashboardAnalyticsIndexRoute
   DashboardAutomationIndexRoute: typeof DashboardAutomationIndexRoute
@@ -3045,6 +3228,7 @@ interface DashboardRouteRouteChildren {
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardCommerceRouteRoute: DashboardCommerceRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardAnalyticsIndexRoute: DashboardAnalyticsIndexRoute,
   DashboardAutomationIndexRoute: DashboardAutomationIndexRoute,
