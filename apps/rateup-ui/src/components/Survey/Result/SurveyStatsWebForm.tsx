@@ -3,6 +3,7 @@ import { useContext, useMemo } from "react";
 
 import { useResponseCount } from "@/backend/surveys/response/response.query";
 import { useGetSurveyStats } from "@/backend/surveys/surveys.query";
+import { Card } from "@/components/ui/card.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 
 const SurveyStatsWebForm = ({ surveyId }) => {
@@ -85,10 +86,7 @@ const SurveyStatsWebForm = ({ surveyId }) => {
   return (
     <div className="pt-6 psw-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       {stats.map(({ title, value, badge, icon }) => (
-        <div
-          key={title}
-          className="flex justify-between items-center bg-[#FAFAFA] border border-[#E2E5ED] rounded-md p-2 shadow-sm"
-        >
+        <Card key={title} size="sm" className="flex-row items-center justify-between gap-4  p-2 ">
           <div>
             <p className="text-xs font-bold text-[#343A40]">{title}</p>
             <div className="text-3xl font-bold  flex items-end">
@@ -97,7 +95,7 @@ const SurveyStatsWebForm = ({ surveyId }) => {
             </div>
           </div>
           <div className="p-2 bg-[#2B82DE1F] rounded-md self-start">{icon}</div>
-        </div>
+        </Card>
       ))}
     </div>
   );

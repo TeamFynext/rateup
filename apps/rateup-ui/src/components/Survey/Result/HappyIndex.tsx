@@ -155,7 +155,7 @@ const HappyIndex = ({ surveyId }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
       {/* Happiness Index - 60% */}
-      <Card className="col-span-1 rounded-md border border-[#E2E5ED] p-4 shadow-sm lg:col-span-3">
+      <Card className="col-span-1  p-4  lg:col-span-3">
         <h4 className="text-lg font-semibold">Happiness Index</h4>
         <div className="flex flex-col gap-4 items-center px-12 py-4 md:flex-row lg:flex-row">
           <HappinessRing percentage={Number(data.happinessIndex ?? 0)} color={happyIndexStatusBg}>
@@ -205,7 +205,7 @@ const HappyIndex = ({ surveyId }) => {
       </Card>
 
       {/* NPS Overview  */}
-      <Card className="col-span-1 rounded-md border border-[#E2E5ED] p-4 shadow-sm lg:col-span-2">
+      <Card className="col-span-1  p-4  lg:col-span-2">
         <h4 className="text-lg font-semibold">NPS Overview</h4>
         <div className="flex flex-col items-center justify-center mt-4 gap-4">
           <NPSGaugeWithNeedle

@@ -101,23 +101,6 @@ function StylesComponent({
 
       <ScrollArea className="flex flex-1 flex-col px-[0.875rem]">
         <div className="relative">
-          {((isSurveyPageTab && isThemeObjBeingEditedDefaultTheme) || shouldUseSurveyTheme) && (
-            <div
-              className="absolute inset-0 z-[198]"
-              style={{ backgroundColor: "light-dark(#ffffff8e, #2e2e2ec0)" }}
-            >
-              {isSurveyPageTab && isThemeObjBeingEditedDefaultTheme && (
-                <div className="flex h-full w-full items-center justify-center p-4">
-                  <div className="rounded-2xl bg-gray-300 p-4">
-                    <p className="text-sm">
-                      Default themes are not editable. Choose another theme or create a new one.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           <Accordion
             value={openEditors}
             onValueChange={(valuesArr) => {

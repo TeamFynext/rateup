@@ -407,10 +407,28 @@ export function EditSurvey({
                   <SurveyVariableEditor setActiveTab={setActiveTab} />
                 )}
                 {activeTab === QuestionTabsEnum.None && (
-                  <div className="flex items-center justify-center h-full">
-                    <span className="text-sm text-muted-foreground">
-                      {translations("Select a question to edit")}
-                    </span>
+                  <div className="flex h-full flex-col">
+                    <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-[#ECECEA] bg-white px-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[13px] font-semibold text-[#1A1B1A]">
+                          {survey?.title}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5 rounded-[7px] border-[1.5px] border-[#ECECEA] px-3 text-xs font-semibold text-[#4A4C49] hover:bg-gray-50"
+                        onClick={() => openSurveyPreviewModal()}
+                      >
+                        <IconEye className="size-3.5" />
+                        {translations("Preview")}
+                      </Button>
+                    </div>
+                    <div className="flex flex-1 items-center justify-center">
+                      <span className="text-sm text-muted-foreground">
+                        {translations("Select a question to edit")}
+                      </span>
+                    </div>
                   </div>
                 )}
                 {activeTab === QuestionTabsEnum.SurveyPreview && (
