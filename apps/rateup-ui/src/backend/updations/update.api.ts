@@ -45,3 +45,27 @@ export async function reconcileInboxStatus(apply = false) {
     { timeout: 60000 },
   );
 }
+
+export interface BackfillConversationsResult {
+  message: string;
+  applied: boolean;
+  scannedContacts: number;
+  conversationsCreated: number;
+  messagesLinked: number;
+  assigneesBackfilled: number;
+  /** False when the server hit its time budget with work left; call again to continue. */
+  done: boolean;
+}
+
+/**
+ * Dry run unless `apply` is true. The server works for ~20s per call and returns
+ * `done: false` if more remains — the API caps every request at 30s, so a full
+ * backfill takes several calls. Callers must loop until `done`.
+ */
+export async function backfillConversations(apply = false) {
+  return await axiosClient.put<BackfillConversationsResult>(
+    `${baseUrl}/backfill-conversations?apply=${apply}`,
+    null,
+    { timeout: 30000 },
+  );
+}

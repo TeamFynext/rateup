@@ -9,6 +9,8 @@ import {
   migrateLoyaltyTierPriority,
   seedInboxStats,
   reconcileInboxStatus,
+  backfillConversations,
+  type BackfillConversationsResult,
 } from "./update.api";
 
 export const useMigrateWaTemplateToWhatsappPhoneId = () => {
@@ -70,6 +72,71 @@ export const useReconcileInboxStatus = () => {
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to reconcile inbox status");
+    },
+  });
+};
+
+// Resumable: the API caps requests at 30s, so a full run takes several calls. The
+// server returns `done: false` while work remains; this hook keeps calling until it is
+// done, accumulating the per-batch counts and showing progress.
+const BATCH_LIMIT = 200; // backstop so a bug on the server cannot spin forever
+
+export const useBackfillConversations = () => {
+  return useMutation({
+    mutationFn: async (apply: boolean) => {
+      const total = {
+        scannedContacts: 0,
+        conversationsCreated: 0,
+        messagesLinked: 0,
+        assigneesBackfilled: 0,
+      };
+      let batches = 0;
+      let last: BackfillConversationsResult;
+
+      do {
+        const { data } = await backfillConversations(apply);
+        last = data;
+        batches++;
+        total.scannedContacts += data.scannedContacts;
+        total.conversationsCreated += data.conversationsCreated;
+        total.messagesLinked += data.messagesLinked;
+        total.assigneesBackfilled += data.assigneesBackfilled;
+
+        if (apply && !data.done) {
+          toast.loading(`Backfilling… ${total.conversationsCreated} conversation(s) created`, {
+            id: "backfill-conversations",
+          });
+        }
+      } while (apply && !last.done && batches < BATCH_LIMIT);
+
+      return { ...total, applied: last.applied, done: last.done, batches };
+    },
+    onSuccess: (data) => {
+      const detail =
+        `${data.conversationsCreated} missing conversation(s), ${data.messagesLinked} message(s) linked, ` +
+        `${data.assigneesBackfilled} assignee(s) copied.`;
+
+      if (!data.applied) {
+        toast.info(`Dry run: would create ${detail} Nothing was written.`, {
+          id: "backfill-conversations",
+        });
+        return;
+      }
+      if (!data.done) {
+        toast.warning(`Stopped after ${data.batches} batches with work remaining. ${detail}`, {
+          id: "backfill-conversations",
+        });
+        return;
+      }
+      toast.success(`Backfill complete in ${data.batches} batch(es).`, {
+        description: detail,
+        id: "backfill-conversations",
+      });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to backfill conversations", {
+        id: "backfill-conversations",
+      });
     },
   });
 };
