@@ -17,6 +17,7 @@ import {
   migrateLoyaltyTierPriorityHandler,
   seedInboxStatsAutomationHandler,
   reconcileInboxStatusHandler,
+  backfillConversationsHandler,
 } from "./update.controller.js";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
@@ -34,4 +35,5 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.put("/migrate-loyalty-tier-priority", migrateLoyaltyTierPriorityHandler);
   server.put("/seed-inbox-stats", seedInboxStatsAutomationHandler);
   server.put("/reconcile-inbox-status", reconcileInboxStatusHandler);
+  server.put("/backfill-conversations", backfillConversationsHandler);
 }

@@ -43,6 +43,7 @@ import { integrationsRoutes } from "./modules/integrations/integrations.route.js
 import { integrationPublicRoutes } from "./modules/integrations/integration.public.route.js";
 import { mobileNotificationRoutes } from "./modules/mobileNotification/mobile.route.js";
 import { dashboardRoutes } from "./modules/dashboard/dashboard.route.js";
+import { commerceRoutes } from "./modules/commerce/commerce.route.js";
 import { notificationRoutes } from "./modules/notification/notification.route.js";
 import { instagramWebhookRoutes } from "./modules/whatsapp/instagram/instagram.webhook.route.js";
 import { facebookWebhookRoutes } from "./modules/whatsapp/facebook/facebook.webhook.route.js";
@@ -114,6 +115,7 @@ const routeConfigs = [
   { plugin: integrationsRoutes, prefix: "/api/integrations" },
   { plugin: mobileNotificationRoutes, prefix: "/api/mobilenotification" },
   { plugin: dashboardRoutes, prefix: "/api/dashboard" },
+  { plugin: commerceRoutes, prefix: "/api/commerce" },
   { plugin: notificationRoutes, prefix: "/api/notification" },
   { plugin: instagramWebhookRoutes, prefix: "/api/instagram/webhook" },
   { plugin: facebookWebhookRoutes, prefix: "/api/facebook/webhook" },

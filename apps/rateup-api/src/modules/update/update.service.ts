@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
 import { subscriptionGates } from "../../utils/canAccess.js";
-import { TeamFeature } from "../../../generated/prisma/client.js";
+import { TeamFeature, PlatformType } from "../../../generated/prisma/client.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
 import type { InboxStatus } from "../../types/enums.js";
 import { WaMessageClosedStatus } from "../whatsapp/constants.js";
@@ -555,6 +555,202 @@ export async function reconcileInboxStatus(apply: boolean) {
     skippedReopenPending,
     mismatches,
   };
+}
+
+/**
+ * Fills in the conversations that are MISSING, and nothing else.
+ *
+ * Targets exactly one population: a contact who is in the inbox, has messages, and
+ * has no conversation at all. Everything else is skipped, which makes this safe to
+ * run against a production table that is already mostly threaded — it only ever adds
+ * the gaps, and it never touches a row the live code owns.
+ *
+ * Skipped, deliberately:
+ *   - Contacts who ALREADY have any conversation. Their orphan messages are left
+ *     unlinked. Folding old messages into an existing thread would inflate its
+ *     `messageCount` and rewrite counters on a row the live code is actively
+ *     maintaining; creating a second historical row would double-count the contact in
+ *     the *unfiltered* conversation counters (`getInboxCountsFromConversations` has no
+ *     date filter, and `getOverAllQuickStatsOfConversations` / `getConversationOverview`
+ *     divide by an unbounded `COUNT(*)`), inflating the inbox tabs and deflating every
+ *     dashboard resolution rate. Neither is worth it for pre-threading history.
+ *   - Contacts with no inbound message (`lastReceivedMessageTimeStamp IS NULL`). The
+ *     inbox universe is gated on exactly this (`recalculateInboxStats`), so a contact
+ *     who has only ever RECEIVED outbound campaign/template blasts has never been in
+ *     the inbox and must not get a conversation. The live path agrees: an outbound send
+ *     to a contact with no conversation stores the message with a null `conversationId`
+ *     rather than opening one.
+ *
+ * The created row is the contact's live conversation, so it takes
+ * `Contact.waMessageAssignStatus` (the inbox source of truth, same precedence
+ * `reconcileInboxStatus` uses) and `createdAt` = their first message.
+ *
+ * Assignees come from `WaInboxAssign` in the same transaction. Assignments made before
+ * conversations existed never reached `ConversationAssignedUserTeamMap` —
+ * `assignWaMessageToUser` writes it under an `if (conversation)` guard that was a no-op
+ * back then — so staff/team analytics, which reach Conversation *through* that map,
+ * would otherwise never see these contacts. `WaInboxAssign` is current-state-only (no
+ * timestamps; revocations are hard deletes), so "who is assigned" is recoverable but
+ * "when, and by whom" is not: `lastAssignedAt` is synthesized from the conversation's
+ * own `createdAt` (it must be non-null or the analytics `lastAssignedAt <= ...` guards
+ * silently drop the row), `lastAssignedBy` is left null, `actionHistory` records the
+ * backfill.
+ *
+ * Not reconstructable, and left null: `closedBy`, `closeReason`, `resolvedAt`,
+ * `reopenCount`. `firstRespondedAt` is stamped with wall-clock `new Date()` by the live
+ * path, never with message time, so it is derived from the first agent message — the
+ * same fallback the analytics CTEs already use.
+ *
+ * INTERNAL (private note) messages are linked but excluded from `messageCount` and the
+ * last-message timestamps, matching `addNewWaMessage`.
+ */
+export async function backfillConversationsFromMessages(apply: boolean) {
+  const PAGE_SIZE = 200;
+  // The server caps every request at `requestTimeout: 30s` (src/index.ts), so a full
+  // backfill cannot land in one call. Work for the budget, then report `done: false`
+  // and let the caller re-invoke. Re-running is safe: each pass re-queries for work
+  // that is still outstanding, and finished contacts no longer match.
+  const TIME_BUDGET_MS = 20_000;
+  const startedAt = Date.now();
+  const outOfTime = () => apply && Date.now() - startedAt > TIME_BUDGET_MS;
+
+  const stats = {
+    applied: apply,
+    scannedContacts: 0,
+    conversationsCreated: 0,
+    messagesLinked: 0,
+    assigneesBackfilled: 0,
+    done: true,
+  };
+
+  // Contacts missing a conversation: in the inbox, have messages, have no thread.
+  const missing = {
+    // Has at least one message that was never threaded.
+    WaMessage: { some: { conversationId: null } },
+    // Has no conversation at all — a contact the live code already threads is left alone.
+    Conversations: { none: {} },
+    // Is actually in the inbox (has sent us something), not an outbound-only recipient.
+    lastReceivedMessageTimeStamp: { not: null },
+  };
+
+  let cursor: string | undefined;
+  for (;;) {
+    if (outOfTime()) {
+      stats.done = false;
+      return stats;
+    }
+
+    const contacts = await prisma.contact.findMany({
+      where: missing,
+      take: PAGE_SIZE,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+      orderBy: { id: "asc" },
+      select: {
+        id: true,
+        orgId: true,
+        waMessageAssignStatus: true,
+        WaMessage: {
+          where: { conversationId: null },
+          select: {
+            id: true,
+            createdAt: true,
+            waCreatedAt: true,
+            sendBy: true,
+            sourcePlatform: true,
+          },
+        },
+        waInboxAssign: { select: { assignedUserId: true, teamId: true } },
+      },
+    });
+    if (!contacts.length) break;
+    cursor = contacts.at(-1)!.id;
+    stats.scannedContacts += contacts.length;
+
+    for (const contact of contacts) {
+      const messages = contact.WaMessage;
+      if (!messages.length) continue;
+
+      const at = (m: (typeof messages)[number]) => m.waCreatedAt ?? m.createdAt;
+      const later = (a: Date | null | undefined, b: Date | null | undefined) =>
+        a && b ? (a.getTime() >= b.getTime() ? a : b) : (a ?? b ?? null);
+      const maxOf = (list: typeof messages) =>
+        list.length ? list.map(at).reduce((a, b) => later(a, b)!) : null;
+      const minOf = (list: typeof messages) =>
+        list.length ? list.map(at).reduce((a, b) => (a.getTime() <= b.getTime() ? a : b)) : null;
+
+      // INTERNAL notes never move the inbox clock or the message counter.
+      const counted = messages.filter((m) => m.sourcePlatform !== PlatformType.INTERNAL);
+      const agent = counted.filter((m) => m.sendBy);
+      const customer = counted.filter((m) => !m.sendBy);
+
+      const firstAt = minOf(messages)!;
+      const lastMessageAt = maxOf(counted);
+      const lastAgentMessageAt = maxOf(agent);
+      const lastCustomerMessageAt = maxOf(customer);
+      const firstAgentMessageAt = minOf(agent);
+
+      const messageIds = messages.map((m) => m.id);
+      const assignees = contact.waInboxAssign;
+      const status = contact.waMessageAssignStatus;
+      const terminal = WaMessageClosedStatus.includes(status);
+
+      if (!apply) {
+        stats.conversationsCreated++;
+        stats.messagesLinked += messages.length;
+        stats.assigneesBackfilled += assignees.length;
+        continue;
+      }
+
+      await prisma.$transaction(async (tx) => {
+        const conversation = await tx.conversation.create({
+          data: {
+            contactId: contact.id,
+            // Must be set: `getInboxCountsFromConversations` filters on Conversation.orgId
+            // while every analytics query scopes via JOIN Contact. A null here makes the two disagree.
+            orgId: contact.orgId,
+            status,
+            createdAt: firstAt,
+            lastMessageAt,
+            lastAgentMessageAt,
+            lastCustomerMessageAt,
+            firstRespondedAt: firstAgentMessageAt,
+            firstRespondedByUserAt: firstAgentMessageAt,
+            messageCount: counted.length,
+            closedAt: terminal ? (lastMessageAt ?? firstAt) : null,
+            assignedAt: assignees.length ? firstAt : null,
+          },
+          select: { id: true },
+        });
+
+        const linked = await tx.waMessage.updateMany({
+          where: { id: { in: messageIds }, conversationId: null },
+          data: { conversationId: conversation.id },
+        });
+
+        if (assignees.length) {
+          await tx.conversationAssignedUserTeamMap.createMany({
+            data: assignees.map((a) => ({
+              conversationId: conversation.id,
+              userId: a.assignedUserId,
+              teamId: a.teamId,
+              // Non-null or the staff/team analytics `lastAssignedAt <= ...` guards drop the row.
+              lastAssignedAt: firstAt,
+              lastAssignedBy: null,
+              isAssignedByAutomation: false,
+              actionHistory: [{ action: "assigned", date: firstAt, by: null, source: "backfill" }],
+            })),
+            skipDuplicates: true,
+          });
+        }
+
+        stats.conversationsCreated++;
+        stats.messagesLinked += linked.count;
+        stats.assigneesBackfilled += assignees.length;
+      });
+    }
+  }
+
+  return stats;
 }
 
 export async function seedInboxStatsAutomation() {
