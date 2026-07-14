@@ -7,6 +7,7 @@ import {
   useSyncTeamFeatures,
   useSeedInboxStats,
   useReconcileInboxStatus,
+  useBackfillConversations,
 } from "@/backend/updations/update.query";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -31,6 +32,7 @@ function UpdateAllThemes() {
   const migrateLoyaltyTierPriorityMutation = useMigrateLoyaltyTierPriority();
   const seedInboxStatsMutation = useSeedInboxStats();
   const reconcileInboxStatusMutation = useReconcileInboxStatus();
+  const backfillConversationsMutation = useBackfillConversations();
   const confirm = useConfirm();
 
   // The dry run is safe to fire directly; applying rewrites conversation rows.
@@ -41,6 +43,15 @@ function UpdateAllThemes() {
         "This rewrites Conversation.status to match each contact's inbox status. Run the dry run first and confirm the mismatch count looks right. This cannot be undone.",
     });
     if (shouldApply) reconcileInboxStatusMutation.mutate(true);
+  };
+
+  const handleBackfillApply = async () => {
+    const shouldApply = await confirm({
+      title: "Apply conversation backfill",
+      description:
+        "This creates the MISSING conversations only: inbox contacts who have messages but no conversation at all. Contacts who already have a conversation are skipped entirely and nothing existing is modified. It runs in batches and can take several minutes. Run the dry run first and confirm the count looks right. This cannot be undone.",
+    });
+    if (shouldApply) backfillConversationsMutation.mutate(true);
   };
 
   return (
@@ -259,6 +270,54 @@ function UpdateAllThemes() {
                 >
                   <Database className="mr-2 h-4 w-4" />
                   Apply Repairs
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
+            <CardHeader className="pb-3">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
+                  <Database className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-lg">Backfill Missing Conversations</CardTitle>
+                  <CardDescription className="mt-1">
+                    Creates conversations only for inbox contacts who have messages but no
+                    conversation at all, links those messages, and copies their inbox assignees.
+                    Contacts who already have a conversation are skipped and nothing existing is
+                    modified. Dry run reports the count without writing.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => backfillConversationsMutation.mutate(false)}
+                  disabled={backfillConversationsMutation.isPending}
+                  className="flex-1"
+                >
+                  {backfillConversationsMutation.isPending ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      Running...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Dry Run
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleBackfillApply}
+                  disabled={backfillConversationsMutation.isPending}
+                  className="flex-1"
+                >
+                  <Database className="mr-2 h-4 w-4" />
+                  Apply Backfill
                 </Button>
               </div>
             </CardContent>
