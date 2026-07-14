@@ -1,4 +1,3 @@
-import { Card, Divider, Group, Text } from "@mantine/core";
 import { useSearch } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { CheckCircle, Loader, Loader2, UserCheck } from "lucide-react";
@@ -394,9 +393,11 @@ const WaInboxChatSelect = () => {
       />
       <div>
         {isStoreLoading || (!contactIds.length && filteredContactsStatus === "pending") ? (
-          <Text px={"md"}>Loading...</Text>
+          <p className="px-4 py-2 text-sm text-muted-foreground">Loading...</p>
         ) : !contactIds.length && filteredContactsStatus === "error" ? (
-          <Text px={"md"}>Error: {filteredContactsError?.message}</Text>
+          <p className="px-4 py-2 text-sm text-destructive">
+            Error: {filteredContactsError?.message}
+          </p>
         ) : (
           <div
             ref={parentRef}
@@ -407,7 +408,7 @@ const WaInboxChatSelect = () => {
               overflow: "auto",
             }}
           >
-            <Divider />
+            <div className="border-t border-border" />
             {isSelectionMode && selectedChats.length > 0 && (
               <div className="h-12 px-3 border-b flex items-center justify-between transition-all">
                 <div className="flex items-center gap-3">
@@ -544,12 +545,12 @@ const WaInboxChatSelect = () => {
                 ) : !contactIds.length && (isContactLoading || isFetching) ? (
                   <ChatSelectSkeletonCardList />
                 ) : (
-                  <Card component={Group}>
-                    <Text c="dimmed" size="sm" ta="center">
+                  <div className="flex flex-col items-center justify-center p-6 rounded-lg bg-card text-card-foreground shadow-xs">
+                    <p className="text-sm text-muted-foreground text-center">
                       {translations("No chats found")} <br />
                       {translations("search for a valid phone number or contact name")}
-                    </Text>
-                  </Card>
+                    </p>
+                  </div>
                 ))}
             </div>
           </div>

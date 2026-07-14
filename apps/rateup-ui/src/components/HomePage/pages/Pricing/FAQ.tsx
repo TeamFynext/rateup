@@ -1,5 +1,12 @@
-import { Accordion, Badge, Stack, Title } from "@mantine/core";
 import { motion } from "motion/react";
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
 
 const faqs = [
   {
@@ -35,17 +42,14 @@ export function Faq() {
       transition={{ duration: 0.5 }}
       viewport={{ once: true }}
     >
-      <Accordion.Item
-        key={q.question}
+      <AccordionItem
         value={q.question}
-        className="bg-white/5 border border-white/10 backdrop-blur-sm rounded-2xl my-5"
+        className="bg-white/5 border border-white/10 backdrop-blur-sm rounded-2xl my-2"
       >
-        <Accordion.Control className="hover:bg-white/10 transition-colors rounded-2xl hover:text-black group">
-          <p className="font-semibold text-white hover:text-black group-hover:text-black">
-            {q.question}
-          </p>
-        </Accordion.Control>
-        <Accordion.Panel>
+        <AccordionTrigger className="group px-4 rounded-2xl transition-colors hover:bg-white/10 ">
+          <p className="font-semibold text-white ">{q.question}</p>
+        </AccordionTrigger>
+        <AccordionContent className="px-4">
           {Array.isArray(q.answer) ? (
             <ul>
               {q.answer.map((ans) => (
@@ -57,8 +61,8 @@ export function Faq() {
           ) : (
             <p className="text-sm text-white">{q.answer}</p>
           )}
-        </Accordion.Panel>
-      </Accordion.Item>
+        </AccordionContent>
+      </AccordionItem>
     </motion.div>
   ));
 
@@ -70,21 +74,12 @@ export function Faq() {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="flex flex-col gap-2 text-white items-center py-12"
     >
-      <Stack justify="center" align="center">
-        <Badge size="lg" tt={"initial"}>
-          FAQs
-        </Badge>
-        <Title order={3} c={"white"} mb={"xl"}>
-          Frequently Asked Questions
-        </Title>
-      </Stack>
+      <div className="flex flex-col items-center justify-center gap-4">
+        <Badge className="px-3 py-1 text-sm">FAQs</Badge>
+        <h3 className="text-2xl font-bold text-white mb-8">Frequently Asked Questions</h3>
+      </div>
 
-      <Accordion
-        w={"85%"}
-        transitionDuration={700}
-        classNames={{ chevron: "text-white group-hover:text-black" }}
-        defaultValue={faqs[0].question}
-      >
+      <Accordion className="w-[85%]" defaultValue={[faqs[0].question]}>
         {faqAccordion}
       </Accordion>
     </motion.div>

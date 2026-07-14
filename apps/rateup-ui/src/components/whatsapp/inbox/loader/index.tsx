@@ -1,13 +1,14 @@
-import { Flex, Group, Loader, Progress, Stack, Text } from "@mantine/core";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import classes from "./styles.module.css";
+import { Progress } from "@/components/ui/progress.tsx";
 
 export default function WhatsAppInboxLoader({ isLoading }: { isLoading: boolean }) {
   const [progress, setProgress] = useState(0);
   const { t: translations } = useTranslation();
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isLoading) {
@@ -27,18 +28,18 @@ export default function WhatsAppInboxLoader({ isLoading }: { isLoading: boolean 
     return () => {
       clearInterval(timer);
     };
-  }, []);
+  }, [isLoading]);
 
   return (
-    <Flex className={classes.wrapper}>
-      <Stack className={classes.inner}>
+    <div className="flex h-full items-center justify-center rounded-lg shadow-sm bg-background">
+      <div className="flex flex-col gap-2 items-center min-w-[300px]">
         <IconBrandWhatsapp color="#0B846D" size={40} />
-        <Progress value={progress} w={300} h={2} color="gray" radius={"sm"} mt={"xs"} />
-        <Group gap={"xs"}>
-          <Loader size={10} />
-          <Text size="xs">{translations("Loading chats...")}</Text>
-        </Group>
-      </Stack>
-    </Flex>
+        <Progress value={progress} className="w-[300px] mt-2 h-0.5" />
+        <div className="flex items-center gap-2 mt-1">
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">{translations("Loading chats...")}</p>
+        </div>
+      </div>
+    </div>
   );
 }

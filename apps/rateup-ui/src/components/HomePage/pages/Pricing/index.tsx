@@ -1,9 +1,9 @@
-import { Box, SegmentedControl, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
 
 import { MotionTransition } from "../../../animation/MotionTransition.tsx";
@@ -12,8 +12,6 @@ import { CustomSection } from "./Section/CustomSection.tsx";
 import { SurveySection } from "./Section/SurveySection.tsx";
 import { WhatsAppSection } from "./Section/WhatsAppSection.tsx";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
-
-import classes from "./Pricing.module.css";
 
 const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebSurveys" }) => {
   const [value, setValue] = useState(source);
@@ -104,30 +102,43 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
   });
 
   return (
-    <Stack mt={isAccount ? 0 : 30} align="center" fw={500} mb={60}>
-      <Box ta={"center"} display={isAccount ? "none" : "block"}>
-        <Text c={"var(--grey-color-4)"} fz={"clamp(14px, 9.008px + 0.833vw, 21.008px)"}>
+    <div
+      className="mb-[60px] flex flex-col items-center gap-4 font-medium"
+      style={{ marginTop: isAccount ? 0 : 30 }}
+    >
+      <div className="text-center" style={{ display: isAccount ? "none" : "block" }}>
+        <p
+          style={{
+            color: "var(--grey-color-4)",
+            fontSize: "clamp(14px, 9.008px + 0.833vw, 21.008px)",
+          }}
+        >
           Our Pricing Plans
-        </Text>
-        <Text c={"var(--tertiary-color)"} fz={"clamp(24px, 15.424px + 1.429vw, 36px)"}>
+        </p>
+        <p
+          style={{
+            color: "var(--tertiary-color)",
+            fontSize: "clamp(24px, 15.424px + 1.429vw, 36px)",
+          }}
+        >
           Choose what you need
-        </Text>
-      </Box>
+        </p>
+      </div>
       {source === "WebSurveys" && (
-        <SimpleGrid cols={{ base: 1, xl: 3 }} spacing={extraLargeScren ? "80px" : "40px"}>
-          <Box display={extraLargeScren ? "block" : "none"} />
-          <SegmentedControl
-            value={value}
-            color="var(--shade-of-blue-7)"
-            onChange={(value) => setValue(value)}
-            classNames={classes}
-            fw={500}
-            data={[
-              { label: "Web Survey", value: "WebSurveys" },
-              { label: "WhatsApp", value: "WhatsApp" },
-              { label: "Custom", value: "Custom" },
-            ]}
-          />
+        <div
+          className="grid grid-cols-1 xl:grid-cols-3"
+          style={{ gap: extraLargeScren ? "80px" : "40px" }}
+        >
+          <div className={extraLargeScren ? "block" : "hidden"} />
+          <ToggleGroup
+            variant="outline"
+            value={[value]}
+            onValueChange={(next) => next && next.length > 0 && setValue(next[0])}
+          >
+            <ToggleGroupItem value="WebSurveys">Web Survey</ToggleGroupItem>
+            <ToggleGroupItem value="WhatsApp">WhatsApp</ToggleGroupItem>
+            <ToggleGroupItem value="Custom">Custom</ToggleGroupItem>
+          </ToggleGroup>
           {/* <Flex align="center" pos={"relative"} gap={"xs"}>
             <Switch
               color={"var(--shade-of-blue-5)"}
@@ -152,7 +163,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
               </Text>
             </Stack>
           </Flex> */}
-        </SimpleGrid>
+        </div>
       )}
 
       <MotionTransition keyValue={{ id: value }} type="bottomSlideIn">
@@ -183,7 +194,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
           />
         )}
       </MotionTransition>
-    </Stack>
+    </div>
   );
 };
 

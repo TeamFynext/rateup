@@ -1,103 +1,106 @@
-import { ActionIcon, Divider, Indicator, Menu } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconAutomation, IconMessage2Code, IconPlus, IconWaveSine } from "@tabler/icons-react";
-import { useRef } from "react";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import WaInboxAutomationDisplayModal from "../automationDisplayModal/index.tsx";
 import WaInboxFlowDisplayModal from "../flowDisplayModel/index.tsx";
 import WaInboxTemplateDisplayModal from "../templateDisplayModal/index.tsx";
 
-import classes from "./styles.module.css";
-
 interface Props {
   sessionExpired: boolean;
   contact: ContactsData;
 }
-export default function WaInboxFooterMenu(props: Props) {
-  const ref = useRef(null);
-  function onOpen() {
-    if (ref?.current === null) return;
-    ref.current.classList.add(classes.action_icon_rotate);
-  }
-  function onClose() {
-    if (ref?.current === null) return;
-    ref.current.classList.remove(classes.action_icon_rotate);
-  }
 
-  const [isModalOpened, { close: onModalClose, open: openModal }] = useDisclosure(false);
-  const [flowModalOpened, { close: flowModalClose, open: openFlowModal }] = useDisclosure(false);
-  const [automationModalOpened, { close: automationModalClose, open: openAutomationModal }] =
-    useDisclosure(false);
+export default function WaInboxFooterMenu(props: Props) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isModalOpened, setIsModalOpened] = useState(false);
+  const [flowModalOpened, setFlowModalOpened] = useState(false);
+  const [automationModalOpened, setAutomationModalOpened] = useState(false);
 
   return (
     <>
-      <Menu
-        position="top-start"
-        openDelay={10}
-        onOpen={onOpen}
-        onClose={onClose}
-        closeOnItemClick={false}
-        closeOnClickOutside={true}
-        zIndex={10}
-      >
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <SessionBasedIndicatorRenderer sessionExpired={props.sessionExpired}>
-          <Menu.Target>
-            <ActionIcon
-              ref={ref}
-              className={classes.action_icon}
-              onClick={(e) => {
-                console.log(e.currentTarget.classList.add(classes.action_icon_rotate));
-              }}
-            >
-              <IconPlus size={18} />
-            </ActionIcon>
-          </Menu.Target>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                size="icon"
+                className={cn(
+                  "h-[30px] w-[30px] max-[1200px]:h-[35px] max-[1200px]:w-[35px] rounded-full transition-transform duration-300",
+                  menuOpen ? "rotate-[135deg]" : "rotate-0",
+                )}
+              />
+            }
+          >
+            <IconPlus size={18} />
+          </DropdownMenuTrigger>
         </SessionBasedIndicatorRenderer>
-        <Menu.Dropdown className={classes.menu_dropdown}>
+        <DropdownMenuContent align="start" className="min-w-[185px] w-full">
           {!props?.sessionExpired && (
             <>
-              <Menu.Item
-                leftSection={<IconAutomation color="var(--mantine-primary-color-6)" />}
-                onClick={openAutomationModal}
+              <DropdownMenuItem
+                className="flex items-center gap-2 text-xs cursor-pointer"
+                onClick={() => setAutomationModalOpened(true)}
               >
-                Initiate Automation
-              </Menu.Item>
-              <Divider />
-              <Menu.Item
-                leftSection={<IconWaveSine color="var(--mantine-primary-color-6)" />}
-                onClick={openFlowModal}
+                <IconAutomation size={16} className="text-primary" />
+                <span>Initiate Automation</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                className="flex items-center gap-2 text-xs cursor-pointer"
+                onClick={() => setFlowModalOpened(true)}
               >
-                Send WhatsApp Flow
-              </Menu.Item>
-              <Divider />
+                <IconWaveSine size={16} className="text-primary" />
+                <span>Send WhatsApp Flow</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
             </>
           )}
-          <Menu.Item
-            leftSection={<IconMessage2Code color="var(--mantine-primary-color-6)" />}
-            rightSection={<SessionBasedIndicatorRenderer sessionExpired={props.sessionExpired} />}
-            onClick={() => openModal()}
+          <DropdownMenuItem
+            className="flex items-center justify-between text-xs cursor-pointer"
+            onClick={() => setIsModalOpened(true)}
           >
-            Send WhatsApp Template
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+            <div className="flex items-center gap-2">
+              <IconMessage2Code size={16} className="text-primary" />
+              <span>Send WhatsApp Template</span>
+            </div>
+            {props.sessionExpired && (
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+            )}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <WaInboxTemplateDisplayModal
         sessionExpired={props.sessionExpired}
         contact={props.contact}
         opened={isModalOpened}
-        onClose={onModalClose}
+        onClose={() => setIsModalOpened(false)}
       />
       <WaInboxFlowDisplayModal
         sessionExpired={props.sessionExpired}
         contact={props.contact}
         opened={flowModalOpened}
-        close={flowModalClose}
+        close={() => setFlowModalOpened(false)}
       />
       <WaInboxAutomationDisplayModal
         sessionExpired={props.sessionExpired}
         contact={props.contact}
         opened={automationModalOpened}
-        close={automationModalClose}
+        close={() => setAutomationModalOpened(false)}
       />
     </>
   );
@@ -108,14 +111,18 @@ const SessionBasedIndicatorRenderer = ({
   children,
 }: {
   sessionExpired: boolean;
-  children?: any;
+  children?: React.ReactNode;
 }) => {
   if (sessionExpired) {
     return (
-      <Indicator processing color="green">
+      <div className="relative inline-block">
         {children}
-      </Indicator>
+        <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+        </span>
+      </div>
     );
   }
-  return children;
+  return <>{children}</>;
 };

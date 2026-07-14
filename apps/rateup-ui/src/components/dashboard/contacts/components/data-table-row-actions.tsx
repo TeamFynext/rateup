@@ -1,11 +1,10 @@
-import { ActionIcon, Menu, rem, Text } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useDeleteCustomFieldMutation } from "@/backend/campaign/contacts/contacts.query";
 import { CustomFieldForm } from "@/components/Contacts/label-form.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +12,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
+import { useConfirm } from "@/context/confirm-provider.tsx";
 
 interface DataTableRowActionsProps<TData> {
   row: {
@@ -23,21 +31,19 @@ interface DataTableRowActionsProps<TData> {
 export function DataTableRowActions<TData>({ row }: Readonly<DataTableRowActionsProps<TData>>) {
   const deleteCustomFieldMutation = useDeleteCustomFieldMutation();
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
 
-  const openDeleteModal = () =>
-    modals.openConfirmModal({
+  const handleDelete = async () => {
+    const confirmed = await confirm({
       title: t("Are you sure you want to delete this label?"),
-      children: (
-        <Text size="sm">{t("This action is irreversible. Please confirm your action.")}</Text>
-      ),
-      labels: { confirm: t("Confirm"), cancel: t("Cancel") },
-      onConfirm: handleDelete,
-      confirmProps: { color: "red" },
-      centered: true,
+      description: t("This action is irreversible. Please confirm your action."),
+      confirmText: t("Confirm"),
+      cancelText: t("Cancel"),
     });
 
-  const handleDelete = () => {
+    if (!confirmed) return;
+
     deleteCustomFieldMutation.mutate((row.original as any)?.id);
   };
 
@@ -49,32 +55,28 @@ export function DataTableRowActions<TData>({ row }: Readonly<DataTableRowActions
 
   return (
     <>
-      <Menu shadow="md" width={160} position="bottom-end" withArrow>
-        <Menu.Target>
-          <ActionIcon variant="subtle" size="sm" aria-label="Open menu">
-            <IconDots style={{ width: rem(16), height: rem(16) }} />
-          </ActionIcon>
-        </Menu.Target>
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Open menu" />}>
+          <IconDots className="size-4" />
+        </DropdownMenuTrigger>
 
-        <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
-            onClick={handleEdit}
-          >
-            {t("Edit")}
-          </Menu.Item>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={handleEdit}>
+              <IconEdit className="size-3.5" />
+              {t("Edit")}
+            </DropdownMenuItem>
 
-          <Menu.Divider />
+            <DropdownMenuSeparator />
 
-          <Menu.Item
-            color="red"
-            leftSection={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
-            onClick={openDeleteModal}
-          >
-            {t("Delete")}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+            <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+              <IconTrash className="size-3.5" />
+              {t("Delete")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <EditCustomFieldModal opened={editOpen} setOpened={setEditOpen} customField={row.original} />
     </>
   );

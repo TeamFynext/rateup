@@ -1,4 +1,3 @@
-import { Center, Flex, Image, Stack, Title } from "@mantine/core";
 import { IconBrandGoogleDrive } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,11 +8,13 @@ import {
   useGetGoogleSheetAuthorizationUrl,
   useIntegrationByType,
 } from "@/backend/appsIntegration/integration.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
+
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 export function GoogleSheet() {
   const confirm = useConfirm();
@@ -55,42 +56,41 @@ export function GoogleSheet() {
   };
   if (!googleAccessToken)
     return (
-      <Center h={"80vh"}>
-        <Stack align="center" justify="center">
-          <Image src={"../../images/googlesheeticon.png"} h={100} w={80} />
-          <RateupButtonPrimary
-            title={translations("Sync Google Account")}
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <img src={"../../images/googlesheeticon.png"} className="h-25 w-20" />
+          <Button
             onClick={() => {
               persistCallbackRoute("/dashboard/apps&services/googlesheet");
               window.open(authUrl);
             }}
-            leftIcon={<IconBrandGoogleDrive />}
-            size="md"
-          />
-        </Stack>
-      </Center>
+            size="lg"
+          >
+            <IconBrandGoogleDrive />
+            {translations("Sync Google Account")}
+          </Button>
+        </div>
+      </div>
     );
   return (
-    <Stack p={"xl"}>
-      <Title order={3}>{translations("Google Sheet Config")}</Title>
-      <PaperLayout>
-        <Flex justify="space-between">
+    <div className="flex flex-col gap-4 p-8">
+      <h3 className="text-xl font-semibold">{translations("Google Sheet Config")}</h3>
+      <Card>
+        <CardContent className="flex justify-between">
           {googleAccessToken?.credential?.userEmail && (
-            <Stack w={"40%"}>
-              <Title order={4}>{translations("Synced account info")}</Title>
-              <ContainedTextField
-                value={googleAccessToken?.credential?.userEmail}
-                disabled
-                label={translations("Email Address")}
-              />
-            </Stack>
+            <div className="flex w-2/5 flex-col gap-4">
+              <h4 className="text-lg font-semibold">{translations("Synced account info")}</h4>
+              <div>
+                <Label>{translations("Email Address")}</Label>
+                <Input value={googleAccessToken?.credential?.userEmail} disabled />
+              </div>
+            </div>
           )}
-          <RateupButtonPrimary
-            title={translations("Sign out of google synced account")}
-            onClick={handleSignOutGoogleSync}
-          />
-        </Flex>
-      </PaperLayout>
-    </Stack>
+          <Button onClick={handleSignOutGoogleSync} variant="destructive">
+            {translations("Sign out of google synced account")}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

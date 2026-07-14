@@ -1,10 +1,16 @@
-import { Group, Skeleton, Stack, Tooltip } from "@mantine/core";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 import { WaConfigType } from "@/types/enums.ts";
 
 import { MetaLoginStatus } from "./meta-login-status.tsx";
@@ -30,44 +36,50 @@ export function WhatsAppSettingsDetail({
         <h3 className="text-lg font-semibold">WhatsApp Settings</h3>
       </div>
       {isLoading ? (
-        <Stack p="md">
-          <Skeleton height={8} width="50%" />
-          <Group>
-            <Skeleton height={30} width={300} />
-            <Skeleton height={30} width={300} />
-          </Group>
-        </Stack>
+        <div className="flex flex-col gap-4 p-4">
+          <Skeleton className="h-2 w-1/2" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-7.5 w-75" />
+            <Skeleton className="h-7.5 w-75" />
+          </div>
+        </div>
       ) : (
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
-            <Tooltip
-              label={
-                isManual
-                  ? translations(
-                      "You need to delete the manually configured details to switch to Automated Configuration",
-                    )
-                  : translations("Automated Configuration")
-              }
-              openDelay={300}
-            >
-              <TabsTrigger value={WaConfigType.Automated} disabled={isManual}>
-                {translations("Automated")}
-              </TabsTrigger>
-            </Tooltip>
-            <Tooltip
-              label={
-                isAutomated
-                  ? translations(
-                      "You need to de-register from the automated onboarding through fb-login to switch to manual configuration",
-                    )
-                  : translations("Manually Configure WhatsApp Business Account")
-              }
-              openDelay={300}
-            >
-              <TabsTrigger value={WaConfigType.Manual} disabled={isAutomated}>
-                {translations("Manual")}
-              </TabsTrigger>
-            </Tooltip>
+            <TooltipProvider delay={300}>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <TabsTrigger value={WaConfigType.Automated} disabled={isManual}>
+                      {translations("Automated")}
+                    </TabsTrigger>
+                  }
+                />
+                <TooltipContent>
+                  {isManual
+                    ? translations(
+                        "You need to delete the manually configured details to switch to Automated Configuration",
+                      )
+                    : translations("Automated Configuration")}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <TabsTrigger value={WaConfigType.Manual} disabled={isAutomated}>
+                      {translations("Manual")}
+                    </TabsTrigger>
+                  }
+                />
+                <TooltipContent>
+                  {isAutomated
+                    ? translations(
+                        "You need to de-register from the automated onboarding through fb-login to switch to manual configuration",
+                      )
+                    : translations("Manually Configure WhatsApp Business Account")}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </TabsList>
 
           <TabsContent value={WaConfigType.Automated}>

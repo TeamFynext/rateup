@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
   ArrowLeft,
+  CalendarClock,
   CheckCircle,
   Edit2,
   FileDown,
@@ -121,6 +122,10 @@ function CampaignDetails() {
 
   const statsQuery = useCampaignStatsById(campaignId, selectedDripStage);
   const queueCount = statsQuery.data?.queueCount ?? 0;
+  // Messages a daily send limit has parked for a future batch.
+  const scheduledCount = statsQuery.data?.scheduledCount ?? 0;
+  const nextBatchAt = statsQuery.data?.nextBatchAt ?? null;
+  const nextBatchCount = statsQuery.data?.nextBatchCount ?? 0;
   const sendCampaignMutation = useSendCampaign(campaignId ?? "", campaignQuery.data?.teamId ?? "");
   const toggleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -280,6 +285,7 @@ function CampaignDetails() {
     type: campaignQuery.data.type,
     team: teamName,
     status: campaignQuery.data.status,
+    dailySendLimit: campaignQuery.data.dailySendLimit ?? null,
     template: campaignQuery.data.template?.name ?? campaignQuery.data.waTemplateId,
     participants: stats.participants,
     pending: stats.pending,
@@ -339,6 +345,7 @@ function CampaignDetails() {
             : undefined,
         type: campaign.type,
         status: canSend ? CampaignStatus.ACTIVE : campaign.status,
+        dailySendLimit: options.dailySendLimit,
       },
       {
         onSuccess: () => {
@@ -673,6 +680,15 @@ function CampaignDetails() {
                           <span className="font-medium">{t("Template:")}</span>
                           <span>{campaignInfo?.template}</span>
                         </div>
+                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                          <span className="font-medium">{t("Daily Send Limit:")}</span>
+                          <span>
+                            {campaign.dailySendLimit
+                              ? t("{limit}/day", { limit: campaign.dailySendLimit })
+                              : t("No limit")}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <Button
@@ -686,6 +702,27 @@ function CampaignDetails() {
                   </div>
                 </CardContent>
               </Card>
+
+              {scheduledCount > 0 && (
+                <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
+                  <CardContent className="flex items-start gap-3 py-4">
+                    <CalendarClock className="w-5 h-5 mt-0.5 shrink-0 text-blue-600" />
+                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                      <p className="font-medium">
+                        {t("{total} message(s) still scheduled", { total: scheduledCount })}
+                      </p>
+                      {nextBatchAt && (
+                        <p className="text-blue-800/80 dark:text-blue-200/80 mt-0.5">
+                          {t("Next batch: {size} message(s) on {when}", {
+                            size: nextBatchCount,
+                            when: dayjs(nextBatchAt).format("MMM D, YYYY [at] h:mm A"),
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               <CampaignPerformance
                 data={{
@@ -789,6 +826,7 @@ function CampaignDetails() {
         onSubmit={handleResendSubmit}
         isLoading={sendCampaignMutation.isPending}
         isFirstSend={canSend}
+        campaignDailySendLimit={campaignQuery.data?.dailySendLimit ?? null}
         stats={{
           failed: statsQuery.data?.countFailed,
           pending: statsQuery.data?.countPending,

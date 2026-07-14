@@ -1,8 +1,9 @@
-import { Box, Center, Loader } from "@mantine/core";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { useGetLinktreeWithShortId } from "@/backend/linktree/linktree.query";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Tabs } from "@/components/ui/tabs.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 
 import { LinktreeContextProvider } from "./LinktreeContext/LinktreeContext.tsx";
@@ -33,38 +34,44 @@ function LinktreeEdtior() {
 
   if (isPending) {
     componentToBeRendered = (
-      <Center w={"100%"} h={"100%"}>
-        <Loader type="bars" />
-      </Center>
+      <div className="flex h-full w-full items-center justify-center">
+        <Spinner />
+      </div>
     );
   }
 
   if (isError) {
     componentToBeRendered = (
-      <Center w={"100%"} h={"100%"}>
+      <div className="flex h-full w-full items-center justify-center">
         <p>Unable to get data, please try again later.</p>
-      </Center>
+      </div>
     );
   }
 
   if (data) {
     componentToBeRendered = (
       <>
-        <Box className={styles["linktree-name-tabs-empty-div-container"]}>
-          <Box>
+        <div className={styles["linktree-name-tabs-empty-div-container"]}>
+          <div>
             <h1 className={styles["linktree-name-h1"]}>{data.name}</h1>
-          </Box>
-          <TabsListComp value={activeTab} onChange={setActiveTab} />
-          <Box></Box>
-        </Box>
-        <TabPanelsComp value={activeTab} />
+          </div>
+          <TabsListComp />
+          <div></div>
+        </div>
+        <TabPanelsComp />
       </>
     );
   }
 
   return (
     <LinktreeContextProvider linktreeData={data} activeTab={activeTab} setActiveTab={setActiveTab}>
-      <Box className={`${styles["linktree-editor-page-root-div"]}`}>{componentToBeRendered}</Box>
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className={styles["linktree-editor-page-root-div"]}
+      >
+        {componentToBeRendered}
+      </Tabs>
     </LinktreeContextProvider>
   );
 }

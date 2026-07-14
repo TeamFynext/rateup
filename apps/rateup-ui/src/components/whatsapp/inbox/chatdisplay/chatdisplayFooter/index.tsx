@@ -1,5 +1,3 @@
-import { Flex, Group, Stack, Text } from "@mantine/core";
-import { useForm } from "@mantine/form";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
@@ -37,13 +35,10 @@ import {
   returnMessageContentBasedOnParsedMessage,
 } from "@/utils/whatsapp/inbox.ts";
 
-import { RateupButtonPrimary } from "../../../../Button/RateupButtons.tsx";
 import { usePhoneIdStore } from "../../chatselect/accountSelectorStore.ts";
 import { generateInternalMessageId } from "../../util.tsx";
 import AssignUser from "../chatdisplayHeader/AssignUser.tsx";
 import WaInboxFooterMenu from "./footerMenu/index.tsx";
-
-import classes from "./styles.module.css";
 
 export default function WaInboxChatDisplayFooter({
   contact,
@@ -72,59 +67,11 @@ export default function WaInboxChatDisplayFooter({
   const { updateContactById } = useContactsStore();
   const messagesStore = useMessagesStore();
 
-  const form = useForm({
-    initialValues: {
-      type: "text",
-      text: { body: "" },
-      media: media,
-      contacts: {
-        contactIds: [],
-        groupIds: [],
-      },
-      location: null,
-    },
-    validate: {
-      text: (value, values) => {
-        if (
-          values.type === "text" &&
-          (value.body === "" || parseToWhatsAppFormat(value.body).trim().length === 0)
-        ) {
-          return translations("Message can't be empty");
-        }
-      },
-      media: (value, values) => {
-        if (values.type === "media" && !value.length) {
-          return "media required";
-        }
-      },
-      contacts: (value, values) => {
-        if (values.type === "contact" && !value.contactIds.length && !value.groupIds.length) {
-          return "contacts required";
-        }
-      },
-    },
-  });
-
   useEffect(() => {
-    if (media.length) {
-      const message = {
-        media,
-        type: "text",
-      };
-      if (body.text.body === "" || parseToWhatsAppFormat(body.text.body).trim().length === 0) {
-        message.type = "media";
-      }
-      form.setValues({ ...body, ...message });
-    } else {
-      form.setValues({ ...body });
-    }
-  }, [body, media]);
-
-  useEffect(() => {
-    if (form.values.type === "location" && form.values.location) {
+    if (body.type === "location" && body.location) {
       handleSendMessage();
     }
-  }, [form.values]);
+  }, [body]);
 
   useEffect(() => {
     if (audioUrl) {
@@ -138,19 +85,50 @@ export default function WaInboxChatDisplayFooter({
       });
     }
   }, [audioUrl]);
+
+  const isTextValid =
+    body.text?.body !== "" && parseToWhatsAppFormat(body.text?.body || "").trim().length > 0;
+
   function handleSendMessage() {
-    if (form.validate().hasErrors) return;
+    const currentType =
+      media.length || body.media?.length
+        ? body.text?.body === "" || parseToWhatsAppFormat(body.text?.body || "").trim().length === 0
+          ? "media"
+          : "text"
+        : body.type;
+
+    if (
+      currentType === "text" &&
+      (!body.text?.body || parseToWhatsAppFormat(body.text.body).trim().length === 0)
+    ) {
+      return;
+    }
+    if (currentType === "media" && !media.length && !body.media?.length) {
+      return;
+    }
+    if (
+      currentType === "contact" &&
+      !body.contacts?.contactIds?.length &&
+      !body.contacts?.groupIds?.length
+    ) {
+      return;
+    }
     if (!whatsappSettingsPhoneId && platform !== MessagePlatform.WEBCHAT) {
       toast.error("Select a account to send the message");
       return;
     }
-    const values = { ...form.values };
-    form.reset();
+    const values = {
+      type: currentType,
+      text: body.text,
+      media: media.length ? media : body.media || [],
+      contacts: body.contacts,
+      location: body.location,
+    };
     resetBody();
     addMessage(contact.id, {
       body: {
         text: values.text.body,
-        ...(values.media.length
+        ...(values.media?.length
           ? {
               url: values.media[0].url,
               urlType: values.media[0].type,
@@ -203,7 +181,7 @@ export default function WaInboxChatDisplayFooter({
                         : values.type === "media"
                           ? returnMessageContentBasedOnParsedMessage(
                               {
-                                messageType: values.media[media.length - 1].type,
+                                messageType: values.media[values.media.length - 1].type,
                                 messageContent: "",
                                 timeStamp: dayjs().unix().toString(),
                               },
@@ -222,13 +200,20 @@ export default function WaInboxChatDisplayFooter({
     }));
   }
   function handleSendPrivateMessage() {
-    if (form.validate().hasErrors) return;
+    if (!body.text?.body || parseToWhatsAppFormat(body.text.body).trim().length === 0) {
+      return;
+    }
     if (!whatsappSettingsPhoneId && platform !== MessagePlatform.WEBCHAT) {
       toast.error("Select a account to send the message");
       return;
     }
-    const values = { ...form.values };
-    form.reset();
+    const values = {
+      type: body.type,
+      text: body.text,
+      media: media,
+      contacts: body.contacts,
+      location: body.location,
+    };
     resetBody();
     resetMedia();
     setAudioUrl(null);
@@ -306,7 +291,11 @@ export default function WaInboxChatDisplayFooter({
             size="sm"
             className="bg-green-600 hover:bg-green-700 h-[60px] px-6"
             onClick={handleSendMessage}
-            disabled={isSessionExpired || isRecording || (!media.length && !form.isValid("text"))}
+            disabled={
+              isSessionExpired ||
+              isRecording ||
+              (!media.length && !body.media?.length && !isTextValid)
+            }
           >
             <Send className="w-4 h-4" />
           </Button>
@@ -323,7 +312,11 @@ export default function WaInboxChatDisplayFooter({
             size="sm"
             className="bg-amber-600 hover:bg-amber-700 h-[60px] px-6"
             onClick={handleSendPrivateMessage}
-            disabled={isSessionExpired || isRecording || (!media.length && !form.isValid("text"))}
+            disabled={
+              isSessionExpired ||
+              isRecording ||
+              (!media.length && !body.media?.length && !isTextValid)
+            }
           >
             <Send className="w-4 h-4" />
           </Button>
@@ -337,9 +330,9 @@ export default function WaInboxChatDisplayFooter({
     if (platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK)
       return null;
     return (
-      <Flex className={classes.wrapper} justify="flex-start">
+      <div className="flex gap-2.5 items-start p-2 max-[1200px]:p-4 bg-background border-t border-border justify-start">
         <WaInboxFooterMenu sessionExpired={isSessionExpired} contact={contact} />
-      </Flex>
+      </div>
     );
   }
   return (
@@ -560,20 +553,17 @@ export const WaInboxBlockedContactFooter = ({ contact }) => {
     );
   }
   return (
-    <Stack gap={"xs"} pb={"xs"} className="bg-background">
-      <Group bg={"black"} justify="center" c={"white"} color="white" gap={2} py={2}>
+    <div className="flex flex-col gap-2 pb-2 bg-background">
+      <div className="bg-black flex justify-center items-center text-white gap-0.5 py-1">
         <IconExclamationCircle size={"1rem"} />
-        <Text size="xs">This contact has been blocked by you.</Text>
-      </Group>
-      <Group justify={"center"} gap={"xs"}>
-        <RateupButtonPrimary
-          title="Unblock contact"
-          onClick={handleUnblock}
-          size="xs"
-          radius={"md"}
-        />
-      </Group>
-    </Stack>
+        <span className="text-xs">This contact has been blocked by you.</span>
+      </div>
+      <div className="flex justify-center items-center gap-2">
+        <Button onClick={handleUnblock} size="sm">
+          Unblock contact
+        </Button>
+      </div>
+    </div>
   );
 };
 
@@ -638,12 +628,14 @@ interface WaMedia {
   url: string;
   name: string;
   key: string;
+  isVoiceNote?: boolean;
 }
 
 interface MediaStore {
   media: WaMedia[];
   addMedia: (value: WaMedia) => void;
-  removeMedia: (key) => void;
+  removeMedia: (key: string) => Promise<void>;
+  removeMediaSilently: (key: string) => void;
   resetMedia: () => void;
   selectedMedia: WaMedia;
   setSelectedMedia: (value) => void;
@@ -654,6 +646,8 @@ export const useMediaStore = create<MediaStore>((set) => ({
   addMedia: (value) => set((state) => ({ media: [...state.media, value] })),
   selectedMedia: null,
   setSelectedMedia: (value) => set(() => ({ selectedMedia: value })),
+  removeMediaSilently: (key) =>
+    set((state) => ({ media: state.media.filter((m) => m.key !== key) })),
   removeMedia: async (key) => {
     await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
     set((state) => {

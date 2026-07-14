@@ -1,7 +1,9 @@
-import { isNotEmpty, useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { IconTrash } from "@tabler/icons-react";
 import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import z from "zod";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import {
@@ -10,43 +12,63 @@ import {
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 
 type WaSetting = WaSettings[number];
+
+interface WaManualConfigFormValues {
+  wabaId: string;
+  phoneId: string;
+  accessToken: string;
+  webhookPassword: string;
+  appId: string;
+  fbPageId: string;
+  ibaId: string;
+  pageAccessToken: string;
+  phoneDisplayName: string;
+}
+
+const defaultFormValues: WaManualConfigFormValues = {
+  wabaId: "",
+  phoneId: "",
+  accessToken: "",
+  webhookPassword: "",
+  appId: "",
+  fbPageId: "",
+  ibaId: "",
+  pageAccessToken: "",
+  phoneDisplayName: "",
+};
 
 export function WhatsAppManualConfiguration({
   waSettings,
 }: Readonly<{ waSettings: WaSetting | undefined }>) {
   const { t: translations } = useTranslation();
 
-  const form = useForm({
-    initialValues: {
-      wabaId: "",
-      phoneId: "",
-      accessToken: "",
-      webhookPassword: "",
-      appId: "",
-      fbPageId: "",
-      ibaId: "",
-      pageAccessToken: "",
-      phoneDisplayName: "",
-    },
-    validate: {
-      wabaId: isNotEmpty("BusnessId is required"),
-      phoneId: isNotEmpty("phoneId is required"),
-      accessToken: isNotEmpty("AccessToken is required"),
-      webhookPassword: isNotEmpty("Webhook Password is required"),
-      appId: isNotEmpty("AppId is required"),
-    },
+  const waManualConfigSchema = z.object({
+    wabaId: z.string().trim().min(1, translations("BusnessId is required")),
+    phoneId: z.string().trim().min(1, translations("phoneId is required")),
+    accessToken: z.string().trim().min(1, translations("AccessToken is required")),
+    webhookPassword: z.string().trim().min(1, translations("Webhook Password is required")),
+    appId: z.string().trim().min(1, translations("AppId is required")),
+    fbPageId: z.string(),
+    ibaId: z.string(),
+    pageAccessToken: z.string(),
+    phoneDisplayName: z.string(),
+  });
+
+  const form = useForm<WaManualConfigFormValues>({
+    resolver: zodResolver(waManualConfigSchema),
+    defaultValues: defaultFormValues,
   });
 
   useEffect(() => {
     if (waSettings) {
-      form.setValues(waSettings);
+      form.reset({ ...defaultFormValues, ...waSettings });
     } else {
-      form.reset();
+      form.reset(defaultFormValues);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waSettings?.id]);
@@ -54,7 +76,7 @@ export function WhatsAppManualConfiguration({
   const upsertMutation = useUpsertWaSettingsMutation();
   const deleteMutation = useDeleteWaSettingsMutation();
 
-  const handleSubmit = (values: Record<string, string>) => {
+  const handleSubmit = (values: WaManualConfigFormValues) => {
     let payload: Record<string, unknown> = { ...values };
     if (waSettings) payload = { ...waSettings, ...values };
     if ("teams" in payload) delete payload.teams;
@@ -69,64 +91,112 @@ export function WhatsAppManualConfiguration({
         <CardDescription>Configure this WhatsApp Business Account manually.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.onSubmit(handleSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="phoneDisplayName">Channel Name</Label>
-            <Input
-              id="phoneDisplayName"
-              placeholder={translations("Enter a name to identify this WhatsApp channel")}
-              {...form.getInputProps("phoneDisplayName")}
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
+          <Controller
+            name="phoneDisplayName"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Channel Name</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  aria-invalid={fieldState.invalid}
+                  placeholder={translations("Enter a name to identify this WhatsApp channel")}
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Controller
+              name="wabaId"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>WABA ID</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    placeholder={translations("Enter your Whatsapp Business Account ID")}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+            <Controller
+              name="phoneId"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>Phone ID</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    placeholder={translations("Enter your phone ID")}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="wabaId">WABA ID</Label>
-              <Input
-                id="wabaId"
-                placeholder={translations("Enter your Whatsapp Business Account ID")}
-                {...form.getInputProps("wabaId")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phoneId">Phone ID</Label>
-              <Input
-                id="phoneId"
-                placeholder={translations("Enter your phone ID")}
-                {...form.getInputProps("phoneId")}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="appId">App ID</Label>
-              <Input
-                id="appId"
-                placeholder={translations("Enter your app ID")}
-                {...form.getInputProps("appId")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="webhookPassword">Webhook Password</Label>
-              <Input
-                id="webhookPassword"
-                type="password"
-                placeholder={translations("Create a webhook password")}
-                {...form.getInputProps("webhookPassword")}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="accessToken">Access Token</Label>
-            <Textarea
-              id="accessToken"
-              placeholder={translations("Enter your access token")}
-              rows={3}
-              {...form.getInputProps("accessToken")}
+            <Controller
+              name="appId"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>App ID</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    placeholder={translations("Enter your app ID")}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+            <Controller
+              name="webhookPassword"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>Webhook Password</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    type="password"
+                    aria-invalid={fieldState.invalid}
+                    placeholder={translations("Create a webhook password")}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
           </div>
+
+          <Controller
+            name="accessToken"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Access Token</FieldLabel>
+                <Textarea
+                  {...field}
+                  id={field.name}
+                  rows={3}
+                  aria-invalid={fieldState.invalid}
+                  placeholder={translations("Enter your access token")}
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
 
           <div className="flex justify-between pt-2">
             <Button

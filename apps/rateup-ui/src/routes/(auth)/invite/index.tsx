@@ -1,15 +1,3 @@
-import {
-  Center,
-  Container,
-  Flex,
-  Image,
-  Loader,
-  NavLink,
-  Paper,
-  Space,
-  Stack,
-  Text,
-} from "@mantine/core";
 import { IconArrowAutofitLeft } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
@@ -20,6 +8,8 @@ import { signOut } from "supertokens-auth-react/recipe/session";
 
 import { completeInvite } from "@/backend/team/team.api";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants";
 
 import styles from "../../../components/(auth)/invite/styles.module.css";
@@ -78,45 +68,38 @@ function Invite() {
   useEffect(() => {}, [updateInviteMutation.error]);
 
   return (
-    <Stack align="center">
-      <Image src="/images/bg-shape.svg" w={"100%"} pos={"fixed"} bottom={0} alt="bg of a shape" />
-      <Paper
-        shadow="md"
-        p={30}
-        mt={70}
-        radius="md"
-        w={350}
-        mih={600}
-        pos={"relative"}
+    <div className="flex flex-col items-center gap-2">
+      <img src="/images/bg-shape.svg" className="fixed bottom-0 w-full" alt="bg of a shape" />
+      <Card
+        className="relative mt-17.5 min-h-150 w-87.5 rounded-md p-7.5"
         style={{
           boxShadow: "0px -4px 12px 0px #0000001F",
           zIndex: 999,
         }}
       >
-        <Center>
+        <div className="flex justify-center">
           <Link to="/">
-            <Image src={rateupLogoStackedWhiteTransparent} alt="RateUp Logo" w={100} />
+            <img src={rateupLogoStackedWhiteTransparent} alt="RateUp Logo" className="w-25" />
           </Link>
-        </Center>
-        <Flex gap="md" justify="center" align="center" direction="column" wrap="wrap">
-          <Space h="lg" />
-          <Text mb="lg" fz={24} style={{ color: "var(--tertiary-color)" }} fw={600}>
+        </div>
+        <div className="flex flex-col flex-wrap items-center justify-center gap-4">
+          <p className="mb-6 text-2xl font-semibold" style={{ color: "var(--tertiary-color)" }}>
             {title} {translations("Invitation")}
-          </Text>
+          </p>
 
           {!type || !token ? (
-            <Container>{translations("Invite is not valid.")}</Container>
+            <div>{translations("Invite is not valid.")}</div>
           ) : (
-            <Container>
+            <div>
               {updateInviteMutation?.isPending || !updateInviteMutation.data ? (
                 type === "team" && token ? (
-                  <Loader type="bars" />
+                  <Spinner className="size-8" />
                 ) : (
                   "Error"
                 )
               ) : (
-                <Flex gap="md" justify="center" align="center" direction="column" wrap="wrap">
-                  <Text c="green"> {updateInviteMutation.data?.data.message}</Text>
+                <div className="flex flex-col flex-wrap items-center justify-center gap-4">
+                  <p className="text-green-600"> {updateInviteMutation.data?.data.message}</p>
                   <div className="wrapper">
                     <svg
                       className={styles.checkmark}
@@ -137,9 +120,8 @@ function Invite() {
                       />
                     </svg>
                   </div>
-                  <Space h="xl" />
 
-                  <Text ta={"center"}>
+                  <p className="mt-8 text-center">
                     {updateInviteMutation.data?.data.data.isUser
                       ? translations(
                           "Login to your existing account in this email and continue using the app.",
@@ -147,7 +129,7 @@ function Invite() {
                       : translations(
                           "Your account is ready, Create a new password and login to start using the app.",
                         )}
-                  </Text>
+                  </p>
 
                   {updateInviteMutation.data?.data.data.isUser ? (
                     <Button
@@ -173,35 +155,28 @@ function Invite() {
                       {translations("Continue")}
                     </Button>
                   )}
-                </Flex>
+                </div>
               )}
-            </Container>
+            </div>
           )}
 
           {updateInviteMutation.error && (
-            <Stack>
-              <Text>{translations("Failed..! Try another invitation.")}</Text>
+            <div className="flex flex-col gap-2">
+              <p>{translations("Failed..! Try another invitation.")}</p>
 
-              <Space h="xl" />
-              <Space h="xl" />
-              <Space h="xl" />
-              <Space h="xl" />
-
-              <Center>
-                <Text inline c="blue.6" style={{ textDecoration: "none" }} className={styles.txt}>
-                  <Link to="/login" style={{ textDecoration: "none" }}>
-                    <NavLink
-                      label={translations("Go to Login")}
-                      leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
-                      variant="subtle"
-                    />
-                  </Link>
-                </Text>
-              </Center>
-            </Stack>
+              <div className="mt-24 flex justify-center">
+                <Link
+                  to="/login"
+                  className={`flex items-center gap-2 text-blue-600 no-underline ${styles.txt}`}
+                >
+                  <IconArrowAutofitLeft size="1rem" stroke={1.5} />
+                  {translations("Go to Login")}
+                </Link>
+              </div>
+            </div>
           )}
-        </Flex>
-      </Paper>
-    </Stack>
+        </div>
+      </Card>
+    </div>
   );
 }

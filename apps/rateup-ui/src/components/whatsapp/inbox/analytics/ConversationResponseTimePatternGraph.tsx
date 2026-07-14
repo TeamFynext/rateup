@@ -1,4 +1,3 @@
-import { Skeleton } from "@mantine/core";
 import { Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { CartesianGrid, LabelList, Line, LineChart, XAxis, YAxis } from "recharts";
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/card.tsx";
 import type { ChartConfig } from "@/components/ui/chart.tsx";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
 
 const ConversationResponseTimePatternGraph = ({ dateRange }) => {

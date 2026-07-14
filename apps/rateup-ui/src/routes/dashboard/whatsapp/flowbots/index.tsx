@@ -27,21 +27,13 @@ export const Route = createFileRoute("/dashboard/whatsapp/flowbots/")({
 });
 
 function FlowbotsPage() {
-  const {
-    data: waData,
-    isPending: waPending,
-    isError: waError,
-    refetch: waRefetch,
-  } = useAllWaAutomatedReplies();
+  const { data: waData, isPending, isError, refetch: waRefetch } = useAllWaAutomatedReplies();
 
   const [opened, setOpened] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("latest");
   const { t: translations } = useTranslation();
   const debouncedSearchQuery = useDebounce(searchQuery.trim(), 200);
-
-  const isLoading = waPending;
-  const isError = waError;
 
   const filteredData = useMemo<WaAutomatedReply[]>(() => {
     const normalizedSearch = debouncedSearchQuery.toLowerCase();
@@ -55,14 +47,14 @@ function FlowbotsPage() {
     return sortData(filtered, sortOption) as WaAutomatedReply[];
   }, [waData, debouncedSearchQuery, sortOption]);
 
-  const isEmpty = !isLoading && !isError && filteredData.length === 0;
+  const isEmpty = !isPending && !isError && filteredData.length === 0;
 
   return (
     <>
       <ListPage>
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
-            <Button onClick={() => setOpened(true)} disabled={isLoading}>
+            <Button onClick={() => setOpened(true)} disabled={isPending}>
               {translations("Create Chatbot")}
               <IconPlus size={16} className="ml-2" />
             </Button>
@@ -80,7 +72,7 @@ function FlowbotsPage() {
         </ListPageHeader>
 
         <ListPageContent
-          isLoading={isLoading}
+          isLoading={isPending}
           isError={isError}
           isEmpty={isEmpty}
           emptyTitle={

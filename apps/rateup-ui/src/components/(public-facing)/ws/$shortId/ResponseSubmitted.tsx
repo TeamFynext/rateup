@@ -1,7 +1,7 @@
-import { Anchor, Box, Button, Group, Image, Stack, Text } from "@mantine/core";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 
+import { Button } from "@/components/ui/button";
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants";
 
 import styles from "./ResponseSubmitted.module.css";
@@ -10,26 +10,31 @@ export function ResponseSubmitted({ isSurveyPreview = false }) {
   const navigate = useNavigate();
 
   return (
-    <Stack
-      className={`${styles["response-submitted-root-div"]} ${isSurveyPreview ? styles["survey-preview"] : ""}`}
+    <div
+      className={`flex flex-col gap-4 ${styles["response-submitted-root-div"]} ${isSurveyPreview ? styles["survey-preview"] : ""}`}
     >
-      <Stack className={styles["check-icon-container-and-thankyou-message-container"]}>
-        <Box className={styles["check-icon-container"]}>
+      <div
+        className={`flex flex-col gap-4 ${styles["check-icon-container-and-thankyou-message-container"]}`}
+      >
+        <div className={styles["check-icon-container"]}>
           {<IconCircleCheckFilled size={"6rem"} />}
-        </Box>
-        <Text className={styles["thankyou-message-p"]}>
-          Thank You, your response has been Submitted!
-        </Text>
-      </Stack>
-      <Stack className={styles["create-surveys-text-and-try-now-btn-container"]}>
-        <Group className={styles["create-surveys-text-container"]}>
-          <Text className={styles["create-surveys-text"]}>
+        </div>
+        <p className={styles["thankyou-message-p"]}>Thank You, your response has been Submitted!</p>
+      </div>
+      <div
+        className={`flex flex-col gap-4 ${styles["create-surveys-text-and-try-now-btn-container"]}`}
+      >
+        <div className={`flex items-center gap-2 ${styles["create-surveys-text-container"]}`}>
+          <p className={styles["create-surveys-text"]}>
             Create Surveys for free using
-            <Anchor href="https://www.rateup.app" styles={{ root: { width: "fit-content" } }}>
-              <Image src={rateupLogoStackedWhiteTransparent} height={60} width={60} fit="contain" />
-            </Anchor>
-          </Text>
-        </Group>
+            <a href="https://www.rateup.app" style={{ width: "fit-content" }}>
+              <img
+                src={rateupLogoStackedWhiteTransparent}
+                style={{ height: 60, width: 60, objectFit: "contain" }}
+              />
+            </a>
+          </p>
+        </div>
         <Button
           className={styles["try-now-btn"]}
           onClick={() => {
@@ -41,7 +46,7 @@ export function ResponseSubmitted({ isSurveyPreview = false }) {
         >
           Try Now
         </Button>
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   );
 }

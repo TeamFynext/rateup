@@ -1,92 +1,78 @@
-import { ActionIcon, Box, Checkbox, Collapse, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import type { Control } from "react-hook-form";
+import { useController, useWatch } from "react-hook-form";
 
+import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible.tsx";
 import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { getNestedProperty } from "@/utils/misc/obj.utils";
 
 import { CountRestrictionCards } from "./CountRestrictionCards.tsx";
 import { FeatureBadge } from "./FeatureBadge.tsx";
+import type { SubscriptionFormValues } from "./SubscriptionEditorModal.tsx";
 
 interface FeatureCardProps {
   featurePathName: SubscriptionFeaturePathName;
-  subscriptionForm: any;
+  control: Control<SubscriptionFormValues>;
 }
 
-export function FeatureCard({ featurePathName, subscriptionForm }: FeatureCardProps) {
-  function handleChange(checked: boolean) {
-    if (checked) {
-      subscriptionForm.setFieldValue(`features.${featurePathName}.active`, true);
-    } else {
-      subscriptionForm.setFieldValue(`features.${featurePathName}.active`, false);
-    }
-  }
+export function FeatureCard({ featurePathName, control }: Readonly<FeatureCardProps>) {
+  const { field: activeField } = useController({
+    control,
+    name: `features.${featurePathName}.active`,
+  });
   const [opened, { toggle }] = useDisclosure(false);
 
-  const feature = getNestedProperty(subscriptionForm.values.features, featurePathName);
+  const features = useWatch({ control, name: "features" });
+  const feature = getNestedProperty(features, featurePathName);
 
   return (
-    <Box
-      style={{
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        backgroundColor: "white",
-      }}
-    >
-      <Group gap={0} p={"xs"}>
+    <div className="rounded-lg border border-border bg-background">
+      <div className="flex items-center p-2">
         <Checkbox
-          checked={feature.active}
-          onChange={(e) => handleChange(e.currentTarget.checked)}
-          style={{
-            cursor: "pointer",
-          }}
-          styles={{
-            input: {
-              cursor: "pointer",
-            },
-          }}
+          className="cursor-pointer"
+          checked={activeField.value}
+          onCheckedChange={(checked) => activeField.onChange(checked)}
         />
-        <Box style={{ flex: 1, cursor: "pointer" }} onClick={toggle} mx="sm">
+        <button type="button" className="mx-3 flex-1 cursor-pointer text-left" onClick={toggle}>
           <FeatureBadge featurePathName={featurePathName} />
-        </Box>
-        <ActionIcon
-          onClick={toggle}
-          variant="transparent"
-          display={Object.keys(feature || {}).length <= 1 ? "none" : "block"}
-        >
-          {opened ? <IconChevronUp /> : <IconChevronDown />}
-        </ActionIcon>
-      </Group>
-      <Collapse
-        expanded={opened}
-        style={{
-          marginLeft: "56px",
-        }}
-        pb="xs"
-      >
-        {Object.keys(feature || {}).map((featureName) => {
-          if (featureName === "count") {
-            return (
-              <CountRestrictionCards
-                key={featureName}
-                featurePathName={featurePathName}
-                subscriptionForm={subscriptionForm}
-              />
-            );
-          }
-          if (["active"].includes(featureName)) {
-            return;
-          } else {
-            return (
-              <FeatureCard
-                key={featureName}
-                featurePathName={`${featurePathName}.${featureName}` as SubscriptionFeaturePathName}
-                subscriptionForm={subscriptionForm}
-              />
-            );
-          }
-        })}
-      </Collapse>
-    </Box>
+        </button>
+        {Object.keys(feature || {}).length > 1 && (
+          <Button variant="ghost" size="icon" onClick={toggle}>
+            {opened ? <IconChevronUp /> : <IconChevronDown />}
+          </Button>
+        )}
+      </div>
+      <Collapsible open={opened}>
+        <CollapsibleContent className="ml-14 pb-2">
+          {Object.keys(feature || {}).map((featureName) => {
+            if (featureName === "count") {
+              return (
+                <CountRestrictionCards
+                  key={featureName}
+                  featurePathName={featurePathName}
+                  control={control}
+                />
+              );
+            }
+            if (["active"].includes(featureName)) {
+              return;
+            } else {
+              return (
+                <FeatureCard
+                  key={featureName}
+                  featurePathName={
+                    `${featurePathName}.${featureName}` as SubscriptionFeaturePathName
+                  }
+                  control={control}
+                />
+              );
+            }
+          })}
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
   );
 }

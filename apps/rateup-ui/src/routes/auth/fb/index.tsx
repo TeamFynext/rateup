@@ -1,4 +1,3 @@
-import { Center, Stack, Text } from "@mantine/core";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { Suspense, useEffect } from "react";
 import { toast } from "sonner";
@@ -79,11 +78,11 @@ function FbLoginRedirect({
   }, [code, error]);
   if (update.isPending) return <RateupLoader />;
   return (
-    <Center h="100vh">
-      <Stack>
+    <div className="flex h-screen items-center justify-center">
+      <div className="flex flex-col gap-2">
         <RateupLoader />
-        <Text>Please wait...</Text>
-      </Stack>
-    </Center>
+        <p>Please wait...</p>
+      </div>
+    </div>
   );
 }

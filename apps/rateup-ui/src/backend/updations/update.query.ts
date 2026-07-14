@@ -8,6 +8,7 @@ import {
   syncTeamFeatures,
   migrateLoyaltyTierPriority,
   seedInboxStats,
+  reconcileInboxStatus,
 } from "./update.api";
 
 export const useMigrateWaTemplateToWhatsappPhoneId = () => {
@@ -54,6 +55,21 @@ export const useSeedInboxStats = () => {
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to seed inbox stats");
+    },
+  });
+};
+
+export const useReconcileInboxStatus = () => {
+  return useMutation({
+    mutationFn: (apply: boolean) => reconcileInboxStatus(apply),
+    onSuccess: ({ data }) => {
+      const detail = `Scanned ${data.scanned}, mismatched ${data.mismatched}, skipped ${data.skippedReopenPending} pending reopen.`;
+      // A dry run wrote nothing, so it is an info toast rather than a success.
+      const notify = data.applied ? toast.success : toast.info;
+      notify(data.message, { description: detail, id: "reconcile-inbox-status" });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to reconcile inbox status");
     },
   });
 };

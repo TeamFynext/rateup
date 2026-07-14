@@ -1,6 +1,4 @@
-import { MultiSelect, NumberInput, Paper, Select, Stack, TextInput } from "@mantine/core";
-import { schemaResolver, useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import {
@@ -23,6 +21,7 @@ import { Ticket } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { useMemo } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
@@ -42,7 +41,15 @@ import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
@@ -99,21 +106,34 @@ export default function WaInboxContactDetails({
     () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     [subscription],
   );
-  const [openedCreateTicket, { open: openCreateTicket, close: closeCreateTicket }] =
-    useDisclosure(false);
+  const [openedCreateTicket, setOpenedCreateTicket] = useState(false);
+  const openCreateTicket = () => setOpenedCreateTicket(true);
+  const closeCreateTicket = () => setOpenedCreateTicket(false);
+
+  useEffect(() => {
+    setEditable(false);
+  }, [contact?.id]);
+
   const labels = contact?.contactLabels?.map((label) => label?.id);
-  const form = useForm<ContactFormValues>({
-    validate: schemaResolver(contactSchema, {
-      sync: true,
-    }),
-    initialValues: {
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    getValues,
+    reset,
+    formState: { errors, isValid },
+  } = useForm<ContactFormValues>({
+    resolver: zodResolver(contactSchema),
+    mode: "onChange",
+    defaultValues: {
       name: contact?.name || "",
-      phone: "+" + contact?.phone || "",
+      phone: contact?.phone ? "+" + contact?.phone : "",
       email: contact?.email || "",
       other: contact?.other || "",
       lifecycleId: contact?.lifecycleId || "",
       customFields: contact?.customFields || [],
-      labels: labels,
+      labels: labels || [],
     },
   });
   const { data: contactLabels = [], isPending } = useContactLabels();
@@ -121,18 +141,18 @@ export default function WaInboxContactDetails({
   const { t } = useTranslation();
 
   useEffect(() => {
-    form.setValues({
+    reset({
       name: contact?.name || "",
-      phone: "+" + contact?.phone || "",
+      phone: contact?.phone ? "+" + contact?.phone : "",
       email: contact?.email || "",
       other: contact?.other || "",
       lifecycleId: contact?.lifecycleId || "",
       customFields: contact?.customFields || [],
-      labels: labels,
+      labels: labels || [],
     });
-  }, [contact]);
+  }, [contact, reset]);
 
-  const handleSubmit = async (values: ContactFormValues) => {
+  const onSubmit = async (values: ContactFormValues) => {
     const data = {
       ...values,
       phone: values.phone?.startsWith("+") ? values.phone.slice(1) : values.phone,
@@ -171,12 +191,12 @@ export default function WaInboxContactDetails({
   };
 
   const getCustomFieldValue = (fieldId) => {
-    const customField = form.getValues().customFields?.find((cf) => cf.fieldId === fieldId);
+    const customField = getValues().customFields?.find((cf) => cf.fieldId === fieldId);
     return customField?.value || "";
   };
 
   const updateCustomField = (fieldId, value, customFieldData) => {
-    const currentCustomFields = form.getValues().customFields || [];
+    const currentCustomFields = getValues().customFields || [];
     const existingIndex = currentCustomFields.findIndex((cf) => cf.fieldId === fieldId);
 
     if (existingIndex >= 0) {
@@ -189,44 +209,52 @@ export default function WaInboxContactDetails({
       });
     }
 
-    form.setFieldValue("customFields", [...currentCustomFields]);
+    setValue("customFields", [...currentCustomFields], { shouldValidate: true });
   };
 
   const renderCustomField = (field) => {
     const fieldValue = getCustomFieldValue(field.slug);
 
-    const commonProps = {
-      label: field.name,
-      placeholder: `Enter ${field.name}`,
-      key: `customField-${field.slug}`,
-      required: field.required,
-    };
-
     switch (field.type) {
       case "email":
         return (
-          <TextInput
-            {...commonProps}
-            type="email"
-            value={fieldValue}
-            onChange={(event) => {
-              updateCustomField(field.slug, event.currentTarget.value, field);
-            }}
-          />
+          <div className="space-y-1" key={`customField-${field.slug}`}>
+            <label className="text-[11px] text-muted-foreground font-medium">
+              {field.name}
+              {field.required && <span className="text-destructive ml-0.5">*</span>}
+            </label>
+            <Input
+              type="email"
+              placeholder={`Enter ${field.name}`}
+              value={fieldValue}
+              onChange={(event) => {
+                updateCustomField(field.slug, event.currentTarget.value, field);
+              }}
+              className="h-8 text-xs"
+            />
+          </div>
         );
 
       case "number":
         return (
-          <NumberInput
-            {...commonProps}
-            value={fieldValue ? Number(fieldValue) : ""}
-            onChange={(value) => {
-              updateCustomField(field.slug, value?.toString() || "", field);
-            }}
-          />
+          <div className="space-y-1" key={`customField-${field.slug}`}>
+            <label className="text-[11px] text-muted-foreground font-medium">
+              {field.name}
+              {field.required && <span className="text-destructive ml-0.5">*</span>}
+            </label>
+            <Input
+              type="number"
+              placeholder={`Enter ${field.name}`}
+              value={fieldValue}
+              onChange={(event) => {
+                updateCustomField(field.slug, event.target.value, field);
+              }}
+              className="h-8 text-xs"
+            />
+          </div>
         );
 
-      case "multivalue":
+      case "multivalue": {
         const options =
           field?.listValues?.map((option) => ({
             value: option,
@@ -234,28 +262,51 @@ export default function WaInboxContactDetails({
           })) || [];
 
         return (
-          <Select
-            {...commonProps}
-            data={options}
-            value={fieldValue}
-            onChange={(value) => {
-              updateCustomField(field.slug, value || "", field);
-            }}
-            searchable
-            clearable
-          />
+          <div className="space-y-1" key={`customField-${field.slug}`}>
+            <label className="text-[11px] text-muted-foreground font-medium">
+              {field.name}
+              {field.required && <span className="text-destructive ml-0.5">*</span>}
+            </label>
+            <Select
+              value={fieldValue}
+              onValueChange={(value) => {
+                updateCustomField(field.slug, value || "", field);
+              }}
+              items={options}
+            >
+              <SelectTrigger size="sm" className="w-full h-8 text-xs">
+                <SelectValue placeholder={`Select ${field.name}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {options.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         );
+      }
 
       case "text":
       default:
         return (
-          <TextInput
-            {...commonProps}
-            value={fieldValue}
-            onChange={(event) => {
-              updateCustomField(field.slug, event.currentTarget.value, field);
-            }}
-          />
+          <div className="space-y-1" key={`customField-${field.slug}`}>
+            <label className="text-[11px] text-muted-foreground font-medium">
+              {field.name}
+              {field.required && <span className="text-destructive ml-0.5">*</span>}
+            </label>
+            <Input
+              type="text"
+              placeholder={`Enter ${field.name}`}
+              value={fieldValue}
+              onChange={(event) => {
+                updateCustomField(field.slug, event.currentTarget.value, field);
+              }}
+              className="h-8 text-xs"
+            />
+          </div>
         );
     }
   };
@@ -266,49 +317,44 @@ export default function WaInboxContactDetails({
   if (!isOpen) {
     return (
       <>
-        <Paper
-          p="xs"
+        <div
           style={{
             borderLeft: "1px solid #e9ecef",
           }}
-          className="hidden"
+          className="flex flex-col p-2 bg-background border-l h-full w-12 items-center gap-4 shrink-0"
         >
-          <Stack gap="md" align="center" style={{ flex: 1 }} mt={6}>
-            <CustomTooltip
-              trigger={
-                <Button variant="ghost" onClick={handleToggle}>
-                  <User />
-                </Button>
-              }
-              content={<p>{t("Open Contact Details")}</p>}
-              side="bottom"
-            />
-
-            {hasTicketFeature && (
-              <CustomTooltip
-                trigger={
-                  <Button variant="ghost" onClick={openCreateTicket}>
-                    <Ticket />
-                  </Button>
-                }
-                content={<p>{t("Create Ticket")}</p>}
-                side="bottom"
-              />
-            )}
-
-            {/* <CustomTooltip
+          <CustomTooltip
             trigger={
-              <Button variant="ghost" disabled>
-                <Zap />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 p-0 hover:bg-muted"
+                onClick={() => setIsOpen(true)}
+              >
+                <User className="w-5 h-5 text-muted-foreground hover:text-foreground" />
               </Button>
             }
-            content={
-              <p>{t("Recent Activity")}</p>
-            }
-            side="bottom"
-           /> */}
-          </Stack>
-        </Paper>
+            content={<p>{t("Open Contact Details")}</p>}
+            side="left"
+          />
+
+          {hasTicketFeature && (
+            <CustomTooltip
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 p-0 hover:bg-muted"
+                  onClick={openCreateTicket}
+                >
+                  <Ticket className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                </Button>
+              }
+              content={<p>{t("Create Ticket")}</p>}
+              side="left"
+            />
+          )}
+        </div>
         <CreateTicketCard
           close={closeCreateTicket}
           opened={openedCreateTicket}
@@ -381,7 +427,7 @@ export default function WaInboxContactDetails({
           </div>
         </motion.div>
         <ScrollArea className="flex-1 h-[calc(100vh-250px)] py-4">
-          <form onSubmit={form.onSubmit(handleSubmit)} className="p-3.5">
+          <form onSubmit={handleSubmit(onSubmit)} className="p-3.5">
             <div className="flex flex-col gap-2">
               {/* Contact Information */}
               <motion.div
@@ -405,8 +451,11 @@ export default function WaInboxContactDetails({
                     <Input
                       placeholder={t("Enter name")}
                       className="h-7 text-xs"
-                      {...form.getInputProps("name")}
+                      {...register("name")}
                     />
+                    {errors.name && (
+                      <p className="text-[10px] text-destructive mt-0.5">{errors.name.message}</p>
+                    )}
                   </motion.div>
 
                   {/* Phone Field */}
@@ -417,15 +466,21 @@ export default function WaInboxContactDetails({
                     transition={{ delay: 0.21, duration: 0.2 }}
                   >
                     <label className="text-[11px] text-muted-foreground">{t("Phone")}</label>
-                    <PhoneInputWithCountry
-                      defaultCountry="IN"
-                      international
-                      countryCallingCodeEditable={false}
-                      value={form.values.phone}
-                      onChange={(value) => form.setFieldValue("phone", value || "")}
-                      borderRadius={4}
-                      placeholder={t("Enter the phone")}
-                      error={form.errors.phone}
+                    <Controller
+                      name="phone"
+                      control={control}
+                      render={({ field }) => (
+                        <PhoneInputWithCountry
+                          defaultCountry="IN"
+                          international
+                          countryCallingCodeEditable={false}
+                          value={field.value}
+                          onChange={field.onChange}
+                          borderRadius={4}
+                          placeholder={t("Enter the phone")}
+                          error={errors.phone?.message}
+                        />
+                      )}
                     />
                   </motion.div>
 
@@ -441,8 +496,11 @@ export default function WaInboxContactDetails({
                       type="email"
                       placeholder={t("Enter email")}
                       className="h-7 text-xs border border-gray-300 py-4 placeholder:text-gray-400"
-                      {...form.getInputProps("email")}
+                      {...register("email")}
                     />
+                    {errors.email && (
+                      <p className="text-[10px] text-destructive mt-0.5">{errors.email.message}</p>
+                    )}
                   </motion.div>
                 </div>
               </motion.div>
@@ -463,11 +521,17 @@ export default function WaInboxContactDetails({
                   {/* Lifecycle Field */}
                   <div className="space-y-1">
                     <label className="text-[11px] text-muted-foreground">{t("Lifecycle")}</label>
-                    <LifecycleSelector
-                      value={form.values.lifecycleId}
-                      onChange={(value) => form.setFieldValue("lifecycleId", value)}
-                      className="w-full"
-                      placeholder={t("Enter lifecycle")}
+                    <Controller
+                      name="lifecycleId"
+                      control={control}
+                      render={({ field }) => (
+                        <LifecycleSelector
+                          value={field.value}
+                          onChange={field.onChange}
+                          className="w-full"
+                          placeholder={t("Enter lifecycle")}
+                        />
+                      )}
                     />
                   </div>
 
@@ -477,18 +541,25 @@ export default function WaInboxContactDetails({
                     <Input
                       placeholder={t("Enter other")}
                       className="h-7 text-xs border border-gray-300 py-4 placeholder:text-gray-400"
-                      {...form.getInputProps("other")}
+                      {...register("other")}
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[11px] text-muted-foreground">{t("Labels")}</label>
-                    <MultiSelect
-                      placeholder={t("Select labels")}
-                      data={contactLabels?.map((label) => ({
-                        value: label.id,
-                        label: label.name,
-                      }))}
-                      {...form.getInputProps("labels")}
+                    <Controller
+                      name="labels"
+                      control={control}
+                      render={({ field }) => (
+                        <MultiSelect
+                          placeholder={t("Select labels")}
+                          options={contactLabels?.map((label) => ({
+                            value: label.id,
+                            label: label.name,
+                          }))}
+                          value={field.value || []}
+                          onValueChange={field.onChange}
+                        />
+                      )}
                     />
                   </div>
                 </div>
@@ -527,11 +598,11 @@ export default function WaInboxContactDetails({
                   type="submit"
                   size="sm"
                   className="w-full h-8 text-xs"
-                  disabled={editContactMutation.isPending || !form.isValid()}
+                  disabled={editContactMutation.isPending || !isValid}
                 >
                   {editContactMutation.isPending ? (
                     <div className="flex items-center gap-2">
-                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       {t("Saving")}...
                     </div>
                   ) : (
@@ -560,7 +631,7 @@ export default function WaInboxContactDetails({
   }
   return (
     <motion.div
-      className="p-3.5 border shrink-0 min-w-[25vw] max-w-[25vw]"
+      className="p-3.5 border shrink-0 min-w-[25vw] max-w-[25vw] flex flex-col h-full bg-background"
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
@@ -604,8 +675,9 @@ export default function WaInboxContactDetails({
           </Tooltip>
         </div>
       </motion.div>
+
       <motion.div
-        className="text-center"
+        className="text-center shrink-0"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
@@ -724,7 +796,9 @@ export default function WaInboxContactDetails({
           <Separator />
 
           {customFields?.length > 0 && (
-            <Stack gap="sm">{customFields.map((field) => renderCustomField(field))}</Stack>
+            <div className="flex flex-col gap-3">
+              {customFields.map((field) => renderCustomField(field))}
+            </div>
           )}
 
           {/* Customer Stats */}

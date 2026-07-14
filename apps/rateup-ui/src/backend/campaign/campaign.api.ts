@@ -41,6 +41,7 @@ export const sendCampaign = async (
   campaignSentAt?: Date,
   status?: CampaignStatus,
   type?: string,
+  dailySendLimit?: number | null,
 ) => {
   return axiosClient.post(`/campaign/${campaignId}/send`, {
     sendToStatuses,
@@ -49,6 +50,7 @@ export const sendCampaign = async (
     sentCampaignChoice,
     status,
     type,
+    dailySendLimit,
   });
 };
 

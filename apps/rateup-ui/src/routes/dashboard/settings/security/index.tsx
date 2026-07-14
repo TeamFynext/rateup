@@ -1,10 +1,12 @@
-import { isNotEmpty, useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AlertTriangle, Eye, EyeOff, Loader2, Lock, Trash2, X } from "lucide-react";
 import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import z from "zod";
 
 import { deleteOrg } from "@/backend/org/org.api";
 import {
@@ -22,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
@@ -52,39 +55,41 @@ function Security() {
   const { user } = useUser();
   const navigate = useNavigate();
 
-  const passwordForm = useForm({
-    initialValues: {
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+
+  const passwordSchema = z
+    .object({
+      existingPassword: z.string().min(1, translations("Enter your existing password")),
+      newPassword: z
+        .string()
+        .min(1, translations("Enter your new password"))
+        .regex(
+          passwordRegex,
+          translations(
+            "Password must be at least 8 characters long, include 1 uppercase, 1 lowercase, 1 number, and 1 special character",
+          ),
+        ),
+      confirmPassword: z.string().min(1, translations("Please confirm your new password")),
+    })
+    .refine((values) => values.confirmPassword === values.newPassword, {
+      path: ["confirmPassword"],
+      message: translations("Passwords do not match"),
+    });
+
+  type PasswordFormValues = z.infer<typeof passwordSchema>;
+
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
       existingPassword: "",
       newPassword: "",
       confirmPassword: "",
     },
-    validate: {
-      existingPassword: isNotEmpty(translations("Enter your existing password")),
-      newPassword: (value) => {
-        if (!value) return translations("Enter your new password");
-
-        const passwordRegex =
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
-
-        if (!passwordRegex.test(value)) {
-          return translations(
-            "Password must be at least 8 characters long, include 1 uppercase, 1 lowercase, 1 number, and 1 special character",
-          );
-        }
-        return null;
-      },
-      confirmPassword: (value, values) => {
-        if (!value) return translations("Please confirm your new password");
-        if (value !== values.newPassword) return translations("Passwords do not match");
-        return null;
-      },
-    },
   });
 
-  const onPasswordSubmit = async (values) => {
+  const onPasswordSubmit = async (values: PasswordFormValues) => {
     setIsLoading(true);
-    const validation = await passwordForm.validate();
-    if (validation.hasErrors) return;
     const data = {
       existingPassword: values.existingPassword,
       newPassword: values.newPassword,
@@ -168,87 +173,101 @@ function Security() {
             {translations("Change Password")}
           </h3>
 
-          <form onSubmit={passwordForm.onSubmit(onPasswordSubmit)} className="space-y-4">
+          <form
+            onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+            className="flex flex-col gap-4"
+          >
             {/* Current Password */}
-            <div className="space-y-1 relative">
-              <Label htmlFor="currentPassword" className="text-sm text-gray-700">
-                {translations("Current Password")}
-              </Label>
-              <div className="relative">
-                <Input
-                  id="currentPassword"
-                  type={showCurrent ? "text" : "password"}
-                  className="h-10 border-2 border-gray-200 focus:border-rateup-blue pr-10"
-                  placeholder={translations("Enter current password")}
-                  {...passwordForm.getInputProps("existingPassword")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrent((prev) => !prev)}
-                  className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
-                  aria-label={showCurrent ? "Hide password" : "Show password"}
-                >
-                  {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+            <Controller
+              name="existingPassword"
+              control={passwordForm.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>{translations("Current Password")}</FieldLabel>
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type={showCurrent ? "text" : "password"}
+                      className="pr-10"
+                      aria-invalid={fieldState.invalid}
+                      placeholder={translations("Enter current password")}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrent((prev) => !prev)}
+                      className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                      aria-label={showCurrent ? "Hide password" : "Show password"}
+                    >
+                      {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
 
             {/* New Password */}
-            <div className="space-y-1 relative">
-              <Label htmlFor="newPassword" className="text-sm text-gray-700">
-                {translations("New Password")}
-              </Label>
-              <div className="relative">
-                <Input
-                  id="newPassword"
-                  type={showNew ? "text" : "password"}
-                  className="h-10 border-2 border-gray-200 focus:border-rateup-blue pr-10"
-                  placeholder={translations("Enter new password")}
-                  {...passwordForm.getInputProps("newPassword")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNew((prev) => !prev)}
-                  className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
-                  aria-label={showNew ? "Hide password" : "Show password"}
-                >
-                  {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+            <Controller
+              name="newPassword"
+              control={passwordForm.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>{translations("New Password")}</FieldLabel>
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type={showNew ? "text" : "password"}
+                      className="pr-10"
+                      aria-invalid={fieldState.invalid}
+                      placeholder={translations("Enter new password")}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNew((prev) => !prev)}
+                      className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                      aria-label={showNew ? "Hide password" : "Show password"}
+                    >
+                      {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
 
             {/* Confirm Password */}
-            <div className="space-y-1 relative">
-              <Label htmlFor="confirmPassword" className="text-sm text-gray-700">
-                {translations("Confirm New Password")}
-              </Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirm ? "text" : "password"}
-                  className="h-10 border-2 border-gray-200 focus:border-rateup-blue pr-10"
-                  placeholder={translations("Confirm new password")}
-                  {...passwordForm.getInputProps("confirmPassword")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm((prev) => !prev)}
-                  className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
-                  aria-label={showConfirm ? "Hide password" : "Show password"}
-                >
-                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              {passwordForm.errors.newPassword && (
-                <p className="text-xs text-red-500">{passwordForm.errors.newPassword}</p>
+            <Controller
+              name="confirmPassword"
+              control={passwordForm.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>
+                    {translations("Confirm New Password")}
+                  </FieldLabel>
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type={showConfirm ? "text" : "password"}
+                      className="pr-10"
+                      aria-invalid={fieldState.invalid}
+                      placeholder={translations("Confirm new password")}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm((prev) => !prev)}
+                      className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                      aria-label={showConfirm ? "Hide password" : "Show password"}
+                    >
+                      {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
               )}
-              {passwordForm.errors.confirmPassword && (
-                <p className="text-xs text-red-500">{passwordForm.errors.confirmPassword}</p>
-              )}
-            </div>
+            />
 
             {/* Info Box */}
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -261,7 +280,7 @@ function Security() {
             </div>
 
             {/* Submit Button */}
-            <Button className="w-full bg-primary" disabled={isLoading}>
+            <Button className="w-full bg-primary" disabled={isLoading} type="submit">
               <Lock className="w-4 h-4 mr-2" />
               {isLoading ? translations("Updating") : translations("Update Password")}
             </Button>

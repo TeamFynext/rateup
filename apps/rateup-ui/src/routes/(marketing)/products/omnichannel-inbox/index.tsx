@@ -93,7 +93,7 @@ export const Route = createFileRoute("/(marketing)/products/omnichannel-inbox/")
 
 function RouteComponent() {
   return (
-    <Layout contentClassName={styles.themeOmnichannel}>
+    <Layout contentClassName={styles.themeOmnichannel} darkNavbar>
       <Hero />
       <SocialProof />
       <Problem />

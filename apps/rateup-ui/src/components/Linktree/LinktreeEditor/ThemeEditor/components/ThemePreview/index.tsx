@@ -1,7 +1,7 @@
-import { Box, Center, Image, Textarea } from "@mantine/core";
 import { useCallback, useRef } from "react";
 
 import { useLinktreeObj } from "@/components/Linktree/LinktreeEditor/LinktreeContext/LinktreeContext.tsx";
+import { Textarea } from "@/components/ui/textarea";
 
 import { imagesPath } from "../../../../../HomePage/constants.tsx";
 import PreviewDeviceSelector from "../../../../../Survey/SurveyTheme/components/PreviewDeviceSelector/index.tsx";
@@ -62,7 +62,7 @@ function ThemePreview() {
   };
 
   return (
-    <Box className={styles["theme-preview-container"]}>
+    <div className={styles["theme-preview-container"]}>
       <PreviewDeviceSelector
         value={selectedPreviewDevice}
         onChange={setSelectedPreviewDevice}
@@ -70,59 +70,51 @@ function ThemePreview() {
         className={styles["preview-device-selector"]}
       />
 
-      <Box
+      <div
         className={`${styles["preview-div"]} ${selectedPreviewDevice === "mobile" ? styles["preview-div-mobile"] : ""}`}
         style={backgroundStylesObj}
         ref={previewDivRef}
       >
         {!links.length ? (
-          <Center h={"100%"} w={"100%"}>
+          <div className="flex size-full items-center justify-center">
             <p>
               <span>Add Links</span>
               <span> to view the preview</span>
             </p>
-          </Center>
+          </div>
         ) : (
           <>
-            <Box className={styles["logo-img-container"]}>
+            <div className={styles["logo-img-container"]}>
               {logoUrl ? (
-                <Image src={logoUrl} alt="logo" style={{ ...logoStyles, objectFit: "contain" }} />
+                <img src={logoUrl} alt="logo" style={{ ...logoStyles, objectFit: "contain" }} />
               ) : (
-                <Image
+                <img
                   src={`${imagesPath}/camera-off.svg`}
                   alt="logo"
                   style={{ ...logoStyles, objectFit: "contain" }}
                 />
               )}
-            </Box>
+            </div>
 
-            <Box className={styles["title-textarea-div-container"]}>
+            <div className={styles["title-textarea-div-container"]}>
               <Textarea
                 className={styles["title-textarea-div"]}
                 style={titleStyles}
                 value={titleText}
                 onChange={handleTitleTextChange}
-                autosize
-                styles={{
-                  input: titleStyles,
-                }}
               />
-            </Box>
+            </div>
 
-            <Box className={styles["subtitle-textarea-div-container"]}>
+            <div className={styles["subtitle-textarea-div-container"]}>
               <Textarea
                 className={styles["subtitle-textarea-div"]}
-                style={titleStyles}
+                style={subtitleStyles}
                 value={subtitleText}
                 onChange={handleSubtitleTextChange}
-                autosize
-                styles={{
-                  input: subtitleStyles,
-                }}
               />
-            </Box>
+            </div>
 
-            <Box className={styles["links-list-container"]}>
+            <div className={styles["links-list-container"]}>
               {links.map(({ id, linkDisplayName, linkUrl }) => {
                 return (
                   <a
@@ -136,13 +128,13 @@ function ThemePreview() {
                   </a>
                 );
               })}
-            </Box>
+            </div>
           </>
         )}
 
         <UnsplashCreditText url={backgroundImageUrl} />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }
 

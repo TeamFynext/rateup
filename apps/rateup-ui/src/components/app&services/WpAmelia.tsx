@@ -1,7 +1,7 @@
-import { ActionIcon, Group, Skeleton, Stack, Title } from "@mantine/core";
-import { schemaResolver, useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { IconTrash } from "@tabler/icons-react";
 import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -12,13 +12,13 @@ import {
   useIntegrationByType,
   useUpdateIntegrationMutation,
 } from "@/backend/appsIntegration/integration.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
-import {
-  ContainedNumberInput,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { IntegratedApps } from "@/types/enums.ts";
+
+import { Card } from "../ui/card";
 
 export function WpAmelia() {
   const { data, isPending } = useIntegrationByType(IntegratedApps.amelia);
@@ -38,19 +38,15 @@ export function WpAmelia() {
     serviceId: 3,
   };
   const form = useForm<z.infer<typeof schema>>({
-    initialValues: initialValues,
-    validate: schemaResolver(schema, { sync: true }),
+    resolver: zodResolver(schema),
+    defaultValues: initialValues,
   });
 
   useEffect(() => {
-    form.setValues(data?.credential ?? initialValues);
-    form.resetDirty();
+    form.reset(data?.credential ?? initialValues);
   }, [data]);
 
   const handleSave = () => {
-    const { hasErrors } = form.validate();
-    if (hasErrors) return;
-
     if (data?.id) {
       updateIntegrationMutation.mutate({
         credential: {
@@ -70,42 +66,79 @@ export function WpAmelia() {
     }
   };
   return (
-    <Stack p={"xl"}>
-      <Title order={3}>{translations("Amelia Config")}</Title>
-      <PaperLayout>
+    <div className="flex flex-col gap-4 p-8">
+      <h3 className="text-xl font-semibold">{translations("Amelia Config")}</h3>
+      <Card className="p-4">
         {isPending ||
         createIntegrationMutation?.isPending ||
         updateIntegrationMutation?.isPending ? (
-          <Skeleton w={500} h={30} />
+          <Skeleton className="h-8 w-125" />
         ) : (
-          <Stack w={500}>
-            <ContainedTextField
-              label={translations("Amelia")}
-              placeholder={translations("Enter your api key")}
-              {...form.getInputProps("apiKey")}
+          <FieldGroup className="w-125 gap-4">
+            <Controller
+              name="apiKey"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>{translations("Amelia")}</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    placeholder={translations("Enter your api key")}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
 
-            <ContainedTextField
-              label={translations("Amelia base url")}
-              placeholder={translations("Enter your base url")}
-              type="url"
-              {...form.getInputProps("baseUrl")}
+            <Controller
+              name="baseUrl"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>{translations("Amelia base url")}</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    type="url"
+                    aria-invalid={fieldState.invalid}
+                    placeholder={translations("Enter your base url")}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
-            <ContainedNumberInput
-              label={translations("serviceId")}
-              placeholder={translations("Enter serviceId")}
-              {...form.getInputProps("serviceId")}
-              min={0}
+            <Controller
+              name="serviceId"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>{translations("serviceId")}</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    type="number"
+                    min={0}
+                    aria-invalid={fieldState.invalid}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    placeholder={translations("Enter serviceId")}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
-            <Group justify="space-between">
-              <RateupButtonPrimary
-                title={translations("save")}
-                onClick={handleSave}
-                disabled={!form.isDirty()}
-              />
-              <ActionIcon
-                loading={deleteIntegrationMutation?.isPending}
-                disabled={!data?.credential?.apiKey && !data?.credential?.base}
+            <div className="flex items-center justify-between">
+              <Button onClick={form.handleSubmit(handleSave)} disabled={!form.formState.isDirty}>
+                {translations("save")}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={
+                  deleteIntegrationMutation?.isPending ||
+                  (!data?.credential?.apiKey && !data?.credential?.base)
+                }
                 onClick={() => {
                   toast.loading(translations("Deleting.."), {
                     id: "integration-delete",
@@ -114,11 +147,11 @@ export function WpAmelia() {
                 }}
               >
                 <IconTrash />
-              </ActionIcon>
-            </Group>
-          </Stack>
+              </Button>
+            </div>
+          </FieldGroup>
         )}
-      </PaperLayout>
-    </Stack>
+      </Card>
+    </div>
   );
 }

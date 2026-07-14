@@ -80,6 +80,13 @@ const formSchema = z.object({
   flowId: z.string().optional(),
   dynamicTags: z.array(z.string()).optional(),
   useUserConsent: z.boolean(),
+  // Empty string means "no cap"; coerced to null on submit.
+  dailySendLimit: z
+    .string()
+    .optional()
+    .refine((v) => !v || (/^\d+$/.test(v) && Number(v) > 0), {
+      error: "Daily send limit must be a whole number of at least 1",
+    }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -109,6 +116,7 @@ const CreateCampaignModal = ({
       flowId: campaign?.flowId || "",
       dynamicTags: campaign?.dynamicTags || [],
       useUserConsent: campaign?.useUserConsent ?? true,
+      dailySendLimit: campaign?.dailySendLimit ? String(campaign.dailySendLimit) : "",
     },
   });
 
@@ -139,6 +147,7 @@ const CreateCampaignModal = ({
         flowId: campaign?.flowId || "",
         dynamicTags: campaign?.dynamicTags || [],
         useUserConsent: campaign?.useUserConsent ?? true,
+        dailySendLimit: campaign?.dailySendLimit ? String(campaign.dailySendLimit) : "",
       });
 
       if (campaign?.dripStages && campaign.dripStages.length > 0) {
@@ -322,6 +331,9 @@ const CreateCampaignModal = ({
 
       const submitData: any = { ...values };
 
+      // The API takes a positive int or null; the form holds it as a string.
+      submitData.dailySendLimit = values.dailySendLimit ? Number(values.dailySendLimit) : null;
+
       if (values.type === CampaignType.DRIP) {
         submitData.dripStages = dripStages.map((stage) => {
           const processedStage: any = { ...stage };
@@ -499,6 +511,35 @@ const CreateCampaignModal = ({
                       />
                     </CardContent>
                   </Card>
+
+                  <Controller
+                    control={form.control}
+                    name="dailySendLimit"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>{t("Daily Send Limit")}</FieldLabel>
+                        <Input
+                          id={field.name}
+                          type="number"
+                          min={1}
+                          step={1}
+                          placeholder={t("No limit")}
+                          aria-invalid={fieldState.invalid}
+                          {...field}
+                        />
+                        <FieldDescription className="text-xs">
+                          {campaignType === CampaignType.DRIP
+                            ? t(
+                                "Max messages sent per day for each stage. Leave empty to send to everyone at once.",
+                              )
+                            : t(
+                                "Max messages sent per day. Leave empty to send to everyone at once.",
+                              )}
+                        </FieldDescription>
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
 
                   {campaignType === CampaignType.DRIP && (
                     <Alert>

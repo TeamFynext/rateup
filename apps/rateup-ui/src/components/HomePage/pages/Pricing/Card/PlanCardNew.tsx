@@ -1,4 +1,4 @@
-import { Spoiler, Stack } from "@mantine/core";
+import { Spoiler } from "@mantine/core";
 import { IconFlame } from "@tabler/icons-react";
 import { CheckCircle2 } from "lucide-react";
 
@@ -56,7 +56,7 @@ const PlanCardNew = ({ plan, onButtonClick }) => {
           </ul>
         </Spoiler>
       </div>
-      <Stack gap={1}>
+      <div className="flex flex-col gap-px">
         {plan.name === "FREE PLAN" && (
           <span className="text-sm font-medium text-[#1c518e] mt-5">*No credit card needed</span>
         )}
@@ -74,7 +74,7 @@ const PlanCardNew = ({ plan, onButtonClick }) => {
               ? `Start  ${plan?.trialDays} Days Free trial`
               : "Subscribe Now"}
         </button>
-      </Stack>
+      </div>
     </div>
   );
 };

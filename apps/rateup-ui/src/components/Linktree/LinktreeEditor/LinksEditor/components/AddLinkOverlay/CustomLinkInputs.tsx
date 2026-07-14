@@ -1,20 +1,45 @@
-import { TextInput } from "@mantine/core";
+import { type Control, Controller } from "react-hook-form";
 
-function CustomLinkInputs({ form }) {
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+
+import type { CustomLinkFormValues } from "./AddLinkModal.tsx";
+
+function CustomLinkInputs({ control }: { control: Control<CustomLinkFormValues> }) {
   return (
     <>
-      <TextInput
-        label="Link Display name"
-        placeholder="Enter Link Display Name"
-        {...form.getInputProps("linkDisplayName")}
-        withAsterisk
+      <Controller
+        name="linkDisplayName"
+        control={control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>Link Display name</FieldLabel>
+            <Input
+              {...field}
+              id={field.name}
+              placeholder="Enter Link Display Name"
+              aria-invalid={fieldState.invalid}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
       />
 
-      <TextInput
-        label="Link Url"
-        placeholder="Enter Url"
-        {...form.getInputProps("linkUrl")}
-        withAsterisk
+      <Controller
+        name="linkUrl"
+        control={control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>Link Url</FieldLabel>
+            <Input
+              {...field}
+              id={field.name}
+              placeholder="Enter Url"
+              aria-invalid={fieldState.invalid}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
       />
     </>
   );

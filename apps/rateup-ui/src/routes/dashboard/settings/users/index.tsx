@@ -1,4 +1,4 @@
-import { useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -24,9 +24,11 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
+import z from "zod";
 
 import { useAllTeamsMembersOfOrg, useUpdateRoleMutation } from "@/backend/org/org.query";
 import { inviteTeamMember } from "@/backend/team/team.api";
@@ -118,23 +120,26 @@ function UsersPage() {
   const { isLoading: isLoadingTeamsUser, data: teamsDataUser } = useTeamsByUser();
 
   // Form setup
-  const userForm = useForm({
-    initialValues: {
+  const userFormSchema = z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, translations("Name is required"))
+      .min(2, translations("Name is too short")),
+    email: z
+      .string()
+      .trim()
+      .min(1, translations("Email is required"))
+      .regex(/^\S+@\S+$/, translations("Please enter a valid email address")),
+    team: z.string(),
+  });
+
+  const userForm = useForm<z.infer<typeof userFormSchema>>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: {
       name: "",
       email: "",
       team: "none",
-    },
-    validate: {
-      name: (value) => {
-        if (!value.trim()) return translations("Name is required");
-        if (value.trim().length < 2) return translations("Name is too short");
-        return null;
-      },
-      email: (value) => {
-        if (!value.trim()) return translations("Email is required");
-        if (!/^\S+@\S+$/.test(value)) return translations("Please enter a valid email address");
-        return null;
-      },
     },
   });
 
@@ -194,21 +199,22 @@ function UsersPage() {
   useEffect(() => {
     const teams = teamsDataUser?.data;
     if (teams && teams.length > 0) {
-      userForm.setFieldValue("team", teams[0].id);
+      userForm.setValue("team", teams[0].id);
     } else {
-      userForm.setFieldValue("team", "none");
+      userForm.setValue("team", "none");
     }
   }, [teamsDataUser]);
 
   const handleMemberInvite = async () => {
     const { orgId } = await getOrgIdRole();
     const { userId } = await getUserID();
+    const values = userForm.getValues();
     const inviteData = {
-      name: userForm.values.name,
-      email: userForm.values.email,
+      name: values.name,
+      email: values.email,
       orgId,
       invitedBy: userId,
-      teamId: userForm.values.team === "none" ? null : userForm.values.team,
+      teamId: values.team === "none" ? null : values.team,
       type: "TEAM",
     };
     return (await inviteTeamMember(inviteData)).data;
@@ -292,7 +298,7 @@ function UsersPage() {
               </DialogHeader>
 
               <form
-                onSubmit={userForm.onSubmit(() => addResourceMutation.mutate())}
+                onSubmit={userForm.handleSubmit(() => addResourceMutation.mutate())}
                 className="space-y-4 py-3"
               >
                 <div className="grid grid-cols-[180px_1fr] gap-6">
@@ -341,15 +347,26 @@ function UsersPage() {
                         <Label htmlFor="new-name" className="text-xs">
                           {translations("Full Name")} <span className="text-red-500">*</span>
                         </Label>
-                        <Input
-                          id="new-name"
-                          placeholder="John Doe"
-                          className="h-9"
-                          {...userForm.getInputProps("name")}
+                        <Controller
+                          name="name"
+                          control={userForm.control}
+                          render={({ field, fieldState }) => (
+                            <>
+                              <Input
+                                {...field}
+                                id="new-name"
+                                placeholder="John Doe"
+                                className="h-9"
+                                aria-invalid={fieldState.invalid}
+                              />
+                              {fieldState.error && (
+                                <p className="text-xs text-red-500 mt-1">
+                                  {fieldState.error.message}
+                                </p>
+                              )}
+                            </>
+                          )}
                         />
-                        {userForm.errors.name && (
-                          <p className="text-xs text-red-500 mt-1">{userForm.errors.name}</p>
-                        )}
                       </div>
 
                       <div className="space-y-1.5">
@@ -373,17 +390,32 @@ function UsersPage() {
                       </Label>
                       <div className="relative">
                         <Mail className="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="new-email"
-                          type="email"
-                          placeholder="john@company.com"
-                          className="h-9 pl-9"
-                          {...userForm.getInputProps("email")}
+                        <Controller
+                          name="email"
+                          control={userForm.control}
+                          render={({ field, fieldState }) => (
+                            <Input
+                              {...field}
+                              id="new-email"
+                              type="email"
+                              placeholder="john@company.com"
+                              className="h-9 pl-9"
+                              aria-invalid={fieldState.invalid}
+                            />
+                          )}
                         />
                       </div>
-                      {userForm.errors.email && (
-                        <p className="text-xs text-red-500 mt-1">{userForm.errors.email}</p>
-                      )}
+                      <Controller
+                        name="email"
+                        control={userForm.control}
+                        render={({ fieldState }) =>
+                          fieldState.error ? (
+                            <p className="text-xs text-red-500 mt-1">{fieldState.error.message}</p>
+                          ) : (
+                            <></>
+                          )
+                        }
+                      />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -442,8 +474,8 @@ function UsersPage() {
                           <div className="h-9 w-full rounded-md bg-muted animate-pulse" />
                         ) : (
                           <Select
-                            value={userForm.values.team}
-                            onValueChange={(value) => userForm.setFieldValue("team", value)}
+                            value={userForm.watch("team")}
+                            onValueChange={(value) => userForm.setValue("team", value)}
                             items={[
                               { value: "none", label: translations("No Team") },
                               ...(teamsDataUser?.data?.map((team: TeamOption) => ({

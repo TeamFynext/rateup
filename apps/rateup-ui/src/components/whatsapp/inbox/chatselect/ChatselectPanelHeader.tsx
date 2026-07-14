@@ -116,7 +116,7 @@ const ChatselectPanelHeader = ({
       )}
       <div className="flex flex-col">
         {/* Row 1: Title and Actions */}
-        <div className="flex h-14 shrink-0 items-center justify-between gap-2.5 border-b px-4 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex h-14 py-1 shrink-0 items-center justify-between gap-2.5 border-b border-border bg-background px-4">
           <span className="text-[15px] font-extrabold whitespace-nowrap capitalize text-slate-900 dark:text-slate-100">
             {tab}
           </span>
@@ -263,7 +263,7 @@ const ChatselectPanelHeader = ({
         </div>
 
         {/* Row 2: Sort */}
-        <div className="flex items-center justify-between gap-2 border-b px-4 py-2.5 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex items-center justify-between gap-2 border-b border-border bg-background px-4 py-2.5">
           <div className="flex gap-0.5 rounded-full p-[3px] bg-slate-50 dark:bg-slate-800">
             <button
               onClick={() => setFilter({ ...filter, assignedUserIds: [] })}
@@ -297,10 +297,10 @@ const ChatselectPanelHeader = ({
               value={filter?.sortBy}
               onChange={(value) => setFilter({ ...filter, sortBy: value })}
               defaultValue="newest"
-              selectTriggerClassName="h-auto w-auto gap-1 border-0 bg-transparent p-0 text-xs text-slate-500 dark:text-slate-400 shadow-none hover:bg-transparent"
+              selectTriggerClassName="h-auto w-auto gap-1 border-0 bg-transparent px-2 text-xs text-slate-500 dark:text-slate-400 shadow-none hover:bg-transparent"
               customSelectTrigger={
                 <div className="flex items-center gap-1">
-                  Sort <ChevronDown className="size-[13px]" />
+                  Sort <ChevronDown className="size-3.25" />
                 </div>
               }
             />

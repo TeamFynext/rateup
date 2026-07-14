@@ -201,7 +201,7 @@ export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")(
 function LoyaltyLandingPage() {
   useRevealAnimation();
   return (
-    <Layout contentClassName={styles.themeLoyalty} navbarClassName="heroNav">
+    <Layout contentClassName={styles.themeLoyalty} navbarClassName="heroNav" darkNavbar>
       <div className="loyalty-scope">
         <span id="top"></span>
         <Hero />

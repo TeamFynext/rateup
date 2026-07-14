@@ -1,5 +1,13 @@
-import { Box, Divider, Select } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 import { useSelectedEditor, useSetSelectedEditor } from "../../ThemeContext/ThemeContext.tsx";
 import BackgroundEditor from "./components/BackgroundEditor/index.tsx";
@@ -10,10 +18,6 @@ import TitleEditor from "./components/TitleEditor/index.tsx";
 import { editorsList } from "./constants.tsx";
 
 import styles from "./ThemeStylesEditor.module.css";
-
-function RenderOption({ option }) {
-  return <Box>{option.label}</Box>;
-}
 
 function ThemeStyles() {
   const selectedEditor = useSelectedEditor();
@@ -44,23 +48,23 @@ function ThemeStyles() {
   }
 
   return (
-    <Box className={styles["theme-styles-div"]}>
-      <Select
-        className={styles["editor-select-dropdown"]}
-        value={selectedEditor}
-        data={editorsList}
-        onChange={setSelectedEditor}
-        leftSection={<IconEdit width={"1rem"} />}
-        renderOption={RenderOption}
-        classNames={{
-          option: styles["editor-select-dropdown-option"],
-          input: styles["editor-selector-dropdown-input"],
-        }}
-        allowDeselect={false}
-      />
-      <Divider />
-      <Box className={styles["editor-container"]}>{componentToBeRendered}</Box>
-    </Box>
+    <div className={styles["theme-styles-div"]}>
+      <Select value={selectedEditor} items={editorsList} onValueChange={setSelectedEditor}>
+        <SelectTrigger className={styles["editor-select-dropdown"]}>
+          <IconEdit width={"1rem"} />
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {editorsList.map((editor) => (
+            <SelectItem key={editor.value} value={editor.value}>
+              {editor.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Separator />
+      <div className={styles["editor-container"]}>{componentToBeRendered}</div>
+    </div>
   );
 }
 

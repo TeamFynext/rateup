@@ -1,18 +1,48 @@
-import { ActionIcon, Box, Button, Modal, Select } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { IconX } from "@tabler/icons-react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 
 import { linkTypeOptions } from "../../constants.tsx";
 import CustomLinkInputs from "./CustomLinkInputs.tsx";
 import SurveyTypeDropdowns from "./SurveyTypeDropdowns.tsx";
 
 import styles from "./AddLinkModal.module.css";
+
+const customLinkFormSchema = z.object({
+  linkDisplayName: z.string().min(1, "Link dispaly name is required."),
+  linkUrl: z
+    .string()
+    .min(1, "Link url is required.")
+    .refine(
+      (value) => {
+        try {
+          new URL(value);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: "Please enter a valid url" },
+    ),
+});
+
+export type CustomLinkFormValues = z.infer<typeof customLinkFormSchema>;
 
 function AddLinkModal({ title, opened, onClose, links }) {
   const queryClient = useQueryClient();
@@ -34,26 +64,12 @@ function AddLinkModal({ title, opened, onClose, links }) {
     wsOrWasLinkDisplayNameErr: "",
   });
 
-  // CustomLinkInputs states
-  const customLinksInputsForm = useForm({
-    initialValues: {
+  // CustomLinkInputs form
+  const customLinksInputsForm = useForm<CustomLinkFormValues>({
+    resolver: zodResolver(customLinkFormSchema),
+    defaultValues: {
       linkDisplayName: "",
       linkUrl: "",
-    },
-    validate: {
-      linkDisplayName: (value) => {
-        if (value) return null;
-        else return "Link dispaly name is required.";
-      },
-      linkUrl: (value) => {
-        if (value) {
-          try {
-            new URL(value);
-          } catch {
-            return "Please enter a valid url";
-          }
-        } else return "Link url is required.";
-      },
     },
   });
 
@@ -76,7 +92,6 @@ function AddLinkModal({ title, opened, onClose, links }) {
 
   const validateDropdownValues = useCallback(() => {
     let isValid = true;
-    // const dropdownErrors = {};
     const newErrState = {};
     if (selectedSurveyTitle) {
       newErrState["selectedSurveyTitleErr"] = "";
@@ -127,7 +142,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
         onClose();
       }
     } else {
-      const isCustomInputsValid = !customLinksInputsForm.validate().hasErrors;
+      const isCustomInputsValid = await customLinksInputsForm.trigger();
       if (isCustomInputsValid) {
         const reqBody = {
           shortUrlId,
@@ -135,7 +150,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
             ...links,
             {
               id: uuidv4(),
-              ...customLinksInputsForm.values,
+              ...customLinksInputsForm.getValues(),
             },
           ],
         };
@@ -166,64 +181,64 @@ function AddLinkModal({ title, opened, onClose, links }) {
   }, [selectedSurveyTitle, selectedTeam, wsOrWasLinkDisplayName]);
 
   return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      radius="lg"
-      centered
-      className={`${styles["addlink-overlay-div"]} ${opened ? styles["opened"] : styles["closed"]}`}
-      classNames={{
-        header: styles["modal-header"],
-        body: styles["modal-body"],
+    <Dialog
+      open={opened}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
       }}
     >
-      <Box className={styles["header"]}>
-        <h1 className={styles["title"]}>{title}</h1>
-        <ActionIcon
-          className={styles["close-btn"]}
-          onClick={() => {
-            onClose();
-          }}
-        >
-          <IconX />
-        </ActionIcon>
-      </Box>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-center">{title}</DialogTitle>
+        </DialogHeader>
 
-      <Box className={styles["body"]}>
-        <Select
-          value={selectedLinkType}
-          label={"Select Link type"}
-          placeholder="Select Link Type"
-          data={linkTypeOptions}
-          onChange={handleSelectedLinkTypeDropdownChange}
-          allowDeselect={false}
-        />
+        <div className={styles["body"]}>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="link-type">Select Link type</Label>
+            <Select
+              value={selectedLinkType}
+              onValueChange={handleSelectedLinkTypeDropdownChange}
+              items={linkTypeOptions}
+            >
+              <SelectTrigger id="link-type" className="w-full">
+                <SelectValue placeholder="Select Link Type" />
+              </SelectTrigger>
+              <SelectContent>
+                {linkTypeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        {selectedLinkType !== "custom-link" ? (
-          <SurveyTypeDropdowns
-            selectedLinkType={selectedLinkType}
-            selectedSurveyTitle={selectedSurveyTitle}
-            onSurveyTitleDDChange={setSelectedSurveyTitle}
-            surveyTitleAutoCompleteSearch={surveyTitleAutoCompleteSearch}
-            onSurveyTitleAutoCompleteSearchChange={setSurveyTitleAutoCompleteSearch}
-            onLinkDisplayNameChange={setWsOrWasLinkDisplayName}
-            linkDisplayName={wsOrWasLinkDisplayName}
-            selectedTeam={selectedTeam}
-            onSelectedTeamDDChange={setSelectedTeam}
-            errors={dropdownErrors}
-          />
-        ) : (
-          <CustomLinkInputs form={customLinksInputsForm} />
-        )}
+          {selectedLinkType !== "custom-link" ? (
+            <SurveyTypeDropdowns
+              selectedLinkType={selectedLinkType}
+              selectedSurveyTitle={selectedSurveyTitle}
+              onSurveyTitleDDChange={setSelectedSurveyTitle}
+              surveyTitleAutoCompleteSearch={surveyTitleAutoCompleteSearch}
+              onSurveyTitleAutoCompleteSearchChange={setSurveyTitleAutoCompleteSearch}
+              onLinkDisplayNameChange={setWsOrWasLinkDisplayName}
+              linkDisplayName={wsOrWasLinkDisplayName}
+              selectedTeam={selectedTeam}
+              onSelectedTeamDDChange={setSelectedTeam}
+              errors={dropdownErrors}
+            />
+          ) : (
+            <CustomLinkInputs control={customLinksInputsForm.control} />
+          )}
 
-        <Box className={styles["cancel-save-btns-container"]}>
-          <Button onClick={onClose} className={styles["cancel-btn"]}>
-            Cancel
-          </Button>
-          <Button onClick={onAddBtnClick}>Add</Button>
-        </Box>
-      </Box>
-    </Modal>
+          <div className={styles["cancel-save-btns-container"]}>
+            <Button variant="outline" onClick={onClose} className={styles["cancel-btn"]}>
+              Cancel
+            </Button>
+            <Button onClick={onAddBtnClick}>Add</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

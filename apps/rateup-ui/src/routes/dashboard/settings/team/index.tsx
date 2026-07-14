@@ -1,9 +1,11 @@
-import { useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ChevronRight, Plus, RefreshCcw, User, Users } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import z from "zod";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useCreateTeamMutation, useTeamsByUser } from "@/backend/team/team.query";
@@ -19,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
@@ -150,43 +153,48 @@ function Team() {
     const index = teamsData.data.length;
     return colorArray[index % colorArray.length].from;
   };
-  const createTeamForm = useForm({
-    initialValues: {
+  const createTeamSchema = z.object({
+    name: z.string().min(3, translations("Team Name should be at least 3 characters long")),
+    code: z.string().superRefine((value, ctx) => {
+      if (value.length < 2) {
+        ctx.addIssue({
+          code: "custom",
+          message: translations("Team Code should be at least 2 characters long"),
+        });
+        return;
+      }
+
+      if (/\s/.test(value)) {
+        const suggested = value.trim().replace(/\s+/g, "-");
+        ctx.addIssue({
+          code: "custom",
+          message: `${translations("Spaces are not allowed, try")} "${suggested}"`,
+        });
+        return;
+      }
+
+      if (!/^[A-Za-z0-9-]+$/.test(value)) {
+        ctx.addIssue({
+          code: "custom",
+          message: translations("Team Code can contain only alphabets, numbers, and hyphens"),
+        });
+      }
+    }),
+    color: z.string(),
+  });
+
+  type CreateTeamFormValues = z.infer<typeof createTeamSchema>;
+
+  const createTeamForm = useForm<CreateTeamFormValues>({
+    resolver: zodResolver(createTeamSchema),
+    defaultValues: {
       name: "",
       code: "",
       color: "",
     },
-
-    validate: {
-      name: (value) => {
-        if (value.length < 3) {
-          return translations("Team Name should be at least 3 characters long");
-        }
-        return null;
-      },
-
-      code: (value) => {
-        if (value.length < 2) {
-          return translations("Team Code should be at least 2 characters long");
-        }
-
-        if (/\s/.test(value)) {
-          const suggested = value.trim().replace(/\s+/g, "-");
-          return (
-            <p className="flex gap-1">
-              {translations("Spaces are not allowed, try")}"{suggested}"
-            </p>
-          );
-        }
-
-        if (!/^[A-Za-z0-9-]+$/.test(value)) {
-          return translations("Team Code can contain only alphabets, numbers, and hyphens");
-        }
-
-        return null;
-      },
-    },
   });
+
+  const colorValue = createTeamForm.watch("color");
 
   const createTeamMutation = useCreateTeamMutation(
     setIsCreateTeamDialogOpen,
@@ -194,7 +202,7 @@ function Team() {
     setIsCreating,
   );
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (values: CreateTeamFormValues) => {
     setIsCreating(true);
     toast.loading(
       `${translations("Hold on, Your team")} '${values?.name}' ${translations("is getting created.")}`,
@@ -209,7 +217,7 @@ function Team() {
   };
   useEffect(() => {
     if (action === "create") {
-      open();
+      setIsCreateTeamDialogOpen(true);
     }
   }, [action]);
 
@@ -238,7 +246,7 @@ function Team() {
           <Button
             className="bg-primary hover:shadow-lg transition-all"
             onClick={() => {
-              createTeamForm.setValues({
+              createTeamForm.reset({
                 name: "",
                 code: "",
                 color: getDefaultColor(),
@@ -340,99 +348,98 @@ function Team() {
                 )}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="team-name">{translations("Team Name")}</Label>
-                <Input
-                  id="team-name"
-                  placeholder="e.g., Customer Support Team"
-                  className="h-10 border-2 border-gray-200 focus:border-rateup-blue"
-                  {...createTeamForm.getInputProps("name")}
-                />
-                {createTeamForm.errors.name && (
-                  <p className="text-xs text-red-500">{createTeamForm.errors.name}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="team-name">{translations("Team Code")}</Label>
-                <Input
-                  id="team-code"
-                  placeholder="e.g., TEAM"
-                  className="h-10 border-2 border-gray-200 focus:border-rateup-blue"
-                  {...createTeamForm.getInputProps("code")}
-                />
-                {createTeamForm.errors.code && (
-                  <p className="text-xs text-red-500">{createTeamForm.errors.code}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>{translations("Team Color")}</Label>
-                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                  {colorArray.map((color, index) => {
-                    const isSelected = createTeamForm.values.color === color.from;
-                    return (
-                      <button
-                        key={index}
-                        type="button"
-                        className={`w-full aspect-square rounded-lg border-2 ${
-                          isSelected ? "border-black scale-105" : "border-transparent"
-                        } transition-all hover:scale-105`}
-                        style={{
-                          background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
-                        }}
-                        onClick={() => createTeamForm.setFieldValue("color", color.from)}
+            <form onSubmit={createTeamForm.handleSubmit(handleSubmit)}>
+              <div className="flex flex-col gap-4 py-4">
+                <Controller
+                  name="name"
+                  control={createTeamForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>{translations("Team Name")}</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="e.g., Customer Support Team"
                       />
-                    );
-                  })}
-                </div>
-              </div>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
 
-              {/* Feature Access */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>{translations("Feature Access")}</Label>
-                  <button
-                    type="button"
-                    onClick={toggleAll}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    {allEnabled ? translations("Disable All") : translations("Enable All")}
-                  </button>
+                <Controller
+                  name="code"
+                  control={createTeamForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>{translations("Team Code")}</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="e.g., TEAM"
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
+
+                <div className="flex flex-col gap-2">
+                  <Label>{translations("Team Color")}</Label>
+                  <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                    {colorArray.map((color, index) => {
+                      const isSelected = colorValue === color.from;
+                      return (
+                        <button
+                          key={index}
+                          type="button"
+                          className={`w-full aspect-square rounded-lg border-2 ${
+                            isSelected ? "border-black scale-105" : "border-transparent"
+                          } transition-all hover:scale-105`}
+                          style={{
+                            background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
+                          }}
+                          onClick={() => createTeamForm.setValue("color", color.from)}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                  {availableFeatures.map(({ feature, label }) => (
-                    <div
-                      key={feature}
-                      className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm"
+
+                {/* Feature Access */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label>{translations("Feature Access")}</Label>
+                    <button
+                      type="button"
+                      onClick={toggleAll}
+                      className="text-xs text-primary hover:underline"
                     >
-                      <span className="text-muted-foreground">{label}</span>
-                      <Switch
-                        checked={selectedFeatures.has(feature)}
-                        onCheckedChange={() => toggleFeature(feature)}
-                      />
-                    </div>
-                  ))}
+                      {allEnabled ? translations("Disable All") : translations("Enable All")}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                    {availableFeatures.map(({ feature, label }) => (
+                      <div
+                        key={feature}
+                        className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm"
+                      >
+                        <span className="text-muted-foreground">{label}</span>
+                        <Switch
+                          checked={selectedFeatures.has(feature)}
+                          onCheckedChange={() => toggleFeature(feature)}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-            <DialogFooter>
-              <Button
-                disabled={isCreating}
-                className="bg-primary"
-                onClick={() => {
-                  const values = createTeamForm.values;
-
-                  // Validate first
-                  const validation = createTeamForm.validate();
-                  if (validation.hasErrors) return; // stop if validation fails
-
-                  handleSubmit(values);
-                }}
-              >
-                {isCreating ? translations("Creating") : translations("Create Team")}
-              </Button>
-            </DialogFooter>
+              <DialogFooter>
+                <Button type="submit" disabled={isCreating} className="bg-primary">
+                  {isCreating ? translations("Creating") : translations("Create Team")}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       )}

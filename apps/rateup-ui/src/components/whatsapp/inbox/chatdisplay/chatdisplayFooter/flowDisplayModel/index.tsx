@@ -1,19 +1,19 @@
-import { Badge, Group, Loader, Radio, Stack, Title } from "@mantine/core";
 import { IconSend } from "@tabler/icons-react";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useSendFlowToUser, useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { RadioGroup } from "@/components/ui/radio-group.tsx";
 import { WaFlowStatus } from "@/types/enums.ts";
 
-import { RateupButtonPrimary } from "../../../../../Button/RateupButtons.tsx";
 import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout.tsx";
 import NothingFound from "../../../../../NothingFound/NothingFound.tsx";
 import { usePhoneIdStore } from "../../../chatselect/accountSelectorStore.ts";
 import WaInboxFlowSelectCard from "./flowSelectCard/index.tsx";
-
-import classes from "./styles.module.css";
 
 interface Props {
   sessionExpired: boolean;
@@ -21,6 +21,7 @@ interface Props {
   opened: boolean;
   close: () => void;
 }
+
 export default function WaInboxFlowDisplayModal(props: Props) {
   const [selectedDbFlowId, setSelectedDbFlowId] = useState<string>("");
   const { data, isLoading, error } = useWaFlowsFromDb();
@@ -51,48 +52,62 @@ export default function WaInboxFlowDisplayModal(props: Props) {
   }
   const acceptedFlows = data?.filter((flow) => flow?.status === WaFlowStatus.PUBLISHED);
   return (
-    <SimpleModalLayout
-      {...{
-        opened: props?.opened,
-        onClose,
-        title: "Send Flow",
-        centered: true,
-      }}
-    >
-      {isLoading && <Loader />}
-      {error && <Badge color="red">{translations("Error")}</Badge>}
+    <SimpleModalLayout opened={props?.opened} onClose={onClose} title="Send Flow" centered={true}>
+      {isLoading && (
+        <div className="flex items-center justify-center p-6">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
+      {error && (
+        <div className="mb-4">
+          <Badge variant="destructive">{translations("Error")}</Badge>
+        </div>
+      )}
       {data && acceptedFlows.length > 0 ? (
         <>
-          <Stack className={classes.inner}>
+          <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto p-1">
             <TeamSelector
               label="Select Team"
               placeholder="Select a team of the flow"
               onChange={setTeamId}
               value={teamId}
             />
-            <Title order={4} fw={400} size={"sm"}>
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
               Select a Flow
-            </Title>
-            <Radio.Group value={selectedDbFlowId} onChange={(value) => setSelectedDbFlowId(value)}>
-              {acceptedFlows?.map((flow) => (
-                <WaInboxFlowSelectCard {...flow} />
-              ))}
-            </Radio.Group>
-          </Stack>
-          <Group className={classes.send_button_wrapper}>
-            <RateupButtonPrimary
-              title={translations("Send")}
-              loading={sendFlowToUser.isPending}
+            </h4>
+            <RadioGroup value={selectedDbFlowId} onValueChange={setSelectedDbFlowId}>
+              <div className="flex flex-col gap-2">
+                {acceptedFlows?.map((flow) => (
+                  <WaInboxFlowSelectCard
+                    key={flow.dbFlowId}
+                    {...flow}
+                    selected={selectedDbFlowId === flow.dbFlowId}
+                  />
+                ))}
+              </div>
+            </RadioGroup>
+          </div>
+          <div className="flex justify-end pt-4 border-t border-border mt-4">
+            <Button
+              disabled={!selectedDbFlowId || sendFlowToUser.isPending}
               onClick={handleSendFlow}
-              rightIcon={<IconSend />}
-              disabled={!selectedDbFlowId}
-            />
-          </Group>
+            >
+              {sendFlowToUser.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+              ) : null}
+              <span>{translations("Send")}</span>
+              {!sendFlowToUser.isPending && <IconSend className="ml-1.5 h-4 w-4" />}
+            </Button>
+          </div>
         </>
       ) : (
-        <NothingFound
-          text={translations("No flows found, If you already have a flow, check if its PUBLISHED")}
-        />
+        !isLoading && (
+          <NothingFound
+            text={translations(
+              "No flows found, If you already have a flow, check if its PUBLISHED",
+            )}
+          />
+        )
       )}
     </SimpleModalLayout>
   );

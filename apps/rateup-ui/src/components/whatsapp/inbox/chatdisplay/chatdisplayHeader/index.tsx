@@ -1,4 +1,3 @@
-import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronDown, IconTags } from "@tabler/icons-react";
 import { ArrowLeft, Ban, BellOff, CircleCheckBig, FolderClosed } from "lucide-react";
 import { useMemo } from "react";
@@ -31,6 +30,7 @@ import {
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { cn } from "@/lib/utils.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
@@ -160,8 +160,8 @@ export default function WaInboxChatDisplayHeader({
   const sourcePlatform = getSoucePlatformIconAndColor(platform);
   if (!contact) return null;
   return (
-    <div className="p-2 border-b shrink-0 bg-background">
-      <div className="flex items-center justify-between gap-2">
+    <div className="h-14 border-b shrink-0 bg-background flex items-center px-4">
+      <div className="flex items-center justify-between gap-2 w-full">
         <div className="flex items-center gap-2 min-w-0 shrink">
           {isMobile && (
             <button

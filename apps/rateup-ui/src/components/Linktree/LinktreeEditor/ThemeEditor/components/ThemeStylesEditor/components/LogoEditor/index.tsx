@@ -1,10 +1,11 @@
-import { ActionIcon, Box, Button, FileButton, Group, Modal, Slider } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 import { useCallback, useRef, useState } from "react";
 
 import ImageCropModal from "@/components/Modal/ModalManagerModals/ImageCropModal/index.tsx";
-import { mmImageCropModalClassnames } from "@/utils/constants.ts";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
 
 import { useThemeDispatch, useThemeObj } from "../../../../ThemeContext/ThemeContext.tsx";
 
@@ -19,7 +20,10 @@ function LogoEditor() {
   } = useThemeObj();
   const themeDispatch = useThemeDispatch();
 
-  const fileBtnResetRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const resetFileInput = useCallback(() => {
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
 
   const [cropModalOpened, { open: openCropModal, close: closeCropModal }] = useDisclosure(false);
   const [cropModalProps, setCropModalProps] = useState(null);
@@ -43,11 +47,11 @@ function LogoEditor() {
       type: "logo-file-change",
       payload: url,
     });
-    fileBtnResetRef.current?.();
+    resetFileInput();
   }, []);
 
   const onCroppedImgCancel = useCallback(() => {
-    fileBtnResetRef.current?.();
+    resetFileInput();
   }, []);
 
   const handleLogoFileChange = useCallback((fileOrNull) => {
@@ -72,83 +76,72 @@ function LogoEditor() {
 
   const handleDeletBtnClick = useCallback(() => {
     handleLogoFileChange(null);
-    fileBtnResetRef.current?.();
+    resetFileInput();
   }, []);
 
   return (
-    <Box className={styles["logo-editor-div"]}>
-      <Box className={`style-section-div`}>
+    <div className={styles["logo-editor-div"]}>
+      <div className={`style-section-div`}>
         <h2>Width</h2>
         <Slider
-          value={width}
-          onChange={handleLogoWidthChange}
-          label={(value) => value}
+          value={[width]}
+          onValueChange={(value) => handleLogoWidthChange(Array.isArray(value) ? value[0] : value)}
           step={1}
-          defaultValue={50}
           min={30}
           max={150}
         />
-      </Box>
+      </div>
 
-      <Box className={`style-section-div`}>
+      <div className={`style-section-div`}>
         <h2>Height</h2>
         <Slider
-          value={height}
-          onChange={handleLogoHeightChange}
-          label={(value) => value}
+          value={[height]}
+          onValueChange={(value) => handleLogoHeightChange(Array.isArray(value) ? value[0] : value)}
           step={1}
-          defaultValue={50}
           min={30}
           max={150}
         />
-      </Box>
+      </div>
 
-      <Box className={`style-section-div`}>
+      <div className={`style-section-div`}>
         <h2>Logo</h2>
-        <Group>
-          <FileButton
-            onChange={handleLogoFileChange}
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
             accept="image/png,image/jpeg"
-            resetRef={fileBtnResetRef}
-          >
-            {(props) => {
-              return (
-                <Button
-                  className={styles["upload-btn"]}
-                  leftSection={<IconUpload size={16} />}
-                  {...props}
-                >
-                  Upload
-                </Button>
-              );
-            }}
-          </FileButton>
+            className="hidden"
+            onChange={(e) => handleLogoFileChange(e.target.files?.[0] ?? null)}
+          />
+          <Button className={styles["upload-btn"]} onClick={() => fileInputRef.current?.click()}>
+            <IconUpload size={16} data-icon="inline-start" />
+            Upload
+          </Button>
 
-          <ActionIcon
+          <Button
+            variant="ghost"
+            size="icon"
             className={styles["delete-logo-btn"]}
             disabled={!logoUrl}
             onClick={handleDeletBtnClick}
           >
             <IconTrash size={16} />
-          </ActionIcon>
-        </Group>
-      </Box>
-      <Modal
-        opened={cropModalOpened}
-        onClose={closeCropModal}
-        title="Crop Image"
-        centered
-        classNames={mmImageCropModalClassnames}
-      >
-        {cropModalProps && (
-          <ImageCropModal
-            context={{ closeModal: closeCropModal }}
-            id="imageCropModal"
-            innerProps={cropModalProps}
-          />
-        )}
-      </Modal>
-    </Box>
+          </Button>
+        </div>
+      </div>
+      <Dialog open={cropModalOpened} onOpenChange={(open) => !open && closeCropModal()}>
+        <DialogContent>
+          <DialogTitle>Crop Image</DialogTitle>
+          {cropModalProps && (
+            <ImageCropModal
+              context={{ closeModal: closeCropModal }}
+              id="imageCropModal"
+              innerProps={cropModalProps}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 

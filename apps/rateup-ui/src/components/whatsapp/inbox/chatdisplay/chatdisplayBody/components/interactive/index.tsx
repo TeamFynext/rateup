@@ -1,10 +1,6 @@
-import { Box } from "@mantine/core";
-
 import type { WaSendMessageBody } from "@/types/global";
 
 import WaInboxInteractiveComponents from "./components/index.tsx";
-
-import classes from "./styles.module.css";
 
 interface Props {
   interactiveBody: WaSendMessageBody["interactive"];
@@ -12,11 +8,11 @@ interface Props {
 }
 export default function WaInboxInteractive(props: Props) {
   return (
-    <Box className={classes.interactive_wrapper}>
+    <div className="w-[298px] flex flex-col gap-2">
       <WaInboxInteractiveComponents
         interactiveBody={props?.interactiveBody}
         messageContent={props?.messageContent}
       />
-    </Box>
+    </div>
   );
 }

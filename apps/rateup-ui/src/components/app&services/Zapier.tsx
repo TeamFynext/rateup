@@ -1,4 +1,3 @@
-import { ActionIcon, Avatar, Flex, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { IconKey, IconReload, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,17 +10,27 @@ import {
   useUpdateIntegrationMutation,
 } from "@/backend/appsIntegration/integration.query";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { IntegratedApps, ZapierTriggers } from "@/types/enums.ts";
 import type { ZapierIntegration } from "@/types/global";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
+
+import { Card, CardContent } from "../ui/card";
+import { Field, FieldDescription, FieldLabel } from "../ui/field";
+import { Input } from "../ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
 
 export function Zapier() {
   const {
@@ -33,18 +42,21 @@ export function Zapier() {
 
   if (isLoading) return <RateupLoader />;
   return (
-    <Stack p={"sm"}>
-      <Group>
-        <Avatar src={"/images/zapier.png"} />
-        <Title>Zapier</Title>
-      </Group>
-      <Flex gap={"sm"} className="flex-col items-start">
+    <div className="flex flex-col gap-4 p-3">
+      <div className="flex items-center gap-2">
+        <Avatar>
+          <AvatarImage src={"/images/zapier.png"} alt="Zapier" />
+          <AvatarFallback>Z</AvatarFallback>
+        </Avatar>
+        <h1 className="text-2xl font-bold">Zapier</h1>
+      </div>
+      <div className="flex flex-col items-start gap-3">
         <APIKeyGenerate integration={integration} />
         <div className="flex flex-col justify-center items-center w-full">
           <ZapierTriggerList integration={integration} refetch={refetch} isLoading={isRefetching} />
         </div>
-      </Flex>
-    </Stack>
+      </div>
+    </div>
   );
 }
 
@@ -79,99 +91,92 @@ function APIKeyGenerate({ integration }) {
     );
   }
   return (
-    <PaperLayout w="50%" p="xl">
-      <Stack>
-        <ContainedTextField
-          label={"Organization ID"}
-          value={user.user.orgId}
-          readOnly
-          rightSection={<ApiCopyButton value={user.user.orgId} />}
-        />
+    <Card className={"w=[50%]"}>
+      <CardContent className="flex flex-col gap-4">
+        <Field>
+          <FieldLabel htmlFor="zapier-org-id">Organization ID</FieldLabel>
+          <InputGroup>
+            <InputGroupInput id="zapier-org-id" value={user.user.orgId} readOnly />
+            <InputGroupAddon align="inline-end">
+              <ApiCopyButton value={user.user.orgId} />
+            </InputGroupAddon>
+          </InputGroup>
+        </Field>
         {integration && integration?.credential?.accessToken ? (
-          <Tooltip
-            openDelay={150}
-            label={
-              apiKey
-                ? translations("Api Access Key")
-                : translations(
-                    "You can only view access key at the time of creation. If you lost the key, you can regenerate it.",
-                  )
-            }
-          >
-            <ContainedTextField
-              value={apiKey || "*".repeat(128)}
-              disabled={!apiKey}
-              styles={{
-                section: {
-                  width: "fit-content",
-                },
-                input: {
-                  paddingRight: "92px", // 46px * 2 (copy/regen and delete button)
-                },
-              }}
-              label={translations("Api Key")}
-              description={translations("Use this key to set up your Zapier connection")}
-              readOnly
-              rightSection={
-                <Group
-                  gap={0}
-                  bg={"white"}
-                  h={"100%"}
-                  style={{
-                    borderRadius: "0 12px 12px 0",
-                    overflow: "hidden",
-                  }}
-                >
-                  {apiKey ? (
-                    <ApiCopyButton value={apiKey} />
-                  ) : (
-                    <Tooltip label={translations("Regenerate")} position="top" withArrow>
-                      <ActionIcon
-                        onClick={handleRegenerate}
-                        variant={"subtle"}
-                        h={"100%"}
-                        w={"46px"}
-                        px={8}
-                        radius={0}
-                      >
-                        <IconReload />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                  <Tooltip label={translations("Delete")} position="top" withArrow>
-                    <ActionIcon
-                      onClick={handleDelete}
-                      variant={"subtle"}
-                      h={"100%"}
-                      w={"46px"}
-                      px={8}
-                      color={"red"}
-                      radius={0}
-                    >
-                      <IconTrash />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-              }
-            />
-          </Tooltip>
+          <TooltipProvider delay={150}>
+            <Tooltip>
+              <TooltipTrigger render={<div className="w-full" />}>
+                <Field>
+                  <FieldLabel htmlFor="zapier-api-key">{translations("Api Key")}</FieldLabel>
+                  <FieldDescription>
+                    {translations("Use this key to set up your Zapier connection")}
+                  </FieldDescription>
+                  <InputGroup>
+                    <InputGroupInput
+                      id="zapier-api-key"
+                      value={apiKey || "*".repeat(128)}
+                      disabled={!apiKey}
+                      readOnly
+                    />
+                    <InputGroupAddon align="inline-end">
+                      {apiKey ? (
+                        <ApiCopyButton value={apiKey} />
+                      ) : (
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <Button onClick={handleRegenerate} variant="ghost" size="icon" />
+                            }
+                          >
+                            <IconReload />
+                          </TooltipTrigger>
+                          <TooltipContent>{translations("Regenerate")}</TooltipContent>
+                        </Tooltip>
+                      )}
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              onClick={handleDelete}
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-500"
+                            />
+                          }
+                        >
+                          <IconTrash />
+                        </TooltipTrigger>
+                        <TooltipContent>{translations("Delete")}</TooltipContent>
+                      </Tooltip>
+                    </InputGroupAddon>
+                  </InputGroup>
+                </Field>
+              </TooltipTrigger>
+              <TooltipContent>
+                {apiKey
+                  ? translations("Api Access Key")
+                  : translations(
+                      "You can only view access key at the time of creation. If you lost the key, you can regenerate it.",
+                    )}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         ) : (
-          <Stack gap={2}>
-            <Text size="sm">Api Key</Text>
-            <Text size="sm" c={"dimmed"} mb="xs">
+          <div className="flex flex-col gap-0.5">
+            <p className="text-sm">Api Key</p>
+            <p className="mb-2 text-sm text-muted-foreground">
               Use this key to set up your Zapier connection
-            </Text>
-            <RateupButtonBlue
-              leftIcon={<IconKey />}
-              radius={"md"}
-              title={translations("Generate Api Key")}
-              onClick={handleCreate}
-              loading={createMut.isPending}
-            />
-          </Stack>
+            </p>
+            <Button onClick={handleCreate}>
+              <IconKey />
+              {createMut.isPending
+                ? translations("Generating...")
+                : translations("Generate Api Key")}
+            </Button>
+          </div>
         )}
-      </Stack>
-    </PaperLayout>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -209,58 +214,62 @@ function ZapierTriggerList({
   }
   if (!integration) return null;
   return (
-    <PaperLayout w="70%" p={"lg"}>
-      <Group>
-        <Title order={4}>Trigger Subscriptions</Title>
+    <Card className="w-[70%] p-4">
+      <div className="flex items-center gap-2">
+        <h4 className="text-lg font-semibold">Trigger Subscriptions</h4>
         <RefreshButton onClick={refetch} isLoading={isLoading} />
-      </Group>
-      <Stack py={"lg"}>
+      </div>
+      <div className="flex flex-col gap-4 py-6">
         {groupedTrigger.map((t) => (
-          <Stack key={t.key} className="rounded-xl bg-gray-100" p={"xl"}>
-            <Text size="sm" fw={500}>
-              Trigger : {getTriggerLabel(t.key)}
-            </Text>
+          <div key={t.key} className="flex flex-col gap-4 rounded-xl bg-gray-100 p-8">
+            <p className="text-sm font-medium">Trigger : {getTriggerLabel(t.key)}</p>
             {t.triggers.length > 0 ? (
               t.triggers.map((tr, index) => (
-                <Stack gap={"sm"} key={tr.hookUrl} className="rounded-sm bg-gray-200" p={"sm"}>
-                  <Group px={"sm"} gap={"xs"} justify="end">
+                <div key={tr.hookUrl} className="flex flex-col gap-3 rounded-sm bg-gray-200 p-3">
+                  <div className="flex items-center justify-end gap-2 px-3">
                     <ActiveStatusBadge active={tr.active} />
-                    <Tooltip label={"Delete"}>
-                      <ActionIcon
-                        loading={deleteMut.isPending}
-                        variant="subtle"
-                        color="red"
-                        onClick={() => handleDeleteClick(tr)}
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            disabled={deleteMut.isPending}
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500"
+                            onClick={() => handleDeleteClick(tr)}
+                          />
+                        }
                       >
-                        {<IconTrash size={"1.2rem"} />}
-                      </ActionIcon>
+                        <IconTrash size={"1.2rem"} />
+                      </TooltipTrigger>
+                      <TooltipContent>Delete</TooltipContent>
                     </Tooltip>
-                  </Group>
-                  <ContainedTextField label={"Zap ID"} value={tr.zapId || ""} readOnly />
-                  <ContainedTextField
-                    value={tr.hookUrl}
-                    label={`Target Url ${index + 1}`}
-                    readOnly
-                  />
-                  <Group justify="end">
-                    <Text size="sm" fw={500}>
-                      Subscribed At:{" "}
-                    </Text>
-                    <Text size="sm" c={"dimmed"}>
+                  </div>
+                  <Field>
+                    <FieldLabel htmlFor={`zap-id-${index}`}>Zap ID</FieldLabel>
+                    <Input id={`zap-id-${index}`} value={tr.zapId || ""} readOnly />
+                  </Field>
+                  <Field>
+                    <FieldLabel
+                      htmlFor={`target-url-${index}`}
+                    >{`Target Url ${index + 1}`}</FieldLabel>
+                    <Input id={`target-url-${index}`} value={tr.hookUrl} readOnly />
+                  </Field>
+                  <div className="flex items-center justify-end gap-2">
+                    <p className="text-sm font-medium">Subscribed At: </p>
+                    <p className="text-sm text-muted-foreground">
                       {formatIsoDateStringWithTime(tr.createdAt)}
-                    </Text>
-                  </Group>
-                </Stack>
+                    </p>
+                  </div>
+                </div>
               ))
             ) : (
-              <Text size="sm" c={"dimmed"}>
-                No trigger subscriptions found
-              </Text>
+              <p className="text-sm text-muted-foreground">No trigger subscriptions found</p>
             )}
-          </Stack>
+          </div>
         ))}
-      </Stack>
-    </PaperLayout>
+      </div>
+    </Card>
   );
 }
 

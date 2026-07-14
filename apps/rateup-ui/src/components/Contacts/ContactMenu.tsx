@@ -1,9 +1,9 @@
-import { modals } from "@mantine/modals";
 import { Edit, EllipsisVertical, Eye, Send, Trash } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useContactDeleteMutation } from "@/backend/campaign/contacts/contacts.query";
+import { useConfirm } from "@/context/confirm-provider";
 
 import { Button } from "../ui/button.tsx";
 import {
@@ -20,21 +20,19 @@ import SendMessageModal from "./SendMessageModal.tsx";
 
 const ContactMenu = ({ contact, groupId }) => {
   const { t: translations } = useTranslation();
+  const confirm = useConfirm();
   const [openedEditModal, setOpenedEditModal] = useState(false);
-  const openDeleteModal = () => {
-    modals.openConfirmModal({
-      title: translations("Delete contact"),
-      centered: true,
-      children: (
-        <p className="text-sm">{translations("Are you sure you want to delete this contact?")}</p>
-      ),
-      labels: { confirm: "Ok", cancel: "cancel" },
-      confirmProps: { color: "red" },
-      onCancel: () => modals.closeAll(),
-      onConfirm: () => deleteContact(),
-    });
-  };
   const [isAddToGroupOpen, setIsAddToGroupOpen] = useState(false);
+  const openDeleteModal = async () => {
+    const ok = await confirm({
+      title: translations("Delete contact"),
+      description: translations("Are you sure you want to delete this contact?"),
+      confirmText: "Ok",
+      cancelText: "cancel",
+    });
+    if (!ok) return;
+    deleteContact();
+  };
   const deleteMutation = useContactDeleteMutation(groupId);
   const [viewDetails, setViewDetails] = useState(false);
   const [isSendMessageOpen, setIsSendMessageOpen] = useState(false);
