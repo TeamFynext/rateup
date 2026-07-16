@@ -277,7 +277,16 @@ export const useContactsStore = create<ContactsStoreState>()(
             assignStatusChanged =
               updatedContact.waMessageAssignStatus !== contact.waMessageAssignStatus;
             const statusMatch = currentFilterKey?.match(/status:([^|]*)/);
-            const statuses = statusMatch ? statusMatch[1].split(",") : [];
+            let statuses = statusMatch ? statusMatch[1].split(",").filter(Boolean) : [];
+            // Closed/Addressed tab with no explicit status sub-filter means "any closed status"
+            if (!statuses.length && currentFilterKey?.includes("waMessageAssignStatus:Addressed")) {
+              statuses = [
+                WaMessageAssignStatus.CLOSED,
+                WaMessageAssignStatus.RESOLVED,
+                WaMessageAssignStatus.UNRESOLVED,
+                WaMessageAssignStatus.SPAM,
+              ];
+            }
             const belongsToCurrentFilter =
               (statuses.length === 0 || statuses.includes(updatedContact.waMessageAssignStatus)) &&
               (!currentFilterKey?.includes("waMessageAssignStatus:mine") ||
@@ -385,11 +394,12 @@ export const useContactsStore = create<ContactsStoreState>()(
                   const isInFilter = contactIds.includes(contactId);
                   let newList = [...contactIds];
                   let changed = false;
-                  const status = filterKey?.match(/status:[^|]*\|/) || [];
+                  const statusMatch = filterKey?.match(/status:([^|]*)/);
+                  const statuses = statusMatch ? statusMatch[1].split(",").filter(Boolean) : [];
                   if (isNew) {
                     if (
                       !isInFilter &&
-                      (!status.length || status[0].includes(contact.waMessageAssignStatus))
+                      (!statuses.length || statuses.includes(contact.waMessageAssignStatus))
                     ) {
                       newList.push(contactId);
                       changed = true;
@@ -397,8 +407,8 @@ export const useContactsStore = create<ContactsStoreState>()(
                   }
                   if (
                     isInFilter &&
-                    status.length &&
-                    !status[0].includes(contact.waMessageAssignStatus)
+                    statuses.length &&
+                    !statuses.includes(contact.waMessageAssignStatus)
                   ) {
                     newList = contactIds.filter((id) => id !== contactId);
                     changed = true;
@@ -454,7 +464,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                   let changed = false;
 
                   const statusMatch = filterKey.match(/status:([^|]*)/);
-                  const statuses = statusMatch ? statusMatch[1].split(",") : [];
+                  const statuses = statusMatch ? statusMatch[1].split(",").filter(Boolean) : [];
                   const matchesStatus = statuses.length
                     ? statuses.includes(contact.waMessageAssignStatus)
                     : [WaMessageAssignStatus.ASSIGNED, WaMessageAssignStatus.UNASSIGNED].includes(
