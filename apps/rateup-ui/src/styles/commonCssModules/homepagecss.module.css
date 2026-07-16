@@ -57,7 +57,7 @@
   --nav-link-hover: #2c6fd6;
   --nav-btn-border: #cbd5e1;
   --nav-btn-text: #1a1b1a;
-  --nav-logo-color: #1e293b;
+  --nav-logo-color: #1c518e;
 
   /* Restore standard ghost button colors for Hero on dark section */
   --nav-btn-ghost-border: rgba(255, 255, 255, 0.14);
@@ -450,7 +450,7 @@ nav.top .row {
   letter-spacing: -0.02em;
 }
 .brand .wm .up {
-  color: #4fc3ff;
+  color: #3884e8;
 }
 .nav-links {
   display: flex;
