@@ -7,6 +7,7 @@
 import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../wa_axios.js";
 import { getWaSettingsByIbaId, updateWaSettingsById } from "../settings/wa_settings.service.js";
+import { assertWithinConversationLimit } from "../whatsappSurvey/wasurvey.auth.js";
 
 async function callInstagramMessengerProfileApi(
   ibaId: string,
@@ -80,6 +81,8 @@ export async function sendInstagramTextMessage(
   ibaId: string,
 ): Promise<any> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    await assertWithinConversationLimit(orgId);
     // Get settings for this organization
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
@@ -124,6 +127,8 @@ export async function sendInstagramImage(
   ibaId?: string,
 ): Promise<any> {
   try {
+    // Outbound — gate on the conversation limit (inbound is never blocked).
+    if (orgId) await assertWithinConversationLimit(orgId);
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {

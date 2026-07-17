@@ -119,14 +119,7 @@ export async function createUserSignup({
       let overrides: Partial<SubscriptionFeatures> | undefined;
 
       if (goals?.length > 0 && goals.includes("loyalty-program")) {
-        overrides = {
-          loyalty: {
-            active: true,
-            action: { count: { max: 1 }, active: true },
-            reward: { count: { max: 1 }, active: true },
-            customer: { count: { max: 1 }, active: true },
-          },
-        };
+        // Loyalty feature is now part of Whatsapp or removed.
       }
 
       await createFreePlanSubscription(org.id, prisma as any, planId, overrides);

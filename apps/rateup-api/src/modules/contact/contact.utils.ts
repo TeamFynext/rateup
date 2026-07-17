@@ -67,7 +67,7 @@ export async function verifyLCustomerMaxCountRestriction(orgId, subscription) {
     count >=
     getNestedProperty(
       subscription?.features as unknown as object,
-      SubscriptionFeaturePathName.LoyaltyCustomer,
+      SubscriptionFeaturePathName.Whatsapp,
     ).count.max
   ) {
     return false;
@@ -129,7 +129,7 @@ export async function createLCustomer(input: any) {
       skipDuplicates: true,
     });
   }
-  await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, input.orgId);
+  await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, input.orgId);
 
   // const customer = contact.loyaltyCustomer;
   return {

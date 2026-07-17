@@ -8,6 +8,7 @@ import {
 } from "../../types/enums.js";
 import { log } from "../../utils/logger.js";
 import dayjs from "dayjs";
+import { checkConversationLimitExceeded } from "../whatsapp/whatsappSurvey/wasurvey.auth.js";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
 import { SpreadsheetExportFormat } from "../../utils/spreadsheet.js";
 import { write } from "hucre";
@@ -413,6 +414,22 @@ export async function sendCampaign(
   participantId?: string,
   userId?: string,
 ) {
+  // Pre-check the conversation limit once so an over-limit campaign fails cleanly
+  // instead of throwing on every recipient inside sendMessage.
+  const campaignOrg = await prisma.campaign.findUnique({
+    where: { id: campaignId },
+    select: { team: { select: { orgId: true } } },
+  });
+  const campaignOrgId = campaignOrg?.team?.orgId;
+  if (campaignOrgId && !(await checkConversationLimitExceeded(campaignOrgId))) {
+    await updateCampaign(campaignId, {
+      status: CampaignStatus.INACTIVE,
+      errorMessage: "Conversation limit reached. Upgrade your plan to send more messages.",
+    });
+    log.warn({ campaignId, orgId: campaignOrgId }, "Campaign skipped — conversation limit reached");
+    return;
+  }
+
   await updateCampaign(campaignId, {
     status: CampaignStatus.ACTIVE,
     startedAt: new Date(),

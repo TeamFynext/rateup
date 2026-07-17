@@ -90,7 +90,7 @@ import {
   handleContactConsent,
 } from "../../contact/contact.service.js";
 import { getOrgById } from "../../org/org.services.js";
-import { checkMessageLimitExceeded } from "./wasurvey.auth.js";
+import { checkConversationLimitExceeded } from "./wasurvey.auth.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
 import { getLatestStatus, updateCampaign } from "../../campaign/campaign.service.js";
 import {
@@ -549,7 +549,7 @@ async function whatsappMessageHandler(
           parsedMessage,
           orgId,
         );
-        await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppAutomationTrigger, orgId);
+        await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
         return;
       }
 
@@ -857,7 +857,7 @@ export async function handleAutomatedReply(
           automation.whatsappSettingsPhoneId = phoneNumberId;
         }
         await startAutomationFlow(phone, automation, parsedMessage, orgId);
-        await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppAutomationTrigger, orgId);
+        await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
       }
     } else {
       const inputHandled = await handleInputReply({
@@ -881,7 +881,7 @@ export async function handleAutomatedReply(
         log.trace("Rule matched and actions executed: %o", ruleResult);
         return;
       }
-      await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppAutomationTrigger, orgId);
+      await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     }
   } catch (error) {
     log.error("Error handling automated reply: %o", error);
@@ -1494,7 +1494,7 @@ async function handleStartSurvey({
     tag,
   });
   if (session.surveyTeamMap.survey.type === SurveyType.WaFlow) {
-    const msgLimit = await checkMessageLimitExceeded(orgId);
+    const msgLimit = await checkConversationLimitExceeded(orgId);
     if (!msgLimit) {
       log.error({ orgId }, "You have reached the maximum monthly limit of messages.");
       return;
@@ -2030,7 +2030,7 @@ async function _sendCampaignToParticipants(
       }
     }
 
-    updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppTemplate, orgId);
+    updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     await wait(50); // wait 50ms (throughput will be ~20 messages per second)
     sendMessage(
       orgId,

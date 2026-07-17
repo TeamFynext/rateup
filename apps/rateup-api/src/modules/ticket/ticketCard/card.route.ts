@@ -21,12 +21,10 @@ import {
 import { checkSession } from "../../../utils/checkSession.js";
 import { verifyColumnAccess } from "../ticketColumn/column.auth.js";
 import { verifyCardAccess } from "./card.auth.js";
-import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
-import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 
 export async function cardRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeaturePathName.Ticket]));
+  // Tickets are a free feature — no subscription gate.
 
   // Create card
   server.post(

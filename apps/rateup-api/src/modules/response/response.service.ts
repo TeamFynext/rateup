@@ -768,9 +768,7 @@ export async function createResponse(
 
   if (surveyResponse) {
     updateMonthlyStat(
-      surveyResponse.platform === "WHATSAPP"
-        ? SubscriptionFeaturePathName.WhatsAppSurvey
-        : "survey",
+      surveyResponse.platform === "WHATSAPP" ? SubscriptionFeaturePathName.Whatsapp : "survey",
       surveyResponse.surveyTeamMap?.team.orgId,
     );
   }

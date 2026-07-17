@@ -233,10 +233,10 @@ model UsageStats {
   loyaltyCustomerCount    Int @default(0)
   waAutomationCount       Int @default(0)
 
-  annualMessageCount       Int @default(0)
+  annualConversationsCount Int @default(0)
   monthlySurveyResponses   Int @default(0)
   monthlyWaSurveyResponses Int @default(0)
-  monthlyMessagesCount     Int @default(0)
+  monthlyConversationsCount     Int @default(0)
 
   subscriptionStartDate DateTime?
   subscriptionEndDate   DateTime?
@@ -1254,7 +1254,9 @@ model PaymentPlans {
   period      String
   interval    Int
   status      PaymentPlanStatus @default(NULL)
-  RateupPlan  RateupPlan?
+  RateupPlan  RateupPlan?       @relation("RateupPlanLegacy")
+  monthlyRateupPlan RateupPlan? @relation("RateupPlanMonthly")
+  yearlyRateupPlan  RateupPlan? @relation("RateupPlanYearly")
 }
 
 enum StripeProductType {
@@ -1291,8 +1293,12 @@ model RateupPlan {
   displayName     String?
   displayWidgetId String?
   planType        PaymentPlanType
-  paymentPlan     PaymentPlans?   @relation(fields: [paymentPlanId], references: [id])
+  paymentPlan     PaymentPlans?   @relation("RateupPlanLegacy", fields: [paymentPlanId], references: [id])
   paymentPlanId   String?         @unique @db.Uuid
+  monthlyPaymentPlan   PaymentPlans? @relation("RateupPlanMonthly", fields: [monthlyPaymentPlanId], references: [id])
+  monthlyPaymentPlanId String?       @unique @db.Uuid
+  yearlyPaymentPlan    PaymentPlans? @relation("RateupPlanYearly", fields: [yearlyPaymentPlanId], references: [id])
+  yearlyPaymentPlanId  String?       @unique @db.Uuid
   Subscription    Subscription[]
   description     String[]        @default([])
   features        Json?
@@ -1301,6 +1307,11 @@ model RateupPlan {
   stripeId        String?         @unique @db.Uuid
   trialDays       Int             @default(0)
   orders          Order[]
+  badge           String?
+  price           Float?
+  currency        String?
+  monthlyPrice    Float?
+  yearlyPrice     Float?
 }
 
 enum OrderStatus {

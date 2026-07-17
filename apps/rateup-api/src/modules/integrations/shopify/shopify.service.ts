@@ -660,7 +660,7 @@ export async function sendWhatsAppTemplateToCustomer(
       teamId,
       "TEMPLATE",
     );
-    await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppTemplate, orgId);
+    await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     return res;
   } catch (e) {
     console.error(e);

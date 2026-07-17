@@ -137,6 +137,8 @@ export async function getAllRateupPaymentPlans() {
     include: {
       paymentPlan: true,
       stripeProduct: true,
+      monthlyPaymentPlan: true,
+      yearlyPaymentPlan: true,
     },
     orderBy: {
       createdAt: "asc",
@@ -187,6 +189,17 @@ export async function createRateUpPlan(data: createRateUpPlanInput) {
       stripeProduct: data?.stripeId ? { connect: { id: data?.stripeId } } : undefined,
       features: data.features ? JSON.parse(data.features) : null,
       trialDays: data.trialDays,
+      badge: data.badge || null,
+      price: data.price,
+      currency: data.currency ?? null,
+      monthlyPrice: data.monthlyPrice ?? null,
+      yearlyPrice: data.yearlyPrice ?? null,
+      monthlyPaymentPlan: data?.monthlyPaymentPlanId
+        ? { connect: { id: data.monthlyPaymentPlanId } }
+        : undefined,
+      yearlyPaymentPlan: data?.yearlyPaymentPlanId
+        ? { connect: { id: data.yearlyPaymentPlanId } }
+        : undefined,
     },
   });
   return { code: 201, data: plans };
@@ -256,12 +269,54 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
           : data?.stripeId
             ? { connect: { id: data?.stripeId } }
             : undefined,
-      features: data?.features,
+      features:
+        typeof data?.features === "string"
+          ? data.features
+            ? JSON.parse(data.features)
+            : undefined
+          : data?.features,
       ...(data.trialDays !== undefined
         ? {
             trialDays: data.trialDays,
           }
         : {}),
+      badge: data?.badge || null,
+      ...(data.price !== undefined
+        ? {
+            price: data.price,
+          }
+        : {}),
+      ...(data.currency !== undefined
+        ? {
+            currency: data.currency,
+          }
+        : {}),
+      ...(data.monthlyPrice !== undefined
+        ? {
+            monthlyPrice: data.monthlyPrice,
+          }
+        : {}),
+      ...(data.yearlyPrice !== undefined
+        ? {
+            yearlyPrice: data.yearlyPrice,
+          }
+        : {}),
+      monthlyPaymentPlan:
+        data.monthlyPaymentPlanId === undefined
+          ? undefined
+          : data.monthlyPaymentPlanId
+            ? { connect: { id: data.monthlyPaymentPlanId } }
+            : existingPlan.monthlyPaymentPlanId
+              ? { disconnect: true }
+              : undefined,
+      yearlyPaymentPlan:
+        data.yearlyPaymentPlanId === undefined
+          ? undefined
+          : data.yearlyPaymentPlanId
+            ? { connect: { id: data.yearlyPaymentPlanId } }
+            : existingPlan.yearlyPaymentPlanId
+              ? { disconnect: true }
+              : undefined,
     },
     where: {
       id: data.id,
@@ -353,10 +408,10 @@ export async function updateSubscription(payload) {
       data: {
         subscriptionStartDate: new Date(),
         subscriptionEndDate: new Date(current_end * 1000),
-        monthlyMessagesCount: 0,
+        monthlyConversationsCount: 0,
         monthlySurveyResponses: 0,
         monthlyWaSurveyResponses: 0,
-        annualMessageCount: notes?.isAnnualMessageLimit ? 0 : undefined,
+        annualConversationsCount: notes?.isAnnualMessageLimit ? 0 : undefined,
         monthlyTemplateMessageCount: 0,
         monthlyAutomationTriggerCount: 0,
         lastMonthlyResettedDate: new Date(),
@@ -752,7 +807,7 @@ export async function updateSubscriptionForTrial(orgId, rateupPlanId, subscripti
     data: {
       subscriptionStartDate: new Date(),
       subscriptionEndDate: dayjs().add(rateupPlan.trialDays, "day").toDate(),
-      monthlyMessagesCount: 0,
+      monthlyConversationsCount: 0,
       monthlySurveyResponses: 0,
       monthlyWaSurveyResponses: 0,
       monthlyTemplateMessageCount: 0,

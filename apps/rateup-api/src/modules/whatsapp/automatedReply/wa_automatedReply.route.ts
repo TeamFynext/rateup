@@ -37,7 +37,7 @@ export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
   fastify.addHook("preHandler", checkSession);
   fastify.addHook(
     "preHandler",
-    getVerifySubscriptionHandler([SubscriptionFeaturePathName.WhatsAppAutomation]),
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp]),
   );
   fastify.addHook("preHandler", requireFeature(TeamFeature.automation));
   fastify.get("/message/:id", getAutomatedRepliesMessagIdHandler);

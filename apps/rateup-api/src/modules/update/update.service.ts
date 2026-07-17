@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
+import { FreePlanSubscriptionFeatures } from "../subscription/subscription.data.js";
 import { subscriptionGates } from "../../utils/canAccess.js";
 import { TeamFeature } from "../../../generated/prisma/client.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
@@ -77,25 +78,10 @@ export async function updateRateupPlanFeature() {
   const rateupPlans = await prisma.rateupPlan.findMany();
   for (const plan of rateupPlans) {
     const feature = plan.features as SubscriptionFeatures;
-    if (feature.whatsapp.automation && feature.whatsapp.automation.automationTrigger) {
-      continue;
-    }
     const newFeature = {
       ...feature,
       whatsapp: {
         ...feature.whatsapp,
-        automation: {
-          active: true,
-          count: {
-            max: 1,
-          },
-          automationTrigger: {
-            active: true,
-            count: {
-              max: 1000,
-            },
-          },
-        },
       },
     };
 
@@ -116,15 +102,6 @@ export async function updateRateupPlanFeature() {
       ...features,
       whatsapp: {
         ...features.whatsapp,
-        automation: {
-          ...features.whatsapp.automation,
-          automationTrigger: {
-            active: true,
-            count: {
-              max: 1000,
-            },
-          },
-        },
       },
     };
 
@@ -229,6 +206,22 @@ export async function updateFreePlanExpiry() {
       expiresAt: dayjs().add(100, "years").toDate(),
     },
   });
+}
+
+// Resets every FREE PLAN subscription's feature set to the current
+// FreePlanSubscriptionFeatures defaults (e.g. after the free-plan limits change).
+export async function migrateFreePlanFeatures() {
+  const result = await prisma.subscription.updateMany({
+    where: {
+      basePlan: {
+        name: "FREE PLAN",
+      },
+    },
+    data: {
+      features: FreePlanSubscriptionFeatures as unknown as object,
+    },
+  });
+  return { updated: result.count };
 }
 
 export async function backfillWithSQL() {

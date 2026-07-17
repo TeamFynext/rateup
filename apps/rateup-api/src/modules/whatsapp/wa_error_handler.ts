@@ -1,9 +1,15 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { GraphApiError } from "./wa_axios.js";
 import { log } from "../../utils/logger.js";
+import { ConversationLimitError } from "./whatsappSurvey/wasurvey.auth.js";
 
 export function handleWhatsappError(error: Error, request: FastifyRequest, reply: FastifyReply) {
-  if (error instanceof GraphApiError) {
+  if (error instanceof ConversationLimitError) {
+    reply.status(403).send({
+      message: error.message,
+      displayMessageInClient: true,
+    });
+  } else if (error instanceof GraphApiError) {
     reply.status(400).send({
       message: getGraphApiErrorMessage(error),
     });

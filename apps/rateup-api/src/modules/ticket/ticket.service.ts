@@ -38,7 +38,8 @@ export async function sendTicketAssignedWaMessage(data: {
     return;
   }
   const message = `A ticket has been assigned to you on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: https://rateup.app/dashboard/tickets/${data.id}`;
-  await sendTextMessage({ phone, orgId }, null, message);
+  // Ticket notifications are system messages — exempt from the conversation limit.
+  await sendTextMessage({ phone, orgId }, null, message, true);
 }
 
 export async function sendTicketAssignedEmail(data: {
@@ -98,7 +99,8 @@ export async function sendTicketCreateWaMessage(data: {
     return;
   }
   const message = `A new ticket has been created on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: https://rateup.app/dashboard/tickets/${data.id}`;
-  await sendTextMessage({ phone, orgId }, null, message);
+  // Ticket notifications are system messages — exempt from the conversation limit.
+  await sendTextMessage({ phone, orgId }, null, message, true);
 }
 
 export async function sendTicketCreateEmail(data: {

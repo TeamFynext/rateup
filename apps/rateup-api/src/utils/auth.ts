@@ -128,11 +128,7 @@ export function getVerifySubscriptionHandler(featurePathNames: Array<Subscriptio
         });
         return;
       }
-      if (
-        featurePathNames.includes(SubscriptionFeaturePathName.LoyaltyCustomer) &&
-        (request.body as any).source !== ContactGroupType.LOYALTY
-      )
-        return;
+
       const missingFeatures = featurePathNames.filter(
         (feature) => !getNestedProperty(subscription.features, feature).active,
       );

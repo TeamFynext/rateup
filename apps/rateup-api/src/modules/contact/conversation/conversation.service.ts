@@ -12,6 +12,7 @@ import {
   mapStatusToField,
   transitionInboxStat,
 } from "../../whatsapp/inbox/inboxStats/inboxStats.service.js";
+import { incrementConversationCount } from "../../stats/stats.service.js";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -23,7 +24,7 @@ type TxClient = Omit<
 
 export async function createConversation(input: ConversationCore) {
   const { contactId, ...rest } = input;
-  return await prisma.conversation.create({
+  const conversation = await prisma.conversation.create({
     data: {
       contact: {
         connect: {
@@ -33,6 +34,8 @@ export async function createConversation(input: ConversationCore) {
       ...rest,
     },
   });
+  await incrementConversationCount(rest.orgId);
+  return conversation;
 }
 
 /// Automation and rule closes have no acting user, so `closedBy` stays null and
@@ -344,7 +347,7 @@ export async function openConversationForContact(
   status: InboxStatus = WaMessageAssignStatus.UNASSIGNED,
 ) {
   const previous = await getLastCreatedConversationForContact(contactId);
-  return await prisma.conversation.create({
+  const conversation = await prisma.conversation.create({
     data: {
       contactId,
       orgId,
@@ -352,6 +355,8 @@ export async function openConversationForContact(
       reopenCount: previous ? previous.reopenCount + 1 : 0,
     },
   });
+  await incrementConversationCount(orgId);
+  return conversation;
 }
 
 export async function updateClosedConversationStatus(

@@ -73,6 +73,7 @@ import {
   ZapierTriggers,
 } from "../../integrations/external/zapier/zapier.service.js";
 import { producer } from "../../../plugins/kafka.js";
+import { assertWithinConversationLimit } from "./wasurvey.auth.js";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -99,7 +100,15 @@ export async function sendMessage(
   messageType: "INBOX" | "TEMPLATE" | "CAMPAIGN" | "AUTOMATED" | "FLOW" = "INBOX",
   isAutomated?: boolean,
   externalApi?: boolean,
+  // System/transactional sends (OTP, payment, ticket notifications) pass true to
+  // bypass the conversation limit. All normal business outbound is gated.
+  skipConversationLimit = false,
 ) {
+  // Freeze all outbound (WhatsApp/Instagram/Facebook/Webchat) once the org is over
+  // its conversation limit. Inbound is never gated — this is the outbound path only.
+  if (!skipConversationLimit) {
+    await assertWithinConversationLimit(orgId);
+  }
   let waSettings: Omit<WhatsappSettings, "accessToken_iv">;
   let to: string;
   let configId: string;
@@ -885,6 +894,9 @@ export async function sendTextMessage(
   to: { phone: string; orgId: string },
   title: string,
   description: any = "",
+  // System/transactional callers (e.g. ticket notifications) pass true to bypass
+  // the conversation limit; normal business text sends stay gated.
+  skipConversationLimit = false,
 ) {
   const messageData = createTextMessage(to.phone, title, description);
   await sendMessage(
@@ -899,6 +911,7 @@ export async function sendTextMessage(
     "AUTOMATED",
     true,
     false,
+    skipConversationLimit,
   );
 }
 interface sendSurveyToParticipantParams {
@@ -1173,7 +1186,7 @@ export async function handleLeadGen(body: WaMessageBody) {
       log.trace("No lead automation found for pageid:%s and ad id: %s", page_id, ad_id);
       return;
     }
-    if (!hasFeature(automation.orgId, SubscriptionFeaturePathName.LeadAdAutomation)) {
+    if (!hasFeature(automation.orgId, SubscriptionFeaturePathName.Whatsapp)) {
       log.trace("Aborting..Not subscribed to lead automation, orgId => %s", automation.orgId);
       return;
     }
