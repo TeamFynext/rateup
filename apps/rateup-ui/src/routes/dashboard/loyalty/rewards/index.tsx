@@ -498,10 +498,7 @@ function RewardsPage() {
     console.error(rewardsError);
   }
 
-  if (
-    !subscription?.features?.loyalty?.active ||
-    !subscription?.features?.loyalty?.reward?.active
-  ) {
+  if (!subscription?.features?.whatsapp?.active) {
     return <ErrorComponent refetch={refetch} />;
   }
 

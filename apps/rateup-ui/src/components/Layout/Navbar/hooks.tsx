@@ -46,9 +46,8 @@ import { Layers } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { SubscriptionFeaturePathName as sfpn, TeamFeature } from "@/types/enums.ts";
+import { TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
-import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 export function useNavMain({
   subscription,
@@ -81,7 +80,7 @@ export function useNavMain({
       //   items: [],
       // },
 
-      ...(hasFeature(subscription, sfpn.Whatsapp) && hasTeamFeature(TeamFeature.Inbox)
+      ...(hasTeamFeature(TeamFeature.Inbox)
         ? [
             {
               title: t("Inbox"),
@@ -262,7 +261,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.WhatsAppCampaign) && hasTeamFeature(TeamFeature.Contacts)
+      ...(hasTeamFeature(TeamFeature.Contacts)
         ? [
             {
               title: t("Contacts"),
@@ -298,7 +297,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.WhatsAppCampaign) && hasTeamFeature(TeamFeature.Campaigns)
+      ...(hasTeamFeature(TeamFeature.Campaigns)
         ? [
             {
               title: t("Campaign"),
@@ -307,18 +306,17 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.Whatsapp) &&
-      (hasTeamFeature(TeamFeature.Flows) ||
-        hasTeamFeature(TeamFeature.Chatbots) ||
-        hasTeamFeature(TeamFeature.Templates) ||
-        hasTeamFeature(TeamFeature.Automation))
+      ...(hasTeamFeature(TeamFeature.Flows) ||
+      hasTeamFeature(TeamFeature.Chatbots) ||
+      hasTeamFeature(TeamFeature.Templates) ||
+      hasTeamFeature(TeamFeature.Automation)
         ? [
             {
               title: t("WhatsApp"),
               url: "/dashboard/whatsapp/flows",
               icon: IconBrandWhatsapp,
               items: [
-                ...(hasFeature(subscription, sfpn.WhatsAppFlow) && hasTeamFeature(TeamFeature.Flows)
+                ...(hasTeamFeature(TeamFeature.Flows)
                   ? [
                       {
                         title: t("Flow"),
@@ -327,8 +325,7 @@ export function useNavMain({
                       },
                     ]
                   : []),
-                ...(hasFeature(subscription, sfpn.WhatsAppAutomation) &&
-                hasTeamFeature(TeamFeature.Chatbots)
+                ...(hasTeamFeature(TeamFeature.Chatbots)
                   ? [
                       {
                         title: t("Chatbot"),
@@ -337,8 +334,7 @@ export function useNavMain({
                       },
                     ]
                   : []),
-                ...(hasFeature(subscription, sfpn.WhatsAppTemplate) &&
-                hasTeamFeature(TeamFeature.Templates)
+                ...(hasTeamFeature(TeamFeature.Templates)
                   ? [
                       {
                         title: t("Templates"),
@@ -354,8 +350,7 @@ export function useNavMain({
                 },
               ],
             },
-            ...(hasFeature(subscription, sfpn.WhatsAppAutomation) &&
-            hasTeamFeature(TeamFeature.Chatbots)
+            ...(hasTeamFeature(TeamFeature.Chatbots)
               ? [
                   {
                     title: t("Instagram"),
@@ -364,8 +359,7 @@ export function useNavMain({
                   },
                 ]
               : []),
-            ...(hasFeature(subscription, sfpn.WhatsAppAutomation) &&
-            hasTeamFeature(TeamFeature.Automation)
+            ...(hasTeamFeature(TeamFeature.Automation)
               ? [
                   {
                     title: t("Automation"),
@@ -377,7 +371,7 @@ export function useNavMain({
           ]
         : []),
 
-      ...(hasFeature(subscription, sfpn.Whatsapp)
+      ...(true
         ? [
             {
               title: t("Commerce"),
@@ -419,7 +413,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.Loyalty) && hasTeamFeature(TeamFeature.Loyalty)
+      ...(hasTeamFeature(TeamFeature.Loyalty)
         ? [
             {
               title: t("Loyalty"),
@@ -480,7 +474,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.WebSurvey) && hasTeamFeature(TeamFeature.WebForms)
+      ...(hasTeamFeature(TeamFeature.WebForms)
         ? [
             {
               title: t("Web Forms"),
@@ -510,7 +504,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.Ticket) && hasTeamFeature(TeamFeature.Tickets)
+      ...(hasTeamFeature(TeamFeature.Tickets)
         ? [
             {
               title: t("Tickets"),

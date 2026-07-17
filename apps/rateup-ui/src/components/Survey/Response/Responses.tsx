@@ -20,16 +20,9 @@ import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
-import {
-  IntegratedApps,
-  PageType,
-  QuestionType,
-  SubscriptionFeaturePathName,
-  SurveyType,
-} from "@/types/enums.ts";
+import { IntegratedApps, PageType, QuestionType, SurveyType } from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
-import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
 import FormModalLayout from "../../Modal/FormModalLayout.tsx";
@@ -39,7 +32,7 @@ import { useSurveyResponseColumns } from "./Columns.tsx";
 import { ResponseTableToolbar } from "./ResponseTableToolbar.tsx";
 import { useResponseFilterStore } from "./store.ts";
 
-const Responses = ({ survey, defaultLanguage, subscription, questions }: any) => {
+const Responses = ({ survey, defaultLanguage, questions }: any) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
@@ -188,8 +181,8 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
     setSelectedRowId,
     open,
     setSelectedResponseId,
-    enableTicket:
-      survey?.enableTickets && hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+    // Tickets are free with no limits, so creation follows only the survey's toggle.
+    enableTicket: survey?.enableTickets,
     surveyId: survey?.id,
     typeWa: survey?.type === SurveyType.WhatsApp || survey?.type === SurveyType.WaFlow,
   });

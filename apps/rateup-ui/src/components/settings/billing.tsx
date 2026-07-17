@@ -45,11 +45,26 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
 export function UsageCard({ subscription }) {
-  const { data: stats } = useUsageStats();
+  const { t: translations } = useTranslation();
+  const { data: stats, refetch, isFetching } = useUsageStats();
 
   return (
     <Card className="p-6 ">
-      <h3 className="">Usage Stats</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="">Usage Stats</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="flex items-center gap-2"
+        >
+          <RefreshCcw
+            className={`w-4 h-4 transition-transform ${isFetching ? "animate-spin" : ""}`}
+          />
+          {translations("Refresh")}
+        </Button>
+      </div>
       <div className="flex flex-col justify-center gap-4">
         <TeamStats stats={stats} subscription={subscription} />
         <SurveyStats stats={stats} subscription={subscription} />
@@ -748,36 +763,23 @@ const WhatsappStats = ({ stats, subscription }) => {
   const isActive = subscription?.features?.whatsapp?.active;
   if (!isActive) return null;
 
-  const statsArray = [
-    {
-      count: subscription?.isAnnualMessageLimit
-        ? stats?.annualTemplateMessageCount
-        : stats?.monthlyTemplateMessageCount,
-      totalCount: subscription?.isAnnualMessageLimit
-        ? subscription?.features?.whatsapp?.count?.monthlyMessageLimit * 12
-        : subscription?.features?.whatsapp?.count?.monthlyMessageLimit,
-      stats: subscription?.isAnnualMessageLimit ? "Annual Message" : "Monthly Message",
-    },
-    {
-      count: stats?.waSurveysCount,
-      totalCount: subscription?.features?.whatsapp?.flow?.count?.max,
-      stats: "Flow Surveys",
-    },
-    {
-      count: stats?.waAutomationCount,
-      totalCount: subscription?.features?.whatsapp?.automation?.count?.max,
-      stats: "Automation",
-    },
-    {
-      count: stats?.monthlyAutomationTriggerCount,
-      totalCount: subscription?.features?.whatsapp?.automation?.automationTrigger?.count?.max,
-      stats: "Monthly Automation Trigger",
-    },
-    {
-      count: stats?.templateMessagesCount,
-      stats: "Total Message",
-    },
-  ];
+  const isAnnual = subscription?.isAnnualMessageLimit;
+  const label = isAnnual ? "Annual Conversation" : "Monthly Conversation";
+  const rawCount =
+    (isAnnual ? stats?.annualConversationsCount : stats?.monthlyConversationsCount) || 0;
+  const totalCount =
+    (isAnnual
+      ? (subscription?.features?.whatsapp?.conversation?.count?.max || 0) * 12
+      : subscription?.features?.whatsapp?.conversation?.count?.max) || 0;
+
+  // Once usage exceeds the allowance we cap the bar/label at the limit (e.g. 4/4,
+  // 100% used, 0 remaining) and surface the surplus separately as "+N more", so
+  // the meter never renders past full or shows negative remaining counts.
+  const hasLimit = totalCount > 0;
+  const displayCount = hasLimit ? Math.min(rawCount, totalCount) : rawCount;
+  const overage = hasLimit ? Math.max(rawCount - totalCount, 0) : 0;
+  const percentage = hasLimit ? Math.min((rawCount / totalCount) * 100, 100) : 0;
+  const remaining = Math.max(totalCount - rawCount, 0);
 
   return (
     <Card className="p-6">
@@ -785,42 +787,40 @@ const WhatsappStats = ({ stats, subscription }) => {
         <MessageCircle className="w-4 h-4" />
         {translations("Whatsapp")}
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-16">
-        {statsArray.map((item, index) => {
-          const count = item.count || 0;
-          const totalCount = item.totalCount || 0;
-          const percentage = totalCount > 0 ? (count / totalCount) * 100 : 0;
-          const remaining = totalCount - count;
-
-          return (
-            <div key={index} className="flex flex-col justify-center gap-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{item.stats}</span>
-                {totalCount > 0 ? (
-                  <span>
-                    {count.toLocaleString()} / {totalCount.toLocaleString()}
-                  </span>
-                ) : (
-                  <span>{count.toLocaleString()}</span>
-                )}
-              </div>
-              {totalCount > 0 && (
-                <>
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                    <div
-                      className="bg-primary h-3 rounded-full transition-all"
-                      style={{ width: `${Math.min(percentage, 100)}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
-                    {translations("remaining")}
-                  </p>
-                </>
-              )}
+      <div className="flex flex-col justify-center gap-2">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">{translations(label)}</span>
+          <div className="flex items-center gap-2">
+            {hasLimit ? (
+              <span>
+                {displayCount.toLocaleString()} / {totalCount.toLocaleString()}
+              </span>
+            ) : (
+              <span>{rawCount.toLocaleString()}</span>
+            )}
+            {overage > 0 && (
+              <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400">
+                +{overage.toLocaleString()} {translations("more")}
+              </Badge>
+            )}
+          </div>
+        </div>
+        {hasLimit && (
+          <>
+            <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200">
+              <div
+                className={`h-3 rounded-full transition-all ${
+                  overage > 0 ? "bg-amber-500" : "bg-primary"
+                }`}
+                style={{ width: `${percentage}%` }}
+              />
             </div>
-          );
-        })}
+            <p className="text-xs text-muted-foreground">
+              {percentage.toFixed(0)}% {translations("used")} • {remaining.toLocaleString()}{" "}
+              {translations("remaining")}
+            </p>
+          </>
+        )}
       </div>
     </Card>
   );

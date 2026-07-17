@@ -22,16 +22,9 @@ import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
-import {
-  IntegratedApps,
-  QuestionType,
-  QuestionType2,
-  SubscriptionFeaturePathName,
-  WaQuestions,
-} from "@/types/enums.ts";
+import { IntegratedApps, QuestionType, QuestionType2, WaQuestions } from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
-import { hasFeature } from "@/utils/subscription/subscription.ts";
 import {
   LDResponseMap,
   RatingScaleMap,
@@ -50,7 +43,7 @@ import { useResponseFilterStore } from "./store.ts";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const WaResponses = ({ survey, defaultLanguage, subscription, questions }) => {
+const WaResponses = ({ survey, defaultLanguage, questions }) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
@@ -117,10 +110,8 @@ const WaResponses = ({ survey, defaultLanguage, subscription, questions }) => {
     ...serverFilters,
   });
 
-  const enableTicket = useMemo(
-    () => survey?.enableTickets && hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
-    [subscription, survey],
-  );
+  // Tickets are free with no limits, so creation follows only the survey's toggle.
+  const enableTicket = useMemo(() => survey?.enableTickets, [survey]);
 
   const deleteResponse = useDeleteResponse(surveyId, surveyTeamMapId, close);
   const { t: translations } = useTranslation();

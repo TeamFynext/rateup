@@ -8,6 +8,7 @@ import {
   useSeedInboxStats,
   useReconcileInboxStatus,
   useBackfillConversations,
+  useMigrateFreePlanFeatures,
 } from "@/backend/updations/update.query";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -33,7 +34,18 @@ function UpdateAllThemes() {
   const seedInboxStatsMutation = useSeedInboxStats();
   const reconcileInboxStatusMutation = useReconcileInboxStatus();
   const backfillConversationsMutation = useBackfillConversations();
+  const migrateFreePlanFeaturesMutation = useMigrateFreePlanFeatures();
   const confirm = useConfirm();
+
+  // Overwrites the feature JSON of every FREE PLAN subscription with the new defaults.
+  const handleMigrateFreePlanFeatures = async () => {
+    const shouldApply = await confirm({
+      title: "Update free plan features",
+      description:
+        "This overwrites the feature set of EVERY FREE PLAN subscription with the current free-plan defaults (new limits, tickets/menu removed). Any per-org customisations on free subscriptions will be replaced. This cannot be undone.",
+    });
+    if (shouldApply) migrateFreePlanFeaturesMutation.mutate();
+  };
 
   // The dry run is safe to fire directly; applying rewrites conversation rows.
   const handleReconcileApply = async () => {
@@ -154,6 +166,41 @@ function UpdateAllThemes() {
                   <>
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Run Sync
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
+            <CardHeader className="pb-3">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
+                  <Database className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-lg">Update Free Plan Features</CardTitle>
+                  <CardDescription className="mt-1">
+                    Overwrites every FREE PLAN subscription with the latest free-plan feature
+                    defaults (new limits, tickets/menu removed). Replaces per-org customisations.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <Button
+                onClick={handleMigrateFreePlanFeatures}
+                disabled={migrateFreePlanFeaturesMutation.isPending}
+                className="w-full"
+              >
+                {migrateFreePlanFeaturesMutation.isPending ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Run Migration
                   </>
                 )}
               </Button>

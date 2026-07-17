@@ -188,8 +188,7 @@ export function WhatsappTemplateById({
         label: type,
         disabled:
           type === TemplateType.CAROUSEL
-            ? !subscription ||
-              !hasFeature(subscription, SubscriptionFeaturePathName.CarouselTemplate)
+            ? !subscription || !hasFeature(subscription, SubscriptionFeaturePathName.Whatsapp)
             : false,
       })),
     [subscription],

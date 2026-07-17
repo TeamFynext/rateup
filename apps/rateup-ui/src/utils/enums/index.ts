@@ -158,36 +158,14 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "Team Members";
     case sfpn.Whatsapp:
       return "Whatsapp";
-    case sfpn.WhatsAppFlow:
-      return "Flow";
-    case sfpn.WhatsAppSurvey:
-      return "Survey";
-    case sfpn.WhatsAppCampaign:
-      return "Campaign";
-    case sfpn.WhatsAppTemplate:
-      return "Template";
-    case sfpn.WhatsAppAutomation:
-      return "Automation";
     case sfpn.Ticket:
       return "Ticket";
     case sfpn.AI:
       return "AI";
-    case sfpn.Loyalty:
-      return "Loyalty";
-    case sfpn.LoyaltyAction:
-      return "Action";
-    case sfpn.LoyaltyCustomer:
-      return "Customer";
-    case sfpn.LoyaltyReward:
-      return "Reward";
-    case sfpn.WhatsAppAutomationTrigger:
-      return "Automation Trigger";
-    case sfpn.CarouselTemplate:
-      return "Carousel Template";
     case sfpn.Webhook:
       return "Webhook";
-    case sfpn.LeadAdAutomation:
-      return "Lead Ad Automation";
+    case sfpn.WhatsAppConversation:
+      return "WhatsApp Conversation";
     case sfpn.Menu:
       return "Digital Menu";
     default:
