@@ -373,7 +373,6 @@ export async function filterChats(
           }
         }
       }
-
       if (!bodyFilterProps?.waMessageAssignStatus) {
         if (bodyFilterProps.status?.length) {
           params.push(bodyFilterProps.status);
@@ -429,6 +428,14 @@ export async function filterChats(
         }
       }
 
+      // Phone filter
+      // if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
+      //   params.push(bodyFilterProps.phone);
+      //   params.push(`+${bodyFilterProps.phone}`);
+      //   filters.push(
+      //     `(c."lastMessageSourceIdentifier" = $${paramIndex++} OR c."lastMessageSourceIdentifier" = $${paramIndex++})`,
+      //   );
+      // }
       if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
         params.push(bodyFilterProps.phone);
         params.push(`+${bodyFilterProps.phone}`);
