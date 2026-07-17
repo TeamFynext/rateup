@@ -1,5 +1,6 @@
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { MessageSquare, Send, StickyNote } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -7,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { create } from "zustand";
 
+import { useConversationLimit } from "@/backend/stats/stats.query";
 import {
   useAssignInboxToUer,
   useCreatePrivateMessage,
@@ -49,7 +51,14 @@ export default function WaInboxChatDisplayFooter({
 
   const submiRef = useRef(null);
   const { t: translations } = useTranslation();
+  const navigate = useNavigate();
   const { user } = useUser();
+  const {
+    isExceeded: conversationLimitReached,
+    used: conversationsUsed,
+    limit: conversationLimit,
+    isAnnual: isAnnualConversationLimit,
+  } = useConversationLimit();
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const currentUser = contact.assignedUsers?.find((c) => c.id === user?.userId);
   const platform = contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
@@ -90,6 +99,12 @@ export default function WaInboxChatDisplayFooter({
     body.text?.body !== "" && parseToWhatsAppFormat(body.text?.body || "").trim().length > 0;
 
   function handleSendMessage() {
+    if (conversationLimitReached) {
+      toast.error(
+        translations("Conversation limit reached. Upgrade your plan to send more messages."),
+      );
+      return;
+    }
     const currentType =
       media.length || body.media?.length
         ? body.text?.body === "" || parseToWhatsAppFormat(body.text?.body || "").trim().length === 0
@@ -372,21 +387,45 @@ export default function WaInboxChatDisplayFooter({
           </TabsList>
 
           <TabsContent value="message">
-            <WaTextEditor
-              handleInputChange={(value) => {
-                setBody({ ...body, text: { ...body.text, body: value } });
-              }}
-              content={body.text.body}
-              mih={100}
-              flex={1}
-              inbox={true}
-              customEnter={() => submiRef.current()}
-              editable={!isSessionExpired && !isRecording && !audioUrl && body.type === "text"}
-              placeholder="Type a message...Type / for quick replies"
-              sendMessageButton={<SendMessageComponent />}
-              border={true}
-              allowFiles={true}
-            />
+            {conversationLimitReached ? (
+              <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-4 text-center dark:border-amber-900/50 dark:bg-amber-950/30">
+                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
+                  <IconExclamationCircle size={"1.1rem"} />
+                  <span className="text-sm font-medium">
+                    {translations("Conversation limit reached")} (
+                    {conversationsUsed.toLocaleString()}/{conversationLimit.toLocaleString()})
+                  </span>
+                </div>
+                <p className="max-w-md text-xs text-muted-foreground">
+                  {isAnnualConversationLimit
+                    ? translations(
+                        "You've used all conversations in your annual plan. Upgrade your plan to send more messages, or wait for it to reset.",
+                      )
+                    : translations(
+                        "You've used all conversations for this month. Upgrade your plan to send more messages, or wait for your monthly limit to reset.",
+                      )}
+                </p>
+                <Button size="sm" onClick={() => navigate({ to: "/dashboard/settings/billing" })}>
+                  {translations("Upgrade Plan")}
+                </Button>
+              </div>
+            ) : (
+              <WaTextEditor
+                handleInputChange={(value) => {
+                  setBody({ ...body, text: { ...body.text, body: value } });
+                }}
+                content={body.text.body}
+                mih={100}
+                flex={1}
+                inbox={true}
+                customEnter={() => submiRef.current()}
+                editable={!isSessionExpired && !isRecording && !audioUrl && body.type === "text"}
+                placeholder="Type a message...Type / for quick replies"
+                sendMessageButton={<SendMessageComponent />}
+                border={true}
+                allowFiles={true}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="private">

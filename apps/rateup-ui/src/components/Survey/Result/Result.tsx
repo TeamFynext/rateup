@@ -23,7 +23,6 @@ const Result = ({
   survey,
   encryptionpassword,
   setEncryptionPassword,
-  subscription = null,
   flow = null,
   version = 1,
 }) => {
@@ -65,19 +64,9 @@ const Result = ({
   return (
     <>
       {version === 1 ? (
-        <Responses
-          survey={survey}
-          defaultLanguage={defaultLanguage}
-          subscription={subscription}
-          questions={questions}
-        />
+        <Responses survey={survey} defaultLanguage={defaultLanguage} questions={questions} />
       ) : (
-        <WaResponses
-          survey={survey}
-          defaultLanguage={defaultLanguage}
-          subscription={subscription}
-          questions={flowQuestions}
-        />
+        <WaResponses survey={survey} defaultLanguage={defaultLanguage} questions={flowQuestions} />
       )}
       <EncryptionPasswordModal
         passwordModalOpened={passwordModalOpened}

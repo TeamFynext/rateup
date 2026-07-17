@@ -24,7 +24,6 @@ import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { useImmer } from "use-immer";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
-import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
@@ -73,9 +72,7 @@ import { FileConverter } from "@/components/whatsapp/flow-v2/input/DataSource.ts
 import WaTemplateFormElements, {
   NoParams,
 } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/templateDisplayModal/templatePreview/formElements/index.tsx";
-import { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
-import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import type {
   CatalogNodeData,
@@ -134,11 +131,8 @@ interface NodeEditorProps {
 export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEditorProps>) {
   const { data: templates, isLoading } = useWaTemplates();
   const { data: flows, isPending } = useWaFlowsFromDb();
-  const { data: subscription } = useSubscription();
-  const [hasTicketFeature] = useMemo(
-    () => [hasFeature(subscription, SubscriptionFeaturePathName.Ticket)],
-    [subscription],
-  );
+  // Tickets are a free feature — always available.
+  const hasTicketFeature = true;
   const { data: boardData, isLoading: isBoardsPending } = useBoardsQueries(hasTicketFeature);
   const { data: teamMembers, isPending: isLoadingTeamMembers } = useTeamsMembersOfOrg();
   const session = useSessionContext() as {

@@ -65,7 +65,7 @@ function TabPanelsComp({
                     "endtoendencryption",
                   "redirect",
                   "uniqueDeviceResponse",
-                  hasFeature(subscription, SubscriptionFeaturePathName.Ticket) && "tickets",
+                  "tickets",
                   hasFeature(subscription, SubscriptionFeaturePathName.EmailNotification) &&
                     "enableNotificationEmail",
                   hasFeature(subscription, SubscriptionFeaturePathName.Webhook) && "webhook",
@@ -85,7 +85,6 @@ function TabPanelsComp({
               survey={survey}
               encryptionpassword={encryptionpassword}
               setEncryptionPassword={setEncryptionPassword}
-              subscription={subscription}
             />
           </TabsContent>
           <TabsContent value="analytics" className="min-h-0">

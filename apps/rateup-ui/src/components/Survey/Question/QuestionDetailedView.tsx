@@ -94,7 +94,8 @@ export function QuestionDetailedView({
       hasFeature(subscription, SubscriptionFeaturePathName.GoogleReview),
     );
 
-    setIsTicketFeatureActive(hasFeature(subscription, SubscriptionFeaturePathName.Ticket));
+    // Tickets are free with no limits — always available.
+    setIsTicketFeatureActive(true);
   }, [subscription]);
 
   const form = useForm({

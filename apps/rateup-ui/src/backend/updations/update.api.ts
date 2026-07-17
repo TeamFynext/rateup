@@ -16,6 +16,19 @@ export async function syncTeamFeatures() {
   });
 }
 
+export interface MigrateFreePlanFeaturesResult {
+  message: string;
+  updated: number;
+}
+
+export async function migrateFreePlanFeatures() {
+  return await axiosClient.put<MigrateFreePlanFeaturesResult>(
+    `${baseUrl}/migrate-free-plan-features`,
+    null,
+    { timeout: 60000 },
+  );
+}
+
 export async function migrateLoyaltyTierPriority() {
   return await axiosClient.put(`${baseUrl}/migrate-loyalty-tier-priority`, null, {
     timeout: 60000,

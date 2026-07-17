@@ -4,18 +4,14 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Calendar, CreditCard, Edit, Package, Star, Trash2, Zap } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 
 import {
   usePaymentsPlans,
   useRateupPaymentsPlanDeleteMutation,
   useRateupPaymentsPlans,
-  useRateupPaymentsPlanUpdateMutation,
 } from "@/backend/payment/payment.query";
 import { useGetStripeProducts } from "@/backend/payment/stripe/stripe.query";
-import { ContainedTagInput } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import RateupPlanModal from "@/components/Modal/RateupPlanModal.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -55,10 +51,7 @@ interface RateupPlanTableData {
 
 function RateupPlan() {
   const [opened, { toggle, close }] = useDisclosure(false);
-  const [error, setError] = useState("");
-  const [updatedField, setUpdatedField] = useState<any>("");
-  const [openedDescriptonModal, { toggle: toggleDescriptonModal, close: closeDescriptonModal }] =
-    useDisclosure(false);
+  const [editPlan, setEditPlan] = useState<any>(null);
   const { t: translations } = useTranslation();
   const { data: plans, isPending, isError } = useRateupPaymentsPlans();
   const {
@@ -68,8 +61,6 @@ function RateupPlan() {
   } = usePaymentsPlans();
   const { data: stripeProducts } = useGetStripeProducts();
 
-  const rateupPaymentsPlanUpdateMutation =
-    useRateupPaymentsPlanUpdateMutation(closeDescriptonModal);
   const rateupPaymentsPlanDelete = useRateupPaymentsPlanDeleteMutation();
 
   const columns: ColumnDef<RateupPlanTableData>[] = [
@@ -185,12 +176,7 @@ function RateupPlan() {
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              setUpdatedField({
-                id: row.original.id,
-                paymentPlanId: row.original.paymentPlanId,
-                description: row.original.description,
-              });
-              toggleDescriptonModal();
+              setEditPlan(row.original.features);
             }}
             className="h-8 w-8 p-0"
           >
@@ -238,14 +224,6 @@ function RateupPlan() {
     value: product.id,
     label: product.name,
   }));
-
-  const handleMutation = (updatedData: any) => {
-    rateupPaymentsPlanUpdateMutation.mutate(updatedData);
-    toast.loading(translations("Hold.. your data is getting updated..."), {
-      id: "load-data",
-    });
-    setUpdatedField("");
-  };
 
   const planList = [
     { group: PaymentPlans.razorpay, items: razorPayPlanFiltered },
@@ -375,44 +353,12 @@ function RateupPlan() {
         />
       </div>
       <RateupPlanModal opened={opened} close={close} planList={planList} />
-      <FormModalLayout
-        opened={openedDescriptonModal}
-        onClose={() => {
-          closeDescriptonModal();
-          setUpdatedField("");
-        }}
-        centered
-        title={translations("Update Description")}
-        buttonTitle="Update"
-        includeCancelButton
-        onSubmit={() => {
-          if (!updatedField?.description.length) {
-            setError("Cannot be empty");
-            return;
-          }
-          handleMutation(updatedField);
-        }}
-      >
-        <div className="mt-4 flex justify-between">
-          <ContainedTagInput
-            label={translations("Description")}
-            placeholder={translations("Type Description and press enter")}
-            withAsterisk
-            value={updatedField?.description ?? []}
-            onChange={(e) => {
-              if (!e) return;
-              setError("");
-              setUpdatedField({
-                ...updatedField,
-                description: e,
-              });
-            }}
-            error={error}
-            description={"Use || for split"}
-            splitChars={["||"]}
-          />
-        </div>
-      </FormModalLayout>
+      <RateupPlanModal
+        opened={Boolean(editPlan)}
+        close={() => setEditPlan(null)}
+        planList={planList}
+        plan={editPlan}
+      />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   seedInboxStats,
   reconcileInboxStatus,
   backfillConversations,
+  migrateFreePlanFeatures,
   type BackfillConversationsResult,
 } from "./update.api";
 
@@ -33,6 +34,21 @@ export const useSyncTeamFeatures = () => {
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to sync team features");
+    },
+  });
+};
+
+export const useMigrateFreePlanFeatures = () => {
+  return useMutation({
+    mutationFn: migrateFreePlanFeatures,
+    onSuccess: ({ data }) => {
+      toast.success(data.message, {
+        description: `${data.updated} free-plan subscription(s) updated.`,
+        id: "migrate-free-plan-features",
+      });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to migrate free plan features");
     },
   });
 };
