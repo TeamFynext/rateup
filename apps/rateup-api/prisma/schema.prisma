@@ -1677,6 +1677,9 @@ model WaMessage {
   @@index([contactId, sourceIdentifier])
   @@index([sendBy, waCreatedAt])
   @@index([conversationId])
+  // Speeds the conversation backfill scan: EXISTS(WaMessage WHERE contactId = c.id
+  // AND conversationId IS NULL) can be answered from this index alone.
+  @@index([contactId, conversationId])
 }
 
 model WaMessageCampaginParticipantMap {
