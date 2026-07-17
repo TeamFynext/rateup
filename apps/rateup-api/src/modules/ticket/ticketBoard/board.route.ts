@@ -14,12 +14,10 @@ import {
 } from "./board.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import { verifyBoardAccess } from "./board.auth.js";
-import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
-import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 
 export async function boardRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeaturePathName.Ticket]));
+  // Tickets are a free feature — no subscription gate.
 
   // Create board
   server.post(

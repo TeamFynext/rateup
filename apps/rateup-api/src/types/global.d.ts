@@ -350,34 +350,17 @@ declare global {
           monthlyResponseLimit: number;
         };
       };
-    [sfpn.Whatsapp]: subscriptionWithActiveAndCount & {
-      survey: subscriptionWithActiveAndCount;
-      campaign: subscriptionWithActiveAndCount;
-      flow: subscriptionWithActiveAndCount;
-      template: subscriptionWithActiveAndCount & {
-        carouselTemplate: subscriptionWithActiveAndCount;
-      };
-      count: {
-        monthlyMessageLimit: number;
-        max: number;
-      };
-      automation: subscriptionWithActiveAndCount & {
-        automationTrigger: subscriptionWithActiveAndCount;
-        leadAdAutomation: subscriptionWithActiveAndCount;
-      };
+    [sfpn.Whatsapp]: subscriptionActiveField & {
+      conversation: subscriptionWithActiveAndCount;
     };
     [sfpn.ReputationManagement]: subscriptionActiveField & subscriptionCountRestriction;
-    [sfpn.Ticket]: subscriptionActiveField & subscriptionCountRestriction;
+    // Tickets are a free feature; kept optional for backward-compat with stored subscriptions.
+    [sfpn.Ticket]?: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.AI]: subscriptionActiveField & {
       count: {
         completionTokens: number;
         promptTokens: number;
       };
-    };
-    [sfpn.Loyalty]: subscriptionActiveField & {
-      action: subscriptionWithActiveAndCount;
-      reward: subscriptionWithActiveAndCount;
-      customer: subscriptionWithActiveAndCount;
     };
   }
 

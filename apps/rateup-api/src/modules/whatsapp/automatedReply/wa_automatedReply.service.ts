@@ -170,15 +170,8 @@ export async function verifyAutomationTriggerLimit(orgId) {
     getUsageStat(orgId),
     getSubscription(orgId),
   ]);
-  if (!subscription.features.whatsapp.automation.automationTrigger.active) {
-    log.error("Automation Trigger is inactive. Aborting automation check...");
-    return false;
-  }
-  if (
-    usageStats?.monthlyAutomationTriggerCount >=
-    subscription.features.whatsapp.automation.automationTrigger.count.max
-  ) {
-    log.error("Automtion Trigger Limit reached. Aborting automation check...");
+  if (!subscription.features.whatsapp.active) {
+    log.error("Whatsapp is inactive. Aborting automation check...");
     return false;
   }
   return true;

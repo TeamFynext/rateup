@@ -1,5 +1,7 @@
 import { Job } from "bullmq";
+import { Role } from "../../../generated/prisma/client.js";
 import { EmailParams, sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
+import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
 import { sendPushNotification } from "../mobileNotification/mobile.service.js";
 import { NotificationSettingSchema } from "./notification.schema.js";
@@ -84,6 +86,29 @@ export async function createNotification(userId, orgId, source, subSource, data)
       data,
     },
   });
+}
+
+// Notifies the org's owner + admins (the members who can upgrade) that the org
+// has reached its conversation limit. Fired once per cycle from the point the
+// counter crosses the limit; best-effort so it never blocks conversation counting.
+export async function notifyConversationLimitReached(orgId: string) {
+  try {
+    const admins = await prisma.orgMember.findMany({
+      where: { orgId, role: { in: [Role.SUPER_ADMIN, Role.ADMIN] }, user: { active: true } },
+      select: { userId: true },
+    });
+
+    await Promise.all(
+      admins.map((m) =>
+        createNotification(m.userId, orgId, "subscription", "conversation-limit-reached", {
+          message:
+            "You've reached your conversation limit. Upgrade your plan to keep sending messages.",
+        }),
+      ),
+    );
+  } catch (error) {
+    log.error(error, "Failed to send conversation-limit notification");
+  }
 }
 
 export async function deleteNotificationById(notificationId: string) {

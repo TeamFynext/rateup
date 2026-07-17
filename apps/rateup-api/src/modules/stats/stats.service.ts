@@ -1,6 +1,8 @@
 import dayjs from "dayjs";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import prisma from "../../utils/prisma.js";
+import { log } from "../../utils/logger.js";
+import { notifyConversationLimitReached } from "../notification/notification.service.js";
 
 export async function updateMonthlyStat(stat: string, orgId: string) {
   try {
@@ -11,58 +13,13 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
       update: {
         monthlySurveyResponses: stat === "survey" ? { increment: 1 } : undefined,
         surveyResponsesCount: stat === "survey" ? { increment: 1 } : undefined,
-        monthlyMessagesCount:
-          stat === SubscriptionFeaturePathName.Whatsapp ? { increment: 1 } : undefined,
         messagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? { increment: 1 } : undefined,
-        waSurveysCount:
-          stat === SubscriptionFeaturePathName.WhatsAppSurvey ? { increment: 1 } : undefined,
-        waSurveyResponsesCount:
-          stat === SubscriptionFeaturePathName.WhatsAppSurvey ? { increment: 1 } : undefined,
-        loyaltyActionCount:
-          stat === SubscriptionFeaturePathName.LoyaltyAction ? { increment: 1 } : undefined,
-        loyaltyRewardCount:
-          stat === SubscriptionFeaturePathName.LoyaltyReward ? { increment: 1 } : undefined,
-        loyaltyCustomerCount:
-          stat === SubscriptionFeaturePathName.LoyaltyCustomer ? { increment: 1 } : undefined,
-        annualMessageCount:
-          stat === SubscriptionFeaturePathName.Whatsapp ? { increment: 1 } : undefined,
-        ...(stat === SubscriptionFeaturePathName.WhatsAppTemplate
-          ? {
-              templateMessagesCount: { increment: 1 },
-              monthlyTemplateMessageCount: { increment: 1 },
-              annualTemplateMessageCount: { increment: 1 },
-            }
-          : {}),
-        monthlyAutomationTriggerCount:
-          stat === SubscriptionFeaturePathName.WhatsAppAutomationTrigger
-            ? { increment: 1 }
-            : undefined,
       },
       create: {
         orgId: orgId,
         monthlySurveyResponses: stat === "survey" ? 1 : 0,
         surveyResponsesCount: stat === "survey" ? 1 : 0,
-        monthlyMessagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
         messagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
-        waSurveysCount: stat === SubscriptionFeaturePathName.WhatsAppSurvey ? 1 : 0,
-        waSurveyResponsesCount: stat === SubscriptionFeaturePathName.WhatsAppSurvey ? 1 : 0,
-        loyaltyActionCount: stat === SubscriptionFeaturePathName.LoyaltyAction ? 1 : 0,
-        loyaltyRewardCount: stat === SubscriptionFeaturePathName.LoyaltyReward ? 1 : 0,
-        loyaltyCustomerCount: stat === SubscriptionFeaturePathName.LoyaltyCustomer ? 1 : 0,
-        annualMessageCount: stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
-        ...(stat === SubscriptionFeaturePathName.WhatsAppTemplate
-          ? {
-              templateMessagesCount: 1,
-              monthlyTemplateMessageCount: 1,
-              annualTemplateMessageCount: 1,
-            }
-          : {
-              templateMessagesCount: 0,
-              monthlyTemplateMessageCount: 0,
-              annualTemplateMessageCount: 0,
-            }),
-        monthlyAutomationTriggerCount:
-          stat === SubscriptionFeaturePathName.WhatsAppAutomationTrigger ? 1 : 0,
         //TODO: improve
         // Add other fields with default values as needed
       },
@@ -74,30 +31,71 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
   }
 }
 
-// Function to reset the monthly counts
+/// Increments the org's monthly conversation usage by one. Called whenever a new
+/// Conversation row is created (a brand-new contact's first thread, or an existing
+/// contact re-engaging after their previous thread closed). This is the counter the
+/// `whatsapp.conversation.count.max` subscription limit is checked against. Best-effort:
+/// a usage-tracking failure must never break conversation creation.
+export async function incrementConversationCount(orgId: string) {
+  try {
+    const usage = await prisma.usageStats.upsert({
+      where: { orgId },
+      update: {
+        monthlyConversationsCount: { increment: 1 },
+        annualConversationsCount: { increment: 1 },
+      },
+      create: { orgId, monthlyConversationsCount: 1, annualConversationsCount: 1 },
+    });
+    await maybeNotifyConversationLimitReached(orgId, usage);
+  } catch (error) {
+    log.error(error, "Failed to increment conversation usage count");
+  }
+}
+
+// Fires a one-time system notification the moment the org's conversation counter
+// first reaches its allowance. Uses `=== effectiveMax` so exactly the increment
+// that hits the limit notifies (repeated over-limit attempts don't re-notify);
+// after a reset the counter drops and the next cycle can notify again. Best-effort:
+// any failure here must never affect the (already committed) usage increment.
+async function maybeNotifyConversationLimitReached(
+  orgId: string,
+  usage: { monthlyConversationsCount: number; annualConversationsCount: number },
+) {
+  try {
+    const subscription = await prisma.subscription.findUnique({ where: { orgId } });
+    const max = (subscription?.features as any)?.[SubscriptionFeaturePathName.Whatsapp]
+      ?.conversation?.count?.max;
+    if (!max || max <= 0) return;
+
+    const isAnnual = subscription?.isAnnualMessageLimit;
+    const effectiveMax = isAnnual ? max * 12 : max;
+    const used = isAnnual ? usage.annualConversationsCount : usage.monthlyConversationsCount;
+
+    if (used === effectiveMax) {
+      await notifyConversationLimitReached(orgId);
+    }
+  } catch (error) {
+    log.error(error, "Failed to evaluate conversation-limit notification");
+  }
+}
+
+// Function to reset the monthly counts.
+// Resets every org whose 30-day monthly cycle has elapsed (or was never reset).
+// Paid monthly plans keep `lastMonthlyResettedDate` fresh via the renewal webhook,
+// so they're naturally excluded here; free plans (no webhook) and annual plans'
+// in-year monthly sub-counters are what this actually rolls over. `annualConversationsCount`
+// is intentionally NOT reset here — that's handled yearly by resetAnnualCounts.
 export async function resetMonthlyCounts() {
   try {
+    const cutoff = dayjs().startOf("day").subtract(30, "day").toDate();
     const resetMonthlyStats = await prisma.usageStats.updateMany({
       where: {
-        lastMonthlyResettedDate: dayjs().startOf("D").subtract(30, "D").toDate(),
-        org: {
-          Subscription: {
-            basePlan: {
-              paymentPlan: {
-                period: "yearly",
-              },
-              OR: [
-                {
-                  paymentPlan: null,
-                },
-              ],
-            },
-          },
-        },
+        OR: [{ lastMonthlyResettedDate: { lte: cutoff } }, { lastMonthlyResettedDate: null }],
       },
       data: {
         monthlySurveyResponses: 0,
-        monthlyMessagesCount: 0,
+        monthlyWaSurveyResponses: 0,
+        monthlyConversationsCount: 0,
         monthlyAutomationTriggerCount: 0,
         monthlyTemplateMessageCount: 0,
         lastMonthlyResettedDate: new Date(),
@@ -112,7 +110,7 @@ export async function resetMonthlyCounts() {
 export async function resetAnnualCounts() {
   try {
     const resetAnnualCounts =
-      await prisma.$executeRaw`UPDATE "UsageStats" SET "annualMessageCount" = 0 WHERE "orgId" IN (
+      await prisma.$executeRaw`UPDATE "UsageStats" SET "annualConversationsCount" = 0 WHERE "orgId" IN (
       SELECT s."orgId"
       FROM "Subscription" s
       JOIN "RateupPlan" r ON s."basePlanId" = r.id 
@@ -201,10 +199,12 @@ export async function createStats(orgId: string) {
       },
     });
 
-    const monthlyMessagesCount = await prisma.waMessage.count({
+    const monthlyConversationsCount = await prisma.conversation.count({
       where: {
-        contact: {
-          orgId,
+        orgId,
+        createdAt: {
+          gte: startOfMonth,
+          lte: currentDate,
         },
       },
     });
@@ -220,7 +220,7 @@ export async function createStats(orgId: string) {
       surveyCount,
       surveyResponsesCount,
       surveyResponsesCountCurrentMonth,
-      monthlyMessagesCount,
+      monthlyConversationsCount,
       waAutomationCount,
     };
 
@@ -241,7 +241,7 @@ export async function updateUsageStats(
     surveyCount: number;
     surveyResponsesCount: number;
     surveyResponsesCountCurrentMonth: number;
-    monthlyMessagesCount: number;
+    monthlyConversationsCount: number;
     waAutomationCount: number;
   },
 ) {
@@ -253,7 +253,7 @@ export async function updateUsageStats(
       surveysCount: stats?.surveyCount || 0,
       surveyResponsesCount: stats?.surveyResponsesCount || 0,
       monthlySurveyResponses: stats?.surveyResponsesCountCurrentMonth || 0,
-      monthlyMessagesCount: stats?.monthlyMessagesCount || 0,
+      monthlyConversationsCount: stats?.monthlyConversationsCount || 0,
       waAutomationCount: stats?.waAutomationCount || 0,
     },
     create: {
@@ -262,7 +262,7 @@ export async function updateUsageStats(
       surveysCount: stats?.surveyCount || 0,
       surveyResponsesCount: stats?.surveyResponsesCount || 0,
       monthlySurveyResponses: stats?.surveyResponsesCountCurrentMonth || 0,
-      monthlyMessagesCount: stats?.monthlyMessagesCount || 0,
+      monthlyConversationsCount: stats?.monthlyConversationsCount || 0,
       orgId,
     },
   });
@@ -293,24 +293,6 @@ export async function updateUsageStatsLastReset(orgId, renewedAt) {
     },
     data: {
       lastMonthlyResettedDate,
-    },
-  });
-}
-
-export async function updateAnnualMessageCount(orgId) {
-  const waMessages = await prisma.$queryRaw`SELECT COUNT(*) FROM "WaMessage" wm 
-  JOIN "Contact" c ON wm."contactId" = c.id 
-  JOIN "Subscription" s ON c."orgId" = s."orgId"
-  WHERE wm."messageBody"->>'send' IS NOT NULL
-  AND wm."createdAt" >= COALESCE(s."renewedAt", s."createdAt")
-  AND c."orgId" = ${orgId}::uuid;`;
-
-  await prisma.usageStats.update({
-    where: {
-      orgId,
-    },
-    data: {
-      annualMessageCount: Number(waMessages[0]?.count),
     },
   });
 }

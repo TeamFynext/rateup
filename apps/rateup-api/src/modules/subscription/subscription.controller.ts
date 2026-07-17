@@ -11,7 +11,7 @@ import { deleteSubscriptionsInput, updateSubscriptionInput } from "./subscriptio
 import { getRateuplanById } from "../payment/payment.service.js";
 import { FreePlanSubscriptionFeatures } from "./subscription.data.js";
 import dayjs from "dayjs";
-import { updateAnnualMessageCount, updateUsageStatsLastReset } from "../stats/stats.service.js";
+import { updateUsageStatsLastReset } from "../stats/stats.service.js";
 import { log } from "../../utils/logger.js";
 
 export async function getUserSubscriptionHandler(req, res) {
@@ -59,7 +59,8 @@ export async function updateSubscriptionHandler(
   if ("isAnnualMessageLimit" in updatedData) {
     if (!updatedData.isAnnualMessageLimit)
       await updateUsageStatsLastReset(orgId, subscription.renewedAt ?? subscription.createdAt);
-    else await updateAnnualMessageCount(orgId);
+    // Switching to annual pooling needs no backfill — annualConversationsCount is
+    // already incremented live on every conversation.
   }
 }
 

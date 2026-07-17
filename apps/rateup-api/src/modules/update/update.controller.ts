@@ -4,6 +4,7 @@ import {
   backfillWithSQL,
   migrateWaTemplatePhoneIds,
   updateFreePlanExpiry,
+  migrateFreePlanFeatures,
   updatePlanFeatures,
   updateRateupPlanFeature,
   updateSubscriptionAutomation,
@@ -81,6 +82,19 @@ export async function updateFreePlanExpiryHandler(request: FastifyRequest, reply
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
+  }
+}
+
+export async function migrateFreePlanFeaturesHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { updated } = await migrateFreePlanFeatures();
+    reply.code(200).send({
+      message: "Free plan subscriptions updated to the latest feature set",
+      updated,
+    });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send("Error migrating free plan features");
   }
 }
 export async function updateDefaultLifecycleHandler(request: FastifyRequest, reply: FastifyReply) {

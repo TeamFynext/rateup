@@ -32,6 +32,13 @@ const createRateUpPlanSchema = z.object({
   description: z.array(z.string()).min(1),
   features: z.any().optional(),
   trialDays: z.number(),
+  badge: z.string().trim().optional(),
+  price: z.number().optional(),
+  currency: z.enum(["USD", "INR"]).optional(),
+  monthlyPrice: z.number().optional(),
+  yearlyPrice: z.number().optional(),
+  monthlyPaymentPlanId: z.string().optional(),
+  yearlyPaymentPlanId: z.string().optional(),
 });
 
 const updateRateUpPlanSchema = z.object({
@@ -45,6 +52,13 @@ const updateRateUpPlanSchema = z.object({
   description: z.array(z.string()).min(1).optional(),
   features: z.any().optional(),
   trialDays: z.number().optional(),
+  badge: z.string().trim().optional(),
+  price: z.number().optional(),
+  currency: z.enum(["USD", "INR"]).optional(),
+  monthlyPrice: z.number().optional(),
+  yearlyPrice: z.number().optional(),
+  monthlyPaymentPlanId: z.string().optional(),
+  yearlyPaymentPlanId: z.string().optional(),
 });
 
 const rateupPlanParamSchema = z.object({

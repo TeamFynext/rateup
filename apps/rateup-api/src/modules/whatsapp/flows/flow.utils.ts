@@ -984,7 +984,7 @@ export async function verifyFlowSubscriptionLimit(request: FastifyRequest, reply
 
     const whatsappFlowFeatures = getNestedProperty(
       subscription.features as any,
-      SubscriptionFeaturePathName.WhatsAppFlow,
+      SubscriptionFeaturePathName.Whatsapp,
     );
     if (flowCount >= whatsappFlowFeatures?.count?.max) {
       throw new Error(

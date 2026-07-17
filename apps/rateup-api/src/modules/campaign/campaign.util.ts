@@ -19,7 +19,7 @@ export async function verifyCampaignMaxLimit(request: FastifyRequest, reply: Fas
 
     const whatsappCampaignFeature = getNestedProperty(
       subscription.features as any,
-      SubscriptionFeaturePathName.WhatsAppCampaign,
+      SubscriptionFeaturePathName.Whatsapp,
     );
     if (campaignCount >= whatsappCampaignFeature?.count?.max) {
       throw new Error(

@@ -44,8 +44,10 @@ import {
 import { faker } from "@faker-js/faker";
 import {
   getLastCreatedConversationForContact,
+  openConversationForContact,
   updateConversationAssignees,
 } from "../../../contact/conversation/conversation.service.js";
+import { isTerminalInboxStatus } from "../../constants.js";
 import { notificationQueue, sendMessageQueue } from "../../../../utils/redisConnection.js";
 import dayjs from "dayjs";
 
@@ -870,7 +872,18 @@ export async function assignWaMessageToUser(
     const updatedContact = await updateContactById(data.contactId, {
       waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
     });
-    const conversation = await getLastCreatedConversationForContact(updatedContact.id);
+    // Assigning a contact whose last conversation is already closed starts a fresh
+    // engagement. Open a new conversation (mirroring the inbound-message reopen path)
+    // instead of resurrecting the finished one, so the closed record's closedAt /
+    // resolution-time metrics stay frozen and the reopen counter advances.
+    let conversation = await getLastCreatedConversationForContact(updatedContact.id);
+    if (!conversation || isTerminalInboxStatus(conversation.status)) {
+      conversation = await openConversationForContact(
+        updatedContact.id,
+        updatedContact.orgId,
+        WaMessageAssignStatus.ASSIGNED,
+      );
+    }
     if (conversation) {
       const updatedAssignees = [
         ...newUsers,
