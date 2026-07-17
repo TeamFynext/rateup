@@ -30,13 +30,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useDebounce } from "@/hooks/use-debounce.ts";
-import {
-  IntegratedApps,
-  QuestionType,
-  QuestionType2,
-  SubscriptionFeaturePathName,
-  WaQuestions,
-} from "@/types/enums.ts";
+import { IntegratedApps, QuestionType, QuestionType2, WaQuestions } from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
 import {

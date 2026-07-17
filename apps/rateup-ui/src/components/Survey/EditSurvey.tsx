@@ -191,25 +191,28 @@ export function EditSurvey({
   });
 
   const handleTypeSelection = (type: QuestionType | PageType) => {
-    let newQ;
     if (type in PageType) {
-      newQ = createPage(type as PageType, surveyLanguages);
+      // Page types (Welcome/ThankYou/etc.) get valid default titles, so it's
+      // safe to persist them immediately.
+      const newQ = createPage(type as PageType, surveyLanguages);
+      questionCreateMutation.mutateAsync(newQ).then((r) => {
+        const question = r.data;
+        if (uniquePages.includes(question.type)) {
+          setSelectedSurveyThemeTab(getSurveyThemeTabValueFromPageType(question.type));
+          setSurveyThemeContextValue(survey?.webSurveyPagesTheme);
+          surveyThemeContextProviderValueRef.current = survey?.webSurveyPagesTheme;
+        }
+        setSelectedQ(question);
+        setActiveTab(QuestionTabsEnum.Edit);
+      });
     } else {
-      newQ = createBlankQuestion(type as QuestionType, surveyLanguages);
-    }
-    const { ...restData } = newQ;
-    const saveQ = { ...restData };
-    questionCreateMutation.mutateAsync(saveQ).then((r) => {
-      const question = r.data;
-      if (uniquePages.includes(question.type)) {
-        setSelectedSurveyThemeTab(getSurveyThemeTabValueFromPageType(question.type));
-        setSurveyThemeContextValue(survey?.webSurveyPagesTheme);
-        surveyThemeContextProviderValueRef.current = survey?.webSurveyPagesTheme;
-      }
-      setSelectedQ(question);
-      setSelectedQ(r.data);
+      // Blank questions have no title yet, so don't persist them until the
+      // user fills in the required fields — QuestionDetailedView creates the
+      // question via questionCreateMutation on first valid save (id-less question).
+      const newQ = createBlankQuestion(type as QuestionType, surveyLanguages);
+      setSelectedQ(newQ);
       setActiveTab(QuestionTabsEnum.Edit);
-    });
+    }
   };
 
   useEffect(() => {

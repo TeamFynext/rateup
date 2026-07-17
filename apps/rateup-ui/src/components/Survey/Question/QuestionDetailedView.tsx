@@ -271,6 +271,13 @@ export function QuestionDetailedView({
             </div>
             <div className="text-[11px] text-[#8B8E8A]">{translations("Question Editor")}</div>
           </div>
+          {/* Language selector */}
+          <LanguageCompletionView
+            selectedLanguage={selectedLanguage}
+            setSelectedLanguage={setSelectedLanguage}
+            languages={surveyLanguages}
+            notCompletedLanguages={getIncompleteLanguages()}
+          />
           {/* Footer controls inline */}
           <QuestionDetailedViewFooter
             question={question}
@@ -360,13 +367,6 @@ export function QuestionDetailedView({
                   handleSave={handleSave}
                 />
               </div>
-
-              <LanguageCompletionView
-                selectedLanguage={selectedLanguage}
-                setSelectedLanguage={setSelectedLanguage}
-                languages={surveyLanguages}
-                notCompletedLanguages={getIncompleteLanguages()}
-              />
             </div>
 
             {/* <div className="flex items-center gap-2">

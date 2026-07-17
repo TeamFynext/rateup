@@ -1,4 +1,4 @@
-import { IconLanguage } from "@tabler/icons-react";
+import { IconChevronDown } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,9 +28,9 @@ export const LanguageCompletionView = ({
         render={
           <Button
             variant="outline"
-            size="icon"
+            size="sm"
             className={cn(
-              "h-8 w-8 shrink-0",
+              "h-8 shrink-0 gap-1.5 px-2.5",
               hasIncomplete
                 ? "border-red-300 text-red-500 hover:border-red-400 hover:text-red-600"
                 : "border-green-300 text-green-600 hover:border-green-400 hover:text-green-700",
@@ -38,7 +38,11 @@ export const LanguageCompletionView = ({
           />
         }
       >
-        <IconLanguage className="size-4" />
+        <span
+          className={cn("size-2 rounded-full", hasIncomplete ? "bg-red-500" : "bg-green-500")}
+        />
+        <span className="text-xs font-medium">{selectedLanguage}</span>
+        <IconChevronDown className="size-3.5 opacity-60" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {languages?.map((language) => {

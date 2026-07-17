@@ -144,9 +144,17 @@ export function QuestionsSideBar({
   };
 
   const handleAddQn = () => {
-    setActiveTab(QuestionTabsEnum.TypeSelection);
-    setSelectedLanguage(surveyLanguages[0]);
-    setSelectedQ(null);
+    const openTypeSelection = () => {
+      setActiveTab(QuestionTabsEnum.TypeSelection);
+      setSelectedLanguage(surveyLanguages[0]);
+      setSelectedQ(null);
+    };
+
+    if (checkForUnsavedChanges()) {
+      openDiscardChangesModal(openTypeSelection);
+      return;
+    }
+    openTypeSelection();
   };
 
   // Clearing selected-question-state if it is the one being deleted
