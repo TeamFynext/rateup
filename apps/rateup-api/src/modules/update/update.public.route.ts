@@ -19,6 +19,9 @@ import {
   seedInboxStatsAutomationHandler,
   reconcileInboxStatusHandler,
   backfillConversationsHandler,
+  startBackfillConversationsHandler,
+  backfillConversationsStatusHandler,
+  stopBackfillConversationsHandler,
 } from "./update.controller.js";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
@@ -38,4 +41,7 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.put("/seed-inbox-stats", seedInboxStatsAutomationHandler);
   server.put("/reconcile-inbox-status", reconcileInboxStatusHandler);
   server.put("/backfill-conversations", backfillConversationsHandler);
+  server.post("/backfill-conversations/start", startBackfillConversationsHandler);
+  server.get("/backfill-conversations/status", backfillConversationsStatusHandler);
+  server.post("/backfill-conversations/stop", stopBackfillConversationsHandler);
 }

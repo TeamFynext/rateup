@@ -15,6 +15,11 @@ import {
   reconcileInboxStatus,
   backfillConversationsFromMessages,
 } from "./update.service.js";
+import {
+  startBackfillConversations,
+  getBackfillConversationStatus,
+  stopBackfillConversations,
+} from "./update.backfill.queue.js";
 import prisma from "../../utils/prisma.js";
 import { StageCategory } from "../../../generated/prisma/enums.js";
 
@@ -372,6 +377,50 @@ export async function backfillConversationsHandler(
         : `Dry run: ${summary} would be written. Re-run with ?apply=true to write.`,
       ...result,
     });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+// Kicks off the background BullMQ backfill (parallel, restart-safe). Returns
+// immediately — poll the status endpoint for progress.
+export async function startBackfillConversationsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const result = await startBackfillConversations();
+    reply.code(result.started ? 202 : 409).send({
+      message: result.started
+        ? "Backfill started. Poll GET /backfill-conversations/status for progress."
+        : `Backfill not started: ${result.reason}.`,
+      ...result,
+    });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function backfillConversationsStatusHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    reply.code(200).send(await getBackfillConversationStatus());
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function stopBackfillConversationsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    reply.code(200).send(await stopBackfillConversations());
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
