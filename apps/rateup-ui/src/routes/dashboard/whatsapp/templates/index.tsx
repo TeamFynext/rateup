@@ -25,7 +25,6 @@ import {
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -46,7 +45,6 @@ import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps
 import WelcomeTour from "@/components/WelcomeTour/WelcomeTour.tsx";
 import { TemplateFilterSort } from "@/components/whatsapp/templates/FilterAndSort.tsx";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates.tsx";
-import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { TemplateType, WhatsappSettingsStatus } from "@/types/enums.ts";
 import { docsPath } from "@/utils/constants.ts";
@@ -93,25 +91,6 @@ const PREDEFINED_TEMPLATES = [
     isBlank: true,
     category: "MARKETING",
   },
-  {
-    type: "Lip Care Promo",
-    templateType: TemplateType.GENERAL_NOTIFICATION,
-    name: "lipbalm",
-    body: "💋 Give Your Lips the Care They Deserve\n\nMost lip products only moisturize temporarily. Our Lip Care Combo follows a complete 3-step routine:\n\n✨ Exfoliate → Repair → Protect\n\n🍓 Berry Blush Lip Scrub\n🌙 Lip Repair Serum\n☀️ Herbal Lip Balm\n\nTogether, they help remove dead skin, deeply nourish lips, and lock in moisture for long-lasting softness.\n\n🎁 Combo Price: ₹999/-",
-    description: "Promote a 3-step lip care combo routine with text header and CTA",
-    category: "MARKETING",
-    format: "TEXT",
-    header: "Lip Care Combo",
-    buttons: [
-      {
-        type: "URL",
-        text: "Order Now",
-        url: "https://www.example.com/products/lip-care-combo",
-      },
-    ],
-    example: [],
-  },
-
   {
     type: "Payment Confirmed",
     templateType: TemplateType.GENERAL_NOTIFICATION,
@@ -211,31 +190,53 @@ const PREDEFINED_TEMPLATES = [
     buttons: [],
     example: ["10023", "Customer", "10023", "10023", "2026-06-18", "Customer request"],
   },
-  {
-    type: "Skincare Combo Offer",
-    templateType: TemplateType.GENERAL_NOTIFICATION,
-    name: "combolast",
-    body: "🔥 LAST ANNOUNCEMENT OFFER 🔥\n\n✨ Complete Skin Care Combo – Limited Time Offer! ✨\n\nGet your daily skincare essentials in one powerful combo:\n\n✅ Pro-Whitening Face Cream\n✅ Hybrid Glow Defender Sunscreen SPF 50 PA++++\n✅ Face Wash\n🎁 FREE Premium Skincare Bag\n\n💰 Combo Price: ₹1999 Only\n\nWhy this combo?\n\n🌿 Cleanses dirt, oil & impurities\n🌿 Brightens dull and uneven skin tone\n🌿 Helps reduce tanning & dark spots\n🌿 Protects from harmful UVA/UVB rays\n🌿 Keeps skin hydrated, smooth & healthy-looking\n🌿 Perfect daily skincare routine for all skin types\n\n🎁 FREE Skincare Bag Included\nCarry your skincare essentials anywhere in style!\n\n⚠️ FINAL ANNOUNCEMENT\nThis special combo offer may be withdrawn at any time. Don't miss your chance to get the complete skincare routine at a special price.\n\n📦 Available Across India\n\n📲 Order Now Below Link",
-    description: "Send limited-time skin care bundle promotion with text header and CTA",
-    category: "MARKETING",
-    format: "TEXT",
-    header: "Skincare Combo Offer",
-    footer: "Store Team",
-    buttons: [
-      {
-        type: "URL",
-        text: "SHOP NOW",
-        url: "https://www.example.com/products/skincare-combo",
-      },
-    ],
-    example: [],
-  },
 ];
 
 const CATEGORY_META: Record<string, { label: string; color: string; bg: string }> = {
   MARKETING: { label: "Marketing", color: "text-violet-700", bg: "bg-violet-50 border-violet-200" },
   UTILITY: { label: "Utility", color: "text-sky-700", bg: "bg-sky-50 border-sky-200" },
+  AUTHENTICATION: {
+    label: "Authentication",
+    color: "text-rose-700",
+    bg: "bg-rose-50 border-rose-200",
+  },
   Blank: { label: "Blank", color: "text-slate-600", bg: "bg-slate-50 border-slate-200" },
+};
+
+const TEMPLATE_TYPE_META: Record<string, { color: string; bg: string }> = {
+  [TemplateType.GENERAL_NOTIFICATION]: { color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
+  [TemplateType.ORDER_DETAILS]: { color: "text-teal-700", bg: "bg-teal-50 border-teal-200" },
+  [TemplateType.PAYMENT_CONFIRMATION]: {
+    color: "text-emerald-700",
+    bg: "bg-emerald-50 border-emerald-200",
+  },
+  [TemplateType.LOYALTY]: { color: "text-fuchsia-700", bg: "bg-fuchsia-50 border-fuchsia-200" },
+  [TemplateType.CAROUSEL]: { color: "text-indigo-700", bg: "bg-indigo-50 border-indigo-200" },
+};
+
+const ACCOUNT_CHIP_CLASS =
+  "text-[11px] font-medium px-2 py-0.5 rounded-md border bg-pink-50 border-pink-200 text-pink-700";
+
+const CHIP_CLASS =
+  "text-[11px] font-medium px-2 py-0.5 rounded-md border border-gray-200 bg-gray-50 text-gray-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400";
+
+const STATUS_BADGE_META: Record<string, { label: string; className: string }> = {
+  APPROVED: {
+    label: "Approved",
+    className: "text-green-700 bg-green-100 dark:bg-green-900/30 dark:text-green-400",
+  },
+  PENDING: {
+    label: "Pending",
+    className: "text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400",
+  },
+  REJECTED: {
+    label: "Rejected",
+    className: "text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400",
+  },
+  DRAFT: {
+    label: "Draft",
+    className: "text-gray-500 bg-gray-100 dark:bg-zinc-800 dark:text-zinc-400",
+  },
 };
 
 interface TemplatePickerProps {
@@ -806,21 +807,45 @@ function TemplateCard({ template, onClick, onDelete }: Readonly<TemplateCardProp
     </DropdownMenu>
   );
 
+  const category = template?.data?.category;
+  const categoryMeta = category ? CATEGORY_META[category] : undefined;
+  const status = template?.data?.status ?? "DRAFT";
+  const statusMeta = STATUS_BADGE_META[status] ?? STATUS_BADGE_META.DRAFT;
+  const accountName =
+    template?.WhatsappSettings?.phoneDisplayName || template?.whatsappSettingsPhoneId;
+  const templateTypeMeta = template?.templateType
+    ? TEMPLATE_TYPE_META[template.templateType]
+    : undefined;
+
   const content = (
-    <div className="flex flex-wrap gap-2">
-      <Badge variant="default" className="text-xs">
-        {(template?.WhatsappSettings?.phoneDisplayName || template?.whatsappSettingsPhoneId) ??
-          "No Account"}
-      </Badge>
-      <WaTemplateStatusBadge status={template?.data?.category as never} defaultType />
-      <div className="min-w-0 flex-1 overflow-hidden">
-        <WaTemplateStatusBadge
-          status={template?.templateType as never}
-          defaultType
-          className="block max-w-full truncate whitespace-nowrap"
-        />
-      </div>
+    <div className="flex items-center gap-2 flex-wrap min-h-10">
+      <span className={ACCOUNT_CHIP_CLASS} title={template?.whatsappSettingsPhoneId ?? undefined}>
+        {accountName ?? "No Account"}
+      </span>
+      {category && (
+        <span
+          className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${categoryMeta ? `${categoryMeta.bg} ${categoryMeta.color}` : CHIP_CLASS}`}
+        >
+          {categoryMeta?.label ?? category}
+        </span>
+      )}
+      {template?.templateType && (
+        <span
+          className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${templateTypeMeta ? `${templateTypeMeta.bg} ${templateTypeMeta.color}` : CHIP_CLASS}`}
+          title={template.templateType}
+        >
+          {formatLabel(template.templateType)}
+        </span>
+      )}
     </div>
+  );
+
+  const statusBadge = (
+    <span
+      className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${statusMeta.className}`}
+    >
+      {statusMeta.label}
+    </span>
   );
 
   return (
@@ -829,7 +854,7 @@ function TemplateCard({ template, onClick, onDelete }: Readonly<TemplateCardProp
       subtitle={template?.data?.category || "Template"}
       actions={menu}
       content={content}
-      footer={<WaTemplateStatusBadge status={template?.data?.status as never} />}
+      footerLeft={statusBadge}
       createdAt={template.createdAt}
       onClick={onClick}
     />
