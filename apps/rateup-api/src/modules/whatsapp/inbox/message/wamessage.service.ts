@@ -375,7 +375,6 @@ export async function filterChats(
           }
         }
       }
-
       if (!bodyFilterProps?.waMessageAssignStatus) {
         if (bodyFilterProps.status.length) {
           params.push(bodyFilterProps.status);
@@ -383,17 +382,6 @@ export async function filterChats(
           filters.push(newQuery);
         }
       }
-
-      // Helper logic: If the user actively filters by Team or User, enforce the filter strictly.
-      // Otherwise, only enforce it for ASSIGNED chats (letting UNASSIGNED bypass the check).
-      const applyAssignmentFilter = (query: string, isStrict: boolean) => {
-        if (isStrict) {
-          filters.push(query);
-        } else {
-          filters.push(`(c."waMessageAssignStatus" != 'ASSIGNED' OR ${query})`);
-        }
-      };
-
       if (waAssignedChatPermission === WaAssignedChatPermission.TeamMembers) {
         let newQuery = `EXISTS (
           SELECT 1 FROM "WaInboxAssign" winb
@@ -408,41 +396,30 @@ export async function filterChats(
           newQuery += ` AND winb."assignedUserId" = ANY($${paramIndex++}::uuid[])`;
         }
         newQuery += ` )`;
-
-        const isStrict = Boolean(
-          bodyFilterProps.assignedTeams?.length ||
-          (bodyFilterProps.assignedUserIds?.length && !isAssignedToMe),
-        );
-
         if (
           (!bodyFilterProps.waMessageAssignStatus && bodyFilterProps.status.includes("ASSIGNED")) ||
-          isStrict
-        ) {
-          applyAssignmentFilter(newQuery, isStrict);
-        } else {
+          (bodyFilterProps.assignedUserIds?.length && !isAssignedToMe) ||
+          bodyFilterProps.assignedTeams?.length
+        )
+          filters.push(newQuery);
+        else {
           const teamIds = await getTeamIdsLazy();
-
-          // BUG FIX: Pushed teamIds FIRST so that it maps correctly to the FIRST $paramIndex inside newQuery
-          params.push(teamIds);
-
           let newQuery = `EXISTS (  
               SELECT 1 FROM "WaInboxAssign" winb
               WHERE winb."contactId" = c.id
               AND winb."teamId" = ANY($${paramIndex++}::uuid[])`;
-
           if (bodyFilterProps.assignedUserIds?.length && !isAssignedToMe) {
             params.push(bodyFilterProps.assignedUserIds);
             newQuery += ` AND winb."assignedUserId" = ANY($${paramIndex++}::uuid[])`;
           }
           newQuery += ` )`;
-
           if (
             (!bodyFilterProps.waMessageAssignStatus &&
               bodyFilterProps.status.includes("ASSIGNED")) ||
             bodyFilterProps.assignedUserIds?.length
           ) {
-            const isStrictFallback = Boolean(bodyFilterProps.assignedUserIds?.length);
-            applyAssignmentFilter(newQuery, isStrictFallback);
+            params.push(teamIds);
+            filters.push(newQuery);
           }
         }
       } else if (
@@ -465,16 +442,15 @@ export async function filterChats(
           params.push(userId);
           newQuery += ` AND winb."assignedUserId" = $${paramIndex++}::uuid`;
         }
-        newQuery += ` )`;
 
-        const isStrict = Boolean(
+        newQuery += ` )`;
+        if (
           bodyFilterProps.assignedTeams?.length ||
           (bodyFilterProps.assignedUserIds?.length &&
             !isAssignedToMe &&
-            bodyFilterProps.assignedUserIds.includes(userId)),
-        );
-
-        if (isStrict) applyAssignmentFilter(newQuery, true);
+            bodyFilterProps.assignedUserIds.includes(userId))
+        )
+          filters.push(newQuery);
       } else {
         let newQuery = `EXISTS (
           SELECT 1 FROM "WaInboxAssign" winb 
@@ -490,17 +466,22 @@ export async function filterChats(
         }
 
         newQuery += `)`;
-
-        const isStrict = Boolean(
+        if (
           bodyFilterProps.assignedTeams?.length ||
-          (bodyFilterProps.assignedUserIds?.length && !isAssignedToMe),
-        );
-
-        if (isStrict) {
-          applyAssignmentFilter(newQuery, true);
+          (bodyFilterProps.assignedUserIds?.length && !isAssignedToMe)
+        ) {
+          filters.push(newQuery);
         }
       }
 
+      // Phone filter
+      // if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
+      //   params.push(bodyFilterProps.phone);
+      //   params.push(`+${bodyFilterProps.phone}`);
+      //   filters.push(
+      //     `(c."lastMessageSourceIdentifier" = $${paramIndex++} OR c."lastMessageSourceIdentifier" = $${paramIndex++})`,
+      //   );
+      // }
       if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
         params.push(bodyFilterProps.phone);
         params.push(`+${bodyFilterProps.phone}`);
