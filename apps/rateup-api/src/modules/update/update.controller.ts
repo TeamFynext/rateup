@@ -14,6 +14,7 @@ import {
   seedInboxStatsAutomation,
   reconcileInboxStatus,
   backfillConversationsFromMessages,
+  backfillConversationSessions,
 } from "./update.service.js";
 import prisma from "../../utils/prisma.js";
 import { StageCategory } from "../../../generated/prisma/enums.js";
@@ -370,6 +371,33 @@ export async function backfillConversationsHandler(
           ? `Backfill complete: ${summary}.`
           : `Backfill batch done (${summary}). More work remains — run again to continue.`
         : `Dry run: ${summary} would be written. Re-run with ?apply=true to write.`,
+      ...result,
+    });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+// Dry run by default; pass ?apply=true to re-segment. Resumable: pass the
+// returned nextCursor back as ?cursor= to continue where the last batch ended.
+export async function backfillConversationSessionsHandler(
+  request: FastifyRequest<{ Querystring: { apply?: string; cursor?: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const apply = request.query.apply === "true";
+    const result = await backfillConversationSessions(apply, request.query.cursor);
+    const summary =
+      `${result.scannedContacts} contact(s) scanned: ` +
+      `${result.conversationsCreated} session(s) created, ${result.conversationsReused} reused, ` +
+      `${result.conversationsDeleted} empty row(s) deleted, ${result.messagesRelinked} message(s) relinked`;
+    reply.code(200).send({
+      message: apply
+        ? result.done
+          ? `Session backfill complete: ${summary}.`
+          : `Session backfill batch done (${summary}). Re-run with ?cursor=${result.nextCursor} to continue.`
+        : `Dry run (first batch): ${summary} would be written. Re-run with ?apply=true to write.`,
       ...result,
     });
   } catch (e) {

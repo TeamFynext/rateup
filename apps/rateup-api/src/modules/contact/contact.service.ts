@@ -32,10 +32,10 @@ import {
 } from "../integrations/external/zapier/zapier.service.js";
 import {
   conversationStatusData,
-  createConversation,
   mirrorConversationStatusTx,
   resolveClosedByUserId,
   resolveInboxActor,
+  stampAssignmentsRemovedTx,
 } from "./conversation/conversation.service.js";
 import type { InboxActor } from "./conversation/conversation.schema.js";
 import { WaMessageAssignStatusTab, WaMessageClosedStatus } from "../whatsapp/constants.js";
@@ -964,7 +964,6 @@ export async function getOrCreateContactByPhone(
   orgId: string,
   additionalData?: Omit<updateContactSchema, "customFields">,
   source?: string,
-  addToConversation: boolean = false,
 ) {
   try {
     let contact = await prisma.contact.findFirst({
@@ -992,7 +991,6 @@ export async function getOrCreateContactByPhone(
         },
       },
     });
-    let conversation;
     if (contact) {
       if (additionalData) {
         const updateData = { ...additionalData };
@@ -1018,7 +1016,7 @@ export async function getOrCreateContactByPhone(
           },
         });
       }
-      return { contact, conversation };
+      return { contact };
     } else {
       const chatbot = await getChatbotDetails(orgId);
       const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
@@ -1042,9 +1040,10 @@ export async function getOrCreateContactByPhone(
           },
         },
       });
-      if (addToConversation) {
-        conversation = await createConversation({ contactId: contact.id, orgId: contact.orgId });
-      }
+      // Conversations are no longer created here: the message pipeline's
+      // lifecycle service (`getOrOpenConversation`) is the single creator, so
+      // session-open rules (inbound/agent opens, automated sends don't) hold
+      // for brand-new contacts too.
       await addZapierTriggerToQueue(
         ZapierTriggers.CONTACT_CREATE,
         { [ZapierTriggers.CONTACT_CREATE]: contact },
@@ -1076,7 +1075,7 @@ export async function getOrCreateContactByPhone(
           rateupContactId: contact.id,
         });
       }
-      return { contact, conversation };
+      return { contact };
     }
   } catch (e) {
     log.error(e);
@@ -1087,7 +1086,6 @@ export async function getOrCreateContactByIgsId(
   igsId: string,
   orgId: string,
   additionalData?: Omit<updateContactSchema, "customFields">,
-  addToConversation: boolean = false,
 ) {
   try {
     let contact = await prisma.contact.findUnique({
@@ -1098,9 +1096,8 @@ export async function getOrCreateContactByIgsId(
         },
       },
     });
-    let conversation;
     if (contact) {
-      if (!additionalData) return { contact, conversation };
+      if (!additionalData) return { contact };
       contact = await prisma.contact.update({
         where: {
           id: contact.id,
@@ -1109,7 +1106,7 @@ export async function getOrCreateContactByIgsId(
           ...additionalData,
         },
       });
-      return { contact, conversation };
+      return { contact };
     } else {
       const chatbot = await getChatbotDetails(orgId);
       const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
@@ -1121,9 +1118,10 @@ export async function getOrCreateContactByIgsId(
           orgId,
         },
       });
-      if (addToConversation) {
-        conversation = await createConversation({ contactId: contact.id, orgId: contact.orgId });
-      }
+      // Conversations are no longer created here: the message pipeline's
+      // lifecycle service (`getOrOpenConversation`) is the single creator, so
+      // session-open rules (inbound/agent opens, automated sends don't) hold
+      // for brand-new contacts too.
       await addZapierTriggerToQueue(
         ZapierTriggers.CONTACT_CREATE,
         { [ZapierTriggers.CONTACT_CREATE]: contact },
@@ -1155,7 +1153,7 @@ export async function getOrCreateContactByIgsId(
           rateupContactId: contact.id,
         });
       }
-      return { contact, conversation };
+      return { contact };
     }
   } catch (e) {
     log.error(e);
@@ -1166,7 +1164,6 @@ export async function getOrCreateContactByPsid(
   psid: string,
   orgId: string,
   additionalData?: Omit<updateContactSchema, "customFields">,
-  addToConversation: boolean = false,
 ) {
   try {
     let contact = await prisma.contact.findUnique({
@@ -1178,11 +1175,10 @@ export async function getOrCreateContactByPsid(
       },
     });
 
-    let conversation;
 
     if (contact) {
       if (!additionalData) {
-        return { contact, conversation };
+        return { contact };
       }
 
       contact = await prisma.contact.update({
@@ -1194,7 +1190,7 @@ export async function getOrCreateContactByPsid(
         },
       });
 
-      return { contact, conversation };
+      return { contact };
     }
 
     const chatbot = await getChatbotDetails(orgId);
@@ -1210,13 +1206,8 @@ export async function getOrCreateContactByPsid(
       },
     });
 
-    if (addToConversation) {
-      conversation = await createConversation({
-        contactId: contact.id,
-        orgId: contact.orgId,
-      });
-    }
-
+    // Conversations are no longer created here: the message pipeline's
+    // lifecycle service (`getOrOpenConversation`) is the single creator.
     await addZapierTriggerToQueue(
       ZapierTriggers.CONTACT_CREATE,
       {
@@ -1252,7 +1243,7 @@ export async function getOrCreateContactByPsid(
       });
     }
 
-    return { contact, conversation };
+    return { contact };
   } catch (e) {
     log.error(
       {
@@ -1807,6 +1798,16 @@ export async function bulkUpdateWaMessageAssignStatus(
       .map((c) => c.id);
 
     if (latestIds.length) {
+      if (closing) {
+        // Closing ends every active assignment on the conversation record; see
+        // `mirrorConversationStatusTx`, which this bulk write bypasses.
+        const stillOpen = latest.filter(
+          (c) => latestIds.includes(c.id) && !WaMessageClosedStatus.includes(c.status),
+        );
+        for (const c of stillOpen) {
+          await stampAssignmentsRemovedTx(tx, c.id, actor, now);
+        }
+      }
       await tx.conversation.updateMany({
         where: { id: { in: latestIds } },
         data: conversationStatusData(waMessageAssignStatus, actor, undefined, now),

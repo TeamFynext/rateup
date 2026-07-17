@@ -6,7 +6,17 @@ import { subscriptionGates } from "../../utils/canAccess.js";
 import { TeamFeature, PlatformType } from "../../../generated/prisma/client.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
 import type { InboxStatus } from "../../types/enums.js";
-import { WaMessageClosedStatus } from "../whatsapp/constants.js";
+import { WaMessageAssignStatus } from "../../types/enums.js";
+import {
+  isTerminalInboxStatus,
+  TerminalInboxStatus,
+  WaMessageClosedStatus,
+} from "../whatsapp/constants.js";
+import {
+  SegmentableMessage,
+  segmentMessagesIntoSessions,
+  SessionSegment,
+} from "../contact/conversation/conversationSegmentation.js";
 
 export async function updateUsageStatsTemplateMessageCount() {
   const subscriptions = await prisma.subscription.findMany();
@@ -744,6 +754,341 @@ export async function backfillConversationsFromMessages(apply: boolean) {
   }
 
   return stats;
+}
+
+/**
+ * Re-segments every inbox contact's message history into conversation
+ * *sessions* — the successor to `backfillConversationsFromMessages`, which only
+ * filled in missing single conversations.
+ *
+ * For each contact the full history is split by `segmentMessagesIntoSessions`
+ * (real closes at internal close markers, synthetic closes at inactivity gaps
+ * longer than the org's auto-close threshold), and each segment becomes one
+ * Conversation row:
+ *
+ *   - segments whose messages already predominantly point at an existing
+ *     conversation KEEP that row (ids referenced by assignment history and
+ *     analytics stay stable); the newest existing row is reserved for the
+ *     final segment;
+ *   - segments with no matching row get a new one;
+ *   - existing rows left with no segment (over-created duplicates) are deleted
+ *     when they carry no assignment history, closed otherwise;
+ *   - at most one conversation per contact stays open: the final segment, and
+ *     only when the segmentation says it is open AND the contact is live
+ *     (UNASSIGNED/ASSIGNED). A live contact whose final segment gap-closed is
+ *     left for `reconcileInboxStatus` / the auto-close cron to align.
+ *
+ * `WaInboxAssign` rows are mirrored into `ConversationAssignedUserTeamMap` for
+ * the open conversation (same rationale and caveats as the original backfill:
+ * "who" is recoverable, "when/by whom" is not).
+ *
+ * KNOWN SEMANTIC SHIFT (flagged in the migration plan): re-segmentation turns
+ * one long conversation per contact into several shorter sessions, so
+ * conversation-counting metrics (closed counts, resolution rates) change scale
+ * at the cutover. Run `/seed-inbox-stats` afterwards.
+ *
+ * Resumable: pass the returned `nextCursor` back in to continue; each contact
+ * commits in its own transaction and re-processing a contact is idempotent
+ * (the segment->row matching is content-based, not order-based).
+ */
+export async function backfillConversationSessions(apply: boolean, fromCursor?: string) {
+  const PAGE_SIZE = 100;
+  const TIME_BUDGET_MS = 20_000;
+  const startedAt = Date.now();
+  const outOfTime = () => Date.now() - startedAt > TIME_BUDGET_MS;
+
+  const stats = {
+    applied: apply,
+    scannedContacts: 0,
+    conversationsCreated: 0,
+    conversationsReused: 0,
+    conversationsDeleted: 0,
+    conversationsClosedEmpty: 0,
+    messagesRelinked: 0,
+    assigneesBackfilled: 0,
+    done: true,
+    nextCursor: null as string | null,
+  };
+
+  // Auto-close thresholds per org: the smallest active CLOSE threshold, the
+  // same one the cron would have applied first. 24h when none configured.
+  const automations = await prisma.inboxAutomation.findMany({
+    where: { active: true, action: "CLOSE" },
+    select: { orgId: true, closeAfterHours: true },
+  });
+  const thresholdByOrg = new Map<string, number>();
+  for (const a of automations) {
+    const hours = a.closeAfterHours ?? 24;
+    const current = thresholdByOrg.get(a.orgId);
+    if (current === undefined || hours < current) thresholdByOrg.set(a.orgId, hours);
+  }
+
+  let cursor = fromCursor;
+  for (;;) {
+    if (outOfTime()) {
+      stats.done = false;
+      stats.nextCursor = cursor ?? null;
+      return stats;
+    }
+
+    const contacts = await prisma.contact.findMany({
+      where: {
+        // The inbox universe: has actually messaged us. Outbound-only
+        // (campaign) recipients never get sessions; their messages stay
+        // unthreaded until they reply.
+        lastReceivedMessageTimeStamp: { not: null },
+        WaMessage: { some: {} },
+      },
+      take: PAGE_SIZE,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+      orderBy: { id: "asc" },
+      select: {
+        id: true,
+        orgId: true,
+        waMessageAssignStatus: true,
+        closedBy: true,
+        waInboxAssign: { select: { assignedUserId: true, teamId: true } },
+      },
+    });
+    if (!contacts.length) break;
+
+    for (const contact of contacts) {
+      if (outOfTime()) {
+        stats.done = false;
+        stats.nextCursor = cursor ?? null;
+        return stats;
+      }
+      cursor = contact.id;
+      stats.scannedContacts++;
+      await resegmentContact(contact, thresholdByOrg.get(contact.orgId) ?? 24, apply, stats);
+    }
+    if (contacts.length < PAGE_SIZE) break;
+  }
+
+  return stats;
+}
+
+type ResegmentContact = {
+  id: string;
+  orgId: string;
+  waMessageAssignStatus: InboxStatus;
+  closedBy: string | null;
+  waInboxAssign: { assignedUserId: string; teamId: string }[];
+};
+
+async function resegmentContact(
+  contact: ResegmentContact,
+  gapHours: number,
+  apply: boolean,
+  stats: {
+    conversationsCreated: number;
+    conversationsReused: number;
+    conversationsDeleted: number;
+    conversationsClosedEmpty: number;
+    messagesRelinked: number;
+    assigneesBackfilled: number;
+  },
+) {
+  const rows = await prisma.waMessage.findMany({
+    where: { contactId: contact.id },
+    orderBy: { waCreatedAt: "asc" },
+    select: {
+      id: true,
+      createdAt: true,
+      waCreatedAt: true,
+      sendBy: true,
+      sourcePlatform: true,
+      conversationId: true,
+      messageBody: true,
+    },
+  });
+  if (!rows.length) return;
+
+  const messages: SegmentableMessage[] = rows.map((m) => {
+    const body = m.messageBody as any;
+    const internal = body?.exchangeProcess === "internal" ? body.internal : null;
+    return {
+      id: m.id,
+      at: m.waCreatedAt ?? m.createdAt,
+      sendBy: m.sendBy,
+      isInternal: m.sourcePlatform === PlatformType.INTERNAL,
+      closeMarkerStatus: internal?.assignStatus ?? null,
+      closeMarkerBy: internal?.triggeredByUser?.id ?? null,
+      closeMarkerByAutomation:
+        internal?.triggeredByUser?.id == null && internal?.triggeredByUser?.name != null,
+    };
+  });
+
+  const segments = segmentMessagesIntoSessions(messages, gapHours);
+  if (!segments.length) return;
+
+  const existing = await prisma.conversation.findMany({
+    where: { contactId: contact.id },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, createdAt: true, assignedUsers: { select: { userId: true }, take: 1 } },
+  });
+
+  // Segment -> existing-row matching. Content-based: a segment claims the row
+  // the majority of its messages already point at. The newest existing row is
+  // reserved for the final segment (the plan's id-stability guarantee for the
+  // row live assignment history references). Each row is claimed at most once;
+  // later (newer) segments win conflicts since history rows were created oldest-first.
+  const currentIdOf = new Map(rows.map((m) => [m.id, m.conversationId]));
+  const newestExistingId = existing.at(-1)?.id ?? null;
+  const claims = new Map<number, string>(); // segment index -> conversation id
+  const claimed = new Set<string>();
+
+  if (newestExistingId) {
+    claims.set(segments.length - 1, newestExistingId);
+    claimed.add(newestExistingId);
+  }
+  for (let i = segments.length - 1; i >= 0; i--) {
+    if (claims.has(i)) continue;
+    const votes = new Map<string, number>();
+    for (const id of segments[i].messageIds) {
+      const cid = currentIdOf.get(id);
+      if (cid && !claimed.has(cid)) votes.set(cid, (votes.get(cid) ?? 0) + 1);
+    }
+    let best: string | null = null;
+    let bestVotes = 0;
+    for (const [cid, count] of votes) {
+      if (count > bestVotes) {
+        best = cid;
+        bestVotes = count;
+      }
+    }
+    if (best) {
+      claims.set(i, best);
+      claimed.add(best);
+    }
+  }
+
+  const contactLive = !isTerminalInboxStatus(contact.waMessageAssignStatus);
+
+  if (!apply) {
+    stats.conversationsReused += claims.size;
+    stats.conversationsCreated += segments.length - claims.size;
+    const leftovers = existing.filter((c) => !claimed.has(c.id));
+    stats.conversationsDeleted += leftovers.filter((c) => !c.assignedUsers.length).length;
+    stats.conversationsClosedEmpty += leftovers.filter((c) => c.assignedUsers.length).length;
+    return;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      const isFinal = i === segments.length - 1;
+      const data = segmentRowData(seg, contact, isFinal, contactLive, i);
+
+      let conversationId = claims.get(i);
+      if (conversationId) {
+        await tx.conversation.update({ where: { id: conversationId }, data });
+        stats.conversationsReused++;
+      } else {
+        const created = await tx.conversation.create({
+          data: { contactId: contact.id, orgId: contact.orgId, openTrigger: "backfill", ...data },
+          select: { id: true },
+        });
+        conversationId = created.id;
+        stats.conversationsCreated++;
+      }
+
+      const relinked = await tx.waMessage.updateMany({
+        where: { id: { in: seg.messageIds }, NOT: { conversationId } },
+        data: { conversationId },
+      });
+      stats.messagesRelinked += relinked.count;
+
+      // Mirror current assignees onto the open session so staff/team analytics
+      // (which reach conversations through the map) see it.
+      const opensLive = isFinal && !seg.close && contactLive;
+      if (opensLive && contact.waInboxAssign.length) {
+        await tx.conversationAssignedUserTeamMap.createMany({
+          data: contact.waInboxAssign.map((a) => ({
+            conversationId: conversationId!,
+            userId: a.assignedUserId,
+            teamId: a.teamId,
+            lastAssignedAt: seg.firstAt,
+            lastAssignedBy: null,
+            isAssignedByAutomation: false,
+            actionHistory: [
+              { action: "assigned", date: seg.firstAt, by: null, source: "session-backfill" },
+            ],
+          })),
+          skipDuplicates: true,
+        });
+        stats.assigneesBackfilled += contact.waInboxAssign.length;
+      }
+    }
+
+    // Rows no segment claimed hold no messages after the relink. Empty rows
+    // with assignment history are kept (closed) for the analytics that join
+    // through the map; the rest are noise from double-creation bugs.
+    const leftovers = existing.filter((c) => !claimed.has(c.id));
+    for (const row of leftovers) {
+      if (row.assignedUsers.length) {
+        await tx.conversation.update({
+          where: { id: row.id },
+          data: {
+            status: WaMessageAssignStatus.CLOSED,
+            closedAt: row.createdAt,
+            closeReason: null,
+            closedByAutomation: false,
+          },
+        });
+        stats.conversationsClosedEmpty++;
+      } else {
+        await tx.conversation.delete({ where: { id: row.id } });
+        stats.conversationsDeleted++;
+      }
+    }
+  });
+}
+
+/// Everything a session segment writes onto its Conversation row.
+function segmentRowData(
+  seg: SessionSegment,
+  contact: ResegmentContact,
+  isFinal: boolean,
+  contactLive: boolean,
+  index: number,
+) {
+  // The final segment may stay open — but only when the contact is live too.
+  // A closed/spam contact's tail segment closes with the contact's own status.
+  let close = seg.close;
+  if (isFinal && !close && !contactLive) {
+    close = {
+      at: seg.lastMessageAt ?? seg.firstAt,
+      by: contact.closedBy,
+      // `!contactLive` guarantees the status is terminal here.
+      status: contact.waMessageAssignStatus as TerminalInboxStatus,
+      reason:
+        contact.waMessageAssignStatus === WaMessageAssignStatus.SPAM
+          ? ("SPAM" as const)
+          : ("MANUAL" as const),
+      byAutomation: false,
+      synthetic: true,
+    };
+  }
+
+  const open = isFinal && !close && contactLive;
+  return {
+    createdAt: seg.firstAt,
+    status: open ? contact.waMessageAssignStatus : (close?.status ?? WaMessageAssignStatus.CLOSED),
+    reopenCount: index,
+    messageCount: seg.messageCount,
+    lastMessageAt: seg.lastMessageAt,
+    lastAgentMessageAt: seg.lastAgentMessageAt,
+    lastCustomerMessageAt: seg.lastCustomerMessageAt,
+    firstRespondedAt: seg.firstAgentMessageAt,
+    firstRespondedByUserAt: seg.firstAgentMessageAt,
+    closedAt: close?.at ?? null,
+    closedBy: close?.by ?? null,
+    closeReason: close?.reason ?? null,
+    closedByAutomation: close?.byAutomation ?? false,
+    resolvedAt: close?.status === WaMessageAssignStatus.RESOLVED ? close.at : null,
+    assignedAt: open && contact.waInboxAssign.length ? seg.firstAt : null,
+  };
 }
 
 export async function seedInboxStatsAutomation() {

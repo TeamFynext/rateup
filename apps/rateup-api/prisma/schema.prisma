@@ -2630,9 +2630,15 @@ model Conversation {
   contactId              String                            @db.Uuid
   contact                Contact                           @relation(fields: [contactId], references: [id], onDelete: Cascade)
   /// Denormalized from `Contact.orgId` so analytics can scope by org without joining Contact.
-  orgId                  String?                           @db.Uuid
+  orgId                  String                            @db.Uuid
   messages               WaMessage[]
   status                 InboxStatus                       @default(UNASSIGNED)
+  /// What opened this session: "inbound" | "agent" | "backfill". Null for rows
+  /// that predate session tracking.
+  openTrigger            String?
+  /// The agent whose action opened the session (agent sends / assigns); null
+  /// for inbound-opened sessions.
+  openedBy               String?                           @db.Uuid
   firstRespondedAt       DateTime?
   firstRespondedByUserAt DateTime?
   assignedUsers          ConversationAssignedUserTeamMap[]

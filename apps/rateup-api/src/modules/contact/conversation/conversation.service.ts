@@ -7,6 +7,7 @@ import {
   UpdateConversationSchema,
 } from "./conversation.schema.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { Prisma } from "../../../../generated/prisma/client.js";
 import { isTerminalInboxStatus } from "../../whatsapp/constants.js";
 import {
   mapStatusToField,
@@ -126,10 +127,49 @@ export async function mirrorConversationStatusTx(
   // one already.
   if (isTerminalInboxStatus(target.status) && !isTerminalInboxStatus(status)) return null;
 
+  // Closing ends every active assignment on the conversation record itself, so
+  // the assignment history describes the session: `lastRemovedAt` is the
+  // conversation-side counterpart of the legacy `WaInboxAssign` wipe the close
+  // paths already perform.
+  if (isTerminalInboxStatus(status) && !isTerminalInboxStatus(target.status)) {
+    await stampAssignmentsRemovedTx(tx, target.id, actor, opts.now ?? new Date());
+  }
+
   return await tx.conversation.update({
     where: { id: target.id },
     data: conversationStatusData(status, actor, opts.closeReason, opts.now),
   });
+}
+
+/// Marks every still-active assignee of a conversation as removed. An
+/// assignment row is active when it was never removed, or re-assigned after its
+/// last removal.
+export async function stampAssignmentsRemovedTx(
+  tx: TxClient,
+  conversationId: string,
+  actor: InboxActor,
+  now: Date = new Date(),
+) {
+  const rows = await tx.conversationAssignedUserTeamMap.findMany({
+    where: { conversationId },
+  });
+  const active = rows.filter(
+    (r) => !r.lastRemovedAt || (r.lastAssignedAt && r.lastAssignedAt > r.lastRemovedAt),
+  );
+  const removedBy = actor.source === "user" ? actor.userId : null;
+  for (const row of active) {
+    await tx.conversationAssignedUserTeamMap.update({
+      where: { userId_conversationId: { userId: row.userId, conversationId } },
+      data: {
+        lastRemovedAt: now,
+        lastRemovedBy: removedBy,
+        actionHistory: [
+          ...row.actionHistory,
+          { action: "assignment-revoked", date: now, by: removedBy, source: "conversation-closed" },
+        ],
+      },
+    });
+  }
 }
 
 /// The single authoritative inbox-status transition.
@@ -224,6 +264,18 @@ export async function updateConversationAssignees(
   await prisma.$transaction(async (tx) => {
     const { assignees, assignedAt, removedAt, assignedBy, removedBy } = data;
     if (assignees && assignees.length > 0) {
+      // A closed conversation is a finished record: assigning into it must not
+      // resurrect its status (closedAt would keep its old value while status
+      // went live again). Callers open a successor session first.
+      const conversation = await tx.conversation.findUnique({
+        where: { id: conversationId },
+        select: { status: true, closedAt: true },
+      });
+      if (!conversation || isTerminalInboxStatus(conversation.status) || conversation.closedAt) {
+        throw new Error(
+          `Cannot assign users to closed conversation ${conversationId}; open a new session instead`,
+        );
+      }
       const existingAssignees = await tx.conversationAssignedUserTeamMap.findMany({
         where: {
           conversationId: conversationId,
@@ -341,22 +393,40 @@ export async function getActiveConversationForContact(contactId: string) {
 /// messaged again becomes a *new* conversation, so that `closedAt`,
 /// `firstRespondedAt` and the resolution-time metrics keep describing exactly
 /// one open-to-close cycle.
+///
+/// PREFER `getOrOpenConversation` (conversationLifecycle.service.ts): it is the
+/// single ingress creator and additionally sweeps orphan messages into the new
+/// session. This lower-level helper stays for callers that only need the row.
+/// It is race-safe against the `Conversation(contactId) WHERE closedAt IS NULL`
+/// partial unique index: a concurrent open loses with P2002 and adopts the
+/// winner rather than throwing.
 export async function openConversationForContact(
   contactId: string,
   orgId: string,
   status: InboxStatus = WaMessageAssignStatus.UNASSIGNED,
 ) {
   const previous = await getLastCreatedConversationForContact(contactId);
-  const conversation = await prisma.conversation.create({
-    data: {
-      contactId,
-      orgId,
-      status,
-      reopenCount: previous ? previous.reopenCount + 1 : 0,
-    },
-  });
-  await incrementConversationCount(orgId);
-  return conversation;
+  try {
+    const conversation = await prisma.conversation.create({
+      data: {
+        contactId,
+        orgId,
+        status,
+        reopenCount: previous ? previous.reopenCount + 1 : 0,
+      },
+    });
+    await incrementConversationCount(orgId);
+    return conversation;
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      const existing = await prisma.conversation.findFirst({
+        where: { contactId, closedAt: null },
+        orderBy: { createdAt: "desc" },
+      });
+      if (existing) return existing;
+    }
+    throw e;
+  }
 }
 
 export async function updateClosedConversationStatus(

@@ -1139,13 +1139,7 @@ export async function processNextNode(
 
       case "assignNode": {
         const assignData = node?.data as NodeTypeMap["assignNode"];
-        const { contact } = await getOrCreateContactByPhone(
-          userPhone,
-          orgId,
-          undefined,
-          undefined,
-          true,
-        );
+        const { contact } = await getOrCreateContactByPhone(userPhone, orgId);
         let assignedUserIds = assignData?.assign?.assignedUserIds || [];
         let teamId = assignData?.assign?.teamId || null;
         if (assignData?.assign?.assignType === "me") {

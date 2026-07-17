@@ -44,10 +44,9 @@ import {
 import { faker } from "@faker-js/faker";
 import {
   getLastCreatedConversationForContact,
-  openConversationForContact,
   updateConversationAssignees,
 } from "../../../contact/conversation/conversation.service.js";
-import { isTerminalInboxStatus } from "../../constants.js";
+import { getOrOpenConversation } from "../../../contact/conversation/conversationLifecycle.service.js";
 import { notificationQueue, sendMessageQueue } from "../../../../utils/redisConnection.js";
 import dayjs from "dayjs";
 
@@ -818,9 +817,25 @@ export async function assignWaMessageToUser(
       skipDuplicates: true,
     });
 
+    const updatedContact = await updateContactById(data.contactId, {
+      waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+    });
+    // Assignment always targets the *open* conversation. Assigning a contact
+    // whose last conversation is closed starts a new session — the single,
+    // race-safe creator (which also advances the reopen counter, sweeps orphan
+    // messages, and increments the usage meter). The contact status write above
+    // cannot resurrect the closed record, so this never mutates a finished one.
+    // Resolved up front so the internal markers below narrate THIS session.
+    const { conversation } = await getOrOpenConversation(updatedContact.id, updatedContact.orgId, {
+      trigger: "agent",
+      userId,
+      status: WaMessageAssignStatus.ASSIGNED,
+    });
+
     if (isReassignment) {
       await createInternalWaMessage({
         contactId: data.contactId,
+        conversationId: conversation?.id,
         waMessageAssignStatus: "REASSIGNED",
         assignedUsers: {
           removed: revokedUsers.map((u) => ({
@@ -839,6 +854,7 @@ export async function assignWaMessageToUser(
       if (newUsers.length) {
         await createInternalWaMessage({
           contactId: data.contactId,
+          conversationId: conversation?.id,
           waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
           assignedUsers: newUsers,
           trigerredByUser: userId ?? "RateUp",
@@ -849,6 +865,7 @@ export async function assignWaMessageToUser(
       if (revokedUsers.length) {
         await createInternalWaMessage({
           contactId: data.contactId,
+          conversationId: conversation?.id,
           waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
           assignedUsers: revokedUsers.map((u) => ({
             userId: u.assignedUserId,
@@ -869,21 +886,6 @@ export async function assignWaMessageToUser(
       },
     });
 
-    const updatedContact = await updateContactById(data.contactId, {
-      waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
-    });
-    // Assigning a contact whose last conversation is already closed starts a fresh
-    // engagement. Open a new conversation (mirroring the inbound-message reopen path)
-    // instead of resurrecting the finished one, so the closed record's closedAt /
-    // resolution-time metrics stay frozen and the reopen counter advances.
-    let conversation = await getLastCreatedConversationForContact(updatedContact.id);
-    if (!conversation || isTerminalInboxStatus(conversation.status)) {
-      conversation = await openConversationForContact(
-        updatedContact.id,
-        updatedContact.orgId,
-        WaMessageAssignStatus.ASSIGNED,
-      );
-    }
     if (conversation) {
       const updatedAssignees = [
         ...newUsers,
@@ -1340,6 +1342,7 @@ export async function createInternalWaMessage({
   orgId,
   privateMessageText,
   messageId,
+  conversationId,
 }: {
   contactId: string;
   waMessageAssignStatus?: string;
@@ -1355,8 +1358,14 @@ export async function createInternalWaMessage({
   orgId?: string;
   privateMessageText?: string;
   messageId: string;
+  /// The conversation this marker narrates. Assign/close flows pass it
+  /// explicitly (they already resolved the session); the last-created fallback
+  /// is only for close markers, written after the conversation was closed.
+  conversationId?: string;
 }) {
-  const conversation = await getLastCreatedConversationForContact(contactId);
+  const conversation = conversationId
+    ? { id: conversationId }
+    : await getLastCreatedConversationForContact(contactId);
 
   let triggeredByUserDetails: { id: string; name: string } | null = null;
 
@@ -1813,4 +1822,19 @@ export async function getWaMessageLogs(
       pageSize: limit,
     },
   };
+}
+/// Conversation-keyed variant of `markMessagesAsRead`, for the session-centric
+/// inbox where read state belongs to the conversation being viewed.
+export async function markConversationMessagesAsRead(conversationId: string, userId: string) {
+  await prisma.$executeRawUnsafe(
+    `
+    UPDATE "WaMessage"
+    SET "readUsers" = "readUsers" || $2::TEXT
+    WHERE "conversationId" = $1::uuid AND
+    "messageBody"->>'exchangeProcess' = 'receive'
+    AND NOT ($2::TEXT = ANY("readUsers"))
+  `,
+    conversationId,
+    userId,
+  );
 }
