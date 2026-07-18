@@ -11,6 +11,7 @@ import {
   reconcileInboxStatus,
   backfillConversations,
   migrateFreePlanFeatures,
+  migrateNonFreePlanFeatures,
   type BackfillConversationsResult,
 } from "./update.api";
 
@@ -49,6 +50,21 @@ export const useMigrateFreePlanFeatures = () => {
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to migrate free plan features");
+    },
+  });
+};
+
+export const useMigrateNonFreePlanFeatures = () => {
+  return useMutation({
+    mutationFn: migrateNonFreePlanFeatures,
+    onSuccess: ({ data }) => {
+      toast.success(data.message, {
+        description: `${data.updated} subscription(s) migrated, ${data.skipped} free plan(s) skipped.`,
+        id: "migrate-non-free-plan-features",
+      });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to migrate plan features");
     },
   });
 };
