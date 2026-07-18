@@ -115,14 +115,9 @@ export async function createUserSignup({
           userId: newUser.id,
         },
       });
-      // creating free plan subscription
-      let overrides: Partial<SubscriptionFeatures> | undefined;
-
-      if (goals?.length > 0 && goals.includes("loyalty-program")) {
-        // Loyalty feature is now part of Whatsapp or removed.
-      }
-
-      await createFreePlanSubscription(org.id, prisma as any, planId, overrides);
+      // Create the free-plan subscription. (Loyalty is no longer a subscription
+      // feature, so signup no longer injects any loyalty-based feature overrides.)
+      await createFreePlanSubscription(org.id, prisma as any, planId);
     });
 
     if (team.id && teamMember.userId) {

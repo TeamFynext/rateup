@@ -5,6 +5,7 @@ import {
   migrateWaTemplatePhoneIds,
   updateFreePlanExpiry,
   migrateFreePlanFeatures,
+  migrateNonFreePlanFeatures,
   updatePlanFeatures,
   updateRateupPlanFeature,
   updateSubscriptionAutomation,
@@ -100,6 +101,23 @@ export async function migrateFreePlanFeaturesHandler(request: FastifyRequest, re
   } catch (e) {
     log.error(e);
     reply.code(500).send("Error migrating free plan features");
+  }
+}
+
+export async function migrateNonFreePlanFeaturesHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { updated, skipped } = await migrateNonFreePlanFeatures();
+    reply.code(200).send({
+      message: "Non-free subscriptions migrated to the current feature schema",
+      updated,
+      skipped,
+    });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send("Error migrating plan features");
   }
 }
 export async function updateDefaultLifecycleHandler(request: FastifyRequest, reply: FastifyReply) {
