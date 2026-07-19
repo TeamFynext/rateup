@@ -43,7 +43,7 @@ const ContactForm = ({ features }) => {
             placeholder={translations("Enter phone number")}
             value={response?.phone || undefined}
             onChange={(value) => updateResponse({ ...response, phone: value })}
-            className="not-prose"
+            className="not-prose w-full max-w-[500px]"
             onClick={handleInputScrollIntoView}
           />
         </div>

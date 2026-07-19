@@ -27,6 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { cn } from "@/lib/utils";
 import {
   NPSWeightage,
   PageType,
@@ -36,7 +37,11 @@ import {
 } from "@/types/enums.ts";
 import { getTypeLabel } from "@/utils/enums/index.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
-import { getInitialQuestionValues, validateAllLanguagesArePopulated } from "@/utils/questions.ts";
+import {
+  getInitialQuestionValues,
+  validateAllLanguagesArePopulated,
+  validateContactFeaturesPopulated,
+} from "@/utils/questions.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
@@ -138,7 +143,13 @@ export function QuestionDetailedView({
   }, [question.id, surveyLanguages]);
 
   function getIncompleteLanguages() {
-    return validateAllLanguagesArePopulated(getValues(), surveyLanguages, ["title", "choices"]);
+    const values = getValues();
+    const missing = validateAllLanguagesArePopulated(values, surveyLanguages, ["title", "choices"]);
+    const missingContactFeatures = validateContactFeaturesPopulated(
+      values as Question,
+      surveyLanguages,
+    );
+    return Array.from(new Set([...missing, ...missingContactFeatures]));
   }
 
   const { imageToDelete, resetImage } = useImageStore();
@@ -152,10 +163,19 @@ export function QuestionDetailedView({
         setIsSaved(false);
         return "error";
       } else {
-        if (getIncompleteLanguages().length > 0) {
-          setSelectedLanguage(getIncompleteLanguages()[0]);
+        const incompleteLanguages = getIncompleteLanguages();
+        if (incompleteLanguages.length > 0) {
+          setSelectedLanguage(incompleteLanguages[0]);
+          const missingContactFeatures = validateContactFeaturesPopulated(
+            getValues() as Question,
+            surveyLanguages,
+          );
           toast.error(
-            translations("Please Enter heading and choices for all languages before saving."),
+            translations(
+              missingContactFeatures.length > 0
+                ? "Please select at least one field (Name, Phone or Email)."
+                : "Please Enter heading and choices for all languages before saving.",
+            ),
           );
           setIsSaved(false);
           return "error";
@@ -239,6 +259,8 @@ export function QuestionDetailedView({
   const isSaving =
     questionCreateMutation.isPending || questionUpdateMutation.isPending || deleteFileLoading;
 
+  const questionTypeLabel = getTypeLabel(question.type) || "";
+
   const alertPortalTarget =
     mounted && typeof document !== "undefined" ? document.getElementById("SurveyIssueAlert") : null;
 
@@ -259,17 +281,19 @@ export function QuestionDetailedView({
       {alertPortalTarget && createPortal(<SurveyIssueAlert isSaved={isSaved} />, alertPortalTarget)}
 
       <div className="flex h-full flex-col" ref={formRef}>
-        <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-[#ECECEA] bg-white px-4">
+        <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-border bg-card px-4">
           {/* Question number badge */}
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-rateup-blue-4 font-nunito text-sm font-black text-white">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary font-nunito text-sm font-black text-primary-foreground">
             {(survey?.questions?.findIndex((q: any) => q.id === question.id) ?? 0) + 1}
           </div>
           {/* Label */}
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] font-semibold text-[#1A1B1A]">
-              {getTypeLabel(question.type)}
+            <div className="truncate text-[13px] font-semibold text-foreground">
+              {questionTypeLabel}
             </div>
-            <div className="text-[11px] text-[#8B8E8A]">{translations("Question Editor")}</div>
+            <div className="text-[11px] text-muted-foreground">
+              {translations("Question Editor")}
+            </div>
           </div>
           {/* Language selector */}
           <LanguageCompletionView
@@ -294,13 +318,13 @@ export function QuestionDetailedView({
             handleSave={handleSave}
             isTicketFeatureActive={isTicketFeatureActive}
             enableAutoGenerateTicket={survey?.enableAutoGenerateTicket}
-            className="flex items-center gap-3 border-r border-[#ECECEA] pr-3.5"
+            className="flex items-center gap-3 border-r border-border pr-3.5"
           />
           {/* Actions */}
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 rounded-[7px] border-[1.5px] border-[#ECECEA] px-3 text-xs font-semibold text-[#4A4C49] hover:bg-gray-50"
+            className="h-8 gap-1.5 rounded-[7px] px-3 text-xs font-semibold"
             onClick={() => openSurveyPreviewModal?.()}
           >
             <IconEye className="size-3.5" />
@@ -308,7 +332,7 @@ export function QuestionDetailedView({
           </Button>
           <Button
             size="sm"
-            className="h-8 gap-1.5 rounded-[7px] bg-rateup-blue-4 px-3 text-xs font-semibold text-white hover:bg-rateup-blue-4/90"
+            className="h-8 gap-1.5 rounded-[7px] px-3 text-xs font-semibold"
             onClick={handleSave}
             disabled={isSaving}
           >
@@ -316,7 +340,10 @@ export function QuestionDetailedView({
             {translations("Save")}
           </Button>
         </div>
-        <ScrollArea className={styles["editor-scroll-area-div"]} style={{ flex: "1 1 0" }}>
+        <ScrollArea
+          className={cn(styles["editor-scroll-area-div"], "min-h-0")}
+          style={{ flex: "1 1 0" }}
+        >
           <div className="flex flex-col gap-4 p-4">
             <div className="flex items-start justify-between ">
               <div
@@ -354,6 +381,11 @@ export function QuestionDetailedView({
                       content={allValues?.title?.[selectedLanguage]}
                       onChange={(v) =>
                         setValue(`title.${selectedLanguage}` as any, v, { shouldDirty: true })
+                      }
+                      placeholder={
+                        questionTypeLabel
+                          ? `Enter your ${questionTypeLabel.toLowerCase()} question`
+                          : "Enter your question"
                       }
                     />
                   )}
@@ -463,16 +495,22 @@ interface QuestionTitleEditorProps {
   content?: string;
   onChange: (value: string) => void;
   className?: string;
+  placeholder?: string;
 }
 
-function QuestionTitleEditor({ content, onChange, className = "" }: QuestionTitleEditorProps) {
+function QuestionTitleEditor({
+  content,
+  onChange,
+  className = "",
+  placeholder = "Enter your question",
+}: QuestionTitleEditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4] },
       }),
-      Placeholder.configure({ placeholder: "Enter your question" }),
+      Placeholder.configure({ placeholder }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TextStyle,
       Underline,

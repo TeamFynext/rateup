@@ -38,6 +38,7 @@ export function EmailPhoneForm() {
         placeholder={translations("Enter phone number")}
         value={response?.phone || undefined}
         onChange={(value) => updateResponse({ ...response, phone: value })}
+        className="w-full max-w-[500px]"
       />
     </div>
   );

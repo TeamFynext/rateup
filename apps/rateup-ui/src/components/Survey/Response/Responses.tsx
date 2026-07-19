@@ -49,6 +49,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
   const surveyId = survey?.id;
   const { filterTeams } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
+  const [selectedRowSurveyTeamMapId, setSelectedRowSurveyTeamMapId] = useState("");
   const [opened, setOpened] = useState(false);
   const open = () => setOpened(true);
   const close = () => setOpened(false);
@@ -105,12 +106,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
     }
   }, [ranges]);
 
-  const deleteResponse = useDeleteResponse(
-    surveyId,
-    // @ts-ignore
-    filterTeams, // Assuming surveyTeamMapId was used but context only provides filterTeams now? Checking original code: it used surveyTeamMapId. But context destructuring gave surveyTeamMapId. I will keep using it if I can access it.
-    close,
-  );
+  const deleteResponse = useDeleteResponse(surveyId, selectedRowSurveyTeamMapId, close);
   const { t: translations } = useTranslation();
   if (Array.isArray(surveyId)) {
     throw new TypeError(translations("surveyId is an array"));
@@ -188,6 +184,7 @@ const Responses = ({ survey, defaultLanguage, questions }: any) => {
     questions: filteredQuestions,
     defaultLanguage,
     setSelectedRowId,
+    setSelectedRowSurveyTeamMapId,
     open,
     setSelectedResponseId,
     // Tickets are free with no limits, so creation follows only the survey's toggle.

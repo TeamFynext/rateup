@@ -23,6 +23,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { cn } from "@/lib/utils";
 import { QuestionType } from "@/types/enums.ts";
+import { getDefaultContactFeatureEnabled } from "@/utils/questions.ts";
 
 type CountryCode = string;
 
@@ -77,18 +78,19 @@ type HeadTextValues = {
 const ContactExtraProps = ({ form }: { form: any }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const qtype = form.values.type;
+  const defaultEnabled = getDefaultContactFeatureEnabled(qtype);
   const features = form.values.features?.[selectedLanguage] || {
     name: {
-      isEnabled: [QuestionType.Contact].includes(qtype),
+      isEnabled: defaultEnabled.name,
       headText: "",
     },
     phone: {
-      isEnabled: [QuestionType.Contact, QuestionType.Phone].includes(qtype),
+      isEnabled: defaultEnabled.phone,
       headText: "",
       defaultCountryCode: "IN",
     },
     email: {
-      isEnabled: [QuestionType.Contact, QuestionType.Email].includes(qtype),
+      isEnabled: defaultEnabled.email,
       headText: "",
     },
   };
@@ -125,16 +127,16 @@ const ContactExtraProps = ({ form }: { form: any }) => {
         ...form.values.features,
         [selectedLanguage]: {
           name: {
-            isEnabled: [QuestionType.Contact].includes(qtype),
+            isEnabled: defaultEnabled.name,
             headText: "",
           },
           phone: {
-            isEnabled: [QuestionType.Contact, QuestionType.Phone].includes(qtype),
+            isEnabled: defaultEnabled.phone,
             headText: "",
             defaultCountryCode: "IN",
           },
           email: {
-            isEnabled: [QuestionType.Contact, QuestionType.Email].includes(qtype),
+            isEnabled: defaultEnabled.email,
             headText: "",
           },
         },

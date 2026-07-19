@@ -75,7 +75,7 @@ function QuestionDetailedViewFooter({
               className={cn(
                 "flex size-7 items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-40",
                 required
-                  ? "bg-rateup-blue-4/10 text-rateup-blue-4"
+                  ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             />
@@ -97,7 +97,7 @@ function QuestionDetailedViewFooter({
                 className={cn(
                   "flex size-7 items-center justify-center rounded-md transition-colors",
                   enableNpsAnalytics
-                    ? "bg-rateup-blue-4/10 text-rateup-blue-4"
+                    ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               />
@@ -123,7 +123,7 @@ function QuestionDetailedViewFooter({
           <IconDots className="size-3.5" />
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuItem onClick={() => setActiveTab(QuestionTabsEnum.VariableEditor)}>
             <IconVariable />
             {translations("Variables")}

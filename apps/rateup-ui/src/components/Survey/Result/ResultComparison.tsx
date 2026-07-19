@@ -80,6 +80,7 @@ export default function ResultComparison({
         <Heading subtitle={translations("Team Question Activity")} />
         {teamWiseComparison?.map((q) => {
           const question = allQuestions.find((ques) => ques.id === q.questionId);
+          if (!question) return null;
           const questionTitle =
             version === 1 ? question.title || question.label : question.header || question.label;
           const localizedTitle =
@@ -90,8 +91,8 @@ export default function ResultComparison({
                 })
               : questionTitle;
           const graphData = filterTeams.length
-            ? q.data.filter((d) => filterTeams.includes(d.mapId))
-            : q.data;
+            ? (q.data ?? []).filter((d) => filterTeams.includes(d.mapId))
+            : (q.data ?? []);
           return (
             <Card key={q.questionId} className="min-h-[500px]">
               <CardContent className="flex flex-col gap-4 pt-6">
@@ -107,7 +108,7 @@ export default function ResultComparison({
                     <XAxis dataKey="teamCode" />
                     <YAxis />
                     <Tooltip />
-                    {Object.keys(q.data[0])
+                    {Object.keys(q.data[0] ?? {})
                       .filter((key) => !["teamCode", "mapId"].includes(key))
                       .map((key) => (
                         <Bar
@@ -117,7 +118,7 @@ export default function ResultComparison({
                           fill={
                             getResponseArrayByQuestionType(
                               version === 1 ? question.type : question?.metaType,
-                            )?.find((j) => j.value.toString() === key).color
+                            )?.find((j) => j.value.toString() === key)?.color
                           }
                           maxBarSize={50}
                           radius={10}

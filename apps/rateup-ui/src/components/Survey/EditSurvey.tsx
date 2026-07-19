@@ -19,6 +19,7 @@ import {
   createBlankQuestion,
   createPage,
   validateAllLanguagesArePopulated,
+  validateContactFeaturesPopulated,
 } from "@/utils/questions.ts";
 
 import PageTypeSelection from "./Page/PageTypeSelection.tsx";
@@ -143,7 +144,11 @@ export function EditSurvey({
           surveyLanguages,
           ["title", "choices"],
         );
-        return missingLanguages?.length > 0;
+        const missingContactFeatures = validateContactFeaturesPopulated(
+          questionDetailedViewFormRef.current as Question,
+          surveyLanguages,
+        );
+        return missingLanguages?.length > 0 || missingContactFeatures?.length > 0;
       } else {
         return false;
       }
@@ -160,6 +165,19 @@ export function EditSurvey({
     // Refs are stable mutable containers — .current is always up-to-date
     // when read inside the callback without needing to be a dependency.
   ]);
+
+  // Whether the current question's unsaved-changes state is specifically the
+  // Contact question's "no field enabled" case, so callers can show that
+  // message instead of the generic one.
+  const hasContactFeatureIssue = useCallback(() => {
+    if (!questionDetailedViewFormRef.current) return false;
+    return (
+      validateContactFeaturesPopulated(
+        questionDetailedViewFormRef.current as Question,
+        surveyLanguages,
+      ).length > 0
+    );
+  }, [surveyLanguages]);
 
   useEffect(() => {
     if (uniquePages.includes(selectedQ?.type as PageType)) {
@@ -286,6 +304,7 @@ export function EditSurvey({
                 setSelectedSurveyThemeTab={setSelectedSurveyThemeTab}
                 setThemeSelectorState={setThemeSelectorState}
                 checkForUnsavedChanges={checkForUnsavedChanges}
+                hasContactFeatureIssue={hasContactFeatureIssue}
               />
             </div>
           </motion.div>
@@ -411,16 +430,16 @@ export function EditSurvey({
                 )}
                 {activeTab === QuestionTabsEnum.None && (
                   <div className="flex h-full flex-col">
-                    <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-[#ECECEA] bg-white px-4">
+                    <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-border bg-card px-4">
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[13px] font-semibold text-[#1A1B1A]">
+                        <div className="truncate text-[13px] font-semibold text-foreground">
                           {survey?.title}
                         </div>
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 gap-1.5 rounded-[7px] border-[1.5px] border-[#ECECEA] px-3 text-xs font-semibold text-[#4A4C49] hover:bg-gray-50"
+                        className="h-8 gap-1.5 rounded-[7px] px-3 text-xs font-semibold"
                         onClick={() => openSurveyPreviewModal()}
                       >
                         <IconEye className="size-3.5" />

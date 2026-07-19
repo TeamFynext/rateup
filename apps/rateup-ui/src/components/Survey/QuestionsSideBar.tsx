@@ -47,6 +47,7 @@ interface QuestionsSideBarProps {
   setSelectedSurveyThemeTab?: any;
   setThemeSelectorState?: any;
   checkForUnsavedChanges?: () => boolean;
+  hasContactFeatureIssue?: () => boolean;
   activeTab?: QuestionTabsEnum;
 }
 
@@ -65,6 +66,7 @@ export function QuestionsSideBar({
   setSelectedSurveyThemeTab,
   setThemeSelectorState,
   checkForUnsavedChanges,
+  hasContactFeatureIssue,
   activeTab,
 }: QuestionsSideBarProps) {
   const params = useParams({
@@ -117,6 +119,11 @@ export function QuestionsSideBar({
     setDiscardDialog({ open: true, onConfirm });
   };
 
+  const getUnsavedChangesMessage = () =>
+    hasContactFeatureIssue?.()
+      ? "Please select at least one field (Name, Phone or Email)."
+      : "Please Enter heading and choices for all languages.";
+
   const handleOpenQuestion = (question: Question) => {
     if (selectedQ === question) {
       return;
@@ -135,7 +142,7 @@ export function QuestionsSideBar({
       haveUnsavedChanges &&
       Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
     ) {
-      toast.error(translations("Please Enter heading and choices for all languages."), {
+      toast.error(translations(getUnsavedChangesMessage()), {
         id: "missing-title-toast",
       });
       return;
@@ -247,7 +254,7 @@ export function QuestionsSideBar({
                   haveUnsavedChanges &&
                   Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
                 ) {
-                  toast.error(translations("Please Enter heading and choices for all languages."), {
+                  toast.error(translations(getUnsavedChangesMessage()), {
                     id: "missing-title-toast",
                   });
                   return;

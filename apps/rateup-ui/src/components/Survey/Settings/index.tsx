@@ -77,10 +77,10 @@ const SurveySettings = ({
     <div
       className={cn(
         styles["survey-settings-root-div"],
-        "min-h-full overflow-auto bg-[#f4f5f2] px-[22px] py-6",
+        "min-h-full overflow-auto bg-muted px-[22px] py-6",
       )}
     >
-      <div className={cn(styles["settings-content"], "mx-auto flex max-w-5xl flex-col gap-4")}>
+      <div className="mx-auto flex max-w-5xl flex-col gap-4">
         <GeneralSettings
           enabledModules={enabledModules}
           survey={survey}

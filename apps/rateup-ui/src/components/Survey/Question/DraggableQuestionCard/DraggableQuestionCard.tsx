@@ -61,8 +61,6 @@ const questionTypeColors: Record<string, string> = {
 
 import { Button } from "@/components/ui/button.tsx";
 
-import classes from "./DraggableQuestionCard.module.css";
-
 interface DraggableQuestionCardProps {
   question: Question;
   index: number;
@@ -128,11 +126,10 @@ export function DraggableQuestionCard({
           <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
             <div
               className={cx(
-                classes.item,
+                "relative flex cursor-pointer items-center gap-[9px] border-l-[3px] border-l-transparent bg-card px-3 py-[11px] transition-all duration-[120ms] not-data-[select=true]:hover:bg-muted data-[select=true]:border-l-primary data-[select=true]:bg-accent",
                 {
-                  [classes.itemDragging]: snapshot.isDragging,
+                  "rounded-lg shadow-custom-hover": snapshot.isDragging,
                 },
-                classes.transition,
               )}
               ref={provided.innerRef}
               onClick={() => {
@@ -146,12 +143,15 @@ export function DraggableQuestionCard({
                 ...provided.draggableProps.style,
               }}
             >
-              <div {...provided.dragHandleProps} className={classes.dragHandle}>
+              <div
+                {...provided.dragHandleProps}
+                className="flex shrink-0 items-center justify-center text-muted-foreground"
+              >
                 <IconGripVertical size={14} stroke={1.5} />
               </div>
               <div
-                className={classes.questionIconBox}
-                style={{ backgroundColor: questionTypeColors[question.type] ?? "#1c518e" }}
+                className="flex size-9 shrink-0 items-center justify-center rounded-[10px] text-white"
+                style={{ backgroundColor: questionTypeColors[question.type] ?? "var(--primary)" }}
               >
                 {(pageIcons[question.type] || questionIcons[question.type]) &&
                   React.createElement(pageIcons[question.type] ?? questionIcons[question.type], {
@@ -159,7 +159,7 @@ export function DraggableQuestionCard({
                     strokeWidth: 2,
                   })}
               </div>
-              <span className="truncate text-[13px] px-2" style={{ flex: 1, color: "#2e302e" }}>
+              <span className="flex-1 truncate px-2 text-[13px] text-foreground">
                 {extractText(questionTitle)}
               </span>
 

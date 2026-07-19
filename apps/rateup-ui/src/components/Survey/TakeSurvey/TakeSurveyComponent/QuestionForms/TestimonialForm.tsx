@@ -181,10 +181,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
             {features?.[selectedLanguage]?.photoQn || translations("Upload Photo")}
           </p>
           <div className="flex items-center gap-4">
-            <div
-              className="relative rounded-[10px]"
-              style={{ border: "1px solid grey", width: 200, height: 150 }}
-            >
+            <div className="relative rounded-[10px] h-[150px] w-[200px] ">
               <FormModalLayout
                 title={translations("Camera")}
                 onClose={close}

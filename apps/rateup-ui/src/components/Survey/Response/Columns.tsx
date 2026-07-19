@@ -28,6 +28,7 @@ export const useSurveyResponseColumns = ({
   questions = [],
   defaultLanguage,
   setSelectedRowId,
+  setSelectedRowSurveyTeamMapId,
   open,
   setSelectedResponseId,
   setResponseTeamId,
@@ -168,10 +169,12 @@ export const useSurveyResponseColumns = ({
             <ActionMenu
               open={open}
               resId={info.row.original.id}
-              resTeamId={info.row.original.surveyTeamMap?.teamId || info.row.original.teamId}
+              resTeamId={info.row.original.teamId}
+              resSurveyTeamMapId={info.row.original.surveyTeamMapId}
               setSelectedResponseId={setSelectedResponseId}
               setResponseTeamId={setResponseTeamId}
               setSelectedRowId={setSelectedRowId}
+              setSelectedRowSurveyTeamMapId={setSelectedRowSurveyTeamMapId}
               ticketData={info.row.original.Ticket}
               enableTicket={enableTicket}
             />
@@ -315,10 +318,12 @@ function BadgeorTextorPreview({
 export function ActionMenu({
   resId,
   resTeamId,
+  resSurveyTeamMapId,
   open,
   setSelectedResponseId,
   setResponseTeamId,
   setSelectedRowId,
+  setSelectedRowSurveyTeamMapId,
   ticketData,
   enableTicket,
 }: any) {
@@ -363,6 +368,7 @@ export function ActionMenu({
             className="text-red-500"
             onClick={() => {
               setSelectedRowId(resId);
+              setSelectedRowSurveyTeamMapId?.(resSurveyTeamMapId);
               open();
             }}
           >

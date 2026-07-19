@@ -15,3 +15,13 @@
 .rich-text-editor {
   width: 100%;
 }
+
+/* Tiptap's Placeholder extension only sets a data-placeholder attribute —
+   without this rule nothing renders it, since Tiptap ships no default CSS. */
+.rich-text-editor :global(.is-editor-empty::before) {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

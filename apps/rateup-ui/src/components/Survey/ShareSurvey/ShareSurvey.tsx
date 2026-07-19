@@ -199,7 +199,7 @@ const ShareSurvey = ({
 
   return (
     <TooltipProvider>
-      <div className="min-h-full overflow-auto bg-[#f4f5f2] p-6">
+      <div className="min-h-full overflow-auto bg-muted p-6">
         <div className="mx-auto flex max-w-5xl flex-col gap-4 pb-8">
           {/* Publish Status Card */}
           <Card>
@@ -448,6 +448,7 @@ const ShareSurvey = ({
                         value={selectTeamDropdownState}
                         onValueChange={handleContainedSelectionChange}
                         disabled={disableShare}
+                        items={teamSelectData}
                       >
                         <SelectTrigger className="min-w-[150px]">
                           <SelectValue />

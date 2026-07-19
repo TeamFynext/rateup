@@ -201,7 +201,7 @@ function GoogleReview({
           </DialogContent>
         </Dialog>
       </div>
-      <div>
+      <div className="flex justify-center">
         <RateupRedirectCard className="!m-0" />
       </div>
     </div>
