@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 import { getOrgIdRole, getUserID } from "@/utils/userInfo.ts";
 
-import type { IEditTeam } from "./team.api";
+import type { IEditTeam, UpdateTeamChannelsInput } from "./team.api";
 import {
   addUsertoTeams,
   createTeam,
@@ -13,11 +13,13 @@ import {
   getNotTeamMembers,
   getSurveyLanguagesFromTeam,
   getTeamById,
+  getTeamChannels,
   getTeamFeatures,
   getTeamMembersFromInvitation,
   getTeamsByUser,
   removeUserFromTeam,
   resendInviteTeamMember,
+  updateTeamChannels,
   updateTeamFeatures,
 } from "./team.api";
 
@@ -247,6 +249,31 @@ export function useUpdateTeamFeatures(teamId: string) {
     },
     onError: (error: any) => {
       toast.error(error?.message || "Failed to update feature access.");
+    },
+  });
+}
+
+export function useTeamChannels(teamId: string) {
+  return useQuery({
+    queryKey: ["teamChannels", teamId],
+    queryFn: () => getTeamChannels(teamId),
+    enabled: !!teamId,
+  });
+}
+
+export function useUpdateTeamChannels(teamId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateTeamChannelsInput) => updateTeamChannels(teamId, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamChannels", teamId] });
+      // The caller's own channel list is derived from their teams, so it can change here too.
+      // `waSettings` is cached with staleTime: Infinity and would otherwise stay stale until reload.
+      queryClient.invalidateQueries({ queryKey: ["waSettings"] });
+      toast.success("Channel access updated successfully.");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to update channel access.");
     },
   });
 }

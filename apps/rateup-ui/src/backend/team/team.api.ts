@@ -147,3 +147,40 @@ export async function updateTeamFeatures(
   const res = await axiosClient.put(`/team/${teamId}/features`, { features });
   return res.data;
 }
+
+// ─── Team Channels ────────────────────────────────────────────────────────────
+
+export interface TeamChannelItem {
+  id: string;
+  phone?: string | null;
+  phoneId?: string | null;
+  ibaId?: string | null;
+  fbPageId?: string | null;
+  phoneDisplayName?: string | null;
+  status?: string;
+}
+
+export interface TeamChannelsResponse {
+  /** When true the team reaches every channel in the org, including ones connected later. */
+  allChannels: boolean;
+  /** Empty while `allChannels` is true — the grant is the flag, not a snapshot of ids. */
+  channels: TeamChannelItem[];
+}
+
+export interface UpdateTeamChannelsInput {
+  allChannels: boolean;
+  channelIds: string[];
+}
+
+export async function getTeamChannels(teamId: string): Promise<TeamChannelsResponse> {
+  const res = await axiosClient.get(`/team/${teamId}/channels`);
+  return res.data;
+}
+
+export async function updateTeamChannels(
+  teamId: string,
+  input: UpdateTeamChannelsInput,
+): Promise<TeamChannelsResponse> {
+  const res = await axiosClient.put(`/team/${teamId}/channels`, input);
+  return res.data;
+}
