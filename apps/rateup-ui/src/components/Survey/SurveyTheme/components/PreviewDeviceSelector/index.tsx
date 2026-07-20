@@ -1,30 +1,31 @@
-import { Group, Tabs } from "@mantine/core";
 import { IconDeviceDesktop, IconDeviceMobile } from "@tabler/icons-react";
+
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import { PreviewTypeEnum } from "../../SurveyTheme.enums";
 
-import styles from "./PreviewDeviceSelector.module.css";
-
 function PreviewDeviceSelector({ onChange, value, withLabel = true, className = "" }) {
   return (
-    <Group className={`${styles["preview-device-selector-div"]} ${className}`}>
-      {withLabel && <p className={styles["label"]}>Preview:</p>}
-      <Tabs
-        value={value}
-        onChange={onChange}
-        classNames={styles}
-        defaultValue={PreviewTypeEnum.DESKTOP}
-      >
-        <Tabs.List>
-          <Tabs.Tab value={PreviewTypeEnum.DESKTOP}>
-            <IconDeviceDesktop size={"1.25rem"} />
-          </Tabs.Tab>
-          <Tabs.Tab value={PreviewTypeEnum.MOBILE}>
-            <IconDeviceMobile size={"1.25rem"} />
-          </Tabs.Tab>
-        </Tabs.List>
-      </Tabs>
-    </Group>
+    <div className={cn("flex items-center gap-2.5", className)}>
+      {withLabel && <p className="text-xl">Preview:</p>}
+      <ToggleGroup spacing={0} variant="outline">
+        <ToggleGroupItem
+          pressed={value === PreviewTypeEnum.DESKTOP}
+          onPressedChange={() => onChange(PreviewTypeEnum.DESKTOP)}
+          className="aria-pressed:bg-[var(--tertiary-color)] aria-pressed:text-white"
+        >
+          <IconDeviceDesktop size={"1.25rem"} />
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          pressed={value === PreviewTypeEnum.MOBILE}
+          onPressedChange={() => onChange(PreviewTypeEnum.MOBILE)}
+          className="aria-pressed:bg-[var(--tertiary-color)] aria-pressed:text-white"
+        >
+          <IconDeviceMobile size={"1.25rem"} />
+        </ToggleGroupItem>
+      </ToggleGroup>
+    </div>
   );
 }
 

@@ -1,15 +1,30 @@
-import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
+import { cn } from "@/lib/utils";
 import { SurveyType, WaFlowStatus } from "@/types/enums.ts";
 
-import { ContainedSelection } from "../../input/ContainedInput/ContainedInput.tsx";
 import NothingFound from "../../NothingFound/NothingFound.tsx";
-import PaperLayout from "../../styled/Layouts/PaperLayout.tsx";
 import { EditFlowContext } from "../../whatsapp/flows/FlowPage/EditFlow/EditFlowContext.ts";
 import { StatusBadge } from "../SurveyCardList.tsx";
 import { FlowShareMessageEditor } from "./FlowShareTemplateEditor.tsx";
@@ -98,97 +113,113 @@ export const ShareFlow = ({
   };
 
   return (
-    <Stack p={10} pr={16}>
-      <PaperLayout
-        p="30px"
-        style={{
-          boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
-          overflowX: "auto",
-        }}
-      >
-        <Group justify="space-between">
-          <Group>
-            <Tooltip
-              label={
-                dbFlow.pendingSave
+    <TooltipProvider delay={150}>
+      <div className="flex flex-col gap-2.5 p-2.5 pr-4">
+        <Card className="overflow-x-auto p-[30px] shadow-[rgba(99,99,99,0.2)_0px_2px_8px_0px]">
+          <div className="flex items-center justify-between">
+            <Tooltip>
+              <TooltipTrigger render={<span className="inline-block" />}>
+                <Button
+                  disabled={!dbFlow.pendingSave || pushToWaMutation.isPending}
+                  onClick={handleSaveToWa}
+                >
+                  {pushToWaMutation.isPending && <Spinner data-icon="inline-start" />}
+                  {translations("Save to WhatsApp")}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {dbFlow.pendingSave
                   ? translations("Save your flow to WhatsApp")
-                  : translations("No changes to save")
-              }
-            >
-              <Button
-                disabled={!dbFlow.pendingSave}
-                onClick={handleSaveToWa}
-                loading={pushToWaMutation.isPending}
-              >
-                {translations("Save to WhatsApp")}
-              </Button>
+                  : translations("No changes to save")}
+              </TooltipContent>
             </Tooltip>
-          </Group>
-          <Group>
-            <Text>{translations("Current Status: ")}</Text>
-            {isPublished ? (
-              <StatusBadge active={survey?.active} />
-            ) : (
-              <Text c="dark.1"> {translations("Not published! ")}</Text>
-            )}
-          </Group>
-        </Group>
-      </PaperLayout>
-      <PaperLayout p="md" shadow="lg" opacity={disableShare ? 0.5 : 1}>
-        <Group gap="lg">
-          <Stack style={{ minWidth: 300, flex: 1 }} p="md">
-            <Title order={4}>{translations("Share Survey")}</Title>
-            <Group>
-              <ContainedSelection
-                style={{ flex: 1 }}
-                disabled={disableShare}
-                label={translations("Select Team")}
-                allowDeselect={false}
-                miw={150}
-                value={surveyTeamMapId}
-                data={teamSelectData}
-                onChange={setSurveyTeamMapId}
-              />
-              <Group gap={2} align="flex-start" style={{ flex: 1 }}>
-                <ContainedSelection
-                  disabled={disableShare || tagSelectData.length === 0}
-                  label={translations("Select Tag")}
-                  placeholder={translations("select a single Tag")}
-                  miw={150}
-                  data={tagSelectData}
-                  value={tag}
-                  onChange={(value) => setTag(value)}
-                />
-                <TagManager
-                  isPublished={true}
-                  selectTeamDropdownValue={selectTeamDropdownState}
-                  teamSelectData={teamSelectData}
-                  onSelectTeamDropdownChange={handleContainedSelectionChange}
-                  nothingFound={NothingFound}
-                  tagsToMap={survey.teams[selectTeamDropdownState].tags}
-                  surveyTitle={survey?.title}
-                  surveyId={surveyId}
-                  shareUrl={shareUrl}
-                />
-              </Group>
-            </Group>
-            <CopyLinkComponent value={shareUrl} disabled={disableShare} />
-          </Stack>
-          <ShareMethods survey={survey} disableShare={disableShare} shareUrl={shareUrl} />
-        </Group>
-      </PaperLayout>
-      <FlowShareMessageEditor
-        selectedTeamCode={teamSelectData.find((t) => t.value === surveyTeamMapId)?.label}
-      />
-      <ShareQR
-        url={shareUrl || import.meta.env.VITE_FRONTEND_URL}
-        sx={{ borderRadius: "0.5rem" }}
-        title={survey.title}
-        isPublished={!disableShare}
-        id={surveyId}
-        queryKey={"surveyShareSettings"}
-        resourceName={"survey"}
-      />
-    </Stack>
+            <div className="flex items-center gap-2">
+              <span>{translations("Current Status: ")}</span>
+              {isPublished ? (
+                <StatusBadge active={survey?.active} />
+              ) : (
+                <span className="text-muted-foreground"> {translations("Not published! ")}</span>
+              )}
+            </div>
+          </div>
+        </Card>
+        <Card className={cn("p-4 shadow-lg", disableShare ? "opacity-50" : "opacity-100")}>
+          <div className="flex gap-5">
+            <div className="flex min-w-[300px] flex-1 flex-col gap-4">
+              <h4 className="text-lg font-semibold">{translations("Share Survey")}</h4>
+              <div className="flex gap-3">
+                <Field className="flex-1">
+                  <FieldLabel>{translations("Select Team")}</FieldLabel>
+                  <Select
+                    disabled={disableShare}
+                    value={surveyTeamMapId}
+                    onValueChange={setSurveyTeamMapId}
+                    items={teamSelectData}
+                  >
+                    <SelectTrigger className="w-full min-w-[150px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teamSelectData?.map((team) => (
+                        <SelectItem key={team.value} value={team.value}>
+                          {team.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <div className="flex flex-1 items-start gap-0.5">
+                  <Field className="flex-1">
+                    <FieldLabel>{translations("Select Tag")}</FieldLabel>
+                    <Select
+                      disabled={disableShare || tagSelectData.length === 0}
+                      value={tag}
+                      onValueChange={(value) => setTag(value)}
+                      items={tagSelectData}
+                    >
+                      <SelectTrigger className="w-full min-w-[150px]">
+                        <SelectValue placeholder={translations("select a single Tag")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tagSelectData?.map((tagItem) => (
+                          <SelectItem key={tagItem} value={tagItem}>
+                            {tagItem}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <TagManager
+                    isPublished={true}
+                    selectTeamDropdownValue={selectTeamDropdownState}
+                    teamSelectData={teamSelectData}
+                    onSelectTeamDropdownChange={handleContainedSelectionChange}
+                    nothingFound={NothingFound}
+                    tagsToMap={survey.teams[selectTeamDropdownState].tags}
+                    surveyTitle={survey?.title}
+                    surveyId={surveyId}
+                    shareUrl={shareUrl}
+                  />
+                </div>
+              </div>
+              <CopyLinkComponent value={shareUrl} disabled={disableShare} />
+            </div>
+            <ShareMethods survey={survey} disableShare={disableShare} shareUrl={shareUrl} />
+          </div>
+        </Card>
+        <FlowShareMessageEditor
+          selectedTeamCode={teamSelectData.find((t) => t.value === surveyTeamMapId)?.label}
+        />
+        <ShareQR
+          url={shareUrl || import.meta.env.VITE_FRONTEND_URL}
+          sx={{ borderRadius: "0.5rem" }}
+          title={survey.title}
+          isPublished={!disableShare}
+          id={surveyId}
+          queryKey={"surveyShareSettings"}
+          resourceName={"survey"}
+        />
+      </div>
+    </TooltipProvider>
   );
 };

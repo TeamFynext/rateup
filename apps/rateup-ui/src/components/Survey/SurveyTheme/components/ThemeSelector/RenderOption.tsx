@@ -1,10 +1,10 @@
-import { ActionIcon, Badge, Group, Loader, Tooltip } from "@mantine/core";
-import { IconPencil, IconTrash, IconTrashX } from "@tabler/icons-react";
+import { IconPencil, IconTrash } from "@tabler/icons-react";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { useDeleteThemeMutation } from "@/backend/surveyTheme/surveyTheme.query";
-
-import styles from "./ThemeSelector.module.css";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
 function RenderOption({
   option,
@@ -14,7 +14,7 @@ function RenderOption({
 }) {
   const isDefaultOption = option.label === "Default Theme";
 
-  const { value, activeInAnotherSurvey } = option;
+  const { value } = option;
   const isSurveyThemeActive = surveyActiveThemeId === value;
 
   const [isDeletingTheme, setIsDeletingTheme] = useState(false);
@@ -35,40 +35,45 @@ function RenderOption({
   };
 
   return (
-    <Group justify="space-between" wrap="nowrap">
-      <span className={styles["label-span"]}>{option.label}</span>
-      <Group wrap="nowrap" className={styles["action-btns-group-div"]}>
+    <div className="flex items-center justify-between gap-2 overflow-hidden">
+      <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{option.label}</span>
+      <div className="flex shrink-0 flex-nowrap items-center gap-2.5">
         {!isDefaultOption && (
-          <ActionIcon
+          <Button
+            size="icon-xs"
+            variant="outline"
+            className="border-gray-300 bg-transparent text-gray-500 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
             onClick={handleEditBtnClick}
-            className={`${styles["render-option-btn"]} ${styles["edit-action-btn"]}`}
           >
             <IconPencil size={"1rem"} />
-          </ActionIcon>
+          </Button>
         )}
-        {!isDefaultOption && !isSurveyThemeActive && !isDeletingTheme && (
-          <ActionIcon
-            className={`${styles["render-option-delete-btn"]} ${styles["render-option-btn"]}`}
+        {!isDefaultOption && !isDeletingTheme && (
+          <Button
+            size="icon-xs"
+            variant="outline"
+            className="border-gray-300 bg-transparent text-red-500 hover:border-red-200 hover:bg-red-50 hover:text-red-500"
             onClick={handleDeleteBtnClick}
-            disabled={activeInAnotherSurvey}
           >
-            {!activeInAnotherSurvey ? (
-              <IconTrash size={"1rem"} />
-            ) : (
-              <Tooltip label={"Active in another survey"} position="right">
-                <IconTrashX size={"1rem"} />
-              </Tooltip>
-            )}
-          </ActionIcon>
+            <IconTrash size={"1rem"} />
+          </Button>
         )}
-        {!isSurveyThemeActive && isDeletingTheme && (
-          <ActionIcon className={`${styles["render-option-btn"]} ${styles["loader-btn"]}`}>
-            <Loader size={"1rem"} className={styles["delete-loader"]} />
-          </ActionIcon>
+        {!isDefaultOption && isDeletingTheme && (
+          <Button
+            size="icon-xs"
+            variant="outline"
+            className="border-gray-300 bg-transparent"
+            disabled
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Loader2 className="size-3 animate-spin" />
+          </Button>
         )}
-        {isSurveyThemeActive && <Badge className={styles["active-badge"]}>Active</Badge>}
-      </Group>
-    </Group>
+        {isSurveyThemeActive && (
+          <Badge className="border border-gray-300 bg-white text-green-600">Active</Badge>
+        )}
+      </div>
+    </div>
   );
 }
 

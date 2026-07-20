@@ -480,27 +480,6 @@ export function useNavMain({
               title: t("Web Forms"),
               url: "/dashboard/surveys",
               icon: IconBrowser,
-              items: [
-                {
-                  title: t("Surveys"),
-                  url: "/dashboard/surveys",
-                  icon: IconBrowser,
-                },
-                {
-                  title: t("Templates"),
-                  url: "/dashboard/surveys/templates",
-                  icon: IconTemplate,
-                },
-                // ...(hiddenModules.includes("testimonial")
-                //   ? []
-                //   : [
-                //       {
-                //         title: t("Testimonial"),
-                //         url: "/dashboard/testimonial",
-                //         icon: IconMessageChatbot,
-                //       },
-                //     ]),
-              ],
             },
           ]
         : []),

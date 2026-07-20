@@ -1,16 +1,14 @@
-import { Box, Button, Center } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
-import classNames from "classnames/bind";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
 import { useNavControlContext } from "@/context/NavControlContext.ts";
+import { cn } from "@/lib/utils.ts";
 
 import PreviewDeviceButtons from "./components/PreviewDeviceButtons.tsx";
 import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout.tsx";
 
 import styles from "./SurveyTheme.module.css";
-
-const cx = classNames.bind(styles);
 
 function SurveyTheme({
   survey,
@@ -20,36 +18,41 @@ function SurveyTheme({
   onEditPageBtnClick = null,
 }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme ?? {};
-
   const { t: translations } = useTranslation();
-
   const { setNavOpened } = useNavControlContext();
 
   if (!surveyTheme)
     return (
-      <Center h={"100%"}>
+      <div className="flex h-full items-center justify-center">
         <p>{translations("Unable to get theme, please try again later")}</p>
-      </Center>
+      </div>
     );
 
   return (
-    <Box className={`${cx("survey-theme-root-div")} survey-theme-root-div`}>
-      <Box
-        className={`${cx("selected-page-tab-panels-and-styles-div-container")} selected-page-tab-panels-and-styles-div-container`}
+    <div className={cn(styles["survey-theme-root-div"], "survey-theme-root-div")}>
+      <div
+        className={cn(
+          styles["selected-page-tab-panels-and-styles-div-container"],
+          "selected-page-tab-panels-and-styles-div-container",
+        )}
       >
-        <Box className={`${cx("theme-preview-container")} theme-preview-container`}>
+        <div className={cn(styles["theme-preview-container"], "theme-preview-container")}>
           <PreviewDeviceButtons />
 
           {!isSurveyThemePreview && (
             <Button
-              className={`${cx("edit-page-theme-btn", { "edit-preview-edit-page-theme-btn": isSurveyThemeEditView })}`}
-              rightSection={<IconEdit size={16} />}
+              className={cn(
+                styles["edit-page-theme-btn"],
+                "edit-page-theme-btn",
+                isSurveyThemeEditView && styles["edit-preview-edit-page-theme-btn"],
+              )}
               onClick={() => {
                 onEditPageBtnClick?.();
                 setNavOpened(false);
               }}
             >
               Edit
+              <IconEdit size={16} />
             </Button>
           )}
 
@@ -59,9 +62,9 @@ function SurveyTheme({
             isSurveyThemeEditView={isSurveyThemeEditView}
             isSurveyThemePreview={isSurveyThemePreview}
           />
-        </Box>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 }
 

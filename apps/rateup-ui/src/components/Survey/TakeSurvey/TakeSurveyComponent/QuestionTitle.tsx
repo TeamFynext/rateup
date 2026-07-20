@@ -1,4 +1,3 @@
-import { Text } from "@mantine/core";
 import { useContext, useEffect } from "react";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
@@ -28,19 +27,18 @@ function QuestionTitle({ largeScreen, themeStyles, responses, surveyId, setAlign
   }, [selectedQ]);
 
   return replacedTitle ? (
-    <Text
+    <div
       style={themeStyles}
       className={classes.questionRichText}
       dangerouslySetInnerHTML={{ __html: replacedTitle }}
     />
   ) : (
-    <Text
-      size={largeScreen ? "30px" : "20px"}
+    <p
       className={classes.questionTitle}
-      style={themeStyles}
+      style={{ fontSize: largeScreen ? "30px" : "20px", ...themeStyles }}
     >
       {selectedQ.title[selectedLanguage]}
-    </Text>
+    </p>
   );
 }
 

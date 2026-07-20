@@ -1,4 +1,3 @@
-import { Radio } from "@mantine/core";
 import { useRouterState } from "@tanstack/react-router";
 import { useAnimate } from "motion/react";
 import { useContext, useEffect, useState } from "react";
@@ -45,16 +44,15 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
 
   useEffect(() => {
     if (response) {
-      setSelectedOp(publicRoute || isSurveyThemePreview ? response.value.value : response.value);
+      const val = response.value?.value ?? response.value;
+      setSelectedOp(typeof val === "string" ? val : "");
     }
   }, [response]);
 
-  const handleSelectedOp = async (value) => {
-    const res = options?.find(
-      (op) => (publicRoute || isSurveyThemePreview ? op?.value?.value : op?.value) === value,
-    );
+  const handleSelectedOp = async (value: string) => {
+    const res = options?.find((op) => (op?.value?.value ?? op?.value) === value);
     updateResponse(res);
-    const selectedEle = scope.current?.querySelector(`.mantine-focus-auto[data-value="${value}"]`);
+    const selectedEle = scope.current?.querySelector(`[data-value="${value}"]`);
     if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
       if (selectedEle) {
         await animate(selectedEle, { opacity: [0, 1, 0, 1] }, { duration: 0.75 });
@@ -69,13 +67,14 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
   const data = options?.map((op) => op?.value);
 
   return (
-    <Radio.Group value={selectedOp} onChange={handleSelectedOp} mr={"sm"} w={"100%"} ref={scope}>
+    <div ref={scope} className="mr-2 w-full">
       <SingleSelectCard
         data={data}
         selectedValue={selectedOp}
         includeImage
         fallbackEnable={fallbackEnable}
+        onChange={handleSelectedOp}
       />
-    </Radio.Group>
+    </div>
   );
 }

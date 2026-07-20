@@ -1,14 +1,13 @@
-import { Box, Group, Stack, Switch } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateFlowMetaDataMutation } from "@/backend/whatsapp/flow/flow.query";
-
-import { RateupButtonPrimary } from "../../Button/RateupButtons.tsx";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
-import PaperLayout from "../../styled/Layouts/PaperLayout.tsx";
-
-import styles from "./SurveySettings.module.css";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 
 const FlowSettingsUpdate = ({
   name,
@@ -19,56 +18,61 @@ const FlowSettingsUpdate = ({
   dbFlowId: string;
   anonymous: boolean;
 }) => {
-  const form = useForm({
-    initialValues: {
+  const { t: translations } = useTranslation();
+  const updateFlowMetaDataMutation = useUpdateFlowMetaDataMutation();
+
+  const { register, watch, setValue, handleSubmit } = useForm({
+    defaultValues: {
       name: name ?? "",
       anonymous: anonymous ?? false,
     },
   });
-  const updateFlowMetaDataMutation = useUpdateFlowMetaDataMutation();
-  const handleFlowMetaData = () => {
-    updateFlowMetaDataMutation.mutate({
-      data: form.getValues(),
-      dbFlowId,
-    });
+
+  const isAnonymous = watch("anonymous");
+
+  const onSubmit = (data: { name: string; anonymous: boolean }) => {
+    updateFlowMetaDataMutation.mutate({ data, dbFlowId });
   };
-  const { t: translations } = useTranslation();
+
   return (
-    <PaperLayout>
-      <Stack align="center">
-        <ContainedTextField
-          className={styles["form-input"]}
-          withAsterisk
-          label={translations("Flow Name")}
-          placeholder={translations("Enter Flow name")}
-          required
-          w={"100%"}
-          key={form.key("name")}
-          {...form.getInputProps("name")}
-        />
-        <Group w={"100%"}>
-          <Switch
-            className={`switch ${(anonymous ?? false) ? "on" : "off"}`}
-            size="md"
-            key={form.key("anonymous")}
-            {...form.getInputProps("anonymous", { type: "checkbox" })}
-          />
-          <Box className={"switch-heading-and-desc-container"}>
-            <h3>{translations("Anonymous")}</h3>
-            <p>
-              {form.getValues().anonymous
+    <Card>
+      <CardHeader>
+        <CardTitle>{translations("Flow Settings")}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <FieldGroup>
+            <Field>
+              <FieldLabel>
+                {translations("Flow Name")} <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Input
+                placeholder={translations("Enter Flow name")}
+                {...register("name", { required: true })}
+              />
+            </Field>
+          </FieldGroup>
+
+          <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5">
+            <Switch checked={isAnonymous} onCheckedChange={(v) => setValue("anonymous", v)} />
+            <span className="text-sm font-medium">{translations("Anonymous")}</span>
+            <div />
+            <p className="text-xs text-muted-foreground">
+              {isAnonymous
                 ? translations("Anonymous Flow is enabled")
                 : translations("Anonymous Flow is disabled")}
             </p>
-          </Box>
-        </Group>
-        <RateupButtonPrimary
-          title={translations("Save Changes")}
-          onClick={handleFlowMetaData}
-          loading={updateFlowMetaDataMutation?.isPending}
-        />
-      </Stack>
-    </PaperLayout>
+          </div>
+
+          <div className="flex justify-center">
+            <Button type="submit" disabled={updateFlowMetaDataMutation.isPending}>
+              {updateFlowMetaDataMutation.isPending && <Spinner data-icon="inline-start" />}
+              {translations("Save Changes")}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

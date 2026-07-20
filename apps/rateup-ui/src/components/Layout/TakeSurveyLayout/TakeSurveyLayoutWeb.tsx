@@ -1,16 +1,4 @@
-import {
-  BackgroundImage,
-  Box,
-  Center,
-  Group,
-  Image,
-  MantineProvider,
-  Paper,
-  Space,
-  Stack,
-  Text,
-} from "@mantine/core";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { MantineProvider } from "@mantine/core";
 import { useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -22,6 +10,7 @@ import {
 } from "@/backend/surveys/surveys.query";
 import { getQuestionsLength } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/util.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { useMediaQuery } from "@/hooks/use-media-querry.ts";
 import { PageType } from "@/types/enums.ts";
 
 import { CreditsCard } from "../../Card/CreditsCard.tsx";
@@ -35,8 +24,6 @@ import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext.
 import LanguageSelectionPage from "../LanguageSelectionPage/index.tsx";
 import WelcomePage from "../WelcomePage/WelcomePage.tsx";
 import { getBgImgAndBgColor } from "./utils.ts";
-
-import styles from "./TakeSurveyLayoutWeb.module.css";
 
 export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme ?? {};
@@ -69,7 +56,9 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   const updateVisited = useUpdateVisitedMutation(survey?.id);
   const updateStarted = useUpdateStartedMutation(survey?.id);
 
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, setOpened] = useState(false);
+  const open = () => setOpened(true);
+  const close = () => setOpened(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
 
@@ -165,13 +154,16 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
 
   if (!getQuestionsLength(survey)) {
     return (
-      <Center style={{ height: "100vh" }}>
-        <Text fw={500}>No Questions found!</Text>
-      </Center>
+      <div className="flex h-screen items-center justify-center">
+        <p className="font-medium">No Questions found!</p>
+      </div>
     );
   }
 
   return (
+    // MantineProvider stays: it generates the --mantine-color-primaryColor-* CSS vars (scoped to
+    // this survey's configured input color) that still-Mantine descendants (Select, MultiSelect,
+    // DatePickerInput, FormModalLayout, etc.) rely on for their accent color.
     <MantineProvider
       cssVariablesSelector={isSurveyThemePreview ? `#${previewId}` : ":root"}
       getRootElement={getRootElementForMantineProvider}
@@ -201,10 +193,10 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
         buttonTitle={"Login"}
         submitBtnColor={"var(--tertiary-color)"}
       >
-        <Text mt="lg" size="sm" c="gray">
+        <p className="mt-5 text-sm text-gray-500">
           Hey Welcome , <br /> You need to enter password to continue.
-        </Text>
-        <Space h="lg" />
+        </p>
+        <div className="h-5" />
         <ContainedPasswordInput
           required
           label="Password"
@@ -213,53 +205,44 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
           my="lg"
         />
       </FormModalLayout>
-      <Stack
-        className={`${styles["take-survey-layout-web-root-div"]} take-survey-layout-web-root-div`}
-        w={"100%"}
-        // mih={"100dvh"}
-        style={{ backgroundColor }}
+      <div
+        className="take-survey-layout-web-root-div flex h-dvh w-full flex-col gap-0
+          [&_.mantine-Modal-inner]:absolute [&_.mantine-Modal-inner]:p-0
+          [&_.mantine-Modal-overlay]:absolute
+          [&_.search-input-and-options-container]:absolute [&_.search-input-and-options-container]:z-[100]"
+        style={{ position: "relative", backgroundColor }}
       >
         <CreditsCard
           enableCredits={isUnsplashImage && !isLanguagePageActive}
           url={backgroundImageSrc}
         >
-          <BackgroundImage
-            h={"100%"}
+          <div
+            className="flex h-full flex-1 flex-col justify-between"
             style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              objectFit: "contain",
+              backgroundImage: backgroundImageSrc ? `url(${backgroundImageSrc})` : undefined,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
             }}
-            src={backgroundImageSrc}
           >
             {/* .........Survey Header Section.......... */}
             {!isLanguagePageActive && startClicked && (
-              <Box className={styles["logo-container"]}>
+              <div className="my-4 flex justify-center">
                 {orgLogoSrc && (
-                  <Image
+                  <img
                     src={orgLogoSrc}
                     alt="Logo"
                     style={{ ...orgLogoStyles }}
-                    mah={200}
-                    maw={200}
-                    fit="contain"
+                    className="max-h-[200px] max-w-[200px] object-contain"
                   />
                 )}
-              </Box>
+              </div>
             )}
 
-            <Paper
-              pt="-50px"
-              radius={0}
-              bg="transparent"
-              style={{ padding: 0, margin: 0, flex: 1 }}
-              display={"flex"}
-            >
+            <div className="m-0 flex flex-1 p-0">
               {(survey?.isPublished && survey?.active) || isSurveyThemePreview ? (
                 survey?.isProtected && !isPasswordVerified && !isSurveyThemePreview ? null : (
-                  <Paper radius={0} w={"100%"} bg={"transparent"} style={{ overflow: "hidden" }}>
+                  <div className="w-full overflow-hidden">
                     {startClicked &&
                       (isLanguagePageActive ? (
                         <LanguageSelectionPage
@@ -294,30 +277,29 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
                         isMobile={isMobile}
                       />
                     )}
-                  </Paper>
+                  </div>
                 )
               ) : (
-                <Center style={{ flex: 1 }}>
+                <div className="flex flex-1 items-center justify-center">
                   {(survey?.isPublished !== true || !survey?.active) && (
-                    <Group align="center" justify="center">
-                      <Image
+                    <div className="flex items-center justify-center gap-4">
+                      <img
                         src={`${import.meta.env.VITE_FRONTEND_URL}/images/bw-logo.png`}
                         alt="Logo"
-                        w={isMobile ? 70 : 80}
-                        h={isMobile ? 70 : 80}
-                        fit={"contain"}
+                        style={{ width: isMobile ? 70 : 80, height: isMobile ? 70 : 80 }}
+                        className="object-contain"
                       />
-                      <Text c="#CDCDCD" fw={"bold"} fz={28}>
+                      <p className="text-[28px] font-bold" style={{ color: "#CDCDCD" }}>
                         Survey is not available..!
-                      </Text>
-                    </Group>
+                      </p>
+                    </div>
                   )}
-                </Center>
+                </div>
               )}
-            </Paper>
-          </BackgroundImage>
+            </div>
+          </div>
         </CreditsCard>
-      </Stack>
+      </div>
     </MantineProvider>
   );
 };

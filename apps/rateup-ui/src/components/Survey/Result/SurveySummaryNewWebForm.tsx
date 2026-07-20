@@ -1,5 +1,5 @@
-import { Rating } from "@mantine/core"; // Rating
 import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
+import { Star } from "lucide-react";
 
 import { QuestionType, WaQuestions } from "@/types/enums.ts";
 import {
@@ -56,7 +56,7 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
   );
 
   const renderAll = (renderFn) => (
-    <div className="space-y-2 max-h-[500px] overflow-scroll">{renderFn()}</div>
+    <div className="flex max-h-[500px] flex-col gap-2 overflow-scroll">{renderFn()}</div>
   );
 
   const getValue = (res) =>
@@ -104,12 +104,11 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
           } else {
             return renderStatRow({
               label: (
-                <Rating
-                  value={Number(item.choice)}
-                  count={Number(item.choice)}
-                  readOnly
-                  color="blue"
-                />
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: Number(item.choice) }, (_, i) => (
+                    <Star key={i} className="size-4 fill-blue-500 text-blue-500" />
+                  ))}
+                </div>
               ),
               value: getValue(res),
               isMostVoted: item.choice.toString() === mostVotedChoice?.toString(),

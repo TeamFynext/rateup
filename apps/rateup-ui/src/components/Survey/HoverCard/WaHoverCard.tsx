@@ -1,65 +1,43 @@
-import { Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { WaQuestions } from "@/types/enums.ts";
 
-export const WaHoverCardComponent = ({
-  content,
-  fw = 300,
-  fz = "sm",
-  c = "",
-  lineClamp = 1,
-  type,
-}) => {
+export const WaHoverCardComponent = ({ content, type }) => {
   const { t: translations } = useTranslation();
+
   return (
-    <HoverCard
-      width={"fit-content"}
-      shadow="md"
-      withArrow
-      styles={{ dropdown: { maxWidth: 400 } }}
-      position="bottom-start"
-    >
-      <HoverCard.Target>
+    <HoverCard>
+      <HoverCardTrigger className="cursor-default">
         {type === WaQuestions.PhotoPicker ? (
-          <Image
+          <img
             src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${content}`}
-            w={30}
-            h={40}
+            className="h-[40px] w-[30px] object-cover"
             loading="lazy"
             alt={translations("answer image of question")}
           />
         ) : (
-          <Text c={c} miw={200} maw={200} fw={fw} fz={fz} lineClamp={lineClamp}>
-            {content}
-          </Text>
+          <p className="line-clamp-1 min-w-[200px] max-w-[200px] font-light">{content}</p>
         )}
-      </HoverCard.Target>
-      <HoverCard.Dropdown>
-        <ScrollAreaAutosize>
+      </HoverCardTrigger>
+
+      <HoverCardContent className="w-fit max-w-[400px] p-3" side="bottom" align="start">
+        <ScrollArea className="max-h-[250px]">
           {type === WaQuestions.PhotoPicker ? (
-            <Image
+            <img
               src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${content}`}
-              w={200}
-              alt={translations("answer image of question")}
+              className="w-[200px]"
               loading="lazy"
+              alt={translations("answer image of question")}
             />
           ) : (
-            <Box
-              c={c}
-              size="sm"
-              style={{
-                wordBreak: "break-word",
-              }}
-              mah={250}
-            >
-              <Text c={c} miw={200} fw={fw} fz={fz}>
-                {content}
-              </Text>
-            </Box>
+            <div className="min-w-[200px] break-words font-light">
+              <p>{content}</p>
+            </div>
           )}
-        </ScrollAreaAutosize>
-      </HoverCard.Dropdown>
+        </ScrollArea>
+      </HoverCardContent>
     </HoverCard>
   );
 };

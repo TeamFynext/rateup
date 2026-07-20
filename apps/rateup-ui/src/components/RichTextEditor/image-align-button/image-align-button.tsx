@@ -54,6 +54,7 @@ export const ImageAlignButton = forwardRef<HTMLButtonElement, ImageAlignButtonPr
       onAligned,
       onClick,
       children,
+      showShortcut: _showShortcut,
       ...buttonProps
     } = props;
 

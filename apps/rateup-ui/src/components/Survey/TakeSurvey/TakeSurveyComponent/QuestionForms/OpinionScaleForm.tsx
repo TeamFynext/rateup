@@ -1,14 +1,16 @@
-import { Button, Flex, Group, isLightColor, useMantineTheme } from "@mantine/core";
 import classNames from "classnames/bind";
 import { useAnimate } from "motion/react";
 import { useContext, useState } from "react";
 
+import { Button } from "@/components/ui/button.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
+import { isLightColor } from "./isLightColor.ts";
+import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 import styles from "./OpinionScaleForm.module.css";
 
@@ -17,14 +19,10 @@ interface iProps {
   initValue?: any;
 }
 export function OpinionScaleForm({ initValue }: iProps) {
-  const theme = useMantineTheme();
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const [isHovered, setIsHovered] = useState(null);
 
-  const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor
-    ? mantineTheme.colors.primaryColor[5]
-    : "#1C518E";
+  const themePrimaryColor = useThemePrimaryColor();
   const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
   const [, animate] = useAnimate();
@@ -62,6 +60,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
     const oneToFive = [];
     const fiveToTen = [];
     for (let i = 1; i <= 10; i++) {
+      const isSelected = response === i || initValue == i;
       const button = (
         <Button
           className={cx("opinion-scale-interval-btn", {
@@ -70,27 +69,15 @@ export function OpinionScaleForm({ initValue }: iProps) {
           key={i}
           onMouseEnter={() => handleHover(i)}
           onMouseLeave={handleLeave}
-          radius="xs"
-          variant={response === i || initValue == i ? "filled" : "outline"}
+          variant={isSelected ? "default" : "outline"}
           style={{
-            color: response === i || initValue == i ? foregroundColor : themePrimaryColor,
-          }}
-          styles={{
-            root: {
-              backgroundColor:
-                response === i || initValue == i
-                  ? `var(--mantine-color-${theme.primaryColor}-filled)`
-                  : isHovered !== i
-                    ? ""
-                    : `var(--mantine-color-${theme.primaryColor}-outline-hover)`,
-              borderColor:
-                (response !== i || initValue != i) &&
-                `var(--mantine-color-${theme.primaryColor}-outline)`,
-              color:
-                response === i || initValue == i
-                  ? "var(--mantine-color-white)"
-                  : `var(--mantine-color-${theme.primaryColor}-outline)`,
-            },
+            backgroundColor: isSelected
+              ? themePrimaryColor
+              : isHovered === i
+                ? `${themePrimaryColor}26`
+                : "transparent",
+            borderColor: themePrimaryColor,
+            color: isSelected ? foregroundColor : themePrimaryColor,
           }}
           data-btn-value={i}
         >
@@ -104,10 +91,10 @@ export function OpinionScaleForm({ initValue }: iProps) {
       }
     }
     const firstFiveBtnsContiner = (
-      <Flex className={cx("opinion-scale-first-five-btns-container")}>{oneToFive}</Flex>
+      <div className={`${cx("opinion-scale-first-five-btns-container")} flex`}>{oneToFive}</div>
     );
     const secondFiveBtnsContainer = (
-      <Flex className={cx("opinion-scale-last-five-btns-container")}>{fiveToTen}</Flex>
+      <div className={`${cx("opinion-scale-last-five-btns-container")} flex`}>{fiveToTen}</div>
     );
     return (
       <>
@@ -118,8 +105,8 @@ export function OpinionScaleForm({ initValue }: iProps) {
   };
 
   return (
-    <Group onClick={handleBtnClick} className={cx("opinion-scale")}>
+    <div onClick={handleBtnClick} className={`${cx("opinion-scale")} flex flex-wrap items-center`}>
       {renderButtons()}
-    </Group>
+    </div>
   );
 }

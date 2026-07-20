@@ -1,15 +1,14 @@
-import { Box, Group, isLightColor, useMantineTheme } from "@mantine/core";
 import { animate } from "motion/react";
 import { useContext } from "react";
 
+import { Button } from "@/components/ui/button.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { YNResponse } from "@/types/enums.ts";
 
-import { RateupButtonBlue } from "../../../../Button/RateupButtons.tsx";
-
-import styles from "./YNForm.module.css";
+import { isLightColor } from "./isLightColor.ts";
+import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 export function YNForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -17,10 +16,8 @@ export function YNForm() {
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
   const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
-  const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor
-    ? mantineTheme.colors.primaryColor[5]
-    : "#1C518E";
+  const themePrimaryColor = useThemePrimaryColor();
+  const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
   const handleYesOrNOClick = async (e, value: YNResponse) => {
     const clickedBtn = e.target;
@@ -33,38 +30,35 @@ export function YNForm() {
     }
   };
 
-  const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
+  const getButtonStyle = (isSelected: boolean) =>
+    isSelected
+      ? { backgroundColor: themePrimaryColor, color: foregroundColor }
+      : { color: themePrimaryColor, borderColor: themePrimaryColor };
 
   return (
-    <Group>
-      <Box w={100}>
-        <RateupButtonBlue
-          size="md"
-          variant={response === YNResponse.No ? "filled" : "outline"}
-          radius="xl"
-          title="No"
-          fullWidth
-          className={styles["yes-no-btn"]}
+    <div className="flex gap-4">
+      <div className="w-[100px]">
+        <Button
+          size="lg"
+          variant={response === YNResponse.No ? "default" : "outline"}
+          style={getButtonStyle(response === YNResponse.No)}
+          className="w-full rounded-full [&_*]:pointer-events-none"
           onClick={(e) => handleYesOrNOClick(e, YNResponse.No)}
-          sx={{
-            color: response === YNResponse.No ? foregroundColor : themePrimaryColor,
-          }}
-        />
-      </Box>
-      <Box w={100}>
-        <RateupButtonBlue
-          size="md"
-          variant={response === YNResponse.Yes ? "filled" : "outline"}
-          radius="xl"
-          title="Yes"
-          fullWidth
-          className={styles["yes-no-btn"]}
+        >
+          No
+        </Button>
+      </div>
+      <div className="w-[100px]">
+        <Button
+          size="lg"
+          variant={response === YNResponse.Yes ? "default" : "outline"}
+          style={getButtonStyle(response === YNResponse.Yes)}
+          className="w-full rounded-full [&_*]:pointer-events-none"
           onClick={(e) => handleYesOrNOClick(e, YNResponse.Yes)}
-          sx={{
-            color: response === YNResponse.Yes ? foregroundColor : themePrimaryColor,
-          }}
-        />
-      </Box>
-    </Group>
+        >
+          Yes
+        </Button>
+      </div>
+    </div>
   );
 }

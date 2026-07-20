@@ -1,7 +1,13 @@
-import { Badge, Stack } from "@mantine/core";
-import { useHover } from "@mantine/hooks";
+import { IconChevronDown } from "@tabler/icons-react";
 
-import PaperLayout from "../../styled/Layouts/PaperLayout.tsx";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 export const LanguageCompletionView = ({
   languages,
@@ -14,26 +20,48 @@ export const LanguageCompletionView = ({
   selectedLanguage?: string;
   setSelectedLanguage?: React.Dispatch<React.SetStateAction<string>>;
 }) => {
+  const hasIncomplete = notCompletedLanguages.length > 0;
+
   return (
-    <PaperLayout w={"fit-content"} p={10} radius={"md"}>
-      <Stack gap={5}>
-        {languages?.map((language, i) => {
-          const { hovered, ref } = useHover();
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-8 shrink-0 gap-1.5 px-2.5",
+              hasIncomplete
+                ? "border-red-300 text-red-500 hover:border-red-400 hover:text-red-600"
+                : "border-green-300 text-green-600 hover:border-green-400 hover:text-green-700",
+            )}
+          />
+        }
+      >
+        <span
+          className={cn("size-2 rounded-full", hasIncomplete ? "bg-red-500" : "bg-green-500")}
+        />
+        <span className="text-xs font-medium">{selectedLanguage}</span>
+        <IconChevronDown className="size-3.5 opacity-60" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {languages?.map((language) => {
+          const isComplete = !notCompletedLanguages.includes(language);
+          const isSelected = selectedLanguage === language;
           return (
-            <Badge
-              key={i}
-              id={language}
-              ref={ref}
-              style={{ cursor: "pointer" }}
-              color={!notCompletedLanguages.includes(language) ? "green" : "red"}
-              variant={selectedLanguage === language || hovered ? "filled" : "light"}
-              onClick={() => setSelectedLanguage(language)}
+            <DropdownMenuItem
+              key={language}
+              onClick={() => setSelectedLanguage?.(language)}
+              className={cn("gap-2", isSelected && "bg-accent")}
             >
+              <span
+                className={cn("size-2 rounded-full", isComplete ? "bg-green-500" : "bg-red-500")}
+              />
               {language}
-            </Badge>
+            </DropdownMenuItem>
           );
         })}
-      </Stack>
-    </PaperLayout>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

@@ -1,4 +1,3 @@
-import { BackgroundImage, Box, Flex, Image } from "@mantine/core";
 import { isNumber } from "@tiptap/react";
 import { useCallback } from "react";
 
@@ -105,29 +104,27 @@ export default function WelcomePageThemeView({ survey }) {
     : title;
 
   return (
-    <Flex align={"center"} h="100%" style={{ backgroundColor }}>
+    <div className="flex h-full items-center" style={{ backgroundColor }}>
       <CreditsCard
         enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
         url={backgroundImageSrc}
       >
-        <BackgroundImage
-          className={classes.parentContainer}
-          style={{ height: "100%", width: "100%", objectFit: "contain" }}
-          src={backgroundImageSrc}
+        <div
+          className="relative h-full w-full p-[25px]"
+          style={{
+            backgroundImage: backgroundImageSrc ? `url(${backgroundImageSrc})` : undefined,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
         >
-          <Flex
-            justify={"center"}
-            align={"center"}
-            h={"100%"}
-            direction={"column"}
-            pos={"relative"}
-            gap={"2rem"}
-          >
+          <div className="relative flex h-full flex-col items-center justify-center gap-8">
             {orgLogoSrc && (
-              <Image
+              <img
                 src={orgLogoSrc}
                 style={{ ...orgLogoStyles, alignSelf: "center" }}
                 alt="logo"
+                className="block h-auto max-w-full"
               />
             )}
 
@@ -136,10 +133,9 @@ export default function WelcomePageThemeView({ survey }) {
               onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
               styles={{ color: titleStyles?.color }}
             />
-            <Box
-              className={classes.titleBox}
+            <div
+              className="relative flex w-full justify-center p-[5px]"
               style={{
-                display: "flex",
                 ...(buttonPosition?.x ? cordinateStyle(buttonPosition.x) : {}),
                 ...(buttonPosition?.y ? cordinateStyle(buttonPosition.y) : {}),
               }}
@@ -161,11 +157,11 @@ export default function WelcomePageThemeView({ survey }) {
                   borderRadius: "0.625rem",
                 }}
               />
-            </Box>
-          </Flex>
-        </BackgroundImage>
+            </div>
+          </div>
+        </div>
       </CreditsCard>
-    </Flex>
+    </div>
   );
 }
 

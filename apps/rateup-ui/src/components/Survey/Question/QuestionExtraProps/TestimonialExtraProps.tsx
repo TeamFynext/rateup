@@ -1,15 +1,24 @@
-import { Flex, Paper, Stack, Switch, Textarea, Tooltip } from "@mantine/core";
-import type { UseFormReturnType } from "@mantine/form";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
-import { isEmptyObject } from "@tiptap/react";
 import { useContext, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
-import classes from "./Style.module.css";
+type QuestionTitles = {
+  nameQn: string;
+  jobTitleQn: string;
+  testimonialQn: string;
+  ratingQn: string;
+  photoQn: string;
+};
 
-const TestimonialExtraProps = ({ form }: { form: UseFormReturnType<any> }) => {
+const TestimonialExtraProps = ({ form }: { form: any }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const features = form.values.features?.[selectedLanguage] || {
     rating: false,
@@ -22,8 +31,27 @@ const TestimonialExtraProps = ({ form }: { form: UseFormReturnType<any> }) => {
     photoQn: "",
   };
   const [selectedField, setSelectedField] = useState<string | null>(null);
-  const [text, setText] = useState("");
   const { t: translations } = useTranslation();
+
+  const { register, getValues, reset } = useForm<QuestionTitles>({
+    defaultValues: {
+      nameQn: features?.nameQn ?? "",
+      jobTitleQn: features?.jobTitleQn ?? "",
+      testimonialQn: features?.testimonialQn ?? "",
+      ratingQn: features?.ratingQn ?? "",
+      photoQn: features?.photoQn ?? "",
+    },
+  });
+
+  useEffect(() => {
+    reset({
+      nameQn: features?.nameQn ?? "",
+      jobTitleQn: features?.jobTitleQn ?? "",
+      testimonialQn: features?.testimonialQn ?? "",
+      ratingQn: features?.ratingQn ?? "",
+      photoQn: features?.photoQn ?? "",
+    });
+  }, [selectedLanguage]);
 
   function updateFeatures(featurekey: string, value: any) {
     form.setFieldValue("features", {
@@ -32,118 +60,128 @@ const TestimonialExtraProps = ({ form }: { form: UseFormReturnType<any> }) => {
     });
   }
 
-  const questionTitleFields = [
-    {
-      key: "nameQn",
-      label: "name",
-      active: true,
-    },
-    {
-      key: "jobTitleQn",
-      label: "job title",
-      active: features?.jobTitle,
-    },
-    {
-      key: "testimonialQn",
-      label: "testimonial",
-      active: true,
-    },
-    {
-      key: "ratingQn",
-      label: "rating",
-      active: features?.rating,
-    },
-    {
-      key: "photoQn",
-      label: "photo",
-      active: features?.photo,
-    },
-  ];
-
   useEffect(() => {
-    const data = {};
-    if (!features?.rating) data["ratingQn"] = "";
-    if (!features?.jobTitle) data["jobTitleQn"] = "";
-    if (!features?.photo) data["photoQn"] = "";
-    if (!isEmptyObject(data))
+    const data: Partial<QuestionTitles> = {};
+    if (!features?.rating && features?.ratingQn) data.ratingQn = "";
+    if (!features?.jobTitle && features?.jobTitleQn) data.jobTitleQn = "";
+    if (!features?.photo && features?.photoQn) data.photoQn = "";
+    if (Object.keys(data).length > 0) {
       form.setFieldValue("features", {
         ...form.values.features,
         [selectedLanguage]: { ...features, ...data },
       });
+    }
   }, [features?.rating, features?.jobTitle, features?.photo]);
 
   const questionTitle = form.values?.title?.[selectedLanguage];
+  const isDisabled = questionTitle === "<p></p>";
 
-  return (
-    <Stack>
-      <Flex justify={"flex-start"} columnGap={"lg"}>
-        <Paper shadow="xl" p={"lg"}>
-          <Switch
-            label={translations("Enable Rating Question")}
-            c={features?.rating ? "var(--tertiary-color)" : "dimmed"}
-            checked={features?.rating}
-            onChange={(e) => updateFeatures("rating", e.currentTarget.checked)}
-          />
-        </Paper>
-        <Paper shadow="xl" p={"lg"} c={"dimmed"}>
-          <Switch
-            label={translations("Add job title")}
-            c={features?.jobTitle ? "var(--tertiary-color)" : "dimmed"}
-            checked={features?.jobTitle}
-            onChange={(e) => updateFeatures("jobTitle", e.currentTarget.checked)}
-          />
-        </Paper>
-        <Paper shadow="xl" p={"lg"}>
-          <Switch
-            label={translations("Capture photo")}
-            c={features?.photo ? "var(--tertiary-color)" : "dimmed"}
-            checked={features?.photo}
-            onChange={(e) => updateFeatures("photo", e.currentTarget.checked)}
-          />
-        </Paper>
-      </Flex>
-      <Stack pt={"sm"}>
-        {questionTitleFields.map((field) => (
-          <Tooltip
-            label={translations("Please fill question")}
-            disabled={questionTitle !== "<p></p>"}
-            key={field.key}
-          >
-            <Textarea
-              placeholder={` ${translations("Enter")} ${field.label}'s ${translations("title here")}`}
-              classNames={{ input: classes.inputHeadText }}
-              size="md"
-              disabled={questionTitle == "<p></p>"}
-              onChange={(e) => setText(e.currentTarget.value)}
-              onBlur={() => {
-                if (text !== features[field.key]) updateFeatures(field.key, text);
+  const renderTitleField = (key: keyof QuestionTitles, label: string) => {
+    const isFocused = selectedField === key;
+    const field = (
+      <Field key={key}>
+        <FieldLabel className="capitalize">{`${label} ${translations("Title")}`}</FieldLabel>
+        <Textarea
+          placeholder={`${translations("Enter")} ${label}'s ${translations("title here")}`}
+          disabled={isDisabled}
+          className="bg-background"
+          {...register(key)}
+          onFocus={() => setSelectedField(key)}
+          onBlur={(e) => {
+            updateFeatures(key, e.currentTarget.value);
+            setSelectedField(null);
+          }}
+        />
+        {isFocused && (
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                updateFeatures(key, getValues()[key]);
                 setSelectedField(null);
               }}
-              value={selectedField === field.key ? text : features[field.key]}
-              onFocus={() => {
-                setSelectedField(field.key);
-                setText(features[field.key]);
-              }}
-              autosize
-              key={field.key}
-              display={field.active ? "block" : "none"}
-              rightSection={
-                selectedField === field.key ? (
-                  <Tooltip label={translations("save")}>
-                    <IconCircleCheckFilled
-                      onClick={() => {
-                        if (text !== features[field.key]) updateFeatures(field.key, text);
-                        setSelectedField(null);
-                      }}
-                    />
-                  </Tooltip>
-                ) : null
-              }
-            />
-          </Tooltip>
-        ))}
-      </Stack>
-    </Stack>
+            >
+              <IconCircleCheckFilled data-icon="inline-start" />
+              {translations("Save")}
+            </Button>
+          </div>
+        )}
+      </Field>
+    );
+
+    if (!isDisabled) return field;
+
+    return (
+      <Tooltip key={key}>
+        <TooltipTrigger className="block w-full text-left">{field}</TooltipTrigger>
+        <TooltipContent>{translations("Please fill question")}</TooltipContent>
+      </Tooltip>
+    );
+  };
+
+  const toggles: Array<{
+    featureKey: string;
+    label: string;
+    value: boolean;
+    titleKey?: keyof QuestionTitles;
+    titleLabel?: string;
+  }> = [
+    {
+      featureKey: "rating",
+      label: translations("Enable Rating Question"),
+      value: features?.rating,
+      titleKey: "ratingQn",
+      titleLabel: "rating",
+    },
+    {
+      featureKey: "jobTitle",
+      label: translations("Add job title"),
+      value: features?.jobTitle,
+      titleKey: "jobTitleQn",
+      titleLabel: "job title",
+    },
+    {
+      featureKey: "photo",
+      label: translations("Capture photo"),
+      value: features?.photo,
+      titleKey: "photoQn",
+      titleLabel: "photo",
+    },
+  ];
+
+  return (
+    <TooltipProvider>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <div className="rounded-lg border p-4">{renderTitleField("nameQn", "name")}</div>
+          <div className="rounded-lg border p-4">
+            {renderTitleField("testimonialQn", "testimonial")}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          {toggles.map(({ featureKey, label, value, titleKey, titleLabel }) => (
+            <div key={featureKey} className="rounded-lg border">
+              <Field orientation="horizontal" className="p-4">
+                <FieldLabel>{label}</FieldLabel>
+                <Switch
+                  checked={value}
+                  onCheckedChange={(checked) => updateFeatures(featureKey, checked)}
+                />
+              </Field>
+              {value && titleKey && titleLabel && (
+                <div className="rounded-b-lg border-t bg-muted px-4 pb-4 pt-3">
+                  {renderTitleField(titleKey, titleLabel)}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </TooltipProvider>
   );
 };
 

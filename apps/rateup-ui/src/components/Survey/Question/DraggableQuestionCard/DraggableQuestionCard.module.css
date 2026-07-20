@@ -1,35 +1,51 @@
 .item {
   display: flex;
   align-items: center;
-  border-radius: 8px;
-  border: 1px solid var(--item-border-color, #ccc);
-  padding: 0.625rem;
-  background-color: var(--item-background-color, white);
+  gap: 9px;
+  padding: 11px 12px;
   background-color: white;
-  margin-bottom: var(--item-margin-bottom, 8px);
   cursor: pointer;
   position: relative;
+  border-left: 3px solid transparent;
+  transition:
+    background 120ms,
+    border-color 120ms;
+}
+
+.item[data-select="true"] {
+  border-left-color: #1c518e;
+  background-color: #eef4fb;
+}
+
+.item:hover:not([data-select="true"]) {
+  background-color: #fafaf7;
 }
 
 .itemDragging {
-  box-shadow: var(--item-box-shadow, 0 2px 4px rgba(0, 0, 0, 0.1));
+  box-shadow: 0 4px 16px rgba(11, 31, 72, 0.12);
+  background-color: white;
+  border-radius: 8px;
 }
 
 .dragHandle {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  color: var(--drag-handle-color, #666);
+  color: #d9dad7;
+  flex-shrink: 0;
 }
+
+.questionIconBox {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+}
+
 .transition {
-  transition: all 0.2s;
-}
-
-[data-mantine-color-scheme="dark"] .item[data-select="true"] {
-  background-color: var(--mantine-color-dark-7);
-}
-
-[data-mantine-color-scheme="light"] .item[data-select="true"] {
-  background-color: var(--light-grey-color);
+  transition: all 0.12s;
 }

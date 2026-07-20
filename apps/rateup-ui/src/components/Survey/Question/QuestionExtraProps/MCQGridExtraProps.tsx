@@ -1,21 +1,18 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { ActionIcon, Flex, Group, Stack, Text, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
-import cx from "clsx";
 import { useContext, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Field, FieldError } from "@/components/ui/field.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { cn } from "@/lib/utils";
 import { SurveyType } from "@/types/enums.ts";
 import { reorder } from "@/utils/questions.ts";
 
-import { RateupButtonBlue, RateupButtonSecondary } from "../../../Button/RateupButtons.tsx";
-import { ContainedTextArea } from "../../../input/ContainedInput/ContainedInput.tsx";
-import FormModalLayout from "../../../Modal/FormModalLayout.tsx";
 import { ChoicesCreator } from "./ChoicesCreator.tsx";
-
-import classes from "../DraggableQuestionCard/DraggableQuestionCard.module.css";
 
 const MCQGridExtraProps = ({ form, qId }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -26,7 +23,9 @@ const MCQGridExtraProps = ({ form, qId }) => {
     question: string;
     index: number;
   }>(null);
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, setOpened] = useState(false);
+  const open = () => setOpened(true);
+  const close = () => setOpened(false);
   const [error, setError] = useState("");
   const [updateError, setUpdateError] = useState("");
   const { t: translations } = useTranslation();
@@ -87,8 +86,8 @@ const MCQGridExtraProps = ({ form, qId }) => {
   };
 
   return (
-    <Stack w={"100%"}>
-      <Title order={5}>{translations("Add Questions")}</Title>
+    <div className="flex w-full flex-col gap-4">
+      <h5 className="text-sm font-semibold">{translations("Add Questions")}</h5>
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="dnd-list" direction="vertical">
           {(provided) => (
@@ -97,39 +96,42 @@ const MCQGridExtraProps = ({ form, qId }) => {
                 <Draggable key={question} index={index} draggableId={question}>
                   {(provided, snapshot) => (
                     <div
-                      className={cx(classes.item, {
-                        [classes.itemDragging]: snapshot.isDragging,
-                      })}
+                      className={cn(
+                        "relative flex items-center gap-2.5 rounded-lg border-l-[3px] border-transparent bg-background px-3 py-2.5 transition-colors duration-150 hover:bg-muted",
+                        snapshot.isDragging && "rounded-lg bg-background shadow-lg",
+                      )}
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       style={provided.draggableProps.style as CSSProperties}
                     >
-                      <div {...provided.dragHandleProps} className={classes.dragHandle}>
+                      <div
+                        {...provided.dragHandleProps}
+                        className="flex shrink-0 items-center justify-center text-muted-foreground"
+                      >
                         <IconGripVertical stroke={1.5} />
                       </div>
-                      <Group justify="space-between" my={"sm"} pl={"xs"}>
-                        <Text w={600}>{question}</Text>
-                      </Group>
-                      <Group>
-                        <ActionIcon
-                          variant="subtle"
-                          size={"sm"}
+                      <div className="flex flex-1 items-center justify-between">
+                        <span className="w-[600px]">{question}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => {
                             setUpdateQuestion({ question, index });
                             open();
                           }}
                         >
                           <IconEdit />
-                        </ActionIcon>
-                        <ActionIcon
-                          variant="subtle"
-                          size={"sm"}
-                          color="red"
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => handleDeleteQuestion(question)}
                         >
-                          <IconTrash />
-                        </ActionIcon>
-                      </Group>
+                          <IconTrash className="text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </Draggable>
@@ -139,55 +141,57 @@ const MCQGridExtraProps = ({ form, qId }) => {
           )}
         </Droppable>
       </DragDropContext>
-      <Flex gap={"md"}>
-        <ContainedTextArea
-          style={{
-            flexGrow: 1,
-          }}
-          placeholder={translations("Enter question here")}
-          autosize
-          size="md"
-          value={newQuestion}
-          onChange={(e) => {
-            setError("");
-            setNewQuestion(e.currentTarget.value);
-          }}
-          error={error}
-        />
-        <RateupButtonSecondary
-          title={translations("Add Question")}
-          leftIcon={<IconPlus size={"1rem"} />}
-          onClick={handleAddQuestion}
-        />
-      </Flex>
-      <Title order={5}>Add Choices</Title>
-      <ChoicesCreator form={form} qId={qId} surveyType={SurveyType.Web} />
-      <FormModalLayout
-        opened={opened}
-        onClose={close}
-        title={translations("Edit Question")}
-        centered
-      >
-        <Stack justify="center">
-          <ContainedTextArea
-            value={updateQuestion?.question}
-            onChange={(event) => {
-              setUpdateError("");
-              setUpdateQuestion({
-                ...updateQuestion,
-                question: event.target.value,
-              });
+      <div className="flex gap-4">
+        <Field data-invalid={!!error} className="flex-1">
+          <Textarea
+            className="flex-1"
+            placeholder={translations("Enter question here")}
+            value={newQuestion}
+            onChange={(e) => {
+              setError("");
+              setNewQuestion(e.currentTarget.value);
             }}
-            autosize
-            error={updateError}
+            aria-invalid={!!error}
           />
-          <RateupButtonBlue
-            title={translations("Update Question")}
-            onClick={handleUpdateQuestion}
-          />
-        </Stack>
-      </FormModalLayout>
-    </Stack>
+          {error && <FieldError>{error}</FieldError>}
+        </Field>
+        <Button onClick={handleAddQuestion}>
+          <IconPlus data-icon="inline-start" />
+          {translations("Add Question")}
+        </Button>
+      </div>
+      <h5 className="text-sm font-semibold">Add Choices</h5>
+      <ChoicesCreator form={form} qId={qId} surveyType={SurveyType.Web} />
+      <Dialog
+        open={opened}
+        onOpenChange={(next) => {
+          if (!next) close();
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{translations("Edit Question")}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4">
+            <Field data-invalid={!!updateError} className="w-full">
+              <Textarea
+                value={updateQuestion?.question}
+                onChange={(event) => {
+                  setUpdateError("");
+                  setUpdateQuestion({
+                    ...updateQuestion,
+                    question: event.target.value,
+                  });
+                }}
+                aria-invalid={!!updateError}
+              />
+              {updateError && <FieldError>{updateError}</FieldError>}
+            </Field>
+            <Button onClick={handleUpdateQuestion}>{translations("Update Question")}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

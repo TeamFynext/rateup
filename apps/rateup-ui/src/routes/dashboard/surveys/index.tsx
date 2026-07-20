@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { Plus, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useSurveys } from "@/backend/surveys/surveys.query";
@@ -20,6 +20,7 @@ import {
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
 import { CreateSurveyModal } from "@/components/Survey/CreateSurveyModal.tsx";
+import SurveySectionTabs from "@/components/Survey/SurveySectionTabs.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Select,
@@ -54,13 +55,12 @@ function Page() {
   const { t: translations } = useTranslation();
   const debouncedSearch = useDebounce(search.trim(), 200);
 
-  useEffect(() => {
-    if (!isCreateDialogOpen) {
-      navigate({
-        to: "/dashboard/surveys",
-      });
+  const closeCreateDialog = () => {
+    setIsCreateDialogOpen(false);
+    if (action === "create") {
+      navigate({ to: "/dashboard/surveys" });
     }
-  }, [isCreateDialogOpen, navigate]);
+  };
 
   const { isLoading, error, data: allSurveys, refetch } = useSurveys();
   const { data: teamRes, isPending: teamsLoading, isError: isTeamsError } = useTeamsByUser();
@@ -100,6 +100,7 @@ function Page() {
 
   return (
     <>
+      <SurveySectionTabs />
       <ListPage>
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">
@@ -159,7 +160,7 @@ function Page() {
       {isCreateDialogOpen && (
         <CreateSurveyModal
           open={isCreateDialogOpen}
-          close={() => setIsCreateDialogOpen(false)}
+          close={closeCreateDialog}
           surveyType="web"
           teamsData={teamRes?.data}
         />

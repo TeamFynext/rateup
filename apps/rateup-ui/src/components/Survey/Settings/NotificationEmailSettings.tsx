@@ -1,12 +1,18 @@
-import { Box, Group, Stack, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
-import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 
-import { RateupButtonBlue } from "../../Button/RateupButtons.tsx";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
 import { updateEmailSurvey } from "./updateSettings.ts";
 
 const NotificationEmailSettings = ({ survey, surveyId }) => {
@@ -14,59 +20,72 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
     survey?.enableNotificationEmail,
   );
   const [notificationEmail, setNotificationEmail] = useState(survey?.notificationEmail);
-  const { t: translations } = useTranslation();
   const [error, setError] = useState("");
+  const { t: translations } = useTranslation();
   const editSurvey = useEditSurveyMutation(surveyId);
+
   useEffect(() => {
     if (!/^\S+@\S+$/.test(notificationEmail)) setError(translations("Invalid Email"));
     else setError("");
   }, [notificationEmail]);
+
   return (
-    <Stack gap={"md"}>
-      <Group>
-        <RateupSwitch
-          offMessage={translations("Click here to enable email notification")}
-          onMessage={translations("Click here to disable email notification")}
-          checked={enableNotificationEmail}
-          onChange={() => updateEmailSurvey(setEnabledNotificationEmail, editSurvey)}
-        />
-        <Box className={"switch-heading-and-desc-container"}>
-          <h3>{translations("Enable Email Notification")}</h3>
-        </Box>
-      </Group>
-      <Stack>
-        <ContainedTextField
-          disabled={!enableNotificationEmail}
-          withAsterisk
-          value={notificationEmail}
-          onChange={(e) => setNotificationEmail(e.target.value)}
-          placeholder={translations("Enter email ID")}
-          error={error}
-        />
-        {!survey?.notificationEmail?.length && (
-          <Text c="var(--tertiary-color)" fz={15}>
-            {translations("Please Enter Email ID and Save to complete the process.")}
-          </Text>
-        )}
-        <Group justify="center">
-          <RateupButtonBlue
-            title={
-              survey?.notificationEmail?.length
+    <TooltipProvider>
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5">
+          <Tooltip>
+            <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
+              <Switch
+                checked={!!enableNotificationEmail}
+                onCheckedChange={() => updateEmailSurvey(setEnabledNotificationEmail, editSurvey)}
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              {enableNotificationEmail
+                ? translations("Click here to disable email notification")
+                : translations("Click here to enable email notification")}
+            </TooltipContent>
+          </Tooltip>
+          <span className="text-sm font-medium">{translations("Enable Email Notification")}</span>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <FieldGroup>
+            <Field data-invalid={!!error}>
+              <FieldLabel>
+                {translations("Notification Email")} <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Input
+                type="email"
+                disabled={!enableNotificationEmail}
+                value={notificationEmail ?? ""}
+                onChange={(e) => setNotificationEmail(e.target.value)}
+                placeholder={translations("Enter email ID")}
+                aria-invalid={!!error}
+              />
+              {error && <FieldDescription className="text-destructive">{error}</FieldDescription>}
+            </Field>
+          </FieldGroup>
+
+          {!survey?.notificationEmail?.length && (
+            <p className="text-sm text-muted-foreground">
+              {translations("Please Enter Email ID and Save to complete the process.")}
+            </p>
+          )}
+
+          <div className="flex justify-center">
+            <Button
+              disabled={!!error || !enableNotificationEmail || editSurvey.isPending}
+              onClick={() => editSurvey.mutate({ enableNotificationEmail, notificationEmail })}
+            >
+              {survey?.notificationEmail?.length
                 ? translations("Edit Email ID")
-                : translations("Save Email ID")
-            }
-            radius={"xl"}
-            disabled={error.length != 0 || !enableNotificationEmail}
-            onClick={() => {
-              editSurvey.mutate({
-                enableNotificationEmail: enableNotificationEmail,
-                notificationEmail: notificationEmail,
-              });
-            }}
-          />
-        </Group>
-      </Stack>
-    </Stack>
+                : translations("Save Email ID")}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </TooltipProvider>
   );
 };
 

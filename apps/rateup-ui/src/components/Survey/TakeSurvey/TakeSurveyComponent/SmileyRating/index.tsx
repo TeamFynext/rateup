@@ -1,4 +1,3 @@
-import { Rating, Text, useMantineTheme } from "@mantine/core";
 import {
   IconMoodAngry,
   IconMoodCrazyHappy,
@@ -25,6 +24,8 @@ import {
   getSmileyEmojies,
 } from "./SmileyRatingStyling.tsx";
 
+const SMILEY_COUNT = 5;
+
 const SmileyRating = ({ updateResponse, response, features }) => {
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
@@ -33,6 +34,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
 
   const [iconColor, setIconColor] = useState(null);
   const [customColor, setIsCustomColor] = useState(false);
+  const [hoveredValue, setHoveredValue] = useState(-1);
 
   const updateStringResponse = (value) => {
     let stringValue;
@@ -57,7 +59,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
     return stringValue;
   };
 
-  const theme = useMantineTheme();
+  const primaryColor = "dark";
 
   const iconStyle = features?.iconStyle || {
     variant: SmileyVariantStyle.Default,
@@ -65,23 +67,27 @@ const SmileyRating = ({ updateResponse, response, features }) => {
   };
 
   const { variant, colorType, color, gradientStartColor, gradientEndColor } = iconStyle;
+
+  // Always render the resting (unselected) icon as a plain outline, even when the
+  // survey is configured for "Filled" — the solid/filled look is reserved for the
+  // selected state so the picker doesn't look like a row of identical solid pills.
+  const emptyIconStyle =
+    variant === SmileyVariantStyle.Filled
+      ? { ...iconStyle, variant: SmileyVariantStyle.FilledOnHover }
+      : iconStyle;
+
   useEffect(() => {
     if (features?.iconStyle) {
       if (!variant) return;
       if (![SmileyVariantStyle.Custom].includes(variant) && colorType !== SmileyColorType.Default) {
         setIsCustomColor(true);
         const newColor = {};
-        const colorArray = generateGradient(
-          gradientStartColor,
-          gradientEndColor,
-          5,
-          theme.primaryColor,
-        );
+        const colorArray = generateGradient(gradientStartColor, gradientEndColor, 5, primaryColor);
         Object.values(SmileyResponse)
           .reverse()
           .map((_s, i) => {
             if (colorType === SmileyColorType.Gradient) newColor[i + 1] = colorArray[i];
-            else newColor[i + 1] = color?.[i + 1] ?? theme.primaryColor;
+            else newColor[i + 1] = color?.[i + 1] ?? primaryColor;
           });
         setIconColor(newColor);
       } else {
@@ -91,41 +97,43 @@ const SmileyRating = ({ updateResponse, response, features }) => {
     }
   }, [features]);
 
+  const currentValue = getNumericValue(response);
+
+  const handleSelect = async (value: number) => {
+    updateStringResponse(value);
+    const selectedValueEle = scope.current?.querySelectorAll(`[data-smiley-index="${value}"]`);
+    if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
+      if (selectedValueEle) {
+        await animate(selectedValueEle, { opacity: [0, 1, 0, 1] }, { duration: 0.7 });
+      }
+      nextFn?.(updateStringResponse(value));
+    }
+  };
+
   return (
-    <Rating
-      ref={scope}
-      color="cyan"
-      value={getNumericValue(response)}
-      emptySymbol={(number) =>
-        getEmptyIcon(
-          number,
-          customColor ? iconColor?.[number] : theme.primaryColor,
-          iconStyle,
-          response,
-        )
-      }
-      fullSymbol={(number) =>
-        getFullIcon(number, customColor ? iconColor?.[number] : theme.primaryColor, iconStyle)
-      }
-      highlightSelectedOnly
-      onChange={async (value) => {
-        updateStringResponse(value);
-        const selectedValueEle = scope.current.querySelectorAll(
-          `.mantine-Rating-symbolGroup:nth-child(${value})`,
+    <div ref={scope} className="flex items-center gap-3">
+      {Array.from({ length: SMILEY_COUNT }, (_, index) => {
+        const number = index + 1;
+        const isFull = hoveredValue !== -1 ? number === hoveredValue : number === currentValue;
+        const symbolColor = isFull ? "red" : customColor ? iconColor?.[number] : primaryColor;
+        return (
+          <button
+            key={number}
+            type="button"
+            data-smiley-index={number}
+            aria-pressed={number === currentValue}
+            onClick={() => handleSelect(number)}
+            onMouseEnter={() => setHoveredValue(number)}
+            onMouseLeave={() => setHoveredValue(-1)}
+            className="flex items-center justify-center p-1"
+          >
+            {isFull
+              ? getFullIcon(number, symbolColor, iconStyle)
+              : getEmptyIcon(number, symbolColor, emptyIconStyle, response)}
+          </button>
         );
-        if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
-          if (selectedValueEle) {
-            await animate(selectedValueEle, { opacity: [0, 1, 0, 1] }, { duration: 0.7 });
-          }
-          nextFn?.(updateStringResponse(value));
-        }
-      }}
-      styles={{
-        symbolBody: {
-          paddingRight: 10,
-        },
-      }}
-    />
+      })}
+    </div>
   );
 };
 
@@ -148,7 +156,7 @@ export const getNumericValue = (stringValue) => {
   }
 };
 
-export function mapSmileyIcon(value, color) {
+export function mapSmileyIcon(value, color?: string) {
   switch (value) {
     case SmileyResponse.VeryHappy: {
       return <IconMoodCrazyHappy style={getIconStyle(color)} />;
@@ -215,5 +223,5 @@ export function getCustomSmileyIcon(response: SmileyResponse, question) {
     default:
       break;
   }
-  return <Text size="2rem">{emoji}</Text>;
+  return <span className="text-3xl">{emoji}</span>;
 }

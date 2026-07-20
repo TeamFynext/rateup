@@ -15,6 +15,7 @@ import {
 } from "@/components/common/list-page-layout.tsx";
 import SurveyTemplates from "@/components/dashboard/surveys/templates/surveyTemplates.tsx";
 import { CreateSurveyModal } from "@/components/Survey/CreateSurveyModal.tsx";
+import SurveySectionTabs from "@/components/Survey/SurveySectionTabs.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -84,6 +85,7 @@ function Templates() {
 
   return (
     <>
+      <SurveySectionTabs />
       <ListPage>
         <ListPageHeader>
           <ListPageHeaderSection className="gap-3">

@@ -1,4 +1,3 @@
-import { Box, Group, Stack } from "@mantine/core";
 import { useCallback } from "react";
 
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker/index.tsx";
@@ -8,8 +7,6 @@ import {
   useSurveyThemeContextValue,
   useSurveyThemeStateDispatch,
 } from "../SurveyThemeContext.tsx";
-
-import styles from "./stylescomponent/StylesComponent.module.css";
 
 function InputStyles() {
   const selectedPageTab = useSelectedPageTab();
@@ -26,18 +23,20 @@ function InputStyles() {
   }, []);
 
   return (
-    <Stack className={`${styles["style-inputs-container"]} style-inputs-container`}>
-      <Group justify="space-between" w={"100%"}>
-        <Box className={"custom-color-picker-and-heading-container"} w={"100%"}>
-          <h2>Color</h2>
+    <div className="flex w-full flex-col gap-4">
+      <div className="flex w-full justify-between">
+        <div className="w-full">
+          <h2 className="mb-[0.3125rem] text-xs font-medium text-[var(--mantine-color-gray-7)]">
+            Color
+          </h2>
           <CustomColorPicker
             value={input?.primaryColor}
             onChange={handleColorPickerChange}
             withoutEyedropper
           />
-        </Box>
-      </Group>
-    </Stack>
+        </div>
+      </div>
+    </div>
   );
 }
 

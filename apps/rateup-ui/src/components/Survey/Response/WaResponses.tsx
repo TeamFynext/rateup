@@ -1,4 +1,3 @@
-import { useDebouncedState } from "@mantine/hooks";
 import { IconTicket } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import type { ColumnFiltersState } from "@tanstack/react-table";
@@ -19,9 +18,18 @@ import {
   useSyncResponseToGoogleSheet,
 } from "@/backend/surveys/response/response.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
+import { useDebounce } from "@/hooks/use-debounce.ts";
 import { IntegratedApps, QuestionType, QuestionType2, WaQuestions } from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
@@ -32,7 +40,6 @@ import {
   YNResponseMap,
 } from "@/utils/whatsapp/enumMap.ts";
 
-import FormModalLayout from "../../Modal/FormModalLayout.tsx";
 import { DataTable } from "../../Table/data-table.tsx";
 import CreateTicketModal from "../../Tickets/CreateTicketModal.tsx";
 import { WaHoverCardComponent } from "../HoverCard/WaHoverCard.tsx";
@@ -84,7 +91,8 @@ const WaResponses = ({ survey, defaultLanguage, questions }) => {
   });
   const dbFlowId = params.dbFlowId as string;
   const { data: CFData } = useCampaignFilterForFlows(surveyId);
-  const [columnFilters, setColumnFilters] = useDebouncedState<ColumnFiltersState>([], 200);
+  const [rawColumnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const columnFilters = useDebounce(rawColumnFilters, 200);
   const [campaignIds, setSelectedCampaignIds] = useState([]);
   const { serverFilters, setServerFilters } = useResponseFilterStore();
   useEffect(() => {
@@ -415,26 +423,34 @@ export default React.memo(WaResponses);
 const DeleteModal = ({ confirmDelete, opened, close }) => {
   const { t: translations } = useTranslation();
   return (
-    <FormModalLayout
-      opened={opened}
-      onClose={close}
-      title={translations("Delete Response")}
-      centered
-      buttonTitle={translations("Yes, Delete")}
-      includeCancelButton
-      onSubmit={() => {
-        confirmDelete();
+    <Dialog
+      open={opened}
+      onOpenChange={(next) => {
+        if (!next) close();
       }}
     >
-      <div className="flex flex-col gap-4 py-2">
-        <p className="text-sm text-gray-700 dark:text-gray-300">
-          {translations("Are you sure you want to delete this response?")}
-        </p>
-        <p className="text-sm text-red-600 dark:text-red-400">
-          {translations("Once deleted, response entry data will be lost.")}
-        </p>
-      </div>
-    </FormModalLayout>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{translations("Delete Response")}</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4 py-2">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            {translations("Are you sure you want to delete this response?")}
+          </p>
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {translations("Once deleted, response entry data will be lost.")}
+          </p>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={close}>
+            {translations("Cancel")}
+          </Button>
+          <Button type="button" onClick={confirmDelete}>
+            {translations("Yes, Delete")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 export const getCellData = (info, question) => {

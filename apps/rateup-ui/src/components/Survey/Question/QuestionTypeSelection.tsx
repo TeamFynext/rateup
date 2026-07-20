@@ -1,5 +1,3 @@
-import { Badge, Button, Flex, Grid, Group, Stack, Text, Title } from "@mantine/core";
-import { useHover } from "@mantine/hooks";
 import {
   IconAddressBook,
   IconAdjustmentsQuestion,
@@ -34,6 +32,8 @@ import {
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { QuestionType, WaFlowFormNonInputElementType } from "@/types/enums.ts";
 import { googleReviewSupportedTypes } from "@/utils/data.ts";
 import { getQuestionTypeLabel } from "@/utils/enums/index.ts";
@@ -49,6 +49,7 @@ interface QuestionTypeSelectionProps {
   }>;
   handleTypeSelection: (type: QuestionType) => void;
 }
+
 export function QuestionTypeSelection({
   questionTypeGroups,
   handleTypeSelection,
@@ -60,73 +61,58 @@ export function QuestionTypeSelection({
     setIsGoogleReviewSupported(false);
   };
   const { t: translations } = useTranslation();
+
   const QuestionButton = ({ type }) => {
-    const { ref } = useHover();
     const Icon = questionIcons[type];
     return (
-      <div ref={ref}>
-        <Button
-          key={type}
-          size="lg"
-          leftSection={<Icon size={"1rem"} />}
-          variant={"default"}
-          className={classes.questionTypeButton}
-          p={15}
-          onClick={() => handleQuestionTypeClick(type as QuestionType)}
-          onMouseOver={() => {
-            if (googleReviewSupportedTypes.includes(type)) setIsGoogleReviewSupported(true);
-            else setIsGoogleReviewSupported(false);
-          }}
-          onMouseLeave={() => {
-            setIsGoogleReviewSupported(false);
-          }}
-        >
-          <Text fz={14}>{getQuestionTypeLabel(type)}</Text>
-        </Button>
-      </div>
+      <Button
+        key={type}
+        size="lg"
+        variant="outline"
+        className={classes.questionTypeButton}
+        onClick={() => handleQuestionTypeClick(type as QuestionType)}
+        onMouseOver={() => {
+          if (googleReviewSupportedTypes.includes(type)) setIsGoogleReviewSupported(true);
+          else setIsGoogleReviewSupported(false);
+        }}
+        onMouseLeave={() => {
+          setIsGoogleReviewSupported(false);
+        }}
+      >
+        <Icon size={"1rem"} />
+        <span className="text-sm">{getQuestionTypeLabel(type)}</span>
+      </Button>
     );
   };
+
   return (
-    <Flex direction={"column"} h={"100%"}>
-      <Stack gap={"md"}>
-        {questionTypeGroups?.map((qtype, i) => {
-          return (
-            <Stack gap={"sm"} key={i}>
-              <Group justify="space-between">
-                <Title order={4} c="dimmed">
-                  {qtype?.title}
-                </Title>
-                {IsGoogleReviewSupported && i == 0 ? (
-                  <Badge
-                    leftSection={<GoogleIcon width={"1rem"} height={"1rem"} />}
-                    radius={"md"}
-                    color="var(--bg-grey-color)"
-                    c="grey"
-                    size={"lg"}
-                    styles={{
-                      label: {
-                        textTransform: "capitalize",
-                      },
-                    }}
-                  >
-                    {translations("Review Supported")}
-                  </Badge>
-                ) : null}
-              </Group>
-              <Grid px={"lg"}>
-                {qtype?.questionTypes?.map((type, index) => {
-                  return (
-                    <Grid.Col span="content" key={index} p={"sm"}>
-                      <QuestionButton type={type} />
-                    </Grid.Col>
-                  );
-                })}
-              </Grid>
-            </Stack>
-          );
-        })}
-      </Stack>
-    </Flex>
+    <div className="flex h-full flex-col">
+      <div className="flex flex-col   gap-4 ">
+        {questionTypeGroups?.map((qtype, i) => (
+          <div className=" flex flex-col gap-3" key={i}>
+            <div className="pl-2 flex items-center justify-between">
+              <h4 className="text-base font-medium text-muted-foreground">{qtype?.title}</h4>
+              {IsGoogleReviewSupported && i === 0 && (
+                <Badge
+                  variant="outline"
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-sm capitalize text-gray-500"
+                >
+                  <GoogleIcon width={"1rem"} height={"1rem"} />
+                  {translations("Review Supported")}
+                </Badge>
+              )}
+            </div>
+            <div className="flex flex-wrap px-4">
+              {qtype?.questionTypes?.map((type, index) => (
+                <div className="p-2" key={index}>
+                  <QuestionButton type={type} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

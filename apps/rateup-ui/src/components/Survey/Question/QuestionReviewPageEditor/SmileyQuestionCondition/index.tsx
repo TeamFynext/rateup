@@ -1,11 +1,8 @@
-import { Button, Group, Text, useMantineTheme } from "@mantine/core";
-
 import { mapSmileyIcon } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { SmileyResponse } from "@/types/enums.ts";
 
 function SmileyQuestionCondition({ currentSelectedEmojis, setState }) {
-  const { primaryColor } = useMantineTheme();
-
   const updateSmileyResponse = (value) => {
     const newState = currentSelectedEmojis?.includes(value)
       ? currentSelectedEmojis.filter((smiley) => smiley !== value)
@@ -14,28 +11,28 @@ function SmileyQuestionCondition({ currentSelectedEmojis, setState }) {
   };
 
   return (
-    <Group>
-      <Text>Select minimum rating for enabling review page:</Text>
-      <Group align="center">
-        {Object.values(SmileyResponse).map((value) => (
-          <Button
-            key={value}
-            variant={currentSelectedEmojis?.includes(value) ? "light" : "default"}
-            gradient={{
-              from: "#62CBE6",
-              to: "#3F5BA9",
-            }}
-            onClick={() => updateSmileyResponse(value)}
-            style={{
-              minHeight: "20px",
-              maxWidth: "70px",
-            }}
-          >
-            {mapSmileyIcon(value, primaryColor)}
-          </Button>
-        ))}
-      </Group>
-    </Group>
+    <div className="flex flex-col gap-2">
+      <span className="text-sm font-medium text-foreground">
+        Select minimum rating for enabling review page
+      </span>
+      <div className="flex items-center gap-2">
+        {Object.values(SmileyResponse).map((value) => {
+          const isSelected = currentSelectedEmojis?.includes(value);
+          return (
+            <Button
+              key={value}
+              type="button"
+              variant="ghost"
+              size="icon-lg"
+              aria-pressed={isSelected}
+              onClick={() => updateSmileyResponse(value)}
+            >
+              {mapSmileyIcon(value, isSelected ? "red" : "dark")}
+            </Button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

@@ -1,59 +1,40 @@
-.survey-settings-root-div {
-  min-height: 100%;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding-bottom: 1rem;
+/*
+ * .survey-settings-root-div carries no local rules of its own here — it exists purely
+ * as an anchor class so the :global() descendant selectors below can still target
+ * Mantine Paper/heading markup rendered by not-yet-converted child settings components.
+ * Do not remove this class name from index.tsx's JSX.
+ */
+
+/* Clean card styling for all PaperLayout (Mantine Paper) inside settings */
+.survey-settings-root-div :global(.mantine-Paper-root) {
+  border-radius: 12px !important;
+  box-shadow:
+    0 1px 2px rgba(11, 31, 72, 0.06),
+    0 1px 4px rgba(11, 31, 72, 0.04) !important;
+  border: 1px solid #e8e8e5 !important;
 }
 
-.panels-container {
-  display: flex;
-  gap: 1.5rem;
+/* Section headings */
+.survey-settings-root-div :global(.settings-section-heading) {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
 }
 
-.panel {
-  flex: 1;
-  min-height: 100%;
-  padding: 0.625rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.survey-settings-root-div :global(.settings-section-description) {
+  font-size: 0.875rem;
+  color: var(--mantine-color-gray-6);
 }
 
-.left-panel {
-  background-color: transparent;
-  justify-content: space-between;
-}
-
-.right-panel {
-  background-color: transparent;
-  justify-content: space-between;
-}
-
-.other-settings-container {
-  padding: 0.625rem;
-}
-
-/* Common styles */
+/* Common section div */
 .survey-settings-root-div :global(.section-div) {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   flex-shrink: 0;
 }
 
 .survey-settings-root-div :global(.section-div label) {
-  color: var(--mantine-color-gray-6);
-}
-
-.survey-settings-root-div :global(.settings-section-heading) {
-  font-size: 1.25rem;
-  color: var(--grey-color-3);
-}
-
-.survey-settings-root-div :global(.settings-section-description) {
-  font-size: 1rem;
   color: var(--mantine-color-gray-6);
 }
 

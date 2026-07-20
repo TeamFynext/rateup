@@ -1,31 +1,37 @@
-import {
-  Divider,
-  Flex,
-  Group,
-  Image,
-  Modal,
-  Rating,
-  Stack,
-  Text,
-  Title,
-  useMantineTheme,
-} from "@mantine/core";
 import { IconCheck, IconChevronLeft } from "@tabler/icons-react";
 import { Image as NextImage } from "@unpic/react";
 import dayjs from "dayjs";
+import { Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { cn } from "@/lib/utils";
 import { QuestionType as Q } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";
 
-import { RateupButtonBlackOutline, RateupButtonBlue } from "../../../Button/RateupButtons.tsx";
 import { SmileyVariantStyle } from "../../Question/QuestionExtraProps/SmileyExtraProps.tsx";
 import { getCustomSmileyIcon, getNumericValue, mapSmileyIcon } from "./SmileyRating/index.tsx";
 import { getDefaultSmileySrc } from "./SmileyRating/SmileyRatingStyling.tsx";
 
-import modalStyles from "./ModalStyles.module.css";
-import styles from "./TakeSurvey.module.css";
+function ReadOnlyRating({ value }: { value: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {Array.from({ length: 5 }, (_, i) => (
+        <Star
+          key={i}
+          className={cn(
+            "size-4",
+            i < value ? "fill-amber-400 text-amber-400" : "text-muted-foreground",
+          )}
+        />
+      ))}
+    </div>
+  );
+}
 
 function ConfirmResponsesModal({
   opened,
@@ -39,269 +45,270 @@ function ConfirmResponsesModal({
   isSavingResponses,
   largeScreen,
 }) {
-  const theme = useMantineTheme();
   const { t: translations } = useTranslation();
   return (
-    <Modal
-      className={styles["modal"]}
-      opened={opened}
-      title={translations("Confirm your responses")}
-      centered
-      onClose={close}
-      overlayProps={{
-        color: theme.colors.gray[2],
-        opacity: 0.55,
-        blur: 3,
-        className: styles["modal-overlay"],
-      }}
-      classNames={modalStyles}
-      styles={{
-        content: { background: "white" },
-      }}
-    >
-      <Flex className={modalStyles["modal-body-content-container"]}>
-        <Stack pb="xl">
-          {survey.questions
-            .filter((q) => questionsHistory.includes(q.id))
-            .map((question) => {
-              const response: QuestionResponse = responses.find(
-                (response) => response.questionId === question.id,
-              );
-              return (
-                <Stack key={question.id}>
-                  <Title pt="sm" order={5}>
-                    {getContent(question.title[selectedLanguage])}
-                  </Title>
-                  {response ? (
-                    <Text pb="sm">
-                      {(() => {
-                        switch (question.type) {
-                          case Q.Rating:
-                            return <Rating value={Object.values(response?.response)[0]} readOnly />;
-                          case Q.Smiley:
-                            const variant = question?.features?.iconStyle?.variant;
-                            if (
-                              variant &&
-                              [SmileyVariantStyle.Custom, SmileyVariantStyle.Emojis].includes(
-                                variant,
-                              )
-                            )
-                              return getCustomSmileyIcon(
-                                Object.values(response?.response)[0],
-                                question,
-                              );
-                            if (!variant || SmileyVariantStyle.Default)
+    <Dialog open={opened} onOpenChange={(open) => !open && close()}>
+      <DialogContent className="flex max-h-[85vh] min-h-[70vh] flex-col px-8 py-4 shadow-[0_0_10px_5px_rgba(0,0,0,0.1)] sm:max-w-lg">
+        <DialogHeader className="border-b pb-4">
+          <DialogTitle className="text-xl font-bold">
+            {translations("Confirm your responses")}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-auto pt-4">
+          <div className="flex flex-col gap-4 pb-8">
+            {survey.questions
+              .filter((q) => questionsHistory.includes(q.id))
+              .map((question) => {
+                const response: QuestionResponse = responses.find(
+                  (response) => response.questionId === question.id,
+                );
+                return (
+                  <div key={question.id} className="flex flex-col gap-2">
+                    <h5 className="pt-3 text-base font-semibold">
+                      {getContent(question.title[selectedLanguage])}
+                    </h5>
+                    {response ? (
+                      <div className="pb-3">
+                        {(() => {
+                          switch (question.type) {
+                            case Q.Rating:
                               return (
-                                <NextImage
-                                  src={getDefaultSmileySrc(
-                                    getNumericValue(Object.values(response?.response)[0]),
-                                  )}
-                                  alt={"smiley icon"}
-                                  width={30}
-                                  height={30}
-                                />
+                                <ReadOnlyRating value={Object.values(response?.response)[0]} />
                               );
-                            return mapSmileyIcon(
-                              Object.values(response?.response)[0],
-                              surveyThemeData?.surveyTheme?.input?.primaryColor,
-                            );
-                          case Q.Photo:
-                            const img = Object.values(response?.response)[0];
-                            const imgUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${img}`;
-                            return img ? (
-                              <Image radius="md" maw={240} mx="0px" src={imgUrl} />
-                            ) : (
-                              <Text pb="sm" c="dark.0" fz="xs">
-                                {translations("... not answered...")}
-                              </Text>
-                            );
-                          case Q.MSQ:
-                            const responses = Object.values(response?.response)[0];
-                            if (Array.isArray(responses)) {
-                              return responses.map((item, index) => {
-                                return (
-                                  <li key={index}>
-                                    {item?.value ||
-                                      `${question?.features?.[selectedLanguage]?.other?.title}: ${item?.other}`}
-                                  </li>
+                            case Q.Smiley:
+                              const variant = question?.features?.iconStyle?.variant;
+                              if (
+                                variant &&
+                                [SmileyVariantStyle.Custom, SmileyVariantStyle.Emojis].includes(
+                                  variant,
+                                )
+                              )
+                                return getCustomSmileyIcon(
+                                  Object.values(response?.response)[0],
+                                  question,
                                 );
-                              });
-                            }
-                            return <li>{responses}</li>;
-
-                          case Q.DDMS:
-                            const responseData = Object.values(response?.response)[0];
-                            if (Array.isArray(responseData)) {
-                              return responseData.map((item, index) => {
-                                return <li key={index}>{item?.value}</li>;
-                              });
-                            }
-                            return <li>{responseData}</li>;
-
-                          case Q.Date:
-                            return dayjs(Object.values(response?.response)[0]).format(
-                              "DD, MMM , YYYY",
-                            );
-
-                          case Q.Testimonial:
-                            const data = Object.values(response?.response)[0];
-                            return (
-                              <Stack>
-                                <Group>
-                                  <Text fw="400">{translations("Name: ")}</Text>
-                                  <Text fw="300">{data.name}</Text>{" "}
-                                </Group>
-                                {data.jobTitle && (
-                                  <Group mt="-10px">
-                                    <Text fw={"400"}>{translations("Job Title: ")}</Text>
-                                    <Text fw="300">{data.jobTitle}</Text>
-                                  </Group>
-                                )}
-                                <Group mt="-10px">
-                                  <Text fw="400">{translations("Testimonial: ")}</Text>{" "}
-                                  <Text fw="300">{data.testimonial}</Text>{" "}
-                                </Group>
-                                {data.rating && <Rating value={data.rating} readOnly />}
-                                {data.photo && (
-                                  <Image
-                                    src={getFileUrlFromKey(data?.photo)}
-                                    radius="md"
-                                    maw={240}
-                                    mx="0px"
+                              if (!variant || SmileyVariantStyle.Default)
+                                return (
+                                  <NextImage
+                                    src={getDefaultSmileySrc(
+                                      getNumericValue(Object.values(response?.response)[0]),
+                                    )}
+                                    alt={"smiley icon"}
+                                    width={30}
+                                    height={30}
                                   />
-                                )}
-                              </Stack>
-                            );
-
-                          case Q.EmailPhone:
-                            const contact = Object.values(response?.response)[0];
-                            return (
-                              <Stack>
-                                <Group>
-                                  <Text fw="400">{translations("Email: ")}</Text>{" "}
-                                  <Text fw="300">{contact.email}</Text>{" "}
-                                </Group>
-                                <Group mt="-10px">
-                                  <Text fw="400">{translations("Phone: ")}</Text>{" "}
-                                  <Text fw="300">{contact.phone}</Text>{" "}
-                                </Group>
-                              </Stack>
-                            );
-
-                          case Q.MCQ:
-                            const selectedValue = Object.values(response?.response)[0];
-                            return (
-                              <Text>
-                                {selectedValue?.value ||
-                                  `${question?.features?.[selectedLanguage]?.other?.title}: ${selectedValue?.other}`}
-                              </Text>
-                            );
-
-                          case Q.CustomNPS:
-                          case Q.DDSS:
-                            const selectedChoice = Object.values(response?.response)[0];
-                            return <Text>{selectedChoice?.value}</Text>;
-                          case Q.PCQ:
-                            const selectedPictureChoice = Object.values(response?.response)?.[0]
-                              ?.value;
-                            return (
-                              <Stack gap={0} align="center">
-                                <Image
-                                  src={getFileUrlFromKey(selectedPictureChoice?.image)}
-                                  w={50}
-                                  style={{ aspectRatio: 4 / 3 }}
-                                />
-                                <Text>{selectedPictureChoice?.value}</Text>
-                              </Stack>
-                            );
-                          case Q.Contact:
-                          case Q.Phone:
-                          case Q.Email:
-                            const res = Object.values(response?.response)[0];
-                            return (
-                              <Stack>
-                                {res?.name && (
-                                  <Group>
-                                    <Text fw="400">{translations("Name: ")}</Text>
-                                    <Text fw="300">{res?.name}</Text>
-                                  </Group>
-                                )}
-                                {res?.phone && (
-                                  <Group>
-                                    <Text fw="400">{translations("Phone: ")}</Text>
-                                    <Text fw="300">{res?.phone}</Text>
-                                  </Group>
-                                )}
-                                {res?.email && (
-                                  <Group>
-                                    <Text fw="400">{translations("Email: ")}</Text>
-                                    <Text fw="300">{res?.email}</Text>
-                                  </Group>
-                                )}
-                              </Stack>
-                            );
-                          case Q.MultiTextInput:
-                            const answers = Object.values(response?.response)[0];
-                            if (!answers) return null;
-                            return (
-                              <Stack>
-                                {Object.values(answers).map((ad: any, index: number) => {
+                                );
+                              return mapSmileyIcon(
+                                Object.values(response?.response)[0],
+                                surveyThemeData?.surveyTheme?.input?.primaryColor,
+                              );
+                            case Q.Photo:
+                              const img = Object.values(response?.response)[0];
+                              const imgUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${img}`;
+                              return img ? (
+                                <img src={imgUrl} alt="" className="max-w-[240px] rounded-md" />
+                              ) : (
+                                <span className="pb-3 text-xs text-muted-foreground">
+                                  {translations("... not answered...")}
+                                </span>
+                              );
+                            case Q.MSQ:
+                              const responses = Object.values(response?.response)[0];
+                              if (Array.isArray(responses)) {
+                                return responses.map((item, index) => {
                                   return (
-                                    <Text fw="300" key={index}>
-                                      {ad}
-                                    </Text>
+                                    <li key={index}>
+                                      {item?.value ||
+                                        `${question?.features?.[selectedLanguage]?.other?.title}: ${item?.other}`}
+                                    </li>
                                   );
-                                })}
-                              </Stack>
-                            );
-                          case Q.MCQGrid:
-                            const results = Object.values(response?.response)[0];
-                            return (
-                              <Stack>
-                                {Object.entries(results).map(([q, res]: any) => {
-                                  return (
-                                    <Text fw="300" key={q}>
-                                      {q}: {res?.value}
-                                    </Text>
-                                  );
-                                })}
-                              </Stack>
-                            );
-                          default:
-                            return JSON.stringify(Object.values(response?.response)[0]);
-                        }
-                      })()}
-                    </Text>
-                  ) : (
-                    <Text pb="sm" c="dark.0" fz="xs">
-                      {translations("... not answered...")}
-                    </Text>
-                  )}
-                  <Divider />
-                </Stack>
-              );
-            })}
-        </Stack>
-      </Flex>
-      <Flex className={modalStyles["modal-footer-container"]}>
-        <RateupButtonBlackOutline
-          radius={"xl"}
-          title=""
-          size={largeScreen ? "lg" : "xs"}
-          onClick={close}
-          leftIcon={<IconChevronLeft />}
-        />
+                                });
+                              }
+                              return <li>{responses}</li>;
 
-        <RateupButtonBlue
-          loading={isSavingResponses}
-          radius={"xl"}
-          title={translations("Confirm")}
-          size={largeScreen ? "lg" : "xs"}
-          leftIcon={<IconCheck />}
-          onClick={finishSurvey}
-        />
-      </Flex>
-    </Modal>
+                            case Q.DDMS:
+                              const responseData = Object.values(response?.response)[0];
+                              if (Array.isArray(responseData)) {
+                                return responseData.map((item, index) => {
+                                  return <li key={index}>{item?.value}</li>;
+                                });
+                              }
+                              return <li>{responseData}</li>;
+
+                            case Q.Date:
+                              return dayjs(Object.values(response?.response)[0]).format(
+                                "DD, MMM , YYYY",
+                              );
+
+                            case Q.Testimonial:
+                              const data = Object.values(response?.response)[0];
+                              return (
+                                <div className="flex flex-col gap-2">
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-normal">{translations("Name: ")}</span>
+                                    <span className="font-light">{data.name}</span>
+                                  </div>
+                                  {data.jobTitle && (
+                                    <div className="-mt-2.5 flex items-center gap-1">
+                                      <span className="font-normal">
+                                        {translations("Job Title: ")}
+                                      </span>
+                                      <span className="font-light">{data.jobTitle}</span>
+                                    </div>
+                                  )}
+                                  <div className="-mt-2.5 flex items-center gap-1">
+                                    <span className="font-normal">
+                                      {translations("Testimonial: ")}
+                                    </span>
+                                    <span className="font-light">{data.testimonial}</span>
+                                  </div>
+                                  {data.rating && <ReadOnlyRating value={data.rating} />}
+                                  {data.photo && (
+                                    <img
+                                      src={getFileUrlFromKey(data?.photo)}
+                                      alt=""
+                                      className="max-w-[240px] rounded-md"
+                                    />
+                                  )}
+                                </div>
+                              );
+
+                            case Q.EmailPhone:
+                              const contact = Object.values(response?.response)[0];
+                              return (
+                                <div className="flex flex-col gap-2">
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-normal">{translations("Email: ")}</span>
+                                    <span className="font-light">{contact.email}</span>
+                                  </div>
+                                  <div className="-mt-2.5 flex items-center gap-1">
+                                    <span className="font-normal">{translations("Phone: ")}</span>
+                                    <span className="font-light">{contact.phone}</span>
+                                  </div>
+                                </div>
+                              );
+
+                            case Q.MCQ:
+                              const selectedValue = Object.values(response?.response)[0];
+                              return (
+                                <span>
+                                  {selectedValue?.value ||
+                                    `${question?.features?.[selectedLanguage]?.other?.title}: ${selectedValue?.other}`}
+                                </span>
+                              );
+
+                            case Q.CustomNPS:
+                            case Q.DDSS:
+                              const selectedChoice = Object.values(response?.response)[0];
+                              return <span>{selectedChoice?.value}</span>;
+                            case Q.PCQ:
+                              const selectedPictureChoice = Object.values(response?.response)?.[0]
+                                ?.value;
+                              return (
+                                <div className="flex flex-col items-center gap-0">
+                                  <img
+                                    src={getFileUrlFromKey(selectedPictureChoice?.image)}
+                                    alt=""
+                                    className="w-[50px]"
+                                    style={{ aspectRatio: "4 / 3" }}
+                                  />
+                                  <span>{selectedPictureChoice?.value}</span>
+                                </div>
+                              );
+                            case Q.Contact:
+                            case Q.Phone:
+                            case Q.Email:
+                              const res = Object.values(response?.response)[0];
+                              return (
+                                <div className="flex flex-col gap-2">
+                                  {res?.name && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-normal">{translations("Name: ")}</span>
+                                      <span className="font-light">{res?.name}</span>
+                                    </div>
+                                  )}
+                                  {res?.phone && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-normal">{translations("Phone: ")}</span>
+                                      <span className="font-light">{res?.phone}</span>
+                                    </div>
+                                  )}
+                                  {res?.email && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-normal">{translations("Email: ")}</span>
+                                      <span className="font-light">{res?.email}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            case Q.MultiTextInput:
+                              const answers = Object.values(response?.response)[0];
+                              if (!answers) return null;
+                              return (
+                                <div className="flex flex-col gap-2">
+                                  {Object.values(answers).map((ad: any, index: number) => {
+                                    return (
+                                      <span className="font-light" key={index}>
+                                        {ad}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            case Q.MCQGrid:
+                              const results = Object.values(response?.response)[0];
+                              return (
+                                <div className="flex flex-col gap-2">
+                                  {Object.entries(results).map(([q, res]: any) => {
+                                    return (
+                                      <span className="font-light" key={q}>
+                                        {q}: {res?.value}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            default:
+                              return JSON.stringify(Object.values(response?.response)[0]);
+                          }
+                        })()}
+                      </div>
+                    ) : (
+                      <span className="pb-3 text-xs text-muted-foreground">
+                        {translations("... not answered...")}
+                      </span>
+                    )}
+                    <Separator />
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+
+        <div className="flex justify-between pt-4">
+          <Button
+            variant="outline"
+            className="rounded-full"
+            size={largeScreen ? "lg" : "xs"}
+            onClick={close}
+          >
+            <IconChevronLeft data-icon="inline-start" />
+          </Button>
+
+          <Button
+            className="rounded-full"
+            size={largeScreen ? "lg" : "xs"}
+            disabled={isSavingResponses}
+            onClick={finishSurvey}
+          >
+            {isSavingResponses && <Spinner data-icon="inline-start" />}
+            <IconCheck data-icon="inline-start" />
+            {translations("Confirm")}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

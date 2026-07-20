@@ -1,18 +1,23 @@
-import { Select, useMantineTheme } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 import CustomSelectForMobile from "../components/CustomSelectForMobile/index.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
-
-import classes from "../TakeSurvey.module.css";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -24,7 +29,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   const choices = selectedQ?.choices?.[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState("");
   const selectedPreview = useSelectedPreview();
-  const isMobile = useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
+  const isMobile = useIsMobile() || selectedPreview === "mobile";
   const { t: translations } = useTranslation();
   const takeSurveyLayoutWebDomNodeRef = useRef(null);
 
@@ -36,6 +41,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
       : sampleChoices;
 
   const data = options?.map((op) => op?.value);
+  const items = data?.map((op) => ({ value: op, label: op }));
   useEffect(() => {
     if (response) {
       setSelectedOp(response.value);
@@ -51,38 +57,25 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
     const res = options?.find((op) => op?.value === value);
     updateResponse(res);
   };
-  const theme = useMantineTheme();
-  const pos = isMobile ? "top" : "bottom";
 
   return !isMobile ? (
     <FormPaperLayout>
-      <Select
-        placeholder={translations("Select one / type in to search")}
-        data={data}
-        value={selectedOp}
-        onChange={handleSelectedOp}
-        comboboxProps={{
-          middlewares: {
-            flip: false,
-            shift: false,
-          },
-          position: pos,
-        }}
-        classNames={{
-          input: classes.selectBox,
-          root: classes.input,
-        }}
-        styles={{
-          input: {
-            backgroundColor: "transparent",
-          },
-          dropdown: {
-            borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
-            zIndex: 999,
-          },
-        }}
-        searchable
-      />
+      <Combobox value={selectedOp || null} onValueChange={handleSelectedOp} items={items}>
+        <ComboboxInput
+          placeholder={translations("Select one / type in to search")}
+          className="w-full border-none bg-transparent px-0 shadow-none"
+        />
+        <ComboboxContent>
+          <ComboboxEmpty>{translations("Nothing found...")}</ComboboxEmpty>
+          <ComboboxList>
+            {(item: { value: string; label: string }) => (
+              <ComboboxItem key={item.value} value={item.value}>
+                {item.label}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
     </FormPaperLayout>
   ) : (
     <CustomSelectForMobile
@@ -90,9 +83,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
       data={data}
       placeholder={translations("Select one")}
       onChange={handleSelectedOp}
-      portalProps={{
-        target: takeSurveyLayoutWebDomNodeRef.current,
-      }}
+      portalTarget={takeSurveyLayoutWebDomNodeRef.current}
     />
   );
 }

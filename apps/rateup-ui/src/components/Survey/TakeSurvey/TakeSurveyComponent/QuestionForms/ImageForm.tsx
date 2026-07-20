@@ -1,24 +1,13 @@
-import {
-  ActionIcon,
-  Box,
-  Button,
-  FileButton,
-  Group,
-  Image,
-  LoadingOverlay,
-  Stack,
-  Text,
-} from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
-
-import styles from "./ImageForm.module.css";
 
 function getFileName(url: string | File, isNewFile: boolean): ReactNode {
   if (isNewFile || typeof url === "string") return <>{url}</>;
@@ -32,10 +21,10 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(isPreview ? null : response || null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const resetRef = useRef<() => void>(null);
-
+  const inputRef = useRef<HTMLInputElement>(null);
   const surveyThemeObj = useSurveyThemeData();
   const pickedFileTextColor = surveyThemeObj?.surveyTheme?.title?.styles?.color;
+  const { t: translations } = useTranslation();
 
   useEffect(() => {
     const uploadAndUpdate = async () => {
@@ -53,7 +42,6 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
     if (file) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-
       return () => URL.revokeObjectURL(url);
     } else {
       setPreviewUrl(null);
@@ -62,85 +50,68 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
 
   function removeImg() {
     setFile(null);
-    resetRef.current?.();
+    if (inputRef.current) inputRef.current.value = "";
     setPreviewUrl(null);
     updateResponse(null);
   }
 
-  const onChangePicture = async (file: File) => {
-    if (!file) return;
-    setFile(file);
-  };
-  const { t: translations } = useTranslation();
   const isImageSelected = previewUrl || response?.length > 0;
-  const imageContainerWidthAndHeight = isImageSelected ? 150 : 0;
 
   return (
-    <Stack className={styles["image-form-root-div"]}>
-      <Stack className={styles["file-btn-and-converting-loader-container"]}>
-        <FileButton
-          resetRef={resetRef}
-          onChange={onChangePicture}
-          accept="image/png,image/jpeg,image/svg+xml,image/webp,.heic"
-        >
-          {(props) => (
-            <Button
-              className={styles["upload-btn"]}
-              fullWidth
-              size="lg"
-              radius="lg"
-              variant="outline"
-              {...props}
-            >
-              {translations("Upload image")}
-            </Button>
-          )}
-        </FileButton>
-      </Stack>
-      <Box
-        className={styles["image-remove-icon-picked-file-text-container"]}
-        style={{ position: "relative" }}
+    <div className="flex w-full flex-col gap-4">
+      <Button
+        type="button"
+        variant="outline"
+        size="lg"
+        className="w-full max-w-[300px] rounded-lg"
+        onClick={() => inputRef.current?.click()}
       >
-        <Stack align="center">
-          {(file || response?.length > 0) && (
-            <Group justify="flex-end" style={{ position: "absolute", right: 0, top: 0 }}>
-              <ActionIcon onClick={removeImg} variant="filled" color="gray" radius="lg">
-                <IconX style={{ width: "70%", height: "70%" }} stroke={1.5} />
-              </ActionIcon>
-            </Group>
-          )}
+        {translations("Upload image")}
+      </Button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/svg+xml,image/webp,.heic"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) setFile(f);
+        }}
+      />
 
-          <Box
-            className="image-container"
-            style={{
-              position: "relative",
-              width: imageContainerWidthAndHeight,
-              height: imageContainerWidthAndHeight,
-            }}
+      {isImageSelected && (
+        <div className="relative max-w-[300px]">
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon-sm"
+            className="absolute right-0 top-0 z-10 rounded-full"
+            onClick={removeImg}
           >
-            <LoadingOverlay
-              visible={isUploading}
-              zIndex={1000}
-              overlayProps={{ radius: "sm", blur: 2 }}
-            />
-            {isImageSelected && (
-              <Image
-                fit="contain"
+            <IconX className="size-3.5" stroke={1.5} />
+          </Button>
+
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative size-[150px]">
+              {isUploading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-sm bg-white/60 backdrop-blur-sm">
+                  <Spinner />
+                </div>
+              )}
+              <img
                 src={previewUrl || `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${response}`}
                 alt="Preview"
-                style={{ width: "100%", height: "100%" }}
+                className="size-full object-contain"
               />
-            )}
-          </Box>
+            </div>
 
-          {isImageSelected && (
-            <Text size="sm" style={{ textAlign: "center" }} c={pickedFileTextColor}>
-              {translations("Picked file:")}
+            <p className="text-center text-sm" style={{ color: pickedFileTextColor }}>
+              {translations("Picked file:")}{" "}
               {file?.name || getFileName(response, isPreview || false)}
-            </Text>
-          )}
-        </Stack>
-      </Box>
-    </Stack>
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -1,21 +1,23 @@
-import { ActionIcon, Button, Group, Portal, Progress, Stack, Text } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useContext, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
+import { ProgressIndicator, ProgressTrack } from "@/components/ui/progress.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+import { useMediaQuery } from "@/hooks/use-media-querry.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";
 import { validationSupportedTypes } from "@/utils/data.ts";
 import { validateQuestion } from "@/utils/validation/index.ts";
 
 import { getSelectedQPos, validateResponse } from "./util.tsx";
-
-import styles from "./TakeSurvey.module.css";
 
 function NextPrev({
   prev,
@@ -99,79 +101,76 @@ function NextPrev({
 
   if (!survey) return null;
 
-  return (
-    <Stack
-      gap={0}
-      w={"100%"}
-      justify="flex-end"
-      id="next-prev-btn-div"
-      className={styles["next-prev-btns-root-div"]}
-    >
-      {errorTextDivRef.current && (
-        <Portal target={errorTextDivRef.current}>
-          {selectedQ?.required && !response && response !== 0 && (
-            <Text className={styles["message-p"]} c={themeStyles?.backgroundColor}>
-              {translations("*Choose an option or answer to proceed!")}
-            </Text>
-          )}
+  const isNextDisabled =
+    ((selectedQ?.required || selectedQ?.validationRules) && response !== 0 && !response) ||
+    isErrorInput;
 
-          {errorMsg && isErrorInput && (
-            <Text className={styles["message-p"]} c={"red"}>
-              {translations("Note: *")} {errorMsg}
-            </Text>
-          )}
-        </Portal>
-      )}
-      <Stack className={styles["next-prev-btns-and-progress-container"]}>
-        <Group justify="flex-end">
-          <ActionIcon
-            className={styles["prev-btn"]}
+  return (
+    <div
+      id="next-prev-btn-div"
+      className="flex w-full flex-col justify-end gap-0 px-[0.3125rem] pb-8 max-[480px]:pb-5"
+    >
+      {errorTextDivRef.current &&
+        createPortal(
+          <>
+            {selectedQ?.required && !response && response !== 0 && (
+              <p
+                className="rounded-[0.625rem] text-sm"
+                style={{ color: themeStyles?.backgroundColor }}
+              >
+                {translations("*Choose an option or answer to proceed!")}
+              </p>
+            )}
+
+            {errorMsg && isErrorInput && (
+              <p className="rounded-[0.625rem] text-sm" style={{ color: "red" }}>
+                {translations("Note: *")} {errorMsg}
+              </p>
+            )}
+          </>,
+          errorTextDivRef.current,
+        )}
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-end gap-4">
+          <Button
+            variant="outline"
+            size="icon"
             title=""
             disabled={isFirstQuestion}
-            variant="outlined"
             onClick={prev}
             style={isFirstQuestion ? {} : themeStylesWoBr}
+            className="h-auto w-[2.875rem] rounded-[0.625rem] px-4 py-2.5 max-[480px]:w-[2.625rem]"
           >
-            <IconChevronLeft size={isMobile ? 20 : 24} />
-          </ActionIcon>
+            <IconChevronLeft className={isMobile ? "size-5" : "size-6"} />
+          </Button>
           <Button
-            className={styles["submit-next-btn"]}
-            disabled={
-              ((selectedQ?.required || selectedQ?.validationRules) &&
-                response !== 0 &&
-                !response) ||
-              isErrorInput
-            }
+            disabled={isNextDisabled || isSavingResponses}
             onClick={handleNextClick}
-            rightSection={<IconChevronRight size={isMobile ? 20 : 24} />}
-            style={
-              ((selectedQ?.required || selectedQ?.validationRules) &&
-                response !== 0 &&
-                !response) ||
-              isErrorInput
-                ? {}
-                : themeStylesWoBr
-            }
-            loading={isSavingResponses}
-            loaderProps={{
-              color: themeStylesWoBr?.color || "white",
-            }}
+            style={isNextDisabled ? {} : themeStylesWoBr}
+            className="h-auto rounded-[0.625rem] py-2.5 pr-2.5 pl-4 text-base max-[480px]:flex-1 max-[480px]:text-sm"
           >
             {isLastQuestion ? submitBtnLabel : nextBtnLabel}
+            {isSavingResponses ? (
+              <Spinner style={{ color: themeStylesWoBr?.color || "white" }} />
+            ) : (
+              <IconChevronRight data-icon="inline-end" className={isMobile ? "size-5" : "size-6"} />
+            )}
           </Button>
-        </Group>
+        </div>
 
-        <Progress
+        <ProgressPrimitive.Root
           value={parseInt(getCompletionRate(selectedQuestionPosition, questionsLength))}
-          transitionDuration={300}
-          color={inputColor}
-          size={isMobile ? "xs" : "sm"}
-          styles={{
-            root: { backgroundColor: "#d0d0d0" },
-          }}
-        />
-      </Stack>
-    </Stack>
+          className="flex w-full flex-wrap gap-3"
+        >
+          <ProgressTrack className={isMobile ? "h-1 bg-[#d0d0d0]" : "h-1.5 bg-[#d0d0d0]"}>
+            <ProgressIndicator
+              className="transition-all duration-300"
+              style={{ backgroundColor: inputColor }}
+            />
+          </ProgressTrack>
+        </ProgressPrimitive.Root>
+      </div>
+    </div>
   );
 }
 

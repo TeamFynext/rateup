@@ -1,4 +1,3 @@
-import { Group } from "@mantine/core";
 import { useContext, useState } from "react";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
@@ -13,7 +12,7 @@ const WOPForm = ({ isPreview = false, wop }: { isPreview: boolean; wop: Wop }) =
 
   const wopData = wop ? (wop?.segments?.length === 0 ? DEFAULT_WOP : wop) : DEFAULT_WOP;
   return (
-    <Group>
+    <div className="flex flex-wrap items-center gap-4">
       <WheelComponent
         segments={wopData.segments}
         segColors={wopData.segColors}
@@ -32,7 +31,7 @@ const WOPForm = ({ isPreview = false, wop }: { isPreview: boolean; wop: Wop }) =
       />
       {!isPreview && price && `You have won ${price}`}
       {!isPreview && response && !price && `You have won ${response}`}
-    </Group>
+    </div>
   );
 };
 

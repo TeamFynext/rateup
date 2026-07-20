@@ -1,5 +1,7 @@
-import { Box, Group, Overlay, Radio, RadioGroup, Stack } from "@mantine/core";
 import { useCallback } from "react";
+
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import LocalOrUnsplashImagePicker from "../../../LocalOrUnsplashImagePicker/index.tsx";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker/index.tsx";
@@ -78,8 +80,12 @@ function BackgroundStyles() {
   const useSurveyBackground = !isSurveyPageTab && bg.useSurveyBackground;
 
   return (
-    <Stack
-      className={`${styles["style-inputs-container"]} style-inputs-container background-style-inputs-div`}
+    <div
+      className={cn(
+        "flex flex-col",
+        styles["style-inputs-container"],
+        "style-inputs-container background-style-inputs-div",
+      )}
     >
       {selectedPageTab === ThemeTabEnum.THANKYOU && (
         <CustomSwitch
@@ -90,30 +96,40 @@ function BackgroundStyles() {
         />
       )}
 
-      <Stack style={{ position: "relative" }}>
-        {useSurveyBackground && <Overlay color="#FFFFFF" zIndex={198} />}
+      <div className="relative flex flex-col">
+        {useSurveyBackground && (
+          <div
+            className="absolute inset-0"
+            style={{ backgroundColor: "rgba(255, 255, 255, 0.6)", zIndex: 198 }}
+          />
+        )}
         <RadioGroup
           value={chooseBgRadioInputValue}
-          onChange={handleChooseBackgroundRadioGroupChange}
+          onValueChange={handleChooseBackgroundRadioGroupChange}
+          className="flex flex-row gap-5"
         >
-          <Group gap={"1.25rem"}>
-            <Radio value={"color"} label="Color" />
-            <Radio value={"image"} label="Image" />
-          </Group>
+          <label className="flex items-center gap-2">
+            <RadioGroupItem value="color" />
+            Color
+          </label>
+          <label className="flex items-center gap-2">
+            <RadioGroupItem value="image" />
+            Image
+          </label>
         </RadioGroup>
 
         {chooseBgRadioInputValue === "color" && (
-          <Box className={"custom-color-picker-and-heading-container"}>
+          <div className="custom-color-picker-and-heading-container">
             <CustomColorPicker
               value={bgColor}
               onChange={handleBgColorPickerChange}
               withoutEyedropper
             />
-          </Box>
+          </div>
         )}
 
         {chooseBgRadioInputValue === "image" && (
-          <Stack>
+          <div className="flex flex-col">
             {selectedPreview === "desktop" && (
               <LocalOrUnsplashImagePicker
                 value={imageUrl}
@@ -131,10 +147,10 @@ function BackgroundStyles() {
                 onImageSelected={handleMobileBgImagePickerChange}
               />
             )}
-          </Stack>
+          </div>
         )}
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   );
 }
 
