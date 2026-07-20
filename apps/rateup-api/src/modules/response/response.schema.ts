@@ -80,8 +80,8 @@ const idInputParamsSchema = z.object({
 });
 
 const deleteResponseParamsSchema = z.object({
-  id: z.string(),
-  surveyTeamMapId: z.string(),
+  id: z.uuid(),
+  surveyTeamMapId: z.uuid(),
 });
 
 const generateBodySchema = z.object({
