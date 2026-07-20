@@ -12,6 +12,7 @@ import {
 } from "./wa_settings.schema.js";
 import { callMetaApi } from "../wa_axios.js";
 import { subscribePageToApp } from "./wa_settings.controller.js";
+import { getChannelScope } from "./wa_channel_access.js";
 
 export async function createWaSettings(orgId: string, data: Partial<WhatsappSettings>) {
   const accessToken = data.accessToken;
@@ -89,6 +90,27 @@ export async function getAllWaSettings(orgId: string) {
   const decryptedSettings = res.map((setting) => getWaSettingsWithAccessTokenDecrypted(setting));
 
   return decryptedSettings;
+}
+
+/**
+ * The org's channels, narrowed to what the caller's teams reach.
+ *
+ * This backs `GET /api/wa/settings`, which is the only endpoint the dashboard uses to populate
+ * channel pickers — so narrowing here narrows every `AccountSelector` in the UI, and also every
+ * `waSettings[0]` default, without any frontend change.
+ */
+export async function getAccessibleWaSettings(orgId: string, userId: string, role: string) {
+  if (role === "SUPER_ADMIN") return await getAllWaSettings(orgId);
+
+  const scope = await getChannelScope(orgId, userId);
+  if (scope.all === true) return await getAllWaSettings(orgId);
+
+  const res = await prisma.whatsappSettings.findMany({
+    where: { orgId, id: { in: Array.from(scope.ids) } },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return res.map((setting) => getWaSettingsWithAccessTokenDecrypted(setting));
 }
 
 export async function getWaSettingsByWaBaId(wabaId: string) {

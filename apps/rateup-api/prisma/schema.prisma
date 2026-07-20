@@ -307,19 +307,20 @@ model WhatsappSettings {
   fbUserName String?
 
   type                    String // enums.ts: WaConfigType
-  status                  String             @default("ACTIVE")
-  createdAt               DateTime           @default(now())
+  status                  String                @default("ACTIVE")
+  createdAt               DateTime              @default(now())
   /// [PWaEncryptionKeys]
   encryption              Json? // for flow {publicKey: string, privateKey: string}
   WaTemplate              WaTemplate[]
   LoyaltyWaCommand        LoyaltyWaCommand[]
   metaAssets              MetaAssets[]
   catalog                 CatalogPhoneIdMap?
-  assets                  String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
+  assets                  String[]              @default([]) //enum.ts MetaLoginAssets (assets selected on login)
   conversionsApiDatasetId String?
   conversionData          Json?
-  paymentMethod           String             @default("NATIVE") // NATIVE, SHOPIFY_LINK
+  paymentMethod           String                @default("NATIVE") // NATIVE, SHOPIFY_LINK
   metaBusinessAgent       MetaBusinessAgent?
+  teamAccess              TeamWhatsappChannel[] // teams explicitly granted this channel
 }
 
 model MetaBusinessAgent {
@@ -624,6 +625,12 @@ model Team {
   waMessageSchedule      WaMessageSchedule[]
   featureAccess          TeamFeatureAccess[]
 
+  /// When true the team reaches every channel in the org, including ones connected later.
+  /// When false access is limited to `channelAccess`. Defaults to true so new teams —
+  /// and every team existing at rollout — keep full access until scoped explicitly.
+  allChannels   Boolean               @default(true)
+  channelAccess TeamWhatsappChannel[]
+
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
 }
@@ -636,6 +643,20 @@ model TeamFeatureAccess {
   createdAt DateTime    @default(now())
 
   @@unique([teamId, feature])
+}
+
+/// Grants one team access to one channel. Only consulted while `Team.allChannels` is false —
+/// when that flag is true the team reaches every channel and these rows are cleared.
+model TeamWhatsappChannel {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  team      Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String           @db.Uuid
+  channel   WhatsappSettings @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId String           @db.Uuid
+  createdAt DateTime         @default(now())
+
+  @@unique([teamId, channelId])
+  @@index([channelId])
 }
 
 model TeamMember {

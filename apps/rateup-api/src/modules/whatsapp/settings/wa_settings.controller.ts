@@ -18,7 +18,7 @@ import {
   deleteWaSettings,
   getAdAccountsFromWa,
   getAdsFromWa,
-  getAllWaSettings,
+  getAccessibleWaSettings,
   getContactTag,
   getConversationalAutomation,
   syncConversationalAutomation,
@@ -64,8 +64,8 @@ export async function createWaSettingsHandler(
 }
 
 export async function getWaSettingsHandler(req: FastifyRequest, res: FastifyReply) {
-  const { orgId } = req.user;
-  const waSettings = await getAllWaSettings(orgId);
+  const { orgId, userId, role } = req.user;
+  const waSettings = await getAccessibleWaSettings(orgId, userId, role);
   if (!waSettings?.length) {
     return res.status(200).send([]);
   }

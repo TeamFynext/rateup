@@ -18,6 +18,7 @@ import {
 import { log } from "../../../../utils/logger.js";
 import { callMetaApi } from "../../wa_axios.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
+import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
 import axios from "axios";
 import { WaAssignedChatPermission, WaMessageAssignStatus } from "../../../../types/enums.js";
 import { updateContactById } from "../../../contact/contact.service.js";
@@ -293,6 +294,26 @@ export async function filterChats(
     const params: any[] = [orgId, (page - 1) * 20, userId];
     let paramIndex = 4;
     const filters: string[] = [`c."orgId" = $1::uuid`];
+
+    // Team channel scope. Applied here — above the search/non-search split and independent of
+    // `bodyFilterProps.phone` — so that choosing "All", clearing the filter, or naming someone
+    // else's channel cannot widen it. The user's own phone filter below ANDs on top of this.
+    if (role !== Role.SUPER_ADMIN) {
+      const scope = await getScopedSourceIdentifiers(orgId, userId);
+      if (!scope.all) {
+        if (scope.identifiers.length === 0) {
+          // Scoped to zero channels: match nothing rather than falling through to no filter.
+          filters.push(`1 = 0`);
+        } else {
+          params.push(scope.identifiers);
+          filters.push(`EXISTS (
+            SELECT 1 FROM "WaMessage" wm
+            WHERE wm."contactId" = c.id
+            AND wm."sourceIdentifier" = ANY($${paramIndex++}::TEXT[])
+          )`);
+        }
+      }
+    }
     let orderBy = `c."lastReceivedMessageTimeStamp"`;
     let allOrderBy = `fc."lastReceivedMessageTimeStamp"`;
     let sortBy = "DESC";
@@ -341,7 +362,9 @@ export async function filterChats(
       if (bodyFilterProps?.waMessageAssignStatus && isNotSent) {
         if (isNew) {
           params.push(WaMessageAssignStatus.UNASSIGNED);
-          filters.push(`c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."waMessageAssignStatus"::TEXT = $${paramIndex++}::TEXT`);
+          filters.push(
+            `c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."waMessageAssignStatus"::TEXT = $${paramIndex++}::TEXT`,
+          );
         } else {
           // FIX: Handle case mismatch (e.g. "Addressed" vs "ADDRESSED")
           const rawStatus = bodyFilterProps.waMessageAssignStatus;
@@ -383,8 +406,9 @@ export async function filterChats(
       }
 
       // --- CLEANED ASSIGNMENT FILTER LOGIC ---
-      
-      const wantsAssignedOnly = !bodyFilterProps?.waMessageAssignStatus && bodyFilterProps?.status?.includes("ASSIGNED");
+
+      const wantsAssignedOnly =
+        !bodyFilterProps?.waMessageAssignStatus && bodyFilterProps?.status?.includes("ASSIGNED");
       const hasTeamFilter = Boolean(bodyFilterProps?.assignedTeams?.length);
       const hasUserFilter = Boolean(bodyFilterProps?.assignedUserIds?.length && !isAssignedToMe);
       const isStrict = hasTeamFilter || hasUserFilter;
@@ -406,14 +430,17 @@ export async function filterChats(
 
         // Build user conditions
         if (hasUserFilter) {
-          if (waAssignedChatPermission === WaAssignedChatPermission.Admins && role === Role.MEMBER) {
-             if (bodyFilterProps.assignedUserIds.includes(userId)) {
-                params.push(userId);
-                assignConditions.push(`winb."assignedUserId" = $${paramIndex++}::uuid`);
-             }
+          if (
+            waAssignedChatPermission === WaAssignedChatPermission.Admins &&
+            role === Role.MEMBER
+          ) {
+            if (bodyFilterProps.assignedUserIds.includes(userId)) {
+              params.push(userId);
+              assignConditions.push(`winb."assignedUserId" = $${paramIndex++}::uuid`);
+            }
           } else {
-             params.push(bodyFilterProps.assignedUserIds);
-             assignConditions.push(`winb."assignedUserId" = ANY($${paramIndex++}::uuid[])`);
+            params.push(bodyFilterProps.assignedUserIds);
+            assignConditions.push(`winb."assignedUserId" = ANY($${paramIndex++}::uuid[])`);
           }
         }
 
