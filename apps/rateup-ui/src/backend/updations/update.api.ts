@@ -29,6 +29,20 @@ export async function migrateFreePlanFeatures() {
   );
 }
 
+export interface MigrateNonFreePlanFeaturesResult {
+  message: string;
+  updated: number;
+  skipped: number;
+}
+
+export async function migrateNonFreePlanFeatures() {
+  return await axiosClient.put<MigrateNonFreePlanFeaturesResult>(
+    `${baseUrl}/migrate-non-free-plan-features`,
+    null,
+    { timeout: 120000 },
+  );
+}
+
 export async function migrateLoyaltyTierPriority() {
   return await axiosClient.put(`${baseUrl}/migrate-loyalty-tier-priority`, null, {
     timeout: 60000,
