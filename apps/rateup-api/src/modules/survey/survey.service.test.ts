@@ -665,7 +665,7 @@ describe("getSurveyTemplates", () => {
       { survey: { id: "t4", type: "whatsapp", title: "Retail__Wa" } },
     ]);
 
-    const res = await getSurveyTemplates("web");
+    const res: any = await getSurveyTemplates("web");
 
     expect(Object.keys(res)).toEqual(["Retail", "Health"]);
     expect(res.Retail.map((s: any) => s.title)).toEqual(["Store Feedback", "Checkout"]);
