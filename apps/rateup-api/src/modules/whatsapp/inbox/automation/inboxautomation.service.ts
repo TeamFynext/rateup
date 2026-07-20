@@ -94,33 +94,31 @@ export async function runInboxAutomationCron() {
     const cutoffTime = new Date(Date.now() - delayHours * 60 * 60 * 1000);
     const statusToFind = automation.condition === "ASSIGNED" ? "ASSIGNED" : "UNASSIGNED";
 
-    const idleContacts = await prisma.contact.findMany({
+    // Idleness is a property of the open conversation, not the contact: a
+    // session with no traffic since the cutoff (or none at all, when it is
+    // older than the cutoff) gets auto-closed. `lastMessageAt` covers both
+    // directions and excludes INTERNAL markers.
+    const idleConversations = await prisma.conversation.findMany({
       where: {
         orgId: automation.orgId,
-        waMessageAssignStatus: statusToFind,
+        closedAt: null,
+        status: statusToFind,
         createdAt: { lt: cutoffTime },
-        OR: [
-          { lastReceivedMessageTimeStamp: null },
-          { lastReceivedMessageTimeStamp: { lt: cutoffTime } },
-        ],
-        AND: [
-          {
-            OR: [
-              { lastSentMessageTimeStamp: null },
-              { lastSentMessageTimeStamp: { lt: cutoffTime } },
-            ],
-          },
-        ],
+        OR: [{ lastMessageAt: null }, { lastMessageAt: { lt: cutoffTime } }],
       },
       select: {
         id: true,
+        contactId: true,
       },
     });
 
-    for (const contact of idleContacts) {
+    for (const conversation of idleConversations) {
       try {
+        // Closing goes through the contact so every legacy side effect (rules,
+        // InboxStats, Zapier, notifications, close marker) still fires; the
+        // conversation row is closed by the transactional mirror inside.
         await updateContactById(
-          contact.id,
+          conversation.contactId,
           {
             waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
           },
@@ -130,7 +128,7 @@ export async function runInboxAutomationCron() {
           { source: "automation" },
         );
       } catch (err) {
-        console.error(`Failed to auto-close contact ${contact.id}:`, err);
+        console.error(`Failed to auto-close conversation ${conversation.id}:`, err);
       }
     }
   }

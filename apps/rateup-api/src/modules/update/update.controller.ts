@@ -15,6 +15,7 @@ import {
   seedInboxStatsAutomation,
   reconcileInboxStatus,
   backfillConversationsFromMessages,
+  backfillConversationSessions,
 } from "./update.service.js";
 import {
   startBackfillConversations,

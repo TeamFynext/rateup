@@ -933,6 +933,10 @@ export interface orgWsMessage {
   inbox?: {
     contact: Contact;
     message: WaMessage;
+    /// The session the message belongs to. Additive: legacy clients read only
+    /// `contact` and `message`. Null for unthreaded messages (automated sends
+    /// with no open conversation, SPAM contacts).
+    conversation?: import("../../generated/prisma/client.js").Conversation | null;
   };
 }
 
