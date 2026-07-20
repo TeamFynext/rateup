@@ -35,6 +35,7 @@ export async function getOrCreateContactHandler(request: FastifyRequest, reply: 
     request.user.orgId,
     body,
     PlatformType.WEBCHAT,
+    true,
   );
   reply.code(200).send(contact?.id);
 }

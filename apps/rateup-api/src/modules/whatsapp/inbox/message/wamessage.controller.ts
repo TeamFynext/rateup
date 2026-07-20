@@ -62,7 +62,7 @@ import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller.js";
 import { writeXlsx } from "hucre/xlsx";
 import { XlsxStreamWriter } from "hucre";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
-import { Conversation, PlatformType } from "../../../../../generated/prisma/client.js";
+import { PlatformType } from "../../../../../generated/prisma/client.js";
 import { Role } from "../../../../utils/enums/index.js";
 import { getIgUserDetailsFromMeta } from "../../instagram/instagram.service.js";
 import { WaSendMessageBody } from "../../../../types/whatsapp.types.js";
@@ -73,86 +73,13 @@ import {
 import {
   checkIfFirstSendMessageInConversation,
   checkIfFirstUserSendMessageInConversation,
+  getActiveConversationForContact,
+  getLastCreatedConversationForContact,
+  openConversationForContact,
   updateConversation,
 } from "../../../contact/conversation/conversation.service.js";
-import {
-  getOpenConversation,
-  getOrOpenConversation,
-} from "../../../contact/conversation/conversationLifecycle.service.js";
 import { WaMessageClosedStatus } from "../../constants.js";
 import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
-import prisma from "../../../../utils/prisma.js";
-/// Which conversation does a message belong to? A closed conversation is a
-/// finished record: nothing is ever appended to it.
-///  - inbound  -> the open conversation, opening a new session if none
-///    (except SPAM contacts, whose messages stay unthreaded);
-///  - agent inbox send -> same; an agent writing to a closed thread starts a
-///    new session, claimed by the sender when the team is known;
-///  - automated sends (template/campaign/flow/bot) -> attach only to an
-///    already-open conversation, otherwise stay unthreaded until the next
-///    session-open sweeps them in.
-async function resolveConversationForMessage({
-  type,
-  messageType,
-  isAutomated,
-  userId,
-  teamID,
-  contact,
-  orgId,
-}: {
-  type: "send" | "receive";
-  messageType: "INBOX" | "TEMPLATE" | "CAMPAIGN" | "AUTOMATED" | "FLOW";
-  isAutomated: boolean;
-  userId?: string;
-  teamID: string | null;
-  contact: any;
-  orgId: string;
-}) {
-  if (type === "receive") {
-    if (contact.waMessageAssignStatus === WaMessageAssignStatus.SPAM) {
-      return { conversation: await getOpenConversation(contact.id), contact };
-    }
-    const { conversation } = await getOrOpenConversation(contact.id, orgId, {
-      trigger: "inbound",
-      // The caller has already flipped closed contacts back to UNASSIGNED, so
-      // the contact status is live here; a fresh session inherits it.
-      status: WaMessageClosedStatus.includes(contact.waMessageAssignStatus)
-        ? undefined
-        : contact.waMessageAssignStatus,
-    });
-    return { conversation, contact };
-  }
-
-  const isAgentInboxSend = messageType === "INBOX" && !isAutomated && Boolean(userId);
-  if (!isAgentInboxSend) {
-    return { conversation: await getOpenConversation(contact.id), contact };
-  }
-
-  const opened = await getOrOpenConversation(contact.id, orgId, {
-    trigger: "agent",
-    userId,
-    status: teamID ? WaMessageAssignStatus.ASSIGNED : WaMessageAssignStatus.UNASSIGNED,
-    assign: teamID ? { userId, teamId: teamID } : undefined,
-  });
-  // Legacy dual-writes for a fresh agent-opened session: mirror the
-  // conversation's status onto the contact and the assignment onto
-  // WaInboxAssign, so the contact-keyed inbox agrees with the session.
-  if (opened.opened && opened.conversation.status !== contact.waMessageAssignStatus) {
-    if (teamID) {
-      await prisma.waInboxAssign.createMany({
-        data: [{ contactId: contact.id, assignedUserId: userId, teamId: teamID }],
-        skipDuplicates: true,
-      });
-    }
-    contact = await updateContactById(
-      contact.id,
-      { waMessageAssignStatus: opened.conversation.status },
-      userId,
-    );
-  }
-  return { conversation: opened.conversation, contact };
-}
-
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
@@ -244,17 +171,16 @@ export async function handleWaMessages(
     // Get or create contact
     let res;
     if (sourcePlatform === PlatformType.INSTAGRAM) {
-      res = await getOrCreateContactByIgsId(from, orgId, contactData);
+      res = await getOrCreateContactByIgsId(from, orgId, contactData, true);
     } else if (sourcePlatform === PlatformType.FACEBOOK) {
       // Facebook uses phone field but stores the Facebook User ID
-      res = await getOrCreateContactByPsid(from, orgId, contactData);
+      res = await getOrCreateContactByPsid(from, orgId, contactData, true);
     } else if (sourcePlatform === PlatformType.WEBCHAT) {
-      res = await getOrCreateContactByPhone(from, orgId, contactData, PlatformType.WEBCHAT);
+      res = await getOrCreateContactByPhone(from, orgId, contactData, PlatformType.WEBCHAT, true);
     } else {
-      res = await getOrCreateContactByPhone(from, orgId, contactData);
+      res = await getOrCreateContactByPhone(from, orgId, contactData, undefined, true);
     }
-    let { contact } = res;
-    let conversation: Conversation | null = null;
+    let { contact, conversation } = res;
     // Prepare parameter data and handle specific cases
     let parameterData = {};
     if (type === "send" && messageBody?.type === "template") {
@@ -276,18 +202,20 @@ export async function handleWaMessages(
         });
       }
     }
-    const teamID = teamId && teamId.trim() !== "" ? teamId : null;
-
     if (!conversation) {
-      ({ conversation, contact } = await resolveConversationForMessage({
-        type,
-        messageType,
-        isAutomated,
-        userId,
-        teamID,
-        contact,
-        orgId,
-      }));
+      if (
+        type === "receive" &&
+        contact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED
+      ) {
+        // An inbound message belongs to a live conversation. If the last one was
+        // closed (or there was never one), this message opens a new conversation
+        // rather than appending to a finished record.
+        conversation =
+          (await getActiveConversationForContact(contact.id)) ??
+          (await openConversationForContact(contact.id, orgId));
+      } else {
+        conversation = await getLastCreatedConversationForContact(contact.id);
+      }
     }
 
     // Add new message to DB
@@ -305,6 +233,8 @@ export async function handleWaMessages(
       messageType,
       logs,
     );
+
+    const teamID = teamId && teamId.trim() !== "" ? teamId : null;
 
     // add to wamessageorgteammap
     if (type === "send") {
@@ -354,8 +284,7 @@ export async function handleWaMessages(
         },
         orgId,
       );
-    // Notify connected clients. `conversation` is additive: legacy clients
-    // read only `contact` and `message`.
+    // Notify connected clients
     await sendViaWstoOrgHandler(
       orgId,
       {
@@ -363,7 +292,6 @@ export async function handleWaMessages(
         inbox: {
           contact,
           message: waMessage,
-          conversation,
         },
       },
       sourcePlatform === PlatformType.WEBCHAT ? "fab" : "main",

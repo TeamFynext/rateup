@@ -72,11 +72,6 @@ export interface InboxCounts {
  * One `groupBy` gives every per-status count; `open`, `closed` and `all` are
  * summed from it rather than issued as extra queries. `blockedCount` still
  * comes from `Contact.blockedOnWhatsApp` -- it is not a conversation status.
- *
- * Counts DISTINCT contacts, not conversation rows: this feeds the legacy
- * contact-keyed inbox tabs, and once history is re-segmented into sessions a
- * contact can own many closed conversations. The conversation-keyed inbox
- * counts rows via its own endpoint instead.
  */
 export async function getInboxCountsFromConversations(orgId: string) {
   const result: {
@@ -85,12 +80,9 @@ export async function getInboxCountsFromConversations(orgId: string) {
     closed_count: number;
   }[] = await prisma.$queryRaw`
   SELECT
-    COUNT(DISTINCT "contactId")::INT                                            AS all_count,
-    COUNT(DISTINCT "contactId") FILTER (WHERE status IN ('UNASSIGNED','ASSIGNED'))::INT AS open_count,
-    -- Tabs are exclusive: a contact with an open session is "open" no matter
-    -- how many closed sessions precede it, so closed = everyone else.
-    (COUNT(DISTINCT "contactId")
-      - COUNT(DISTINCT "contactId") FILTER (WHERE status IN ('UNASSIGNED','ASSIGNED')))::INT AS closed_count
+    COUNT(*)::INT                                                               AS all_count,
+    COUNT(*) FILTER (WHERE status IN ('UNASSIGNED','ASSIGNED'))::INT            AS open_count,
+    COUNT(*) FILTER (WHERE status IN ('CLOSED','SPAM','RESOLVED','UNRESOLVED'))::INT AS closed_count
   FROM "Conversation"
   WHERE "orgId" = ${orgId}
 `;
