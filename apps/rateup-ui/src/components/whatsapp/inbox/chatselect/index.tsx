@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next";
 
 import { useBulkAssignStatusMutation } from "@/backend/campaign/contacts/contacts.query";
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import useContactStore, {
@@ -43,7 +44,7 @@ import ChatselectPanelHeader from "./ChatselectPanelHeader.tsx";
 
 const WaInboxChatSelect = () => {
   const searchParams = useSearch({ strict: false });
-  const tab = (searchParams.tab as string) ?? "New";
+  const tab = (searchParams.tab as string) ?? "open";
   const { filter, setFilter, clearFilter } = useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
   const {
@@ -130,10 +131,13 @@ const WaInboxChatSelect = () => {
   }, []);
   function updateInitialMessagesToStore(contacts) {
     contacts.map((c) => {
+      // Rows are conversation-grained; bucket preview messages by the ticket key
+      // (conversationId ?? id) so two tickets of one contact don't share a bucket.
+      const rowKey = getRowKey(c);
       const messageMap = new Map();
       c.messages.map((m) => {
-        const key = `${c.id}_${m.sourceIdentifier}`;
-        const all = `${c.id}_all`;
+        const key = `${rowKey}_${m.sourceIdentifier}`;
+        const all = `${rowKey}_all`;
         messageMap.set(key, [...(messageMap.get(key) ?? []), m]);
         messageMap.set(all, [...(messageMap.get(all) ?? []), m]);
       });
@@ -153,14 +157,16 @@ const WaInboxChatSelect = () => {
 
     const getNewContacts = (page) => {
       const existingIds = new Set(state.contactsByFilter[filterKey] || []);
+      // Rows are tickets — dedupe on the ticket key, not the contact id, or a
+      // contact's second ticket would be discarded as a duplicate of its first.
       const filteredContacts = page.rows.filter((c) => {
-        const existingContact = state.contactsById.get(c.id);
+        const existingContact = state.contactsById.get(getRowKey(c));
         if (!existingContact) return true;
-        return !existingIds.has(c.id);
+        return !existingIds.has(getRowKey(c));
       });
 
       return filteredContacts.map((c) => {
-        if (state.contactsById.get(c.id)) return c;
+        if (state.contactsById.get(getRowKey(c))) return c;
         return { ...c, updatedAt: new Date().toISOString() };
       });
     };
@@ -283,9 +289,12 @@ const WaInboxChatSelect = () => {
   );
   useEffect(() => {
     if (!tab) return;
+    // `favorite`/`mentions` are sticky in the filter store; clear them for every
+    // tab that is not the favourites/mentions tab, or they leak across tabs.
+    const base = { ...filter, favorite: undefined, mentions: undefined };
     if (tab === "blocked") {
       prepareFilters({
-        ...filter,
+        ...base,
         messageType: "all",
         waMessageAssignStatus: undefined,
         blockedUsers: true,
@@ -295,7 +304,7 @@ const WaInboxChatSelect = () => {
     if (tab === "all") {
       // All conversations — no status restriction
       prepareFilters({
-        ...filter,
+        ...base,
         messageType: "all",
         waMessageAssignStatus: null,
         blockedUsers: false,
@@ -304,7 +313,7 @@ const WaInboxChatSelect = () => {
       const openStatuses = ["ASSIGNED", "UNASSIGNED"];
       const selectedOpenStatuses = filter.status?.filter((s) => openStatuses.includes(s));
       prepareFilters({
-        ...filter,
+        ...base,
         messageType: "usermessages",
         waMessageAssignStatus: undefined,
         status: selectedOpenStatuses?.length ? selectedOpenStatuses : openStatuses,
@@ -313,15 +322,51 @@ const WaInboxChatSelect = () => {
     } else if (tab === "closed") {
       // Closed = Addressed
       prepareFilters({
-        ...filter,
+        ...base,
         messageType: "all",
         waMessageAssignStatus: "Addressed",
         blockedUsers: false,
       });
+    } else if (tab === "new") {
+      // New = unassigned and active within the last 24h (the API's "New" tab).
+      prepareFilters({
+        ...base,
+        messageType: "usermessages",
+        waMessageAssignStatus: "New",
+        blockedUsers: false,
+      });
+    } else if (tab === "mine") {
+      // Assigned to me. The API resolves "mine" against the session user.
+      prepareFilters({
+        ...base,
+        messageType: "usermessages",
+        waMessageAssignStatus: "mine",
+        blockedUsers: false,
+      });
+    } else if (tab === "spam") {
+      // Spam is a status, not a tab, on the API side.
+      prepareFilters({
+        ...base,
+        messageType: "all",
+        waMessageAssignStatus: undefined,
+        status: ["SPAM"],
+        blockedUsers: false,
+      });
+    } else if (tab === "favourites" || tab === "mentions") {
+      // These two are orthogonal booleans, not tab values — they AND with whatever
+      // status filter is active, so the status side stays unrestricted here.
+      prepareFilters({
+        ...base,
+        messageType: "all",
+        waMessageAssignStatus: null,
+        blockedUsers: false,
+        favorite: tab === "favourites" ? true : undefined,
+        mentions: tab === "mentions" ? true : undefined,
+      });
     } else {
       // Fallback for any legacy/custom tab values
       prepareFilters({
-        ...filter,
+        ...base,
         messageType: "usermessages",
         waMessageAssignStatus: tab,
         blockedUsers: false,
@@ -502,7 +547,10 @@ const WaInboxChatSelect = () => {
                 return (
                   <div
                     data-index={virtualRow.index}
-                    key={virtualRow.index}
+                    // Key on the ticket id, not the virtual index: the list
+                    // reorders as messages arrive, and an index key would recycle
+                    // one ticket's row state onto another.
+                    key={contactIds[virtualRow.index] ?? `loader-${virtualRow.index}`}
                     ref={rowVirtualizer.measureElement}
                     style={{
                       position: "absolute",

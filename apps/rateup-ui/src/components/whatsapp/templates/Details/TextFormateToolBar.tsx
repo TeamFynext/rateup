@@ -108,7 +108,7 @@ export const PopoverEmojiPicker = ({
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted cursor-pointer" />
             }
           >
-            {showIcon ?? <Smile className="w-5 h-5" />}
+            {showIcon ?? <Smile className="w-4 h-4" />}
           </PopoverTrigger>
         }
         content={<span>{translations("Insert an emoji")}</span>}

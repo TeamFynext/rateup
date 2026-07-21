@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
   useGetAssignedUserForContact,
@@ -60,8 +61,11 @@ const AssignUser = ({
     { userId: string; teamId: string; contactId: string }[]
   >([]);
   const [debouncedAssignedStaff, setDebouncedAssignedStaff] = useState<any[]>([]);
-  const { updateContactById } = useContactsStore();
+  const { updateContactById, selectedContact } = useContactsStore();
   const isDefault = variant === "default";
+  // Land the optimistic assign note in the open ticket's message bucket. AssignUser
+  // only receives contactId, so derive the conversation row key from the open row.
+  const rowKey = selectedContact?.id === contactId ? getRowKey(selectedContact) : contactId;
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -202,8 +206,8 @@ const AssignUser = ({
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
-            messagesStore.addMessage(`${contactId}_all`, newMessage as any);
-            messagesStore.addMessage(`${contactId}_internal`, newMessage as any);
+            messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
+            messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
             updateContactById(contactId, (contact) => ({
               ...contact,
               waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,

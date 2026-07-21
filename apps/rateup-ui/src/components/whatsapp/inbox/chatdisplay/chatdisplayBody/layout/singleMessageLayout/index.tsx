@@ -3,6 +3,7 @@ import type { EmojiClickData } from "emoji-picker-react";
 import {
   AlertCircle,
   Archive,
+  Bot,
   Check,
   CheckCheck,
   CheckCircle2,
@@ -10,7 +11,6 @@ import {
   CircleAlertIcon,
   Clock,
   Lock,
-  Terminal,
   UserCog,
 } from "lucide-react";
 import React, { useState } from "react";
@@ -19,10 +19,18 @@ import { toast } from "sonner";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Bubble, BubbleContent, BubbleReactions } from "@/components/ui/bubble.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import {
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageFooter,
+  MessageHeader,
+} from "@/components/ui/message.tsx";
 import {
   Tooltip,
   TooltipContent,
@@ -35,6 +43,7 @@ import { useUser } from "@/context/UserContext.tsx";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaReceiveMessageBody } from "@/types/global";
 import { formatDateWithRelativeTime, formatToCustomTime } from "@/utils/dateTime.ts";
+import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 interface Props {
   exchangeProcess: "send" | "receive" | "internal" | "privateNote";
@@ -50,43 +59,11 @@ interface Props {
   };
 }
 
-const TIMESTAMP_CLASS = "text-[10px] font-medium text-slate-400 dark:text-slate-500";
-
-const SEND_BACKGROUND_CLASS: Record<string, string> = {
-  [MessagePlatform.INSTAGRAM]: "bg-pink-50 dark:bg-pink-950/20",
-  [MessagePlatform.FACEBOOK]: "bg-blue-50 dark:bg-blue-950/20",
-  [MessagePlatform.WHATSAPP]: "bg-emerald-50 dark:bg-emerald-950/20",
-};
-
-const SEND_BORDER_CLASS: Record<string, string> = {
-  [MessagePlatform.INSTAGRAM]:
-    "rounded-xl rounded-tr-sm border border-pink-100 dark:border-pink-900/30",
-  [MessagePlatform.FACEBOOK]:
-    "rounded-xl rounded-tr-sm border border-blue-100 dark:border-blue-900/30",
-  [MessagePlatform.WHATSAPP]:
-    "rounded-xl rounded-tr-sm border border-emerald-100 dark:border-emerald-900/30",
-};
-
-const INTERNAL_BACKGROUND_CLASS: Record<string, string> = {
-  [WaMessageAssignStatus.RESOLVED]: "bg-green-50 dark:bg-green-950/20",
-  [WaMessageAssignStatus.UNRESOLVED]: "bg-orange-50 dark:bg-orange-950/20",
-  [WaMessageAssignStatus.CLOSED]: "bg-blue-50 dark:bg-blue-950/20",
-  [WaMessageAssignStatus.SPAM]: "bg-red-50 dark:bg-red-950/20",
-};
-
-const INTERNAL_BORDER_CLASS: Record<string, string> = {
-  [WaMessageAssignStatus.RESOLVED]: "rounded-xl border border-green-200 dark:border-green-900/30",
-  [WaMessageAssignStatus.UNRESOLVED]:
-    "rounded-xl border border-orange-200 dark:border-orange-900/30",
-  [WaMessageAssignStatus.CLOSED]: "rounded-xl border border-blue-200 dark:border-blue-900/30",
-  [WaMessageAssignStatus.SPAM]: "rounded-xl border border-red-200 dark:border-red-900/30",
-};
-
 const MessageStats = ({ status }: Readonly<{ status: WaGetMessagesBody["stats"] }>) => {
   if (status?.failed?.length) return null;
 
   return (
-    <div className="flex min-w-36 flex-col gap-1 text-xs text-slate-600 dark:text-slate-300">
+    <div className="flex min-w-36 flex-col gap-1 text-xs text-muted-foreground">
       <p>Read: {status?.read ? formatDateWithRelativeTime(status?.read) : "..."}</p>
       <p>Delivered: {status?.delivered ? formatDateWithRelativeTime(status?.delivered) : "..."}</p>
       <p>Sent: {status?.sent ? formatDateWithRelativeTime(status?.sent) : "..."}</p>
@@ -102,191 +79,65 @@ function emojiReactionMap(emojiUnified?: string) {
   return null;
 }
 
+/**
+ * Delivery ticks. The footer already carries `text-muted-foreground`, so only
+ * the states that need to stand out (read / failed) name a colour.
+ */
 function getLatestStatusIcon(statusObj?: { [key: string]: string }) {
   if (statusObj?.read) {
-    return <CheckCheck className="h-3.5 w-3.5 text-primary" />;
+    return <CheckCheck className="size-3.5 text-primary" />;
   }
 
   if (statusObj?.delivered) {
-    return <CheckCheck className="h-3.5 w-3.5 text-slate-400" />;
+    return <CheckCheck className="size-3.5" />;
   }
 
   if (statusObj?.failed) {
-    return <CircleAlertIcon className="h-3.5 w-3.5 text-red-500" />;
+    return <CircleAlertIcon className="size-3.5 text-destructive" />;
   }
 
   if (statusObj?.sent) {
-    return <Check className="h-3.5 w-3.5 text-slate-400" />;
+    return <Check className="size-3.5" />;
   }
 
-  return <Clock className="h-3.5 w-3.5 text-slate-400" />;
+  return <Clock className="size-3.5" />;
 }
 
-function getBubbleBackgroundClass(
-  exchangeProcess: Props["exchangeProcess"],
-  sourcePlatform: MessagePlatform | undefined,
-  assignStatus: string | undefined,
-  isAutomatedSend: boolean,
-) {
-  if (exchangeProcess === "send") {
-    return isAutomatedSend
-      ? "bg-primary/5 dark:bg-primary/10"
-      : (sourcePlatform && SEND_BACKGROUND_CLASS[sourcePlatform]) ||
-          "bg-cyan-50 dark:bg-cyan-950/20";
-  }
-
-  if (exchangeProcess === "internal") {
-    return (
-      (assignStatus && INTERNAL_BACKGROUND_CLASS[assignStatus]) ||
-      "bg-indigo-50 dark:bg-indigo-950/20"
-    );
-  }
-
-  if (exchangeProcess === "privateNote") {
-    return "bg-amber-50 dark:bg-amber-950/20";
-  }
-
-  return "bg-white dark:bg-slate-900";
-}
-
-function getBubbleBorderClass(
-  exchangeProcess: Props["exchangeProcess"],
-  sourcePlatform: MessagePlatform | undefined,
-  assignStatus: string | undefined,
-  isAutomatedSend: boolean,
-) {
-  if (exchangeProcess === "send") {
-    return isAutomatedSend
-      ? "rounded-xl rounded-tr-sm border border-primary/10 dark:border-primary/20"
-      : (sourcePlatform && SEND_BORDER_CLASS[sourcePlatform]) ||
-          "rounded-xl rounded-tr-sm border border-cyan-100 dark:border-cyan-900/30";
-  }
-
-  if (exchangeProcess === "internal") {
-    return (
-      (assignStatus && INTERNAL_BORDER_CLASS[assignStatus]) ||
-      "rounded-xl border border-indigo-200 dark:border-indigo-900/30"
-    );
-  }
-
-  if (exchangeProcess === "privateNote") {
-    return "rounded-xl rounded-tr-sm border border-amber-200 dark:border-amber-900/30";
-  }
-
-  return "rounded-xl rounded-tl-sm border border-slate-100 dark:border-slate-800";
-}
-
-function getRootAlignment(exchangeProcess: Props["exchangeProcess"]) {
-  if (exchangeProcess === "internal") {
-    return "justify-center";
-  }
-
-  if (exchangeProcess === "send" || exchangeProcess === "privateNote") {
-    return "justify-end";
-  }
-
-  return "justify-start";
-}
-
-function getMetaAlignment(exchangeProcess: Props["exchangeProcess"]) {
-  if (exchangeProcess === "send" || exchangeProcess === "privateNote") {
-    return "justify-end";
-  }
-
-  if (exchangeProcess === "internal") {
-    return "justify-center";
-  }
-
-  return "justify-start";
-}
-
-function renderInternalStatus(assignStatus?: string) {
+/**
+ * System/status messages (`exchangeProcess === "internal"`) keep the same
+ * assign-status vocabulary they had before — only the chrome changed.
+ */
+function getInternalStatus(assignStatus?: string): { icon: React.ReactNode; label: string } | null {
   if (assignStatus === WaMessageAssignStatus.ASSIGNED) {
-    return (
-      <div className="flex items-center gap-1 text-indigo-600">
-        <UserCog className="h-4 w-4" />
-        <span>Assigned</span>
-      </div>
-    );
+    return { icon: <UserCog />, label: "Assigned" };
   }
 
   if (assignStatus === "REASSIGNED") {
-    return (
-      <div className="flex items-center gap-1 text-indigo-600">
-        <UserCog className="h-4 w-4" />
-        <span>Reassigned</span>
-      </div>
-    );
+    return { icon: <UserCog />, label: "Reassigned" };
   }
 
   if (assignStatus === WaMessageAssignStatus.RESOLVED) {
-    return (
-      <div className="flex items-center gap-1 text-green-600">
-        <CheckCircle2 className="h-4 w-4" />
-        <span>Resolved</span>
-      </div>
-    );
+    return { icon: <CheckCircle2 />, label: "Resolved" };
   }
 
   if (assignStatus === WaMessageAssignStatus.CLOSED) {
-    return (
-      <div className="flex items-center gap-1 text-blue-600">
-        <Archive className="h-4 w-4" />
-        <span>Closed</span>
-      </div>
-    );
+    return { icon: <Archive />, label: "Closed" };
   }
 
   if (assignStatus === WaMessageAssignStatus.UNRESOLVED) {
-    return (
-      <div className="flex items-center gap-1 text-orange-600">
-        <Circle className="h-4 w-4" />
-        <span>Unresolved</span>
-      </div>
-    );
+    return { icon: <Circle />, label: "Unresolved" };
   }
 
   if (assignStatus === WaMessageAssignStatus.SPAM) {
-    return (
-      <div className="flex items-center gap-1 text-red-600">
-        <AlertCircle className="h-4 w-4" />
-        <span>Spam</span>
-      </div>
-    );
+    return { icon: <AlertCircle />, label: "Spam" };
   }
 
   if (assignStatus === WaMessageAssignStatus.UNASSIGNED) {
-    return (
-      <div className="flex items-center gap-1 text-indigo-600">
-        <UserCog className="h-4 w-4" />
-        <span>Unassigned</span>
-      </div>
-    );
+    return { icon: <UserCog />, label: "Unassigned" };
   }
 
   return null;
 }
-
-export const getColorForUser = (userName = "") => {
-  const colors = [
-    "#1E90FF", // Blue
-    "#32CD32", // Green
-    "#FF4500", // Red
-    "#8A2BE2", // Purple
-    "#20B2AA", // Teal
-    "#FFA500", // Orange
-    "#00CED1", // Cyan
-    "#FF69B4", // Pink
-    "#FFD700", // Gold
-    "#4B0082", // Indigo
-  ];
-  let hash = 0;
-  for (let i = 0; i < userName.length; i++) {
-    hash = (userName.codePointAt(i) ?? 0) + ((hash << 5) - hash);
-  }
-  const colorIndex = Math.abs(hash) % colors.length;
-  return colors[colorIndex];
-};
 
 export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   const { exchangeProcess, messageObject, reaction } = props;
@@ -296,28 +147,11 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
 
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const messageContentRef = React.useRef<HTMLDivElement | null>(null);
-  const platform = selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const platform = getContactPlatform(selectedContact);
   const isAutomatedSend = exchangeProcess === "send" && !messageObject?.sender;
   const shouldShowSenderAvatar = exchangeProcess === "send" && Boolean(messageObject?.sender);
   const senderName = messageObject?.sender?.name ?? "Automation";
-  const senderColor = messageObject?.sender
-    ? getColorForUser(messageObject.sender.name)
-    : "#3B82F6";
   const assignStatus = messageObject?.messageBody?.internal?.assignStatus;
-  const rootAlignment = getRootAlignment(exchangeProcess);
-  const metaAlignment = getMetaAlignment(exchangeProcess);
-  const bubbleBackgroundClass = getBubbleBackgroundClass(
-    exchangeProcess,
-    messageObject.sourcePlatform,
-    assignStatus,
-    isAutomatedSend,
-  );
-  const bubbleBorderClass = getBubbleBorderClass(
-    exchangeProcess,
-    messageObject.sourcePlatform,
-    assignStatus,
-    isAutomatedSend,
-  );
   const sendnewWaMessage = useSendNewWaMessage(
     selectedContact?.id,
     currentUser?.teamId,
@@ -369,154 +203,179 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   }
 
   const timestamp = formatToCustomTime(messageObject?.waCreatedAt);
-  const timestampNode = <span className={TIMESTAMP_CLASS}>{timestamp}</span>;
+  const timestampNode = <span>{timestamp}</span>;
 
-  return (
-    <div key={messageObject.id} className={`group flex w-full items-end gap-2 ${rootAlignment}`}>
-      {exchangeProcess === "send" && (
-        <div className="pointer-events-none mt-auto opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground mt-auto"
-                    onClick={handleCopy}
-                  />
-                }
-              >
-                {copied ? <Check className="h-4 w-4 text-teal-500" /> : <IconCopy size={16} />}
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>{copied ? "Copied" : "Copy"}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      )}
-      <div className="flex max-w-[min(42rem,82vw)] items-end gap-2">
-        {exchangeProcess === "receive" && (
-          <div className="mb-5">
-            <CreativeAvatar
-              name={
-                selectedContact?.name ||
-                selectedContact?.whatsappUserName ||
-                selectedContact?.phone ||
-                selectedContact?.igsId ||
-                selectedContact?.psid
-              }
-              size="xs"
-              src={selectedContact?.profilePic}
-              showRing={true}
-              variant="light-blue"
-            />
-          </div>
-        )}
-        <div className="flex items-end gap-2">
-          <div className="min-w-0">
-            {exchangeProcess === "privateNote" && (
-              <span className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-600">
-                <Lock className="w-3 h-3" /> Private Note
-              </span>
-            )}
-            <div
-              className={`relative p-3 shadow-sm w-fit ${bubbleBackgroundClass} ${bubbleBorderClass}`}
-            >
-              {exchangeProcess === "send" &&
-                (isAutomatedSend ? (
-                  <div className="mb-3 flex items-center gap-2">
-                    <span className="rounded-xs bg-primary px-1.5 py-1 text-white shadow-sm">
-                      <Terminal className="h-3 w-3" />
-                    </span>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
-                      Automation
-                    </span>
-                  </div>
-                ) : (
-                  <span style={{ color: senderColor }} className="mb-1 block text-xs font-semibold">
-                    {senderName}
-                  </span>
-                ))}
-              {exchangeProcess === "privateNote" && (
-                <span
-                  style={{ color: senderColor }}
-                  className="mb-1 flex items-center gap-1 text-xs font-semibold"
-                >
-                  {senderName}
-                </span>
-              )}
+  /** Timestamp with the delivery-stats tooltip, unless the send failed. */
+  const timestampWithStats = messageObject?.stats?.failed ? (
+    timestampNode
+  ) : (
+    <CustomTooltip
+      trigger={timestampNode}
+      content={<MessageStats status={messageObject?.stats} />}
+      side="bottom"
+    />
+  );
 
-              {exchangeProcess === "internal" && (
-                <span className="mb-1 block text-sm">{renderInternalStatus(assignStatus)}</span>
-              )}
-              <div
-                ref={messageContentRef}
-                className="min-w-0 text-sm leading-relaxed text-slate-800 dark:text-slate-200"
-              >
-                {props?.children}
-              </div>
-              <div
-                className={`absolute ${exchangeProcess === "send" ? "-bottom-1.5 right-0" : "-bottom-3 right-2"}`}
-              >
-                <ReactionPopOver reaction={reaction} />
-              </div>
-            </div>
-            <div className={`mt-1 flex items-center gap-1.5 px-2 ${metaAlignment}`}>
-              {!messageObject?.stats?.failed &&
-              (exchangeProcess === "send" || exchangeProcess === "privateNote") ? (
-                <CustomTooltip
-                  trigger={timestampNode}
-                  content={<MessageStats status={messageObject?.stats} />}
-                  side="bottom"
-                />
-              ) : (
-                timestampNode
-              )}
-              {exchangeProcess === "send" && messageObject.stats && (
-                <div>{getLatestStatusIcon(messageObject?.stats)}</div>
-              )}
-            </div>
-          </div>
-          {shouldShowSenderAvatar && (
-            <div className="mb-5">
-              <CreativeAvatar
-                name={messageObject?.sender?.name}
-                size="xs"
-                src={messageObject?.sender?.profilePhoto}
-                showRing={true}
-              />
-            </div>
+  const copyAction = (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger
+          render={<Button variant="ghost" size="icon" className="size-8" onClick={handleCopy} />}
+        >
+          {copied ? <Check className="size-4" /> : <IconCopy size={16} />}
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <p>{copied ? "Copied" : "Copy"}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+
+  /* ---------------------------------------------------------------- system */
+  // Assign / close / spam events: a single centered badge rather than a full-width
+  // separator, so status changes read as inline events in the timeline.
+  if (exchangeProcess === "internal") {
+    const status = getInternalStatus(assignStatus);
+    return (
+      <Message align="center">
+        <MessageContent className="w-auto">
+          <Badge
+            variant="system"
+            // Layout only: the badge is normally a fixed-height chip, but this one
+            // wraps a rendered message, so it needs to grow.
+            className="h-auto max-w-full gap-1.5 rounded-full px-3 py-1"
+          >
+            {status?.icon}
+            <span className="font-semibold">{status?.label}</span>
+            <span ref={messageContentRef} className="min-w-0 truncate empty:hidden">
+              {props?.children}
+            </span>
+            <span className="opacity-70">{timestamp}</span>
+          </Badge>
+        </MessageContent>
+      </Message>
+    );
+  }
+
+  /* --------------------------------------------------------- internal note */
+  // Centered and amber via the `note` Bubble variant — internal notes are not part
+  // of the customer conversation, and the colour is what signals that at a glance.
+  if (exchangeProcess === "privateNote") {
+    return (
+      <Message align="center">
+        <MessageContent className="max-w-[78%]">
+          <MessageHeader className="gap-1.5 text-[10px] font-extrabold tracking-wider uppercase">
+            <Lock className="size-3 shrink-0" />
+            <span className="truncate">
+              Internal note · {senderName} · {timestamp}
+            </span>
+          </MessageHeader>
+          <Bubble variant="note" className="max-w-full">
+            <BubbleContent ref={messageContentRef}>{props?.children}</BubbleContent>
+          </Bubble>
+          {messageObject?.stats && !messageObject?.stats?.failed && (
+            <MessageFooter>{timestampWithStats}</MessageFooter>
           )}
-        </div>
-      </div>
+        </MessageContent>
+      </Message>
+    );
+  }
 
-      {exchangeProcess === "receive" && (
-        <div className="pointer-events-none flex items-center gap-1 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
-          <PopoverEmojiPicker onEmojiClick={sendReaction} />
-          <TooltipProvider>
+  /* ------------------------------------------------------- bot / automation */
+  // Outbound like an agent reply, so it sits on the send side. It keeps the
+  // `muted` bubble rather than the agent's `default` fill, so an automated reply
+  // is still distinguishable from one a person wrote.
+  if (isAutomatedSend) {
+    return (
+      <Message align="end">
+        <MessageContent>
+          <MessageHeader>
+            <Bot className="size-3 shrink-0" />
+            Automation
+          </MessageHeader>
+          <Bubble variant="muted" align="end">
+            <BubbleContent ref={messageContentRef}>{props?.children}</BubbleContent>
+          </Bubble>
+          <MessageFooter>
+            {copyAction}
+            {timestampNode}
+            {messageObject.stats && getLatestStatusIcon(messageObject?.stats)}
+          </MessageFooter>
+        </MessageContent>
+      </Message>
+    );
+  }
+
+  /* --------------------------------------------------------------- outgoing */
+  if (exchangeProcess === "send") {
+    return (
+      <Message align="end">
+        {shouldShowSenderAvatar && (
+          <MessageAvatar>
+            <CreativeAvatar
+              name={messageObject?.sender?.name}
+              size="xs"
+              src={messageObject?.sender?.profilePhoto}
+              showRing={true}
+            />
+          </MessageAvatar>
+        )}
+        <MessageContent>
+          <MessageHeader>{senderName}</MessageHeader>
+          <Bubble variant="default" align="end">
+            <BubbleContent ref={messageContentRef}>{props?.children}</BubbleContent>
+          </Bubble>
+          <MessageFooter>
+            {copyAction}
+            {timestampWithStats}
+            {messageObject.stats && getLatestStatusIcon(messageObject?.stats)}
+          </MessageFooter>
+        </MessageContent>
+      </Message>
+    );
+  }
+
+  /* --------------------------------------------------------------- incoming */
+  return (
+    <Message align="start">
+      <MessageAvatar>
+        <CreativeAvatar
+          name={
+            selectedContact?.name ||
+            selectedContact?.whatsappUserName ||
+            selectedContact?.phone ||
+            selectedContact?.igsId ||
+            selectedContact?.psid
+          }
+          size="xs"
+          src={selectedContact?.profilePic}
+          showRing={true}
+          variant="light-blue"
+        />
+      </MessageAvatar>
+      <MessageContent>
+        <Bubble variant="outline" align="start">
+          <BubbleContent ref={messageContentRef}>{props?.children}</BubbleContent>
+          <BubbleReactions hidden={!reaction?.emoji}>
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    onClick={handleCopy}
-                  />
+                  <Button variant="ghost" size="icon-xs">
+                    {reaction?.emoji || reactionEmojiMap(reaction?.reaction)}
+                  </Button>
                 }
-              >
-                {copied ? <Check className="h-4 w-4 text-teal-500" /> : <IconCopy size={16} />}
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>{copied ? "Copied" : "Copy"}</p>
-              </TooltipContent>
+              />
+              <TooltipContent>Reacted By {reaction?.from}</TooltipContent>
             </Tooltip>
-          </TooltipProvider>
-        </div>
-      )}
-    </div>
+          </BubbleReactions>
+        </Bubble>
+        <MessageFooter>
+          {timestampNode}
+          <PopoverEmojiPicker onEmojiClick={sendReaction} />
+          {copyAction}
+        </MessageFooter>
+      </MessageContent>
+    </Message>
   );
 }
 
@@ -527,28 +386,3 @@ export function reactionEmojiMap(reaction) {
 
   return "";
 }
-
-const ReactionPopOver = ({ reaction }: Readonly<{ reaction?: Props["reaction"] }>) => {
-  if (!reaction) return null;
-  return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <button
-            type="button"
-            className="cursor-pointer rounded-full border border-slate-200 bg-white px-2 py-0.5 text-center text-xs shadow-sm dark:border-slate-800 dark:bg-slate-900"
-          />
-        }
-      >
-        {reaction?.emoji || reactionEmojiMap(reaction?.reaction)}
-      </PopoverTrigger>
-      <PopoverContent className="flex items-center justify-between gap-3 rounded-xl border-slate-200 bg-white/95 shadow-lg dark:border-slate-800 dark:bg-slate-950/95">
-        <div className="flex gap-1 items-center">
-          <CreativeAvatar name={reaction.from} size="xs" />
-          <p className="text-sm font-medium">{reaction.from}</p>
-        </div>
-        <p className="text-xl">{reaction?.emoji || reactionEmojiMap(reaction?.reaction)}</p>
-      </PopoverContent>
-    </Popover>
-  );
-};

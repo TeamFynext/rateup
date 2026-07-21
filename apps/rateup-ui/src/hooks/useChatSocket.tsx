@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useChatContactCountStore,
   useContactsStore,
@@ -106,22 +107,28 @@ export const useChatSocket = () => {
               }
             }
 
+            // Bucket the live message by its ticket (conversationId), falling back
+            // to the contact row key for legacy/un-backfilled payloads.
+            const messageRowKey = message.conversationId ?? getRowKey(incomingContact);
             for (const key of [
-              `${incomingContact?.id}_all`,
-              `${incomingContact?.id}_${message.sourceIdentifier}`,
+              `${messageRowKey}_all`,
+              `${messageRowKey}_${message.sourceIdentifier}`,
             ]) {
               messageStore.mergeMessages(key, [message]);
             }
             break;
           case "message_status_update":
             if (selectedContact && selectedContact?.id === data?.message_status_update?.contactId) {
+              // Status receipts target the open thread — key by its ticket bucket.
+              const statusRowKey =
+                data?.message_status_update?.conversationId ?? getRowKey(selectedContact);
               messageStore.updateMessageByMessageId(
-                `${selectedContact?.id}_${data.message_status_update.sourceIdentifier}`,
+                `${statusRowKey}_${data.message_status_update.sourceIdentifier}`,
                 data?.message_status_update.messageId,
                 { stats: data?.message_status_update?.stats },
               );
               messageStore.updateMessageByMessageId(
-                `${selectedContact?.id}_all`,
+                `${statusRowKey}_all`,
                 data?.message_status_update.messageId,
                 { stats: data?.message_status_update?.stats },
               );

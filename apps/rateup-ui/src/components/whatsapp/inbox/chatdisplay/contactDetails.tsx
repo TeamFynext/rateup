@@ -52,8 +52,8 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
-import { MessagePlatform } from "@/types/enums.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
+import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 interface WaInboxContactDetailsProps {
   contact: any;
@@ -96,7 +96,7 @@ export default function WaInboxContactDetails({
   const { updateContactById, setSelectedContact } = useContactsStore();
   const deleteContactMutation = useContactDeleteMutation(groupId);
   const [editable, setEditable] = useState(false);
-  const platform = contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const platform = getContactPlatform(contact);
   // Tickets are a free feature — always available.
   const hasTicketFeature = true;
   const [openedCreateTicket, setOpenedCreateTicket] = useState(false);

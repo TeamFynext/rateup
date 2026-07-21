@@ -321,12 +321,11 @@ function NavLink({
           )}
         >
           {item.icon && <item.icon />}
-          {/* TODO:converasation */}
-          {/* {item.count != null && item.count > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 hidden group-data-[collapsible=icon]:flex items-center justify-center min-w-[14px] h-[14px] px-0.5 rounded-full bg-primary text-[8px] font-bold text-white leading-none border border-background">
+          {item.count != null && item.count > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 hidden h-3.5 min-w-3.5 items-center justify-center rounded-full border border-background bg-primary px-0.5 text-[8px] font-bold leading-none text-white group-data-[collapsible=icon]:flex">
               {item.count}
             </span>
-          )} */}
+          )}
         </span>
         <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
           <div
@@ -343,12 +342,18 @@ function NavLink({
             <div className="mt-px text-[11px] text-slate-400 dark:text-slate-500">{item.hint}</div>
           ) : null}
         </div>
-        {/* TODO:converasation */}
-        {/* {item.count != null && (
-          <span className="rounded-full px-2 py-0.5 text-[11px] font-bold bg-slate-50 dark:bg-white/10 group-data-[collapsible=icon]:hidden">
+        {item.count != null && (
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-[11px] font-bold group-data-[collapsible=icon]:hidden",
+              isActive
+                ? "bg-primary text-primary-foreground"
+                : "bg-slate-50 text-muted-foreground dark:bg-white/10",
+            )}
+          >
             {item.count}
           </span>
-        )} */}
+        )}
       </Link>
     );
 
@@ -358,8 +363,7 @@ function NavLink({
           <TooltipTrigger render={linkElement} />
           <TooltipContent side="right" align="center" hidden={isMobile}>
             {item.title}
-            {/* TODO:converasation */}
-            {/* {item.count != null ? `(${item.count})` : ""} */}
+            {item.count != null ? ` (${item.count})` : ""}
           </TooltipContent>
         </Tooltip>
       );

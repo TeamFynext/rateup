@@ -28,7 +28,7 @@ This file provides essential guidance for AI coding agents working in this codeb
 - **Routing Root:** Route tree lives under `src/routes/` (not `routes/`).
 - **Router APIs:** For TanStack Router links, use `to` (not `href`) on `Link`.
 - **Component Library:** Prefer existing local patterns in the touched area; for new UI, prefer shadcn/ui composition where practical.
-- **Styling:** Use Tailwind utility classes and project tokens; avoid introducing one-off raw color values.
+- **Styling:** Use Tailwind utility classes with **shadcn semantic tokens** for color (see "Styling & Design Tokens" below). Do not introduce scoped design-token CSS files or per-feature CSS Modules for colors/layout.
 - **React/TypeScript:** Prefer immutable props (`Readonly<Props>` or readonly fields) and avoid syncing query data to local state through effect-based copies.
 - **File Structure:**
   - `src/routes/` — Route tree and route modules
@@ -51,6 +51,31 @@ This file provides essential guidance for AI coding agents working in this codeb
 - Do not perform broad Mantine-to-shadcn rewrites unless explicitly requested.
 - shadcn/ui primitives in `src/components/ui/` are built on `@base-ui/react` (not Radix). There is no direct `@radix-ui/*` dependency in `package.json`; don't add one or reintroduce `cmdk`/`Command`-based patterns.
 - For select-style fields prefer `Select` (`src/components/ui/select.tsx`) for single choice and `MultiSelect` (`src/components/ui/multi-select.tsx`, a thin wrapper over `Combobox` in `src/components/ui/combobox.tsx`) for multi choice. Always pass `items` on `<Select>`/`<Combobox>` roots so the trigger renders the correct label.
+
+## Styling & Design Tokens
+
+Color and styling go through **Tailwind utilities + shadcn semantic tokens**, never a bespoke
+scoped-token CSS system. (The inbox's old `inbox-v2.css` `.inbox-v2` token scope and its
+per-feature `*.module.css` files were deliberately removed and migrated to this model — do not
+reintroduce them.)
+
+- **Do not create scoped design-token CSS** (e.g. a `.some-feature { --fg-1: … }` block) or
+  feature `*.module.css` files for colors/layout. Style with Tailwind classes.
+- **Do not put colors in inline `style={{ color: "var(--…)" }}`.** Express color and spacing as
+  Tailwind classes. Inline `style` is only for genuinely dynamic values (data-driven hex like a
+  user-chosen label color, or a computed dimension).
+- **Use shadcn semantic tokens** so light/dark both work automatically:
+  - text: `text-foreground` (primary), `text-muted-foreground` (secondary/tertiary)
+  - surfaces: `bg-background`, `bg-muted`, `bg-card`
+  - brand: `primary` / `text-primary` / `bg-primary/10` (the app `--primary` ≈ the RateUp brand blue)
+  - borders: `border-border`
+- **Accents use the Tailwind palette with explicit `dark:` variants**, not custom tokens: warm/star →
+  `amber-*` (e.g. `text-amber-700 dark:text-amber-500`, `bg-amber-50 dark:bg-amber-950/40`);
+  success → `green-600` / `bg-green-600/10`. Only truly brand-specific one-offs (channel colors) use
+  literal hex, and only when consumed as a dynamic `style` value.
+- **Prefer shadcn components over custom styled markup:** callouts/banners → `Alert`, status/count
+  chips → `Badge`, actions → `Button`. Extend components with `cva` variants, never with `className`
+  color/typography overrides.
 
 ## Internationalization
 
