@@ -19,6 +19,7 @@ import { log } from "../../../../utils/logger.js";
 import { callMetaApi } from "../../wa_axios.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
 import axios from "axios";
+import type { InboxStatus } from "../../../../types/enums.js";
 import { WaAssignedChatPermission, WaMessageAssignStatus } from "../../../../types/enums.js";
 import { updateContactById } from "../../../contact/contact.service.js";
 import { wait } from "../../whatsappSurvey/wasurvey.controller.js";
@@ -388,25 +389,44 @@ export async function filterChats(
         )`;
       };
 
+      /**
+       * Set when every status this request asks for is a live one (Open, New,
+       * Mine…). A conversation carrying a close stamp is a finished ticket
+       * whatever its `status` column says, so those tabs also require the stamp
+       * to be absent — without it a row left inconsistent by some other writer
+       * shows up in Open right next to the successor ticket that replaced it.
+       */
+      let liveStatusesOnly = false;
+
       if (bodyFilterProps?.waMessageAssignStatus && isNotSent) {
         if (isNew) {
+          liveStatusesOnly = true;
           params.push(WaMessageAssignStatus.UNASSIGNED);
-          filters.push(`COALESCE(conv."lastMessageAt", conv."createdAt") > NOW() - INTERVAL '24 hours' AND conv."status"::TEXT = $${paramIndex++}::TEXT`);
+          filters.push(
+            `COALESCE(conv."lastMessageAt", conv."createdAt") > NOW() - INTERVAL '24 hours' AND conv."status"::TEXT = $${paramIndex++}::TEXT`,
+          );
         } else {
           // FIX: Handle case mismatch (e.g. "Addressed" vs "ADDRESSED")
           const rawStatus = bodyFilterProps.waMessageAssignStatus;
           const assignedStatus = WaMessageAssignStatusTab[rawStatus] || rawStatus.toUpperCase();
 
           if (assignedStatus === "ADDRESSED") {
-            if (bodyFilterProps.status?.length) {
-              params.push(bodyFilterProps.status);
-            } else {
-              params.push(WaMessageClosedStatus);
-            }
-            filters.push(`conv."status"::TEXT = ANY($${paramIndex++}::TEXT[])`);
+            // A subset was picked in the filter panel (only SPAM, say), so match it
+            // exactly; the unfiltered tab is "every closed ticket", which includes
+            // anything carrying a close stamp — the mirror of the live-status rule
+            // below, so a stamped row can never fall out of both tabs.
+            const statusSubsetPicked = Boolean(bodyFilterProps.status?.length);
+            params.push(statusSubsetPicked ? bodyFilterProps.status : WaMessageClosedStatus);
+            const statusParam = paramIndex++;
+            filters.push(
+              statusSubsetPicked
+                ? `conv."status"::TEXT = ANY($${statusParam}::TEXT[])`
+                : `(conv."status"::TEXT = ANY($${statusParam}::TEXT[]) OR conv."closedAt" IS NOT NULL)`,
+            );
           } else {
             params.push(assignedStatus);
             filters.push(`conv."status"::TEXT = $${paramIndex++}::TEXT`);
+            liveStatusesOnly = !isTerminalInboxStatus(assignedStatus as InboxStatus);
           }
 
           if (isAssignedToMe) {
@@ -430,12 +450,16 @@ export async function filterChats(
         if (bodyFilterProps.status?.length) {
           params.push(bodyFilterProps.status);
           filters.push(`(conv."status"::TEXT = ANY($${paramIndex++}::TEXT[]))`);
+          liveStatusesOnly = bodyFilterProps.status.every(
+            (s) => !isTerminalInboxStatus(s as InboxStatus),
+          );
         }
       }
 
       // --- CLEANED ASSIGNMENT FILTER LOGIC ---
 
-      const wantsAssignedOnly = !bodyFilterProps?.waMessageAssignStatus && bodyFilterProps?.status?.includes("ASSIGNED");
+      const wantsAssignedOnly =
+        !bodyFilterProps?.waMessageAssignStatus && bodyFilterProps?.status?.includes("ASSIGNED");
       const hasTeamFilter = Boolean(bodyFilterProps?.assignedTeams?.length);
       const hasUserFilter = Boolean(bodyFilterProps?.assignedUserIds?.length && !isAssignedToMe);
       const isStrict = hasTeamFilter || hasUserFilter;
@@ -462,18 +486,21 @@ export async function filterChats(
 
         // Build user conditions
         if (hasUserFilter) {
-          if (waAssignedChatPermission === WaAssignedChatPermission.Admins && role === Role.MEMBER) {
-             if (bodyFilterProps.assignedUserIds.includes(userId)) {
-                params.push(userId);
-                const userParam = paramIndex++;
-                convConditions.push(`cam."userId" = $${userParam}::uuid`);
-                contactConditions.push(`winb."assignedUserId" = $${userParam}::uuid`);
-             }
+          if (
+            waAssignedChatPermission === WaAssignedChatPermission.Admins &&
+            role === Role.MEMBER
+          ) {
+            if (bodyFilterProps.assignedUserIds.includes(userId)) {
+              params.push(userId);
+              const userParam = paramIndex++;
+              convConditions.push(`cam."userId" = $${userParam}::uuid`);
+              contactConditions.push(`winb."assignedUserId" = $${userParam}::uuid`);
+            }
           } else {
-             params.push(bodyFilterProps.assignedUserIds);
-             const userParam = paramIndex++;
-             convConditions.push(`cam."userId" = ANY($${userParam}::uuid[])`);
-             contactConditions.push(`winb."assignedUserId" = ANY($${userParam}::uuid[])`);
+            params.push(bodyFilterProps.assignedUserIds);
+            const userParam = paramIndex++;
+            convConditions.push(`cam."userId" = ANY($${userParam}::uuid[])`);
+            contactConditions.push(`winb."assignedUserId" = ANY($${userParam}::uuid[])`);
           }
         }
 
@@ -507,6 +534,10 @@ export async function filterChats(
         )`);
       }
 
+      if (liveStatusesOnly) {
+        filters.push(`conv."closedAt" IS NULL`);
+      }
+
       filters.push(`c."blockedOnWhatsApp" = ${bodyFilterProps?.blockedUsers ? "TRUE" : "FALSE"}`);
     }
 
@@ -530,6 +561,12 @@ export async function filterChats(
           conv."description"       AS "ticketDescription",
           conv."resolutionResult"  AS "resolutionResult",
           conv."status"            AS "conversationStatus",
+          -- Row freshness for the client's cache: it keeps rows in IndexedDB and
+          -- only replaces one when the response is newer, so a row without this
+          -- was cached forever and a ticket closed since first load kept its old
+          -- status client-side. Contact has no updatedAt column; the ticket's own
+          -- is what changes when it moves.
+          COALESCE(conv."updatedAt", conv."createdAt") AS "updatedAt",
           conv."createdAt"         AS "ticketCreatedAt",
           conv."closedAt"          AS "ticketClosedAt",
           conv."reopenCount"       AS "ticketReopenCount",
@@ -1131,6 +1168,7 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
     INNER JOIN "Contact" c ON c.id = conv."contactId"
     WHERE c."orgId" = ${orgId}::uuid
       AND NOT c."blockedOnWhatsApp"
+      AND conv."closedAt" IS NULL
       AND COALESCE(conv."lastMessageAt", conv."createdAt") > NOW() - INTERVAL '24 hours'
   ), orgDetails AS (
     SELECT o."waAssignedChatPermission" AS permission FROM "Org" o WHERE o."id" = ${orgId}::uuid
@@ -1173,6 +1211,43 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
   const favouriteCount = await prisma.conversation.count({
     where: { isFavorite: true, contact: { orgId, blockedOnWhatsApp: false } },
   });
+
+  /**
+   * "Mine" = the Assigned tickets this user is on, matching the list's `mine`
+   * filter: status ASSIGNED plus an assignment row for the user. Assignment is
+   * conversation-grained in v2 but was contact-grained before it, so both maps
+   * are checked — see `filterChats`.
+   */
+  const mineCount: { count: number }[] = await prisma.$queryRaw`
+    SELECT COUNT(*)::INTEGER AS count
+    FROM "Conversation" conv
+    INNER JOIN "Contact" c ON c.id = conv."contactId"
+    WHERE conv."orgId" = ${orgId}::uuid
+      AND NOT c."blockedOnWhatsApp"
+      AND conv."closedAt" IS NULL
+      AND conv."status"::TEXT = ${WaMessageAssignStatus.ASSIGNED}
+      AND (
+        EXISTS (
+          SELECT 1 FROM "ConversationAssignedUserTeamMap" cam
+          WHERE cam."conversationId" = conv.id
+          AND cam."lastRemovedAt" IS NULL
+          AND cam."userId" = ${userId}::uuid
+        )
+        OR EXISTS (
+          SELECT 1 FROM "WaInboxAssign" winb
+          WHERE winb."contactId" = c.id
+          AND winb."assignedUserId" = ${userId}::uuid
+        )
+      );`;
+
+  // Spam is a status on the conversation, not a tab, on this side.
+  const spamCount = await prisma.conversation.count({
+    where: {
+      orgId,
+      status: WaMessageAssignStatus.SPAM,
+      contact: { blockedOnWhatsApp: false },
+    },
+  });
   const mentionedConversations = await prisma.inboxMention.findMany({
     where: { orgId, mentionedUserId: userId, clearedAt: null },
     select: { conversationId: true, contactId: true },
@@ -1190,7 +1265,9 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
     newAssigned: count[0].new_assigned_count,
     newUnassigned: count[0].new_unassigned_count,
     newAssignedTome: 0,
-    assignedToMe: 0,
+    assignedToMe: mineCount[0]?.count ?? 0,
+    mine: mineCount[0]?.count ?? 0,
+    spam: spamCount,
     open: stats.open_count,
     closed: stats.closed_count,
     total: stats.all_count,

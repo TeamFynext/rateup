@@ -931,7 +931,8 @@ export interface FlowLogicJump {
 export interface orgWsMessage {
   type: "inbox";
   inbox?: {
-    contact: Contact;
+    /** Contact plus the ticket the message landed on — the inbox list is keyed by ticket. */
+    contact: Contact & { conversationId?: string | null; conversationStatus?: string | null };
     message: WaMessage;
   };
 }

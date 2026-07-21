@@ -209,11 +209,19 @@ export async function setInboxStatus(
 }
 
 export async function updateConversation(conversationId: string, data: UpdateConversationSchema) {
+  // A bare `status` write here would leave the close stamps as they were — a
+  // closed ticket carrying a live status, which is exactly what put closed
+  // tickets back in the Open tab. Any status change is expanded through the same
+  // transition data `setInboxStatus` uses; fields the caller passed explicitly
+  // still win.
+  const { status, ...rest } = data;
   return await prisma.conversation.update({
     where: {
       id: conversationId,
     },
-    data,
+    data: status
+      ? { ...conversationStatusData(status, resolveInboxActor(rest.closedBy)), ...rest }
+      : rest,
   });
 }
 

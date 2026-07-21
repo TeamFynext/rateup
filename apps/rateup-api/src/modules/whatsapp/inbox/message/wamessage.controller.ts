@@ -294,7 +294,14 @@ export async function handleWaMessages(
       {
         type: "inbox",
         inbox: {
-          contact,
+          // The inbox list is ticket-grained, so the payload names the ticket
+          // this message landed on. A bare Contact has no way to say which of
+          // its tickets it means, and the client had to guess.
+          contact: {
+            ...contact,
+            conversationId: conversation?.id ?? null,
+            conversationStatus: conversation?.status ?? null,
+          },
           message: waMessage,
         },
       },
