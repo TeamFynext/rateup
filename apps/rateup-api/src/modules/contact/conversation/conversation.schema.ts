@@ -1,8 +1,9 @@
 import z from "zod";
-import { CloseReason, WaMessageAssignStatus } from "../../../types/enums.js";
+import { CloseReason, ResolutionResult, WaMessageAssignStatus } from "../../../types/enums.js";
 
 const inboxStatusSchema = z.enum(WaMessageAssignStatus);
 const closeReasonSchema = z.enum(CloseReason);
+const resolutionResultSchema = z.enum(ResolutionResult);
 
 const conversationCoreSchema = z.object({
   contactId: z.uuid(),
@@ -20,6 +21,10 @@ const updateConversationSchema = z.object({
   resolvedAt: z.date().optional(),
   closeReason: closeReasonSchema.optional(),
   closedByAutomation: z.boolean().optional(),
+  // Inbox Tickets v2: editable ticket fields + resolution taxonomy.
+  subject: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  resolutionResult: resolutionResultSchema.optional().nullable(),
 });
 
 /// Who caused a status transition. `closedBy` is only ever populated from a real
@@ -48,6 +53,11 @@ const conversationParamsSchema = z.object({
   conversationId: z.uuid(),
 });
 
+/** Inbox Tickets v2 — params for a contact's ticket history. */
+const contactConversationsParamsSchema = z.object({
+  contactId: z.uuid(),
+});
+
 const statsQuerySchema = z.object({
   dateKey: z.string().optional(),
   dateRange: z.string().optional(),
@@ -66,6 +76,7 @@ export type ConversationCore = z.infer<typeof conversationCoreSchema>;
 export type UpdateConversationSchema = z.infer<typeof updateConversationSchema>;
 export type InboxActor = z.infer<typeof inboxActorSchema>;
 export type ConversationParamsSchema = z.infer<typeof conversationParamsSchema>;
+export type ContactConversationsParamsSchema = z.infer<typeof contactConversationsParamsSchema>;
 export type ConversationAssigneeUpdateSchema = z.infer<typeof conversationAssigneeUpdateSchema>;
 export type StatsQuerySchema = z.infer<typeof statsQuerySchema>;
 export type StaffIdParamsSchema = z.infer<typeof staffIdParamsSchema>;
@@ -76,6 +87,7 @@ export {
   conversationCoreSchema,
   updateConversationSchema,
   conversationParamsSchema,
+  contactConversationsParamsSchema,
   conversationAssigneeUpdateSchema,
   statsQuerySchema,
   staffIdParamsSchema,

@@ -8,6 +8,8 @@ import {
   WaMediaFileByMediaIdBody,
   WaMessageAssignBody,
   BlockUserBody,
+  FavoriteContactBody,
+  ClearMentionsBody,
   GenerateInboxResponseBody,
   PrivateWaMessageBody,
   BulkWaMessageAssignBody,
@@ -16,6 +18,7 @@ import {
 import {
   addNewWaMessage,
   assignWaMessageToUser,
+  clearMentionsForConversation,
   exportWhatsapChats,
   filterChats,
   generateChatFilterData,
@@ -32,6 +35,7 @@ import {
   createInternalWaMessage,
   createWaMessageOrgTeamMap,
   getWaMessageLogs,
+  setConversationFavorite,
 } from "./wamessage.service.js";
 import { ByContactIdParams, ContactCore } from "../../../contact/contact.schema.js";
 import {
@@ -444,8 +448,9 @@ export async function getWaMessagesByContactIdHandler(
   try {
     const cursor = request.query.cursor || null;
     const phone = request.query.phone || null;
+    const conversationId = request.query.conversationId || null;
     const { contactId } = request.params;
-    const messages = await getWaMessagesByContactId(contactId, cursor, phone);
+    const messages = await getWaMessagesByContactId(contactId, cursor, phone, conversationId);
     reply.send(messages);
   } catch (error) {
     log.error(error);
@@ -462,6 +467,28 @@ export async function markMessagesAsReadHandler(
     reply.code(200).send(res);
   } catch (e) {
     reply.code(500).send(e);
+  }
+}
+
+/** Explicit "clear @mention" action from the UI. Clears only the current user's
+ *  unseen mentions on the given conversation. */
+export async function clearConversationMentionsHandler(
+  request: FastifyRequest<{
+    Body: ClearMentionsBody;
+    Params: ByContactIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    await clearMentionsForConversation(
+      request.user.userId,
+      request.params.contactId,
+      request.body?.conversationId ?? null,
+    );
+    reply.code(200).send({ success: true });
+  } catch (e) {
+    log.error("Error clearing mentions: %o", e);
+    reply.code(500).send("Internal Server Error");
   }
 }
 
@@ -650,6 +677,24 @@ export async function unblockWhatsappUserHandler(
   }
 }
 
+export async function setContactFavoriteHandler(
+  request: FastifyRequest<{ Body: FavoriteContactBody }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await setConversationFavorite(
+      request.user.orgId,
+      request.body.conversationId,
+      request.body.isFavorite,
+    );
+    if (res.success) return reply.code(200).send(res);
+    reply.code(404).send({ success: false, message: "Conversation not found" });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
 export async function generateChatAnalyticsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const orgId = request.user.orgId;
@@ -704,6 +749,9 @@ export async function createPrivateMessageHandler(
       orgId: orgId,
       exchangeProcess: "privateNote",
       mentionedUsers: mentionedUsers,
+      // Client sends explicit ids when the note came from the mention picker;
+      // these win over the name-based `mentionedUsers` fallback below.
+      mentionedUserIds: body.mentionedUserIds,
       messageId: body.messageId,
     });
     reply.code(200).send(res);

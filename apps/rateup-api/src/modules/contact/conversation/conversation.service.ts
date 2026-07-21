@@ -1,4 +1,9 @@
-import { CloseReason, InboxStatus, WaMessageAssignStatus } from "../../../types/enums.js";
+import {
+  CloseReason,
+  InboxStatus,
+  ResolutionResult,
+  WaMessageAssignStatus,
+} from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
 import {
   ConversationAssigneeUpdateSchema,
@@ -77,9 +82,10 @@ export function conversationStatusData(
   actor: InboxActor,
   closeReason?: CloseReason,
   now: Date = new Date(),
+  resolutionResult?: ResolutionResult | null,
 ) {
   if (!isTerminalInboxStatus(status)) {
-    // Reopening clears the previous close stamp.
+    // Reopening clears the previous close stamp (and any resolution result).
     return {
       status,
       closedAt: null,
@@ -87,6 +93,7 @@ export function conversationStatusData(
       resolvedAt: null,
       closeReason: null,
       closedByAutomation: false,
+      resolutionResult: null,
     };
   }
   return {
@@ -96,6 +103,7 @@ export function conversationStatusData(
     closeReason: closeReason ?? resolveCloseReason(status, actor),
     closedByAutomation: actor.source === "automation",
     resolvedAt: status === WaMessageAssignStatus.RESOLVED ? now : null,
+    resolutionResult: resolutionResult ?? null,
   };
 }
 
@@ -108,7 +116,12 @@ export async function mirrorConversationStatusTx(
   contactId: string,
   status: InboxStatus,
   actor: InboxActor,
-  opts: { closeReason?: CloseReason; conversationId?: string; now?: Date } = {},
+  opts: {
+    closeReason?: CloseReason;
+    conversationId?: string;
+    now?: Date;
+    resolutionResult?: ResolutionResult | null;
+  } = {},
 ) {
   const target = opts.conversationId
     ? await tx.conversation.findUnique({ where: { id: opts.conversationId } })
@@ -128,7 +141,7 @@ export async function mirrorConversationStatusTx(
 
   return await tx.conversation.update({
     where: { id: target.id },
-    data: conversationStatusData(status, actor, opts.closeReason, opts.now),
+    data: conversationStatusData(status, actor, opts.closeReason, opts.now, opts.resolutionResult),
   });
 }
 
@@ -141,7 +154,11 @@ export async function setInboxStatus(
   contactId: string,
   status: InboxStatus,
   actor: InboxActor,
-  opts: { closeReason?: CloseReason; conversationId?: string } = {},
+  opts: {
+    closeReason?: CloseReason;
+    conversationId?: string;
+    resolutionResult?: ResolutionResult | null;
+  } = {},
 ) {
   const terminal = isTerminalInboxStatus(status);
   const now = new Date();
@@ -313,6 +330,36 @@ export async function updateConversationAssignees(
         },
       });
     }
+  });
+}
+
+/**
+ * Inbox Tickets v2 — a contact's full ticket history, newest first.
+ *
+ * Backs the thread's "previous conversations" strip. Org scoping goes through the
+ * contact rather than `Conversation.orgId`, which is a nullable denormalized copy
+ * and is not reliably populated on older rows.
+ */
+export async function getConversationsByContactId(orgId: string, contactId: string) {
+  return await prisma.conversation.findMany({
+    where: { contactId, contact: { orgId } },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      number: true,
+      subject: true,
+      description: true,
+      status: true,
+      resolutionResult: true,
+      createdAt: true,
+      closedAt: true,
+      lastMessageAt: true,
+      messageCount: true,
+      assignedUsers: {
+        where: { lastRemovedAt: null },
+        select: { userId: true, teamId: true, user: { select: { name: true } } },
+      },
+    },
   });
 }
 
