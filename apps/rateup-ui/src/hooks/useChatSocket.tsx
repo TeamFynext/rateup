@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
+  resolveIncomingRowKey,
   useChatContactCountStore,
   useContactsStore,
   useMessagesStore,
@@ -43,17 +44,26 @@ export const useChatSocket = () => {
             if (selectedContact?.id === incomingContact?.id) {
               markUnread = true;
             }
-            const contactInStore = useContactsStore.getState().contactsById.get(incomingContact.id);
-            if (contactInStore) {
+            // The message names its ticket even though the contact payload does
+            // not, so the row is resolved from that rather than the contact id.
+            const incomingConversationId = message?.conversationId ?? null;
+            const existingRowKey = resolveIncomingRowKey(
+              useContactsStore.getState().contactsById,
+              incomingContact.id,
+              incomingConversationId,
+            );
+            const isOpenInThread =
+              !!selectedContact &&
+              (existingRowKey
+                ? getRowKey(selectedContact) === existingRowKey
+                : selectedContact.id === incomingContact.id);
+            if (existingRowKey) {
               updateContactById(
-                incomingContact.id,
+                existingRowKey,
                 (contact) => ({
                   ...contact,
                   waMessageAssignStatus: incomingContact.waMessageAssignStatus,
-                  unReadMessageCount:
-                    selectedContact?.id === incomingContact?.id
-                      ? 0
-                      : (contact.unReadMessageCount ?? 0) + 1,
+                  unReadMessageCount: isOpenInThread ? 0 : (contact.unReadMessageCount ?? 0) + 1,
                   lastMessage: {
                     messageBody: message.messageBody,
                     sourceIdentifier: message.sourceIdentifier,
@@ -74,6 +84,9 @@ export const useChatSocket = () => {
                 [
                   {
                     ...incomingContact,
+                    // Without this the row would be keyed by contact id and would
+                    // sit beside the same contact's real ticket rows.
+                    conversationId: incomingConversationId ?? incomingContact.conversationId,
                     unReadMessageCount: 1,
                     lastMessage: {
                       messageBody: message.messageBody,
@@ -107,9 +120,10 @@ export const useChatSocket = () => {
               }
             }
 
-            // Bucket the live message by its ticket (conversationId), falling back
-            // to the contact row key for legacy/un-backfilled payloads.
-            const messageRowKey = message.conversationId ?? getRowKey(incomingContact);
+            // Bucket the live message by the row it landed on, so a legacy
+            // contact-keyed row and its thread stay on the same key.
+            const messageRowKey =
+              existingRowKey ?? incomingConversationId ?? getRowKey(incomingContact);
             for (const key of [
               `${messageRowKey}_all`,
               `${messageRowKey}_${message.sourceIdentifier}`,

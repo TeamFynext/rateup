@@ -51,6 +51,10 @@ interface ChatContactCountStore {
     mentionsCount: number;
     /** Tickets whose contact is starred */
     favouriteCount: number;
+    /** Assigned tickets the current user is on */
+    mineCount: number;
+    /** Tickets marked as spam */
+    spamCount: number;
   };
   setSectionCounts: (value: ChatContactCountStore["sectionCounts"]) => void;
   /** Applies a local delta (e.g. from a socket event) without waiting for a backend refetch. */
@@ -76,6 +80,8 @@ export const useChatContactCountStore = create<ChatContactCountStore>((set) => (
     newCount: 0,
     mentionsCount: 0,
     favouriteCount: 0,
+    mineCount: 0,
+    spamCount: 0,
   },
   setSectionCounts: (value) => set({ sectionCounts: value }),
   bumpSectionCounts: (delta) =>
@@ -87,6 +93,8 @@ export const useChatContactCountStore = create<ChatContactCountStore>((set) => (
         newCount: state.sectionCounts.newCount + (delta.newCount ?? 0),
         mentionsCount: state.sectionCounts.mentionsCount + (delta.mentionsCount ?? 0),
         favouriteCount: state.sectionCounts.favouriteCount + (delta.favouriteCount ?? 0),
+        mineCount: state.sectionCounts.mineCount + (delta.mineCount ?? 0),
+        spamCount: state.sectionCounts.spamCount + (delta.spamCount ?? 0),
       },
     })),
 }));
@@ -160,6 +168,24 @@ function rowActivityAt(row: ContactWithUpdatedAt): number {
   return stamp ? new Date(stamp).getTime() : 0;
 }
 
+/**
+ * Whether an incoming row should replace the copy already held. It does unless
+ * the one in hand can be shown to be newer.
+ *
+ * The list rows carried no `updatedAt` at all, so the old `new Date(undefined) >
+ * new Date(existing.updatedAt)` was always false and a cached row was *never*
+ * refreshed from the API: a ticket that closed after it was first cached kept
+ * its stale `conversationStatus` client-side, which is how a closed ticket ended
+ * up rendering the message composer. Optimistic local edits stamp `updatedAt`
+ * with the client clock, so they still outrank an older in-flight response.
+ */
+function isFresherRow(incoming: ContactWithUpdatedAt, existing: ContactWithUpdatedAt): boolean {
+  const incomingAt = Date.parse(incoming?.updatedAt ?? "");
+  const existingAt = Date.parse(existing?.updatedAt ?? "");
+  if (Number.isNaN(incomingAt) || Number.isNaN(existingAt)) return true;
+  return incomingAt >= existingAt;
+}
+
 function liveRowKeyForContact(
   contactsById: Map<string, ContactWithUpdatedAt>,
   contactId: string,
@@ -176,6 +202,29 @@ function liveRowKeyForContact(
     }
   }
   return best?.key ?? null;
+}
+
+/**
+ * Which ticket row a realtime event belongs to, or `null` when the store has no
+ * row for it yet and the caller should insert one.
+ *
+ * Socket payloads are contact-grained — the contact record they carry has no
+ * conversation id — while `contactsById` is keyed by ticket. Looking a row up by
+ * contact id therefore missed every threaded row, and the handler inserted a
+ * second row keyed by the contact id: a duplicate ticket next to the open one,
+ * which a reload then cleared because the API rows are keyed properly.
+ */
+export function resolveIncomingRowKey(
+  contactsById: Map<string, ContactWithUpdatedAt>,
+  contactId: string,
+  conversationId?: string | null,
+): string | null {
+  if (conversationId && contactsById.has(conversationId)) return conversationId;
+  // Rows cached before threading are still keyed by contact id.
+  if (contactsById.has(contactId)) return contactId;
+  // A payload that names its ticket and matches nothing is a ticket the store has
+  // not seen; without one, the contact's live ticket is the only sensible target.
+  return conversationId ? null : liveRowKeyForContact(contactsById, contactId);
 }
 
 let currentLoadToken = 0;
@@ -216,7 +265,7 @@ export const useContactsStore = create<ContactsStoreState>()(
             contacts.forEach((c) => {
               const rowKey = getRowKey(c);
               const existing = contactsByIdMap.get(rowKey);
-              if (!existing || new Date(c.updatedAt) > new Date(existing.updatedAt)) {
+              if (!existing || isFresherRow(c, existing)) {
                 contactsByIdMap.set(rowKey, c);
               }
             });
@@ -242,11 +291,21 @@ export const useContactsStore = create<ContactsStoreState>()(
             const selectedRowKey = state.selectedContact ? getRowKey(state.selectedContact) : null;
             contacts.forEach((c) => {
               const { ...rest } = c;
-              const rowKey = getRowKey(c);
+              // A contact-grained payload (realtime events carry a bare Contact,
+              // with no ticket id) must never open a second row beside that
+              // contact's real ticket rows — that duplicate is what a reload used
+              // to clear. Fold it into the contact's live ticket instead.
+              const rowKey = c.conversationId
+                ? getRowKey(c)
+                : (liveRowKeyForContact(contactsByIdMap, c.id) ?? getRowKey(c));
               const existing = contactsByIdMap.get(rowKey);
-              if (!existing || new Date(c.updatedAt) > new Date(existing.updatedAt)) {
+              if (!existing || isFresherRow(c, existing)) {
                 contactsByIdMap.set(rowKey, {
+                  ...existing,
                   ...rest,
+                  // Ticket identity only ever comes off a real row; a partial
+                  // payload must not blank it out and orphan the row's key.
+                  conversationId: rest.conversationId ?? existing?.conversationId,
                   unReadMessageCount: selectedRowKey === rowKey ? 0 : c.unReadMessageCount,
                 });
               }

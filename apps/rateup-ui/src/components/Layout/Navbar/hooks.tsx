@@ -121,6 +121,7 @@ export function useNavMain({
                   title: t("Mine"),
                   url: "/dashboard/inbox?tab=mine",
                   icon: UserCheck,
+                  count: sectionCounts?.mineCount || 0,
                   variant: "inbox-tab",
                 },
                 {
@@ -141,6 +142,7 @@ export function useNavMain({
                   title: t("Spam"),
                   url: "/dashboard/inbox?tab=spam",
                   icon: ShieldAlert,
+                  count: sectionCounts?.spamCount || 0,
                   variant: "inbox-tab",
                 },
                 {

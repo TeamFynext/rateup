@@ -13,7 +13,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import { useChatContactCountStore, useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.tsx";
@@ -33,6 +33,19 @@ import { cn } from "@/lib/utils.ts";
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
 import WaInboxChatExport from "./chatExport/index.tsx";
 import WaInboxChatFilter, { useChatFilterStore } from "./chatFilter/index.tsx";
+
+// Inbox tab → the sidebar rail's count for that tab. Blocked is absent on
+// purpose: the API returns no total for it.
+const TAB_SECTION_COUNT_KEY = {
+  open: "openCount",
+  new: "newCount",
+  closed: "closedCount",
+  all: "allCount",
+  mentions: "mentionsCount",
+  favourites: "favouriteCount",
+  mine: "mineCount",
+  spam: "spamCount",
+} as const;
 
 const ChatselectPanelHeader = ({
   isRefetchingFilteredContacts,
@@ -64,9 +77,18 @@ const ChatselectPanelHeader = ({
   const { filter, setFilter } = useChatFilterStore();
   const { t: translations } = useTranslation();
 
-  // Rows are conversation-grained (one per ticket), so the count comes from the
-  // store's row list for the active filter rather than a contact count.
-  const rowCount = useContactsStore((s) => s.contactsByFilter[s.currentFilterKey]?.length ?? 0);
+  // The header count has to agree with the sidebar rail's count for the same tab,
+  // so it reads the same backend totals. The store's row list only holds the pages
+  // fetched so far, which undercounts everything past the first page.
+  const sectionCounts = useChatContactCountStore((s) => s.sectionCounts);
+  const loadedRowCount = useContactsStore(
+    (s) => s.contactsByFilter[s.currentFilterKey]?.length ?? 0,
+  );
+  const countKey = TAB_SECTION_COUNT_KEY[tab as keyof typeof TAB_SECTION_COUNT_KEY];
+  // Blocked has no backend total, and a search narrows the list below the tab
+  // total — both fall back to what is actually loaded.
+  const rowCount =
+    countKey && !filter?.searchTerm?.length ? sectionCounts[countKey] : loadedRowCount;
   const rowCountLabel = `${rowCount} ${rowCount === 1 ? translations("conversation") : translations("conversations")}`;
 
   useEffect(() => {

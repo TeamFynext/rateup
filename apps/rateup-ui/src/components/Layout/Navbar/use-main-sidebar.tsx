@@ -97,6 +97,8 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
         // DB column are "favorite". Not a typo.
         favouriteCount: inboxCount.favourite ?? 0,
         mentionsCount: inboxCount.mentions ?? 0,
+        mineCount: inboxCount.mine ?? 0,
+        spamCount: inboxCount.spam ?? 0,
       });
     }
   }, [inboxCount, setSectionCounts]);

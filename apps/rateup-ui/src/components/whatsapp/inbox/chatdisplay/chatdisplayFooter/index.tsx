@@ -36,7 +36,6 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
-import { WaMessageClosedStatus } from "@/utils/constants.ts";
 import { formatDateWithRelativeTime } from "@/utils/dateTime.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
 import {
@@ -48,6 +47,7 @@ import {
 import { usePhoneIdStore } from "../../chatselect/accountSelectorStore.ts";
 import { generateInternalMessageId } from "../../util.tsx";
 import AssignUser from "../chatdisplayHeader/AssignUser.tsx";
+import { isTicketClosed } from "../chatdisplayHeader/ticket.ts";
 import { useComposerTabStore } from "./composerTabStore.ts";
 import WaInboxFooterMenu from "./footerMenu/index.tsx";
 
@@ -538,7 +538,7 @@ export const WaInboxAssignUserFooter = ({
   contact: ContactWithUpdatedAt;
   user: User;
 }) => {
-  const { id: contactId, waMessageAssignStatus, closedAt, closedUser } = contact ?? {};
+  const { id: contactId, closedUser } = contact ?? {};
   const { t } = useTranslation();
   const { filterData } = useContactStore();
   const messagesStore = useMessagesStore();
@@ -624,7 +624,11 @@ export const WaInboxAssignUserFooter = ({
     );
   }
 
-  const isClosed = WaMessageClosedStatus.includes(waMessageAssignStatus);
+  // The ticket decides, not the contact: a contact with a live ticket elsewhere
+  // would otherwise make this closed one read as "new and unassigned". Same for
+  // the timestamp — `closedAt` on the row is the contact's.
+  const isClosed = isTicketClosed(contact);
+  const closedAt = contact?.ticketClosedAt ?? contact?.closedAt;
 
   return (
     <Alert
