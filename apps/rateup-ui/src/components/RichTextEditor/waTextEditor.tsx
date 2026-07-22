@@ -3,6 +3,7 @@ import { ActionIcon, Anchor, Image, Indicator, Modal, Stack } from "@mantine/cor
 import { useDisclosure } from "@mantine/hooks";
 import { RichTextEditor } from "@mantine/tiptap";
 import { IconFileFilled, IconRobot, IconTrash, IconWaveSine, IconX } from "@tabler/icons-react";
+import Mention from "@tiptap/extension-mention";
 import Placeholder from "@tiptap/extension-placeholder";
 import { CharacterCount } from "@tiptap/extensions";
 import { Plugin } from "@tiptap/pm/state";
@@ -10,13 +11,14 @@ import { Extension, generateHTML, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 import { LayoutTemplate, Paperclip, TypeOutline, X, Zap } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import { cn } from "@/lib/utils";
 import { MessagePlatform } from "@/types/enums.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
-import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
+import { getContactPlatform, isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 import { AccountSelector } from "../input/AccountSelector.tsx";
 import VoiceRecorder from "../input/VoiceRecorder.tsx";
@@ -35,9 +37,9 @@ import InsertInboxAudio from "./InsertInboxMedia/InserInboxAudio.tsx";
 import InsertInboxFile from "./InsertInboxMedia/InsertInboxFile.tsx";
 import InsertInboxImage from "./InsertInboxMedia/InsertInboxImage.tsx";
 import InsertInboxVideo from "./InsertInboxMedia/InsertInboxVideo.tsx";
+import type { MentionUser } from "./mention/MentionList.tsx";
+import { createMentionSuggestion } from "./mention/suggestion.ts";
 import { isJSONString, WaQuickReply } from "./WaQuickReply/index.tsx";
-
-import styles from "./waTextEditor.module.css";
 
 interface WaTextEditorProps extends BoxComponentProps {
   handleInputChange: (value) => void;
@@ -58,6 +60,15 @@ interface WaTextEditorProps extends BoxComponentProps {
   isQuickReplyEditor?: boolean;
   border?: boolean;
   allowFiles?: boolean;
+  hideCharacterCount?: boolean;
+  /** Enable @-mentions of teammates (used by the private-note composer). */
+  enableMention?: boolean;
+  /** Candidate users for the @-mention suggestion list. */
+  mentionUsers?: MentionUser[];
+  // When provided, the quick-replies panel is controlled by the parent (so the
+  // toggle button can live outside the editor, e.g. in the footer tab row).
+  quickRepliesOpen?: boolean;
+  onQuickRepliesOpenChange?: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 const CustomEnter = Extension.create({
@@ -96,11 +107,28 @@ function WaTextEditor({
   isQuickReplyEditor = false,
   border,
   allowFiles = false,
+  hideCharacterCount = false,
+  enableMention = false,
+  mentionUsers,
+  quickRepliesOpen,
+  onQuickRepliesOpenChange,
 }: Readonly<WaTextEditorProps>) {
   const [opened, { open, close }] = useDisclosure(false);
-  const [showQuickReplies, setShowQuickReplies] = useState(false);
+  const [internalShowQuickReplies, setInternalShowQuickReplies] = useState(false);
+  // Controlled when the parent owns the toggle; otherwise fall back to local state.
+  const quickRepliesControlled = onQuickRepliesOpenChange !== undefined;
+  const showQuickReplies = quickRepliesControlled
+    ? (quickRepliesOpen ?? false)
+    : internalShowQuickReplies;
+  const setShowQuickReplies = quickRepliesControlled
+    ? onQuickRepliesOpenChange
+    : setInternalShowQuickReplies;
   const [quickReplySearchQuery, setQuickReplySearchQuery] = useState("");
   const { addMedia } = useMediaStore();
+  // The editor (and its extensions) are created once; the suggestion reads this
+  // ref so the mention list stays current as `mentionUsers` updates.
+  const mentionUsersRef = useRef<MentionUser[]>([]);
+  mentionUsersRef.current = mentionUsers ?? [];
   const extensions = useMemo(() => {
     const ext = [
       StarterKit.configure({ link: false }),
@@ -117,8 +145,17 @@ function WaTextEditor({
           onEnter: customEnter,
         }) as any,
       );
+    if (enableMention)
+      ext.push(
+        Mention.configure({
+          HTMLAttributes: {
+            class: "rounded bg-primary/10 px-1 font-medium text-primary",
+          },
+          suggestion: createMentionSuggestion(() => mentionUsersRef.current),
+        }) as any,
+      );
     return ext;
-  }, [customEnter]);
+  }, [customEnter, enableMention]);
   const [searchTerm, setSearchTerm] = useState("");
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -226,7 +263,7 @@ function WaTextEditor({
   const [isModalOpened, { close: onModalClose, open: openModal }] = useDisclosure(false);
   const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
 
-  const platform = selectedContact ? selectedContact.lastMessage?.sourcePlatform : null;
+  const platform = selectedContact ? getContactPlatform(selectedContact) : null;
   const phone_number_id = useMemo(
     () =>
       waSettings
@@ -414,18 +451,8 @@ function WaTextEditor({
               },
             }}
           >
-            <div className="relative">
-              <RichTextEditor.Content
-                bg={"var(--accent)"}
-                style={{
-                  borderRadius: "5px",
-                }}
-                className={`${editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""}`}
-              />
-            </div>
-            <div className="flex items-center justify-end px-2 pt-1 space-x-1">
-              <WaTextCharacterCount editor={editor} max={max} />
-              {inbox && (
+            {inbox && !quickRepliesControlled && (
+              <div className="flex items-center justify-end px-2 pb-1">
                 <CustomTooltip
                   trigger={
                     <Button
@@ -439,7 +466,21 @@ function WaTextEditor({
                   }
                   content={<p>Quick Replies</p>}
                 />
-              )}
+              </div>
+            )}
+            <div className="relative">
+              <RichTextEditor.Content
+                bg={"var(--accent)"}
+                style={{
+                  borderRadius: "5px",
+                }}
+                className={`${editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""}`}
+              />
+            </div>
+            <div
+              className={`${hideCharacterCount ? "hidden" : "flex"} items-center justify-end px-2 pt-1 space-x-1`}
+            >
+              {!hideCharacterCount && <WaTextCharacterCount editor={editor} max={max} />}
             </div>
             <div className="flex justify-between items-center">
               <div className="flex flex-wrap p-2">
@@ -620,7 +661,11 @@ const WaTextCharacterCount = ({ editor, max }) => {
     : 0;
   return (
     <div
-      className={`${styles["character-count"]} ${editor?.storage?.characterCount?.characters() === max ? styles["character-count--warning"] : ""}`}
+      className={cn(
+        "flex items-center gap-2 p-2.5 text-xs text-muted-foreground [&>svg]:text-green-600",
+        editor?.storage?.characterCount?.characters() === max &&
+          "text-red-600 [&>svg]:text-red-600",
+      )}
     >
       <svg height="20" width="20" viewBox="0 0 20 20">
         <circle r="10" cx="10" cy="10" fill="#e9ecef" />
@@ -640,6 +685,22 @@ const WaTextCharacterCount = ({ editor, max }) => {
     </div>
   );
 };
+
+/**
+ * Collect the user ids of every mention node in a tiptap doc. Sent alongside a
+ * private note so the backend resolves mentions by id (robust to names that
+ * contain spaces, which the text-based `@name` extraction can't match).
+ */
+export function extractMentionUserIds(editorContent: any): string[] {
+  const ids = new Set<string>();
+  const walk = (node: any) => {
+    if (!node) return;
+    if (node.type === "mention" && node.attrs?.id) ids.add(String(node.attrs.id));
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
+  walk(editorContent);
+  return Array.from(ids);
+}
 
 export function parseToWhatsAppFormat(editorContent) {
   function formatText(text, type = "*") {
@@ -690,6 +751,8 @@ export function parseToWhatsAppFormat(editorContent) {
         return `\`\`\`${node.content.map(parseNode).join("")}\`\`\``;
       case "listItem":
         return node.content.map(parseNode).join("");
+      case "mention":
+        return `@${node.attrs?.label ?? node.attrs?.id ?? ""}`;
       default:
         return "";
     }

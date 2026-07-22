@@ -2,13 +2,15 @@ import { IconExclamationCircle } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { MessageSquare, Send, StickyNote } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Ban, MessageSquare, Send, StickyNote, UserCheck, UserPlus, Zap } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { create } from "zustand";
 
+import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useConversationLimit } from "@/backend/stats/stats.query";
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
   useCreatePrivateMessage,
@@ -21,7 +23,12 @@ import useContactStore, {
   useMessagesStore,
 } from "@/components/dashboard/inbox/store.ts";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder.tsx";
-import WaTextEditor, { parseToWhatsAppFormat } from "@/components/RichTextEditor/waTextEditor.tsx";
+import WaTextEditor, {
+  extractMentionUserIds,
+  parseToWhatsAppFormat,
+} from "@/components/RichTextEditor/waTextEditor.tsx";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
@@ -29,10 +36,10 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
-import { WaMessageClosedStatus } from "@/utils/constants.ts";
 import { formatDateWithRelativeTime } from "@/utils/dateTime.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
 import {
+  getContactPlatform,
   isInboxSessionExpired,
   returnMessageContentBasedOnParsedMessage,
 } from "@/utils/whatsapp/inbox.ts";
@@ -40,14 +47,49 @@ import {
 import { usePhoneIdStore } from "../../chatselect/accountSelectorStore.ts";
 import { generateInternalMessageId } from "../../util.tsx";
 import AssignUser from "../chatdisplayHeader/AssignUser.tsx";
+import { isTicketClosed } from "../chatdisplayHeader/ticket.ts";
+import { useComposerTabStore } from "./composerTabStore.ts";
 import WaInboxFooterMenu from "./footerMenu/index.tsx";
+
+// Mirrors WaTextEditor's default CharacterCount limit so the footer count and the
+// editor's own hard limit stay in lock-step.
+const MESSAGE_CHAR_LIMIT = 1024;
+
+// The editor writes its content back as a ProseMirror JSON doc (editor.getJSON()),
+// so we count characters by summing the text nodes — this matches tiptap's
+// CharacterCount.characters() (doc.textContent length) without needing the editor ref.
+function countEditorCharacters(content: unknown): number {
+  if (!content) return 0;
+  if (typeof content === "string") return content.length;
+  let count = 0;
+  const walk = (node: any) => {
+    if (!node) return;
+    if (node.type === "text" && typeof node.text === "string") count += node.text.length;
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
+  walk(content);
+  return count;
+}
+
+function FooterCharacterCount({ body, max }: { body: { text?: { body?: unknown } }; max: number }) {
+  const count = countEditorCharacters(body?.text?.body);
+  const atLimit = count >= max;
+  return (
+    <Badge variant={atLimit ? "destructive" : "outline"} className="tabular-nums">
+      {count} / {max}
+    </Badge>
+  );
+}
 
 export default function WaInboxChatDisplayFooter({
   contact,
 }: Readonly<{
   contact: ContactWithUpdatedAt;
 }>) {
-  const [activeTab, setActiveTab] = useState<"message" | "private">("message");
+  // Shared with the thread body: the "private" tab also filters the thread to
+  // internal notes only.
+  const { activeTab, setActiveTab } = useComposerTabStore();
+  const [quickRepliesOpen, setQuickRepliesOpen] = useState(false);
 
   const submiRef = useRef(null);
   const { t: translations } = useTranslation();
@@ -61,7 +103,7 @@ export default function WaInboxChatDisplayFooter({
   } = useConversationLimit();
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const currentUser = contact.assignedUsers?.find((c) => c.id === user?.userId);
-  const platform = contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const platform = getContactPlatform(contact);
   const sendnewWaMessage = useSendNewWaMessage(
     contact.id,
     currentUser.teamId,
@@ -75,6 +117,12 @@ export default function WaInboxChatDisplayFooter({
   const { body, setBody, resetBody } = useMessageBodyStore();
   const { updateContactById } = useContactsStore();
   const messagesStore = useMessagesStore();
+  const { data: orgMembers } = useTeamsMembersOfOrg();
+  // Teammates available to @-mention in a private note.
+  const mentionUsers = useMemo(
+    () => (orgMembers?.data ?? []).map((m) => ({ id: m.id, name: m.name })),
+    [orgMembers],
+  );
 
   useEffect(() => {
     if (body.type === "location" && body.location) {
@@ -97,6 +145,8 @@ export default function WaInboxChatDisplayFooter({
 
   const isTextValid =
     body.text?.body !== "" && parseToWhatsAppFormat(body.text?.body || "").trim().length > 0;
+  const charCount = countEditorCharacters(body.text?.body);
+  const isOverCharLimit = charCount >= MESSAGE_CHAR_LIMIT;
 
   function handleSendMessage() {
     if (conversationLimitReached) {
@@ -140,7 +190,7 @@ export default function WaInboxChatDisplayFooter({
       location: body.location,
     };
     resetBody();
-    addMessage(contact.id, {
+    addMessage(getRowKey(contact), {
       body: {
         text: values.text.body,
         ...(values.media?.length
@@ -159,7 +209,7 @@ export default function WaInboxChatDisplayFooter({
       { ...values },
       {
         onSuccess: () => {
-          removeMessage(contact.id);
+          removeMessage(getRowKey(contact));
         },
       },
     );
@@ -229,6 +279,10 @@ export default function WaInboxChatDisplayFooter({
       contacts: body.contacts,
       location: body.location,
     };
+    // Mentions are resolved by id (robust to names with spaces), taken straight
+    // from the mention nodes the user inserted.
+    const mentionedUserIds = extractMentionUserIds(values.text?.body);
+    const mentionedUser = mentionUsers.filter((u) => mentionedUserIds.includes(u.id));
     resetBody();
     resetMedia();
     setAudioUrl(null);
@@ -244,7 +298,7 @@ export default function WaInboxChatDisplayFooter({
           text: {
             body: parseToWhatsAppFormat(values.text.body),
           },
-          mentionedUser: [],
+          mentionedUser,
           triggeredByUser: {
             id: user.userId,
             name: user.userName,
@@ -267,20 +321,22 @@ export default function WaInboxChatDisplayFooter({
       },
       messageId: id,
     };
-    messagesStore.addMessage(`${contact.id}_all`, newMessage as any);
-    messagesStore.addMessage(`${contact.id}_internal`, newMessage as any);
+    const rowKey = getRowKey(contact);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
 
     createPrivateMessage.mutate(
       {
         data: {
           ...values,
           messageId: id,
+          mentionedUserIds,
         },
       },
       {
         onError: () => {
-          messagesStore.removeMessage(`${contact.id}_all`, id);
-          messagesStore.removeMessage(`${contact.id}_internal`, id);
+          messagesStore.removeMessage(`${rowKey}_all`, id);
+          messagesStore.removeMessage(`${rowKey}_internal`, id);
         },
       },
     );
@@ -303,12 +359,13 @@ export default function WaInboxChatDisplayFooter({
       <CustomTooltip
         trigger={
           <Button
-            size="sm"
-            className="bg-green-600 hover:bg-green-700 h-[60px] px-6"
+            size="icon-lg"
+            className="bg-green-600 hover:bg-green-700"
             onClick={handleSendMessage}
             disabled={
               isSessionExpired ||
               isRecording ||
+              isOverCharLimit ||
               (!media.length && !body.media?.length && !isTextValid)
             }
           >
@@ -324,8 +381,8 @@ export default function WaInboxChatDisplayFooter({
       <CustomTooltip
         trigger={
           <Button
-            size="sm"
-            className="bg-amber-600 hover:bg-amber-700 h-[60px] px-6"
+            size="icon-lg"
+            className="bg-amber-600 hover:bg-amber-700"
             onClick={handleSendPrivateMessage}
             disabled={
               isSessionExpired ||
@@ -358,7 +415,7 @@ export default function WaInboxChatDisplayFooter({
           onValueChange={(v) => setActiveTab(v as any)}
           className="p-2 bg-white dark:bg-transparent"
         >
-          <TabsList>
+          <div className="flex items-center justify-between gap-2">
             <TabsList className="bg-muted p-1 rounded-lg">
               <TabsTrigger
                 value="message"
@@ -384,19 +441,38 @@ export default function WaInboxChatDisplayFooter({
                 Private Note
               </TabsTrigger>
             </TabsList>
-          </TabsList>
+
+            {activeTab === "message" && (
+              <div className="flex items-center gap-1.5">
+                <CustomTooltip
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => setQuickRepliesOpen((prev) => !prev)}
+                    >
+                      <Zap className="w-4 h-4 text-cyan-600" />
+                    </Button>
+                  }
+                  content={<p>Quick Replies</p>}
+                />
+                <FooterCharacterCount body={body} max={MESSAGE_CHAR_LIMIT} />
+              </div>
+            )}
+          </div>
 
           <TabsContent value="message">
             {conversationLimitReached ? (
-              <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-4 text-center dark:border-amber-900/50 dark:bg-amber-950/30">
+              <Alert className="flex! flex-col items-center gap-2 border-amber-300 bg-amber-50 text-center dark:border-amber-900/50 dark:bg-amber-950/30">
                 <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
                   <IconExclamationCircle size={"1.1rem"} />
-                  <span className="text-sm font-medium">
+                  <AlertTitle className="text-sm font-medium">
                     {translations("Conversation limit reached")} (
                     {conversationsUsed.toLocaleString()}/{conversationLimit.toLocaleString()})
-                  </span>
+                  </AlertTitle>
                 </div>
-                <p className="max-w-md text-xs text-muted-foreground">
+                <AlertDescription className="max-w-md text-xs">
                   {isAnnualConversationLimit
                     ? translations(
                         "You've used all conversations in your annual plan. Upgrade your plan to send more messages, or wait for it to reset.",
@@ -404,18 +480,18 @@ export default function WaInboxChatDisplayFooter({
                     : translations(
                         "You've used all conversations for this month. Upgrade your plan to send more messages, or wait for your monthly limit to reset.",
                       )}
-                </p>
+                </AlertDescription>
                 <Button size="sm" onClick={() => navigate({ to: "/dashboard/settings/billing" })}>
                   {translations("Upgrade Plan")}
                 </Button>
-              </div>
+              </Alert>
             ) : (
               <WaTextEditor
                 handleInputChange={(value) => {
                   setBody({ ...body, text: { ...body.text, body: value } });
                 }}
                 content={body.text.body}
-                mih={100}
+                mih={67}
                 flex={1}
                 inbox={true}
                 customEnter={() => submiRef.current()}
@@ -424,6 +500,9 @@ export default function WaInboxChatDisplayFooter({
                 sendMessageButton={<SendMessageComponent />}
                 border={true}
                 allowFiles={true}
+                hideCharacterCount={true}
+                quickRepliesOpen={quickRepliesOpen}
+                onQuickRepliesOpenChange={setQuickRepliesOpen}
               />
             )}
           </TabsContent>
@@ -434,13 +513,16 @@ export default function WaInboxChatDisplayFooter({
                 setBody({ ...body, text: { ...body.text, body: value } });
               }}
               content={body.text.body}
-              mih={100}
+              mih={67}
               flex={1}
               privateMessage={true}
               editable={true}
               placeholder="Add a private note"
               sendMessageButton={<SendPrivateMessageComponent />}
               border={true}
+              hideCharacterCount={true}
+              enableMention={true}
+              mentionUsers={mentionUsers}
             />
           </TabsContent>
         </Tabs>
@@ -456,7 +538,8 @@ export const WaInboxAssignUserFooter = ({
   contact: ContactWithUpdatedAt;
   user: User;
 }) => {
-  const { id: contactId, waMessageAssignStatus, closedAt, closedUser } = contact ?? {};
+  const { id: contactId, closedUser } = contact ?? {};
+  const { t } = useTranslation();
   const { filterData } = useContactStore();
   const messagesStore = useMessagesStore();
   const assignMut = useAssignInboxToUer(contactId, filterData);
@@ -504,8 +587,9 @@ export const WaInboxAssignUserFooter = ({
       },
       messageId: id,
     };
-    messagesStore.addMessage(`${contactId}_all`, newMessage as any);
-    messagesStore.addMessage(`${contactId}_internal`, newMessage as any);
+    const rowKey = getRowKey(contact);
+    messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
+    messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
     assignMut.mutate(
       {
         messageId: id,
@@ -533,37 +617,58 @@ export const WaInboxAssignUserFooter = ({
           qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
         },
         onError: () => {
-          messagesStore.removeMessage(`${contactId}_all`, id);
-          messagesStore.removeMessage(`${contactId}_internal`, id);
+          messagesStore.removeMessage(`${rowKey}_all`, id);
+          messagesStore.removeMessage(`${rowKey}_internal`, id);
         },
       },
     );
   }
 
+  // The ticket decides, not the contact: a contact with a live ticket elsewhere
+  // would otherwise make this closed one read as "new and unassigned". Same for
+  // the timestamp — `closedAt` on the row is the contact's.
+  const isClosed = isTicketClosed(contact);
+  const closedAt = contact?.ticketClosedAt ?? contact?.closedAt;
+
   return (
-    <div className="flex flex-col gap-2 pb-2 bg-background">
-      <div className="bg-black flex justify-center items-center text-white gap-0.5 py-1">
-        <IconExclamationCircle size={"1rem"} />
-        {WaMessageClosedStatus.includes(waMessageAssignStatus) && (
+    <Alert
+      // Shadcn Alert, overridden to a full-width warm footer bar (grid → flex,
+      // rounded box → top-bordered bar) so it keeps the mockup's warm palette.
+      // `flex!` because Alert's base `grid` would otherwise win the display cascade.
+      className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-6 py-2.5 dark:bg-amber-950/40"
+    >
+      <UserPlus className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
+      <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
+        {isClosed ? (
           <>
-            <span className="text-xs">This chat has been closed</span>
+            {t("This chat has been closed")}
             {closedAt && (
-              <span className="text-xs lowercase">
-                by {closedUser?.name ?? "Unknown"} at {formatDateWithRelativeTime(contact.closedAt)}
-                .
+              <span className="lowercase">
+                {" "}
+                by {closedUser?.name ?? "Unknown"} at {formatDateWithRelativeTime(closedAt)}
               </span>
             )}
+            . {t("Assign it to start the conversation again.")}
           </>
+        ) : (
+          t("This conversation is new and unassigned.")
         )}
-        <span className="text-xs">Please Assign to start the chat.</span>
-      </div>
-      <div className="flex justify-center items-center gap-2">
-        <Button variant="outline" onClick={handleAssignToMe} size="sm">
-          <div className="text-sm">Assign To Me</div>
-        </Button>
-        <AssignUser contactId={contactId} variant="default" />
-      </div>
-    </div>
+      </AlertTitle>
+
+      <Button
+        size="sm"
+        className="h-8 shrink-0 gap-1.5 border-transparent bg-primary text-primary-foreground shadow-none"
+        disabled={assignMut.isPending}
+        onClick={handleAssignToMe}
+      >
+        <UserCheck className="size-3.5" />
+        <span className="text-xs font-bold">{t("Assign to me")}</span>
+      </Button>
+
+      {/* The teammate picker stays `AssignUser` — it owns the real multi-assignee
+          and team round-robin behaviour that the mockup's popover only sketches. */}
+      <AssignUser contactId={contactId} variant="outline" />
+    </Alert>
   );
 };
 
@@ -592,17 +697,23 @@ export const WaInboxBlockedContactFooter = ({ contact }) => {
     );
   }
   return (
-    <div className="flex flex-col gap-2 pb-2 bg-background">
-      <div className="bg-black flex justify-center items-center text-white gap-0.5 py-1">
-        <IconExclamationCircle size={"1rem"} />
-        <span className="text-xs">This contact has been blocked by you.</span>
-      </div>
-      <div className="flex justify-center items-center gap-2">
-        <Button onClick={handleUnblock} size="sm">
-          Unblock contact
-        </Button>
-      </div>
-    </div>
+    // Same banner shape as the assign footer, so the three footer states read as
+    // one family rather than a black bar next to a redesigned one.
+    <Alert className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-6 py-2.5 dark:bg-amber-950/40">
+      <Ban className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
+      <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
+        This contact has been blocked by you.
+      </AlertTitle>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-8 shrink-0"
+        onClick={handleUnblock}
+        disabled={unblockMut.isPending}
+      >
+        <span className="text-xs font-bold">Unblock contact</span>
+      </Button>
+    </Alert>
   );
 };
 

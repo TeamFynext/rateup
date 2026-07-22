@@ -42,7 +42,7 @@ import {
   IconWaveSine,
   IconWebhook,
 } from "@tabler/icons-react";
-import { Layers } from "lucide-react";
+import { AtSign, Layers, ShieldAlert, Sparkles, Star, UserCheck } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -87,11 +87,20 @@ export function useNavMain({
               url: "/dashboard/inbox?tab=open",
               icon: IconInbox,
               items: [
+                // Inbox Tickets v2 filter rail. Order matches the design mockup:
+                // Open · New · Closed · All · Mine · @Mentions · Favourites · Spam.
                 {
                   title: t("Open"),
                   url: "/dashboard/inbox?tab=open",
                   icon: IconInbox,
                   count: sectionCounts?.openCount || 0,
+                  variant: "inbox-tab",
+                },
+                {
+                  title: t("New"),
+                  url: "/dashboard/inbox?tab=new",
+                  icon: Sparkles,
+                  count: sectionCounts?.newCount || 0,
                   variant: "inbox-tab",
                 },
                 {
@@ -106,6 +115,34 @@ export function useNavMain({
                   url: "/dashboard/inbox?tab=all",
                   icon: Layers,
                   count: sectionCounts?.allCount || 0,
+                  variant: "inbox-tab",
+                },
+                {
+                  title: t("Mine"),
+                  url: "/dashboard/inbox?tab=mine",
+                  icon: UserCheck,
+                  count: sectionCounts?.mineCount || 0,
+                  variant: "inbox-tab",
+                },
+                {
+                  title: t("@Mentions"),
+                  url: "/dashboard/inbox?tab=mentions",
+                  icon: AtSign,
+                  count: sectionCounts?.mentionsCount || 0,
+                  variant: "inbox-tab",
+                },
+                {
+                  title: t("Favourites"),
+                  url: "/dashboard/inbox?tab=favourites",
+                  icon: Star,
+                  count: sectionCounts?.favouriteCount || 0,
+                  variant: "inbox-tab",
+                },
+                {
+                  title: t("Spam"),
+                  url: "/dashboard/inbox?tab=spam",
+                  icon: ShieldAlert,
+                  count: sectionCounts?.spamCount || 0,
                   variant: "inbox-tab",
                 },
                 {

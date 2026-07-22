@@ -1,12 +1,20 @@
-import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import dayjs from "dayjs";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Lock } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { getMessagesFromIDB } from "@/components/dashboard/inbox/idb.ts";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
-import { Button } from "@/components/ui/button.tsx";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+  useMessageScrollerVisibility,
+} from "@/components/ui/message-scroller.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { MessagePlatform } from "@/types/enums.ts";
 import type { IgReceiveMessageBody } from "@/types/global";
@@ -14,6 +22,7 @@ import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
 import { useChatFilterStore } from "../../chatselect/chatFilter/index.tsx";
 import WhatsAppInboxLoader from "../../loader/index.tsx";
+import { useComposerTabStore } from "../chatdisplayFooter/composerTabStore.ts";
 import { useTemperoryMessageStore } from "../chatdisplayFooter/index.tsx";
 import {
   DateComponent,
@@ -24,15 +33,16 @@ import {
 } from "./components/utils.tsx";
 import WaInboxSingleMessageLayout from "./layout/singleMessageLayout/index.tsx";
 
-import classes from "./styles.module.css";
+/**
+ * Sentinel row parked above the oldest message. The scroller reports it as
+ * visible once the user reaches the top, which is what drives pagination now
+ * that the virtualizer (and its "topmost index" trigger) is gone.
+ */
+const TOP_SENTINEL_ID = "wa-inbox-top-sentinel";
 
-const reverseScroll = (e) => {
-  e.preventDefault();
-  e.currentTarget.scrollTop -= e.deltaY;
-};
-
-const WaInboxChatDisplayBody = ({ isContactDetailsOpened }) => {
-  const parentRef = useRef(null);
+// `isContactDetailsOpened` used to position the bespoke scroll affix; the
+// MessageScrollerButton positions itself inside the viewport, so it is unused.
+const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: boolean }>) => {
   const { selectedContact } = useContactsStore();
   const { filter } = useChatFilterStore();
   // api call
@@ -40,37 +50,59 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened }) => {
   const { mergeMessages, setSelected, setIsLoading, selectedKey, messagesByKey, isLoading } =
     useMessagesStore();
 
+  /**
+   * The store holds messages newest-first. The scroller renders in document
+   * order, so the thread is reversed here: oldest at the top, newest at the
+   * bottom, no inverted-scroll trickery.
+   */
   const allMessages = useMemo(() => {
     if (!selectedKey) return [];
-    const [contactId, source] = selectedKey.split("_");
+    // Keys are `${rowKey}_${source}` where rowKey is the conversation (ticket)
+    // identity — getRowKey(row) = conversationId ?? contactId.
+    const [rowId, source] = selectedKey.split("_");
     if (source === "all") {
-      const key1 = `${contactId}_${source}`;
-      return [...(messagesByKey.get(key1)?.messages ?? [])];
+      const key1 = `${rowId}_${source}`;
+      return [...(messagesByKey.get(key1)?.messages ?? [])].reverse();
     } else {
-      const key1 = `${contactId}_${source}`;
-      const key2 = `${contactId}_+${source}`;
-      const key3 = `${contactId}_internal`;
+      const key1 = `${rowId}_${source}`;
+      const key2 = `${rowId}_+${source}`;
+      const key3 = `${rowId}_internal`;
       return [
         ...(messagesByKey.get(key1)?.messages ?? []),
         ...(messagesByKey.get(key2)?.messages ?? []),
         ...(messagesByKey.get(key3)?.messages ?? []),
-      ].sort((a, b) => new Date(b.waCreatedAt).getTime() - new Date(a.waCreatedAt).getTime());
+      ].sort((a, b) => new Date(a.waCreatedAt).getTime() - new Date(b.waCreatedAt).getTime());
     }
   }, [selectedKey, messagesByKey]);
+
+  /**
+   * The composer's "Private Note" tab is also the thread's view mode: in it the
+   * thread shows internal notes only, so the note history reads as its own
+   * surface instead of being scattered through the customer conversation.
+   */
+  const { activeTab, setActiveTab } = useComposerTabStore();
+  const isNotesView = activeTab === "private";
+  const visibleMessages = useMemo(
+    () =>
+      isNotesView
+        ? allMessages.filter((m) => m?.messageBody?.exchangeProcess === "privateNote")
+        : allMessages,
+    [allMessages, isNotesView],
+  );
 
   const { messages: tempMessages } = useTemperoryMessageStore();
 
   useEffect(() => {
-    if (tempMessages[selectedContact?.id]?.length) {
-      rowVirtualizer.scrollToIndex(0);
-    }
-  }, [tempMessages]);
-
-  useEffect(() => {
     if (!selectedContact) return;
-    setEnabled(false);
-    setSelected(selectedContact.id, filter?.phone || "all");
+    setSelected(getRowKey(selectedContact), filter?.phone || "all");
+    setEnabled(true);
   }, [selectedContact, filter?.phone]);
+
+  // Opening another ticket starts back on the customer conversation.
+  const rowKey = selectedContact ? getRowKey(selectedContact) : null;
+  useEffect(() => {
+    setActiveTab("message");
+  }, [rowKey]);
 
   const {
     fetchNextPage,
@@ -78,24 +110,23 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened }) => {
     data,
     isFetchingNextPage,
     isPending,
-  } = useGetMessagesByContactId(selectedContact?.id, filter?.phone, enable);
+  } = useGetMessagesByContactId(
+    selectedContact?.id,
+    filter?.phone,
+    enable,
+    selectedContact?.conversationId,
+  );
 
   useEffect(() => {
     if (!data || !selectedKey || !selectedContact) return;
-    const contactId = selectedKey.split("_")[0];
-    if (contactId !== selectedContact.id) return;
+    const rowId = selectedKey.split("_")[0];
+    if (rowId !== getRowKey(selectedContact)) return;
     const all = data.pages.flatMap((p) => p.messages);
     if (!all.length) {
       return;
     }
     mergeMessages(selectedKey, all);
   }, [data, selectedKey, selectedContact]);
-
-  const rowVirtualizer = useVirtualizer({
-    count: hasNextPage ? allMessages.length + 1 : allMessages.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 100,
-  });
 
   useEffect(() => {
     if (!selectedKey) return;
@@ -106,131 +137,92 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened }) => {
       }
       mergeMessages(selectedKey, cached);
     })();
-    if (rowVirtualizer.getVirtualItems().length > 0) rowVirtualizer.scrollToIndex(0);
   }, [selectedKey]);
 
-  const isAtBottom = () => {
-    if (!parentRef.current) return false;
-    const { scrollTop } = parentRef.current;
-    const threshold = 5;
-    return scrollTop <= threshold;
-  };
-
-  useEffect(() => {
-    const lastItem = rowVirtualizer.getVirtualItems().at(-1);
-    if (lastItem && lastItem?.index >= allMessages.length - 1) setEnabled(true);
-    else if (enable) setEnabled(false);
-    if (lastItem?.index >= allMessages.length - 1 && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [
-    rowVirtualizer.getVirtualItems(),
-    allMessages,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  ]);
-
-  useEffect(() => {
-    const current = parentRef.current;
-    current?.addEventListener("wheel", reverseScroll, { passive: false });
-    return () => void current?.removeEventListener("wheel", reverseScroll);
-  }, []);
+  const loadOlderMessages = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
     setIsLoading(!messagesByKey?.get(selectedKey)?.messages?.length && isPending);
   }, [selectedKey, isPending, messagesByKey, enable]);
   if (isLoading) return <WhatsAppInboxLoader isLoading={isLoading} />;
 
+  const pendingMessages = tempMessages?.[getRowKey(selectedContact)] ?? [];
+
   return (
-    <>
-      <div ref={parentRef} className="relative h-full p-2 scale-y-[-1] overflow-y-auto">
-        {tempMessages?.[selectedContact.id]?.length > 0 && (
-          <div className="relative p-6 max-w-4xl mx-auto">
-            {tempMessages?.[selectedContact.id]?.map((msg, i) => (
-              <div
-                key={msg?.id || i}
-                style={{
-                  transform: `scaleY(-1)`,
-                  width: "100%",
-                }}
-                className="flex flex-col items-end gap-6"
-              >
-                <TempMessageBody body={msg?.body} timestamp={msg.timestamp} />
-              </div>
+    <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+      <MessageScroller className="min-h-0 flex-1">
+        <MessageScrollerViewport preserveScrollOnPrepend>
+          <MessageScrollerContent className="mx-auto w-full max-w-4xl gap-6 px-7 py-6">
+            <MessageScrollerItem messageId={TOP_SENTINEL_ID}>
+              {isPending || isFetchingNextPage || hasNextPage ? (
+                <div className="flex items-center justify-center">
+                  <Spinner className="size-4 text-muted-foreground" />
+                </div>
+              ) : (
+                <EndofConversationComponent />
+              )}
+            </MessageScrollerItem>
+            {isNotesView && !visibleMessages.length && (
+              <MessageScrollerItem messageId="wa-inbox-notes-empty">
+                <div className="flex flex-col items-center gap-1.5 py-10 text-center">
+                  <Lock className="size-5 text-amber-600 dark:text-amber-500" />
+                  <p className="text-sm font-medium text-foreground">No internal notes yet</p>
+                  <p className="max-w-xs text-xs text-muted-foreground">
+                    Notes stay with the ticket and are never sent to the customer.
+                  </p>
+                </div>
+              </MessageScrollerItem>
+            )}
+            {visibleMessages.map((message, index) => (
+              <MessageScrollerItem key={message?.id ?? index} messageId={message?.id}>
+                <MessageItem
+                  message={message}
+                  selectedContact={selectedContact}
+                  previousMessage={index > 0 ? visibleMessages[index - 1] : null}
+                />
+              </MessageScrollerItem>
             ))}
-          </div>
-        )}
-        <div
-          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-          className="relative p-6 max-w-4xl mx-auto mt-"
-        >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const message = allMessages[virtualRow.index];
-            const nextMessage =
-              virtualRow.index < allMessages.length - 1 ? allMessages[virtualRow.index + 1] : null;
-            const isLoaderRow = virtualRow.index > allMessages.length - 1;
-            const isEndofConversation = !hasNextPage && virtualRow.index === allMessages.length - 1;
-            return (
-              <div
-                key={virtualRow.key}
-                data-index={virtualRow.index}
-                ref={rowVirtualizer.measureElement}
-                style={{
-                  transform: `translateY(${virtualRow.start}px) scaleY(-1)`,
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                }}
-                className="gap-4 pb-4 pr-4 pl-6"
-              >
-                {isLoaderRow && (
-                  <div className="flex items-center justify-center">
-                    <Spinner className="size-4 text-muted-foreground" />
-                  </div>
-                )}
-                {isEndofConversation && (
-                  <div className="mb-6">
-                    <EndofConversationComponent />
-                  </div>
-                )}
-                {!isLoaderRow && (
-                  <MessageItem
-                    message={message}
-                    selectedContact={selectedContact}
-                    nextMessage={nextMessage}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      {!isAtBottom() && (
-        <div
-          className={classes.affix}
-          style={{
-            right: isContactDetailsOpened ? "395px" : "58px",
-            bottom: isContactDetailsOpened ? "180px" : "155px",
-          }}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hover:bg-transparent p-0 h-auto w-auto text-primary"
-            onClick={() => rowVirtualizer.scrollToIndex(0)}
-          >
-            <IconSquareRoundedChevronDown size={20} />
-          </Button>
-        </div>
-      )}
-    </>
+            {!isNotesView &&
+              pendingMessages.map((msg, i) => (
+                <MessageScrollerItem
+                  key={msg?.id || i}
+                  messageId={msg?.id || `temp-${i}`}
+                  scrollAnchor
+                >
+                  <TempMessageBody body={msg?.body} timestamp={msg.timestamp} />
+                </MessageScrollerItem>
+              ))}
+          </MessageScrollerContent>
+        </MessageScrollerViewport>
+        <MessageScrollerButton />
+        <LoadOlderMessagesTrigger enabled={hasNextPage} onReach={loadOlderMessages} />
+      </MessageScroller>
+    </MessageScrollerProvider>
   );
 };
 export default WaInboxChatDisplayBody;
 
-const MessageItem = ({ message, selectedContact, nextMessage }) => {
+/**
+ * Watches the top sentinel through the scroller's visibility hook — the
+ * documented escape hatch — and asks for the next page when it comes into view.
+ */
+const LoadOlderMessagesTrigger = ({
+  enabled,
+  onReach,
+}: Readonly<{ enabled: boolean; onReach: () => void }>) => {
+  const { visibleMessageIds } = useMessageScrollerVisibility();
+  const isSentinelVisible = visibleMessageIds.includes(TOP_SENTINEL_ID);
+
+  useEffect(() => {
+    if (isSentinelVisible && enabled) onReach();
+  }, [isSentinelVisible, enabled, onReach]);
+
+  return null;
+};
+
+const MessageItem = ({ message, selectedContact, previousMessage }) => {
   const { messagesByKey, selectedKey } = useMessagesStore();
   if (!message) return null;
   const { exchangeProcess, receive } = message.messageBody;
@@ -244,7 +236,8 @@ const MessageItem = ({ message, selectedContact, nextMessage }) => {
   )
     return <div />;
   const showDate =
-    !nextMessage || !dayjs(message.waCreatedAt).isSame(dayjs(nextMessage.waCreatedAt), "day");
+    !previousMessage ||
+    !dayjs(message.waCreatedAt).isSame(dayjs(previousMessage.waCreatedAt), "day");
   const reaction = getReactionMessage({
     message,
     allMessages: messagesByKey.get(selectedKey)?.messages || [],
@@ -252,7 +245,11 @@ const MessageItem = ({ message, selectedContact, nextMessage }) => {
   });
   return (
     <React.Fragment key={message?.id}>
-      {showDate && <DateComponent date={message?.waCreatedAt} />}
+      {showDate && (
+        <div className="pb-6">
+          <DateComponent date={message?.waCreatedAt} />
+        </div>
+      )}
       <WaInboxSingleMessageLayout
         exchangeProcess={message?.messageBody?.exchangeProcess}
         messageObject={message}
