@@ -1,3 +1,4 @@
+import { IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -88,14 +89,14 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center gap-2 pb-2">
-        <CardTitle>{translations("Survey Settings")}</CardTitle>
+      <CardHeader className="flex flex-row items-center gap-2.25 pb-2">
+        <IconAdjustmentsHorizontal className="size-4 text-primary" />
+        <CardTitle className="font-nunito text-[15px] font-extrabold">
+          {translations("General")}
+        </CardTitle>
         <InfoButton docUrl={`${docsPath}/webSurvey/shareSurvey`} />
       </CardHeader>
       <CardContent className="flex flex-col gap-1">
-        <p className="mb-4 text-sm text-muted-foreground">
-          {translations("Choose the teams to be added")}
-        </p>
         <form
           onSubmit={handleSubmit(onSubmit)}
           onKeyDown={(e) => {
@@ -183,8 +184,8 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
             <span className="text-sm">{translations("Send weekly report to email")}</span>
           </div>
 
-          <div className="flex justify-center pt-1">
-            <Button type="submit" disabled={editSurvey.isPending}>
+          <div className="flex justify-end pt-1">
+            <Button type="submit" size="sm" disabled={editSurvey.isPending}>
               {editSurvey.isPending && <Spinner data-icon="inline-start" />}
               {translations("Save Changes")}
             </Button>

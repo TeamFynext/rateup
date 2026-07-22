@@ -6,6 +6,7 @@ import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import { EditSurvey } from "../EditSurvey.tsx";
+import { EditTheme } from "../EditTheme.tsx";
 import Result from "../Result/Result.tsx";
 import ResultComparison from "../Result/ResultComparison.tsx";
 import SurveySettings from "../Settings/index.tsx";
@@ -42,6 +43,16 @@ function TabPanelsComp({
           }
         />
       </TabsContent>
+      <TabsContent value={TabEnum.Theme} className="h-full min-h-0">
+        <EditTheme
+          survey={survey}
+          questions={questions}
+          onClose={() => setActiveTab(TabEnum.Edit)}
+          setFunToRunBeforeSurveyIdPageHeaderTabsChange={
+            setFunToRunBeforeSurveyIdPageHeaderTabsChange
+          }
+        />
+      </TabsContent>
       <TabsContent value={TabEnum.Settings}>
         <SurveySettings
           surveyId={surveyId}
@@ -63,7 +74,7 @@ function TabPanelsComp({
                     "endtoendencryption",
                   "redirect",
                   "uniqueDeviceResponse",
-                  hasFeature(subscription, SubscriptionFeaturePathName.Ticket) && "tickets",
+                  "tickets",
                   hasFeature(subscription, SubscriptionFeaturePathName.EmailNotification) &&
                     "enableNotificationEmail",
                   hasFeature(subscription, SubscriptionFeaturePathName.Webhook) && "webhook",

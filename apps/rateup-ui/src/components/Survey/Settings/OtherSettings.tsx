@@ -64,19 +64,29 @@ const OtherSettings = () => {
 
   return (
     <>
-      <Card className="border-red-200 bg-red-50 dark:border-red-800/50 dark:bg-red-950/20">
-        <CardContent className="flex items-center justify-between gap-4">
+      <Card
+        size="sm"
+        className="bg-destructive/[0.03] shadow-none ring-destructive/25 dark:bg-destructive/10"
+      >
+        <CardContent className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="font-semibold text-destructive">{translations("DANGER ZONE")}</p>
-            <p className="text-sm text-muted-foreground">
-              {translations("Reset data and responses")}
+            <p className="text-[13px] font-extrabold tracking-wider text-destructive">
+              {translations("DANGER ZONE")}
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {translations("Resetting or deleting removes response data permanently.")}
             </p>
           </div>
-          <div className="flex flex-col gap-2">
-            <Button variant="destructive" onClick={() => setResetOpen(true)}>
+          <div className="flex flex-wrap gap-2.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-destructive/35 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setResetOpen(true)}
+            >
               {translations("Reset Response data")}
             </Button>
-            <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
+            <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
               {translations("Delete Survey")}
             </Button>
           </div>

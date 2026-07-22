@@ -50,15 +50,15 @@ export default function SurveyPageHeader<T extends string>({
       <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as T)}>
         <TabsList
           variant="line"
-          className="h-auto w-full justify-start gap-0 rounded-none border-b border-border bg-background p-0 px-[26px]"
+          className="h-11.5 w-full justify-start gap-0.5 rounded-none border-b border-border bg-background p-0 px-3"
         >
           {tabs.map(({ value, label, icon: Icon }) => (
             <TabsTrigger
               key={value}
               value={value}
-              className="h-[46px] flex-none gap-[6px] rounded-none border-0 px-[15px] text-[13px] font-medium text-muted-foreground after:bottom-[-1px] after:bg-primary data-active:font-semibold data-active:text-primary"
+              className="h-full flex-none gap-1.75 rounded-none border-0 px-3.25 text-[13px] font-medium text-muted-foreground after:bg-primary group-data-horizontal/tabs:after:-bottom-px data-active:font-bold data-active:text-primary"
             >
-              <Icon className="size-3.5" />
+              <Icon className="size-3.75" />
               {label}
             </TabsTrigger>
           ))}

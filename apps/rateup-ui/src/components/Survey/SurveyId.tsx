@@ -1,5 +1,5 @@
 import { useParams, useSearch } from "@tanstack/react-router";
-import { BarChart3, FileText, MessageSquare, Settings, Share2, Users } from "lucide-react";
+import { BarChart3, FileText, MessageSquare, Palette, Settings, Share2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -33,6 +33,7 @@ import TabPanelsComp from "./Tabs/TabPanels.tsx";
 
 export enum TabEnum {
   Edit = "Edit",
+  Theme = "Theme",
   Settings = "Settings",
   Share = "Share",
   Responses = "Responses",
@@ -44,6 +45,7 @@ const RESULT_TABS: TabEnum[] = [TabEnum.Responses, TabEnum.Analytics, TabEnum.Te
 
 const HEADER_TABS: SurveyHeaderTab<TabEnum>[] = [
   { value: TabEnum.Edit, label: "Questions", icon: FileText },
+  { value: TabEnum.Theme, label: "Edit Theme", icon: Palette },
   { value: TabEnum.Settings, label: "Settings", icon: Settings },
   { value: TabEnum.Share, label: "Share", icon: Share2 },
   { value: TabEnum.Responses, label: "Responses", icon: MessageSquare },

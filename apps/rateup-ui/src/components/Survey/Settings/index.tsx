@@ -80,62 +80,71 @@ const SurveySettings = ({
         "min-h-full overflow-auto bg-muted px-[22px] py-6",
       )}
     >
-      <div className="mx-auto flex max-w-5xl flex-col gap-4">
-        <GeneralSettings
-          enabledModules={enabledModules}
-          survey={survey}
-          setSelectedLanguage={setSelectedLanguage}
-        />
+      <div className="mx-auto flex max-w-[1120px] flex-col gap-4">
+        {/* Two columns of three, each stacking its own cards so a tall card never
+            leaves a gap beside a short one (as it would with a plain grid flow).
+            Split so the two columns end up roughly the same height: the two
+            tallest cards (General, Behaviour) are balanced against the three
+            shorter ones on the right. */}
+        <div className="grid items-start gap-4 lg:grid-cols-2">
+          <div className="flex flex-col gap-4">
+            <GeneralSettings
+              enabledModules={enabledModules}
+              survey={survey}
+              setSelectedLanguage={setSelectedLanguage}
+            />
 
-        <SecuritySettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
+            <KioskFetchLocSkipPreview
+              enabledModules={enabledModules}
+              kioskMode={kioskMode}
+              setKioskMode={setKioskMode}
+              editSurvey={editSurvey}
+              hasGoogleReview={hasGoogleReview}
+              location={location}
+              setLocation={setLocation}
+              preview={preview}
+              setPreview={setPreview}
+              webSurveyAutoTransitionToNextQues={webSurveyAutoTransitionToNextQues}
+              setwebSurveyAutoTransitionToNextQues={setwebSurveyAutoTransitionToNextQues}
+              survey={survey}
+              surveyId={surveyId}
+            />
 
-        <KioskFetchLocSkipPreview
-          enabledModules={enabledModules}
-          kioskMode={kioskMode}
-          setKioskMode={setKioskMode}
-          editSurvey={editSurvey}
-          hasGoogleReview={hasGoogleReview}
-          location={location}
-          setLocation={setLocation}
-          preview={preview}
-          setPreview={setPreview}
-          webSurveyAutoTransitionToNextQues={webSurveyAutoTransitionToNextQues}
-          setwebSurveyAutoTransitionToNextQues={setwebSurveyAutoTransitionToNextQues}
-          survey={survey}
-          surveyId={surveyId}
-        />
+            <WebhookSettings
+              responseWebhookEndpoint={survey?.responseWebhookEndpoint}
+              editSurvey={editSurvey}
+              enabledModules={enabledModules}
+            />
+          </div>
 
-        <RedirectSettings
-          enabledModules={enabledModules}
-          kioskMode={kioskMode}
-          editSurvey={editSurvey}
-          redirect={redirect}
-          setRedirect={setRedirect}
-          debounced={debounced}
-          redirectError={redirectError}
-          setRedirectError={setRedirectError}
-          survey={survey}
-        />
+          <div className="flex flex-col gap-4">
+            <SecuritySettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
 
-        <WebhookSettings
-          responseWebhookEndpoint={survey?.responseWebhookEndpoint}
-          editSurvey={editSurvey}
-          enabledModules={enabledModules}
-        />
+            <RedirectSettings
+              enabledModules={enabledModules}
+              kioskMode={kioskMode}
+              editSurvey={editSurvey}
+              redirect={redirect}
+              setRedirect={setRedirect}
+              debounced={debounced}
+              redirectError={redirectError}
+              setRedirectError={setRedirectError}
+              survey={survey}
+            />
 
-        {survey?.spreadSheetId && <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />}
+            {enabledModules.includes("tickets") && (
+              <TicketSettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
+            )}
 
-        {enabledModules.includes("tickets") && (
-          <TicketSettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
-        )}
+            {survey?.spreadSheetId && <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />}
 
-        {enabledModules.includes("flow") && (
-          <FlowSettingsUpdate name={flowName} dbFlowId={flowDbId} anonymous={anonymous} />
-        )}
-
-        <div className="rounded-xl border border-red-200 bg-red-50 shadow-none [&_.mantine-Paper-root]:border-none [&_.mantine-Paper-root]:bg-transparent [&_.mantine-Paper-root]:shadow-none">
-          <OtherSettings />
+            {enabledModules.includes("flow") && (
+              <FlowSettingsUpdate name={flowName} dbFlowId={flowDbId} anonymous={anonymous} />
+            )}
+          </div>
         </div>
+
+        <OtherSettings />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { IconEye, IconLanguage } from "@tabler/icons-react";
+import { IconEye, IconSearch } from "@tabler/icons-react";
 import { isEqual } from "lodash";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -10,6 +10,7 @@ import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { cn } from "@/lib/utils";
 import { PageType, QuestionType, SurveyType } from "@/types/enums.ts";
@@ -41,7 +42,6 @@ import {
 } from "./SurveyTheme/SurveyTheme.constants";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext.tsx";
-import UiTextTranslationsModal from "./UiTextTranslationsModal/index.tsx";
 
 const isQuestionType = (type: QuestionType | PageType | undefined): type is QuestionType =>
   Object.values(QuestionType).includes(type as QuestionType);
@@ -55,7 +55,6 @@ export enum QuestionTabsEnum {
   TicketIssueEditor = "TicketIssueEditor",
   VariableEditor = "VariableEditor",
   None = "None",
-  SurveyPreview = "SurveyPreview",
   QuestionReviewPageEditor = "QuestionReviewPageEditor",
 }
 interface EditSurveyProps {
@@ -90,11 +89,8 @@ export function EditSurvey({
   // To store state of surveyThemeContextProvider.
   const surveyThemeContextProviderValueRef = useRef(null);
 
-  const [isUiTextTranslationsModalOpen, setIsUiTextTranlationsModalOpen] = useState(false);
-
-  const handleUiTextTranslationsModalClose = useCallback(() => {
-    setIsUiTextTranlationsModalOpen(false);
-  }, [isUiTextTranslationsModalOpen]);
+  // Search text for the "Add Element" catalogue.
+  const [elementQuery, setElementQuery] = useState("");
 
   const [isSurveyPreviewModalOpen, setIsSurveyPreviewModalOpen] = useState(false);
   const openSurveyPreviewModal = () => setIsSurveyPreviewModalOpen(true);
@@ -116,16 +112,7 @@ export function EditSurvey({
   const closeStylesEditorDrawer = () => setIsStylesEditorDrawerOpen(false);
 
   const checkForUnsavedChanges = useCallback(() => {
-    if (!selectedQ && activeTab === QuestionTabsEnum.SurveyPreview) {
-      if (
-        themeSelectorState !== survey?.webSurveyThemeId ||
-        !isEqual(surveyThemeContextProviderValueRef.current, survey?.webSurveyTheme?.theme)
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    } else if (uniquePages.includes(selectedQ?.type as PageType)) {
+    if (uniquePages.includes(selectedQ?.type as PageType)) {
       const themeObjKey = getSurveyThemeKeyFromPageType(selectedQ?.type);
       if (
         !isEqual(
@@ -182,8 +169,6 @@ export function EditSurvey({
   useEffect(() => {
     if (uniquePages.includes(selectedQ?.type as PageType)) {
       setSurveyThemeContextValue(survey?.webSurveyPagesTheme);
-    } else if (activeTab === QuestionTabsEnum.SurveyPreview) {
-      setSurveyThemeContextValue(survey?.webSurveyTheme?.theme);
     }
   }, [survey]);
 
@@ -240,7 +225,7 @@ export function EditSurvey({
   }, [selectedSurveyThemeTab]);
 
   useEffect(() => {
-    if (activeTab !== QuestionTabsEnum.SurveyPreview) {
+    if (activeTab !== QuestionTabsEnum.Edit) {
       closeStylesEditorDrawer();
     }
   }, [activeTab]);
@@ -294,15 +279,12 @@ export function EditSurvey({
                 selectedQ={selectedQ}
                 setSelectedQ={setSelectedQ}
                 setActiveTab={setActiveTab}
-                activeTab={activeTab}
                 surveyLanguages={surveyLanguages}
                 setSelectedLanguage={setSelectedLanguage}
                 addQnTrigger={addQnTrigger}
                 survey={survey}
-                openStylesEditorDrawer={openStylesEditorDrawer}
                 setSurveyThemeContextValue={setSurveyThemeContextValue}
                 setSelectedSurveyThemeTab={setSelectedSurveyThemeTab}
-                setThemeSelectorState={setThemeSelectorState}
                 checkForUnsavedChanges={checkForUnsavedChanges}
                 hasContactFeatureIssue={hasContactFeatureIssue}
               />
@@ -371,22 +353,40 @@ export function EditSurvey({
                   </div>
                 )}
                 {activeTab === QuestionTabsEnum.TypeSelection && (
-                  <div className="h-full overflow-auto">
-                    {survey?.type === SurveyType.Web && (
-                      <PageTypeSelection
-                        questions={questions}
+                  <div className="flex h-full flex-col bg-card">
+                    <div className="flex h-13.5 shrink-0 items-center gap-3.5 border-b border-border px-5.5">
+                      <span className="shrink-0 font-nunito text-[17px] font-extrabold text-foreground">
+                        {translations("Add Element")}
+                      </span>
+                      <div className="relative max-w-md flex-1">
+                        <IconSearch className="absolute top-1/2 left-3 size-3.75 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          value={elementQuery}
+                          onChange={(event) => setElementQuery(event.target.value)}
+                          placeholder={translations("Search elements...")}
+                          className="h-9 pl-8.5 text-[13px]"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-1 flex-col gap-5 overflow-auto px-5.5 py-4.5">
+                      {survey?.type === SurveyType.Web && (
+                        <PageTypeSelection
+                          questions={questions}
+                          handleTypeSelection={handleTypeSelection}
+                          subscription={subscription}
+                          query={elementQuery}
+                        />
+                      )}
+                      <QuestionTypeSelection
+                        questionTypeGroups={
+                          survey?.type === SurveyType.WhatsApp
+                            ? WaSurveyQuestionTypes
+                            : QuestionTypesGroup
+                        }
                         handleTypeSelection={handleTypeSelection}
-                        subscription={subscription}
+                        query={elementQuery}
                       />
-                    )}
-                    <QuestionTypeSelection
-                      questionTypeGroups={
-                        survey?.type === SurveyType.WhatsApp
-                          ? WaSurveyQuestionTypes
-                          : QuestionTypesGroup
-                      }
-                      handleTypeSelection={handleTypeSelection}
-                    />
+                    </div>
                   </div>
                 )}
                 {activeTab === QuestionTabsEnum.LogicEditor && selectedQ && (
@@ -453,29 +453,6 @@ export function EditSurvey({
                     </div>
                   </div>
                 )}
-                {activeTab === QuestionTabsEnum.SurveyPreview && (
-                  <div className="relative h-full">
-                    {survey && (
-                      <SurveyTheme
-                        previewId={"survey-theme-edit-preview"}
-                        key={surveyPreviewCompKey}
-                        survey={survey}
-                        isSurveyThemeEditView={true}
-                        onEditPageBtnClick={openStylesEditorDrawer}
-                      />
-                    )}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="absolute right-3 top-3 z-[100] h-auto w-auto p-[5px]"
-                      onClick={() =>
-                        setIsUiTextTranlationsModalOpen(!isUiTextTranslationsModalOpen)
-                      }
-                    >
-                      <IconLanguage size={20} />
-                    </Button>
-                  </div>
-                )}
               </div>
             </div>
           </motion.div>
@@ -523,12 +500,6 @@ export function EditSurvey({
             />
           </SurveyPreviewModal>
         </div>
-
-        <UiTextTranslationsModal
-          survey={survey}
-          opened={isUiTextTranslationsModalOpen}
-          onClose={handleUiTextTranslationsModalClose}
-        />
       </div>
     </SurveyThemeContextProvider>
   );
