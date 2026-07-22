@@ -17,6 +17,8 @@ import {
   getTeamByIdHandler,
   getTeamFeaturesHandler,
   setTeamFeaturesHandler,
+  getTeamChannelsHandler,
+  setTeamChannelsHandler,
 } from "./team.controller.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
@@ -44,6 +46,8 @@ import {
   inviteMemberRequestSchema,
   setTeamFeaturesSchema,
   getTeamFeaturesResponseSchema,
+  setTeamChannelsSchema,
+  getTeamChannelsResponseSchema,
 } from "./team.schema.js";
 
 // TODO: add checkSession as server.addHook instead of defining it in every route
@@ -305,5 +309,36 @@ export async function teamRoutes(server: FastifyInstance) {
       },
     },
     setTeamFeaturesHandler,
+  );
+
+  // ── Team Channel Access ───────────────────────────────────────────────────
+
+  server.get(
+    "/:teamId/channels",
+    {
+      preHandler: [checkSession, getVerifySubscriptionHandler([sf.Team]), verifyTeamAccess],
+      schema: {
+        params: getTeamMembersRequestSchema,
+        response: { 200: getTeamChannelsResponseSchema },
+      },
+    },
+    getTeamChannelsHandler,
+  );
+
+  server.put(
+    "/:teamId/channels",
+    {
+      preHandler: [
+        checkSession,
+        getVerifySubscriptionHandler([sf.Team]),
+        checkRoleHandler(["SUPER_ADMIN"]),
+      ],
+      schema: {
+        params: getTeamMembersRequestSchema,
+        body: setTeamChannelsSchema,
+        response: { 200: getTeamChannelsResponseSchema },
+      },
+    },
+    setTeamChannelsHandler,
   );
 }

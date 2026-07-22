@@ -17,7 +17,9 @@ import {
   addMemberToTeams,
   getUsersNotInTeam,
   addMembersToTeamsMail,
+  getTeamChannels,
   getTeamFeatures,
+  setTeamChannels,
   setTeamFeatures,
 } from "./team.service.js";
 import {
@@ -29,6 +31,7 @@ import {
   IdParamInput,
   InviteCompleteInput,
   InviteMemberInput,
+  SetTeamChannelsInput,
   tagQuerySchema,
 } from "./team.schema.js";
 import Session from "supertokens-node/recipe/session/index.js";
@@ -357,6 +360,33 @@ export async function setTeamFeaturesHandler(
     const features = await setTeamFeatures(request.params.teamId, request.body as any);
     reply.send({ features });
   } catch {
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function getTeamChannelsHandler(
+  request: FastifyRequest<{ Params: { teamId: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    reply.send(await getTeamChannels(request.params.teamId));
+  } catch (e: any) {
+    log.error("Failed to get team channels\n%o", e);
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function setTeamChannelsHandler(
+  request: FastifyRequest<{
+    Params: { teamId: string };
+    Body: SetTeamChannelsInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    reply.send(await setTeamChannels(request.params.teamId, request.body));
+  } catch (e: any) {
+    log.error("Failed to set team channels\n%o", e);
     reply.code(500).send({ message: "Internal server error" });
   }
 }

@@ -1813,7 +1813,13 @@ export async function bulkUpdateWaMessageAssignStatus(
     if (latestIds.length) {
       await tx.conversation.updateMany({
         where: { id: { in: latestIds } },
-        data: conversationStatusData(waMessageAssignStatus, actor, undefined, now, resolutionResult),
+        data: conversationStatusData(
+          waMessageAssignStatus,
+          actor,
+          undefined,
+          now,
+          resolutionResult,
+        ),
       });
     }
   });

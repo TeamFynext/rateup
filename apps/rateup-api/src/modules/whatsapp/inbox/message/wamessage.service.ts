@@ -18,6 +18,7 @@ import {
 import { log } from "../../../../utils/logger.js";
 import { callMetaApi } from "../../wa_axios.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
+import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
 import axios from "axios";
 import type { InboxStatus } from "../../../../types/enums.js";
 import { WaAssignedChatPermission, WaMessageAssignStatus } from "../../../../types/enums.js";
@@ -302,6 +303,29 @@ export async function filterChats(
     const params: any[] = [orgId, (page - 1) * 20, userId];
     let paramIndex = 4;
     const filters: string[] = [`c."orgId" = $1::uuid`];
+
+    // Team channel scope. Applied here — above the search/non-search split and independent of
+    // `bodyFilterProps.phone` — so that choosing "All", clearing the filter, or naming someone
+    // else's channel cannot widen it. The user's own phone filter below ANDs on top of this.
+    // Contact-grained, matching the phone filter: legacy messages carry a null conversationId,
+    // so scoping by conversation would hide un-backfilled tickets outright.
+    if (role !== Role.SUPER_ADMIN) {
+      const scope = await getScopedSourceIdentifiers(orgId, userId);
+      if (!scope.all) {
+        if (scope.identifiers.length === 0) {
+          // Scoped to zero channels: match nothing rather than falling through to no filter.
+          filters.push(`1 = 0`);
+        } else {
+          params.push(scope.identifiers);
+          filters.push(`EXISTS (
+            SELECT 1 FROM "WaMessage" wm
+            WHERE wm."contactId" = c.id
+            AND wm."sourceIdentifier" = ANY($${paramIndex++}::TEXT[])
+          )`);
+        }
+      }
+    }
+
     // Inbox Tickets v2: the list is conversation-grained — one row per ticket, not
     // per contact. Recency is therefore the conversation's own clock; `createdAt`
     // covers tickets that exist but have not been messaged in yet.
