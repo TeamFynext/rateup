@@ -1,0 +1,125 @@
+---
+title: "Earning Rules & Tiers"
+description: How customers earn points, and the tiers they climb as they do.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+Two things decide how generous your programme feels: the **earning rate** and the **tiers**. Both
+are configured here.
+
+<ImagePlaceholder
+  file="loyalty/earning-rules.png"
+  shot="The Point Earning Rules page showing Tier-Based Earning Rates with tier cards, and the Additional Earning Rules list below."
+  caption="Earning rules and tiers."
+/>
+
+{/* TODO: capture the earning rules page */}
+
+---
+
+## Tier-Based Earning Rates
+
+Each tier has its own **earning rate** — how many points a customer gets per unit of spend.
+
+<Steps>
+<Step>
+Click **Add Tier**.
+</Step>
+<Step>
+Enter a **tier name** — required.
+</Step>
+<Step>
+Set the **threshold**: the points needed to reach it.
+</Step>
+<Step>
+Set the **earning rate** for members at this tier.
+</Step>
+<Step>
+Pick a **colour** so the tier is recognisable across the dashboard.
+</Step>
+</Steps>
+
+The first tier is the **base tier** — the starting point every new member joins at.
+
+### Designing tiers
+
+| Guideline | Why |
+|-----------|-----|
+| Three or four tiers | Enough to motivate, few enough to remember |
+| Reachable first upgrade | The first upgrade is what creates the habit |
+| Meaningfully better rates higher up | If the top tier earns barely more, nobody chases it |
+| Round, memorable thresholds | *500 points* beats *473 points* |
+
+<Callout type="warn">
+  Deleting a tier that members occupy offers **Downgrade & Delete** — those members move down.
+  Expect complaints; announce it before you do it.
+</Callout>
+
+---
+
+## Additional Earning Rules
+
+Beyond the base rate, additional rules give points for specific behaviour. Before you create any
+you will see *"No additional rules yet"* and a **Create Your First Rule** prompt.
+
+<Steps>
+<Step>
+Click **Add Rule** or **Create Earning Rule**.
+</Step>
+<Step>
+Enter a **rule name** — required, and it is what appears on the customer's transaction history.
+</Step>
+<Step>
+Choose the **type**.
+</Step>
+<Step>
+Set the value, and any conditions such as the days of the week it applies to.
+</Step>
+<Step>
+Save. Rules can be toggled **Active** / **Inactive** without deleting them.
+</Step>
+</Steps>
+
+### Rule types
+
+| Type | Effect |
+|------|--------|
+| **Multiplier** | Multiplies the points earned — double points |
+| **Fixed Bonus Points** | Adds a set number of points |
+| **Percentage Bonus** | Adds a percentage on top |
+
+### Day-of-week conditions
+
+Rules can apply on chosen days — Monday through Sunday. This is how you build "double points on
+Tuesdays" to shift demand into your quiet periods.
+
+<Callout type="info">
+  Use additional rules to change *behaviour*, not to be generally generous. A permanent bonus is
+  just a higher earning rate with extra steps; a Tuesday bonus actually moves footfall.
+</Callout>
+
+---
+
+## Getting the Rate Right
+
+The earning rate and the [reward](/loyalty/rewards) costs together decide what a point is worth.
+Work backwards:
+
+1. Decide what a reward should cost the customer in spend
+2. Decide the reward's point cost
+3. Set the earning rate so those two line up
+
+<Callout type="warn">
+  Changing the earning rate later revalues every point already issued. Model it before launch —
+  this is the number you least want to change in public.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Rewards](/loyalty/rewards)
+- [Overview Dashboard](/loyalty/dashboard) — checking tier distribution
+- [Settings](/loyalty/settings)

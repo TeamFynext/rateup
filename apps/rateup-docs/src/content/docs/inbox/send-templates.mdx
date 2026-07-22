@@ -1,58 +1,52 @@
 ---
 title: "Sending Templates"
-description: Learn how to send WhatsApp templates before and after the 24-hour messaging window.
+description: Use approved WhatsApp templates to message customers inside or outside the 24-hour window.
 ---
 
-import { CDN } from "@/lib/cdn";
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
+import { CDN } from "@/lib/cdn";
 
-WhatsApp **Templates** allow you to message customers **both before and after the 24-hour messaging window**.
-
-Templates are required after the 24-hour window expires, but they can also be used **within the 24-hour window** for structured or predefined communication.
-
----
-
-## When Should You Send a Template?
-
-Templates can be sent in two scenarios:
-
-### ✅ After the 24-Hour Window (Required)
-- Direct chat replies are disabled
-- Templates are the **only allowed way** to message the customer
-- Used to re-engage inactive conversations
-
-### ✅ Before the 24-Hour Window (Optional)
-- Normal chat replies are still available
-- Templates can be used for:
-  - Structured messages
-  - Consistent responses
-  - Business updates or notifications
+WhatsApp **templates** are pre-approved messages. They are the only way to write to a customer
+once the 24-hour window has closed — and they are useful inside it too.
 
 ---
 
-## How to Send a Template
+## When You Need a Template
 
-Templates are sent directly from an Inbox conversation.
+| Situation | Free-form reply | Template |
+|-----------|-----------------|----------|
+| Customer messaged in the last 24 hours | ✅ | ✅ |
+| More than 24 hours since their last message | ❌ | ✅ |
+| You are starting the conversation | ❌ | ✅ |
 
-### Step-by-Step: Sending a Template
-
-1. Open the customer conversation in the **Inbox**
-2. Click the **Send Template** option in the chat window
-3. Select an **approved template**
-4. Review the template content
-5. Click **Send**
-
-The template message is delivered immediately to the customer.
+<Callout type="info">
+  The countdown in the chat header shows how long the current window has left. When it runs out,
+  the composer switches to template-only options automatically.
+</Callout>
 
 ---
 
-## Sending Templates After the 24-Hour Window
+## Send a Template
 
-When the 24-hour window has expired:
-
-- The normal message input is **disabled**
-- You will see an option to **Send Template**
-- Only **approved WhatsApp templates** can be sent
+<Steps>
+<Step>
+Open the ticket in the Inbox.
+</Step>
+<Step>
+Open the composer menu and choose **Send WhatsApp Template**.
+</Step>
+<Step>
+Pick an **approved** template from the list.
+</Step>
+<Step>
+Fill in any variables the template requires, and review the preview.
+</Step>
+<Step>
+Click **Send**. The message is delivered immediately and appears in the thread.
+</Step>
+</Steps>
 
 <ScreenShot
   src={`${CDN}/docs/screenshots/inbox/send-template-after-24h.png`}
@@ -60,20 +54,34 @@ When the 24-hour window has expired:
   width={650}
 />
 
-Once the customer replies:
-- A **new 24-hour window** starts automatically
-- Normal chat replies and flows become available again
+{/* TODO: re-capture against the current composer */}
 
 ---
 
-## Sending Templates Within the 24-Hour Window
+## After the Window Has Closed
 
-Even when the 24-hour window is active, you can still send templates.
+When the 24-hour window has expired:
 
-Use templates within the window when:
-- You want consistent messaging
-- You are sending structured updates
-- You prefer predefined content
+- The normal message box is disabled
+- Only **Send WhatsApp Template** remains available
+- Only templates approved by WhatsApp can be sent
+
+Once the customer replies to your template:
+
+- A **new 24-hour window** opens automatically
+- Free-form replies, quick replies and flows become available again
+
+---
+
+## Inside the Window
+
+Templates still work while the window is open. Use one when you want:
+
+- Consistent, approved wording
+- A structured update — order status, appointment reminder
+- A message with buttons or a defined layout
+
+Manual replies and templates can sit side by side in the same ticket.
 
 <ScreenShot
   src={`${CDN}/docs/screenshots/inbox/send-template-within-24h.png`}
@@ -81,57 +89,64 @@ Use templates within the window when:
   width={650}
 />
 
-Both manual replies and templates can coexist in the same conversation.
-
 ---
 
 ## Templates vs Manual Messages
 
-| Feature | Manual Message | Template |
-|------|---------------|----------|
-Availability | Only within 24 hours | Anytime |
-Approval required | No | Yes (WhatsApp approval) |
-Personalization | High | Limited |
-Use case | Live conversation | Re-engagement & structured messages |
+| | Manual message | Template |
+|---|----------------|----------|
+| **Availability** | Inside the 24-hour window only | Any time |
+| **Approval required** | No | Yes, by WhatsApp |
+| **Personalisation** | Full | Limited to variables |
+| **Best for** | Live conversation | Re-engagement and structured messages |
 
 ---
 
-## Role-Based Access
+## Consent
 
-### Business Admin
-- Can send templates
-- Can manage and create templates
+A customer who has not given consent cannot be sent template messages. Their name carries a **DND**
+badge in the chat header, and consent is shown in the **Ticket Details** panel.
 
-### Manager
-- Can send approved templates
+---
 
-### Agent
-- Can send approved templates
-- Cannot create or edit templates
+## Who Can Do What
+
+| Role | Send templates | Create & edit templates |
+|------|----------------|------------------------|
+| **Business Admin** | ✅ | ✅ |
+| **Manager** | ✅ | ❌ |
+| **Agent** | ✅ | ❌ |
+
+---
+
+## Frequently Asked
+
+<Accordions type="single">
+<Accordion title="My template is not in the list.">
+It is probably not approved yet. Templates must be approved by WhatsApp before they can be sent —
+check its status under **WhatsApp → Templates**.
+</Accordion>
+<Accordion title="Can I send a template to reopen a closed ticket?">
+Sending any message requires an active ticket. Click **Reopen** first — that opens a successor
+ticket — then send the template from there.
+</Accordion>
+<Accordion title="Does sending a template open a new 24-hour window?">
+No. Only a message **from the customer** opens a window. Your template may prompt one.
+</Accordion>
+</Accordions>
 
 ---
 
 ## Best Practices
 
-- Use templates only when necessary
-- Keep template content clear and relevant
-- Avoid overusing templates within the 24-hour window
-- Monitor customer replies to reopen conversations quickly
-- Ensure templates are approved before relying on them
+- Use templates for re-engagement, not as a substitute for a real reply
+- Keep the content relevant to that specific customer — generic templates get reported as spam
+- Get templates approved before you need them, not during an incident
+- Watch for the reply, so you can continue in free-form while the window is open
 
 ---
 
-## Common Scenarios
+## Related Pages
 
-- Following up after customer inactivity
-- Sending reminders or updates
-- Reopening a closed or inactive conversation
-- Maintaining compliance with WhatsApp policies
-
----
-
-## What’s Next?
-
-Learn how templates are created and approved in **Templates**, or explore **Flows** to automate conversations inside the Inbox.
-
-
+- [Replying to Customers](/inbox/responding-to-conversation)
+- [WhatsApp Templates](/whatsapp/templates) — creating and approving templates

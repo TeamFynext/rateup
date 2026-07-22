@@ -1,207 +1,125 @@
 ---
 title: "Lifecycle Stages"
+description: The customer journey funnel — where each contact stands, from lead to customer.
 ---
 
-Lifecycle stages help teams track how contacts progress through different phases of their journey. Each contact belongs to one lifecycle stage at a time, making lifecycle stages useful for monitoring long-term status and outcomes.
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-import ScreenShot from "@/components/Screenshot";
-import { CDN } from '@/lib/cdn';
+A **lifecycle stage** records where a contact stands in your customer journey. Each contact is in
+exactly one stage at a time, and the stages together form your **Customer Journey Funnel**.
 
----
-
-## What Is a Lifecycle Stage?
-
-A lifecycle stage represents the **current position of a contact in a defined journey**, such as sales, onboarding, or support.
-
-Lifecycle stages are:
-- Sequential
-- Mutually exclusive (one contact = one stage)
-- Designed to reflect **long-term progress**, not temporary context
-
----
-
-## Accessing Lifecycle Management
-
-Lifecycle stages are managed from **Contacts → Lifecycle**.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/lifecycle-dashboard.png`}
-  alt="Lifecycle management dashboard"
+<ImagePlaceholder
+  file="contacts/lifecycle.png"
+  shot="The Lifecycle Management page showing the customer journey funnel with stages, their emoji icons and descriptions, plus the Add Stage control."
+  caption="Lifecycle stages."
 />
 
-This page provides both:
-- Configuration options for lifecycle stages
-- A visual overview of how contacts are distributed across stages
+{/* TODO: capture the lifecycle page */}
 
 ---
 
-## Lifecycle Overview Dashboard
+## Setting Up Stages
 
-The dashboard displays lifecycle stages as cards.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/lifecycle-cards.png`}
-  alt="Lifecycle stage summary cards"
-/>
-
-Each card shows:
-- Stage name
-- Icon and color
-- Number of contacts in the stage
-- Stage status (Default, Active, Won)
-
-This overview helps teams quickly understand where contacts currently stand.
-
----
-
-## Customer Journey Funnel
-
-The **Customer Journey Funnel** visualizes how contacts move across lifecycle stages.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/lifecycle-funnel.png`}
-  alt="Customer journey funnel"
-/>
-
-This section helps identify:
-- Drop-offs between stages
-- Bottlenecks in progression
-- Overall distribution across the journey
+<Steps>
+<Step>
+Open **Contacts → Lifecycle**. If nothing is configured you will see *"No lifecycle stages yet"*
+and a **Set up Lifecycle Stages** prompt.
+</Step>
+<Step>
+Click **Add Stage** or **Create Lifecycle Stage**.
+</Step>
+<Step>
+Enter a **stage name** — the placeholder suggests the shape: *New Lead*. A name is required.
+</Step>
+<Step>
+Pick an **emoji icon**. It is how the stage is recognised at a glance across RateUp.
+</Step>
+<Step>
+Add a **description** explaining what qualifies someone for this stage, so the whole team applies
+it the same way.
+</Step>
+<Step>
+Save.
+</Step>
+</Steps>
 
 ---
 
-## Setting Up Lifecycle Stages
+## Won and Lost Stages
 
-Click **Setup** to configure lifecycle stages.
+The funnel has two kinds of endpoint:
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/lifecycle-setup.png`}
-  alt="Lifecycle setup screen"
-/>
+| Type | Meaning |
+|------|---------|
+| **Won stage** | The contact converted |
+| **Lost stages** | The contact did not — add these with **Add Lost Stage** |
 
-The setup screen is divided into two areas:
-- **Lifecycle Stages** (active journey)
-- **Lost Stages** (contacts that exit the journey)
-
----
-
-## Creating a Lifecycle Stage
-
-To add a new lifecycle stage:
-
-1. Click **Add Stage**
-2. Configure the stage details
-3. Save the stage
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/add-lifecycle-stage-modal.png`}
-  alt="Add lifecycle stage modal"
-  width={350}
-/>
-
-### Stage Configuration Options
-
-- **Name**  
-  The stage label (for example: *New Lead*, *Qualified*, *Closed*).
-
-- **Description**  
-  Internal explanation of what the stage represents.
-
-- **Emoji Icon**  
-  Used for quick visual recognition across the UI.
-
-- **Color**  
-  Helps differentiate stages in dashboards and filters.
-
-Click **Save** to add the stage.
+Several lost stages is usually better than one. *Too expensive*, *Went to competitor* and
+*No response* are three different problems, and lumping them together hides all three.
 
 ---
 
-## Default and Won Stages
+## A Typical Funnel
 
-Some lifecycle stages have special roles:
+| Stage | Meaning |
+|-------|---------|
+| 🆕 **New Lead** | Just made contact |
+| 💬 **Engaged** | In active conversation |
+| 📋 **Qualified** | A genuine fit |
+| ✅ **Customer** | Bought — the won stage |
+| ❌ **Lost Lead** | Did not convert — a lost stage |
 
-- **Default stage**  
-  Newly created contacts are automatically assigned to this stage.
-
-- **Won stage**  
-  Represents successful completion of the journey.
-
-These indicators are visible directly in the setup view.
-
----
-
-## Lost Stages
-
-Lost stages represent contacts that exit the journey without completion.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/lifecycle-lost-stages.png`}
-  alt="Lost lifecycle stages section"
-/>
-
-Key behavior:
-- Lost stages do not create default inbox filters
-- Contacts in lost stages remain accessible
-- Used for tracking churn or unsuccessful outcomes
+Keep it to five or six. A funnel with fifteen stages does not get maintained.
 
 ---
 
-## Show or Hide Lifecycle Stages
+## Changing a Contact's Stage
 
-Lifecycle visibility can be toggled using the **Show / Hide Lifecycle Stages** option.
+| From | How |
+|------|-----|
+| **Contact record** | Set the stage directly |
+| **Inbox** | Ticket Details panel → **Lifecycle Stage** |
+| **Automation** | The **Assign Lifecycle** action |
+| **Import** | Assign a stage during import |
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/lifecycle-visibility-toggle.png`}
-  alt="Show or hide lifecycle stages toggle"
-/>
-
-- Disabling lifecycle hides it from Contacts and Inbox
-- Contact data remains unchanged
-- Stages can be re-enabled at any time
-
----
-
-## Using Lifecycle Stages Across Contacts
-
-Lifecycle stages are used when:
-
-- Viewing or filtering contacts
-- Performing bulk actions
-- Tracking progress in dashboards
-- Analyzing customer journeys
-
-Lifecycle filters are also available in the Contacts list and Inbox.
+Automating stage changes on real signals — a first purchase, a form submission — keeps the funnel
+honest in a way that relying on people to remember never does.
 
 ---
 
-## Lifecycle vs Labels vs Groups
+## Display Options
 
-- **Lifecycle stages** track long-term progression
-- **Labels** add short-term or contextual tags
-- **Groups** organize contacts into collections
+**Show/Hide Lifecycle Stages** controls whether the funnel appears in the contacts view. Hidden, it
+reads *"Lifecycle Display is Hidden"* — the stages still exist and still apply.
 
-A contact:
-- Can have many labels
-- Can belong to multiple groups
-- Can have only one lifecycle stage
+Descriptions can be shown or hidden with **Show description** / **Hide description**.
 
 ---
 
-## Best Practices
+## Editing and Deleting
 
-- Keep lifecycle stages minimal and meaningful
-- Avoid duplicate or overlapping stages
-- Use lost stages for exits instead of deleting contacts
-- Review stage definitions periodically
+Use **Update Lifecycle Stage** to change a stage's name, icon or description.
 
----
-
-## Why Lifecycle Stages Matter
-
-Lifecycle stages provide a structured way to understand contact progress, identify outcomes, and improve workflows by making long-term movement visible and measurable.
+<Callout type="warn">
+  **Cannot delete default stage** — the default is required. Deleting any other stage asks
+  *"Delete lifecycle stage?"*; make sure contacts sitting in it are moved somewhere sensible first.
+</Callout>
 
 ---
 
+## Lifecycle vs Labels
 
+| | Lifecycle stages | [Labels](/contacts/labels) |
+|---|-----------------|--------|
+| **How many** | One per contact | Many |
+| **Shape** | An ordered funnel | A flat set of tags |
+| **Answer** | "How far along are they?" | "What is true about them?" |
 
+---
+
+## Related Pages
+
+- [Labels](/contacts/labels)
+- [Automation Actions](/automation/actions)
+- [Campaigns](/campaign) — targeting by stage

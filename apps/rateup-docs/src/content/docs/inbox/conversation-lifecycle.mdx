@@ -1,184 +1,209 @@
 ---
-title: "Conversation Lifecycle"
-description: Understand how conversation status works in the RateUp Inbox.
+title: "Closing & Reopening Tickets"
+description: The ticket lifecycle end to end — the four close options, what closing changes, and what reopening actually does.
 ---
 
-import { CDN } from "@/lib/cdn";
-import ScreenShot from "@/components/Screenshot";
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-Every conversation in the RateUp Inbox follows a **lifecycle**.  
-The lifecycle helps teams track progress, take action, and manage conversations efficiently from start to closure.
-
----
-
-## What is Conversation Lifecycle?
-
-Conversation lifecycle represents the **current state** of a customer conversation, such as new, resolved, or closed.
-
-The lifecycle control is available **in every Inbox view** and can be updated at any time.
+Every ticket ends. This page covers how to end one properly, and what happens afterwards.
 
 ---
 
-## Lifecycle Control Location
+## The Three States
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/lifecycle-overview.png`}
-  alt="Conversation view with lifecycle control"
+| Status | Meaning | Set by |
+|--------|---------|--------|
+| **New** | Nobody is assigned yet | Created automatically with the ticket |
+| **Assigned** | At least one agent or team owns it | Assigning someone |
+| **Closed** | Closed, resolved, unresolved or spam | Using the **Close** menu |
+
+<Callout type="info">
+  Status is derived from assignment and closure — there is no status field to maintain separately.
+  Assign a ticket and it becomes **Assigned**; close it and it becomes **Closed**.
+</Callout>
+
+---
+
+## Closing a Ticket
+
+The green **Close** button sits in the top-right of the chat window, next to the panel toggle.
+
+<ImagePlaceholder
+  file="inbox/close-menu.png"
+  shot="The Close dropdown open, showing Mark as Resolved, Mark as Closed, Mark as Spam, Mark as Unresolved, a separator, and Block contact in red."
+  caption="The Close menu."
 />
 
-The lifecycle control is located at the **top-right corner of the chat window**.  
-It is visible in all Inbox views including **New**, **Assigned**, **Mine**, and **Closed**.
+{/* TODO: capture the Close dropdown */}
+
+<Steps>
+<Step>
+Finish the conversation — make sure the customer has what they need.
+</Step>
+<Step>
+Click **Close** in the chat header.
+</Step>
+<Step>
+Pick the outcome that describes what actually happened.
+</Step>
+</Steps>
+
+### Choosing the right outcome
+
+| Option | Use when | Ticket goes to |
+|--------|----------|----------------|
+| **Mark as Resolved** | The customer's problem was solved | Closed |
+| **Mark as Closed** | Finished, with no specific outcome to record | Closed |
+| **Mark as Unresolved** | You could not solve it, and want that on record | Closed |
+| **Mark as Spam** | Not a genuine customer query | Spam |
+
+<Callout type="info">
+  These outcomes feed your reporting. "Resolved" and "Unresolved" are the difference between a
+  support team that looks perfect and one that can actually find its weak spots — pick honestly.
+</Callout>
 
 ---
 
-## Lifecycle Options
+## What Closing Changes
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/lifecycle-dropdown.png`}
-  alt="Conversation lifecycle dropdown options"
-   width={350}
-/>
+<Callout type="warn">
+  Closing a ticket **removes all its assignees**. This is intentional: closed work should not sit
+  in anyone's queue.
+</Callout>
 
-Clicking the lifecycle dropdown allows you to change the conversation status.
+Once a ticket is closed:
 
-Available options include:
-
----
-
-### Mark as Resolved
-
-- Indicates the issue has been addressed
-- Conversation may still be visible for reference
-
-**Use when:**  
-The customer’s query has been answered successfully.
+- It moves to the **Closed** view (or **Spam**)
+- All assignees are cleared
+- A system note records **who** closed it and **when**
+- The composer is replaced by a banner — the ticket becomes **read-only**
+- If it was closed with a result, a green badge appears in the ticket strip and in **Ticket Details**
 
 ---
 
-### Mark as Closed
+## Blocking a Contact
 
-- Closes the conversation completely
-- Conversation moves to the **Closed** tab
+**Block contact** sits at the bottom of the **Close** menu. On an already-closed ticket it moves
+into the **⋮** overflow menu next to **Reopen**.
 
-**Use when:**  
-No further action is required.
+<Steps>
+<Step>
+Open the **Close** menu (or **⋮** on a closed ticket) and choose **Block contact**.
+</Step>
+<Step>
+Confirm in the dialog.
+</Step>
+</Steps>
 
----
+A blocked contact cannot message you, and you cannot message them.
 
-### Mark as Spam
-
-- Marks the conversation as irrelevant or unwanted
-- Helps keep Inbox clean
-
-**Use when:**  
-Messages are promotional, automated, or not genuine customer queries.
-
----
-
-### Mark as Unresolved
-
-- Reopens the conversation for further action
-
-**Use when:**  
-The issue could not be resolved and needs follow-up.
+<Callout type="warn">
+  Blocking cuts communication in both directions and applies to the **contact**, not just this
+  ticket. For one-off junk, **Mark as Spam** is the right tool.
+</Callout>
 
 ---
 
-### Create Ticket
+## Reopening a Ticket
 
-- Converts the conversation into a support ticket
-- Useful for tracking complex issues
+A closed ticket shows **Reopen** where **Close** used to be.
 
-**Use when:**  
-The issue requires long-term tracking or escalation.
+<Steps>
+<Step>
+Open the closed ticket.
+</Step>
+<Step>
+Click **Reopen** in the chat header.
+</Step>
+<Step>
+A **new ticket** is created for the same customer, with the previous assignees carried over.
+</Step>
+</Steps>
 
----
+### What reopening actually does
 
-## Closed Conversations
+| | Original ticket | New ticket |
+|---|-----------------|-----------|
+| **Number** | Keeps its own | Gets a fresh one |
+| **Status** | Stays **Closed** | **Assigned** |
+| **Close time and result** | Frozen | Not set |
+| **Assignees** | None | Whoever was assigned when it closed |
+| **Where it appears** | Closed view, history bar | Open / Mine |
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/closed-conversation.png`}
-  alt="Closed conversation view"
-/>
+<Callout type="warn">
+  Reopening does not revive the old ticket. Its resolution time and outcome stay exactly as they
+  were, so your reporting is not rewritten after the fact.
+</Callout>
 
-Once a conversation is closed:
-
-- It moves to the **Closed** tab
-- It remains available for reference
-- Follow-up messages may reopen the conversation automatically
-
----
-
-## Role-Based Behavior
-
-- **Business Admins** can change lifecycle status for any conversation
-- **Agents** may have limited lifecycle permissions based on role settings
-
----
-## Reassigning a Closed Conversation
-
-When a conversation is marked as **Closed**, it is considered resolved and moved to the **Closed** tab.  
-However, closed conversations can be **reassigned and reactivated** if further action is required.
+The same happens if you assign somebody to a closed ticket: a successor is opened rather than the
+closed one being brought back to life.
 
 ---
 
-## Closed Conversation Message
+## When a Customer Replies After Closure
 
-When viewing a closed conversation, you will see a system message like:
+Nothing to do. Their message creates a **new ticket** in the **New** view, and the closed ticket
+stays closed.
 
-> **This chat has been closed**  
-> by *RateUp Admin* at *16/12/25 11:01 PM*.  
-> **Please assign to start the chat.**
-
-This message indicates that the conversation is currently inactive.
+This is the whole point of the ticket model: one topic, one ticket, one honest record of how it
+went.
 
 ---
 
-## Assign to Restart the Chat
+## Auto-Close
 
-Below the system message, an **Assign to Me** button is available.
+Tickets that go quiet can be closed automatically. Business Admins configure two rules under
+**Inbox Settings → Automation**:
 
-To reopen the conversation:
+- **New / Unassigned chats** — close after N hours of inactivity
+- **Assigned chats** — close after N hours of inactivity
 
-1. Click **Assign to Me**
-2. The conversation will be reassigned to you
-3. The chat becomes active again
-4. You can now respond to the customer
+Auto-closed tickets behave like any other closed ticket and can be reopened.
 
-Once assigned, the conversation moves out of the **Closed** state and follows the normal lifecycle.
-
----
-
-## When to Reassign a Closed Conversation
-
-Reassigning a closed conversation is useful when:
-
-- A customer replies after the conversation was closed
-- Additional follow-up is required
-- The issue was not fully resolved
-- The conversation was closed by mistake
+[Configure auto-close →](/inbox/inbox-settings)
 
 ---
 
-## Role-Based Behavior
+## Frequently Asked
 
-- **Business Admins** can reassign any closed conversation
-- **Agents** can reassign conversations based on their role permissions
+<Accordions type="single">
+<Accordion title="Can I undo a close?">
+Click **Reopen**. That opens a successor ticket rather than undoing the close — the closed record
+is permanent by design.
+</Accordion>
+<Accordion title="Which close option should I use if I am not sure?">
+**Mark as Closed**. It records that the ticket is finished without claiming an outcome that did not
+happen.
+</Accordion>
+<Accordion title="I closed the wrong ticket.">
+Reopen it immediately and carry on. The mistaken close stays in the record, along with a system
+note showing you reopened it.
+</Accordion>
+<Accordion title="Do closed tickets still count towards my conversation limit?">
+Limits are counted from conversations used, not from open tickets. Closing does not free capacity.
+</Accordion>
+<Accordion title="Can two people close the same ticket?">
+The first close wins. The second person will see the read-only banner.
+</Accordion>
+</Accordions>
 
 ---
 
 ## Best Practices
 
-- Close conversations only after full resolution
-- Reassign closed chats only when follow-up is genuinely required
-- Avoid reopening conversations unnecessarily to keep the Inbox clean
-- Create tickets for issues needing extended support
-- Keep the Inbox clean by closing completed chats
+- Close only when the topic is genuinely finished
+- Pick the outcome that is true, not the one that looks best
+- Do not reuse an old ticket for a new question — let a new one be created
+- Use **Spam** for noise and **Block** only for repeat offenders
+- Let auto-close handle the tickets nobody will ever answer
 
 ---
 
-## What’s Next?
+## Related Pages
 
-Continue to **Inbox Views** to learn how conversations are organized and how to work with different Inbox states such as New, Assigned, Mine, and Closed.
-
-
+- [Closed view](/inbox/inboxview/closed)
+- [Spam view](/inbox/inboxview/spam)
+- [Tickets & Conversations](/inbox/tickets)
+- [Inbox Settings](/inbox/inbox-settings) — auto-close rules

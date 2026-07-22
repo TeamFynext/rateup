@@ -1,0 +1,86 @@
+---
+title: "Conditions"
+description: Narrow a trigger down so the rule fires only when it should.
+---
+
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Conditions** are the `IF` part of a rule. They are optional — a rule with none fires on every
+occurrence of its trigger.
+
+<ImagePlaceholder
+  file="automation/conditions.png"
+  shot="The IF section of the rule builder with two conditions and the Match all / Match any selector."
+  caption="Building conditions."
+/>
+
+{/* TODO: capture the conditions builder */}
+
+---
+
+## What You Can Test
+
+| Field | Checks |
+|-------|--------|
+| **Message Body** | The text of the message |
+| **Message Direction** | Whether it came in or went out |
+| **Thread Subject** | The ticket's title |
+| **Contact Email** | The contact's email address |
+| **Contact Label** | Labels on the contact |
+| **Contact Group** | Groups the contact belongs to |
+| **Contact Lifecycle** | The contact's lifecycle stage |
+
+---
+
+## Operators
+
+| Operator | True when |
+|----------|-----------|
+| **Equals** | The value matches exactly |
+| **Contains** | The value appears anywhere |
+| **Starts With** | The value begins with it |
+| **Ends With** | The value ends with it |
+| **Greater Than** | Numerically larger |
+| **Less Than** | Numerically smaller |
+
+<Callout type="info">
+  **Contains** is the right default for message text. **Equals** on a message body almost never
+  matches — real customers do not send exactly one word.
+</Callout>
+
+---
+
+## Match All vs Match Any
+
+| Setting | Meaning |
+|---------|---------|
+| **Match all** | Every condition must be true (AND) |
+| **Match any** | At least one must be true (OR) |
+
+**Match any** is how you catch the several ways people phrase the same thing —
+*refund*, *money back*, *return*.
+
+**Match all** is how you narrow — a message containing "refund" **and** a contact labelled *VIP*.
+
+---
+
+## Writing Conditions That Actually Fire
+
+- **Test lowercase and common misspellings** — customers do not proofread
+- **Prefer a few broad keywords over many exact ones**
+- **Watch for accidental matches** — a rule on "no" will fire constantly
+- **Check the direction** if a rule is looping; an outgoing message can re-trigger a badly scoped
+  rule
+
+<Callout type="warn">
+  A rule with no conditions on **Message Received** fires on every single incoming message. That is
+  occasionally what you want — usually it is not.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Triggers](/automation/triggers)
+- [Actions](/automation/actions)
+- [Labels](/contacts/labels) and [Lifecycle](/contacts/lifecycle) — the contact fields you can test

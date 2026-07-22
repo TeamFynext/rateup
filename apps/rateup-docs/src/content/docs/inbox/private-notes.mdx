@@ -1,0 +1,196 @@
+---
+title: "Private Notes & @Mentions"
+description: Discuss a ticket internally, pull colleagues in with @mentions, and manage the mentions addressed to you.
+---
+
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Private notes** let your team talk about a ticket without the customer seeing any of it. They
+live on the ticket, are visible only to your team, and are never delivered to WhatsApp, Instagram
+or any other channel.
+
+---
+
+## Message vs Private Note
+
+The composer has two tabs, and they behave differently:
+
+| | Message | Private Note |
+|---|---------|--------------|
+| **Goes to** | The customer | Your team only |
+| **Colour** | Blue | Amber |
+| **Character limit** | 1024 | None |
+| **@mentions** | No | Yes |
+| **Appears in thread as** | A normal message | Centred, with a padlock |
+
+---
+
+## Write a Private Note
+
+<Steps>
+<Step>
+Open the ticket and click the **Private Note** tab.
+</Step>
+<Step>
+Type your note. The composer turns amber to signal that this is internal.
+</Step>
+<Step>
+Click **Send**.
+</Step>
+</Steps>
+
+The note is added to the thread immediately, labelled **Internal note** with your name and the
+time.
+
+<ImagePlaceholder
+  file="inbox/private-note-in-thread.png"
+  shot="A private note rendered in the thread: centred, padlock icon, 'Internal note · Sara · 10:42' header, amber-toned bubble."
+  caption="A private note in the message thread."
+/>
+
+{/* TODO: capture a private note in the thread */}
+
+---
+
+## The Notes-Only View
+
+While the **Private Note** tab is selected, the thread above shows **internal notes only**.
+
+This turns the internal discussion into its own readable surface, instead of something you scroll
+past customer messages to find.
+
+Switch back to **Message** to see the full conversation again. Opening a different ticket always
+starts on the customer conversation.
+
+<Callout type="info">
+  This is the fastest way to catch up on a ticket someone handed to you: open it, click **Private
+  Note**, and read the internal thread top to bottom.
+</Callout>
+
+---
+
+## Mention a Colleague
+
+<Steps>
+<Step>
+In the **Private Note** tab, type `@`.
+</Step>
+<Step>
+A list of your organisation's members appears. Keep typing to narrow it, or use the arrow keys.
+</Step>
+<Step>
+Press **Enter** or click a name to insert the mention. It appears highlighted in the note.
+</Step>
+<Step>
+Finish the note and click **Send**.
+</Step>
+</Steps>
+
+<ImagePlaceholder
+  file="inbox/mention-picker.png"
+  shot="The @ mention picker open above the private note composer, showing several org members with avatars, one highlighted."
+  caption="Mentioning a colleague in a private note."
+/>
+
+{/* TODO: capture the mention picker */}
+
+<Callout type="info">
+  You can mention **anyone in your organisation**, not just members of your own team. Mention
+  several people in one note if the question concerns all of them.
+</Callout>
+
+---
+
+## What the Mentioned Person Sees
+
+When you are mentioned:
+
+- The ticket appears in your **@Mentions** view
+- The **@Mentions** count in the sidebar goes up
+- The ticket row shows an **@ Mention** chip — with a number if you were mentioned more than once
+- An **@** button appears in that ticket's chat header
+
+Mentions are personal: you only see mentions addressed to you.
+
+---
+
+## Clearing a Mention
+
+Opening or reading a mentioned ticket does **not** clear the mention. It stays until you dismiss it
+deliberately, so it cannot disappear because you glanced at the row.
+
+<Steps>
+<Step>
+Open the ticket from **@Mentions**.
+</Step>
+<Step>
+Do whatever was asked — usually a reply in a private note.
+</Step>
+<Step>
+Click the **@** button in the chat header, next to the star.
+</Step>
+<Step>
+The ticket leaves **@Mentions** and the sidebar count goes down.
+</Step>
+</Steps>
+
+<Callout type="info">
+  Clearing affects **you only**. The note stays on the ticket, and colleagues mentioned in the same
+  note keep their own mention until they clear it.
+</Callout>
+
+---
+
+## What to Use Notes For
+
+| Situation | Note to write |
+|-----------|---------------|
+| **Handover** | What has been done, what is outstanding, what you promised the customer |
+| **Escalation** | Why it is being escalated and what decision you need — mention the decision-maker |
+| **Context** | Anything you learned that is not in the messages (a phone call, a system check) |
+| **Decisions** | Why you offered the refund, why the exception was approved |
+
+Avoid using notes for anything the customer should be told — switch to **Message** for that.
+
+---
+
+## Frequently Asked
+
+<Accordions type="single">
+<Accordion title="Can the customer ever see a private note?">
+No. Private notes are never sent to any channel. They exist only inside RateUp.
+</Accordion>
+<Accordion title="Can I mention someone in a customer message?">
+No — `@` mentions work in the **Private Note** tab only.
+</Accordion>
+<Accordion title="I mentioned the wrong person. What now?">
+Send a new note with the right person mentioned. The wrong recipient can clear their own mention
+with the **@** button.
+</Accordion>
+<Accordion title="Do notes count towards the 1024-character limit?">
+No. Private notes have no limit, and the counter is hidden on that tab.
+</Accordion>
+<Accordion title="Are private notes included in exports?">
+Exports follow the message-type filter you choose when exporting. Check the export options before
+sharing a file outside the company.
+</Accordion>
+</Accordions>
+
+---
+
+## Best Practices
+
+- Write the handover note *before* reassigning, not after
+- Mention people instead of messaging them outside RateUp — the context stays on the ticket
+- Clear your mentions once handled, so **@Mentions** stays a real to-do list
+- Keep notes factual; they are part of the permanent ticket record
+
+---
+
+## Related Pages
+
+- [@Mentions view](/inbox/inboxview/mentions)
+- [Replying to Customers](/inbox/responding-to-conversation)
+- [Assignment & Reassignment](/inbox/asigning-conversation)

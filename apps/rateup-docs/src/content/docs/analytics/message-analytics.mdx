@@ -1,0 +1,81 @@
+---
+title: "Message Analytics"
+description: Delivery health — how many messages were sent, delivered, read, and how many failed.
+---
+
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Message Analytics** is about delivery, not conversation. It answers one question: are your
+messages actually reaching people?
+
+<ImagePlaceholder
+  file="analytics/message-analytics.png"
+  shot="The Message Analytics tab: Total Messages Sent, Successful Delivery, Failed Messages and Avg Delivery Time cards, with the source filter."
+  caption="WhatsApp message analytics."
+/>
+
+{/* TODO: capture the message analytics tab */}
+
+---
+
+## The Metrics
+
+| Metric | Meaning |
+|--------|---------|
+| **Total Messages Sent** | Everything dispatched in the period |
+| **Successful Delivery** | Messages that reached the recipient |
+| **Failed Messages** | Messages that did not |
+| **Avg Delivery Time** | How long delivery took on average |
+
+Alongside these, the standard message states:
+
+**Sent → Delivered → Read**
+
+---
+
+## Filtering by Source
+
+Messages are grouped by where they originated:
+
+| Source | Sent by |
+|--------|---------|
+| **Campaign** | A bulk campaign send |
+| **Template** | A template sent from a conversation |
+| **External API** | Your own integration — see [External API](/external-api) |
+| **All Sources** | Everything together |
+
+This split matters. Campaign failures and conversation failures have completely different causes.
+
+---
+
+## Why Messages Fail
+
+| Cause | Fix |
+|-------|-----|
+| Invalid or unreachable number | Clean the contact list |
+| No consent for template messages | Check consent before campaigning |
+| Template not approved | Get approval before sending |
+| Outside the 24-hour window with a free-form message | Use a template |
+| Rate or quality limits on the account | Reduce volume, improve message relevance |
+
+<Callout type="warn">
+  A rising failure rate on campaigns is an early warning about list quality. Repeatedly messaging
+  people who do not want it damages your WhatsApp account's quality rating, which is much harder to
+  repair than a bad campaign.
+</Callout>
+
+---
+
+## Delivered Is Not Read
+
+Delivery only means the message reached the device. **Read** is the number that indicates
+attention, and the gap between the two is the honest measure of whether your messages are worth
+sending.
+
+---
+
+## Related Pages
+
+- [Message Logs](/analytics/message-logs) — the individual messages behind these totals
+- [Campaigns](/campaign)
+- [WhatsApp Templates](/whatsapp/templates)

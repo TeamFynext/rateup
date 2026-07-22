@@ -1,0 +1,149 @@
+---
+title: "Rewards"
+description: Point rewards, coupons, free gifts and the referral programme — what points are actually worth.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Rewards** are what customers spend points on. Without attractive rewards, points are just a
+number that goes up.
+
+<ImagePlaceholder
+  file="loyalty/rewards.png"
+  shot="The Rewards page with reward cards showing name, type, point cost and active status, plus the Create Reward button; empty state reads 'No rewards found'."
+  caption="Your rewards."
+/>
+
+{/* TODO: capture the rewards page */}
+
+---
+
+## The Three Reward Types
+
+| Type | Customer gets | Best for |
+|------|---------------|----------|
+| **Point Reward** | A points credit | Bonuses and goodwill gestures |
+| **Coupon** | A discount — fixed amount or percentage | Driving the next purchase |
+| **Free Gift** | A physical item | Memorable, high-perceived-value rewards |
+
+---
+
+## Create a Point Reward
+
+<Steps>
+<Step>
+Click **Create Reward** → **Create Point Reward**.
+</Step>
+<Step>
+Name it, and set the **cost** in points.
+</Step>
+<Step>
+Set the points the customer receives.
+</Step>
+<Step>
+Save.
+</Step>
+</Steps>
+
+---
+
+## Create a Coupon
+
+<Steps>
+<Step>
+Click **Create Coupon**.
+</Step>
+<Step>
+Name it and set the **cost** in points.
+</Step>
+<Step>
+Choose the discount: **Fixed Amount** or a percentage.
+</Step>
+<Step>
+Set the **expiry date**, if it should not last forever.
+</Step>
+<Step>
+Save. Redemption produces a **redemption code** for the customer to present.
+</Step>
+</Steps>
+
+---
+
+## Create a Free Gift
+
+<Steps>
+<Step>
+Click **Create Free Gift**.
+</Step>
+<Step>
+Enter the **gift / reward name** and its point cost.
+</Step>
+<Step>
+Save.
+</Step>
+</Steps>
+
+Free gifts are confirmed in person — the cashier uses **Confirm successful redemption** in the
+[cashier portal](/loyalty/cashier-portal).
+
+---
+
+## Pricing Rewards
+
+The point cost is where a programme succeeds or fails.
+
+| Problem | Symptom | Fix |
+|---------|---------|-----|
+| Priced too high | Points issued far exceeds points redeemed | Lower the cost, or add a cheap entry reward |
+| Priced too low | Redemptions constant, margin suffering | Raise the cost, or reduce the earning rate |
+| Nothing reachable early | New members drop out | Add one small reward reachable in a visit or two |
+
+<Callout type="info">
+  Always have one **cheap, attainable reward**. The first redemption is what converts a sign-up
+  into a member — after that, saving for something bigger feels worth it.
+</Callout>
+
+Check **Top Redeemed Rewards** on the [dashboard](/loyalty/dashboard) to see what people actually
+choose, and retire what nobody takes.
+
+---
+
+## Referral Programme
+
+The **Referral Programme** rewards members for bringing in new customers.
+
+Every member has a **referral code** and a **referral link**, both copyable from their record in
+[Customers](/loyalty/customers).
+
+<Steps>
+<Step>
+Configure the referral rewards — what the referrer gets, and what the new member gets.
+</Step>
+<Step>
+Set the [referral notification template](/loyalty/notifications) so both sides are told.
+</Step>
+<Step>
+Make sure members know their code exists — most never look for it unless told.
+</Step>
+</Steps>
+
+<Callout type="info">
+  Reward **both sides**. A referral bonus that only pays the referrer feels like being used; one
+  that gives the friend something too is an easy thing to send.
+</Callout>
+
+---
+
+## Managing Rewards
+
+Rewards can be set **Active** or **Inactive**. Deactivating is better than deleting for a seasonal
+reward you will bring back.
+
+---
+
+## Related Pages
+
+- [Earning Rules & Tiers](/loyalty/earning-rules)
+- [Cashier Portal](/loyalty/cashier-portal) — confirming redemptions
+- [Customers](/loyalty/customers)

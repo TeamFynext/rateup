@@ -1,0 +1,122 @@
+---
+title: "Users"
+description: Invite people, set their role and permissions, and remove access when they leave.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Users** is the list of everyone with access to your organisation, and the controls that decide
+what each of them can do.
+
+<ImagePlaceholder
+  file="settings/users.png"
+  shot="The Users page: the member list with avatars, roles, active-account badges and the Add New User button."
+  caption="Organisation members."
+/>
+
+{/* TODO: capture the Users page */}
+
+---
+
+## Adding a User
+
+<Steps>
+<Step>
+Click **Add New User**.
+</Step>
+<Step>
+Enter their **email address** — this is required, and it is where the invite goes.
+</Step>
+<Step>
+Enter their name and phone number.
+</Step>
+<Step>
+Choose their **role** and set any **additional permissions**.
+</Step>
+<Step>
+Assign them to a **team**, so team-routed work reaches them.
+</Step>
+<Step>
+Save. They receive an invite and appear in the list.
+</Step>
+</Steps>
+
+An invite that has not been accepted can be removed with **Delete Invite**.
+
+---
+
+## Permissions
+
+Beyond the role, each user has individually switchable permissions:
+
+| Permission | Grants |
+|------------|--------|
+| **Access to Inbox** | Can open the Inbox and work on tickets |
+| **Access reports and data insights** | Can open Analytics |
+| **Create and edit workflow automation** | Can build and change automations |
+| **Allow mobile app access** | Can sign in from the mobile app |
+| **Email notifications enabled** | Receives email notifications |
+
+<Callout type="info">
+  Permissions are additive on top of the role. Removing **Access to Inbox** from an agent hides the
+  Inbox for them entirely, whatever their role says.
+</Callout>
+
+---
+
+## Account Status
+
+Each member shows whether their account is **active**. Deactivating is the reversible option — use
+it for someone on extended leave, rather than deleting and re-inviting them later.
+
+---
+
+## Editing a User
+
+Click **Edit User** to change their name, photo, contact details, role, permissions or team
+assignment. Changes take effect immediately for that person.
+
+---
+
+## Removing a User
+
+<Steps>
+<Step>
+Open the user and choose **Delete User**.
+</Step>
+<Step>
+Confirm in the dialog — you will be asked to confirm the specific person.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Deleting a user account is permanent. Their tickets stay in the system with their name on them,
+  but their access ends immediately. If they might come back, deactivate instead.
+</Callout>
+
+---
+
+## Before Someone Leaves
+
+<Steps>
+<Step>
+Reassign their open tickets — check the [Mine](/inbox/inboxview/mine) view filtered to them from
+[Staff Filters](/inbox/inbox-filter).
+</Step>
+<Step>
+Check whether any automation or routing points at them specifically.
+</Step>
+<Step>
+Then deactivate or delete the account.
+</Step>
+</Steps>
+
+Deleting first leaves their tickets ownerless and invisible in personal views.
+
+---
+
+## Related Pages
+
+- [Teams](/settings/teams) — grouping users and controlling feature access
+- [Assignment & Reassignment](/inbox/asigning-conversation)

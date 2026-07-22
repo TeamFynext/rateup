@@ -1,0 +1,101 @@
+---
+title: "Chatbots"
+description: Automated WhatsApp conversations that answer common questions and hand over when they cannot.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+A **chatbot** answers a WhatsApp conversation automatically — handling the questions you get
+constantly, and passing anything else to a person.
+
+<ImagePlaceholder
+  file="whatsapp/chatbots-list.png"
+  shot="The Chatbots list with existing bots, search box and Create Chatbot button; empty state reads 'No chatbots found'."
+  caption="Your WhatsApp chatbots."
+/>
+
+{/* TODO: capture the chatbots list */}
+
+---
+
+## Creating a Chatbot
+
+<Steps>
+<Step>
+Click **Create Chatbot** and enter a name.
+</Step>
+<Step>
+Build the conversation as a series of steps — a message, then the replies the customer can choose.
+</Step>
+<Step>
+Attach a **flow** or **template** to a step where you need structured input or approved wording.
+</Step>
+<Step>
+Save.
+</Step>
+</Steps>
+
+---
+
+## What a Step Can Do
+
+| Element | Behaviour |
+|---------|-----------|
+| **Message** | Sends text |
+| **Button** | Offers a choice that moves the conversation on |
+| **Document** | Sends a file |
+| **Open link** | Sends the customer to a URL |
+| **Flow** | Opens a [flow](/whatsapp/flows) for structured input |
+| **Restart conversation** | Returns the customer to the start |
+
+---
+
+## Testing Before You Publish
+
+The preview runs the bot as a customer would experience it — *Start*, *Type your reply…*,
+*Waiting for a reply above…*.
+
+Walk it end to end and check:
+
+- Every button leads somewhere real
+- No path dead-ends without an option
+- The customer can always reach a human
+- The wording sounds like your brand
+
+<Callout type="warn">
+  The single worst chatbot failure is the loop with no exit. Before publishing, try deliberately
+  giving unexpected answers and confirm you can still get out.
+</Callout>
+
+---
+
+## Handover to an Agent
+
+When the bot cannot help, the conversation becomes a normal ticket in the [Inbox](/inbox). The
+bot's messages are already in the thread, so the agent has the context and the customer does not
+repeat themselves.
+
+---
+
+## Managing Chatbots
+
+| Action | Notes |
+|--------|-------|
+| **Clone** | Duplicates as *"Copy of …"* — the safe way to change a live bot |
+| **Search** | Find a bot by name |
+| **Delete** | Removes it permanently |
+
+<Callout type="info">
+  Clone before editing anything customers are currently using. Edit the copy, test it, then switch
+  over.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Flows](/whatsapp/flows)
+- [Templates](/whatsapp/templates)
+- [Automation](/automation)
+- [Inbox](/inbox)

@@ -1,42 +1,121 @@
 ---
 title: "Inbox Overview"
-description: Overview of the RateUp Inbox for managing customer conversations.
+description: The RateUp Inbox is a shared, ticket-based workspace for every customer conversation across WhatsApp, Instagram and chat.
 ---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 import { CDN } from '@/lib/cdn';
 
-<ScreenShot src={`${CDN}/docs/screenshots/inbox/inbox-overview.png`} alt="Inbox-overview" />
+The **Inbox** is where your team receives, answers and closes customer conversations — all in one
+shared workspace, whichever channel the customer used.
 
-The **Inbox** is RateUp’s central hub for managing customer conversations.  
-It allows teams to receive, respond to, and organize WhatsApp, Instagram and chat bot messages in one shared workspace.
+<ScreenShot src={`${CDN}/docs/screenshots/inbox/inbox-overview.png`} alt="Inbox overview" />
 
----
-
-## What Inbox Does
-
-With Inbox, you can:
-
-- View all customer messages in one place
-- Assign conversations to team members
-- Use automated and manual replies
-- Track conversation status from start to closure
+{/* TODO: replace the overview screenshot above with a capture of the current ticket-based Inbox */}
 
 ---
 
-## Why Inbox Matters
+## The One Thing to Understand First
 
-Inbox helps teams:
-- Respond faster to customers
-- Avoid missed or duplicate replies
-- Collaborate efficiently across teams
-- Keep conversations organized
+**Every row in the Inbox is a ticket.**
+
+A ticket is one topic with one customer — a delivery question, a refund request, a complaint. It
+has its own number, title, owner and outcome.
+
+When a customer comes back next month with a different question, they get a **new ticket**. Their
+old ticket stays closed, exactly as your team left it.
+
+| | Ticket |
+|---|---|
+| **Identity** | `#1042` + a short title |
+| **Owner** | One agent, several agents, or a whole team |
+| **Status** | New → Assigned → Closed |
+| **Contents** | Only the messages belonging to that topic |
+
+<Callout type="info">
+  A customer with three topics has **three rows** in your Inbox. Opening one shows only that
+  topic's messages — the rest are one click away in the ticket's history bar.
+</Callout>
+
+[Read the full explanation →](/inbox/tickets)
 
 ---
 
-## Supported Channel
+## What You Can Do
+
+<Cards>
+  <Card
+    title="Sort work into views"
+    href="/inbox/inboxview"
+    description="Eight views — Open, New, Closed, All, Mine, @Mentions, Favourites and Spam — each with a live count."
+  />
+  <Card
+    title="Give every ticket an owner"
+    href="/inbox/asigning-conversation"
+    description="Assign to yourself, a colleague or an entire team, and reassign whenever things change."
+  />
+  <Card
+    title="Reply to customers"
+    href="/inbox/responding-to-conversation"
+    description="Send messages, quick replies, attachments and templates, within WhatsApp's rules."
+  />
+  <Card
+    title="Talk to your team privately"
+    href="/inbox/private-notes"
+    description="Leave internal notes on a ticket and pull colleagues in with @mentions."
+  />
+  <Card
+    title="Close with a clear outcome"
+    href="/inbox/conversation-lifecycle"
+    description="Resolve, close, mark unresolved or mark as spam — and reopen when a customer returns."
+  />
+  <Card
+    title="Find anything"
+    href="/inbox/toolbar"
+    description="Search, filter by channel or label, sort, and export conversation history."
+  />
+</Cards>
+
+---
+
+## Supported Channels
 
 - **WhatsApp Business**
 - **Instagram**
 
+Messages from every connected channel land in the same Inbox, and each ticket shows a channel
+badge so agents always know where the customer is writing from.
+
 ---
 
+## Who Uses the Inbox
+
+| Role | Typical use |
+|------|-------------|
+| **Agent** | Works from **Mine**, replies to customers, closes their own tickets |
+| **Manager** | Watches **Open** and **New**, balances workload across the team |
+| **Business Admin** | Full visibility, configures automation and quick replies |
+
+Exactly what you can see and do depends on your role and team permissions.
+
+---
+
+## Where to Start
+
+If you are new to the Inbox, follow the pages in order:
+
+<Steps>
+<Step>
+**[Access the Inbox](/inbox/accessing-inbox)** — find it in the dashboard and check your permissions.
+</Step>
+<Step>
+**[Learn the layout](/inbox/layout)** — the four regions of the screen and what each one does.
+</Step>
+<Step>
+**[Understand tickets](/inbox/tickets)** — the concept everything else is built on.
+</Step>
+<Step>
+**[Pick up your first ticket](/inbox/asigning-conversation)** — assign it, reply, and close it.
+</Step>
+</Steps>

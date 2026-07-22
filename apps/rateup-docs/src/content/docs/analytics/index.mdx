@@ -1,38 +1,96 @@
 ---
-title: "Analytics"
-description: Monitor team performance, conversation trends, and agent productivity using RateUp Analytics.
+title: "Analytics Overview"
+description: Six views into how your team, your messages and your channels are performing.
 ---
 
-import { CDN } from "@/lib/cdn";
-import ScreenShot from "@/components/Screenshot";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-# 📊 Analytics
+**Analytics** turns your conversation history into numbers you can act on: how fast your team
+replies, how many conversations resolve, and whether your messages are actually being delivered.
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/analytics/analytics.png`}
-  alt="Analytics"
-  width={"80%"}
+<ImagePlaceholder
+  file="analytics/overview.png"
+  shot="The Analytics Overview tab: quick stat cards for conversations, active chats, agents online and resolution rate, with the conversation trends chart below."
+  caption="The Analytics Overview."
 />
 
-Analytics in RateUp provides visibility into **team performance**, **agent productivity**, and **conversation trends**.  
-It helps admins and managers make data-driven decisions and improve response efficiency.
+{/* TODO: capture the Analytics overview */}
 
 ---
 
-## What You Can Track
+## The Six Tabs
 
-- Total conversations and resolution rate
-- Average response and first response time
-- Agent availability and workload
-- Conversation trends over time
-- Channel-wise distribution
-- Individual agent performance
+<Cards>
+  <Card
+    title="Overview"
+    href="/analytics/overview"
+    description="Conversation volume, active chats, agents online and resolution rate."
+  />
+  <Card
+    title="Agent Performance"
+    href="/analytics/agent-performance"
+    description="Per-agent response times, conversations handled and resolution rates."
+  />
+  <Card
+    title="Team Performance"
+    href="/analytics/team-performance"
+    description="The same picture, grouped by team."
+  />
+  <Card
+    title="Message Analytics"
+    href="/analytics/message-analytics"
+    description="Delivery health — sent, delivered, read and failed."
+  />
+  <Card
+    title="Message Logs"
+    href="/analytics/message-logs"
+    description="Every individual message, searchable and exportable."
+  />
+  <Card
+    title="Team Activity"
+    href="/analytics/team-activity"
+    description="Who is online and what the team is doing right now."
+  />
+</Cards>
 
 ---
 
-## Analytics Sections
+## Date Ranges
 
-- **Overview** – High-level dashboard for team activity  
-- **Agent Performance** – Detailed breakdown for each agent
+Every tab shares the same period selector:
 
-Use the filters and date range selector to analyze performance over specific time periods.
+- **Today**
+- **Last 7 Days**
+- **Last 14 Days**
+- **Last 30 Days**
+- **Last 60 Days**
+
+<Callout type="info">
+  Comparisons only mean something over equal periods. A "bad week" against a month-long average is
+  a reporting artefact, not a problem.
+</Callout>
+
+---
+
+## Exporting
+
+Most tabs support **Export**, producing a PDF of the current view. Tabs that do not will tell you
+*"Export not supported for this tab"*.
+
+[Message Logs](/analytics/message-logs) exports raw data rather than a report.
+
+---
+
+## Who Can See Analytics
+
+Analytics requires the **Analytics** feature on your team, plus the *"Access reports and data
+insights"* permission on your user.
+
+Without both, the section does not appear in the sidebar.
+
+---
+
+## Related Pages
+
+- [Teams](/settings/teams) — enabling the Analytics feature
+- [Users](/settings/users) — the reports permission

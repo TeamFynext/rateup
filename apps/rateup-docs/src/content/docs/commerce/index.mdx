@@ -1,0 +1,82 @@
+---
+title: "Commerce Overview"
+description: Sell through WhatsApp — catalogs, orders, payments and checkout, all from the RateUp dashboard.
+---
+
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Commerce** turns your WhatsApp channel into a storefront. Customers browse your catalog, place
+an order in chat, and pay — and every step lands in RateUp.
+
+<ImagePlaceholder
+  file="commerce/overview.png"
+  shot="The Commerce Overview page: the four stat cards, the sales-over-time chart, top products, and the recent orders list."
+  caption="The Commerce Overview page."
+/>
+
+{/* TODO: capture the Commerce overview */}
+
+---
+
+## What's in Commerce
+
+<Cards>
+  <Card
+    title="Overview"
+    href="/commerce/overview"
+    description="Sales, order volume, average order value and what is selling."
+  />
+  <Card
+    title="Catalogs"
+    href="/commerce/catalogs"
+    description="The products customers can buy, synced with your WhatsApp catalog."
+  />
+  <Card
+    title="Orders"
+    href="/commerce/orders"
+    description="Every order and the stage it has reached, from pending to delivered."
+  />
+  <Card
+    title="Payments"
+    href="/commerce/payments"
+    description="How customers pay — UPI, cards, WhatsApp Pay or cash on delivery."
+  />
+  <Card
+    title="Checkout Settings"
+    href="/commerce/checkout-settings"
+    description="Taxes and charges, abandoned-cart recovery and the checkout experience."
+  />
+</Cards>
+
+---
+
+## How an Order Happens
+
+1. A customer browses your **catalog** in WhatsApp
+2. They add items and send the order to you
+3. RateUp creates an **order** and moves it through the stages
+4. A **checkout link** is sent for payment, unless the order is cash on delivery
+5. Once paid, the order moves to packing and delivery
+6. The conversation stays in the [Inbox](/inbox) throughout
+
+---
+
+## Before You Start
+
+Commerce is built on top of your WhatsApp Business account. You need:
+
+- A connected **WhatsApp Business** account
+- A **WhatsApp catalog** connected to that account
+- A **payment method** configured, if you want in-chat payment
+
+<Callout type="warn">
+  Without a connected catalog, Catalogs and Payments show a "no catalog connected" notice and the
+  rest of Commerce has nothing to work with. Connect one first.
+</Callout>
+
+---
+
+## Related Pages
+
+- [WhatsApp Catalog](/whatsapp/catalogs) — connecting a catalog to your account
+- [Inbox](/inbox) — where order conversations live

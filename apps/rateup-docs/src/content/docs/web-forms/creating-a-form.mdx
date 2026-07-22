@@ -1,0 +1,104 @@
+---
+title: "Creating a Form"
+description: Start blank or from a template, add questions, and preview before you share.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+---
+
+## Start Blank or From a Template
+
+<Steps>
+<Step>
+Click **Create Survey**.
+</Step>
+<Step>
+Choose **Start Blank**, or **Create Survey from Template** to begin with a ready-made form.
+</Step>
+<Step>
+Name it and select the **team** it belongs to.
+</Step>
+<Step>
+The editor opens on the **Questions** tab.
+</Step>
+</Steps>
+
+Templates are worth browsing even if you end up starting blank — **Try this Template** shows how a
+well-structured form is put together. If none match, you will see *"No templates found"*.
+
+---
+
+## Adding Questions
+
+<ImagePlaceholder
+  file="web-forms/editor.png"
+  shot="The survey editor: the questions sidebar on the left, the question being edited in the centre with its title, description and options, and the preview."
+  caption="The form editor."
+/>
+
+{/* TODO: capture the survey editor */}
+
+<Steps>
+<Step>
+Click **Add Question** and pick a [type](/web-forms/question-types).
+</Step>
+<Step>
+Write the question in **Enter question here**.
+</Step>
+<Step>
+Add a **description** if the question needs context — but if it needs a paragraph, rewrite the
+question.
+</Step>
+<Step>
+Configure the type-specific options.
+</Step>
+<Step>
+Reorder questions from the sidebar by dragging.
+</Step>
+</Steps>
+
+---
+
+## Writing Questions People Answer
+
+Completion rate is decided almost entirely by the questions, not the design.
+
+| Do | Instead of |
+|----|-----------|
+| Ask one thing per question | Bundling two into one sentence |
+| Use the customer's words | Internal jargon |
+| Make optional questions optional | Requiring everything |
+| Put the easy questions first | Opening with a long free-text box |
+| Stop at five or six questions | Twenty "while we have you" extras |
+
+<Callout type="warn">
+  Every extra question costs completions. Before adding one, ask what decision its answer will
+  change — if there is no answer to that, cut it.
+</Callout>
+
+---
+
+## Previewing
+
+Use **Preview** to take the form as a customer would. Check it on a phone: most responses arrive on
+one, and layouts that work on a laptop often do not.
+
+The editor flags problems with an **Issue with your survey** warning — resolve those before
+sharing.
+
+---
+
+## Status
+
+A form is **Active** or **Paused**. Paused forms do not accept responses, which is the safe way to
+stop collection without deleting anything.
+
+---
+
+## Related Pages
+
+- [Question Types](/web-forms/question-types)
+- [Logic & Variables](/web-forms/logic-and-variables)
+- [Design](/web-forms/design)

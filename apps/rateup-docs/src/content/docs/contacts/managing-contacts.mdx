@@ -1,0 +1,146 @@
+---
+title: "Managing Contacts"
+description: Add, edit, search, filter, import and export the people in your database.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+Day-to-day work with the contact list: getting people in, finding them again, and keeping the data
+clean.
+
+---
+
+## Where Contacts Come From
+
+| Source | How |
+|--------|-----|
+| **Inbound message** | Anyone who messages you becomes a contact automatically |
+| **Manual entry** | Added by an agent, including from the Inbox toolbar |
+| **Import** | A CSV or spreadsheet upload |
+| **Web forms** | Someone submitting a [form](/web-forms) |
+| **Integrations** | Synced from a connected platform |
+
+---
+
+## Adding a Contact
+
+Add a contact from the contacts list, or start a conversation directly from the
+[Inbox toolbar](/inbox/toolbar). Either way you provide the name, phone number, and any other
+fields you need.
+
+<Callout type="info">
+  Adding a contact does not open a messaging window. If they have never written to you, your first
+  message must be an approved [template](/whatsapp/templates).
+</Callout>
+
+---
+
+## Searching and Filtering
+
+Search by **name**, **phone number** or **email**.
+
+**Filter contacts** narrows the list by the ways you have organised them — labels, groups,
+lifecycle stage, source and custom field values.
+
+Combine them the way you would build a segment: *lifecycle = Customer* **and** *label = VIP* is the
+list you would send a loyalty offer to.
+
+---
+
+## Importing
+
+<ImagePlaceholder
+  file="contacts/import.png"
+  shot="The Import Contacts dialog with the file picker, the Download Demo Csv File link, and the 'Update the existing data while importing' option."
+  caption="Importing contacts."
+/>
+
+{/* TODO: capture the import dialog */}
+
+<Steps>
+<Step>
+Click **Import**.
+</Step>
+<Step>
+Click **Download Demo Csv File** and match your data to its columns. This is the single biggest
+cause of failed imports.
+</Step>
+<Step>
+Select your file. CSV, XLSX and ODS are accepted — you will be told
+*"Please select a CSV file to import"* if nothing is chosen.
+</Step>
+<Step>
+Decide whether to **update the existing data while importing**:
+
+- **On** — existing contacts are updated with the new values
+- **Off** — existing contacts are left as they are
+</Step>
+<Step>
+Run the import.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Import with update **on** overwrites what is already there. If your file has blank cells, you can
+  wipe good data with them. Test with a handful of rows before importing thousands.
+</Callout>
+
+### Before importing
+
+- Check phone numbers include the country code
+- Remove duplicates in the file itself — importing them creates duplicate contacts
+- Confirm you have consent for everyone in the list
+
+---
+
+## Exporting
+
+Export the current, filtered list. Filter first, then export — it is far easier than trimming a
+spreadsheet afterwards.
+
+<Callout type="warn">
+  Exports contain personal data. Treat the file accordingly and delete it when you are done.
+</Callout>
+
+---
+
+## Bulk Actions
+
+Select several contacts to act on them together:
+
+| Action | Use |
+|--------|-----|
+| **Add to Group** | Build a campaign audience |
+| **Apply Label** | Tag a set of people at once |
+| **Delete** | Remove contacts permanently |
+
+---
+
+## Deleting a Contact
+
+**Delete contact** removes the person from your database.
+
+<Callout type="warn">
+  Deleting is permanent and takes their conversation history with them. If someone asks not to be
+  contacted, withdrawing consent is usually the right answer — deletion is for data-removal
+  requests.
+</Callout>
+
+---
+
+## Keeping the Database Clean
+
+- Import carefully; most bad data arrives in bulk
+- Use [lifecycle stages](/contacts/lifecycle) so stale leads are visible rather than hidden
+- Review contacts with repeated message failures — see
+  [Message Analytics](/analytics/message-analytics)
+- Agree naming conventions for [labels](/contacts/labels) before everyone invents their own
+
+---
+
+## Related Pages
+
+- [Groups](/contacts/groups)
+- [Labels](/contacts/labels)
+- [Campaigns](/campaign)

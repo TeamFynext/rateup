@@ -1,0 +1,96 @@
+---
+title: "Instagram Chatbots"
+description: Build automated DM conversations that answer common questions without an agent.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+An **Instagram chatbot** handles a DM conversation automatically — answering the questions you get
+constantly, and handing over to a person when it cannot.
+
+<ImagePlaceholder
+  file="instagram/chatbots.png"
+  shot="The Instagram Chatbots list with existing bots and the Create Chatbot button; empty state reads 'No chatbots yet'."
+  caption="Instagram chatbots."
+/>
+
+{/* TODO: capture the chatbots list */}
+
+---
+
+## Create a Chatbot
+
+<Steps>
+<Step>
+Select the **Instagram account** the bot belongs to.
+</Step>
+<Step>
+Click **Create Chatbot** and give it a name.
+</Step>
+<Step>
+Build the conversation — the messages the bot sends and the replies it offers.
+</Step>
+<Step>
+**Save**, then **Sync with Meta** so it goes live.
+</Step>
+</Steps>
+
+---
+
+## What a Bot Can Send
+
+| Element | Use |
+|---------|-----|
+| **Message** | Plain text |
+| **Buttons** | Choices that move the conversation on |
+| **Web URL** | Opens a link — *Visit the website*, *Open in browser* |
+| **Postback** | Triggers the next step inside the bot |
+| **Live chat with a person** | Hands the conversation to your team |
+
+<Callout type="info">
+  Always include a route to a human. A bot that cannot be escaped turns a small question into a
+  complaint — the **Live chat with a person** action is what prevents that.
+</Callout>
+
+---
+
+## Handover to an Agent
+
+When a customer chooses the live-chat option, the conversation becomes a normal ticket in the
+[Inbox](/inbox). The bot's messages are already in the thread, so the agent can see what was
+already said and does not ask the customer to repeat it.
+
+---
+
+## Testing
+
+Use the preview to walk the conversation before syncing. Check that:
+
+- Every button leads somewhere
+- The wording reads like your brand, not like a form
+- The handover option is reachable within a step or two
+- Nothing loops back on itself endlessly
+
+---
+
+## Managing Chatbots
+
+| Action | Notes |
+|--------|-------|
+| **Clone** | Copies a bot as *"Copy of …"* — the safe way to iterate on a live bot |
+| **Search** | Find a bot by name once you have several |
+| **Delete** | Removes it; sync afterwards so Instagram stops serving it |
+
+<Callout type="warn">
+  Editing a live bot changes what customers get mid-conversation. Clone, edit the clone, test it,
+  then switch — rather than editing the one currently in use.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Entry Points](/instagram/entry-points) — how customers start a conversation
+- [Automations](/instagram/automations)
+- [Inbox](/inbox)

@@ -1,0 +1,103 @@
+---
+title: "Flows"
+description: Multi-screen forms customers complete without leaving WhatsApp.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+A **flow** is a form built from screens that a customer fills in inside WhatsApp — no browser, no
+link, no app switch.
+
+Use flows for anything structured: a booking, a feedback survey, a lead form, an order detail.
+
+<ImagePlaceholder
+  file="whatsapp/flows-list.png"
+  shot="The Flows list page with existing flows, the account selector, search box and Create Flow button; empty state reads 'No Flows Available'."
+  caption="Your WhatsApp flows."
+/>
+
+{/* TODO: capture the flows list */}
+
+---
+
+## Creating a Flow
+
+<Steps>
+<Step>
+Select the **WhatsApp account** the flow belongs to. You will be asked to
+*"Please select a WhatsApp account"* if you skip this.
+</Step>
+<Step>
+Click **Create Flow** and name it.
+</Step>
+<Step>
+Build the screens — each screen is one step the customer sees.
+</Step>
+<Step>
+Add the fields on each screen: text inputs, choices, dates, uploads.
+</Step>
+<Step>
+Save and publish.
+</Step>
+</Steps>
+
+Use **Search flows** to find one once you have several.
+
+---
+
+## Designing Screens That Get Finished
+
+Flows have a much higher completion rate than web forms — but only if they are short.
+
+- **One idea per screen.** Customers on a phone abandon dense screens.
+- **Ask only what you will use.** Every extra field costs completions.
+- **Put the easy questions first.** Momentum matters.
+- **Make optional fields obviously optional.**
+
+<Callout type="info">
+  If your flow needs more than four or five screens, it is probably two flows — or a job for a
+  conversation with an agent.
+</Callout>
+
+---
+
+## Sending a Flow
+
+A flow reaches customers in three ways:
+
+| Route | Use |
+|-------|-----|
+| **From a conversation** | An agent sends it from the Inbox composer |
+| **From a template** | Attach a flow button to an approved template |
+| **From a chatbot** | A bot step opens the flow |
+
+---
+
+## Responses
+
+Answers come back attached to the customer's conversation, so the agent handling the ticket sees
+what was submitted without leaving the thread.
+
+To push submissions into your own systems, set a **webhook** on the flow's Settings tab. It uses the
+same signed, retried mechanism as web forms — see
+[Web Forms → Settings](/web-forms/settings) for the payload, headers and verification.
+
+---
+
+## Syncing
+
+Flows live on Meta's side too. Use **Sync** to align RateUp with WhatsApp after making changes.
+
+<Callout type="warn">
+  A flow that is edited but not synced still serves the old version to customers. Sync after every
+  change you intend to be live.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Templates](/whatsapp/templates) — attaching a flow to a message
+- [Chatbots](/whatsapp/chatbots)
+- [Web Forms](/web-forms) — the browser-based alternative

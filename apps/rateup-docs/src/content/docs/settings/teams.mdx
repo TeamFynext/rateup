@@ -1,0 +1,111 @@
+---
+title: "Teams"
+description: Group members into teams, control which features each team can use, and route work by team.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Teams** organises members into groups and controls what each group can reach. It is the main tool
+for routing work and for limiting access without editing every user one by one.
+
+<ImagePlaceholder
+  file="settings/teams.png"
+  shot="The Team Management page: team cards with colour, member count and team code, plus the Create Team button."
+  caption="Team Management."
+/>
+
+{/* TODO: capture the Teams page */}
+
+---
+
+## Creating a Team
+
+<Steps>
+<Step>
+Click **Create Team**.
+</Step>
+<Step>
+Enter a **team name**. Spaces are not allowed — use a single word or hyphenate.
+</Step>
+<Step>
+Pick a **team colour**. It identifies the team at a glance across the dashboard.
+</Step>
+<Step>
+Set **feature access** for the team — see below.
+</Step>
+<Step>
+Click **Create**.
+</Step>
+</Steps>
+
+Each team gets a **team code**, used when referring to the team elsewhere in RateUp.
+
+---
+
+## Feature Access
+
+This is the important part. Each team is granted or denied access to RateUp's features:
+
+| Feature | Controls |
+|---------|----------|
+| **Inbox** | The shared conversation inbox |
+| **Analytics** | Reports and performance data |
+| **Contacts** | The contact database |
+| **Campaigns** | Bulk template sends |
+| **Flows** | WhatsApp flows |
+| **Chatbots** | Automated chat bots |
+| **Templates** | WhatsApp message templates |
+| **Automation** | Automation rules |
+| **Loyalty** | The loyalty programme |
+| **Web Forms** | Surveys and forms |
+| **Tickets** | The ticket boards |
+| **QR Studio** | QR codes and access links |
+| **Apps & Services** | Integrations |
+| **Settings** | Organisation settings |
+
+Use **Enable All** or **Disable All** to set the whole list quickly, then adjust.
+
+<Callout type="info">
+  Feature access decides what appears in the sidebar. A member of a team without **Loyalty** simply
+  does not see Loyalty — it is hidden, not greyed out.
+</Callout>
+
+---
+
+## Members
+
+Add members to a team from the team's detail page, or assign a team when
+[creating a user](/settings/users).
+
+A person can belong to more than one team, and sees the combined access of all of them.
+
+---
+
+## Why Teams Matter for the Inbox
+
+Teams are how work is routed without naming individuals:
+
+- A ticket assigned to a **team** is available to every member of it
+- The Inbox's [team filter](/inbox/inbox-filter) narrows any view to one team's work
+- Team-based routing survives people being on leave; individual routing does not
+
+---
+
+## Designing Your Teams
+
+| Approach | Works when |
+|----------|-----------|
+| **By function** — Support, Sales, Billing | Different skills handle different questions |
+| **By language or region** | You serve several markets |
+| **By shift** | You run extended hours |
+
+Avoid one team per person — that is what user permissions are for, and it makes routing brittle.
+
+---
+
+## Related Pages
+
+- [Users](/settings/users)
+- [Assignment & Reassignment](/inbox/asigning-conversation)
+- [Staff & Team Filters](/inbox/inbox-filter)

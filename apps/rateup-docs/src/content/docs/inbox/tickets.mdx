@@ -1,0 +1,196 @@
+---
+title: "Tickets & Conversations"
+description: How the Inbox turns customer messages into tickets, and how ticket numbers, titles, status and history work.
+---
+
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+The RateUp Inbox is organised around **tickets**. Everything else in this section — views,
+assignment, closing, reporting — is built on this one idea, so it is worth reading properly.
+
+---
+
+## What Is a Ticket?
+
+A ticket is **one topic with one customer**, from the first message about it until it is closed.
+
+Each ticket has:
+
+| | |
+|---|---|
+| **Number** | `#1042` — unique in your organisation, never reused |
+| **Title** | A short summary of the topic |
+| **Description** | Optional longer context |
+| **Owner** | One agent, several agents, or a team |
+| **Status** | New, Assigned or Closed |
+| **Result** | How it ended, if it was closed with an outcome |
+| **Messages** | Only the messages that belong to this topic |
+
+---
+
+## One Customer, Several Tickets
+
+A customer can have any number of tickets, and several can be open at once.
+
+<ImagePlaceholder
+  file="inbox/tickets-same-contact.png"
+  shot="The conversation list filtered to one customer, showing three rows for the same person: two closed tickets and one open, each with a different number and title."
+  caption="Three tickets for the same customer, each its own row."
+/>
+
+{/* TODO: capture three rows belonging to the same customer */}
+
+Each ticket:
+
+- Appears as its **own row** in the Inbox
+- Has its **own status, owner and result**
+- Shows **only its own messages** when you open it
+
+<Callout type="info">
+  Opening a ticket shows that ticket's messages only. You will never see a different topic's
+  messages mixed into the thread — but the customer's history is always one click away.
+</Callout>
+
+---
+
+## Why It Works This Way
+
+Before tickets, the Inbox showed one row per **customer**, so every message a person had ever sent
+lived in one endless thread. That made three things hard:
+
+| Problem | How tickets fix it |
+|---------|--------------------|
+| A resolved issue reopened when the customer asked something unrelated | The new question opens a new ticket; the old one stays closed |
+| Two agents worked on different issues in one thread | Each issue has its own owner |
+| "How long did that take to resolve?" had no answer | Each ticket has its own created, closed and result data |
+
+---
+
+## Ticket Status
+
+The status pill appears on the row, in the chat header, and in the history bar — always the same
+three values:
+
+| Status | Meaning | When it changes |
+|--------|---------|-----------------|
+| **New** | Nobody is assigned yet | The moment someone is assigned |
+| **Assigned** | At least one agent or team owns it | When it is closed, or all assignees are removed |
+| **Closed** | Closed, resolved, unresolved or spam | When it is reopened — as a new ticket |
+
+<Callout type="info">
+  Status is worked out automatically from assignment and closure. There is no status field to keep
+  in sync by hand.
+</Callout>
+
+---
+
+## Ticket History
+
+When a customer has more than one ticket, an amber bar appears under the chat header:
+
+> 🕘 **3 previous conversations** · last on Mar 12, 2026
+
+<ImagePlaceholder
+  file="inbox/previous-conversations.png"
+  shot="The amber previous-conversations bar expanded, listing three earlier tickets with channel icon, number, title, status pill, assignee and result badge."
+  caption="Expanded ticket history for a returning customer."
+/>
+
+{/* TODO: capture the expanded previous-conversations bar */}
+
+Click the bar to expand it. Each earlier ticket shows:
+
+- Channel icon
+- Ticket number and title
+- Status pill
+- Assigned agents
+- Close result, if it had one
+- Creation date
+
+Click any entry to open that ticket. Use this before replying to a returning customer — it is the
+fastest way to see what your team already told them.
+
+---
+
+## Editing a Ticket's Title & Description
+
+Titles matter: they are what your team reads in the conversation list.
+
+<Steps>
+<Step>
+Open the ticket and click the **panel icon** in the chat header.
+</Step>
+<Step>
+Scroll to **Title & Description** and click the **pencil** icon.
+</Step>
+<Step>
+Write a short, specific title — *"Refund not received for order 8821"* beats *"Question"*.
+</Step>
+<Step>
+Add a description if there is context the messages do not make obvious, then click **Save**.
+</Step>
+</Steps>
+
+<Callout type="info">
+  The title and description belong to **this ticket only**. Contact details — name, phone, labels,
+  lifecycle — are shared across all of that customer's tickets.
+</Callout>
+
+---
+
+## The Life of a Ticket
+
+<Steps>
+<Step>
+**A customer writes in.** A ticket is created with status **New** and appears in the **New** and
+**Open** views.
+</Step>
+<Step>
+**Someone takes ownership.** Status becomes **Assigned**; the ticket appears in that person's
+**Mine** view. Replying is only possible once a ticket has an owner.
+</Step>
+<Step>
+**The team works on it.** Replies go to the customer; private notes and @mentions stay internal.
+</Step>
+<Step>
+**It is closed with an outcome** — resolved, closed, unresolved or spam. Assignees are cleared and
+the ticket moves to **Closed**.
+</Step>
+<Step>
+**The customer comes back.** A new ticket is created. The closed one keeps its record and shows up
+in the history bar.
+</Step>
+</Steps>
+
+---
+
+## Frequently Asked
+
+<Accordions type="single">
+<Accordion title="A customer replied to a closed ticket. Where did their message go?">
+Into a **new ticket**, which appears in your **New** view. The closed ticket stays closed so its
+resolution time and outcome are not distorted.
+</Accordion>
+<Accordion title="Can I merge two tickets?">
+Not directly. If a customer opened two tickets about the same thing, close one with the result
+**Duplicate** and continue on the other.
+</Accordion>
+<Accordion title="Do ticket numbers ever repeat?">
+No. Numbers are unique within your organisation and are not reused, even after a ticket is closed.
+</Accordion>
+<Accordion title="Can I reopen a ticket exactly as it was?">
+Clicking **Reopen** opens a *successor* ticket and carries over the people who were assigned when
+it closed. The original stays closed as a permanent record of what happened.
+</Accordion>
+</Accordions>
+
+---
+
+## Related Pages
+
+- [Inbox Views](/inbox/inboxview) — how tickets are grouped into tabs
+- [Assignment & Reassignment](/inbox/asigning-conversation) — giving a ticket an owner
+- [Closing & Reopening](/inbox/conversation-lifecycle) — how a ticket ends
+- [Ticket Details](/inbox/ticket-details) — the right-hand panel

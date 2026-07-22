@@ -1,0 +1,86 @@
+---
+title: "Orders"
+description: Track every order through its stages, from pending payment to delivered.
+---
+
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Orders** lists every order placed through WhatsApp, with the stage each one has reached.
+
+<ImagePlaceholder
+  file="commerce/orders.png"
+  shot="The Orders page: the stage filter tabs across the top, and the order list with customer, amount, payment method icon and stage pill."
+  caption="The Orders list."
+/>
+
+{/* TODO: capture the Orders page */}
+
+---
+
+## Order Stages
+
+An order moves through these stages:
+
+| Stage | Shown as | Meaning |
+|-------|----------|---------|
+| **Pending payment** | Pending | The order exists but has not been paid |
+| **Checkout sent** | Confirmed | A checkout link has gone to the customer |
+| **Pending delivery** | Packed | Paid and being prepared |
+| **Pending address** | Shipped | On its way, awaiting or using the delivery address |
+| **Completed** | Delivered | Fulfilled |
+| **Cancelled** | Cancelled | Called off |
+
+<Callout type="info">
+  Stages are the operational truth of the order. The customer's conversation about it stays in the
+  [Inbox](/inbox), so support and fulfilment never drift apart.
+</Callout>
+
+---
+
+## Filtering
+
+Tabs across the top narrow the list:
+
+- **All orders**
+- **Pending** — not yet paid
+- **To ship** — paid, needs packing
+- **Shipped** — on the way
+- **Delivered** — done
+
+Work from **Pending** and **To ship** day to day; the rest are for reference.
+
+---
+
+## Payment Methods
+
+Each order shows how it was paid:
+
+| Method | Notes |
+|--------|-------|
+| **UPI** | Paid by UPI |
+| **Card** | Paid by card |
+| **WhatsApp Pay** | Paid inside WhatsApp |
+| **COD** | Cash on delivery — collect on handover |
+| **Pending** | No payment recorded yet |
+
+---
+
+## Working an Order
+
+1. Open the order to see its items, amount and customer
+2. Move it to the next stage as fulfilment progresses
+3. If the customer asks about it, their conversation is in the Inbox under their ticket
+4. Mark it **Completed** on delivery, or **Cancelled** if it falls through
+
+<Callout type="warn">
+  Cancelling does not automatically refund the customer. Handle the refund in your payment
+  provider, then record the cancellation here.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Payments](/commerce/payments)
+- [Checkout Settings](/commerce/checkout-settings)
+- [Inbox](/inbox) — the conversation behind the order

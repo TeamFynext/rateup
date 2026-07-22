@@ -1,0 +1,224 @@
+---
+title: "Integrations"
+description: Connect RateUp to your own systems with webhooks and API keys, or to third-party platforms.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Integrations** connects RateUp to everything outside it — your own systems, and the platforms you
+already use.
+
+<ImagePlaceholder
+  file="settings/integrations.png"
+  shot="The Integrations page with the RateUp Services group and the External group, each card showing Connect / Manage / Open and a last-sync time."
+  caption="Integrations."
+/>
+
+{/* TODO: capture the Integrations page */}
+
+---
+
+## Two Groups
+
+| Group | Contains |
+|-------|----------|
+| **RateUp Services** | Built-in services — webhooks, API access |
+| **External** | Third-party platforms and partner services |
+
+Each card shows its state — **Connect** if it is not set up, **Manage** or **Open** if it is —
+along with the **last sync** time where relevant.
+
+---
+
+## Webhook — WhatsApp Message Status
+
+The **Webhook** integration configures one endpoint for the whole organisation and delivers
+**WhatsApp message status** events to it: what happened to the messages *you* sent.
+
+<Callout type="info">
+  Survey and flow **responses** use a completely different webhook, configured on each form rather
+  than here — it is signed, retried, and has its own payload. See
+  [Web Forms → Settings](/web-forms/settings).
+</Callout>
+
+<ImagePlaceholder
+  file="settings/webhook-integration.png"
+  shot="The Webhook integration panel: the Endpoint URL field, the Verify Token field, the Verify and Save button, and the Events list with Message Status."
+  caption="Configuring the organisation webhook."
+/>
+
+{/* TODO: capture the webhook integration panel */}
+
+### Setting it up
+
+<Steps>
+<Step>
+**Create an HTTPS endpoint** that accepts **POST** with a JSON body. A non-HTTPS URL is rejected
+with *"Webhook URL must use HTTPS"*.
+
+It must also answer a **GET** for verification — see the next step.
+</Step>
+<Step>
+**Handle the verification challenge.** Before saving, RateUp sends a GET to your URL with a
+`challenge` query parameter:
+
+```
+GET https://example.com/webhook?challenge=<your-verify-token>
+```
+
+Your endpoint must reply with that exact value as the **plain-text body**.
+
+```javascript
+app.get("/webhook", (req, res) => {
+  res.type("text/plain").send(req.query.challenge);
+});
+```
+
+<Callout type="warn">
+  Verification times out after **5 seconds**. A cold-starting serverless function is a common reason
+  for failing the first attempt and succeeding on a retry.
+</Callout>
+</Step>
+<Step>
+**Enter the Endpoint URL and a Verify Token**, then click **Verify and Save**. The token cannot be
+empty.
+</Step>
+<Step>
+**Subscribe to events.** Until the webhook is saved the list reads
+*"(save webhook first to configure events)"*. Select **Message Status**.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Events you have not subscribed to are **dropped silently**. If your endpoint verifies but receives
+  nothing, an unchecked event box is the first thing to check.
+</Callout>
+
+### Payload
+
+```json
+{
+  "event": "message_status",
+  "status": "delivered",
+  "messageId": "wamid.HBgMOTE5...",
+  "recipientId": "14155552671",
+  "timestamp": "1726567200",
+  "errors": null
+}
+```
+
+| Field | Contains |
+|-------|----------|
+| `event` | The event name — `message_status` |
+| `status` | `sent`, `delivered`, `read` or `failed` |
+| `messageId` | The WhatsApp message id |
+| `recipientId` | The recipient's number |
+| `timestamp` | When the status changed |
+| `errors` | `null`, or the error detail when the status is `failed` |
+
+The event name is in the body, so one endpoint can handle several event types.
+
+### Headers
+
+Only `Content-Type: application/json`.
+
+<Callout type="warn">
+  There is **no signature header** on this webhook — the payload cannot be verified
+  cryptographically. Protect the endpoint another way: a hard-to-guess URL path, a shared secret in
+  the query string, or an IP allowlist. Never treat the contents as trusted input.
+</Callout>
+
+### A status is not a sequence
+
+You will receive several deliveries for the same `messageId` as it progresses:
+
+```
+sent  →  delivered  →  read
+```
+
+Not every message reaches every stage. A message can go straight to `failed`, and `read` never
+arrives if the recipient has read receipts disabled.
+
+Key your records on `messageId` and **update** the status, rather than appending rows.
+
+### No retries
+
+A non-2xx response marks the delivery failed and it is logged on RateUp's side. **It is not
+retried.**
+
+<Callout type="warn">
+  If your endpoint is down for ten minutes, the status updates from those ten minutes are gone —
+  there is no catch-up. Treat this webhook as a live feed, and use
+  [Message Logs](/analytics/message-logs) when you need a record you can reconcile against.
+</Callout>
+
+Acknowledge with a 2xx immediately and queue the payload — a slow handler is the most likely reason
+to miss events.
+
+### Removing it
+
+**Delete Webhook** / **Remove Webhook** removes the endpoint and its event subscriptions.
+
+### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| "Webhook URL must use HTTPS" | HTTP endpoint | Serve over HTTPS |
+| Verification fails | Endpoint does not echo the challenge, or responds slowly | Return the raw `challenge` as plain text within 5 seconds |
+| Verified, but nothing arrives | Event not subscribed | Tick **Message Status** |
+| Some statuses missing | Your endpoint was unavailable | No retries — cross-check with Message Logs |
+| `read` never arrives | Recipient has read receipts off | Expected; not a failure |
+| Statuses arrive out of order | Independent deliveries | Key on `messageId`, take the latest status |
+
+---
+
+## API Service
+
+**API Service** is where you generate the access key for RateUp's **External API** — the REST API
+your own code uses to create contacts, send templates, award loyalty points and read survey
+responses.
+
+| Action | Effect |
+|--------|--------|
+| **Generate Api Key** | Creates a key for the organisation |
+| **Regenerate** | Issues a new key and invalidates the old one immediately |
+| **Delete** | Revokes API access entirely |
+
+The panel also shows the **API Base URL**, with your organisation id already in it. You need both
+that and the key.
+
+[Full API guide →](/external-api)
+
+<Callout type="warn">
+  The key carries **super-admin access to the whole organisation**. Treat it like a root password —
+  never commit it to a repository, never ship it in front-end code, and regenerate immediately if it
+  leaks.
+</Callout>
+
+---
+
+## Third-Party Platforms
+
+External integrations connect RateUp to platforms you already run — a store, a CRM, a business
+suite. Each one states what it syncs and in which direction.
+
+Connecting typically sends you to the other platform to authorise the connection, then returns you
+to RateUp.
+
+---
+
+## Before You Connect
+
+- Check **which direction** data flows — some integrations write into RateUp, some read out of it
+- Check **what it syncs** — contacts, orders, or both
+- Connect with an account that will still exist in six months, not a personal one
+
+---
+
+## Related Pages
+
+- [External API](/external-api) — using the key you generate here
+- [Web Forms → Settings](/web-forms/settings) — the survey response webhook
+- [Message Analytics](/analytics/message-analytics) — the same delivery data, in the dashboard
+- [Channels](/settings/channels)

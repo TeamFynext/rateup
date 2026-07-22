@@ -1,111 +1,101 @@
 ---
-title: "Mine (My Conversations)"
-description: Learn how to manage conversations assigned specifically to you in the RateUp Inbox.
+title: "Mine"
+description: The Mine view is your personal workload — every ticket assigned to you.
 ---
 
-import { CDN } from "@/lib/cdn";
-import ScreenShot from "@/components/Screenshot";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-The **Mine** view displays conversations that are **assigned specifically to you**.  
-This view represents your **personal workload** and is where agents focus on handling customer conversations.
-
-The Mine view helps you:
-
-- Focus only on conversations you own
-- Manage your daily workload efficiently
-- Respond to customers without distraction
-- Track conversations you are responsible for closing
+**Mine** shows the tickets assigned **to you**. For most agents this is where the working day
+happens.
 
 ---
 
-## Mine View Overview
+## What You See
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/mine.png`}
-  alt="Mine view showing conversations assigned to the current user"
-  width={"80%"}
+<ImagePlaceholder
+  file="inbox/view-mine.png"
+  shot="The Mine view: rows all showing the Assigned pill and the current user's avatar, some with unread badges."
+  caption="Your personal ticket queue."
 />
 
-In the **Mine** view:
-- All conversations are assigned to **you**
-- You are the primary owner of each conversation
-- These conversations also appear in **Assigned**, but Mine is your personal view
+{/* TODO: capture the Mine view */}
+
+- Every ticket is assigned to you
+- You are accountable for replying and for closing it
+- These tickets also appear in **Open**, but **Mine** filters out everyone else's work
 
 ---
 
-## How Conversations Appear in Mine
+## How Tickets Get Here
 
-A conversation appears in **Mine** when:
+A ticket appears in **Mine** when:
 
-- You click **Assign to Me**
-- A conversation is assigned to you by an admin or manager
-- A team conversation is explicitly assigned to you
-
----
-
-## Mine vs Assigned
-
-| View | Meaning |
-|-----|--------|
-| Mine | Conversations assigned specifically to you |
-| Assigned | Conversations assigned to any team or staff |
-
-> ℹ️ All conversations in **Mine** are also part of **Assigned**, but not all Assigned conversations appear in Mine.
+- You click **person +** on a row in the **New** view
+- You click **Assign to me** inside a ticket
+- A manager or admin assigns it to you
+- A team ticket is narrowed down to you specifically
 
 ---
 
-## Working with Conversations in Mine
+## Your Daily Loop
 
-From the Mine view, you can:
-
-- Open and read customer messages
-- Send replies and use quick actions
-- Update conversation lifecycle (Resolved / Closed)
-- Create tickets if required
-- Reassign conversations (if permitted)
-
----
-
-## Reassigning from Mine
-
-If needed, you can reassign a conversation from Mine:
-
-1. Open the conversation
-2. Click the assigned user name at the top-right
-3. Select another team or team member
-4. The conversation moves out of your Mine view
-
-Reassignment is useful when:
-- You are unavailable
-- The issue needs escalation
-- Another agent is better suited to handle it
+<Steps>
+<Step>
+**Clear @Mentions first.** Colleagues are blocked on those.
+</Step>
+<Step>
+**Work through Mine**, oldest or most urgent first. Watch the 24-hour countdown on WhatsApp
+tickets.
+</Step>
+<Step>
+**Close each ticket with the right outcome** as soon as its topic is finished.
+</Step>
+<Step>
+**Top up from New** when your queue is short.
+</Step>
+</Steps>
 
 ---
 
-## Role-Based Behavior
+## What You Can Do From Here
 
-### Agent
-- Primarily works from the **Mine** view
-- Handles customer communication
-- Closes or resolves conversations
-
-### Manager / Business Admin
-- May also see Mine conversations
-- Can reassign or monitor conversations
+- Read and reply to customer messages
+- Leave [private notes](/inbox/private-notes) and mention colleagues
+- Edit the [ticket title and description](/inbox/ticket-details)
+- Star the ticket into **Favourites**
+- [Close it with a result](/inbox/conversation-lifecycle)
+- Reassign it, if your role permits
 
 ---
 
-## Best Practices
+## Handing a Ticket Over
 
-- Regularly review your Mine view
-- Respond promptly to assigned conversations
-- Close conversations once resolved
-- Reassign conversations when you cannot continue handling them
+<Steps>
+<Step>
+Leave a **private note** summarising where things stand — this is the handover, and it stays on the
+ticket.
+</Step>
+<Step>
+**@mention** the person taking over, so it lands in their **@Mentions** view.
+</Step>
+<Step>
+Open **Ticket Details → Assignment → Change** and pick the new owner.
+</Step>
+<Step>
+The ticket leaves your **Mine** view and appears in theirs.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Reassigning without a note is the most common cause of a customer repeating themselves. Always
+  leave the context behind.
+</Callout>
 
 ---
 
-## What’s Next?
+## Related Pages
 
-Continue to **Closed Conversations** to learn how resolved chats are stored, reviewed, and reopened if needed.
-
-
+- [@Mentions](/inbox/inboxview/mentions) — requests from colleagues
+- [Private Notes & @Mentions](/inbox/private-notes) — how handovers are written
+- [Closing & Reopening](/inbox/conversation-lifecycle)

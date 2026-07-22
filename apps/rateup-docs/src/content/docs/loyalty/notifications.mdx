@@ -1,0 +1,121 @@
+---
+title: "Notifications"
+description: The WhatsApp messages the loyalty programme sends automatically, and when.
+---
+
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Notifications** are what keeps a loyalty programme alive. A customer who never hears about their
+points forgets they have any.
+
+<ImagePlaceholder
+  file="loyalty/notifications.png"
+  shot="The loyalty notification settings with the list of notification types and their enable toggles, plus the WhatsApp template selectors."
+  caption="Loyalty notifications."
+/>
+
+{/* TODO: capture the notification settings */}
+
+---
+
+## Point Activity
+
+| Notification | Sent when |
+|--------------|-----------|
+| **Points Issued** | Points are awarded |
+| **Points Adjusted** | Staff manually change a balance |
+| **Points Earned** | A purchase earns points |
+
+Toggle these individually:
+
+- **Notify on purchase points**
+- **Notify on manual adjustments**
+- **Notify on manual reward grant**
+
+<Callout type="info">
+  The points-earned message is the one that matters most. It closes the loop at the moment of
+  purchase, while the customer still remembers why.
+</Callout>
+
+---
+
+## Rewards
+
+| Notification | Sent when |
+|--------------|-----------|
+| **Reward Issued** | A reward is granted |
+| **Reward Redeemed** | A reward is claimed |
+| **Reward Assigned** | A reward is assigned to them |
+| **Tier Upgraded** | They reach a new tier |
+
+Tier upgrades are worth celebrating properly — it is the moment a member feels the programme
+noticed them.
+
+---
+
+## Expiry
+
+| Notification | Sent when |
+|--------------|-----------|
+| **Points Reminder** | Points are approaching expiry |
+| **Points Expiry Alert** | Expiry is imminent |
+| **Points Expired** | Points have gone |
+
+Controlled by **Enable Points Reminder**, **Enable Expiry Alert** and **Enable Points Expired
+Notification**.
+
+<Callout type="warn">
+  If you expire points, warn people first. Silently deleting a balance a customer was saving is the
+  single most reliable way to turn a member into a detractor.
+</Callout>
+
+---
+
+## Re-engagement
+
+| Notification | Sent when |
+|--------------|-----------|
+| **Inactivity Reminder** | After a set number of **days of inactivity** |
+| **Birthday Reminder** | On the member's birthday |
+
+Birthday messages are enabled with **Enable Birthday Reminders**, and pair naturally with a
+**Birthday Gift** reward. They need the member's **date of birth** — collect it at registration or
+you have nothing to trigger on.
+
+---
+
+## Channels
+
+| Channel | Notes |
+|---------|-------|
+| **Customer Notifications** | WhatsApp messages to members |
+| **Email Notifications** | Where an email address is on file |
+
+WhatsApp notifications use approved [templates](/whatsapp/templates) — set one per notification
+type. A notification with no template selected will not send.
+
+---
+
+## How Much Is Too Much
+
+Every one of these can be turned off, and some should be.
+
+| Send | Do not send |
+|------|-------------|
+| Points earned — at the moment of purchase | A message for every trivial adjustment |
+| Tier upgrades | Repeated expiry warnings in one week |
+| Expiry warnings — once, with time to act | Birthday messages with no gift attached |
+| Birthday gifts | Inactivity reminders more than occasionally |
+
+<Callout type="warn">
+  Notification fatigue ends in blocks, and a blocked customer is lost across every channel — not
+  just loyalty.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Settings](/loyalty/settings) — expiry and birthday configuration
+- [WhatsApp Templates](/whatsapp/templates)
+- [Commands](/loyalty/commands)

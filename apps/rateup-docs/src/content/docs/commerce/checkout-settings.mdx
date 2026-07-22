@@ -1,0 +1,70 @@
+---
+title: "Checkout Settings"
+description: Taxes and charges, abandoned-cart recovery, and the checkout experience customers get.
+---
+
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Checkout Settings** gathers the rules that apply after a customer decides to buy.
+
+<ImagePlaceholder
+  file="commerce/checkout-settings.png"
+  shot="The Checkout Settings page with its three cards: Taxes & charges, Abandoned cart recovery, and Checkout experience."
+  caption="Checkout Settings."
+/>
+
+{/* TODO: capture the Checkout Settings page */}
+
+---
+
+## Taxes & Charges
+
+The money added to, or waived from, the cart total:
+
+| Setting | Purpose |
+|---------|---------|
+| **Tax rate** | The tax applied to the order |
+| **Shipping charge** | Flat delivery fee |
+| **Free shipping over** | Cart value above which shipping is waived |
+| **Minimum order value** | The smallest order you will accept |
+
+<Callout type="warn">
+  A **free shipping** threshold set close to your average order value is a strong nudge; set too
+  far above it and it does nothing but annoy people. Check your average order value on the
+  [Overview](/commerce/overview) page before choosing a number.
+</Callout>
+
+---
+
+## Abandoned Cart Recovery
+
+Customers who start an order and stop can be reminded automatically.
+
+| Control | What it does |
+|---------|--------------|
+| **Toggle** | Turns recovery reminders on or off |
+| **Timing** | How long to wait before reminding — 30 minutes, 1 hour, 3 hours or 24 hours |
+
+Shorter timings catch people who got distracted; longer ones catch people who were comparing
+prices. One reminder that arrives while the intent is still fresh beats several that read as
+nagging.
+
+---
+
+## Checkout Experience
+
+Three toggles that change what the customer goes through:
+
+| Setting | Effect when on |
+|---------|----------------|
+| **Send order confirmation** | The customer gets a confirmation message once the order is placed |
+| **Guest checkout** | Customers can buy without registering |
+| **Order notes** | Customers can add a note to their order — delivery instructions, gift messages |
+
+---
+
+## Related Pages
+
+- [Payments](/commerce/payments)
+- [Orders](/commerce/orders)
+- [Overview](/commerce/overview)

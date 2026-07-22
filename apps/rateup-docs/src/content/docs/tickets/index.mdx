@@ -1,0 +1,75 @@
+---
+title: "Ticket Boards Overview"
+description: Kanban boards for work that outlives a conversation — bugs, requests and follow-ups your team tracks to completion.
+---
+
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Tickets** is a board-based workspace for work your team tracks over time: bug reports, feature
+requests, escalations, anything that needs owning past the end of a chat.
+
+<ImagePlaceholder
+  file="tickets/board.png"
+  shot="A ticket board in Kanban view with several columns and ticket cards showing labels, assignees and due dates."
+  caption="A ticket board."
+/>
+
+{/* TODO: capture a ticket board */}
+
+---
+
+## Tickets vs Inbox Tickets
+
+The two are different things with an unfortunate name overlap:
+
+| | [Inbox tickets](/inbox/tickets) | Ticket boards |
+|---|-------------------------------|---------------|
+| **What it is** | One customer conversation | A unit of internal work |
+| **Created by** | A customer messaging you | A person, deliberately |
+| **Lives in** | The Inbox | A board column |
+| **Ends when** | The conversation is closed | The work is done |
+
+A customer reports a bug in the Inbox; you create a **board ticket** to get it fixed. The two link
+together — see **Open Chat In Inbox** on any ticket that came from a conversation.
+
+---
+
+## What's Here
+
+<Cards>
+  <Card
+    title="Boards"
+    href="/tickets/boards"
+    description="Create boards and columns for each kind of work your team tracks."
+  />
+  <Card
+    title="Working with Tickets"
+    href="/tickets/working-with-tickets"
+    description="Assignees, labels, due dates, checklists, comments and attachments."
+  />
+</Cards>
+
+---
+
+## When to Use a Board
+
+| Situation | Board? |
+|-----------|--------|
+| A customer question you can answer now | No — handle it in the Inbox |
+| A bug that needs a developer | Yes |
+| A refund awaiting approval | Yes |
+| A follow-up in three weeks | Yes |
+| A conversation waiting on the customer | No — leave it in the Inbox |
+
+<Callout type="info">
+  If the work will outlive the conversation, or needs someone outside the support team, it belongs
+  on a board.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Boards](/tickets/boards)
+- [Working with Tickets](/tickets/working-with-tickets)
+- [Inbox](/inbox)

@@ -1,203 +1,187 @@
 ---
-title: "Inbox Actions, Filters & Contact Management"
-description: Learn how to use Inbox toolbar actions, filters, sorting, contact details, and contact management in RateUp.
+title: "Search, Filters & Sorting"
+description: Every control in the Inbox toolbar — search, advanced filters, sorting, bulk selection, export and adding a contact.
 ---
 
-import { CDN } from "@/lib/cdn";
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+import { CDN } from "@/lib/cdn";
 
-This guide explains the tools available in the **RateUp Inbox toolbar**, including filtering, sorting, contact details, and contact management.  
-These features help agents and admins efficiently manage customer conversations.
+The toolbar sits above the conversation list. The left side names the view you are in; the right
+side holds the actions.
 
----
-
-## Inbox Action Toolbar
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/inbox-toolbar.png`}
-  alt="Inbox action toolbar with search, filter, export, refresh and history"
-  width={"70%"}
+<ImagePlaceholder
+  file="inbox/toolbar-annotated.png"
+  shot="The toolbar with callouts on each icon: search, advanced filters with its active-count badge, select chats, download, refresh, and the blue New button; plus the second row showing the ticket count and sort control."
+  caption="The Inbox toolbar."
 />
 
-The Inbox toolbar appears at the top of the conversation list and provides quick access to common actions.
+{/* TODO: capture an annotated toolbar */}
 
-### Available Toolbar Actions
+| Icon | Action | What it does |
+|------|--------|--------------|
+| 🔍 | **Search** | Find tickets by contact name or phone number |
+| 🎚️ | **Advanced Filters** | Narrow the list; a badge shows how many filters are active |
+| ✅ | **Select Chats** | Turn on selection mode for bulk actions |
+| ⬇️ | **Download Chats** | Export conversation history |
+| 🔄 | **Refresh** | Reload the list |
+| ➕ | **New** | Add a WhatsApp contact and start a conversation |
 
-| Icon | Action | Description |
-|-----|------|-------------|
-| 👤➕ | Add Contact | Add a new WhatsApp contact and start a conversation |
-| 🔍 | Search | Search conversations by contact name or phone number |
-| 🔽 | Filters | Apply filters to narrow down conversations |
-| ⬇️ | Export | Download conversation data |
-| 🔄 | Refresh | Reload the Inbox |
-| 🕒 | Sort | Sort conversations by time or creation order |
+Below them, a second row shows the **ticket count for the current view** on the left and the
+**sort** control on the right.
 
-These actions are available across **New**, **Assigned**, and **Mine** Inbox views.
+<Callout type="info">
+  The count comes from the server, so it reflects the entire view — not just the rows loaded so
+  far. While a search is running it shows the number of matching rows instead.
+</Callout>
 
 ---
 
-## Inbox Filters
+## Search
+
+<Steps>
+<Step>
+Click the **search** icon. The search bar slides over the toolbar.
+</Step>
+<Step>
+Type a contact name or phone number. Results narrow as you type.
+</Step>
+<Step>
+Click the **✕** to clear the search and restore the full view.
+</Step>
+</Steps>
+
+Search runs **within the current view**. To search everything — open and closed — switch to
+[**All**](/inbox/inboxview/all) first.
+
+---
+
+## Advanced Filters
+
+Click the **filters** icon to open the panel. The badge on the icon tells you how many filters are
+currently applied.
 
 <ScreenShot
   src={`${CDN}/docs/screenshots/inbox/inbox-filter.png`}
-  alt="Inbox filters panel"
+  alt="Advanced filters panel"
   width={350}
 />
 
-Inbox filters help narrow down conversations based on specific criteria.
+{/* TODO: re-capture the filter panel against the current UI */}
 
-### Available Filters
+| Filter | Use |
+|--------|-----|
+| **Channel** | Show one channel only — WhatsApp, Instagram and so on |
+| **Tags / Groups / Campaigns** | Tickets linked to a specific tag, group or campaign |
+| **Category** | Tickets in a given category |
+| **Labels** | Tickets whose contact carries a label |
+| **Status** | Available in **All** and **Closed** — pick exact statuses |
+| **Message type** | Include or exclude automated and system messages |
 
-- **Channel**  
-  Filter conversations by communication channel (such as WhatsApp).
+Click **Reset** to clear everything and return to the plain view.
 
-- **Tags / Groups / Campaigns**  
-  View conversations associated with specific tags, groups, or campaigns.
+<Callout type="info">
+  Filters are scoped to the view you set them in. Switching views clears view-specific filters, so
+  a status filter set in **Closed** does not silently follow you into **Open**.
+</Callout>
 
-- **Category**  
-  Filter chats based on assigned categories.
-
-### Reset Filters
-
-Click **Reset** to clear all applied filters and return to the default Inbox view.
+For filtering by who owns the work, see [Staff & Team Filters](/inbox/inbox-filter).
 
 ---
 
-## Sorting Conversations
+## Sorting
 
 <ScreenShot
   src={`${CDN}/docs/screenshots/inbox/inbox-sort.png`}
-  alt="Conversation sorting options"
+  alt="Sorting options"
   width={300}
 />
 
-Sorting controls the order in which conversations appear in the Inbox.
+| Group | Options |
+|-------|---------|
+| **Message received** | Newest first · Oldest first |
+| **Message created** | Newest first · Oldest first |
 
-### Sort Options
-
-- **Message Received**
-  - Newest First
-  - Oldest First
-
-- **Message Created**
-  - Newest First
-  - Oldest First
-
-Sorting helps agents prioritize recent customer messages or review older conversations efficiently.
+**Newest first** is the default and suits day-to-day work. Switch to **oldest first** when you are
+hunting for tickets that have been waiting too long.
 
 ---
 
-## Viewing Contact Details
+## Bulk Selection
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/contact-details.png`}
-  alt="Contact details panel showing customer information"
-  width={450}
-/>
+<Steps>
+<Step>
+Click the **select** (✅) icon. Checkboxes appear on every row.
+</Step>
+<Step>
+Tick the tickets you want to act on.
+</Step>
+<Step>
+Apply the action — assigning several tickets to one person at once is the common case.
+</Step>
+<Step>
+Click the select icon again to leave selection mode.
+</Step>
+</Steps>
 
-Click the **Contact icon** in the top-right corner of an open conversation to view customer details.
-
-### Contact Details Include
-
-- Customer name and avatar
-- Phone number
-- Source (WhatsApp)
-- Customer status (Active / Inactive)
-- Customer since date
-- Consent status
-- AI Chat status
-- Assignment status
-
-This information helps agents understand customer context before responding.
+Selection mode is cleared automatically when you switch views.
 
 ---
 
-## Editing Contact Details
+## Exporting
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/edit-contact.png`}
-  alt="Edit contact details modal"
-  width={420}
-/>
+Click the **download** icon to export conversation history.
 
-Agents and admins can update customer information directly from the Contact Details panel.
+Set the constraints — date range, message types and the filters currently applied — and download
+the file.
 
-### Editable Fields
-
-#### Contact Information
-- Name
-- Phone number
-- Email address
-
-#### Additional Details
-- Lifecycle stage
-- Labels
-- Custom fields
-- Other notes
-
-### Saving Changes
-
-After updating the required fields:
-1. Click **Save Changes**
-2. The updated contact information is reflected immediately
-
-Editing contact details helps keep customer data accurate and up to date.
+<Callout type="warn">
+  Exports can include private notes depending on the message types you select. Check before sharing
+  a file outside the company.
+</Callout>
 
 ---
 
-## Assignment Required to Start Chat
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/assign-before-chat.png`}
-  alt="Assign to start the chat message"
-  width={"80%"}
-/>
-
-If a conversation is **unassigned**, messaging is disabled until ownership is assigned.
-
-You can:
-- Click **Assign To Me**
-- Or assign the conversation to another team member
-
-This ensures accountability and prevents duplicate responses.
-
----
-
-## Adding a New WhatsApp Contact
+## Adding a Contact
 
 <ScreenShot
   src={`${CDN}/docs/screenshots/inbox/add-whatsapp-contact.png`}
-  alt="Add new WhatsApp contact modal"
+  alt="Add new WhatsApp contact"
   width={550}
 />
 
-Agents can manually add new WhatsApp contacts to initiate conversations.
+<Steps>
+<Step>
+Click **New** (➕) in the toolbar.
+</Step>
+<Step>
+Enter the full name, WhatsApp number, email (optional) and lifecycle stage.
+</Step>
+<Step>
+Click **Start Conversation**.
+</Step>
+</Steps>
 
-### Steps to Add a Contact
+A ticket is created immediately and appears in the Inbox.
 
-1. Click the **Add Contact (👤➕)** icon in the Inbox toolbar
-2. Enter:
-   - Full Name
-   - WhatsApp Number
-   - Email Address (optional)
-   - Lifecycle Stage
-3. Click **Start Conversation**
-
-The new conversation appears instantly in the Inbox.
-
----
-
-## Key Notes
-
-- Filters and sorting apply only to the current Inbox view
-- Assignment is mandatory before sending messages
-- Contact details help personalize conversations
-- Editing contact data requires appropriate permissions
+<Callout type="info">
+  Starting a conversation with someone who has not messaged you first means there is no open
+  24-hour window — your first message must be an approved
+  [template](/inbox/send-templates).
+</Callout>
 
 ---
 
-## What’s Next?
+## Refreshing
 
-Continue to **Inbox Settings** to learn how Quick Replies, visibility rules, and Inbox preferences are configured.
+The Inbox updates live, but the **refresh** icon forces a reload. Use it if a colleague tells you
+about a ticket you cannot see, or after a bulk change made elsewhere.
 
+---
 
+## Related Pages
+
+- [Inbox Views](/inbox/inboxview) — the list before you filter it
+- [Staff & Team Filters](/inbox/inbox-filter)
+- [Ticket Details](/inbox/ticket-details)

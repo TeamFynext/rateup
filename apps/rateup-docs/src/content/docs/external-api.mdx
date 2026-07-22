@@ -1,0 +1,305 @@
+---
+title: "External API"
+description: Call RateUp from your own code — authentication, worked examples, and the full API reference.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+The **External API** lets your own systems drive RateUp: create contacts, send WhatsApp templates,
+award loyalty points, pull survey responses.
+
+It is a REST API over HTTPS, authenticated with a single API access key.
+
+<Callout type="info">
+  **The full API reference lives at [api.rateup.app/reference](https://api.rateup.app/reference/).**
+  Every endpoint, parameter, schema and response is there, generated from the API itself — so it is
+  always current. This page covers how to authenticate and shows a few worked examples.
+</Callout>
+
+---
+
+## Getting an API Key
+
+<Steps>
+<Step>
+Go to **Settings → Integrations** and open **API Service**.
+</Step>
+<Step>
+Click **Generate Api Key**. Before you generate one, the panel reads *"No API Key Found"*.
+</Step>
+<Step>
+Copy the key and the **API Base URL** shown beside it. You need both.
+</Step>
+</Steps>
+
+<ImagePlaceholder
+  file="settings/api-access-key.png"
+  shot="The API Access Key panel showing the generated key, the API Base URL, and the Regenerate and Delete buttons."
+  caption="API access key management."
+/>
+
+{/* TODO: capture the API key panel */}
+
+| Action | Effect |
+|--------|--------|
+| **Generate Api Key** | Creates a key for the organisation |
+| **Regenerate** | Issues a new key and invalidates the old one immediately |
+| **Delete** | Revokes API access entirely |
+
+<Callout type="warn">
+  The key carries **super-admin access to your whole organisation** — every contact, conversation
+  and loyalty balance. Treat it like a root password: never commit it to a repository, never ship it
+  in front-end code, and regenerate immediately if it leaks.
+</Callout>
+
+<Callout type="warn">
+  **Regenerate and Delete take effect at once.** Any integration still using the old key starts
+  failing with 401 the moment you click.
+</Callout>
+
+---
+
+## Base URL & Authentication
+
+Every endpoint sits under a versioned path that includes your **organisation id**:
+
+```
+https://api.rateup.app/api/external/v1/{orgId}
+```
+
+The exact base URL, with your `orgId` already filled in, is shown on the API Access Key panel —
+copy it from there rather than assembling it by hand.
+
+Send the key as a bearer token on every request:
+
+```bash
+curl "https://api.rateup.app/api/external/v1/$ORG_ID/contacts" \
+  -H "Authorization: Bearer $RATEUP_API_KEY"
+```
+
+There is no session, no refresh and no expiry. The key is valid until you regenerate or delete it.
+
+---
+
+## What You Can Do
+
+The API covers **contacts**, **contact groups**, **campaigns**, **WhatsApp templates**,
+**loyalty**, **surveys** and **teams**.
+
+<Callout type="info">
+  See [api.rateup.app/reference](https://api.rateup.app/reference/) for the complete endpoint list
+  with request and response schemas. Authorise once with your key and you can try any endpoint
+  straight from the page.
+</Callout>
+
+The examples below cover the three requests people ask about most.
+
+<Callout type="info">
+  **`body_variables` is optional.** Send it only if the template's **body** contains variables —
+  `{{1}}`, `{{2}}` and so on. A template with fixed wording needs no `body_variables` at all.
+
+  When you do send it, provide **one entry per variable, in order**. The header image and the body
+  variables are independent: a template can have an image header and no variables, or variables and
+  no header.
+</Callout>
+
+---
+
+## Example 1 · Send a Template with an Uploaded Image
+
+Use `POST /wa/templates/send-with-file` when the image lives on **your** machine rather than at a
+public URL. The request is `multipart/form-data`; RateUp uploads the file to WhatsApp and attaches
+it as the template's header.
+
+```bash
+curl -X POST \
+  "https://api.rateup.app/api/external/v1/$ORG_ID/wa/templates/send-with-file" \
+  -H "Authorization: Bearer $RATEUP_API_KEY" \
+  -F "templateName=order_shipped" \
+  -F "phone=14155552671" \
+  -F "headerType=image" \
+  -F "file=@/path/to/banner.jpg" \
+  -F 'body_variables=["Priya","8821"]'
+```
+
+| Field | Notes |
+|-------|-------|
+| `templateName` | The approved template's name |
+| `phone` | **Including country code, without `+`** |
+| `headerType` | `image`, `video` or `document` |
+| `file` | The binary file. Maximum **100 MB** |
+| `filename` | Optional; used for `document` headers |
+| `body_variables` | **Optional.** A JSON-encoded array string, in template order — only if the body has variables |
+| `teamId`, `tag` | Optional — attribution and reporting |
+| `timeDelay` | Optional; schedules the send. Minimum **15** |
+
+If the template's body has no variables, leave the field out entirely:
+
+```bash
+curl -X POST \
+  "https://api.rateup.app/api/external/v1/$ORG_ID/wa/templates/send-with-file" \
+  -H "Authorization: Bearer $RATEUP_API_KEY" \
+  -F "templateName=new_menu_announcement" \
+  -F "phone=14155552671" \
+  -F "headerType=image" \
+  -F "file=@/path/to/banner.jpg"
+```
+
+<Callout type="warn">
+  When you *do* send it, `body_variables` must be a **JSON string** in a multipart request —
+  `'["Priya","8821"]'`, not repeated form fields. Malformed JSON is silently treated as an empty
+  array, so the variables vanish and the template sends with blanks.
+</Callout>
+
+When `timeDelay` is set, the response is `{ "status": ..., "scheduleId": ... }` instead of the
+send result.
+
+---
+
+## Example 2 · Send a Template with an Image by URL
+
+If the image is already hosted publicly, use the JSON endpoint `POST /wa/templates/send` and pass
+a link — no upload needed.
+
+```bash
+curl -X POST \
+  "https://api.rateup.app/api/external/v1/$ORG_ID/wa/templates/send" \
+  -H "Authorization: Bearer $RATEUP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "templateName": "order_shipped",
+    "phone": 14155552671,
+    "parameterData": [
+      { "type": "image", "link": "https://cdn.example.com/banner.jpg" }
+    ],
+    "body_variables": ["Priya", "8821"]
+  }'
+```
+
+| Field | Notes |
+|-------|-------|
+| `phone` | A **number**, with country code, no `+` |
+| `parameterData[].type` | `image`, `video` or `document` |
+| `parameterData[].link` | Must be publicly reachable — WhatsApp fetches it |
+| `parameterData[].filename` | Optional; for `document` headers |
+| `body_variables` | **Optional.** A real JSON array here, not a string — only if the body has variables |
+
+A template whose body is fixed wording needs nothing more than the header:
+
+```json
+{
+  "templateName": "new_menu_announcement",
+  "phone": 14155552671,
+  "parameterData": [
+    { "type": "image", "link": "https://cdn.example.com/banner.jpg" }
+  ]
+}
+```
+
+<Callout type="info">
+  Prefer this form when you already host the asset — it is one request instead of an upload, and
+  the same URL can be reused across sends. Use
+  [Example 1](#example-1--send-a-template-with-an-uploaded-image) when the file is generated on the
+  fly, such as a per-order PDF.
+</Callout>
+
+---
+
+## Example 3 · Send an Authentication (OTP) Template
+
+Authentication templates deliver a one-time code, usually with a **copy code** button.
+
+```bash
+curl -X POST \
+  "https://api.rateup.app/api/external/v1/$ORG_ID/wa/templates/send" \
+  -H "Authorization: Bearer $RATEUP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "templateName": "login_verification",
+    "phone": 14155552671,
+    "body_variables": ["482915"]
+  }'
+```
+
+<Callout type="info">
+  **Pass the code once.** For a template whose button is a copy-code button, RateUp reuses the
+  **first body variable** as the button's value automatically. You do not send the OTP twice, and
+  you should not set `buttonVariable` for it.
+</Callout>
+
+### Building the template
+
+The template itself is created under [WhatsApp → Templates](/whatsapp/templates):
+
+<Steps>
+<Step>
+Choose the **Authentication** category.
+</Step>
+<Step>
+Add an **Authentication Button** — only one is allowed per template.
+</Step>
+<Step>
+Set the **Code Expiration (minutes)** so the message states how long the code lasts.
+</Step>
+<Step>
+Submit it for approval. Nothing can be sent until WhatsApp approves it.
+</Step>
+</Steps>
+
+### Checking it arrived
+
+The send response includes a message id. Poll its status:
+
+```bash
+curl "https://api.rateup.app/api/external/v1/$ORG_ID/wa/templates/message/$MESSAGE_ID/status" \
+  -H "Authorization: Bearer $RATEUP_API_KEY"
+```
+
+For OTP flows, prefer the [message status webhook](/settings/integrations) over polling — you find
+out about a failed delivery in time to offer the customer another route, instead of after they have
+given up.
+
+<Callout type="warn">
+  Generate and expire OTPs in **your** system, not RateUp's. The API delivers the code; it does not
+  validate it.
+</Callout>
+
+---
+
+## Errors
+
+| Status | Body | Cause |
+|--------|------|-------|
+| `400` | `No bearer token found in headers` | The `Authorization` header is missing or malformed |
+| `400` | `Invalid phone number format` | The number is not valid for its country code |
+| `401` | `No access token found in headers` | The header says `Bearer` but carries no token |
+| `401` | `Invalid access token` | The key is wrong, or has been regenerated or deleted |
+| `404` | `Not found` | The `orgId` is missing from the path |
+| `404` | `Org with orgId='…' not found` | The `orgId` does not exist |
+
+<Callout type="warn">
+  A `404` here usually means a **URL problem**, not a missing record. If every endpoint returns 404,
+  check the `orgId` segment of your base URL first.
+</Callout>
+
+---
+
+## Working With It
+
+- **Store the key in a secret manager or environment variable** — never in source control
+- **Call it from your server**, never from a browser or mobile app; the key cannot be scoped down
+- **Handle 401 explicitly** so a rotated key raises a clear alert rather than losing data quietly
+- **Send phone numbers with the country code and no `+`**, everywhere
+- **Get templates approved before you need them** — approval is not instant
+- **Use [webhooks](/settings/integrations) for events** and the API for actions; polling for
+  something you could be told about is wasted effort
+
+---
+
+## Related Pages
+
+- [API reference](https://api.rateup.app/reference/) — every endpoint and schema
+- [Integrations](/settings/integrations) — generating the key, and the message status webhook
+- [WhatsApp Templates](/whatsapp/templates) — building and approving templates
+- [Web Forms → Settings](/web-forms/settings) — the survey response webhook

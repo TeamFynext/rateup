@@ -1,8 +1,11 @@
 {
   "pages": [
+    "index",
+    "flows",
+    "chatbots",
     "templates",
+    "conversational-components",
     "catalogs",
-    "logs",
     "settings"
   ]
 }

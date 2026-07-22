@@ -1,79 +1,183 @@
 ---
 title: "Inbox Layout"
-description: Understand the layout and sections of the RateUp Inbox.
+description: A guided tour of the four regions of the RateUp Inbox and every control in them.
 ---
 
-import ScreenShot from "@/components/Screenshot";
-import { CDN } from '@/lib/cdn';
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-The RateUp Inbox is designed to help you manage customer conversations efficiently.  
-It is divided into three main sections, each serving a specific purpose.
+The Inbox is split into four regions. This page names every one of them, so the rest of the
+documentation can point at things without describing them again.
 
----
+<ImagePlaceholder
+  file="inbox/layout-annotated.png"
+  shot="The full Inbox with the four regions numbered: 1 sidebar, 2 conversation list, 3 chat window, 4 ticket details panel."
+  caption="The four regions of the Inbox."
+/>
 
-## Inbox Sections Overview
+{/* TODO: capture an annotated full-width screenshot with the four regions numbered */}
 
-The Inbox layout consists of:
-
-1. Left Panel – Conversation Filters  
-2. Middle Panel – Conversation List  
-3. Right Panel – Chat Window  
-
-<ScreenShot src={`${CDN}/docs/screenshots/inbox/layout.png`} alt="Inbox layout" />
----
-
-## Left Panel: Conversation Filters
-
-The left panel helps you organize conversations by status and ownership.
-
-Available filters include:
-
-- **New** – New or unassigned conversations
-- **Assigned** – Conversations assigned to team members
-- **Mine** – Conversations assigned to you
-- **Closed** – Resolved conversations
-
-You can quickly switch between these views to manage your workload.
+| # | Region | Purpose |
+|---|--------|---------|
+| 1 | **Sidebar** | Choose which tickets you are looking at |
+| 2 | **Conversation list** | One row per ticket, with search, filters and sort |
+| 3 | **Chat window** | The selected ticket: history, header controls, composer |
+| 4 | **Ticket Details** | Everything about the ticket and the customer (collapsible) |
 
 ---
 
-## Middle Panel: Conversation List
+## 1 · Sidebar
 
-The middle panel displays a list of customer conversations.
+The sidebar holds the eight Inbox **views**, each with a live count so you can see where work is
+waiting without opening anything.
 
-From here, you can:
-- View recent conversations
-- Search by **phone number** or **contact name**
-- See conversation status and assignment
+| View | Shows |
+|------|-------|
+| **Open** | Every active ticket |
+| **New** | Tickets with no owner yet |
+| **Closed** | Finished tickets |
+| **All** | Every ticket, any status |
+| **Mine** | Tickets assigned to you |
+| **@Mentions** | Tickets where a colleague mentioned you |
+| **Favourites** | Tickets you have starred |
+| **Spam** | Tickets marked as spam |
 
-Clicking a conversation opens it in the chat window.
+Below the views sit the **staff** and **team** filters, used mainly by admins and managers.
 
----
-
-## Right Panel: Chat Window
-
-The chat window shows the selected customer conversation.
-
-You can:
-- View message history
-- Send replies to customers
-- Use quick reply buttons (if available)
-- Assign or close the conversation using top controls
-
-This is where most interaction with customers happens.
+[Views in detail →](/inbox/inboxview) · [Staff & team filters →](/inbox/inbox-filter)
 
 ---
 
-## Navigation Tips
+## 2 · Conversation List
 
-- Use filters to focus on relevant conversations
-- Assign conversations to avoid duplicate replies
-- Close conversations once they are resolved
+Each row is a **ticket**, not a customer. A customer with three tickets appears three times.
+
+<ImagePlaceholder
+  file="inbox/ticket-row-annotated.png"
+  shot="A single conversation-list row, zoomed in, with callouts on: star, name, ticket number and title, message preview, status pill, mention chip, labels, unread badge, assignee avatar, amber left edge."
+  caption="Anatomy of a ticket row."
+/>
+
+{/* TODO: capture a zoomed, annotated single row */}
+
+### What a row tells you
+
+| Element | Meaning |
+|---------|---------|
+| **Avatar + channel badge** | The customer and where they wrote from |
+| **Star** | The ticket is a favourite. Hover any row to star it |
+| **`#1042` + title** | The ticket's number and subject |
+| **Message preview** | The most recent message on this ticket |
+| **Status pill** | **New**, **Assigned** or **Closed** |
+| **@ Mention chip** | A colleague mentioned you on this ticket |
+| **Coloured chips** | Contact labels and lifecycle stage |
+| **Green badge** | Number of unread messages |
+| **Avatar on the right** | Who the ticket is assigned to (`+2` if several) |
+| **Amber left edge** | Nobody owns this ticket yet |
+| **Person + button** | Assign the ticket to yourself in one click |
+
+### Above the list
+
+- The **view name** and the toolbar: search, advanced filters, select, export, refresh, **New**
+- A second row with the **ticket count** for the view and the **sort** control
+
+[Toolbar in detail →](/inbox/toolbar)
 
 ---
 
-## What’s Next?
+## 3 · Chat Window
 
-Continue to **Inbox views** to understand how chats filters.
+The chat window shows the selected **ticket** — only its messages, never the customer's whole
+history.
 
+<ImagePlaceholder
+  file="inbox/chat-window-annotated.png"
+  shot="An open ticket with callouts on the header row (star, @ clear-mention, countdown, status pill, Close button, panel toggle), the ticket strip, the previous conversations bar, and the composer tabs."
+  caption="The chat window, top to bottom."
+/>
 
+{/* TODO: capture an annotated chat window */}
+
+### Header row
+
+| Control | What it does |
+|---------|--------------|
+| **Customer name and sub-line** | Name, channel, account and phone number |
+| **★ Star** | Add or remove this ticket from **Favourites** |
+| **@** | Clear your mention on this ticket (only shown when you have one) |
+| **Countdown** | Time left in WhatsApp's 24-hour reply window |
+| **Status pill** | New, Assigned or Closed |
+| **Close / Reopen** | End the ticket, or start a successor once it is closed |
+| **Panel icon** | Show or hide the Ticket Details panel |
+
+### Ticket strip
+
+Directly under the header: the ticket icon, `#number`, the ticket title, and — once the ticket has
+been closed with an outcome — a green result badge on the right.
+
+### Previous conversations
+
+If the customer has other tickets, an amber bar appears: **"3 previous conversations · last on
+Mar 12, 2026"**. Expand it to see each earlier ticket with its number, title, status, assignees
+and result, and click any of them to jump straight there.
+
+### Message thread
+
+- Customer messages on the left, your replies on the right
+- **Internal notes** appear centred, with a padlock and the author's name
+- **System notes** record assignments, closures and reopenings
+- Delivery ticks show **Sent → Delivered → Read**
+
+### Composer
+
+Two tabs: **Message** (goes to the customer) and **Private Note** (internal only). To their right
+sit the quick-replies button and the character counter.
+
+<Callout type="info">
+  The composer is replaced by a banner when you cannot reply — because the ticket is unassigned,
+  closed, blocked, or outside WhatsApp's 24-hour window.
+</Callout>
+
+[Replying in detail →](/inbox/responding-to-conversation)
+
+---
+
+## 4 · Ticket Details Panel
+
+Open it with the panel icon at the far right of the chat header.
+
+<ImagePlaceholder
+  file="inbox/ticket-details-full.png"
+  shot="The right-hand Ticket Details panel, full height, showing Assignment, Lifecycle Stage, Labels, Contact, Ticket Info, Title & Description and Mark as spam."
+  caption="The Ticket Details panel."
+/>
+
+{/* TODO: capture the full ticket details panel */}
+
+It contains, top to bottom:
+
+- **Ticket #number** and a **copy link** button
+- **Assignment** — the owner and team, with **Change**
+- **Lifecycle Stage** — the customer's stage
+- **Labels** — add or remove contact labels
+- **Contact** — name, phone, channel, customer since, consent
+- **Ticket Info** — channel, account, created date, close result
+- **Title & Description** — editable with the pencil icon
+- **Mark as spam**
+
+[Ticket Details in full →](/inbox/ticket-details)
+
+---
+
+## On Smaller Screens
+
+Below roughly 1200px wide, the list and the chat window take turns instead of sitting side by
+side. Opening a ticket fills the screen, and a **back arrow** appears in the header to return to
+the list.
+
+---
+
+## Related Pages
+
+- [Tickets & Conversations](/inbox/tickets) — what a ticket actually is
+- [Inbox Views](/inbox/inboxview) — the eight sidebar views
+- [Ticket Details](/inbox/ticket-details) — the right-hand panel

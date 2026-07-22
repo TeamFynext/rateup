@@ -1,0 +1,113 @@
+---
+title: "Automations"
+description: Route happy customers to Google reviews, and turn unhappy ones into tickets automatically.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+Two automations turn a form from a data-collection exercise into something that acts on what it
+learns.
+
+---
+
+## Google Review Routing
+
+Send satisfied respondents straight to your Google review page, and unsatisfied ones somewhere
+useful instead.
+
+<ImagePlaceholder
+  file="web-forms/google-review.png"
+  shot="The Google Review question configuration with the review link, the condition field and the platform selector."
+  caption="Google review routing."
+/>
+
+{/* TODO: capture the google review setup */}
+
+<Steps>
+<Step>
+Add a **Google Review** question, or configure **Google Review Redirects**.
+</Step>
+<Step>
+Enter the **condition and Google page URL** — which answers qualify, and where to send them.
+</Step>
+<Step>
+Save. Qualifying respondents see the review prompt; everyone else continues normally.
+</Step>
+</Steps>
+
+You can also route to other platforms — **Facebook**, **Instagram**, **Amazon**, **MakeMyTrip**, or
+a custom platform with **Enter Custom Platform Name**.
+
+<Callout type="warn">
+  Route on the answer, not on everyone. Asking an unhappy customer for a public review is how a
+  private complaint becomes a one-star rating. The condition is the whole point of this feature.
+</Callout>
+
+### The pattern that works
+
+```
+"How was your experience?"
+   ├── Great / Excellent  →  Google review prompt
+   └── Poor / Okay        →  "What went wrong?" → ticket
+```
+
+Happy customers get a frictionless path to saying so in public. Unhappy ones get a path to being
+heard in private — and a chance for you to fix it before they post anyway.
+
+---
+
+## Automatic Ticket Creation
+
+**Enable Auto-Ticket Creation** turns qualifying responses into tickets on a
+[board](/tickets/boards), so nothing gets lost in a spreadsheet.
+
+<Steps>
+<Step>
+Enable **Auto-Ticket** on the form or the question.
+</Step>
+<Step>
+**Choose a board** and **choose a column** for new tickets to land in.
+</Step>
+<Step>
+Set the **condition for ticket issue** — which answers should raise one.
+</Step>
+<Step>
+**Choose the teams to be added** so the right people see it.
+</Step>
+</Steps>
+
+### What to trigger on
+
+| Trigger | Why |
+|---------|-----|
+| Detractor NPS scores | Every one is a customer worth rescuing |
+| A complaint keyword in free text | Catches problems the rating missed |
+| A specific choice — *"Report a problem"* | Explicit, unambiguous |
+
+<Callout type="info">
+  Do not raise a ticket for every response. A board full of "everything was fine" cards is a board
+  your team stops reading — and then they miss the one that mattered.
+</Callout>
+
+---
+
+## Closing the Loop
+
+The full sequence, when both automations are set up:
+
+1. A customer submits a poor rating
+2. A ticket is created on your support board, assigned to the right team
+3. An agent opens it, sees the response, and contacts the customer
+4. The problem is fixed and the ticket closed
+5. Next time, that customer is a promoter — and the review prompt is the right thing to show them
+
+That loop is the difference between measuring satisfaction and improving it.
+
+---
+
+## Related Pages
+
+- [Ticket Boards](/tickets)
+- [Logic & Variables](/web-forms/logic-and-variables)
+- [Results](/web-forms/results)

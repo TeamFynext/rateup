@@ -1,121 +1,104 @@
 ---
-title: "New Conversations"
-description: Learn how to view and assign newly received conversations in the New tab of the RateUp Inbox.
+title: "New"
+description: The New view holds every ticket without an owner — the queue that needs attention first.
 ---
 
-import { CDN } from "@/lib/cdn";
-import ScreenShot from "@/components/Screenshot";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-# New Conversations (New Tab)
+**New** shows every active ticket that is **not yet assigned to anyone**.
 
-The **New** tab displays all **newly received customer messages** that are **not yet assigned** to any team member or staff.
+It is the only view where work has no owner, which makes it the first place any agent or manager
+should look.
 
-This view helps ensure every incoming message is noticed and assigned quickly.
-
----
-
-## Purpose of the New Tab
-
-The New tab is used to:
-
-- View newly received customer messages
-- Identify conversations that are not yet assigned
-- Assign conversations to yourself or other team members
-- Manage incoming workload efficiently
+<Callout type="info">
+  **New means unassigned.** A ticket leaves this view the moment someone is assigned — even if
+  nobody has replied yet. It is about ownership, not about whether the customer got an answer.
+</Callout>
 
 ---
 
-## New Tab Overview
+## What You See
 
-<ScreenShot src={`${CDN}/docs/screenshots/inbox/new-chat.png`} alt="New tab showing unassigned conversations" />
+<ImagePlaceholder
+  file="inbox/view-new.png"
+  shot="The New view: several unassigned rows, each with an amber left edge, a New status pill and the person+ quick-assign button on the right."
+  caption="Unassigned tickets in the New view."
+/>
 
-In the **New** tab:
-- All conversations are **unassigned**
-- Conversations are sorted by recent activity
-- Each conversation shows the customer name, last message, and time received
+{/* TODO: capture the New view */}
 
----
-
-## Opening a New Conversation
-
-<ScreenShot src={`${CDN}/docs/screenshots/inbox/new-chat.png`} alt="Unassigned conversation view" />
-
-To open a conversation:
-
-1. Click on any conversation listed under **New**
-2. The conversation opens in the chat window on the right
-3. At this stage, the conversation is still unassigned
-
-You can review the customer’s message before deciding how to assign it.
+- Every ticket is **unassigned**
+- Rows carry an **amber left edge**
+- Each row shows the customer, ticket number and title, last message and time
+- The **person +** button on the right assigns the ticket to you instantly
 
 ---
 
-## Assigning a Conversation
+## Assign a Ticket to Yourself
 
-At the bottom of the chat window, assignment options are available.
+The fastest route does not require opening the ticket at all.
 
----
+<Steps>
+<Step>
+Hover the row in the **New** view.
+</Step>
+<Step>
+Click the **person +** button on the right of the row.
+</Step>
+<Step>
+The ticket moves to **Mine** and disappears from **New**. A system note records that you took it.
+</Step>
+</Steps>
 
-### Assign to Me
-
-- Click **Assign to Me** to take ownership of the conversation
-- The conversation moves from **New** to **Mine**
-- You are now responsible for responding and closing the chat
-
-This is useful when you want to handle the conversation immediately.
-
----
-
-### Assign to Team or Individual
-
-<ScreenShot src={`${CDN}/docs/screenshots/inbox/assignDropdown.png`} alt="Assign conversation to team or individual" />
-
-Next to **Assign to Me**, click the **dropdown icon** to assign the conversation to others.
-
-From the **Assign to team or individual** panel, you can:
-
-- Assign the conversation to a **specific team**
-- Assign it to an **individual staff member**
-- Assign the entire team at once
-
-The list of available teams and users depends on your role and permissions.
+You can also open the ticket and use the **Assign to me** bar shown above the reply box.
 
 ---
 
-## Team vs Individual Assignment
+## Assign to Someone Else
 
-- **Team assignment**
-  - Conversation becomes visible to the selected team
-  - Any team member can respond based on access rules
+<Steps>
+<Step>
+Open the ticket from the **New** view.
+</Step>
+<Step>
+Click the dropdown next to **Assign to me**, or open the **Ticket Details** panel and click
+**Change** under **Assignment**.
+</Step>
+<Step>
+Pick a **team** or an **individual**. Availability (online / offline) is shown to help you choose.
+</Step>
+<Step>
+The ticket is assigned immediately and moves to that person's **Mine** view.
+</Step>
+</Steps>
 
-- **Individual assignment**
-  - Conversation is assigned directly to one staff member
-  - It appears under their **Mine** tab
-
----
-
-## Business Admin Capabilities
-
-As a **Business Admin**, you can:
-
-- View all new incoming conversations
-- Assign conversations to any team or staff member
-- Monitor and control conversation distribution across the organization
-
-Other roles may have limited assignment options based on permissions.
+[Full assignment guide →](/inbox/asigning-conversation)
 
 ---
 
-## Best Practices
+## Why Replying Is Blocked Here
 
-- Check the **New** tab frequently
-- Assign conversations as soon as possible
-- Use **Assign to Me** for quick handling
-- Use team assignment for shared responsibility
+Until a ticket has an owner, the composer is replaced by an **Assign to me** bar.
+
+This is deliberate: it prevents two agents answering the same customer at the same time, and it
+guarantees every conversation has someone accountable for it.
 
 ---
 
-## What’s Next?
+## Keeping New Empty
 
-Continue to **Responding to Conversations** to learn how to reply, use quick actions, and close chats.
+**New** works best as a queue you actively drain:
 
+- Check it frequently — a ticket sitting here has nobody watching it
+- Assign first, investigate second; ownership can always be changed later
+- Route to a **team** when you are not sure who should handle it
+- Use [auto-close rules](/inbox/inbox-settings) so genuinely dead tickets do not pile up
+
+---
+
+## Related Pages
+
+- [Open](/inbox/inboxview/open) — the full active workload
+- [Mine](/inbox/inboxview/mine) — what you picked up
+- [Assignment & Reassignment](/inbox/asigning-conversation)

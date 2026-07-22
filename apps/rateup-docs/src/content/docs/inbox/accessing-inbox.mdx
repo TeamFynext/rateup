@@ -1,60 +1,96 @@
 ---
 title: "Accessing the Inbox"
-description: Learn how to open the Inbox and understand who can access it in RateUp.
+description: Open the Inbox from the RateUp dashboard, and understand who can see which conversations.
 ---
 
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 import { CDN } from '@/lib/cdn';
 
-This section explains how to access the Inbox from the RateUp dashboard and who can use it.
+Before you can work on tickets, you need access to the Inbox. This page covers where to find it,
+what has to be connected, and what each role is allowed to see.
 
 ---
 
-## Open Inbox from Dashboard
+## Before You Start
 
-To access the Inbox:
+You need:
 
-1. **[Log in to your RateUp](/gettingStarted/login) account** .
-2. From the left sidebar, click **Inbox**
-3. The Inbox dashboard will open with your available conversations
+- A RateUp account with an **Inbox-enabled role**
+- At least one connected channel — a **WhatsApp Business** number or an **Instagram** account
+- Membership of at least one **team**, if your organisation routes tickets by team
 
-<ScreenShot src={`${CDN}/docs/screenshots/inbox/inbox.png`} alt="Inbox" />
-
-Inbox is accessible from anywhere within the RateUp platform using the sidebar menu.
-
----
-
-## Who Can Access the Inbox?
-
-Access to Inbox depends on your **user role and permissions**.
-
-### Users with Inbox Access
-
-Typically, the following roles can access Inbox:
-
-- **Admins** – Full access to all conversations and settings
-- **Managers** – View and manage team conversations
-- **Agents** – Access assigned and personal conversations
+<Callout type="warn">
+  If the Inbox is missing from your sidebar, it is almost always one of two things: your role does
+  not include Inbox access, or no channel has been connected yet. Ask a Business Admin to check
+  both.
+</Callout>
 
 ---
 
-## Permission-Based Access
+## Open the Inbox
 
-- Users can only see conversations assigned to them or their team
-- Some actions (assignment, closing chats, filters) may be limited based on role
-- Inbox visibility and actions are controlled through **Team & Role settings**
+<Steps>
+<Step>
+**Log in** to your RateUp account.
+
+If you have not set a password yet, see [Login](/getting-started/login).
+</Step>
+<Step>
+In the left sidebar, click **Inbox**.
+</Step>
+<Step>
+The Inbox opens on the **Open** view, showing every active ticket you have access to.
+</Step>
+</Steps>
+
+<ScreenShot src={`${CDN}/docs/screenshots/inbox/inbox.png`} alt="Opening the Inbox from the sidebar" />
+
+{/* TODO: re-capture — the sidebar should show the eight Inbox views with their live counts */}
+
+The Inbox is reachable from anywhere in RateUp using the sidebar, and the sidebar counts update as
+new messages arrive.
 
 ---
 
-## Important Notes
+## Who Can Access the Inbox
 
-- Inbox access requires an active WhatsApp integration
-- If Inbox is not visible, check your assigned role or permissions
+| Role | What they see |
+|------|---------------|
+| **Business Admin** | Every ticket in the organisation, plus Inbox settings and automation |
+| **Manager** | Tickets belonging to the teams they manage |
+| **Agent** | Tickets assigned to them or to their team, subject to permissions |
 
 ---
 
-## What’s Next?
+## What Your Role Controls
 
-Continue to **Inbox Layout** to understand how conversations and controls are organized.
+Permissions affect more than visibility. Depending on your role you may or may not be able to:
 
+- Assign or reassign tickets to other people
+- Close, reopen or mark tickets as spam
+- Block a contact
+- Export conversation history
+- Edit contact details
+- Change Inbox settings and automation rules
 
+These are configured under **Teams & Roles**, not in the Inbox itself.
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause | What to do |
+|---------|--------------|------------|
+| Inbox is missing from the sidebar | Role does not include Inbox access | Ask a Business Admin to update your role |
+| Inbox opens but is empty | No channel connected, or no tickets match your permissions | Check the **All** view; ask an admin to confirm the channel is live |
+| You can read but not reply | The ticket is unassigned, or closed | Assign it to yourself, or reopen it |
+| You cannot see a colleague's ticket | It belongs to a team you are not in | Ask a Manager to assign it to you or your team |
+
+---
+
+## Related Pages
+
+- [Inbox Layout](/inbox/layout) — what each part of the screen does
+- [Tickets & Conversations](/inbox/tickets) — the concept behind every row
+- [Inbox Views](/inbox/inboxview) — how tickets are grouped

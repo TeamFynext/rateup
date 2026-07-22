@@ -1,0 +1,91 @@
+---
+title: "Spam"
+description: Keep promotional and automated noise out of your working views.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Spam** holds tickets marked as junk — promotional blasts, automated noise, and anything that is
+not a genuine customer query.
+
+Marking a ticket as spam closes it and removes it from every working view.
+
+---
+
+## Mark a Ticket as Spam
+
+Two routes, same result:
+
+| From | How |
+|------|-----|
+| **The Close menu** | Open the ticket → **Close** → **Mark as Spam** |
+| **Ticket Details panel** | Open the panel → **Mark as spam** at the bottom |
+
+<ImagePlaceholder
+  file="inbox/mark-as-spam.png"
+  shot="The Close dropdown open with the four options visible, Mark as Spam highlighted."
+  caption="Marking a ticket as spam from the Close menu."
+/>
+
+{/* TODO: capture the Close dropdown */}
+
+---
+
+## What Happens
+
+- The ticket is treated as **closed** — the composer is hidden
+- It disappears from **Open**, **New** and **Mine**
+- Its assignees are cleared
+- A system note records who marked it and when
+- It remains available in the **Spam** view
+
+---
+
+## Recovering a Ticket Marked by Mistake
+
+<Steps>
+<Step>
+Open the ticket from the **Spam** view.
+</Step>
+<Step>
+Click **Reopen** in the chat header.
+</Step>
+<Step>
+A fresh ticket is opened for the customer and you can carry on as normal.
+</Step>
+</Steps>
+
+---
+
+## Spam vs Blocking
+
+| | Mark as spam | Block contact |
+|---|-------------|---------------|
+| **Scope** | This one ticket | The contact, permanently |
+| **Effect** | Ticket closes and moves to Spam | Neither side can message the other |
+| **Future messages** | Still arrive, as new tickets | Do not arrive at all |
+| **Reversible** | Yes, by reopening | Yes, by unblocking |
+
+To block: open the ticket, use the **Close** menu — or the **⋮** overflow menu if the ticket is
+already closed — and choose **Block contact**. You will be asked to confirm.
+
+<Callout type="warn">
+  Blocking cuts communication in both directions. Use it for repeat offenders, not for a single
+  unwanted message.
+</Callout>
+
+---
+
+## Best Practices
+
+- Use **Spam** for noise and **Close** for real conversations that are finished
+- Review the Spam view occasionally — genuine customers do end up here by accident
+- Block only when marking as spam is not enough
+
+---
+
+## Related Pages
+
+- [Closing & Reopening](/inbox/conversation-lifecycle)
+- [Closed](/inbox/inboxview/closed)

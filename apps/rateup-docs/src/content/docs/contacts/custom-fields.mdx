@@ -1,167 +1,87 @@
 ---
 title: "Custom Fields"
+description: Store the contact data your business needs that RateUp does not have by default.
 ---
 
-Custom Fields allow teams to extend contact information by adding additional attributes that are specific to their workflows. These fields can be created, edited, hidden, and used consistently across contacts, groups, and imports.
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-import ScreenShot from "@/components/Screenshot";
-import { CDN } from '@/lib/cdn';
+**Custom fields** extend the contact record with data specific to your business — a membership
+number, a vehicle registration, a dietary requirement, a renewal date.
 
----
-
-## Accessing Custom Fields
-
-Custom Fields are managed from the **Contacts → Custom Fields** section.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/custom-fields-list.png`}
-  alt="Custom fields list page"
+<ImagePlaceholder
+  file="contacts/custom-fields.png"
+  shot="The Custom Fields page listing defined fields with their types, and the Add Custom Field button."
+  caption="Custom fields."
 />
 
-This page displays all existing custom fields and serves as the central place to create or manage them.
+{/* TODO: capture the custom fields page */}
 
 ---
 
-## Creating a Custom Field
+## Creating a Field
 
-To create a new custom field:
+<Steps>
+<Step>
+Click **Add Custom Field**.
+</Step>
+<Step>
+Give it a clear **name** — this is what your team sees on every contact record.
+</Step>
+<Step>
+Choose the field type.
+</Step>
+<Step>
+Save. The field appears on every contact.
+</Step>
+</Steps>
 
-1. Click **Add Custom Field**
-2. Fill in the required configuration
-3. Save the field
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/add-custom-field-modal.png`}
-  alt="Add custom field modal"
-  width={350}
-/>
-
-### Field Configuration Options
-
-- **Name**  
-  The display name shown across contact views (for example: *Blood Group*, *Location*).
-
-- **Field ID**  
-  Auto-generated from the name and used internally, especially during imports.
-
-- **Type**  
-  Defines the kind of data the field accepts.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/custom-field-type-options.png`}
-  alt="Custom field type options"
-  width={350}
-/>
-
-Available types:
-- **Text** – General-purpose text
-- **Number** – Numeric values
-- **Email** – Email-specific validation
-- **Multi-value** – Multiple values per contact
-
-- **Visibility**  
-  Controls whether the field appears in contact views.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/custom-field-visibility.png`}
-  alt="Custom field visibility options"
-  width={350}
-/>
-
-- **Show** – Field is visible in tables and contact details  
-- **Hide** – Field remains stored but hidden from views
-
-- **Description (optional)**  
-  Internal context for the field’s purpose.
-
-Click **Create Custom Field** to finish.
+Use **Edit Custom Field** to change one later.
 
 ---
 
-## Editing a Custom Field
+## Where Custom Fields Appear
 
-Existing custom fields can be updated to adjust naming, visibility, or descriptions.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/edit-custom-field-modal.png`}
-  alt="Edit custom field modal"
-  width={350}
-/>
-
-Editable attributes include:
-- Field name
-- Visibility
-- Description
-
-> Field ID and Type cannot be changed after creation to protect existing data.
+| Location | Use |
+|----------|-----|
+| **Contact record** | Viewing and editing the value |
+| **Ticket Details panel** | Agents see it while replying |
+| **Contact filters** | Segmenting on the value |
+| **Import** | Populating in bulk |
 
 ---
 
-## Viewing Custom Fields in a Table
+## Custom Fields vs Labels
 
-All custom fields are displayed in a structured table format.
+The choice is about what kind of thing you are storing:
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/custom-fields-table.png`}
-  alt="Custom fields table"
-/>
+| | Custom fields | [Labels](/contacts/labels) |
+|---|--------------|--------|
+| **Store** | A value — a number, a date, text | A yes/no trait |
+| **Example** | *Membership number: 4471* | *VIP* |
+| **Visible in the Inbox list** | No | Yes |
 
-Each row shows:
-- Field Name
-- Field ID
-- Description
-- Visibility status
-- Field Type
-- Created date
-
-The table supports sorting and searching for easier management.
+If the answer is "yes or no", use a label. If the answer is "which one" or "how much", use a
+custom field.
 
 ---
 
-## Customizing the Table View
+## Designing Fields Well
 
-You can control which columns are visible using **View → Toggle Columns**.
+<Callout type="warn">
+  Every field you add is a field someone has to fill in. Fields that are half-populated are worse
+  than no field, because nobody trusts them.
+</Callout>
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/custom-fields-view-settings.png`}
-  alt="Toggle columns in custom fields table"
-  width={300}
-/>
-
-This allows teams to focus only on relevant metadata when managing many fields.
-
----
-
-## How Custom Fields Are Used
-
-Once created, custom fields automatically become available in:
-
-- Contact creation and editing
-- Group member management
-- CSV/XLSX contact imports
-- Contact detail views
-
-For example:
-- Store **Blood Group** for healthcare use cases
-- Capture **Location** for regional segmentation
-- Track **Coupons** during marketing campaigns
+- Add a field only when you know what you will do with the data
+- Name it so its meaning is obvious to someone who joined last week
+- Populate existing contacts by [import](/contacts/managing-contacts) rather than by hand
+- Review yearly and remove fields nobody fills in
 
 ---
 
-## Best Practices
+## Related Pages
 
-- Use meaningful and specific field names
-- Choose the correct data type from the start
-- Hide unused fields instead of deleting them
-- Avoid creating multiple fields with overlapping purposes
-
----
-
-## Why This Matters
-
-Custom Fields provide flexibility without compromising structure, allowing teams to adapt contact data to evolving business needs while maintaining consistency across the system.
-
----
-
-
-
+- [Managing Contacts](/contacts/managing-contacts) — importing values in bulk
+- [Labels](/contacts/labels)
+- [Ticket Details](/inbox/ticket-details)

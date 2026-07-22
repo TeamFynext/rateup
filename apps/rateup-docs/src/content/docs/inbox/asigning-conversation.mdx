@@ -1,145 +1,195 @@
 ---
 title: "Assignment & Reassignment"
-description: Learn how to assign and reassign conversations to team members or teams in the RateUp Inbox.
+description: Give every ticket an owner — assign to yourself, a colleague or a team, and hand work over cleanly.
 ---
 
-import { CDN } from "@/lib/cdn";
-import ScreenShot from "@/components/Screenshot";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-Assignment and reassignment allow you to control **who is responsible for a conversation**.  
-This helps teams manage workload, avoid duplicate replies, and ensure timely responses.
-
-Assignment actions are available across Inbox views such as **New**, **Assigned**, and **Mine**, based on your role permissions.
-
----
-
-## Assigning a Conversation
-
-Assigning a conversation means assigning ownership to **yourself**, a **specific team member**, or a **team**.
+Assignment decides **who is responsible for a ticket**. It is not optional bookkeeping: a ticket
+with no owner cannot be replied to.
 
 ---
 
-### When to Assign a Conversation
+## Why Assignment Is Required
 
-You should assign a conversation when:
-- A new message arrives in the **New** tab
-- A conversation needs a clear owner
-- You want to route the chat to the correct team
+The composer stays locked until a ticket has an owner. This prevents the two failure modes every
+shared inbox suffers from:
+
+- **Duplicate replies** — two agents answering the same customer minutes apart
+- **Silent drops** — everyone assuming somebody else picked it up
+
+An unassigned ticket is visible to everyone but owned by nobody, and it sits in **New** with an
+amber edge until that changes.
 
 ---
 
-### Step-by-Step: Assigning a Conversation
+## The Three Ways to Assign
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/assignDropdown.png`}
-  alt="Assigning a new conversation from the New tab"
-  width={650}
+| Route | Best for | Where |
+|-------|----------|-------|
+| **Quick assign** | Taking a ticket without reading it first | The **person +** button on a list row |
+| **Assign bar** | Taking a ticket you have just read | Above the composer in an unassigned ticket |
+| **Ticket Details** | Assigning to someone else, or reassigning | Panel → **Assignment** → **Change** |
+
+---
+
+## Assign a Ticket to Yourself
+
+<Steps>
+<Step>
+Open the **New** view — or find any row with an amber left edge.
+</Step>
+<Step>
+Click the **person +** button on the right of the row.
+
+Alternatively, open the ticket and click **Assign to me** above the composer.
+</Step>
+<Step>
+The status pill turns to **Assigned**, the ticket moves to your **Mine** view, and the composer
+unlocks.
+</Step>
+</Steps>
+
+<ImagePlaceholder
+  file="inbox/assign-to-me.png"
+  shot="An unassigned ticket open in the chat window, showing the amber 'Assign to me' bar in place of the composer, with the dropdown arrow beside it."
+  caption="Messaging is blocked until the ticket has an owner."
 />
 
-1. Open a conversation from the **New** tab
-2. In the chat window, locate the assignment options at the bottom
-3. Click **Assign to Me**  
-   **or**
-4. Click the **dropdown icon** next to Assign
-5. Select:
-   - A **team**, or
-   - An **individual team member**
-6. The conversation is assigned immediately
+{/* TODO: capture the assign bar on an unassigned ticket */}
 
-Once assigned, the conversation moves out of **New** and appears under **Assigned** (and **Mine**, if assigned to you).
+A system note is added to the thread recording who took the ticket, so ownership history is always
+visible.
 
 ---
 
-## Assigning to a Team vs Individual
+## Assign to a Colleague or Team
 
-- **Assign to Team**
-  - The conversation is visible to the entire team
-  - Any team member can pick up the conversation
+<Steps>
+<Step>
+Open the ticket.
+</Step>
+<Step>
+Click the **dropdown** next to **Assign to me**, or open **Ticket Details** and click **Change**
+under **Assignment**.
+</Step>
+<Step>
+Choose a **team** or an **individual**. Online / offline availability is shown next to each person.
+</Step>
+<Step>
+The ticket is assigned instantly and appears in that person's **Mine** view.
+</Step>
+</Steps>
 
-- **Assign to Individual**
-  - Ownership is clearly defined for one person
-  - The conversation appears in that user’s **Mine** view
-
----
-
-## Reassigning a Conversation
-
-Reassignment allows you to **change the owner** of an already assigned conversation.
-
-This is useful when:
-- An agent is unavailable
-- The issue needs escalation
-- The conversation should be handled by another team
-
----
-
-### Step-by-Step: Reassigning a Conversation
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/reassign.png`}
-  alt="Reassigning a conversation to another team or user"
-  width={450}
+<ImagePlaceholder
+  file="inbox/assign-panel.png"
+  shot="The 'Assign to team or individual' picker open, showing teams at the top and individual members with online/offline indicators."
+  caption="Choosing between a team and an individual."
 />
 
-1. Open an assigned conversation
-2. Click the **assigned user name** at the top-right of the chat window
-3. The **Assign to team or individual** panel opens
-4. Select another:
-   - Team, or
-   - Team member
-5. The conversation is reassigned instantly
-
-The new assignee becomes responsible for responding and closing the conversation.
+{/* TODO: capture the assignment picker */}
 
 ---
 
-## Reassigning Closed Conversations
+## Team vs Individual
 
-Closed conversations can also be reassigned if follow-up is required.
+| | Assign to a team | Assign to an individual |
+|---|-----------------|------------------------|
+| **Who can respond** | Any member, subject to permissions | That person |
+| **Shows in Mine for** | Nobody in particular | That person |
+| **Use when** | You want the fastest available person | The work needs a specific skill or owner |
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/closed-reassign.png`}
-  alt="Reassigning a closed conversation"
-  width={600}
-/>
-
-To reopen a closed conversation:
-
-1. Open the conversation from the **Closed** tab
-2. Click **Assign to Me** or assign to another user
-3. The conversation becomes active again
-4. It moves out of the Closed view
-
-> ℹ️ Reassigning a closed conversation does **not** override the WhatsApp 24-hour messaging window.
+<Callout type="info">
+  You can assign several people to one ticket. The list row then shows the first assignee's avatar
+  with a `+N` badge — hover it for the full list.
+</Callout>
 
 ---
 
-## Role-Based Assignment Permissions
+## Reassigning
 
-### Business Admin
-- Can assign and reassign any conversation
-- Can assign across all teams and users
+Reassignment changes the owner of an already-assigned ticket. Reach for it when:
 
-### Manager
-- Can assign and reassign conversations within their teams
+- An agent is going offline or on leave
+- The issue needs escalating
+- Another team is better placed to handle it
 
-### Agent
-- Can assign conversations to themselves
-- Reassignment permissions depend on role settings
+<Steps>
+<Step>
+Leave a **private note** explaining where things stand. This is the handover.
+</Step>
+<Step>
+**@mention** the new owner in that note so it reaches their **@Mentions** view.
+</Step>
+<Step>
+Open **Ticket Details → Assignment → Change** and pick the new owner.
+</Step>
+<Step>
+The ticket leaves your **Mine** view and enters theirs. A system note records the change.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Reassigning without a note is the most common reason customers have to repeat themselves. Always
+  leave the context behind — it takes ten seconds and stays on the ticket forever.
+</Callout>
+
+---
+
+## Picking Up a Closed Ticket
+
+Closed tickets cannot be reassigned in place — they are a finished record.
+
+Assigning one, or clicking **Reopen**, opens a **new ticket** for the same customer and carries the
+previous assignees across. The closed ticket keeps its number, close time and result.
+
+[More on reopening →](/inbox/conversation-lifecycle)
+
+---
+
+## Bulk Assignment
+
+To hand several tickets to one person at once:
+
+<Steps>
+<Step>
+Click the **select** (✅) icon in the toolbar to enter selection mode.
+</Step>
+<Step>
+Tick the tickets you want to move.
+</Step>
+<Step>
+Choose the assignee and confirm.
+</Step>
+</Steps>
+
+Useful at shift changes, or when redistributing an absent colleague's queue.
+
+---
+
+## Permissions
+
+| Role | Can assign |
+|------|-----------|
+| **Business Admin** | Any ticket, to anyone, across all teams |
+| **Manager** | Tickets within the teams they manage |
+| **Agent** | To themselves; reassigning to others depends on role settings |
 
 ---
 
 ## Best Practices
 
-- Assign conversations as soon as they arrive
-- Ensure every conversation has a clear owner
-- Reassign when availability changes
-- Avoid frequent reassignment to reduce confusion
-- Close conversations once resolved
+- Assign as soon as a ticket arrives — an unowned ticket is nobody's problem
+- Route to a **team** when you are unsure who should take it
+- Reassign when availability changes, rather than letting a queue stall
+- Avoid ping-ponging tickets between agents; it fragments the history
+- Close tickets once resolved, so ownership lists stay honest
 
 ---
 
-## What’s Next?
+## Related Pages
 
-Continue to **Conversation Lifecycle** to learn how conversations move between states such as New, Assigned, and Closed.
-
+- [New](/inbox/inboxview/newchat) — the unowned queue
+- [Private Notes & @Mentions](/inbox/private-notes) — writing a handover
+- [Closing & Reopening](/inbox/conversation-lifecycle)

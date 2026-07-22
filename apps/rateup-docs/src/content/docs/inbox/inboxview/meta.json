@@ -2,8 +2,12 @@
   "pages": [
     "index",
     "newchat",
-    "assigned",
+    "open",
     "mine",
-    "closed"
+    "mentions",
+    "favourites",
+    "closed",
+    "spam",
+    "all"
   ]
 }

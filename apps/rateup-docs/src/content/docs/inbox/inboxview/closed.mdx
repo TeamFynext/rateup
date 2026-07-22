@@ -1,120 +1,112 @@
 ---
-title: "Closed Conversations"
-description: Learn how closed conversations work in the RateUp Inbox and how to review or reopen them.
+title: "Closed"
+description: Finished tickets — how they are stored, why they are read-only, and what happens when you reopen one.
 ---
 
-import { CDN } from "@/lib/cdn";
-import ScreenShot from "@/components/Screenshot";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-The **Closed** view contains conversations that have been **marked as closed** after resolution.  
-Closed conversations are no longer active but remain available for reference, reporting, and follow-ups.
+**Closed** holds tickets that have been **closed, resolved, marked unresolved or marked as spam**.
 
-The Closed view helps teams:
-
-- Keep the Inbox clean and focused
-- Maintain a record of resolved interactions
-- Review past conversations for context
-- Reopen conversations when follow-up is required
+They are finished work: no longer active, but kept as a permanent record for reference and
+reporting.
 
 ---
 
-## Closed View Overview
+## What You See
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/closed.png`}
-  alt="Closed conversations view in Inbox"
-  width={"80%"}
+<ImagePlaceholder
+  file="inbox/view-closed.png"
+  shot="The Closed view: rows with green Closed pills, one hovered to show the tooltip 'Marked as RESOLVED by … at …'."
+  caption="Closed tickets, with the closing details on hover."
 />
 
-In the **Closed** view:
-- All conversations are completed
-- No immediate action is required
-- Conversations are read-only until reassigned
+{/* TODO: capture the Closed view including the status tooltip */}
+
+- Every ticket is finished
+- The status pill is green — hover it to see **who** closed it, **when**, and **how**
+- No ticket here has an assignee; closing clears them
 
 ---
 
-## How Conversations Get Closed
+## Closed Tickets Are Read-Only
 
-A conversation appears in **Closed** when a user selects **Mark as Closed** from the lifecycle menu.
-
-Common reasons to close a conversation:
-- The customer’s issue is fully resolved
-- No response is required
-- The conversation has ended
-
----
-
-## Viewing a Closed Conversation
-
-You can open any closed conversation to:
-- Read the full message history
-- Review the resolution details
-- Understand previous actions taken
-
-Closed conversations remain accessible for auditing and reference.
-
----
-
-## Reassigning a Closed Conversation
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/closed-reassign.png`}
-  alt="Reassigning a closed conversation"
-  width={600}
-/>
-
-When a closed conversation needs further action, it can be reassigned.
-
-You may see a system message like:
+Opening a closed ticket replaces the composer with a banner:
 
 > **This chat has been closed**  
-> Please assign to start the chat.
+> by *RateUp Admin* at *16/12/25 11:01 PM*.
 
-To reopen the conversation:
+You cannot send a message or a private note on a closed ticket. The record stays exactly as it was
+left.
 
-1. Click **Assign to Me** or reassign to another user/team
-2. The conversation becomes active again
-3. It moves out of the Closed view and follows the normal lifecycle
+You can still:
 
----
-
-## When to Reopen a Closed Conversation
-
-Reopen a closed conversation when:
-- A customer replies after closure
-- Additional clarification is required
-- The issue was not fully resolved
-- The conversation was closed by mistake
+- Read the whole message history
+- See the close result and who closed it
+- Open the **Ticket Details** panel
+- Star the ticket
+- Export the conversation
 
 ---
 
-## Role-Based Behavior
+## Reopening
 
-### Business Admin
-- Can view all closed conversations
-- Can reassign and reopen any closed chat
+Click **Reopen** in the chat header.
 
-### Manager
-- Can view and manage closed conversations within their teams
+<Callout type="warn">
+  Reopening does **not** revive the old ticket. It opens a **new ticket** for the same customer and
+  carries over the people who were assigned when the original closed.
+</Callout>
 
-### Agent
-- Can view closed conversations
-- Can reassign or reopen based on permissions
+| | Original ticket | New ticket |
+|---|-----------------|-----------|
+| **Number** | Unchanged | A fresh number |
+| **Status** | Stays Closed | Assigned |
+| **Close time and result** | Frozen | Not set yet |
+| **Where it lives** | Closed view + history bar | Open / Mine |
 
----
-
-## Best Practices
-
-- Close conversations only after full resolution
-- Reopen closed chats only when follow-up is necessary
-- Use reassignment to reactivate conversations
-- Keep Closed view organized for easy reference
+Both remain visible in the customer's **previous conversations** bar, so the full story is never
+lost.
 
 ---
 
-## What’s Next?
+## When a Customer Replies After Closure
 
-You’ve completed **Inbox Views**.  
-Next, explore **Responding to Conversations** to learn how to reply, use quick actions, and manage customer interactions effectively.
+You do not need to do anything. Their message creates a **new ticket**, which lands in **New**.
+The closed ticket stays closed, so its resolution time and result stay accurate.
 
+---
 
+## When to Reopen
+
+<Steps>
+<Step>
+**The ticket was closed by mistake** — reopen and carry on.
+</Step>
+<Step>
+**The fix did not work** — reopen so the follow-up is tracked as active work rather than buried in
+a closed thread.
+</Step>
+<Step>
+**A customer asks about something unrelated** — do *not* reopen. Let their message open its own
+ticket.
+</Step>
+</Steps>
+
+---
+
+## Role-Based Behaviour
+
+| Role | In the Closed view |
+|------|--------------------|
+| **Business Admin** | Views and reopens any closed ticket |
+| **Manager** | Views and reopens within their teams |
+| **Agent** | Views closed tickets; reopening depends on permissions |
+
+---
+
+## Related Pages
+
+- [Closing & Reopening](/inbox/conversation-lifecycle) — the close options in full
+- [All](/inbox/inboxview/all) — search across open and closed together
+- [Spam](/inbox/inboxview/spam)

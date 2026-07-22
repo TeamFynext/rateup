@@ -1,0 +1,129 @@
+---
+title: "Question Types"
+description: Input, choice, contact, NPS and rating questions — and when to use each.
+---
+
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+Choosing the right question type does more for your data quality than anything else in the editor.
+
+<ImagePlaceholder
+  file="web-forms/question-types.png"
+  shot="The Add Question picker showing the available question types grouped by category."
+  caption="Question types."
+/>
+
+{/* TODO: capture the question type picker */}
+
+---
+
+## Input Questions
+
+Free-text and structured input.
+
+| Type | Collects |
+|------|----------|
+| **Short text** | A word or a line |
+| **Long text** | A paragraph |
+| **Number** | Numeric input |
+| **Date** | A date |
+| **File upload** | A document or image, up to the maximum file size |
+| **Capture photo** | A photo taken on the spot |
+
+<Callout type="info">
+  Free text is the most expensive question type — expensive for the customer to answer and for you
+  to analyse. Use one, at the end, and make it optional.
+</Callout>
+
+Input questions support [custom validation](/web-forms/logic-and-variables) — letters only, numbers
+only, a length limit, or a pattern of your own with a custom **error message**.
+
+---
+
+## Choice Questions
+
+Pick from a list.
+
+| Feature | Notes |
+|---------|-------|
+| **Add choice** | Add options one at a time |
+| **Import Choices from Excel File** | Bulk-load a long list |
+| **Choice Image** | Attach an image to each option |
+| **Enable Other** | Adds an *Other* option with a free-text box |
+
+*Other* is worth enabling on any question where you are not certain the list is complete — the
+answers people type there are how you discover the option you forgot.
+
+---
+
+## Contact Questions
+
+Collect identity and contact details in a structured way: **name**, **email address**, **phone**.
+
+Because these map to contact fields, responses can create or update
+[contacts](/contacts) rather than sitting as loose text.
+
+| Option | Effect |
+|--------|--------|
+| **Enable Email** | Collects an email address |
+| **Allowed Email IDs** | Restricts submissions to specific addresses |
+| **All Emails** | Accepts any address |
+| **Emails from list** | Only addresses you have imported |
+
+Email restriction turns a public form into an invite-only one — useful for internal or member-only
+surveys.
+
+---
+
+## NPS & Rating Questions
+
+The satisfaction measures.
+
+| Type | Scale |
+|------|-------|
+| **NPS** | 0–10, the standard Net Promoter Score |
+| **Rating** | Stars or numbers |
+| **Smiley** | Emoji faces |
+| **Yes / No** | A binary |
+| **Like / Dislike** | A thumbs judgement |
+
+NPS answers feed the **NPS Analytics** view in [Results](/web-forms/results).
+
+<Callout type="info">
+  A rating on its own tells you the score but not the reason. Pair it with one optional follow-up —
+  and use a [logic jump](/web-forms/logic-and-variables) so detractors get a different question from
+  promoters.
+</Callout>
+
+---
+
+## Other Question Types
+
+| Type | Use |
+|------|-----|
+| **Statement** | Text with no answer — instructions or a thank-you mid-form |
+| **Consent** | An *I agree to…* checkbox with your terms |
+| **Spin wheel** | A gamified reward, sized by segment count (minimum two) |
+| **Google Review** | Routes happy respondents to leave a public review |
+
+[Google review routing →](/web-forms/automations)
+
+---
+
+## Choosing Well
+
+| To learn | Use |
+|----------|-----|
+| How satisfied someone is | NPS or rating |
+| Which of a known set applies | Choice |
+| Something you cannot predict | Long text — sparingly |
+| Who they are | Contact |
+| Whether they agree | Consent |
+
+---
+
+## Related Pages
+
+- [Logic & Variables](/web-forms/logic-and-variables)
+- [Results](/web-forms/results)
+- [Automations](/web-forms/automations)

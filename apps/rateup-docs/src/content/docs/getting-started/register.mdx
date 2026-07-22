@@ -1,0 +1,212 @@
+---
+title: "Create an Account"
+description: Sign up for RateUp with email, Google or Apple, and complete the three-step setup.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+import { CDN } from "@/lib/cdn";
+
+Signing up takes three short steps. What you are asked for depends on whether you register with
+**email** or with **Google / Apple**.
+
+<Callout type="info">
+  If a colleague invited you, do **not** sign up here — use the invite link in your email instead.
+  Registering separately creates a second, empty organisation rather than joining theirs.
+</Callout>
+
+---
+
+## Getting to the Signup Form
+
+<Steps>
+<Step>
+Visit [rateup.app](https://rateup.app) and click **Login** in the top-right corner.
+</Step>
+<Step>
+On the login page, click **Create account**.
+</Step>
+<Step>
+Choose how to register:
+
+- **Continue with Google**
+- **Continue with Apple**
+- **Continue with Email**
+</Step>
+</Steps>
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/authentication/login.png`}
+  alt="The create account option on the login page"
+  width="350px"
+/>
+
+---
+
+## Step 1 · Create Your Account
+
+What this step asks for depends on the method you chose.
+
+### With email
+
+| Field | Notes |
+|-------|-------|
+| **Name** | Your own name |
+| **Email address** | Must be valid, and not already registered |
+| **Password** | See the rules below |
+| **Confirm password** | Must match |
+
+<Callout type="warn">
+  Your password must be at least **5 characters** and contain **at least one letter and one
+  number**. A password of only letters or only digits is rejected.
+</Callout>
+
+### With Google or Apple
+
+Your name and email come from the provider, so instead you are asked for a **phone number**. It is
+required, and it is verified later with a one-time code.
+
+---
+
+## Step 2 · Tell Us About Your Business
+
+<ImagePlaceholder
+  file="authentication/signup-step2.png"
+  shot="Signup step 2 'Tell Us About Your Business' with business name, website, industry, location and team size, and the Step 2 of 3 progress indicator."
+  caption="Business details."
+/>
+
+{/* TODO: capture signup step 2 */}
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **Business name** | Yes | Appears across RateUp and on customer-facing pages |
+| **Website URL** | No | For example `https://yourcompany.com` |
+| **Industry** | Yes | Chosen from the list below |
+| **Location** | Yes | Where the business operates |
+| **Team size** | Yes, in practice | **1–5**, **6–25**, **26–100** or **100+** |
+
+**Industries:** E-commerce · Healthcare · Education · Finance · Real Estate · Hospitality ·
+Retail · Technology · Marketing · Other.
+
+<Callout type="info">
+  **Team size** is marked optional but the **Continue** button stays disabled until you pick one. If
+  the button looks stuck on this step, that is almost always why.
+</Callout>
+
+Your industry choice shapes the templates, automations and onboarding RateUp suggests — so pick the
+closest match rather than **Other** where you can.
+
+---
+
+## Step 3 · What Are You Most Excited to Use?
+
+Select all that apply. This tailors your dashboard and onboarding tour; it does not restrict what
+you can use later.
+
+| Option | Covers |
+|--------|--------|
+| **WhatsApp Business API** | Verified sender and templates |
+| **Loyalty on WhatsApp** | Points, tiers and rewards |
+| **WhatsApp Campaigns** | Broadcasts |
+| **Customer Feedback** | NPS, CSAT and review drives |
+| **Web Feedback Forms** | Surveys and forms |
+| **Unified Inbox** | WhatsApp and Instagram in one place |
+
+A progress indicator shows **Step 3 of 3**. Use **Back** to revisit earlier steps — nothing is lost.
+
+---
+
+## Verification
+
+The last stage depends, again, on how you registered.
+
+### Email signup — verify your email
+
+<Steps>
+<Step>
+RateUp sends a verification email. The page reads **Verify Your Email — check your inbox to
+continue**.
+</Step>
+<Step>
+Open the email and click the verification link.
+</Step>
+<Step>
+Your account is activated and you can sign in.
+</Step>
+</Steps>
+
+If it does not arrive, use **Resend verification email** and check your spam and promotions
+folders.
+
+### Google / Apple signup — verify your phone
+
+<Steps>
+<Step>
+The **Verify your Phone Number** screen asks for the **OTP code** sent to the number you gave.
+</Step>
+<Step>
+Enter it and click **Verify OTP**, or use **Resend OTP** if it does not arrive.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Email verification is required before your first login. An unverified account cannot sign in.
+</Callout>
+
+---
+
+## The Flow at a Glance
+
+```
+Create account
+  ├── Email        →  name, email, password
+  └── Google/Apple →  phone number
+        ↓
+Business details  →  name, website, industry, location, team size
+        ↓
+Interests         →  select all that apply
+        ↓
+Verify            →  email link, or phone OTP
+        ↓
+Dashboard
+```
+
+---
+
+## Troubleshooting
+
+| Message | Meaning | What to do |
+|---------|---------|-----------|
+| **"This account already exists"** | That email is already registered | [Log in](/getting-started/login), or [reset your password](/getting-started/resetpassword) |
+| **"Sign up process is already completed"** | Registration finished on a previous attempt | Go to the login page and sign in |
+| **"Password should contain at least one letter and one number"** | Password is all letters or all digits | Mix both |
+| **"Enter a valid email"** | The address is malformed | Check for typos |
+| **Continue button will not activate** | A required field is empty — usually **team size** | Fill every field on the step |
+| **No verification email** | Filtered as spam, or a typo in the address | Check spam, then **Resend verification email** |
+
+---
+
+## What Happens Next
+
+<Steps>
+<Step>
+**[Log in](/getting-started/login)** with your new account.
+</Step>
+<Step>
+**[Connect a channel](/settings/channels)** — a WhatsApp Business account or Instagram. Nothing
+works until one is live.
+</Step>
+<Step>
+**[Invite your team](/settings/users)** and group them into [teams](/settings/teams).
+</Step>
+</Steps>
+
+---
+
+## Related Pages
+
+- [Login](/getting-started/login)
+- [Reset Password](/getting-started/resetpassword)
+- [Account Settings](/settings/account) — changing these details later

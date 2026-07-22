@@ -1,0 +1,111 @@
+---
+title: "Security"
+description: Change your password, and permanently delete your account or your organisation.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Security Settings** holds your password and the two irreversible actions in RateUp.
+
+<ImagePlaceholder
+  file="settings/security.png"
+  shot="The Security Settings page: the Change Password form above the red Danger Zone with Delete Account and Delete Organization."
+  caption="Security Settings."
+/>
+
+{/* TODO: capture the Security page */}
+
+---
+
+## Change Your Password
+
+<Steps>
+<Step>
+Enter your **current password**.
+</Step>
+<Step>
+Enter your **new password**.
+</Step>
+<Step>
+**Confirm** the new password — the two must match.
+</Step>
+<Step>
+Click **Change Password**. You will see *"Password Changed Successfully"*.
+</Step>
+</Steps>
+
+If you cannot remember your current password, sign out and use
+[Reset Password](/getting-started/resetpassword) instead.
+
+---
+
+## Danger Zone
+
+Two actions live here. Both are permanent.
+
+### Delete Account
+
+Permanently deletes **your own user account**.
+
+- Your access ends immediately
+- You are removed from every team
+- Tickets you handled remain, with your name on them
+
+<Callout type="warn">
+  This action cannot be undone. If you are leaving the organisation, ask an admin to remove you
+  instead — that way your open work gets reassigned first.
+</Callout>
+
+### Delete Organization
+
+Permanently deletes **the entire organisation** and everything in it:
+
+- All chats and contacts
+- All team members and their access
+- All integrations
+- All billing information
+
+<Callout type="warn">
+  This is permanent and irreversible. Every person in the organisation loses access, and no export
+  is produced automatically. Export anything you need to keep **before** starting.
+</Callout>
+
+---
+
+## Before Deleting an Organisation
+
+<Steps>
+<Step>
+Export conversation history from the [Inbox toolbar](/inbox/toolbar).
+</Step>
+<Step>
+Export contacts from [Contacts](/contacts).
+</Step>
+<Step>
+Export survey and campaign results you need to retain.
+</Step>
+<Step>
+Cancel or check your [billing](/settings/billing) status.
+</Step>
+<Step>
+Tell your team — they lose access the moment it completes.
+</Step>
+</Steps>
+
+---
+
+## Good Password Practice
+
+- Use a unique password for RateUp, not one shared with other services
+- Longer beats complicated — a passphrase is easier to remember and harder to break
+- Change it immediately if you suspect it has been shared
+- Never share a login; add the person as a [user](/settings/users) instead
+
+---
+
+## Related Pages
+
+- [Account](/settings/account)
+- [Users](/settings/users)
+- [Reset Password](/getting-started/resetpassword)

@@ -1,0 +1,84 @@
+---
+title: "Customers"
+description: Your loyalty members — balances, tiers, referral codes and activity.
+---
+
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Customers** is the member list for your loyalty programme.
+
+<ImagePlaceholder
+  file="loyalty/customers.png"
+  shot="The loyalty Customers table with columns for customer, tier badge, points, lifetime points, last active and actions."
+  caption="Loyalty members."
+/>
+
+{/* TODO: capture the customers table */}
+
+---
+
+## The Columns
+
+| Column | Meaning |
+|--------|---------|
+| **Customer** | Name and contact details |
+| **Tier** | Their current tier |
+| **Points** | Current spendable balance |
+| **Lifetime** | Total ever earned — this does not go down on redemption |
+| **Last Active** | When they last did something |
+| **Referral Code** | Their personal code |
+
+Use **Filter** to narrow by tier or activity.
+
+<Callout type="info">
+  **Points** and **Lifetime** answer different questions. Points is what they can spend now;
+  lifetime is how valuable they have been. Tier thresholds are based on the lifetime figure, which
+  is why redeeming never demotes anyone.
+</Callout>
+
+---
+
+## Customer Details
+
+Open a member to see their full record — balance, tier, date of birth, transaction history and
+referral information. **Back to Customers** returns to the list.
+
+### Referral tools
+
+| Action | Use |
+|--------|-----|
+| **Copy referral code** | Give the customer their code over the phone or in chat |
+| **Copy referral link** | Send them something they can forward directly |
+
+If copying fails you will see *"Failed to copy referral code"* — usually a browser clipboard
+permission.
+
+---
+
+## Exporting
+
+| Format | Use |
+|--------|-----|
+| **Export as CSV** | Import elsewhere |
+| **Export as Excel** | Analysis in a spreadsheet |
+
+<Callout type="warn">
+  Member exports contain personal data including dates of birth. Handle and delete accordingly.
+</Callout>
+
+---
+
+## Using the List Well
+
+- Sort by **Last Active** to find members drifting away, and target them before they are gone
+- Look at members just below a tier threshold — a nudge converts them
+- Check high-lifetime members are actually redeeming; a big saver who never spends is disengaged
+- Use **date of birth** with [birthday reminders](/loyalty/settings)
+
+---
+
+## Related Pages
+
+- [Transactions](/loyalty/transactions) — the point movements behind a balance
+- [Rewards](/loyalty/rewards)
+- [Settings](/loyalty/settings)

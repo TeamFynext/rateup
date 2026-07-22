@@ -1,6 +1,11 @@
 {
   "pages": [
+    "index",
     "overview",
-    "agent-perfomance"
+    "agent-performance",
+    "team-performance",
+    "message-analytics",
+    "message-logs",
+    "team-activity"
   ]
 }

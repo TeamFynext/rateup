@@ -1,0 +1,113 @@
+---
+title: "Responses & Results"
+description: Reading individual responses, analysing the whole set, and exporting the data.
+---
+
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+Two tabs cover what came back: **Responses** for individual submissions, **Analytics** for the
+picture across all of them.
+
+<ImagePlaceholder
+  file="web-forms/results.png"
+  shot="The survey Analytics tab showing the Happiness Index, NPS breakdown into Promoters, Passives and Detractors, and per-question charts."
+  caption="Survey analytics."
+/>
+
+{/* TODO: capture the analytics tab */}
+
+---
+
+## Responses
+
+Every individual submission, with its answers, timestamp and any
+[URL tags](/web-forms/sharing) it carried.
+
+Read these when you need the detail: a specific complaint, a lead's contact details, the wording
+someone used.
+
+---
+
+## Analytics
+
+### Happiness Index
+
+An overall satisfaction score across responses, from **Poor** through **Okay**, **Good**,
+**Great** and **Excellent**.
+
+### NPS breakdown
+
+Net Promoter Score responses split three ways:
+
+| Group | Score | Meaning |
+|-------|-------|---------|
+| **Promoters** | 9–10 | Will recommend you |
+| **Passives** | 7–8 | Satisfied but not enthusiastic |
+| **Detractors** | 0–6 | Unhappy, and may say so |
+
+<Callout type="info">
+  **Passives are the opportunity.** Promoters already advocate and detractors are a rescue job;
+  passives are the group closest to becoming promoters if you find out what is missing. Use a
+  [logic jump](/web-forms/logic-and-variables) to ask them specifically.
+</Callout>
+
+### Per-question charts
+
+Each question gets its own visualisation — distributions for choice and rating questions, response
+listings for free text.
+
+---
+
+## AI Summaries
+
+| Feature | Produces |
+|---------|----------|
+| **Generate Summary by AI** | A written summary of the responses |
+| **Generate Team wise summary** | The same, broken down by team |
+| **Large Text Summary** | A digest of long free-text answers |
+
+This is most valuable on free text, where hundreds of paragraphs are otherwise unreadable.
+
+<Callout type="warn">
+  Treat a summary as a starting point, not a finding. Read a sample of the raw responses before
+  acting — a summary smooths over exactly the sharp, specific complaint you most needed to see.
+</Callout>
+
+---
+
+## Exporting
+
+| Format | Use |
+|--------|-----|
+| **Excel / CSV** | Analysis elsewhere |
+| **Export to PDF** | A shareable report |
+| **Google Sheet** | Live sync to a spreadsheet |
+
+<Callout type="warn">
+  Exports contain whatever respondents told you, including contact details. Treat them as personal
+  data.
+</Callout>
+
+Filter before exporting — by team, date or response content — rather than exporting everything and
+trimming later.
+
+---
+
+## Acting on Results
+
+A survey nobody acts on trains customers not to answer the next one.
+
+| Signal | Action |
+|--------|--------|
+| Detractor response | Follow up personally — see [Automations](/web-forms/automations) |
+| Repeated complaint about one thing | Fix the thing; the survey has done its job |
+| Promoters | Ask for a [Google review](/web-forms/automations) or a [testimonial](/testimonials) |
+| Falling response rate | The form is too long, or you are asking too often |
+
+---
+
+## Related Pages
+
+- [Automations](/web-forms/automations) — turning responses into tickets and reviews
+- [Testimonials](/testimonials)
+- [Sharing](/web-forms/sharing)

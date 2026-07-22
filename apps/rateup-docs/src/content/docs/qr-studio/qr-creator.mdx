@@ -1,0 +1,118 @@
+---
+title: "QR Creator"
+description: Generate branded QR codes, redirect them after printing, and track scans.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**QR Creator** generates QR codes that you control after they are printed. The code stays the same;
+where it sends people does not have to.
+
+<ImagePlaceholder
+  file="qr-studio/qr-list.png"
+  shot="The QR Creator list page: a grid of generated QR cards with names and previews, plus the search box, sort dropdown and Create QR button."
+  caption="Your generated QR codes."
+/>
+
+{/* TODO: capture the QR list page */}
+
+---
+
+## Create a QR Code
+
+<Steps>
+<Step>
+Go to **QR Studio → QR Creator** and click **Create QR**.
+</Step>
+<Step>
+Enter a **QR name**.
+
+It must be at least three characters, alphanumeric, and start with a letter. This name is for you —
+customers never see it — so make it findable later: *table-tent-cafe-2026* beats *qr1*.
+</Step>
+<Step>
+Enter the **URL** the code should open.
+
+Any valid URL works: a survey, a catalog, an access link, your website.
+</Step>
+<Step>
+Click **Create**. The code is generated and appears in your list.
+</Step>
+</Steps>
+
+---
+
+## Design the Code
+
+Open a QR from the list and switch to **Editor Mode** to style it — colours, patterns and shape —
+so it matches your brand instead of looking like a default black square.
+
+<ImagePlaceholder
+  file="qr-studio/qr-editor.png"
+  shot="The QR detail page in Editor Mode, showing the styled QR preview alongside the design controls, the Destination URL field, the QR URL copy row, and the Total Scans statistic."
+  caption="Editing and tracking a QR code."
+/>
+
+{/* TODO: capture the QR editor */}
+
+<Callout type="warn">
+  Keep contrast high and do not over-style. A beautiful QR that phones cannot read is worse than a
+  plain one — always test-scan before printing, ideally from a phone that is not yours.
+</Callout>
+
+---
+
+## Change Where It Points
+
+The **destination URL** is editable at any time. The printed code keeps working; the next scan
+goes to the new address.
+
+This is the whole reason to use QR Creator rather than a static generator:
+
+- Redirect a seasonal campaign without reprinting
+- Point last year's table tents at this year's survey
+- Fix a URL that turned out to be wrong
+
+---
+
+## Sharing the Code
+
+| Control | Use |
+|---------|-----|
+| **QR URL** | Copy the short link behind the code, to send digitally |
+| **Copy URL** | Copies it to your clipboard |
+| **Download** | Save the image for print or design work |
+
+---
+
+## Tracking Scans
+
+The **Statistics** section shows **Total Scans** for the code.
+
+Use it to compare placements: the same campaign on a receipt versus a table tent versus a poster
+tells you where your customers actually are.
+
+---
+
+## Renaming and Managing
+
+Use **Rename QR** to change the name — this does not affect the code or its destination. Search
+and sort in the list page header when your library grows.
+
+---
+
+## Best Practices
+
+- Name codes by placement, not by campaign — placements outlive campaigns
+- Test-scan every code before it goes to print
+- Point QR codes at an [access link](/qr-studio/access-links) when the destination may need to
+  become several destinations
+- Leave quiet space around the code; QR readers need the margin
+
+---
+
+## Related Pages
+
+- [Access Links](/qr-studio/access-links)
+- [Share Your Survey](/web-forms/sharing)

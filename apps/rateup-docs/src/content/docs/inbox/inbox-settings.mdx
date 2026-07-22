@@ -1,117 +1,154 @@
 ---
 title: "Inbox Settings"
-description: Configure Inbox behavior, visibility rules, and Quick Replies in RateUp.
+description: Configure quick replies and auto-close automation for your Inbox.
 ---
 
-import { CDN } from "@/lib/cdn";
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+import { CDN } from "@/lib/cdn";
 
-Inbox Settings allow you to control **how conversations are displayed** and **how agents respond faster** using predefined replies.
+Inbox Settings is where admins configure the two things that shape how the Inbox behaves for
+everyone: **quick replies** and **auto-close rules**.
 
-These settings help teams maintain clarity, consistency, and efficiency while working in the Inbox.
+Open it from **Inbox → Settings** in the sidebar. It has two tabs.
 
----
-
-## Show Assigned Chats
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/inbox-settings.png`}
-  alt="Show Assigned Chats settings"
-  width={"70%"}
+<ImagePlaceholder
+  file="inbox/inbox-settings-tabs.png"
+  shot="The Inbox Settings screen with the Quick Replies and Automation tabs visible, Quick Replies active."
+  caption="Inbox Settings."
 />
 
-The **Show Assigned Chats** setting controls **who can see assigned conversations** in the Inbox.
+{/* TODO: capture the settings screen with both tabs */}
 
-### Available Options
-
-#### Everyone
-- Shows all assigned conversations to all users
-- Useful for open collaboration and transparency
-
-#### Staff of Assigned Teams
-- Shows conversations only to staff who belong to the same assigned teams
-- Helps limit visibility to relevant team members
-
-#### Admins
-- Shows assigned conversations only to Admins and Super Admins
-- Useful for restricted or sensitive workflows
-
----
-
-## When to Use Each Option
-
-- Use **Everyone** for shared support environments
-- Use **Staff of Assigned Teams** for team-based routing
-- Use **Admins** when tighter access control is required
+<Callout type="info">
+  These settings apply to the whole organisation. Changing them affects every agent's Inbox
+  immediately.
+</Callout>
 
 ---
 
 ## Quick Replies
 
+Quick replies are saved answers agents insert instead of retyping the same thing all day.
+
+Agents reach them by clicking the **lightning** button in the composer, or by typing `/` in the
+message box.
+
 <ScreenShot
   src={`${CDN}/docs/screenshots/inbox/quick-replies-list.png`}
-  alt="Quick Replies list in Inbox settings"
+  alt="Quick replies list"
   width={"70%"}
 />
 
-**Quick Replies** are predefined response messages that agents can quickly insert into conversations.
+### Add a quick reply
 
-They help:
-- Reduce typing time
-- Maintain consistent responses
-- Speed up customer interactions
-
-Quick Replies are especially useful for frequently asked questions.
-
----
-
-## Adding a Quick Reply
+<Steps>
+<Step>
+Open the **Quick Replies** tab and click **Add Quick Reply**.
+</Step>
+<Step>
+Enter a **key** — a short, unique handle agents will type after `/`. Keep it memorable:
+`refund-policy` beats `qr-14`.
+</Step>
+<Step>
+Choose a **category** — a high-level grouping such as Billing, Technical or General.
+</Step>
+<Step>
+Choose a **topic** for more specific context.
+</Step>
+<Step>
+Write the **reply text**, then click **Save Changes**.
+</Step>
+</Steps>
 
 <ScreenShot
   src={`${CDN}/docs/screenshots/inbox/add-quick-reply.png`}
-  alt="Add Quick Reply modal"
+  alt="Add quick reply"
   width={650}
 />
 
-To create a new Quick Reply:
+The reply is available in every conversation straight away.
 
-1. Click **Add Quick Reply**
-2. Enter a **Key**
-   - A short, unique identifier used for quick lookup
-3. Select a **Category**
-   - High-level grouping (e.g., Billing, Technical, General)
-4. Select a **Topic**
-   - More specific context (e.g., General Inquiry)
-5. Enter the **Reply Text**
-6. Click **Save Changes**
+### Manage quick replies
 
-The Quick Reply becomes immediately available for use in conversations.
-
----
-
-## Managing Quick Replies
-
-From the Quick Replies list, you can:
-
-- ✏️ Edit an existing reply
-- 🗑️ Delete a reply
-- Organize replies by category and topic
-
+From the list you can **edit** and **delete** replies, and organise them by category and topic.
 Changes apply instantly across the Inbox.
 
+### Writing good quick replies
+
+- Keep them short — agents will edit them before sending anyway
+- Leave the greeting out, so agents can personalise the opening line
+- Cover the questions you answer daily, not the rare ones
+- Review them quarterly; outdated policies in a quick reply spread fast
+- Remember customer messages cap at **1024 characters**
+
 ---
 
-## Best Practices
+## Automation: Auto-Close Rules
 
-- Keep reply text short and clear
-- Use categories and topics for easy organization
-- Regularly review and update outdated replies
-- Avoid overusing quick replies—personalize when needed
+Tickets that go quiet forever are noise. Auto-close rules end them for you.
+
+<ImagePlaceholder
+  file="inbox/auto-close-rules.png"
+  shot="The Automation tab showing the two auto-close rule cards — New / Unassigned Chats and Assigned Chats — each with its inactivity period and a toggle."
+  caption="Auto-close rules."
+/>
+
+{/* TODO: capture the Automation tab */}
+
+There are two rules, each switched on or off independently:
+
+| Rule | Applies to |
+|------|-----------|
+| **New / Unassigned Chats** | Tickets nobody has taken |
+| **Assigned Chats** | Tickets with an owner that have gone quiet |
+
+Each reads: **inactive for `<time>` → Close Conversation.**
+
+### Edit a rule
+
+<Steps>
+<Step>
+Open the **Automation** tab and click the rule you want to change.
+</Step>
+<Step>
+Confirm the **chat type** — New / Unassigned, or Assigned.
+</Step>
+<Step>
+Pick a **close after inactivity** period from the presets, or choose **Custom** and enter a number
+of hours.
+</Step>
+<Step>
+The **action** is **Close Conversation** — the thread is marked closed and agents can reopen it at
+any time.
+</Step>
+<Step>
+Save.
+</Step>
+</Steps>
+
+### Choosing sensible periods
+
+| Rule | Typical | Why |
+|------|---------|-----|
+| **New / Unassigned** | Shorter — 24–48 hours | If nobody claimed it in two days, nobody will |
+| **Assigned** | Longer — 72 hours or more | An owner may legitimately be waiting on the customer |
+
+<Callout type="warn">
+  Set the assigned-chat period too short and you will close tickets agents are still working on.
+  Start generous and tighten it once you have seen the effect.
+</Callout>
+
+<Callout type="info">
+  Auto-closed tickets behave exactly like manually closed ones: read-only, no assignees, and
+  reopenable. If a customer writes again, a new ticket is created.
+</Callout>
 
 ---
 
-## What’s Next?
+## Related Pages
 
-Continue to **Quick Replies Usage** to learn how agents can insert and use Quick Replies directly while responding to conversations.
-
-
+- [Replying to Customers](/inbox/responding-to-conversation) — where quick replies are used
+- [Closing & Reopening](/inbox/conversation-lifecycle) — what closing does
+- [Accessing the Inbox](/inbox/accessing-inbox) — roles and permissions

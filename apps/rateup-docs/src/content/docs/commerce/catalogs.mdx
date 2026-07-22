@@ -1,0 +1,85 @@
+---
+title: "Catalogs"
+description: Manage the products customers can buy in WhatsApp, and keep them in sync.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+**Catalogs** is the product side of Commerce: what customers see when they browse your store in
+WhatsApp.
+
+<ImagePlaceholder
+  file="commerce/catalogs.png"
+  shot="The Catalogs page showing a grid of products with images, prices, Active / Out of stock badges, and the collections list."
+  caption="Products in the connected catalog."
+/>
+
+{/* TODO: capture the Catalogs page */}
+
+---
+
+## Products
+
+Each product shows its image, title, brand or category, price, and a stock badge:
+
+| Badge | Meaning |
+|-------|---------|
+| **Active** | In stock and buyable |
+| **Out of stock** | Visible but cannot be ordered |
+
+Use the row menu on any product to manage or delete it.
+
+<Callout type="warn">
+  Deleting a product removes it from the catalog customers browse. Existing orders that contain it
+  are unaffected.
+</Callout>
+
+---
+
+## Syncing
+
+Products come from the WhatsApp catalog connected to your account. Click **Sync** to pull the
+latest state.
+
+<Steps>
+<Step>
+Make the change in your product source — your WhatsApp catalog or connected store.
+</Step>
+<Step>
+Return to **Commerce → Catalogs** and click **Sync**.
+</Step>
+<Step>
+You will see *"Products synced"* when it completes.
+</Step>
+</Steps>
+
+Sync when a price changes, stock runs out, or a product is added — the catalog customers see is
+whatever was last synced.
+
+---
+
+## Collections
+
+Collections group products so customers can browse by theme rather than scrolling everything —
+"New arrivals", "Under ₹500", seasonal ranges.
+
+Manage them from the collections area of the Catalogs page.
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---------|--------------|
+| "No catalog connected" | No WhatsApp catalog is linked — connect one in [WhatsApp Catalog](/whatsapp/catalogs) |
+| A product is missing | It has not been synced, or it is not published in the source catalog |
+| Sync failed | The connection to the catalog has expired; reconnect the account |
+| Price is wrong in chat | The customer is seeing a cached catalog; sync and ask them to reopen it |
+
+---
+
+## Related Pages
+
+- [WhatsApp Catalog](/whatsapp/catalogs) — connecting the catalog
+- [Orders](/commerce/orders)

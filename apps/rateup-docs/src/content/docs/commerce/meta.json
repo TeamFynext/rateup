@@ -1,0 +1,10 @@
+{
+  "pages": [
+    "index",
+    "overview",
+    "catalogs",
+    "orders",
+    "payments",
+    "checkout-settings"
+  ]
+}

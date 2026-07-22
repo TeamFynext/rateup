@@ -1,99 +1,109 @@
 ---
-title: "Inbox Filters"
-description: Learn how to filter Inbox conversations by staff members and teams in RateUp.
+title: "Staff & Team Filters"
+description: Narrow any Inbox view down to a single agent or team — the main tool for managers monitoring workload.
 ---
 
-import { CDN } from "@/lib/cdn";
-import ScreenShot from "@/components/Screenshot";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-Inbox Filters help you **narrow down conversations** based on assigned staff members and teams.  
-They are especially useful for admins and managers handling a large number of conversations.
+Below the eight views in the sidebar sit two filters: **All Staff** and **All Teams**.
 
----
+They answer the question every manager asks a dozen times a day: *whose work is this, and how much
+of it is there?*
 
-## Filter Overview
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/inbox-filters.png`}
-  alt="Inbox filters for staff and teams"
-  width={350}
+<ImagePlaceholder
+  file="inbox/staff-team-filters.png"
+  shot="The sidebar's All Staff and All Teams filter dropdowns, one of them open showing a list of agents."
+  caption="The staff and team filters."
 />
 
-The Inbox filter section includes two main filters:
-
-- **All Staff**
-- **All Teams**
-
-These filters allow you to control which conversations appear in the Inbox list.
+{/* TODO: capture the staff and team filters */}
 
 ---
 
-## All Staff Filter
+## How They Differ From Advanced Filters
 
-The **All Staff** filter lets you view conversations based on **assigned users**.
+| | Staff & team filters | [Advanced filters](/inbox/toolbar) |
+|---|---------------------|-----------------------------------|
+| **Where** | Sidebar, under the views | Toolbar, above the list |
+| **Filter by** | Who owns the ticket | What the ticket is — channel, labels, campaign, status |
+| **Mainly for** | Managers and admins | Everyone |
 
-Using this filter, you can:
-- View conversations assigned to all staff members
-- Select a specific agent to see only their conversations
-- Monitor individual workloads
-
-This filter is commonly used by:
-- Business Admins
-- Managers
+Both stack on top of the view you are in. **Open** + *Team: Support* + *Channel: WhatsApp* is a
+perfectly normal combination.
 
 ---
 
-## All Teams Filter
+## All Staff
 
-The **All Teams** filter lets you view conversations based on **team assignments**.
+Filters the list by **assigned agent**.
 
-Using this filter, you can:
-- View conversations assigned to all teams
-- Select a specific team to focus on its conversations
-- Manage department or region-based workloads
+Use it to:
 
-This is useful when conversations are routed to different teams.
+- See everything one agent is handling right now
+- Check whether someone is overloaded before assigning them more
+- Review an individual's work before a coaching conversation
+- Find out who has been handling a particular customer
 
----
-
-## Using Staff and Team Filters Together
-
-You can apply **both filters at the same time** to create a more specific Inbox view.
-
-For example:
-- Conversations assigned to **Team Support** and handled by **Agent John**
-- Conversations belonging to a specific region and agent
-
-This helps quickly locate and manage conversations.
+Set it back to **All Staff** to see everyone again.
 
 ---
 
-## Access & Permissions
+## All Teams
 
-Filter visibility depends on user role:
+Filters the list by **assigned team**.
 
-### Business Admin
-- Can view all staff and all teams
+Use it to:
 
-### Manager
-- Can view staff and teams they manage
+- Focus on one department's queue — Support, Sales, Billing
+- Compare load across teams
+- Manage region- or language-based routing
 
-### Agent
-- May have limited visibility based on permissions
+Set it back to **All Teams** to clear.
+
+---
+
+## Combining Them
+
+Applying both narrows the list to the intersection: *tickets assigned to **Agent John** within
+**Team Support***.
+
+Useful combinations:
+
+| Goal | View | Staff | Team |
+|------|------|-------|------|
+| What is my team sitting on right now? | Open | All | Support |
+| Is this agent overloaded? | Open | John | All |
+| What did Sales close last week? | Closed | All | Sales |
+| Who has unowned work in my department? | New | All | Support |
+
+---
+
+## Who Sees What
+
+| Role | Filter visibility |
+|------|-------------------|
+| **Business Admin** | Every staff member and every team |
+| **Manager** | The staff and teams they manage |
+| **Agent** | Limited or hidden, depending on permissions |
+
+<Callout type="info">
+  The filters never widen your access. They only narrow what you can already see — an agent
+  filtering by a colleague still sees only the tickets their role permits.
+</Callout>
 
 ---
 
 ## Best Practices
 
-- Use filters to quickly locate conversations
-- Clear filters when switching tasks
-- Managers can use **All Staff** to monitor workload
-- Team leads can use **All Teams** to focus on team queues
+- Clear the filters when you switch tasks, or you will wonder where your tickets went
+- Combine with **oldest first** sorting to surface stale work in one team
+- Use **New** + a team filter to find work nobody in that department has picked up
+- Rebalance by reassigning, not by asking people to "check the Inbox"
 
 ---
 
-## What’s Next?
+## Related Pages
 
-Continue to **Inbox Settings** to learn how Inbox preferences and configuration options can be customized.
-
-
+- [Inbox Views](/inbox/inboxview)
+- [Search, Filters & Sorting](/inbox/toolbar)
+- [Assignment & Reassignment](/inbox/asigning-conversation)
