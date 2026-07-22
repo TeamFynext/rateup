@@ -27,10 +27,13 @@ import {
   useEditTeamMutation,
   useNotTeamMembers,
   useRemoveUserFromTeam,
+  useTeamChannels,
   useTeamFeatures,
   useTeamMembersFromInvitation,
+  useUpdateTeamChannels,
   useUpdateTeamFeatures,
 } from "@/backend/team/team.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -820,6 +823,152 @@ export function TeamFeatureAccess({ selectedTeam }) {
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+/** Best available human-readable name for a channel, with the platform it belongs to. */
+function describeChannel(channel: any): { label: string; platform: string } {
+  if (channel?.ibaId) {
+    return {
+      label: channel.igDisplayName || channel.igUserName || channel.ibaId,
+      platform: "Instagram",
+    };
+  }
+  if (channel?.fbPageId) {
+    return { label: channel.fbUserName || channel.fbPageId, platform: "Facebook" };
+  }
+  return {
+    label: channel?.phoneDisplayName || channel?.phone || channel?.phoneId || "Unnamed channel",
+    platform: "WhatsApp",
+  };
+}
+
+export function TeamChannelAccess({ selectedTeam }) {
+  const { t: translations } = useTranslation();
+  const teamId = selectedTeam?.id as string;
+
+  const { data, isLoading } = useTeamChannels(teamId);
+  const { data: allChannelsList, isLoading: isLoadingChannels } = useWaSettings();
+  const updateMutation = useUpdateTeamChannels(teamId);
+
+  // `null` means "no local edits yet" — the server value is shown until the user touches something.
+  const [draft, setDraft] = useState<{ allChannels: boolean; ids: Set<string> } | null>(null);
+
+  const serverState = useMemo(
+    () => ({
+      allChannels: data?.allChannels ?? true,
+      ids: new Set<string>((data?.channels ?? []).map((c) => c.id)),
+    }),
+    [data],
+  );
+
+  const current = draft ?? serverState;
+  const isDirty = draft !== null;
+
+  const toggleChannel = (channelId: string) => {
+    const ids = new Set(current.ids);
+    if (ids.has(channelId)) ids.delete(channelId);
+    else ids.add(channelId);
+    setDraft({ allChannels: false, ids });
+  };
+
+  const handleSave = () => {
+    updateMutation.mutate(
+      { allChannels: current.allChannels, channelIds: Array.from(current.ids) },
+      { onSuccess: () => setDraft(null) },
+    );
+  };
+
+  if (isLoading || isLoadingChannels) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 3 }, (_, i) => (
+          <Skeleton key={`chan-skel-${i}`} className="h-12 w-full rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  const channels = allChannelsList ?? [];
+  const hasNoGrant = !current.allChannels && current.ids.size === 0;
+
+  return (
+    <div className="space-y-4 pt-2">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl mb-1">{translations("Channel Access")}</h2>
+          <p className="text-sm text-muted-foreground">
+            {translations(
+              "Choose which channels this team can see. Org owners always see every channel.",
+            )}
+          </p>
+        </div>
+        <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending || !isDirty}>
+          {updateMutation.isPending ? translations("Saving") : translations("Save Changes")}
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-4 space-y-3">
+          <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
+            <div>
+              <span>{translations("All channels")}</span>
+              <p className="text-xs text-muted-foreground">
+                {translations("Includes any channel connected in the future.")}
+              </p>
+            </div>
+            <Switch
+              checked={current.allChannels}
+              onCheckedChange={(checked) =>
+                setDraft({ allChannels: checked, ids: checked ? new Set() : current.ids })
+              }
+            />
+          </div>
+
+          {!current.allChannels && (
+            <>
+              <Separator />
+              {channels.length === 0 ? (
+                <p className="text-sm text-muted-foreground px-1 py-2">
+                  {translations("No channels are connected to this organisation yet.")}
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {channels.map((channel: any) => {
+                    const { label, platform } = describeChannel(channel);
+                    return (
+                      <div
+                        key={channel.id}
+                        className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+                      >
+                        <div className="min-w-0">
+                          <span className="block truncate">{label}</span>
+                          <Badge variant="secondary" className="mt-1 text-[10px]">
+                            {platform}
+                          </Badge>
+                        </div>
+                        <Switch
+                          checked={current.ids.has(channel.id)}
+                          onCheckedChange={() => toggleChannel(channel.id)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {hasNoGrant && (
+                <p className="text-sm text-destructive px-1">
+                  {translations(
+                    "No channels selected — members of this team will not see any channel.",
+                  )}
+                </p>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
