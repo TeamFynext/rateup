@@ -1,133 +1,128 @@
-import { Blockquote, Button, FileButton, Group, NavLink, Stack } from "@mantine/core";
 import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
-import classNames from "classnames/bind";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import readXlsxFile from "read-excel-file/browser";
 import { toast } from "sonner";
 
-import styles from "./ImportChoices.module.css";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
-const cx = classNames.bind(styles);
+interface ImportChoicesProps {
+  setValue: (name: string, value: any) => void;
+  surveyLanguagesArr: string[];
+  questionObj: Question;
+  handleSave: () => void;
+}
 
-function ImportChoices({ mantineFormObj, surveyLanguagesArr, questionObj, handleSave }) {
-  const fileButtonResetRef = useRef<() => void>(null);
+function ImportChoices({
+  setValue,
+  surveyLanguagesArr,
+  questionObj,
+  handleSave,
+}: ImportChoicesProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
   const { t: translations } = useTranslation();
-  // checks if excel rows has all surveyLanguages columns.
-  const areAllSurveyLanguagesColumnsPresent = useCallback((headerRow) => {
-    let result = true;
-    const headerRowArr = headerRow.map((languageStr) => languageStr.toString().toLowerCase());
-    for (const surveyLanguage of surveyLanguagesArr) {
-      if (!headerRowArr.includes(surveyLanguage.toLowerCase())) {
-        result = false;
-      }
-    }
-    return result;
-  }, []);
 
-  const handleFileButtonChange = useCallback(
-    async (file) => {
-      if (file) {
-        const rows = await readXlsxFile(file);
-        const headerRow = rows[0]?.data;
-        const areAllSurveyLangsColsPresent = areAllSurveyLanguagesColumnsPresent(headerRow);
-        if (!areAllSurveyLangsColsPresent) {
-          toast.error(translations("Please add all survey languages columns in excel file"));
-          return;
-        }
-        // Format => { English: Set("choice1", "choice 2") }
-        const choiceStringsSets = {};
-
-        // Format => { headerRowColIndex: language }; Example => { 0: "English", 1: "Malayalam" }
-        const columnLanguageObj = {};
-
-        for (const surveyLanguage of surveyLanguagesArr) {
-          if (!choiceStringsSets[surveyLanguage]) {
-            const newSet = new Set();
-            if (questionObj.choices) {
-              const existingOptionsStrsArr =
-                questionObj.choices[surveyLanguage]?.map((obj) => obj.value) || [];
-              for (const str of existingOptionsStrsArr) newSet.add(str);
-            }
-            choiceStringsSets[surveyLanguage] = newSet;
-          }
-          const surveyLanguageColIndexInHeaderRow = headerRow.findIndex(
-            (language) => language.toString().toLowerCase() === surveyLanguage.toLowerCase(),
-          );
-          if (
-            surveyLanguageColIndexInHeaderRow >= 0 &&
-            !columnLanguageObj[surveyLanguageColIndexInHeaderRow]
-          ) {
-            columnLanguageObj[surveyLanguageColIndexInHeaderRow] = surveyLanguage;
-          }
-        }
-        for (let i = 1; i < rows.length; i++) {
-          const rowArr = rows[i]?.data;
-          if (!rowArr.includes(null)) {
-            for (const key in columnLanguageObj) {
-              const surveyLanguage = columnLanguageObj[key];
-              const choiceStrsSet = choiceStringsSets[surveyLanguage];
-              choiceStrsSet.add(rowArr[key]);
-            }
-          }
-        }
-
-        // Set to check if all language Sets have same size.
-        const sizeSet = new Set();
-        for (const language in choiceStringsSets) {
-          const languageSet = choiceStringsSets[language];
-          sizeSet.add(languageSet.size);
-        }
-
-        // means all languages have same number of options/choices.
-        if (sizeSet.size === 1) {
-          const choices = {};
-          for (const language in choiceStringsSets) {
-            const languageSet = choiceStringsSets[language];
-            const currentLanguageChoices = [];
-            for (const choice of languageSet) {
-              currentLanguageChoices.push({ value: choice });
-            }
-            choices[language] = currentLanguageChoices;
-          }
-          mantineFormObj.setFieldValue("choices", choices);
-          handleSave();
-        }
-      }
-
-      fileButtonResetRef.current?.();
+  const areAllSurveyLanguagesColumnsPresent = useCallback(
+    (headerRow) => {
+      const headerRowArr = headerRow.map((languageStr) => languageStr.toString().toLowerCase());
+      return surveyLanguagesArr.every((lang) => headerRowArr.includes(lang.toLowerCase()));
     },
-    [questionObj, surveyLanguagesArr, handleSave, mantineFormObj],
+    [surveyLanguagesArr],
+  );
+
+  const handleFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const rows = await readXlsxFile(file);
+      const headerRow = rows[0]?.data;
+
+      if (!areAllSurveyLanguagesColumnsPresent(headerRow)) {
+        toast.error(translations("Please add all survey languages columns in excel file"));
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
+
+      const choiceStringsSets: Record<string, Set<unknown>> = {};
+      const columnLanguageObj: Record<number, string> = {};
+
+      for (const surveyLanguage of surveyLanguagesArr) {
+        if (!choiceStringsSets[surveyLanguage]) {
+          const newSet = new Set();
+          if (questionObj.choices) {
+            const existing = questionObj.choices[surveyLanguage]?.map((obj) => obj.value) || [];
+            for (const str of existing) newSet.add(str);
+          }
+          choiceStringsSets[surveyLanguage] = newSet;
+        }
+        const colIndex = headerRow.findIndex(
+          (language) => language.toString().toLowerCase() === surveyLanguage.toLowerCase(),
+        );
+        if (colIndex >= 0 && !columnLanguageObj[colIndex]) {
+          columnLanguageObj[colIndex] = surveyLanguage;
+        }
+      }
+
+      for (let i = 1; i < rows.length; i++) {
+        const rowArr = rows[i]?.data;
+        if (!rowArr.includes(null)) {
+          for (const key in columnLanguageObj) {
+            choiceStringsSets[columnLanguageObj[key]].add(rowArr[key]);
+          }
+        }
+      }
+
+      const sizeSet = new Set(Object.values(choiceStringsSets).map((s) => s.size));
+      if (sizeSet.size === 1) {
+        const choices: Record<string, { value: unknown }[]> = {};
+        for (const language in choiceStringsSets) {
+          choices[language] = [...choiceStringsSets[language]].map((choice) => ({ value: choice }));
+        }
+        setValue("choices", choices);
+        handleSave();
+      }
+
+      if (inputRef.current) inputRef.current.value = "";
+    },
+    [questionObj, surveyLanguagesArr, handleSave, setValue],
   );
 
   return (
-    <Stack className={cx("import-choices-root-div")}>
-      <p>{translations("Import Choices from Excel File")}</p>
-      <Group gap={"1.5rem"}>
-        <FileButton
-          resetRef={fileButtonResetRef}
+    <div className="flex flex-col gap-3">
+      <p className="text-sm font-medium">{translations("Import Choices from Excel File")}</p>
+
+      <div className="flex flex-wrap items-start gap-4">
+        <Button variant="outline" size="sm" onClick={() => inputRef.current?.click()}>
+          {translations("Choose .xlsx file")}
+        </Button>
+        <input
+          ref={inputRef}
+          type="file"
           accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          onChange={handleFileButtonChange}
-        >
-          {(props) => <Button {...props}>Choose .xlsx file</Button>}
-        </FileButton>
-        <Stack className={cx("blockquote-container")}>
-          <Blockquote icon={<IconInfoCircle />} iconSize={"1.25rem"}>
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
+        <Alert className="flex-1 min-w-[220px]">
+          <IconInfoCircle className="size-4" />
+          <AlertDescription className="flex flex-col gap-2">
             <span>
               {translations("Column headings in Excel file should be the selected language key.")}
             </span>
-            <NavLink
+            <a
               href={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/File/multiple-choice-questions-choices-demo.xlsx`}
-              label={translations("Download Demo .xlsx File")}
-              leftSection={<IconDownload size="1rem" stroke={1.5} />}
               download
-              active
-              style={{ borderRadius: "4px" }}
-            />
-          </Blockquote>
-        </Stack>
-      </Group>
-    </Stack>
+              className="flex w-fit items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+            >
+              <IconDownload className="size-3.5" stroke={1.5} />
+              {translations("Download Demo .xlsx File")}
+            </a>
+          </AlertDescription>
+        </Alert>
+      </div>
+    </div>
   );
 }
 

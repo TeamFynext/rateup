@@ -1,12 +1,12 @@
 import { lazy, Suspense } from "react";
-import { useTranslation } from "react-i18next";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent } from "@/components/ui/tabs.tsx";
 import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import { EditSurvey } from "../EditSurvey.tsx";
+import { EditTheme } from "../EditTheme.tsx";
 import Result from "../Result/Result.tsx";
 import ResultComparison from "../Result/ResultComparison.tsx";
 import SurveySettings from "../Settings/index.tsx";
@@ -27,18 +27,27 @@ function TabPanelsComp({
   setActiveTab,
   setFunToRunBeforeSurveyIdPageHeaderTabsChange,
 }) {
-  const { t: translations } = useTranslation();
   const { data: subscription } = useSubscription();
 
   return (
     <Tabs value={value} className="h-full min-h-0">
-      <TabsContent value={TabEnum.Edit}>
+      <TabsContent value={TabEnum.Edit} className="h-full min-h-0">
         <EditSurvey
           questions={questions}
           addQnTrigger={addQnTrigger}
           surveyLanguages={survey?.languages}
           setSelectedLanguage={setSelectedLanguage}
           subscription={subscription}
+          setFunToRunBeforeSurveyIdPageHeaderTabsChange={
+            setFunToRunBeforeSurveyIdPageHeaderTabsChange
+          }
+        />
+      </TabsContent>
+      <TabsContent value={TabEnum.Theme} className="h-full min-h-0">
+        <EditTheme
+          survey={survey}
+          questions={questions}
+          onClose={() => setActiveTab(TabEnum.Edit)}
           setFunToRunBeforeSurveyIdPageHeaderTabsChange={
             setFunToRunBeforeSurveyIdPageHeaderTabsChange
           }
@@ -65,7 +74,7 @@ function TabPanelsComp({
                     "endtoendencryption",
                   "redirect",
                   "uniqueDeviceResponse",
-                  hasFeature(subscription, SubscriptionFeaturePathName.Ticket) && "tickets",
+                  "tickets",
                   hasFeature(subscription, SubscriptionFeaturePathName.EmailNotification) &&
                     "enableNotificationEmail",
                   hasFeature(subscription, SubscriptionFeaturePathName.Webhook) && "webhook",
@@ -73,44 +82,34 @@ function TabPanelsComp({
           }
         />
       </TabsContent>
-      <TabsContent value={TabEnum.Result} className="min-h-0">
-        <Tabs defaultValue="responses" className="relative h-full min-h-0">
-          <TabsList className="mx-auto mb-2 flex">
-            <TabsTrigger value="responses">{translations("Responses")}</TabsTrigger>
-            <TabsTrigger value="analytics">{translations("Analytics")}</TabsTrigger>
-            <TabsTrigger value="team-analytics">{translations("Team Analytics")}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="responses" className="min-h-0">
-            <Result
-              survey={survey}
-              encryptionpassword={encryptionpassword}
-              setEncryptionPassword={setEncryptionPassword}
-              subscription={subscription}
-            />
-          </TabsContent>
-          <TabsContent value="analytics" className="min-h-0">
-            <Suspense
-              fallback={<div className="flex items-center justify-center h-64">Loading...</div>}
-            >
-              <ResultsOverviewWebForm
-                surveyId={surveyId}
-                aiResponseSummary={survey?.aiResponseSummary}
-                flowId={null}
-                version={1}
-                flowQuestions={[]}
-                questions={questions}
-              />
-            </Suspense>
-          </TabsContent>
-          <TabsContent value="team-analytics" className="min-h-0">
-            <ResultComparison
-              surveyId={surveyId}
-              version={1}
-              flowQuestions={[]}
-              questions={questions}
-            />
-          </TabsContent>
-        </Tabs>
+      <TabsContent value={TabEnum.Responses} className="min-h-0">
+        <Result
+          survey={survey}
+          encryptionpassword={encryptionpassword}
+          setEncryptionPassword={setEncryptionPassword}
+        />
+      </TabsContent>
+      <TabsContent value={TabEnum.Analytics} className="min-h-0">
+        <Suspense
+          fallback={<div className="flex items-center justify-center h-64">Loading...</div>}
+        >
+          <ResultsOverviewWebForm
+            surveyId={surveyId}
+            aiResponseSummary={survey?.aiResponseSummary}
+            flowId={null}
+            version={1}
+            flowQuestions={[]}
+            questions={questions}
+          />
+        </Suspense>
+      </TabsContent>
+      <TabsContent value={TabEnum.TeamAnalytics} className="min-h-0">
+        <ResultComparison
+          surveyId={surveyId}
+          version={1}
+          flowQuestions={[]}
+          questions={questions}
+        />
       </TabsContent>
       <TabsContent value={TabEnum.Share}>
         <ShareSurvey survey={survey} setActiveTab={setActiveTab} />

@@ -171,7 +171,7 @@ function RateUpOnboarding() {
   const isSubReady = !isSubLoading && sub;
 
   const hasLoyaltyFeature = isSubReady
-    ? hasFeature(sub, SubscriptionFeaturePathName.Loyalty)
+    ? hasFeature(sub, SubscriptionFeaturePathName.Whatsapp)
     : null;
   const { data: checklist } = useChecklist();
 

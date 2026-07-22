@@ -42,13 +42,12 @@ import {
   IconWaveSine,
   IconWebhook,
 } from "@tabler/icons-react";
-import { Layers } from "lucide-react";
+import { AtSign, Layers, ShieldAlert, Sparkles, Star, UserCheck } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { SubscriptionFeaturePathName as sfpn, TeamFeature } from "@/types/enums.ts";
+import { TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
-import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 export function useNavMain({
   subscription,
@@ -65,10 +64,6 @@ export function useNavMain({
 }: any) {
   const { t } = useTranslation();
 
-  const LifecycleIcon = () => <IconActivity className="h-3 w-3 text-amber-400" />;
-  const LabelIcon = () => <IconTag className="h-3 w-3 text-blue-400" />;
-  const UserIcon = () => <IconUser className="h-3 w-3 text-green-400" />;
-  const TeamIcon = () => <IconUsers className="h-3 w-3 text-purple-400" />;
   // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)
   const hasTeamFeature = (feature: TeamFeature) =>
     allowedFeatures === null || allowedFeatures.has(feature);
@@ -81,18 +76,27 @@ export function useNavMain({
       //   items: [],
       // },
 
-      ...(hasFeature(subscription, sfpn.Whatsapp) && hasTeamFeature(TeamFeature.Inbox)
+      ...(hasTeamFeature(TeamFeature.Inbox)
         ? [
             {
               title: t("Inbox"),
               url: "/dashboard/inbox?tab=open",
               icon: IconInbox,
               items: [
+                // Inbox Tickets v2 filter rail. Order matches the design mockup:
+                // Open · New · Closed · All · Mine · @Mentions · Favourites · Spam.
                 {
                   title: t("Open"),
                   url: "/dashboard/inbox?tab=open",
                   icon: IconInbox,
                   count: sectionCounts?.openCount || 0,
+                  variant: "inbox-tab",
+                },
+                {
+                  title: t("New"),
+                  url: "/dashboard/inbox?tab=new",
+                  icon: Sparkles,
+                  count: sectionCounts?.newCount || 0,
                   variant: "inbox-tab",
                 },
                 {
@@ -110,6 +114,34 @@ export function useNavMain({
                   variant: "inbox-tab",
                 },
                 {
+                  title: t("Mine"),
+                  url: "/dashboard/inbox?tab=mine",
+                  icon: UserCheck,
+                  count: sectionCounts?.mineCount || 0,
+                  variant: "inbox-tab",
+                },
+                {
+                  title: t("@Mentions"),
+                  url: "/dashboard/inbox?tab=mentions",
+                  icon: AtSign,
+                  count: sectionCounts?.mentionsCount || 0,
+                  variant: "inbox-tab",
+                },
+                {
+                  title: t("Favourites"),
+                  url: "/dashboard/inbox?tab=favourites",
+                  icon: Star,
+                  count: sectionCounts?.favouriteCount || 0,
+                  variant: "inbox-tab",
+                },
+                {
+                  title: t("Spam"),
+                  url: "/dashboard/inbox?tab=spam",
+                  icon: ShieldAlert,
+                  count: sectionCounts?.spamCount || 0,
+                  variant: "inbox-tab",
+                },
+                {
                   group: "Filter",
                   items: [
                     ...(lifecycles.length > 0
@@ -117,7 +149,7 @@ export function useNavMain({
                           {
                             title: "Lifecycle",
                             isSectionHeader: true,
-                            icon: LifecycleIcon,
+                            icon: IconActivity,
                             showClearButton: !!chatFilterStore.filter.lifecycle,
                             clearFilter: () =>
                               chatFilterStore.setFilter({
@@ -141,7 +173,7 @@ export function useNavMain({
                           {
                             title: "Labels",
                             isSectionHeader: true,
-                            icon: LabelIcon,
+                            icon: IconTag,
                             showClearButton: chatFilterStore.filter.labels?.length > 0,
                             clearFilter: () =>
                               chatFilterStore.setFilter({
@@ -173,7 +205,7 @@ export function useNavMain({
                           {
                             title: "Users",
                             isSectionHeader: true,
-                            icon: UserIcon,
+                            icon: IconUser,
                             showClearButton: chatFilterStore.filter.assignedUserIds?.length > 0,
                             clearFilter: () =>
                               chatFilterStore.setFilter({
@@ -194,7 +226,7 @@ export function useNavMain({
                           {
                             title: "Teams",
                             isSectionHeader: true,
-                            icon: TeamIcon,
+                            icon: IconUsers,
                             showClearButton: chatFilterStore.filter.assignedTeams?.length > 0,
                             clearFilter: () =>
                               chatFilterStore.setFilter({
@@ -262,7 +294,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.WhatsAppCampaign) && hasTeamFeature(TeamFeature.Contacts)
+      ...(hasTeamFeature(TeamFeature.Contacts)
         ? [
             {
               title: t("Contacts"),
@@ -298,7 +330,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.WhatsAppCampaign) && hasTeamFeature(TeamFeature.Campaigns)
+      ...(hasTeamFeature(TeamFeature.Campaigns)
         ? [
             {
               title: t("Campaign"),
@@ -307,18 +339,17 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.Whatsapp) &&
-      (hasTeamFeature(TeamFeature.Flows) ||
-        hasTeamFeature(TeamFeature.Chatbots) ||
-        hasTeamFeature(TeamFeature.Templates) ||
-        hasTeamFeature(TeamFeature.Automation))
+      ...(hasTeamFeature(TeamFeature.Flows) ||
+      hasTeamFeature(TeamFeature.Chatbots) ||
+      hasTeamFeature(TeamFeature.Templates) ||
+      hasTeamFeature(TeamFeature.Automation)
         ? [
             {
               title: t("WhatsApp"),
               url: "/dashboard/whatsapp/flows",
               icon: IconBrandWhatsapp,
               items: [
-                ...(hasFeature(subscription, sfpn.WhatsAppFlow) && hasTeamFeature(TeamFeature.Flows)
+                ...(hasTeamFeature(TeamFeature.Flows)
                   ? [
                       {
                         title: t("Flow"),
@@ -327,8 +358,7 @@ export function useNavMain({
                       },
                     ]
                   : []),
-                ...(hasFeature(subscription, sfpn.WhatsAppAutomation) &&
-                hasTeamFeature(TeamFeature.Chatbots)
+                ...(hasTeamFeature(TeamFeature.Chatbots)
                   ? [
                       {
                         title: t("Chatbot"),
@@ -337,8 +367,7 @@ export function useNavMain({
                       },
                     ]
                   : []),
-                ...(hasFeature(subscription, sfpn.WhatsAppTemplate) &&
-                hasTeamFeature(TeamFeature.Templates)
+                ...(hasTeamFeature(TeamFeature.Templates)
                   ? [
                       {
                         title: t("Templates"),
@@ -354,8 +383,7 @@ export function useNavMain({
                 },
               ],
             },
-            ...(hasFeature(subscription, sfpn.WhatsAppAutomation) &&
-            hasTeamFeature(TeamFeature.Chatbots)
+            ...(hasTeamFeature(TeamFeature.Chatbots)
               ? [
                   {
                     title: t("Instagram"),
@@ -364,8 +392,7 @@ export function useNavMain({
                   },
                 ]
               : []),
-            ...(hasFeature(subscription, sfpn.WhatsAppAutomation) &&
-            hasTeamFeature(TeamFeature.Automation)
+            ...(hasTeamFeature(TeamFeature.Automation)
               ? [
                   {
                     title: t("Automation"),
@@ -377,7 +404,7 @@ export function useNavMain({
           ]
         : []),
 
-      ...(hasFeature(subscription, sfpn.Whatsapp)
+      ...(true
         ? [
             {
               title: t("Commerce"),
@@ -419,7 +446,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.Loyalty) && hasTeamFeature(TeamFeature.Loyalty)
+      ...(hasTeamFeature(TeamFeature.Loyalty)
         ? [
             {
               title: t("Loyalty"),
@@ -480,37 +507,16 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.WebSurvey) && hasTeamFeature(TeamFeature.WebForms)
+      ...(hasTeamFeature(TeamFeature.WebForms)
         ? [
             {
               title: t("Web Forms"),
               url: "/dashboard/surveys",
               icon: IconBrowser,
-              items: [
-                {
-                  title: t("Surveys"),
-                  url: "/dashboard/surveys",
-                  icon: IconBrowser,
-                },
-                {
-                  title: t("Templates"),
-                  url: "/dashboard/surveys/templates",
-                  icon: IconTemplate,
-                },
-                // ...(hiddenModules.includes("testimonial")
-                //   ? []
-                //   : [
-                //       {
-                //         title: t("Testimonial"),
-                //         url: "/dashboard/testimonial",
-                //         icon: IconMessageChatbot,
-                //       },
-                //     ]),
-              ],
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.Ticket) && hasTeamFeature(TeamFeature.Tickets)
+      ...(hasTeamFeature(TeamFeature.Tickets)
         ? [
             {
               title: t("Tickets"),

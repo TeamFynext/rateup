@@ -1,96 +1,95 @@
-import { Group, Stack } from "@mantine/core";
-import { isNotEmpty, useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useContext, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
-import { RateupButtonBlue, RateupButtonSecondary } from "../../../Button/RateupButtons.tsx";
-import {
-  ContainedTextArea,
-  ContainedTextField,
-} from "../../../input/ContainedInput/ContainedInput.tsx";
-import FormModalLayout from "../../../Modal/FormModalLayout.tsx";
 import DraggableTable from "../../../styled/Table/DraggableTable.tsx";
+
+type FieldFormValues = {
+  fieldKey: string;
+  placeholderText: string;
+};
 
 const MultiTextInputExtraProps = ({ form }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = form.values.features?.[selectedLanguage];
   const { t: translations } = useTranslation();
-  const headers = [
-    { headerKey: "fieldKey", headerValue: "Field Key" },
-    { headerKey: "placeholderText", headerValue: "Display Text" },
-  ];
-  const [openedEditModal, { open: openEditModal, close: closeEditModal }] = useDisclosure(false);
-  const [displayText, setDisplayText] = useState("");
-  const [selectedField, setSelectedField] = useState(null);
 
-  const fieldForm = useForm({
-    initialValues: {
-      fieldKey: "",
-      placeholderText: "",
-    },
-    validate: {
-      fieldKey: (value) =>
-        !value?.trim().length
-          ? translations("Field key cannot be empty")
-          : !/^[a-zA-Z0-9_]+$/.test(value)
-            ? translations("only alphabets, digits and underscore are allowed")
-            : null,
-      placeholderText: isNotEmpty(translations("Display Text cannot be empty")),
-    },
+  const [openedEditModal, setOpenedEditModal] = useState(false);
+  const [displayText, setDisplayText] = useState("");
+  const [selectedField, setSelectedField] = useState<any>(null);
+
+  const headers = [
+    { headerKey: "fieldKey", headerValue: translations("Field Key") },
+    { headerKey: "placeholderText", headerValue: translations("Display Text") },
+  ];
+
+  const {
+    register,
+    handleSubmit,
+    reset: resetFieldForm,
+    formState: { errors },
+  } = useForm<FieldFormValues>({
+    defaultValues: { fieldKey: "", placeholderText: "" },
   });
-  const handleDragEnd = (values) => {
+
+  const handleDragEnd = (values: any[]) => {
     form.setFieldValue("features", {
       ...form.values.features,
       [selectedLanguage]: { ...features, fields: values },
     });
   };
 
-  const addField = async () => {
-    const validationRes = await fieldForm.validate();
-    if (validationRes.hasErrors) return;
-    const existingFields = form.values.features?.[selectedLanguage]?.fields ?? [];
-    if (existingFields?.find((f) => f.fieldKey === fieldForm.values.fieldKey)) return;
-    existingFields.push(fieldForm.values);
+  const addField = handleSubmit((values) => {
+    const existingFields: any[] = form.values.features?.[selectedLanguage]?.fields ?? [];
+    if (existingFields.find((f) => f.fieldKey === values.fieldKey)) return;
     form.setFieldValue("features", {
       ...form.values.features,
-      [selectedLanguage]: { ...features, fields: existingFields },
+      [selectedLanguage]: { ...features, fields: [...existingFields, values] },
     });
-    fieldForm.reset();
-  };
+    resetFieldForm();
+  });
+
   const handleEditDisplayText = () => {
     form.setFieldValue("features", {
       ...form.values.features,
       [selectedLanguage]: {
         ...features,
-        fields: features?.fields?.map((f) => {
-          if (f.fieldKey === selectedField?.fieldKey) {
-            return { ...f, placeholderText: displayText };
-          }
-          return f;
-        }),
+        fields: features?.fields?.map((f) =>
+          f.fieldKey === selectedField?.fieldKey ? { ...f, placeholderText: displayText } : f,
+        ),
       },
     });
     setDisplayText("");
-    closeEditModal();
+    setOpenedEditModal(false);
   };
 
-  const handleEdit = (field) => {
+  const handleEdit = (field: any) => {
     setDisplayText(field?.placeholderText);
     setSelectedField(field);
-    openEditModal();
+    setOpenedEditModal(true);
   };
 
-  const handleDelete = (field) => {
-    const fields = form.values.features?.[selectedLanguage]?.fields?.filter(
-      (f) => f.fieldKey !== field?.fieldKey,
-    );
+  const handleDelete = (field: any) => {
     form.setFieldValue("features", {
       ...form.values.features,
-      [selectedLanguage]: { ...features, fields },
+      [selectedLanguage]: {
+        ...features,
+        fields: features?.fields?.filter((f) => f.fieldKey !== field?.fieldKey),
+      },
     });
   };
 
@@ -100,19 +99,14 @@ const MultiTextInputExtraProps = ({ form }) => {
         ...form.values.features,
         [selectedLanguage]: {
           ...features,
-          fields: [
-            {
-              fieldKey: "name",
-              placeholderText: "Name",
-            },
-          ],
+          fields: [{ fieldKey: "name", placeholderText: "Name" }],
         },
       });
     }
   }, [form]);
 
   return (
-    <Stack>
+    <div className="flex flex-col gap-3">
       <DraggableTable
         headers={headers}
         handleDragEnd={handleDragEnd}
@@ -121,48 +115,66 @@ const MultiTextInputExtraProps = ({ form }) => {
         deleteEnabled
         handleEdit={handleEdit}
         handleDelete={handleDelete}
-        itemUniqueKey={"fieldKey"}
+        itemUniqueKey="fieldKey"
         withRowBorder={false}
       />
-      <Group>
-        <ContainedTextField
-          label={translations("Enter key for the field")}
-          {...fieldForm.getInputProps("fieldKey")}
-          w={200}
-        />
-        <ContainedTextField
-          label={translations("Enter display text for field")}
-          w={350}
-          {...fieldForm.getInputProps("placeholderText")}
-        />
-        <RateupButtonSecondary
-          title={translations("Add Field")}
-          rightIcon={<IconPlus />}
-          onClick={() => addField()}
-          mt={"md"}
-        />
-      </Group>
-      <FormModalLayout
-        opened={openedEditModal}
-        onClose={closeEditModal}
-        title={translations("Edit Display Text")}
-        centered
-      >
-        <Stack justify="center">
-          <ContainedTextArea
-            value={displayText}
-            onChange={(event) => {
-              setDisplayText(event.target.value);
-            }}
-            autosize
-          />
-          <RateupButtonBlue
-            title={translations("Update Display Text")}
-            onClick={handleEditDisplayText}
-          />
-        </Stack>
-      </FormModalLayout>
-    </Stack>
+
+      <div className="rounded-lg border bg-background p-3">
+        <FieldGroup>
+          <div className="flex flex-wrap items-end gap-3">
+            <Field data-invalid={!!errors.fieldKey} className="flex-1 min-w-[160px]">
+              <FieldLabel>{translations("Field Key")}</FieldLabel>
+              <Input
+                placeholder={translations("e.g. email")}
+                {...register("fieldKey", {
+                  required: translations("Field key cannot be empty"),
+                  validate: (v) =>
+                    /^[a-zA-Z0-9_]+$/.test(v.trim()) ||
+                    translations("Only alphabets, digits and underscore are allowed"),
+                })}
+              />
+              {errors.fieldKey && (
+                <FieldDescription className="text-destructive">
+                  {errors.fieldKey.message}
+                </FieldDescription>
+              )}
+            </Field>
+
+            <Field data-invalid={!!errors.placeholderText} className="flex-[2] min-w-[200px]">
+              <FieldLabel>{translations("Display Text")}</FieldLabel>
+              <Input
+                placeholder={translations("e.g. Email address")}
+                {...register("placeholderText", {
+                  required: translations("Display Text cannot be empty"),
+                })}
+              />
+              {errors.placeholderText && (
+                <FieldDescription className="text-destructive">
+                  {errors.placeholderText.message}
+                </FieldDescription>
+              )}
+            </Field>
+
+            <Button type="button" variant="outline" size="sm" onClick={addField}>
+              <IconPlus data-icon="inline-start" />
+              {translations("Add Field")}
+            </Button>
+          </div>
+        </FieldGroup>
+      </div>
+
+      <Dialog open={openedEditModal} onOpenChange={(open) => !open && setOpenedEditModal(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{translations("Edit Display Text")}</DialogTitle>
+          </DialogHeader>
+          <Textarea value={displayText} onChange={(e) => setDisplayText(e.target.value)} rows={3} />
+          <DialogFooter>
+            <Button onClick={handleEditDisplayText}>{translations("Update Display Text")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

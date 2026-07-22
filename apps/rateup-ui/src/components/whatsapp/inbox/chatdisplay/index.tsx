@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
+import { Alert, AlertTitle } from "@/components/ui/alert.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 
 import WaInboxChatDisplayBody from "./chatdisplayBody/index.tsx";
@@ -14,7 +15,8 @@ import WaInboxChatDisplayFooter, {
   WaInboxBlockedContactFooter,
 } from "./chatdisplayFooter/index.tsx";
 import WaInboxChatDisplayHeader from "./chatdisplayHeader/index.tsx";
-import WaInboxContactDetails from "./contactDetails.tsx";
+import { isTicketClosed } from "./chatdisplayHeader/ticket.ts";
+import TicketPanel from "./TicketPanel.tsx";
 
 export default function WaInboxChatDisplay() {
   const contact = useContactsStore((s) => s.selectedContact);
@@ -29,7 +31,7 @@ export default function WaInboxChatDisplay() {
 
   const { t: translations } = useTranslation();
   const { isLoading } = useMessagesStore();
-  const [showCustomerInfo, setShowCustomerInfo] = useState(false);
+  const [showCustomerInfo, setShowCustomerInfo] = useState(true);
   const contactId = contact?.id;
   const { data: assignedUserList } = useGetAssignedUserForContact(contactId);
   const MAX_FILES = 10;
@@ -78,19 +80,28 @@ export default function WaInboxChatDisplay() {
     });
   }, [assignedUserList, contact?.id]);
 
+  // A closed ticket is read-only — never show the composer, even when it is still
+  // assigned to the current user (assignment is inherited from the contact).
+  const isClosedTicket = !!contact && isTicketClosed(contact);
   let footerContent = null;
   if (contact?.blockedOnWhatsApp) {
     footerContent = <WaInboxBlockedContactFooter contact={contact} />;
-  } else if (!contact?.assignedUsers?.length) {
+  } else if (isClosedTicket || !contact?.assignedUsers?.length) {
+    // Closed or unassigned → the assign/closed banner (which explains a closed
+    // ticket and offers reopen-by-assign), not the message editor.
     footerContent = <WaInboxAssignUserFooter contact={contact} user={user} />;
   } else if (isAssignedToMe) {
     footerContent = <WaInboxChatDisplayFooter contact={contact} />;
   } else {
     footerContent = (
-      <div className="flex justify-center items-center bg-black text-white gap-2 py-2">
-        <IconExclamationCircle size={"1rem"} />
-        <p className="text-xs">This chat is not assigned to you</p>
-      </div>
+      // Matches the assign / blocked banners so all three footer states share a
+      // shape. Read-only state, so it carries no action.
+      <Alert className="flex! shrink-0 items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-6 py-2.5 dark:bg-amber-950/40">
+        <IconExclamationCircle size={"1rem"} className="text-amber-700 dark:text-amber-500" />
+        <AlertTitle className="text-[13px] font-semibold text-amber-700 dark:text-amber-500">
+          {translations("This chat is not assigned to you")}
+        </AlertTitle>
+      </Alert>
     );
   }
   useEffect(() => {
@@ -151,13 +162,16 @@ export default function WaInboxChatDisplay() {
           </div>
         </div>
       ) : (
-        <div className={`flex min-w-0 h-full flex-1}`}>
+        <div className="flex h-full min-w-0 flex-1">
           <div className="flex-1 flex flex-col min-w-0">
-            <WaInboxChatDisplayHeader contact={contact} />
+            <WaInboxChatDisplayHeader
+              contact={contact}
+              onToggleContextPanel={() => setShowCustomerInfo((v) => !v)}
+            />
             <WaInboxChatDisplayBody isContactDetailsOpened={showCustomerInfo} />
             {!isLoading && footerContent}
           </div>
-          <WaInboxContactDetails
+          <TicketPanel
             contact={contact}
             groupId={""}
             isOpen={showCustomerInfo}

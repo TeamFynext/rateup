@@ -1,8 +1,8 @@
-import type { TextareaProps } from "@mantine/core";
 import { Badge, Divider, Group, ScrollArea, Stack } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconDeviceSdCard } from "@tabler/icons-react";
+import type { ComponentProps } from "react";
 import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -139,28 +139,24 @@ export function FlowEmbeddedLinkDetailedView() {
 }
 
 function FlowTextElementEditor(
-  props: TextareaProps & {
+  props: ComponentProps<"textarea"> & {
     value?: string;
     maxValue: number;
     fontNormal: boolean;
   },
 ) {
-  const { ...otherProp } = props;
+  const { fontNormal: _fontNormal, ...otherProp } = props;
   const { t: translations } = useTranslation();
   return (
     <TextareaWithLengthTracker
-      fz="lg"
-      styles={{
-        input: {
-          fontSize: "1.75rem",
-          fontWeight: props.fontNormal ? "inherit" : 800,
-        },
+      inputStyle={{
+        fontSize: "1.75rem",
+        fontWeight: props.fontNormal ? "inherit" : 800,
       }}
       style={{
         marginBottom: "20px", // add 30px bottom margin
       }}
-      variant="unstyled"
-      autosize
+      className="border-none bg-transparent px-0 shadow-none"
       placeholder={translations("Enter your text here *")}
       {...otherProp}
     />

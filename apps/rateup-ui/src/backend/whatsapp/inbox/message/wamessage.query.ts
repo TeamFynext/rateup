@@ -7,9 +7,10 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import useContactStore from "@/components/dashboard/inbox/store.ts";
-import { MessagePlatform } from "@/types/enums.ts";
+import useContactStore, { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 
+import type { AssignInboxResult } from "./wamessage.api";
 import {
   assignInboxToUser,
   blockWhatsAppUser,
@@ -19,27 +20,37 @@ import {
   exportWaMessageLogs,
   generateInboxResponse,
   getAssignedUserForContact,
+  getConversationsByContactId,
   getFilteredContacts,
+  getRowKey,
   getInboxAnalytics,
   getInboxUserCount,
   getMessagesByContactId,
   getWaChatMediaFile,
   getWaMessageLogs,
   markWaMessagesAsRead,
+  clearConversationMentions,
+  reopenConversation,
   sendNewWaMessage,
+  setConversationFavorite,
   unblockWhatsAppUser,
+  updateConversation,
 } from "./wamessage.api";
 
 export const useGetMessagesByContactId = (
   contactId: string,
   selectedPhone: string,
   enabled: boolean,
+  conversationId?: string | null,
 ) => {
   return useInfiniteQuery({
-    queryKey: ["wa-messages", contactId, selectedPhone],
+    // conversationId is part of the key so two tickets of the same contact are
+    // cached (and fetched) separately.
+    queryKey: ["wa-messages", contactId, selectedPhone, conversationId ?? null],
     initialPageParam: "",
     placeholderData: { pages: [], pageParams: [] },
-    queryFn: ({ pageParam }) => getMessagesByContactId(contactId, pageParam, selectedPhone),
+    queryFn: ({ pageParam }) =>
+      getMessagesByContactId(contactId, pageParam, selectedPhone, conversationId),
     getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.nextCursor : undefined),
     // select: (data) => ({
     //   pages: [...data.pages].reverse(),
@@ -116,11 +127,45 @@ export const useGetMediaFile = () => {
   });
 };
 
+/**
+ * Assigning a *closed* ticket does not reopen it — the API leaves the finished
+ * record alone (its closedAt and resolution timings are frozen) and opens a
+ * successor ticket to carry the new engagement. The open thread therefore has to
+ * follow the assignment onto that successor; staying on the closed ticket is why
+ * its "This chat has been closed… Assign it to start the conversation again"
+ * banner survived the assign that was supposed to dismiss it.
+ */
+function followAssignmentToItsTicket(result: AssignInboxResult, contactId: string) {
+  const conversation = result?.conversation;
+  const { selectedContact, setSelectedContact } = useContactsStore.getState();
+  if (!conversation || !selectedContact || selectedContact.id !== contactId) return;
+  // Same ticket — the call site's own optimistic update covers it.
+  if (getRowKey(selectedContact) === conversation.id) return;
+
+  setSelectedContact({
+    ...selectedContact,
+    conversationId: conversation.id,
+    ticketNumber: conversation.number,
+    conversationStatus: conversation.status,
+    waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+    // The successor starts clean: none of the closed ticket's outcome carries over.
+    closedAt: null,
+    ticketClosedAt: null,
+    closedUser: null,
+    resolutionResult: null,
+    unReadMessageCount: 0,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
 export const useAssignInboxToUer = (_contactId, filterData) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: assignInboxToUser,
-    onSuccess: () => {
+    onSuccess: (result, variables) => {
+      // Runs before the caller's own onSuccess, so their `updateContactById`
+      // lands on the ticket the assignment actually went to.
+      followAssignmentToItsTicket(result, variables.contactId);
       qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
       qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
       qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
@@ -130,6 +175,29 @@ export const useAssignInboxToUer = (_contactId, filterData) => {
     },
     onError: (e) => {
       toast.warning(e?.message || "Something went wrong");
+    },
+  });
+};
+
+/**
+ * Reopen a closed ticket, keeping whoever was on it. The API answers with the
+ * successor ticket, and the thread follows it exactly as it does for an assign —
+ * the closed ticket itself stays closed, with its history intact.
+ */
+export const useReopenConversation = (filterData?: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: reopenConversation,
+    onSuccess: (result, variables) => {
+      followAssignmentToItsTicket(result, variables.contactId);
+      qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
+      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
+      qc.invalidateQueries({ queryKey: ["wa-messages", variables.contactId] });
+      toast.success("Ticket reopened");
+    },
+    onError: (e) => {
+      toast.warning(e?.message || "Could not reopen the ticket");
     },
   });
 };
@@ -181,6 +249,124 @@ export const useMarkWaMessagesAsRead = (contactId: string, _filterData) => {
     mutationFn: () => markWaMessagesAsRead(contactId),
     onSuccess: () => {},
     onError: (_e) => {},
+  });
+};
+
+/**
+ * Inbox Tickets v2 — star/unstar. `isFavorite` is per-conversation, so this flips
+ * only the one ticket row (keyed by conversationId), not the contact's other rows.
+ */
+export const useToggleFavorite = () => {
+  const { filterData } = useContactStore();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: setConversationFavorite,
+    onSuccess: (_res, variables) => {
+      const { selectedContact } = useContactsStore.getState();
+      useContactsStore.getState().updateContactById(variables.conversationId, (c) => ({
+        ...c,
+        isFavorite: variables.isFavorite,
+      }));
+      if (selectedContact?.conversationId === variables.conversationId) {
+        useContactsStore.setState({
+          selectedContact: { ...selectedContact, isFavorite: variables.isFavorite },
+        });
+      }
+      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
+      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+    },
+    onError: () => toast.error("Could not update favourite"),
+  });
+};
+
+/**
+ * Inbox Tickets v2 — clear the current user's @mention on a conversation. Flips
+ * the row's `mentionCount` to 0, which drops it from the "@Mentions" filter (see
+ * `belongsToCurrentFilter`), and refetches the nav count.
+ */
+export const useClearMention = () => {
+  const { filterData } = useContactStore();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: clearConversationMentions,
+    onSuccess: (_res, variables) => {
+      const rowKey = variables.conversationId ?? variables.contactId;
+      const { selectedContact } = useContactsStore.getState();
+      useContactsStore.getState().updateContactById(rowKey, (c) => ({ ...c, mentionCount: 0 }));
+      if (selectedContact && getRowKey(selectedContact) === rowKey) {
+        useContactsStore.setState({
+          selectedContact: { ...selectedContact, mentionCount: 0 },
+        });
+      }
+      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
+      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+    },
+    onError: () => toast.error("Could not clear mention"),
+  });
+};
+
+/** Inbox Tickets v2 — edit a ticket's title/description. */
+export const useEditConversation = () => {
+  const { filterData } = useContactStore();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      conversationId,
+      ...data
+    }: {
+      conversationId: string;
+      subject?: string | null;
+      description?: string | null;
+    }) => updateConversation(conversationId, data),
+    onSuccess: (res: any, variables) => {
+      // Prefer what the server actually stored; fall back to what we sent.
+      const subject = res?.subject !== undefined ? res.subject : variables.subject;
+      const description = res?.description !== undefined ? res.description : variables.description;
+      const patch = (c) => ({
+        ...c,
+        ...(subject !== undefined ? { ticketSubject: subject } : {}),
+        ...(description !== undefined ? { ticketDescription: description } : {}),
+      });
+
+      const store = useContactsStore.getState();
+
+      // The cached row, when the ticket is in the list. `updateContactById` is a
+      // no-op for a ticket that was never paged in — e.g. one reached through the
+      // history strip, whose selection is synthesized rather than cached.
+      if (store.contactsById.has(variables.conversationId)) {
+        store.updateContactById(variables.conversationId, patch);
+      }
+
+      // The selected ticket, re-read AFTER the row update so we patch fresh state
+      // instead of clobbering it with a snapshot taken before the write.
+      const fresh = useContactsStore.getState().selectedContact;
+      if (fresh?.conversationId === variables.conversationId) {
+        useContactsStore.setState({ selectedContact: patch(fresh) });
+      }
+
+      toast.success("Ticket updated");
+      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+      // The history strip lists sibling tickets by subject, so it has to refresh
+      // too — otherwise a renamed ticket keeps its old title there.
+      const contactId = fresh?.id ?? store.contactsById.get(variables.conversationId)?.id;
+      if (contactId) {
+        qc.invalidateQueries({ queryKey: ["conversations", "by-contact", contactId] });
+      }
+    },
+    onError: () => toast.error("Could not update the ticket"),
+  });
+};
+
+/**
+ * Inbox Tickets v2 — every ticket belonging to a contact, newest first.
+ * Drives the thread's "previous conversations" strip, which needs the contact's
+ * whole ticket history rather than whatever the inbox list happens to have cached.
+ */
+export const useConversationsByContact = (contactId: string, enabled = true) => {
+  return useQuery({
+    queryKey: ["conversations", "by-contact", contactId],
+    queryFn: () => getConversationsByContactId(contactId),
+    enabled: !!contactId && enabled,
   });
 };
 

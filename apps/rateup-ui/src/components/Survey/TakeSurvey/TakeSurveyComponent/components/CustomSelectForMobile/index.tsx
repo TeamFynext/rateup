@@ -1,36 +1,38 @@
-import {
-  ActionIcon,
-  Combobox,
-  Group,
-  Input,
-  InputBase,
-  isLightColor,
-  luminance,
-  Portal,
-  ScrollAreaAutosize,
-  Stack,
-  useCombobox,
-  useMantineTheme,
-} from "@mantine/core";
-import { IconArrowLeft, IconCheck } from "@tabler/icons-react";
+import { IconArrowLeft, IconCheck, IconChevronDown } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { motion, useAnimate } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
 
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils.ts";
+import { isLightColor, luminance } from "../../QuestionForms/isLightColor.ts";
+import { useThemePrimaryColor } from "../../QuestionForms/useThemePrimaryColor.ts";
 
 import styles from "./CustomSelectForMobile.module.css";
 
 const cx = classNames.bind(styles);
 
-function CustomSelectForMobile({ value, data, placeholder, onChange, portalProps = {} }) {
-  const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor
-    ? mantineTheme.colors.primaryColor[5]
-    : "#1C518E";
+interface CustomSelectForMobileProps {
+  value: string;
+  data: string[];
+  placeholder?: string;
+  onChange: (value: string) => void;
+  portalTarget?: HTMLElement | null;
+}
+
+function CustomSelectForMobile({
+  value,
+  data,
+  placeholder,
+  onChange,
+  portalTarget,
+}: Readonly<CustomSelectForMobileProps>) {
+  const themePrimaryColor = useThemePrimaryColor();
 
   const primaryColor =
     luminance(themePrimaryColor) > 0.8 ? `var(--mantine-color-gray-7)` : themePrimaryColor;
@@ -46,61 +48,15 @@ function CustomSelectForMobile({ value, data, placeholder, onChange, portalProps
 
   const [search, setSearch] = useState("");
   const [isOptionSelectionDivVisible, setIsOptionSelectionDivVisible] = useState(false);
-  const combobox = useCombobox({
-    onDropdownClose: () => {
-      setSearch("");
-    },
-  });
+  const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
 
   const [scope, animate] = useAnimate();
   const { t: translations } = useTranslation();
   const optionsMotionDivRefs = useRef(null);
 
-  const options = data
-    ?.filter((item) => item.toLowerCase().includes(search.toLowerCase().trim()))
-    .map((item) => {
-      const isSelected = item === value;
-      const unSelectedOptionStyleObj = {
-        backgroundColor: "rgba(0,0,0,0)",
-        color: primaryColor,
-        borderColor: primaryColor,
-      };
-      const selectedOptionStyleObj = {
-        backgroundColor: primaryColor,
-        color: foregroundColor,
-        borderColor: primaryColor,
-      };
-      const styleObj = isSelected ? selectedOptionStyleObj : unSelectedOptionStyleObj;
-
-      return (
-        <Combobox.Option
-          value={item}
-          key={item + primaryColor}
-          className={cx("option", { selected: isSelected })}
-          data-value={item}
-        >
-          <motion.div
-            className={cx("option-text-checked-icon-container")}
-            style={styleObj}
-            ref={(node) => {
-              const map = getOptionsMotionDivsMap();
-              if (node) {
-                map.set(item, node);
-              } else {
-                map.delete(item);
-              }
-            }}
-          >
-            <span className={cx("option-text-span")}>{item}</span>
-            {item === value && (
-              <span className={cx("checked-icon-span")}>
-                <IconCheck size={"1rem"} />
-              </span>
-            )}
-          </motion.div>
-        </Combobox.Option>
-      );
-    });
+  const filteredData = data?.filter((item) =>
+    item.toLowerCase().includes(search.toLowerCase().trim()),
+  );
 
   function getOptionsMotionDivsMap() {
     if (!optionsMotionDivRefs.current) {
@@ -113,91 +69,149 @@ function CustomSelectForMobile({ value, data, placeholder, onChange, portalProps
     setSearch("");
   }, [isOptionSelectionDivVisible]);
 
+  useEffect(() => {
+    if (portalTarget) {
+      setPortalNode(portalTarget);
+      return;
+    }
+    const node = document.createElement("div");
+    node.setAttribute("data-portal", "true");
+    document.body.appendChild(node);
+    setPortalNode(node);
+    return () => {
+      document.body.removeChild(node);
+    };
+  }, [portalTarget]);
+
+  const handleOptionSelect = async (val: string) => {
+    const selectedEle = getOptionsMotionDivsMap().get(val);
+    const prevSelectedEle = getOptionsMotionDivsMap().get(value);
+    onChange(val);
+
+    if (prevSelectedEle)
+      animate(
+        prevSelectedEle,
+        {
+          backgroundColor: "rgba(0,0,0,0)",
+          color: primaryColor,
+          borderColor: primaryColor,
+        },
+        { duration: 0.2 },
+      );
+
+    if (value !== val) {
+      await animate(
+        selectedEle,
+        {
+          backgroundColor: primaryColor,
+          color: foregroundColor,
+          borderColor: primaryColor,
+        },
+        { duration: 0.5 },
+      );
+    }
+
+    setIsOptionSelectionDivVisible(false);
+  };
+
   return (
-    <Combobox
-      store={combobox}
-      onOptionSubmit={async (val) => {
-        const selectedEle = getOptionsMotionDivsMap().get(val);
-        const prevSelectedEle = getOptionsMotionDivsMap().get(value);
-        onChange(val);
-
-        if (prevSelectedEle)
-          animate(
-            prevSelectedEle,
-            {
-              backgroundColor: "rgba(0,0,0,0)",
-              color: primaryColor,
-              borderColor: primaryColor,
-            },
-            { duration: 0.2 },
-          );
-
-        if (value !== val) {
-          await animate(
-            selectedEle,
-            {
-              backgroundColor: primaryColor,
-              color: foregroundColor,
-              borderColor: primaryColor,
-            },
-            { duration: 0.5 },
-          );
-        }
-
-        setIsOptionSelectionDivVisible(false);
-      }}
-    >
-      <Combobox.EventsTarget>
-        <InputBase
-          className={cx("input-btn")}
-          component="button"
-          type="button"
-          pointer
-          rightSection={<Combobox.Chevron />}
-          onClick={() => setIsOptionSelectionDivVisible(true)}
-          rightSectionPointerEvents="none"
-        >
-          {value || <Input.Placeholder>{placeholder || "Pick value"}</Input.Placeholder>}
-        </InputBase>
-      </Combobox.EventsTarget>
-      {isOptionSelectionDivVisible && (
-        <Portal {...portalProps}>
-          <Stack
-            className={`${cx("search-input-and-options-container")} search-input-and-options-container`}
+    <>
+      <button
+        type="button"
+        onClick={() => setIsOptionSelectionDivVisible(true)}
+        style={{ border: `1px solid ${primaryColor}` }}
+        className="flex min-h-9 w-full items-center justify-between gap-1.5 rounded-md border bg-transparent px-4 py-2.5 text-left text-sm transition-[color,box-shadow] max-[480px]:min-h-11"
+      >
+        {value || <span className="text-muted-foreground">{placeholder || "Pick value"}</span>}
+        <IconChevronDown size={16} className="shrink-0 opacity-60" />
+      </button>
+      {isOptionSelectionDivVisible &&
+        portalNode &&
+        createPortal(
+          <div
+            className={`${cx("search-input-and-options-container")} flex flex-col`}
             style={{
               backgroundColor,
               backgroundImage: `url(${backgroundImageSrc})`,
             }}
           >
-            <Group className={cx("back-btn-and-search-input-container")}>
-              <ActionIcon
-                variant="transparent"
+            <div className={`${cx("back-btn-and-search-input-container")} flex items-center`}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsOptionSelectionDivVisible(false)}
               >
                 <IconArrowLeft color={primaryColor} />
-              </ActionIcon>
-              <Combobox.Search
+              </Button>
+              <input
+                type="text"
                 className={cx("search-input")}
                 value={search}
                 onChange={(event) => setSearch(event.currentTarget.value)}
                 placeholder={translations("Type in to search")}
               />
-            </Group>
-            <Combobox.Options ref={scope} className={cx("options-container-root")}>
-              <ScrollAreaAutosize h={"100%"} scrollbarSize={7} offsetScrollbars>
-                <Stack className={cx("options-container-div")}>
-                  {options.length > 0 ? (
-                    options
+            </div>
+            <div className={cx("options-container-root")}>
+              <ScrollArea className="h-full">
+                <div ref={scope} className={`${cx("options-container-div")} flex flex-col`}>
+                  {filteredData.length > 0 ? (
+                    filteredData.map((item) => {
+                      const isSelected = item === value;
+                      const unSelectedOptionStyleObj = {
+                        backgroundColor: "rgba(0,0,0,0)",
+                        color: primaryColor,
+                        borderColor: primaryColor,
+                      };
+                      const selectedOptionStyleObj = {
+                        backgroundColor: primaryColor,
+                        color: foregroundColor,
+                        borderColor: primaryColor,
+                      };
+                      const styleObj = isSelected
+                        ? selectedOptionStyleObj
+                        : unSelectedOptionStyleObj;
+
+                      return (
+                        <button
+                          type="button"
+                          key={item}
+                          onClick={() => handleOptionSelect(item)}
+                          className={cx("option")}
+                          data-value={item}
+                        >
+                          <motion.div
+                            className={cx("option-text-checked-icon-container")}
+                            style={styleObj}
+                            ref={(node) => {
+                              const map = getOptionsMotionDivsMap();
+                              if (node) {
+                                map.set(item, node);
+                              } else {
+                                map.delete(item);
+                              }
+                            }}
+                          >
+                            <span className={cx("option-text-span")}>{item}</span>
+                            {item === value && (
+                              <span className={cx("checked-icon-span")}>
+                                <IconCheck size={"1rem"} />
+                              </span>
+                            )}
+                          </motion.div>
+                        </button>
+                      );
+                    })
                   ) : (
-                    <Combobox.Empty>{translations("Nothing found...")}</Combobox.Empty>
+                    <span>{translations("Nothing found...")}</span>
                   )}
-                </Stack>
-              </ScrollAreaAutosize>
-            </Combobox.Options>
-          </Stack>
-        </Portal>
-      )}
-    </Combobox>
+                </div>
+              </ScrollArea>
+            </div>
+          </div>,
+          portalNode,
+        )}
+    </>
   );
 }
 

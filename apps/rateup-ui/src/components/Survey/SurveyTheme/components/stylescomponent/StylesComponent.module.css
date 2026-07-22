@@ -30,15 +30,6 @@
   padding-top: 0.875rem;
 }
 
-.use-survey-theme-checkbox :global(.mantine-Checkbox-input) {
-  cursor: pointer;
-}
-
-.use-survey-theme-checkbox :global(.mantine-Checkbox-label) {
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
 .expand-all-collapse-all-btn-container {
   padding: 0 0.75rem;
   justify-content: center;
@@ -92,11 +83,11 @@
   display: none;
 }
 
-.accordion-root-div :global(.mantine-Accordion-control) {
+.accordion-root-div [data-slot="accordion-trigger"] {
   padding: 0 0.3125rem;
 }
 
-.accordion-root-div :global(.mantine-Accordion-content) {
+.accordion-root-div [data-slot="accordion-content"] > div {
   padding-left: 0.3125rem;
   padding-right: 0.3125rem;
 }

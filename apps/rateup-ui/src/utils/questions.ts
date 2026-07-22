@@ -145,6 +145,53 @@ export function validateAllLanguagesArePopulated(
   return missingLangs;
 }
 
+const CONTACT_FEATURE_TYPES = [QuestionType.Contact, QuestionType.Phone, QuestionType.Email];
+const CONTACT_FEATURE_KEYS = ["name", "phone", "email"] as const;
+
+/**
+ * Default enabled/disabled state for the Contact question's sub-fields, by
+ * question type. Every option starts off, except the field a dedicated
+ * Phone/Email question is built around — that one has no visible toggle for
+ * its own type, so it must stay on.
+ */
+export function getDefaultContactFeatureEnabled(
+  qtype: QuestionType,
+): Record<(typeof CONTACT_FEATURE_KEYS)[number], boolean> {
+  return {
+    name: false,
+    phone: qtype === QuestionType.Phone,
+    email: qtype === QuestionType.Email,
+  };
+}
+
+/**
+ * For Contact/Phone/Email questions, at least one sub-field (name/phone/email)
+ * must be enabled — returns the languages where none is enabled.
+ *
+ * A language whose `features` entry hasn't been initialized yet (the editor
+ * only sets it up lazily, for whichever language tab is currently open) falls
+ * back to the same type-based default ContactExtraProps would give it, so an
+ * unvisited language isn't incorrectly treated as "nothing enabled".
+ */
+export function validateContactFeaturesPopulated(
+  question: Question,
+  languages: Array<string>,
+): Array<string> {
+  if (!CONTACT_FEATURE_TYPES.includes(question?.type as QuestionType)) return [];
+
+  const defaultEnabled = getDefaultContactFeatureEnabled(question.type as QuestionType);
+
+  const missingLangs = [];
+  languages.forEach((language) => {
+    const featureSet = question?.features?.[language];
+    const hasAnyEnabled = CONTACT_FEATURE_KEYS.some((key) =>
+      featureSet ? featureSet[key]?.isEnabled : defaultEnabled[key],
+    );
+    if (!hasAnyEnabled) missingLangs.push(language);
+  });
+  return missingLangs;
+}
+
 export const getInitialQuestionValues = (
   question: Question,
   languages: Array<string>,

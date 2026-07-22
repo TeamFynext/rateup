@@ -1,115 +1,155 @@
-import { Box, Button, Center, CopyButton, Flex, Grid, Group, Stack, Text } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { IconCopy } from "@tabler/icons-react";
+import { Check, Copy } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import {
-  ContainedNumberInput,
-  ContainedSelection,
-} from "../../input/ContainedInput/ContainedInput.tsx";
-import PaperLayout from "../../styled/Layouts/PaperLayout.tsx";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 
-const IFrameModal = ({ close, shareUrl }) => {
-  let disabled = false;
-  let hasError = false;
-  const form = useForm({
-    initialValues: {
-      width: 300,
-      height: 600,
-      widthUnit: "px",
-      heightUnit: "px",
-    },
+const units = [
+  { value: "px", label: "px" },
+  { value: "%", label: "%" },
+];
+
+interface IFrameModalProps {
+  close: () => void;
+  shareUrl: string;
+}
+
+const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
+  const { t: translations } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  const [values, setValues] = useState({
+    width: 300,
+    height: 600,
+    widthUnit: "px",
+    heightUnit: "px",
   });
 
-  const units = ["px", "%"];
-  const errors = {
-    width: "",
-    height: "",
-  };
+  let hasError = false;
+  const errors = { width: "", height: "" };
   let iframe = "";
-  if (form.values.widthUnit == "%" && form.values.width > 100) {
+
+  if (values.widthUnit === "%" && values.width > 100) {
     errors.width = "Maximum 100% is allowed";
     hasError = true;
   }
-  if (form.values.heightUnit == "%" && form.values.height > 100) {
+  if (values.heightUnit === "%" && values.height > 100) {
     errors.height = "Maximum 100% is allowed";
     hasError = true;
   }
-  if (!form.values.width || !form.values.height) {
+  if (!values.width || !values.height) {
     hasError = true;
   }
-  if (hasError) {
-    disabled = true;
-    iframe = "";
-  } else {
-    errors.width = errors.height = "";
-    const width = form.values.width + form.values.widthUnit;
-    const height = form.values.height + form.values.heightUnit;
+  if (!hasError) {
+    const width = values.width + values.widthUnit;
+    const height = values.height + values.heightUnit;
     iframe = `<iframe src="${shareUrl}" width="${width}" height="${height}"></iframe>`;
   }
-  const { t: translations } = useTranslation();
+
+  function handleCopy() {
+    navigator.clipboard.writeText(iframe).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
   return (
-    <Box>
-      <Center>
-        <Text>{translations("Create an iframe to embed survey")}</Text>
-      </Center>
-      <Stack gap={"md"}>
-        <form>
-          <Grid>
-            <Grid.Col span={9}>
-              <ContainedNumberInput
-                label={translations("Width")}
-                placeholder={translations("Enter width of iframe")}
-                {...form.getInputProps("width")}
-                allowNegative={false}
-                allowDecimal={false}
-                error={errors.width}
-              />
-            </Grid.Col>
-            <Grid.Col span={3}>
-              <ContainedSelection label=" " data={units} {...form.getInputProps("widthUnit")} />
-            </Grid.Col>
-            <Grid.Col span={9}>
-              <ContainedNumberInput
-                label={translations("Height")}
-                placeholder={translations("Enter height of iframe")}
-                {...form.getInputProps("height")}
-                allowNegative={false}
-                allowDecimal={false}
-                error={errors.height}
-              />
-            </Grid.Col>
-            <Grid.Col span={3}>
-              <ContainedSelection label=" " data={units} {...form.getInputProps("heightUnit")} />
-            </Grid.Col>
-          </Grid>
-        </form>
-        <PaperLayout>
-          <Stack>
-            {iframe}
-            <Flex justify={"flex-end"}>
-              <Group gap={"sm"}>
-                <RateupButtonSecondary title={translations("cancel")} onClick={close} />
-                <CopyButton value={iframe}>
-                  {({ copied, copy }) => (
-                    <Button
-                      variant={copied ? "outline" : "filled"}
-                      onClick={copy}
-                      rightSection={<IconCopy />}
-                      radius={"lg"}
-                      disabled={disabled}
-                    >
-                      {copied ? translations("Copied") : translations("Copy code")}
-                    </Button>
-                  )}
-                </CopyButton>
-              </Group>
-            </Flex>
-          </Stack>
-        </PaperLayout>
-      </Stack>
-    </Box>
+    <div className="flex flex-col gap-4">
+      <p className="text-center">{translations("Create an iframe to embed survey")}</p>
+      <div className="grid grid-cols-12 gap-3">
+        <Field className="col-span-9" data-invalid={!!errors.width}>
+          <FieldLabel>{translations("Width")}</FieldLabel>
+          <Input
+            type="number"
+            min={0}
+            step={1}
+            placeholder={translations("Enter width of iframe")}
+            value={values.width}
+            aria-invalid={!!errors.width}
+            onChange={(e) => setValues((prev) => ({ ...prev, width: Number(e.target.value) }))}
+          />
+          {errors.width && <FieldError>{errors.width}</FieldError>}
+        </Field>
+        <Field className="col-span-3">
+          <FieldLabel className="sr-only">{translations("Width unit")}</FieldLabel>
+          <Select
+            value={values.widthUnit}
+            onValueChange={(unit) => setValues((prev) => ({ ...prev, widthUnit: unit }))}
+            items={units}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {units.map((unit) => (
+                <SelectItem key={unit.value} value={unit.value}>
+                  {unit.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field className="col-span-9" data-invalid={!!errors.height}>
+          <FieldLabel>{translations("Height")}</FieldLabel>
+          <Input
+            type="number"
+            min={0}
+            step={1}
+            placeholder={translations("Enter height of iframe")}
+            value={values.height}
+            aria-invalid={!!errors.height}
+            onChange={(e) => setValues((prev) => ({ ...prev, height: Number(e.target.value) }))}
+          />
+          {errors.height && <FieldError>{errors.height}</FieldError>}
+        </Field>
+        <Field className="col-span-3">
+          <FieldLabel className="sr-only">{translations("Height unit")}</FieldLabel>
+          <Select
+            value={values.heightUnit}
+            onValueChange={(unit) => setValues((prev) => ({ ...prev, heightUnit: unit }))}
+            items={units}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {units.map((unit) => (
+                <SelectItem key={unit.value} value={unit.value}>
+                  {unit.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
+      <Card>
+        <CardContent className="flex flex-col gap-4">
+          <p className="font-mono text-xs break-all text-muted-foreground">{iframe}</p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={close}>
+              {translations("cancel")}
+            </Button>
+            <Button
+              variant={copied ? "outline" : "default"}
+              onClick={handleCopy}
+              disabled={hasError}
+            >
+              {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
+              {copied ? translations("Copied") : translations("Copy code")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

@@ -92,6 +92,13 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
         openCount: inboxCount.open,
         closedCount: inboxCount.closed,
         allCount: inboxCount.total,
+        newCount: inboxCount.new ?? 0,
+        // NB: the API spells this count "favourite" while the filter param and the
+        // DB column are "favorite". Not a typo.
+        favouriteCount: inboxCount.favourite ?? 0,
+        mentionsCount: inboxCount.mentions ?? 0,
+        mineCount: inboxCount.mine ?? 0,
+        spamCount: inboxCount.spam ?? 0,
       });
     }
   }, [inboxCount, setSectionCounts]);

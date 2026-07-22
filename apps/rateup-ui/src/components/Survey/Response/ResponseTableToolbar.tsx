@@ -1,12 +1,7 @@
-import {
-  IconDatabaseImport,
-  IconFileDownload,
-  IconRefresh,
-  IconSearch,
-  IconTableExport,
-} from "@tabler/icons-react";
+import { IconFileDownload, IconTableExport } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import { RefreshCw, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Range } from "react-date-range";
 import { useForm } from "react-hook-form";
@@ -318,7 +313,7 @@ export function ResponseTableToolbar<TData>({
   }, [filterableColumns, filters, searchTerm]);
 
   return (
-    <div className="pb-3">
+    <div className="pb-3 pt-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           {filterableColumns.length > 0 && (
@@ -354,7 +349,7 @@ export function ResponseTableToolbar<TData>({
                 onClick={applySearch}
                 aria-label={translations("Search")}
               >
-                <IconSearch className="h-4 w-4 text-muted-foreground" />
+                <Search className="size-4 text-muted-foreground" />
               </Button>
             </div>
             <Button
@@ -402,7 +397,7 @@ export function ResponseTableToolbar<TData>({
                     else handleSyncGoogleSheet();
                   }}
                 >
-                  <IconRefresh className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+                  <RefreshCw className={`mr-2 size-4 ${isSyncing ? "animate-spin" : ""}`} />
                   {survey.spreadSheetId
                     ? translations("Resync with Google Sheet")
                     : translations("Sync with Google Sheet")}
@@ -429,7 +424,7 @@ export function ResponseTableToolbar<TData>({
                 ))}
                 {hasContactQuestion && handleExportContacts && (
                   <DropdownMenuItem onClick={handleExportContacts}>
-                    <IconDatabaseImport className="mr-2 h-4 w-4" />
+                    <Users className="mr-2 size-4" />
                     {translations("Contacts")}
                   </DropdownMenuItem>
                 )}

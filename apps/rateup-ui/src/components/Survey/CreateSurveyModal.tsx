@@ -1,44 +1,33 @@
-import {
-  CheckIcon,
-  Combobox,
-  ComboboxChevron,
-  Group,
-  Loader,
-  LoadingOverlay,
-  MultiSelect,
-  Pill,
-  PillsInput,
-  Radio,
-  Select,
-  Stack,
-  useCombobox,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import type { CreateSurveyResponse } from "@/backend/surveys/survey.api";
 import { useCreateSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput.tsx";
-import FormModalLayout from "../Modal/FormModalLayout.tsx";
-
-const Languages = new Set([
-  "English",
-  "മലയാളം",
-  "Deutsch",
-  "हिन्दी",
-  "ಕನ್ನಡ",
-  "Français",
-  "عربي",
-  "தமிழ்",
-]);
+const Languages = ["English", "മലയാളം", "Deutsch", "हिन्दी", "ಕನ್ನಡ", "Français", "عربي", "தமிழ்"];
 const defaultLanguage = "English";
+const languageOptions = Languages.map((lang) => ({ label: lang, value: lang }));
 
 interface CreateSurveyModalProps {
   open: boolean;
@@ -48,6 +37,15 @@ interface CreateSurveyModalProps {
   template?: any;
   setTemplate?: any;
 }
+
+interface CreateSurveyFormValues {
+  title: string;
+  languages: string[];
+  teamIds: string[];
+  getLocation: boolean;
+  selectedTheme: string;
+}
+
 export function CreateSurveyModal({
   open,
   close,
@@ -56,9 +54,7 @@ export function CreateSurveyModal({
   template,
   setTemplate,
 }: CreateSurveyModalProps) {
-  const [languages, setLanguages] = useState<string[]>([defaultLanguage]);
   const [teamChoice, setTeamChoice] = useState("all");
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const navigate = useNavigate();
   const { t: translations } = useTranslation();
   const [prevOpen, setPrevOpen] = useState(false);
@@ -70,34 +66,33 @@ export function CreateSurveyModal({
   const [templateName, setTemplateName] = useState(template?.title || tn || null);
 
   const { data: allThemesArr, isPending: isAllThemesFetchPending } = useAllThemes();
-  const selectThemeDropdownData = allThemesArr?.map(({ id, name }) => {
-    return {
-      value: id,
-      label: name,
-    };
+  const selectThemeDropdownData =
+    allThemesArr?.map(({ id, name }) => ({ value: id, label: name })) ?? [];
+
+  const allTeams = teamsData?.map((team) => team?.id) ?? [];
+  const teamOptions = teamsData?.map((team) => ({ value: team?.id, label: team?.name })) ?? [];
+
+  const formSchema = z.object({
+    title: z.string().min(1, translations("Cannot be empty")),
+    languages: z.array(z.string()).min(1, translations("Must contain at least one language")),
+    teamIds: z.array(z.string()).min(1, translations("Must contain atleast one team")),
+    getLocation: z.boolean(),
+    selectedTheme: z.string(),
   });
 
-  const allTeams = teamsData?.map((team) => team?.id);
-  const teamOptions = teamsData?.map((team) => ({
-    value: team?.id,
-    label: team?.name,
-  }));
-
-  const form = useForm({
-    initialValues: {
+  const { control, handleSubmit, setValue, watch, reset } = useForm<CreateSurveyFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
       title: templateName ? templateName : "",
-      languages: languages,
+      languages: [defaultLanguage],
       teamIds: [],
       getLocation: false,
       selectedTheme: "",
     },
-    validate: {
-      title: (value) => (templateName || value?.length ? null : "Cannot be empty"),
-      languages: (values) =>
-        values?.length ? null : translations("Must contain at least one language"),
-      teamIds: (values) => (values?.length ? null : translations("Must contain atleast one team")),
-    },
   });
+
+  const watchedTeamIds = watch("teamIds");
+  const watchedSelectedTheme = watch("selectedTheme");
 
   useEffect(() => {
     if (template) {
@@ -107,7 +102,7 @@ export function CreateSurveyModal({
   }, [template]);
 
   useEffect(() => {
-    form.setFieldValue("title", templateName);
+    setValue("title", templateName);
   }, [templateName]);
 
   useEffect(() => {
@@ -118,23 +113,6 @@ export function CreateSurveyModal({
     }
     setPrevOpen(open);
   }, [open]);
-
-  useEffect(() => {
-    form.setFieldValue("languages", languages);
-  }, [languages]);
-
-  useEffect(() => {
-    form.setFieldValue("teamIds", selectedTeams);
-  }, [selectedTeams]);
-
-  useEffect(() => {
-    if (!form.getValues().selectedTheme) {
-      const defaultThemeId = allThemesArr?.find(
-        (themeObj) => themeObj.name === "Default Theme",
-      )?.id;
-      form.setFieldValue("selectedTheme", defaultThemeId || "");
-    }
-  }, [allThemesArr, open, form.values?.selectedTheme]);
 
   function arraysEqual(a, b) {
     if (a === b) return true;
@@ -151,51 +129,55 @@ export function CreateSurveyModal({
   }
 
   useEffect(() => {
-    setSelectedTeams([]);
+    setValue("teamIds", []);
   }, [teamChoice]);
 
   useEffect(() => {
-    if (teamChoice === "all" && !arraysEqual(form?.values?.teamIds, allTeams)) {
-      form.setFieldValue("teamIds", allTeams);
+    if (teamChoice === "all" && !arraysEqual(watchedTeamIds, allTeams)) {
+      setValue("teamIds", allTeams);
     }
-  }, [allTeams, teamChoice, form?.values?.teamIds]);
+  }, [allTeams, teamChoice, watchedTeamIds]);
 
   const resetForm = () => {
-    form.reset();
-    setLanguages([defaultLanguage]);
+    reset();
+    setValue("languages", [defaultLanguage]);
   };
 
   useEffect(() => {
-    form.reset();
-    setLanguages([defaultLanguage]);
+    reset();
+    setValue("languages", [defaultLanguage]);
   }, [open]);
+
+  useEffect(() => {
+    if (!watchedSelectedTheme) {
+      const defaultThemeId = allThemesArr?.find(
+        (themeObj) => themeObj.name === "Default Theme",
+      )?.id;
+      setValue("selectedTheme", defaultThemeId || "");
+    }
+  }, [allThemesArr, open, watchedSelectedTheme]);
 
   function handleClose() {
     close();
     resetForm();
   }
 
-  const [isLoading, { toggle: setIsLoading }] = useDisclosure(false);
+  const [isLoading, setIsLoading] = useState(false);
   const createSurveyMutation = useCreateSurveyMutation();
   const queryClient = useQueryClient();
 
-  const onSubmit = () => {
-    const validationRes = form.validate();
-    if (validationRes.hasErrors) {
-      console.error(validationRes.errors);
-      return;
-    }
+  const onSubmit = (values: CreateSurveyFormValues) => {
     toast.loading(translations("Hold on, your survey is getting created..."), {
       id: "load-data",
     });
     createSurveyMutation.mutate(
-      { ...form.values, type: surveyType, templateId: templateId || "" },
+      { ...values, type: surveyType, templateId: templateId || "" },
       {
         onSuccess: (data: CreateSurveyResponse) => {
           queryClient.invalidateQueries({ queryKey: ["whatsappsurveys"] });
           queryClient.invalidateQueries({ queryKey: ["surveys"] });
           if (data?.id) {
-            setIsLoading();
+            setIsLoading(true);
             navigate({
               to: `/dashboard/surveys/${data?.id}`,
             });
@@ -208,211 +190,152 @@ export function CreateSurveyModal({
     );
   };
   return isLoading ? (
-    <LoadingOverlay
-      visible={isLoading}
-      zIndex={1000}
-      overlayProps={{ radius: "sm", blur: 2 }}
-      loaderProps={{
-        type: "bars",
-        color: "var(--tertiary-color)",
-      }}
-    />
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center rounded-sm bg-background/50 backdrop-blur-[2px]">
+      <Spinner className="size-8" style={{ color: "var(--tertiary-color)" }} />
+    </div>
   ) : (
-    <FormModalLayout
-      opened={open}
-      onClose={handleClose}
-      title={translations("Create Survey")}
-      centered
-      onSubmit={form.onSubmit(onSubmit)}
-      buttonTitle={translations("Submit")}
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) handleClose();
+      }}
     >
-      <Stack style={{ minHeight: "300px" }} mt="xl">
-        <ContainedTextField
-          placeholder={templateName === null ? translations("Enter title") : templateName}
-          label={templateName === null ? translations("Title") : translations("Template Selected")}
-          withAsterisk
-          {...form.getInputProps("title")}
-          disabled={templateName !== null}
-        />
-        {/* // TODO: Add a user-level language list */}
-
-        {templateName === null && (
-          <MultiSelectCreatable
-            value={languages}
-            setValue={setLanguages}
-            errors={form.errors.languages}
-          />
-        )}
-
-        <Radio.Group
-          value={teamChoice}
-          onChange={(value) => setTeamChoice(value)}
-          name="selectTeams"
-          label={translations("Select teams")}
-          withAsterisk
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-center text-[1.2rem] font-medium">
+            {translations("Create Survey")}
+          </DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          onKeyDown={(e) => {
+            const isSave = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s";
+            if (isSave) {
+              e.preventDefault();
+              handleSubmit(onSubmit)();
+            }
+          }}
         >
-          <Group mt="xs">
-            <Radio checked label={translations("All Teams")} value="all" />
-            <Radio label={translations("Select Manually")} value="manual" />
-          </Group>
-        </Radio.Group>
+          <div className="flex flex-col gap-4" style={{ minHeight: "300px" }}>
+            <Controller
+              name="title"
+              control={control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>
+                    {templateName === null
+                      ? translations("Title")
+                      : translations("Template Selected")}{" "}
+                    <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    placeholder={templateName === null ? translations("Enter title") : templateName}
+                    disabled={templateName !== null}
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+            {/* // TODO: Add a user-level language list */}
 
-        {teamChoice === "manual" && (
-          <MultiSelect
-            radius="md"
-            value={selectedTeams}
-            onChange={setSelectedTeams}
-            placeholder={translations("Select teams (type in to search)")}
-            data={teamOptions}
-            searchable
-            error={form.errors.teamIds}
-          />
-        )}
-
-        {!template && (
-          <Select
-            label={translations("Select Theme")}
-            data={selectThemeDropdownData}
-            value={form.getValues().selectedTheme}
-            onChange={(value) => form.setFieldValue("selectedTheme", value)}
-            placeholder={translations("Select Theme")}
-            styles={{
-              input: {
-                borderRadius: "0.5rem",
-                paddingTop: "0.23125rem",
-                paddingBottom: "0.23125rem",
-              },
-            }}
-            rightSection={isAllThemesFetchPending ? <Loader size={"1rem"} /> : <ComboboxChevron />}
-          />
-        )}
-
-        {/* {form.values.type !== "whatsapp" && (
-            <Box>
-              <Switch
-                label="Save Respondent's location"
-                {...form.getInputProps("getLocation")}
+            {templateName === null && (
+              <Controller
+                name="languages"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>
+                      {translations("Select Languages")} <span className="text-destructive">*</span>
+                    </FieldLabel>
+                    <MultiSelect
+                      options={languageOptions}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder={translations("Select languages")}
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
               />
-              <Text c="dimmed" fz="xs">
-                {`(Automatically fetched from the browser if the respondent allows it.)`}
-              </Text>
-            </Box>
-          )} */}
-      </Stack>
-    </FormModalLayout>
-  );
-}
+            )}
 
-interface iProps {
-  value: string[];
-  setValue: React.Dispatch<React.SetStateAction<string[]>>;
-  errors: any;
-}
+            <Field>
+              <FieldLabel>
+                {translations("Select teams")} <span className="text-destructive">*</span>
+              </FieldLabel>
+              <RadioGroup
+                value={teamChoice}
+                onValueChange={setTeamChoice}
+                className="flex flex-row gap-4"
+              >
+                <label className="flex items-center gap-2">
+                  <RadioGroupItem value="all" />
+                  {translations("All Teams")}
+                </label>
+                <label className="flex items-center gap-2">
+                  <RadioGroupItem value="manual" />
+                  {translations("Select Manually")}
+                </label>
+              </RadioGroup>
+            </Field>
 
-function MultiSelectCreatable({ value, setValue, errors }: iProps) {
-  const combobox = useCombobox({
-    onDropdownClose: () => combobox.resetSelectedOption(),
-    onDropdownOpen: () => combobox.updateSelectedOptionIndex("active"),
-  });
-  const { t: translations } = useTranslation();
-  useEffect(() => {
-    console.log(errors);
-  }, [errors]);
-
-  const languages = Array.from(Languages);
-  const [search, setSearch] = useState("");
-  const [data, setData] = useState(languages);
-
-  const exactOptionMatch = data.some((item) => item === search);
-
-  const handleValueSelect = (val: string) => {
-    if (val === "$create") {
-      setData((current) => [...current, search]);
-      setValue((current) => [...current, search]);
-      setSearch("");
-    } else {
-      setValue((current) =>
-        current.includes(val) ? current.filter((v) => v !== val) : [...current, val],
-      );
-    }
-  };
-
-  const handleValueRemove = (val: string) =>
-    setValue((current) => current.filter((v) => v !== val));
-
-  const values = value?.map((item) => (
-    <Pill key={item} withRemoveButton onRemove={() => handleValueRemove(item)}>
-      {item}
-    </Pill>
-  ));
-
-  const options = languages
-    .filter((item) => item.toLowerCase().includes(search.trim().toLowerCase()))
-    .map((item) => (
-      <Combobox.Option
-        title={translations("Language")}
-        value={item}
-        key={item}
-        active={value?.includes(item)}
-      >
-        <Group gap="sm">
-          {value?.includes(item) ? <CheckIcon size={12} /> : null}
-          <span>{item}</span>
-        </Group>
-      </Combobox.Option>
-    ));
-
-  return (
-    <Combobox store={combobox} onOptionSubmit={handleValueSelect} withinPortal={false}>
-      <Combobox.DropdownTarget>
-        <PillsInput
-          radius="md"
-          error={errors ? errors : false}
-          label={translations("Select Languages")}
-          description={translations("*Type to add new languages")}
-          styles={{ description: { color: "var(--tertiary-color)" } }}
-          withAsterisk
-          onClick={() => combobox.openDropdown()}
-        >
-          <Pill.Group p="4px">
-            {values}
-
-            <Combobox.EventsTarget>
-              <PillsInput.Field
-                onFocus={() => combobox.openDropdown()}
-                onBlur={() => combobox.closeDropdown()}
-                value={search}
-                placeholder={translations("Select languages")}
-                onChange={(event) => {
-                  combobox.updateSelectedOptionIndex();
-                  setSearch(event.currentTarget.value);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Backspace" && search.length === 0) {
-                    event.preventDefault();
-                    handleValueRemove(value[value.length - 1]);
-                  }
-                }}
+            {teamChoice === "manual" && (
+              <Controller
+                name="teamIds"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <MultiSelect
+                      options={teamOptions}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder={translations("Select teams (type in to search)")}
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
               />
-            </Combobox.EventsTarget>
-          </Pill.Group>
-        </PillsInput>
-      </Combobox.DropdownTarget>
-      <Combobox.Dropdown>
-        <Combobox.Options>
-          {options}
+            )}
 
-          {!exactOptionMatch && search.trim().length > 0 && (
-            <Combobox.Option value="$create">
-              + {translations("Create")} {search}
-            </Combobox.Option>
-          )}
-
-          {exactOptionMatch && search.trim().length > 0 && options.length === 0 && (
-            <Combobox.Empty>{translations("Nothing found...")}</Combobox.Empty>
-          )}
-        </Combobox.Options>
-      </Combobox.Dropdown>
-    </Combobox>
+            {!template && (
+              <Controller
+                name="selectedTheme"
+                control={control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel>{translations("Select Theme")}</FieldLabel>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        items={selectThemeDropdownData}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder={translations("Select Theme")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {selectThemeDropdownData.map((themeOpt) => (
+                            <SelectItem key={themeOpt.value} value={themeOpt.value}>
+                              {themeOpt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {isAllThemesFetchPending && <Spinner className="size-4 shrink-0" />}
+                    </div>
+                  </Field>
+                )}
+              />
+            )}
+          </div>
+          <div className="mt-6 flex justify-center">
+            <Button type="submit">{translations("Submit")}</Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

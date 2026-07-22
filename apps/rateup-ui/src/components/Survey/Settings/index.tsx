@@ -1,8 +1,8 @@
-import { Box } from "@mantine/core";
-import { useDebouncedValue } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
+import { useDebounce } from "@/hooks/use-debounce.ts";
+import { cn } from "@/lib/utils";
 
 import FlowSettingsUpdate from "./FlowSettingsUpdate.tsx";
 import GeneralSettings from "./GeneralSettings/index.tsx";
@@ -31,6 +31,7 @@ const defaultEnabledModules = [
   "tickets",
   "uniqueDeviceResponse",
 ];
+
 interface SurveySettingsProps {
   surveyId: string;
   survey: any;
@@ -40,6 +41,7 @@ interface SurveySettingsProps {
   flowDbId?: string;
   anonymous?: boolean;
 }
+
 const SurveySettings = ({
   surveyId,
   survey,
@@ -59,7 +61,7 @@ const SurveySettings = ({
   const [redirect, setRedirect] = useState(survey?.redirect);
   const [redirectError, setRedirectError] = useState({ url: "", time: "" });
   const editSurvey = useEditSurveyMutation(surveyId);
-  const [debounced] = useDebouncedValue(redirect?.url, 200);
+  const debounced = useDebounce(redirect?.url, 200);
 
   useEffect(() => {
     setHasGoogleReview(
@@ -72,60 +74,79 @@ const SurveySettings = ({
   }, [survey]);
 
   return (
-    <Box className={`${styles["survey-settings-root-div"]}`}>
-      <Box className={styles["panels-container"]}>
-        <Box className={`${styles["left-panel"]} ${styles["panel"]}`}>
-          <GeneralSettings
-            enabledModules={enabledModules}
-            survey={survey}
-            setSelectedLanguage={setSelectedLanguage}
-          />
+    <div
+      className={cn(
+        styles["survey-settings-root-div"],
+        "min-h-full overflow-auto bg-muted px-[22px] py-6",
+      )}
+    >
+      <div className="mx-auto flex max-w-[1120px] flex-col gap-4">
+        {/* Two columns of three, each stacking its own cards so a tall card never
+            leaves a gap beside a short one (as it would with a plain grid flow).
+            Split so the two columns end up roughly the same height: the two
+            tallest cards (General, Behaviour) are balanced against the three
+            shorter ones on the right. */}
+        <div className="grid items-start gap-4 lg:grid-cols-2">
+          <div className="flex flex-col gap-4">
+            <GeneralSettings
+              enabledModules={enabledModules}
+              survey={survey}
+              setSelectedLanguage={setSelectedLanguage}
+            />
 
-          <SecuritySettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
-          <WebhookSettings
-            responseWebhookEndpoint={survey?.responseWebhookEndpoint}
-            editSurvey={editSurvey}
-            enabledModules={enabledModules}
-          />
-        </Box>
-        <Box className={`${styles["right-panel"]} ${styles["panel"]}`}>
-          <KioskFetchLocSkipPreview
-            enabledModules={enabledModules}
-            kioskMode={kioskMode}
-            setKioskMode={setKioskMode}
-            editSurvey={editSurvey}
-            hasGoogleReview={hasGoogleReview}
-            location={location}
-            setLocation={setLocation}
-            preview={preview}
-            setPreview={setPreview}
-            webSurveyAutoTransitionToNextQues={webSurveyAutoTransitionToNextQues}
-            setwebSurveyAutoTransitionToNextQues={setwebSurveyAutoTransitionToNextQues}
-            survey={survey}
-            surveyId={surveyId}
-          />
-          <RedirectSettings
-            enabledModules={enabledModules}
-            kioskMode={kioskMode}
-            editSurvey={editSurvey}
-            redirect={redirect}
-            setRedirect={setRedirect}
-            debounced={debounced}
-            redirectError={redirectError}
-            setRedirectError={setRedirectError}
-            survey={survey}
-          />
-          <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />
-          <TicketSettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
-          {enabledModules.includes("flow") && (
-            <FlowSettingsUpdate name={flowName} dbFlowId={flowDbId} anonymous={anonymous} />
-          )}
-        </Box>
-      </Box>
-      <Box className={styles["other-settings-container"]}>
+            <KioskFetchLocSkipPreview
+              enabledModules={enabledModules}
+              kioskMode={kioskMode}
+              setKioskMode={setKioskMode}
+              editSurvey={editSurvey}
+              hasGoogleReview={hasGoogleReview}
+              location={location}
+              setLocation={setLocation}
+              preview={preview}
+              setPreview={setPreview}
+              webSurveyAutoTransitionToNextQues={webSurveyAutoTransitionToNextQues}
+              setwebSurveyAutoTransitionToNextQues={setwebSurveyAutoTransitionToNextQues}
+              survey={survey}
+              surveyId={surveyId}
+            />
+
+            <WebhookSettings
+              responseWebhookEndpoint={survey?.responseWebhookEndpoint}
+              editSurvey={editSurvey}
+              enabledModules={enabledModules}
+            />
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <SecuritySettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
+
+            <RedirectSettings
+              enabledModules={enabledModules}
+              kioskMode={kioskMode}
+              editSurvey={editSurvey}
+              redirect={redirect}
+              setRedirect={setRedirect}
+              debounced={debounced}
+              redirectError={redirectError}
+              setRedirectError={setRedirectError}
+              survey={survey}
+            />
+
+            {enabledModules.includes("tickets") && (
+              <TicketSettings survey={survey} surveyId={surveyId} enabledModules={enabledModules} />
+            )}
+
+            {survey?.spreadSheetId && <GoogleSheetSettings spreadSheetId={survey?.spreadSheetId} />}
+
+            {enabledModules.includes("flow") && (
+              <FlowSettingsUpdate name={flowName} dbFlowId={flowDbId} anonymous={anonymous} />
+            )}
+          </div>
+        </div>
+
         <OtherSettings />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

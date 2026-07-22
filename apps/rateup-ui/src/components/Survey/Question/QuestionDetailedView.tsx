@@ -1,10 +1,17 @@
-import { Alert, Box, Divider, Group, Portal, ScrollArea, Stack } from "@mantine/core";
-import type { UseFormReturnType } from "@mantine/form";
-import { useForm } from "@mantine/form";
-import { getHotkeyHandler } from "@mantine/hooks";
-import { IconAlertOctagon, IconEye } from "@tabler/icons-react";
+import { IconAlertOctagon, IconDeviceSdCard, IconEye } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
+import { Color } from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Underline from "@tiptap/extension-underline";
+import { EditorContent, type Extension, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import React, { useContext, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -14,8 +21,13 @@ import {
   useQuestionUpdateMutation,
 } from "@/backend/surveys/questions/questions.query";
 import HTMLEditor from "@/components/RichTextEditor/HTMLEditor.tsx";
-import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+import SearchAndReplace from "@/components/tiptap/extensions/search-and-replace";
+import { EditorToolbar } from "@/components/tiptap/toolbars/editor-toolbar.tsx";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { cn } from "@/lib/utils";
 import {
   NPSWeightage,
   PageType,
@@ -23,18 +35,19 @@ import {
   SubscriptionFeaturePathName,
   SurveyType,
 } from "@/types/enums.ts";
-import { SAVE_HOTKEY } from "@/utils/constants.ts";
+import { getTypeLabel } from "@/utils/enums/index.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
-import { getInitialQuestionValues, validateAllLanguagesArePopulated } from "@/utils/questions.ts";
+import {
+  getInitialQuestionValues,
+  validateAllLanguagesArePopulated,
+  validateContactFeaturesPopulated,
+} from "@/utils/questions.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
-import TextEditor from "../../RichTextEditor/TextEditor.tsx";
 import type { QuestionTabsEnum } from "../EditSurvey.tsx";
 import ImportChoices from "./ImportChoices/index.tsx";
 import { LanguageCompletionView } from "./LanguageCompletionView.tsx";
-import QuestionTypePreview from "./Previews/QuestionTypePreview.tsx";
-import QuestionDetailedViewBadge from "./QuestionDetailedViewBadge.tsx";
 import QuestionDetailedViewFooter from "./QuestionDetailedViewFooter.tsx";
 import { ChoicesCreator } from "./QuestionExtraProps/ChoicesCreator.tsx";
 import ContactExtraProps from "./QuestionExtraProps/ContactExtraProps.tsx";
@@ -59,7 +72,9 @@ interface QuestionDetailedViewProps {
   surveyId?: string;
   survey: Survey;
   questionDetailedViewFormRef?: any;
+  openSurveyPreviewModal?: () => void;
 }
+
 export function QuestionDetailedView({
   question,
   setSelectedQ,
@@ -69,13 +84,13 @@ export function QuestionDetailedView({
   surveyId: pSurveyId,
   survey,
   questionDetailedViewFormRef,
+  openSurveyPreviewModal,
 }: QuestionDetailedViewProps) {
   const params = useParams({
     strict: false,
   });
   const surveyId = pSurveyId || (params.surveyId as string);
   const [isSaved, setIsSaved] = useState(true);
-  const [currentResponse, updateResponse] = useState(null);
   const [deleteFileLoading, setDeleteFileLoading] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const questionCreateMutation = useQuestionCreateMutation({
@@ -88,40 +103,53 @@ export function QuestionDetailedView({
   const { data: subscription } = useSubscription();
   const [isGoogleReviewFeatureActive, setIsGoogleReviewFeatureActive] = useState(false);
   const [isTicketFeatureActive, setIsTicketFeatureActive] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setIsGoogleReviewFeatureActive(
       hasFeature(subscription, SubscriptionFeaturePathName.GoogleReview),
     );
 
-    setIsTicketFeatureActive(hasFeature(subscription, SubscriptionFeaturePathName.Ticket));
+    // Tickets are free with no limits — always available.
+    setIsTicketFeatureActive(true);
   }, [subscription]);
 
   const form = useForm({
-    initialValues: getInitialQuestionValues(question, surveyLanguages),
+    defaultValues: getInitialQuestionValues(question, surveyLanguages),
   });
+  const { setValue, getValues, watch, reset, formState } = form;
 
-  form.watch("choices", () => {
-    if (!getIncompleteLanguages()?.length) {
-      handleSave();
-    }
-  });
+  // Reactive snapshot of all values — used for QuestionTypePreview and ExtraProps children
+  const allValues = watch();
 
-  form.watch("features", ({ previousValue, value }) => {
-    if (JSON.stringify(previousValue) !== JSON.stringify(value) && !getIncompleteLanguages().length)
-      handleSave();
-  });
+  // Mantine-compatible adapter for ExtraProps children not yet migrated to RHF
+  const extraPropsForm = {
+    values: allValues,
+    setFieldValue: (path: string, value: any) =>
+      setValue(path as any, value, { shouldDirty: true }),
+    getValues: () => getValues(),
+  };
 
+  // Reset form when question ID or languages change.
+  // Using question.id (primitive) instead of question (object) prevents a reset
+  // on every React Query background refetch where the reference changes but data hasn't.
   useEffect(() => {
-    form.setInitialValues(getInitialQuestionValues(question, surveyLanguages));
-    form.reset();
-  }, [question, surveyLanguages]);
+    reset(getInitialQuestionValues(question, surveyLanguages));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [question.id, surveyLanguages]);
 
   function getIncompleteLanguages() {
-    return validateAllLanguagesArePopulated(form.getValues(), surveyLanguages, [
-      "title",
-      "choices",
-    ]);
+    const values = getValues();
+    const missing = validateAllLanguagesArePopulated(values, surveyLanguages, ["title", "choices"]);
+    const missingContactFeatures = validateContactFeaturesPopulated(
+      values as Question,
+      surveyLanguages,
+    );
+    return Array.from(new Set([...missing, ...missingContactFeatures]));
   }
 
   const { imageToDelete, resetImage } = useImageStore();
@@ -129,15 +157,25 @@ export function QuestionDetailedView({
 
   const handleSave = async () => {
     try {
-      if (!form.values.title[selectedLanguage] || form.values.title[selectedLanguage] == "") {
+      const titleValues = getValues("title" as any);
+      if (!titleValues?.[selectedLanguage] || titleValues[selectedLanguage] === "") {
         toast.error(translations("Question title is missing"));
         setIsSaved(false);
         return "error";
       } else {
-        if (getIncompleteLanguages().length > 0) {
-          setSelectedLanguage(getIncompleteLanguages()[0]);
+        const incompleteLanguages = getIncompleteLanguages();
+        if (incompleteLanguages.length > 0) {
+          setSelectedLanguage(incompleteLanguages[0]);
+          const missingContactFeatures = validateContactFeaturesPopulated(
+            getValues() as Question,
+            surveyLanguages,
+          );
           toast.error(
-            translations("Please Enter heading and choices for all languages before saving."),
+            translations(
+              missingContactFeatures.length > 0
+                ? "Please select at least one field (Name, Phone or Email)."
+                : "Please Enter heading and choices for all languages before saving.",
+            ),
           );
           setIsSaved(false);
           return "error";
@@ -153,7 +191,7 @@ export function QuestionDetailedView({
         // Checking if its a new question
         if (!question.id) {
           // Creating new question
-          questionCreateMutation.mutate(form.values, {
+          questionCreateMutation.mutate(getValues(), {
             onSuccess: (r) => {
               setSelectedQ(r.data);
               setIsSaved(true);
@@ -166,7 +204,7 @@ export function QuestionDetailedView({
           });
           questionUpdateMutation.mutate({
             qId: question.id,
-            data: form.getValues(),
+            data: getValues(),
           });
         }
       }
@@ -178,18 +216,53 @@ export function QuestionDetailedView({
     }
   };
 
-  useEffect(() => {
-    if (form.isDirty()) handleSave();
-  }, [form.values.required, form.values.enableNpsAnalytics]);
+  // Latest-ref pattern: always points to the current handleSave closure
+  const handleSaveRef = useRef(handleSave);
+  handleSaveRef.current = handleSave;
 
+  // Auto-save when choices change (skip initial mount)
+  const watchedChoices = watch("choices" as any);
+  const isFirstChoicesRender = useRef(true);
   useEffect(() => {
-    if (questionDetailedViewFormRef) {
-      questionDetailedViewFormRef.current = form.getValues();
+    if (isFirstChoicesRender.current) {
+      isFirstChoicesRender.current = false;
+      return;
     }
-  }, [form]);
+    if (!getIncompleteLanguages()?.length) handleSaveRef.current?.();
+  }, [watchedChoices]);
+
+  // Auto-save when features change (prev-value comparison naturally skips first render)
+  const watchedFeatures = watch("features" as any);
+  const prevFeaturesStr = useRef(JSON.stringify(watchedFeatures));
+  useEffect(() => {
+    const current = JSON.stringify(watchedFeatures);
+    if (prevFeaturesStr.current !== current) {
+      prevFeaturesStr.current = current;
+      if (!getIncompleteLanguages().length) handleSaveRef.current?.();
+    }
+  }, [watchedFeatures]);
+
+  // Auto-save when required or enableNpsAnalytics change
+  const watchedRequired = watch("required" as any);
+  const watchedEnableNpsAnalytics = watch("enableNpsAnalytics" as any);
+  useEffect(() => {
+    if (formState.isDirty) handleSaveRef.current?.();
+  }, [watchedRequired, watchedEnableNpsAnalytics]);
+
+  // Keep the ref in sync with the latest form values on every render.
+  // This is a plain ref mutation — safe to do directly during render,
+  // no useEffect needed (avoids running an effect on every single render).
+  if (questionDetailedViewFormRef) {
+    questionDetailedViewFormRef.current = getValues();
+  }
 
   const isSaving =
     questionCreateMutation.isPending || questionUpdateMutation.isPending || deleteFileLoading;
+
+  const questionTypeLabel = getTypeLabel(question.type) || "";
+
+  const alertPortalTarget =
+    mounted && typeof document !== "undefined" ? document.getElementById("SurveyIssueAlert") : null;
 
   return (
     <form
@@ -197,112 +270,159 @@ export function QuestionDetailedView({
         e.preventDefault();
       }}
       style={{ height: "100%" }}
-      onKeyDown={getHotkeyHandler([
-        [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSave)(event)],
-      ])}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        const isMod = e.metaKey || e.ctrlKey;
+        if (isMod && e.key === "s") {
+          e.preventDefault();
+          handleSave();
+        }
+      }}
     >
-      <Portal target={"#SurveyIssueAlert"}>
-        <SurveyIssueAlert isSaved={isSaved} />
-      </Portal>
-      <Stack style={{ height: "100%" }} ref={formRef}>
-        <ScrollArea
-          className={styles["editor-scroll-area-div"]}
-          style={{ flex: "1 1 0" }}
-          offsetScrollbars={"x"}
-          styles={{ viewport: { paddingRight: "1rem" } }}
-        >
-          <QuestionDetailedViewBadge question={question} />
-          <Group justify="space-between" p={2} gap={2} align="start" mt={"xs"}>
-            <Stack
-              style={{
-                minHeight: "150px",
-                height: "100%",
-                flex: 1,
-                overflow: "hidden",
-              }}
-              mr={"xs"}
-            >
-              <Group
-                onBlur={async (e) => {
-                  const currentTarget = e.currentTarget;
-                  const relatedTarget = e.relatedTarget;
-                  if (
-                    !currentTarget.contains(relatedTarget) &&
-                    getIncompleteLanguages()?.length === 0
-                  ) {
-                    if (form.isDirty()) await handleSave();
-                  }
-                }}
-              >
-                {question?.type === PageType.Custom ? (
-                  <HTMLEditor
-                    className={styles["html-editor-div"]}
-                    form={form}
-                    selectedLanguage={selectedLanguage}
-                  />
-                ) : (
-                  <TextEditor
-                    className={styles["rich-text-editor"]}
-                    form={form}
-                    selectedLanguage={selectedLanguage}
-                  />
-                )}
-              </Group>
+      {alertPortalTarget && createPortal(<SurveyIssueAlert isSaved={isSaved} />, alertPortalTarget)}
 
-              <ExtraProps
-                form={form}
-                question={question}
-                surveyType={SurveyType.Web}
-                surveyLanguages={surveyLanguages}
-                handleSave={handleSave}
-              />
-            </Stack>
-            <LanguageCompletionView
-              selectedLanguage={selectedLanguage}
-              setSelectedLanguage={setSelectedLanguage}
-              languages={surveyLanguages}
-              notCompletedLanguages={getIncompleteLanguages()}
-            />
-          </Group>
-          <Divider
-            my="xs"
-            variant="dashed"
-            labelPosition="center"
-            label={
-              <>
-                <IconEye size={12} />
-                <Box ml={5}>{translations("Preview")}</Box>
-              </>
-            }
+      <div className="flex h-full flex-col" ref={formRef}>
+        <div className="flex h-[54px] flex-shrink-0 items-center gap-3.5 border-b border-border bg-card px-4">
+          {/* Question number badge */}
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary font-nunito text-sm font-black text-primary-foreground">
+            {(survey?.questions?.findIndex((q: any) => q.id === question.id) ?? 0) + 1}
+          </div>
+          {/* Label */}
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[13px] font-semibold text-foreground">
+              {questionTypeLabel}
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              {translations("Question Editor")}
+            </div>
+          </div>
+          {/* Language selector */}
+          <LanguageCompletionView
+            selectedLanguage={selectedLanguage}
+            setSelectedLanguage={setSelectedLanguage}
+            languages={surveyLanguages}
+            notCompletedLanguages={getIncompleteLanguages()}
           />
+          {/* Footer controls inline */}
+          <QuestionDetailedViewFooter
+            question={question}
+            required={watchedRequired}
+            enableNpsAnalytics={watchedEnableNpsAnalytics}
+            onRequiredChange={(checked) =>
+              setValue("required" as any, checked, { shouldDirty: true })
+            }
+            onNpsAnalyticsChange={(checked) =>
+              setValue("enableNpsAnalytics" as any, checked, { shouldDirty: true })
+            }
+            setActiveTab={setActiveTab}
+            isGoogleReviewFeatureActive={isGoogleReviewFeatureActive}
+            handleSave={handleSave}
+            isTicketFeatureActive={isTicketFeatureActive}
+            enableAutoGenerateTicket={survey?.enableAutoGenerateTicket}
+            className="flex items-center gap-3 border-r border-border pr-3.5"
+          />
+          {/* Actions */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 rounded-[7px] px-3 text-xs font-semibold"
+            onClick={() => openSurveyPreviewModal?.()}
+          >
+            <IconEye className="size-3.5" />
+            {translations("Preview")}
+          </Button>
+          <Button
+            size="sm"
+            className="h-8 gap-1.5 rounded-[7px] px-3 text-xs font-semibold"
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            <IconDeviceSdCard className="size-3.5" />
+            {translations("Save")}
+          </Button>
+        </div>
+        <ScrollArea
+          className={cn(styles["editor-scroll-area-div"], "min-h-0")}
+          style={{ flex: "1 1 0" }}
+        >
+          <div className="flex flex-col gap-4 p-4">
+            <div className="flex items-start justify-between ">
+              <div
+                className="mr-2 flex flex-1 flex-col overflow-hidden"
+                style={{ minHeight: "150px" }}
+              >
+                <div
+                  className="mb-2"
+                  onBlur={async (e) => {
+                    const currentTarget = e.currentTarget;
+                    const relatedTarget = e.relatedTarget;
+                    if (
+                      !currentTarget.contains(relatedTarget) &&
+                      getIncompleteLanguages()?.length === 0
+                    ) {
+                      if (formState.isDirty) await handleSave();
+                    }
+                  }}
+                >
+                  {question?.type === PageType.Custom ? (
+                    <HTMLEditor
+                      className={styles["html-editor-div"]}
+                      titleValue={allValues?.title?.[selectedLanguage]}
+                      descriptionValue={allValues?.description?.[selectedLanguage]}
+                      onTitleChange={(v) =>
+                        setValue(`title.${selectedLanguage}` as any, v, { shouldDirty: true })
+                      }
+                      onDescriptionChange={(v) =>
+                        setValue(`description.${selectedLanguage}` as any, v, { shouldDirty: true })
+                      }
+                    />
+                  ) : (
+                    <QuestionTitleEditor
+                      className={styles["rich-text-editor"]}
+                      content={allValues?.title?.[selectedLanguage]}
+                      onChange={(v) =>
+                        setValue(`title.${selectedLanguage}` as any, v, { shouldDirty: true })
+                      }
+                      placeholder={
+                        questionTypeLabel
+                          ? `Enter your ${questionTypeLabel.toLowerCase()} question`
+                          : "Enter your question"
+                      }
+                    />
+                  )}
+                </div>
 
-          <CurrentResponsesContext.Provider value={{ response: currentResponse, updateResponse }}>
+                <ExtraProps
+                  form={extraPropsForm}
+                  question={question}
+                  surveyType={SurveyType.Web}
+                  surveyLanguages={surveyLanguages}
+                  handleSave={handleSave}
+                />
+              </div>
+            </div>
+
+            {/* <div className="flex items-center gap-2">
+            <Separator className="flex-1" />
+            <span className="flex items-center gap-1 whitespace-nowrap text-xs text-muted-foreground">
+              <IconEye size={12} />
+              <span>{translations("Preview")}</span>
+            </span>
+            <Separator className="flex-1" />
+          </div> */}
+
+            {/* <CurrentResponsesContext.Provider value={{ response: currentResponse, updateResponse }}>
             <QuestionTypePreview
               type={question?.type}
-              choices={form.values.choices}
-              features={form.values.features}
-              tnc={form.values.tnc}
-              wop={form.values?.wop}
-              htmlContent={form?.values?.description[selectedLanguage] || null}
+              choices={allValues.choices}
+              features={allValues.features}
+              tnc={allValues.tnc}
+              wop={allValues?.wop}
+              htmlContent={allValues?.description?.[selectedLanguage] || null}
             />
-          </CurrentResponsesContext.Provider>
+          </CurrentResponsesContext.Provider> */}
+          </div>
         </ScrollArea>
-
-        <Divider />
-
-        <QuestionDetailedViewFooter
-          question={question}
-          form={form}
-          setActiveTab={setActiveTab}
-          isGoogleReviewFeatureActive={isGoogleReviewFeatureActive}
-          handleSave={handleSave}
-          isTicketFeatureActive={isTicketFeatureActive}
-          getIncompleteLanguages={getIncompleteLanguages}
-          selectedLanguage={selectedLanguage}
-          isSaving={isSaving}
-          enableAutoGenerateTicket={survey?.enableAutoGenerateTicket}
-        />
-      </Stack>
+      </div>
     </form>
   );
 }
@@ -321,7 +441,7 @@ export function getNpsColor(npstype) {
 }
 
 interface ExtraPropsProps {
-  form: UseFormReturnType<any>;
+  form: any;
   question: Question;
   surveyType: SurveyType;
   surveyLanguages: string[];
@@ -337,7 +457,7 @@ function ExtraProps({ form, question, surveyType, surveyLanguages, handleSave }:
       return (
         <>
           <ImportChoices
-            mantineFormObj={form}
+            setValue={form.setFieldValue}
             surveyLanguagesArr={surveyLanguages}
             questionObj={question}
             handleSave={handleSave}
@@ -371,6 +491,58 @@ function ExtraProps({ form, question, surveyType, surveyLanguages, handleSave }:
   }
 }
 
+interface QuestionTitleEditorProps {
+  content?: string;
+  onChange: (value: string) => void;
+  className?: string;
+  placeholder?: string;
+}
+
+function QuestionTitleEditor({
+  content,
+  onChange,
+  className = "",
+  placeholder = "Enter your question",
+}: QuestionTitleEditorProps) {
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3, 4] },
+      }),
+      Placeholder.configure({ placeholder }),
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      TextStyle,
+      Underline,
+      Link,
+      Color,
+      Highlight.configure({ multicolor: true }),
+      SearchAndReplace,
+    ] as Extension[],
+    content,
+    editorProps: {
+      attributes: { class: "max-w-full focus:outline-none" },
+    },
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
+  });
+
+  useEffect(() => {
+    if (!editor) return;
+    if (editor.getHTML() !== (content ?? "")) {
+      editor.commands.setContent(content ?? "");
+    }
+  }, [content, editor]);
+
+  return (
+    <div className={`overflow-hidden rounded-md border bg-card ${className}`}>
+      <EditorToolbar editor={editor} />
+      <EditorContent editor={editor} className="min-h-[120px] cursor-text p-3" />
+    </div>
+  );
+}
+
 const SurveyIssueAlert = ({ isSaved }: { isSaved: boolean }) => {
   const { t: translations } = useTranslation();
 
@@ -378,19 +550,13 @@ const SurveyIssueAlert = ({ isSaved }: { isSaved: boolean }) => {
     return null;
   }
 
-  const issueMessage = translations(
-    "The survey contains incomplete questions. Please fix the issue.",
-  );
-
   return (
-    <Alert
-      variant="light"
-      color="red"
-      title={translations("Issue with your survey")}
-      icon={<IconAlertOctagon />}
-      m={"xs"}
-    >
-      {issueMessage}
+    <Alert variant="destructive" className="m-2">
+      <IconAlertOctagon />
+      <AlertTitle>{translations("Issue with your survey")}</AlertTitle>
+      <AlertDescription>
+        {translations("The survey contains incomplete questions. Please fix the issue.")}
+      </AlertDescription>
     </Alert>
   );
 };

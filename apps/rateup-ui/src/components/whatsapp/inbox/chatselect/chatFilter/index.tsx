@@ -22,9 +22,16 @@ export interface ChatFilter {
   assignedTeams: string[];
   phone?: string;
   labels: string[];
-  sortBy: "newest" | "oldest";
+  sortBy: "newest" | "oldest" | "newest_wa_created" | "oldest_wa_created";
   lifecycle?: string;
   assignedUserIds: string[];
+  /**
+   * Inbox Tickets v2 — orthogonal booleans, not tab values. They AND with
+   * whatever status filter is active. Spelled "favorite" here to match the API
+   * param and the DB column; the *count* key is British ("favourite").
+   */
+  favorite?: boolean;
+  mentions?: boolean;
 }
 
 export default function WaInboxChatFilter() {

@@ -1,13 +1,12 @@
 import { Draggable } from "@hello-pangea/dnd";
-import { ActionIcon, Badge, Box, Flex, Group, Image, Text } from "@mantine/core";
-import { useHover } from "@mantine/hooks";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import cx from "clsx";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
+import { Button } from "@/components/ui/button.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { PageType } from "@/types/enums.ts";
@@ -16,9 +15,7 @@ import { extractText } from "@/utils/index.ts";
 import { pageIcons } from "../../Page/PageIcons.ts";
 import { getReplacedTitleFromVariable } from "../../TakeSurvey/TakeSurveyComponent/util.tsx";
 import { reviewPageLogosObj } from "../QuestionReviewPageEditor/constants.tsx";
-import { questionIcons } from "../QuestionTypeSelection.tsx";
-
-import classes from "./DraggableQuestionCard.module.css";
+import { questionIcons, questionTypeColors } from "../QuestionTypeSelection.tsx";
 
 interface DraggableQuestionCardProps {
   question: Question;
@@ -37,8 +34,7 @@ export function DraggableQuestionCard({
   onDelete,
   isWaSurvey,
 }: DraggableQuestionCardProps) {
-  // TODO: ref lost when card is dragged to new place
-  const { ref: hoverRef } = useHover();
+  const [hovered, setHovered] = useState(false);
   const params = useParams({
     strict: false,
   });
@@ -83,14 +79,13 @@ export function DraggableQuestionCard({
         // isDragDisabled={question.type in PageType}
       >
         {(provided, snapshot) => (
-          <div ref={hoverRef}>
-            <Box
+          <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+            <div
               className={cx(
-                classes.item,
+                "relative flex cursor-pointer items-center gap-[9px] border-l-[3px] border-l-transparent bg-card px-3 py-[11px] transition-all duration-[120ms] not-data-[select=true]:hover:bg-muted data-[select=true]:border-l-primary data-[select=true]:bg-accent",
                 {
-                  [classes.itemDragging]: snapshot.isDragging,
+                  "rounded-lg shadow-custom-hover": snapshot.isDragging,
                 },
-                classes.transition,
               )}
               ref={provided.innerRef}
               onClick={() => {
@@ -104,64 +99,56 @@ export function DraggableQuestionCard({
                 ...provided.draggableProps.style,
               }}
             >
-              <div {...provided.dragHandleProps} className={classes.dragHandle}>
-                <IconGripVertical size={20} stroke={1.5} />
-              </div>
-              <Badge
-                style={{ minWidth: "30px" }}
-                c={"white"}
-                variant={selected ? "filled" : "filled"}
+              <div
+                {...provided.dragHandleProps}
+                className="flex shrink-0 items-center justify-center text-muted-foreground"
               >
-                <Flex style={{ marginTop: "0.5rem", marginBottom: "0.5rem" }}>
-                  {pageIcons[question.type] &&
-                    React.createElement(pageIcons[question.type], {
-                      size: 15,
-                      strokeWidth: 2,
-                      style: { marginRight: "0.5rem" },
-                    })}
-
-                  {questionIcons[question.type] &&
-                    React.createElement(questionIcons[question.type], {
-                      size: 15,
-                      strokeWidth: 2,
-                      style: { marginRight: "0.5rem" },
-                    })}
-                  {index + 1}
-                </Flex>
-              </Badge>
-              <Text px="xs" fz={14} truncate style={{ flex: 1 }}>
+                <IconGripVertical size={14} stroke={1.5} />
+              </div>
+              <div
+                className="flex size-9 shrink-0 items-center justify-center rounded-[10px] text-white"
+                style={{ backgroundColor: questionTypeColors[question.type] ?? "var(--primary)" }}
+              >
+                {(pageIcons[question.type] || questionIcons[question.type]) &&
+                  React.createElement(pageIcons[question.type] ?? questionIcons[question.type], {
+                    size: 18,
+                    strokeWidth: 2,
+                  })}
+              </div>
+              <span className="flex-1 truncate px-2 text-[13px] text-foreground">
                 {extractText(questionTitle)}
-              </Text>
+              </span>
 
-              <Group justify={"flex-end"} gap={4} ml={"auto"}>
+              <div className="flex items-center justify-end gap-1 ml-auto">
                 {question?.logic?.length && (
-                  <Image
+                  <img
                     src={
                       isWaSurvey == true
                         ? `${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump-whatsapp.svg`
                         : `${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump.svg`
                     }
-                    w={30}
-                    h={30}
-                    fit="contain"
-                    alt="image of logic jump"
+                    width={30}
+                    height={30}
+                    className="object-contain"
+                    alt="logic jump"
                   />
                 )}
                 {question.reviewPageOptions && reviewPageLogosObj[question.reviewPagePlatform]}
 
-                {!nonDeletablePagetypeStrs.includes(question.type) && (
-                  <ActionIcon
+                {!nonDeletablePagetypeStrs.includes(question.type) && hovered && (
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-destructive"
                     onClick={(e) => {
                       handleDelete(e);
                     }}
-                    variant="subtle"
-                    color="gray"
                   >
-                    <IconTrash />
-                  </ActionIcon>
+                    <IconTrash className="size-4" />
+                  </Button>
                 )}
-              </Group>
-            </Box>
+              </div>
+            </div>
           </div>
         )}
       </Draggable>

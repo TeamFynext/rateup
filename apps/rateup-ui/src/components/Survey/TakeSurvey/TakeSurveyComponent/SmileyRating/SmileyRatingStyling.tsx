@@ -1,4 +1,3 @@
-import { lighten, rem, Text } from "@mantine/core";
 import {
   IconMoodAngry,
   IconMoodAngryFilled,
@@ -17,6 +16,18 @@ import {
   SmileyColorType,
   SmileyVariantStyle,
 } from "@/components/Survey/Question/QuestionExtraProps/SmileyExtraProps.tsx";
+import { cn } from "@/lib/utils";
+
+function lighten(color: string, alpha: number): string {
+  if (color.startsWith("var(")) return `color-mix(in srgb, ${color}, white ${alpha * 100}%)`;
+  const h = color.replace("#", "");
+  if (h.length < 6) return color;
+  const light = (channel: number) => Math.round(channel + (255 - channel) * alpha);
+  const r = light(parseInt(h.slice(0, 2), 16));
+  const g = light(parseInt(h.slice(2, 4), 16));
+  const b = light(parseInt(h.slice(4, 6), 16));
+  return `rgb(${r}, ${g}, ${b})`;
+}
 
 export const getIconStyle = (
   color?: string,
@@ -60,8 +71,8 @@ export const getIconStyle = (
     }
   }
   return {
-    width: iconType === "full" ? rem(60) : rem(50),
-    height: iconType === "full" ? rem(60) : rem(50),
+    width: iconType === "full" ? "3.75rem" : "3.125rem",
+    height: iconType === "full" ? "3.75rem" : "3.125rem",
     color: colorString,
     marginTop: iconType === "full" ? "-8px" : "0px",
     paddingBottom: iconType === "full" ? "0px" : "4px",
@@ -78,15 +89,15 @@ export const getEmptyIcon = (value: number, color: string, iconStyle, response) 
     );
   } else if (variant === SmileyVariantStyle.Emojis) {
     return (
-      <Text size={value === response ? "3rem" : "2.3rem"} style={{ margin: "0px 4px 4px" }}>
+      <span className={cn(value === response ? "text-5xl" : "text-4xl", "mt-0 mb-1 mx-1")}>
         {getSmileyEmojies(value)}
-      </Text>
+      </span>
     );
   } else if (variant === SmileyVariantStyle.Custom) {
     return (
-      <Text size={value === response ? "3rem" : "2.3rem"} style={{ margin: "0px 4px 4px" }}>
+      <span className={cn(value === response ? "text-5xl" : "text-4xl", "mt-0 mb-1 mx-1")}>
         {emojies?.[value]}
-      </Text>
+      </span>
     );
   } else if (variant === SmileyVariantStyle.Filled) {
     switch (value) {
@@ -130,17 +141,9 @@ export const getFullIcon = (value: number, color: string, iconStyle) => {
       </div>
     );
   } else if (variant === SmileyVariantStyle.Emojis) {
-    return (
-      <Text size={"3rem"} style={{ margin: "-8px 4px 4px" }}>
-        {getSmileyEmojies(value)}
-      </Text>
-    );
+    return <span className="-mt-2 mx-1 mb-1 text-5xl">{getSmileyEmojies(value)}</span>;
   } else if (variant === SmileyVariantStyle.Custom) {
-    return (
-      <Text size={"3rem"} style={{ margin: "-8px 4px 4px" }}>
-        {emojies?.[value]}
-      </Text>
-    );
+    return <span className="-mt-2 mx-1 mb-1 text-5xl">{emojies?.[value]}</span>;
   } else if ([SmileyVariantStyle.Filled, SmileyVariantStyle.FilledOnHover].includes(variant)) {
     switch (value) {
       case 1:

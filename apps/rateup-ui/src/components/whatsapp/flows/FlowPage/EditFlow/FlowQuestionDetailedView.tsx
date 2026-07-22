@@ -431,20 +431,14 @@ function ElementEditor({
             {question.type !== QuestionType.Optin && (
               <>
                 <TextareaWithLengthTracker
-                  fw={800}
-                  fz="lg"
-                  styles={{
-                    input: {
-                      fontSize: "1.75rem",
-                      fontWeight: 700, // set custom font size for this TextInput
-                    },
+                  inputStyle={{
+                    fontSize: "1.75rem",
+                    fontWeight: 700, // set custom font size for this TextInput
                   }}
                   style={{
                     marginBottom: "20px", // add 30px bottom margin
                   }}
-                  variant="unstyled"
-                  autosize
-                  maxRows={3}
+                  className="max-h-24 overflow-y-auto border-none bg-transparent px-0 shadow-none"
                   placeholder={translations("Enter question title here")}
                   maxValue={getFlowTextLimit(WaFlowFormElementType.textSubHeading)}
                   {...form.getInputProps(`title.${selectedLanguage}`)}
@@ -454,17 +448,13 @@ function ElementEditor({
                 />
 
                 <TextareaWithLengthTracker
-                  variant="unstyled"
+                  className="max-h-48 overflow-y-auto border-none bg-transparent px-0 shadow-none"
                   placeholder={translations("Enter question description here")}
                   {...form.getInputProps(`description.${selectedLanguage}`)}
                   value={form.values.description[selectedLanguage]}
-                  autosize
-                  maxRows={6}
-                  styles={{
-                    input: {
-                      fontSize: "1.1rem",
-                      fontWeight: 400, // set custom font size for this TextInput
-                    },
+                  inputStyle={{
+                    fontSize: "1.1rem",
+                    fontWeight: 400, // set custom font size for this TextInput
                   }}
                   maxValue={getFlowTextLimit(WaFlowFormElementType.textBody)}
                   onBlur={() => {

@@ -1,5 +1,4 @@
-import { Flex } from "@mantine/core";
-import { IconTableExport } from "@tabler/icons-react";
+import { FileDown } from "lucide-react";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
@@ -8,12 +7,12 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useResponseAnalytics } from "@/backend/surveys/response/response.query";
 import { useAllResponseNPSForGraph } from "@/backend/surveys/surveys.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import OverallResponseGraphWebForm from "@/components/Graph/OverallResponseGraphWebForm.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { QuestionType, WaQuestions } from "@/types/enums.ts";
@@ -42,11 +41,10 @@ const ResultsOverviewWebForm = ({
     const { default: generatePDF, Margin } = await import("react-to-pdf");
     generatePDF(targetRef, {
       filename: `survey-analytics-${surveyId}.pdf`,
-      page: {
-        margin: Margin.SMALL,
-      },
+      page: { margin: Margin.SMALL },
     });
   };
+
   const { data: subscription } = useSubscription();
 
   const {
@@ -62,6 +60,7 @@ const ResultsOverviewWebForm = ({
         ? []
         : [ranges[0]?.startDate.toISOString(), ranges[0]?.endDate.toISOString()],
   });
+
   const [timePeriod, setTimePeriod] = useState("daily");
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const {
@@ -71,9 +70,7 @@ const ResultsOverviewWebForm = ({
   } = useAllResponseNPSForGraph(timePeriod, userTimeZone, surveyId, filterTeams);
 
   useEffect(() => {
-    if (ranges.length === 0) {
-      setRanges([{ key: "selection" }]);
-    }
+    if (ranges.length === 0) setRanges([{ key: "selection" }]);
   }, [ranges]);
 
   const [npsOverView, choiceWiseOverView] = useMemo(
@@ -96,48 +93,54 @@ const ResultsOverviewWebForm = ({
         <RateupLoader />
       ) : isError ? (
         <ErrorComponent refetch={refetch} isRefetching={isRefetching} />
+      ) : !npsOverView.length && !choiceWiseOverView.length ? (
+        <NothingFound
+          className="min-h-[70vh]"
+          text={translations("No Data available for Analysis")}
+        />
       ) : (
-        !npsOverView.length &&
-        !choiceWiseOverView.length && (
-          <NothingFound text={translations("No Data available for Analysis")} />
-        )
+        <>
+          {!flowId && <SurveyStatsWebForm surveyId={surveyId} />}
+
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <Button variant="outline" size="sm" onClick={handleExport}>
+                  <FileDown className="mr-1.5 size-4" />
+                  {translations("Export to PDF")}
+                </Button>
+                <CalenderIconDateRangePicker ranges={ranges} setRange={setRanges} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <div ref={targetRef} className="flex flex-col gap-6">
+            <HappyIndex surveyId={surveyId} />
+            <OverallResponseGraphWebForm
+              data={graphResponse}
+              timePeriod={timePeriod}
+              setTimePeriod={setTimePeriod}
+              isLoading={isrLoading || isrRefetching}
+            />
+            <SurveyQuestion
+              choiceWise={choiceWiseOverView}
+              NPS={npsOverView}
+              flowQuestions={flowQuestions}
+              questions={questions}
+              version={version}
+              surveyId={surveyId}
+              defaultLanguage={defaultLanguage}
+            />
+            <LargeTextResponseSummary
+              surveyId={surveyId}
+              questions={textAreaQuestions}
+              subscription={subscription}
+              currentSummary={aiResponseSummary}
+              version={version}
+            />
+          </div>
+        </>
       )}
-      {!flowId && <SurveyStatsWebForm surveyId={surveyId} />}
-      <PaperLayout p={"md"}>
-        <Flex justify={"space-between"}>
-          <RateupButtonPrimary
-            onClick={handleExport}
-            leftIcon={<IconTableExport size={"1rem"} />}
-            title="Export to Pdf"
-          />
-          <CalenderIconDateRangePicker ranges={ranges} setRange={setRanges} />
-        </Flex>
-      </PaperLayout>
-      <div ref={targetRef} className="flex flex-col gap-6">
-        <HappyIndex surveyId={surveyId} />
-        <OverallResponseGraphWebForm
-          data={graphResponse}
-          timePeriod={timePeriod}
-          setTimePeriod={setTimePeriod}
-          isLoading={isrLoading || isrRefetching}
-        />
-        <SurveyQuestion
-          choiceWise={choiceWiseOverView}
-          NPS={npsOverView}
-          flowQuestions={flowQuestions}
-          questions={questions}
-          version={version}
-          surveyId={surveyId}
-          defaultLanguage={defaultLanguage}
-        />
-        <LargeTextResponseSummary
-          surveyId={surveyId}
-          questions={textAreaQuestions}
-          subscription={subscription}
-          currentSummary={aiResponseSummary}
-          version={version}
-        />
-      </div>
     </div>
   );
 };

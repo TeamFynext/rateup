@@ -9,6 +9,7 @@ import {
   AddMembers,
   DeleteTeam,
   EditTeam,
+  TeamChannelAccess,
   TeamFeatureAccess,
 } from "@/components/settings/team.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -83,7 +84,10 @@ function TeamManagement() {
 
           {isSuperAdmin && (
             <TabsContent value="feature-access">
-              <TeamFeatureAccess selectedTeam={teamsData} />
+              <div className="space-y-6">
+                <TeamFeatureAccess selectedTeam={teamsData} />
+                <TeamChannelAccess selectedTeam={teamsData} />
+              </div>
             </TabsContent>
           )}
 

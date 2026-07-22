@@ -20,7 +20,6 @@ import {
 import { Ticket } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -31,7 +30,6 @@ import {
   useContactLabels,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
-import { useSubscription } from "@/backend/subscription/subscription.query";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
@@ -54,10 +52,8 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
-import { MessagePlatform } from "@/types/enums.ts";
-import { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
-import { hasFeature } from "@/utils/subscription/subscription.ts";
+import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 interface WaInboxContactDetailsProps {
   contact: any;
@@ -100,12 +96,9 @@ export default function WaInboxContactDetails({
   const { updateContactById, setSelectedContact } = useContactsStore();
   const deleteContactMutation = useContactDeleteMutation(groupId);
   const [editable, setEditable] = useState(false);
-  const platform = contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
-  const { data: subscription } = useSubscription();
-  const hasTicketFeature = useMemo(
-    () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
-    [subscription],
-  );
+  const platform = getContactPlatform(contact);
+  // Tickets are a free feature — always available.
+  const hasTicketFeature = true;
   const [openedCreateTicket, setOpenedCreateTicket] = useState(false);
   const openCreateTicket = () => setOpenedCreateTicket(true);
   const closeCreateTicket = () => setOpenedCreateTicket(false);

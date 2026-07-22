@@ -1,4 +1,3 @@
-import { Card, Center, Progress, RingProgress, Skeleton, Text, Title } from "@mantine/core";
 import {
   IconMoodAngry,
   IconMoodCry,
@@ -12,7 +11,55 @@ import {
 import { useContext } from "react";
 
 import { useHappyIndex } from "@/backend/surveys/response/response.query";
+import { Card } from "@/components/ui/card.tsx";
+import { Progress } from "@/components/ui/progress.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
+
+const HappinessRing = ({
+  percentage,
+  color,
+  size = 230,
+  thickness = 20,
+  children,
+}: {
+  percentage: number;
+  color: string;
+  size?: number;
+  thickness?: number;
+  children?: React.ReactNode;
+}) => {
+  const radius = (size - thickness) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (Math.min(Math.max(percentage, 0), 100) / 100) * circumference;
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#F1F3F5"
+          strokeWidth={thickness}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={thickness}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">{children}</div>
+    </div>
+  );
+};
 
 const HappyIndex = ({ surveyId }) => {
   const { filterTeams } = useContext(SurveyContext);
@@ -108,43 +155,25 @@ const HappyIndex = ({ surveyId }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
       {/* Happiness Index - 60% */}
-      <Card
-        shadow="sm"
-        radius="md"
-        className="p-4 border border-[#E2E5ED] col-span-1 lg:col-span-3"
-      >
-        <Title order={4}>Happiness Index</Title>
+      <Card className="col-span-1  p-4  lg:col-span-3">
+        <h4 className="text-lg font-semibold">Happiness Index</h4>
         <div className="flex flex-col gap-4 items-center px-12 py-4 md:flex-row lg:flex-row">
-          <RingProgress
-            size={230}
-            thickness={20}
-            sections={[
-              {
-                value: Number(data.happinessIndex ?? 0),
-                color: happyIndexStatusBg,
-              },
-            ]}
-            label={
-              <Center>
-                <div className="text-center flex flex-col justify-between items-center gap-2">
-                  <div>
-                    <div className="text-4xl font-bold">
-                      {(Number(data?.happinessIndex ?? 0) / 10).toFixed(1)}
-                    </div>
-                    <Text size="xs" c="dimmed">
-                      Out of 10
-                    </Text>
-                  </div>
-                  <div
-                    style={{ backgroundColor: happyIndexStatusBg }}
-                    className="text-white p-1 text-xs rounded-sm flex justify-center items-center"
-                  >
-                    {happinessIndexStatus}
-                  </div>
+          <HappinessRing percentage={Number(data.happinessIndex ?? 0)} color={happyIndexStatusBg}>
+            <div className="text-center flex flex-col justify-between items-center gap-2">
+              <div>
+                <div className="text-4xl font-bold">
+                  {(Number(data?.happinessIndex ?? 0) / 10).toFixed(1)}
                 </div>
-              </Center>
-            }
-          />
+                <span className="text-xs text-muted-foreground">Out of 10</span>
+              </div>
+              <div
+                style={{ backgroundColor: happyIndexStatusBg }}
+                className="text-white p-1 text-xs rounded-sm flex justify-center items-center"
+              >
+                {happinessIndexStatus}
+              </div>
+            </div>
+          </HappinessRing>
           <div className="flex flex-col gap-4 w-full">
             {moodList?.map(({ label, value, percentage, icon: Icon, color }) => (
               <div key={label} className="flex items-center gap-2 w-full">
@@ -153,22 +182,20 @@ const HappyIndex = ({ surveyId }) => {
                 </div>
                 <div className="flex w-full flex-col justify-center gap-2 items-start">
                   <div className="flex w-full justify-between">
-                    <Text size="xs" c={"#343A40"} style={{ fontWeight: 700 }}>
-                      {label}
-                    </Text>
+                    <span className="text-xs font-bold text-[#343A40]">{label}</span>
                     <div className="flex items-center justify-center gap-1">
-                      <Text size="xs" c="#7A8289">
-                        ({value ?? 0})
-                      </Text>
+                      <span className="text-xs text-[#7A8289]">({value ?? 0})</span>
                       <div className="bg-[#004F98] max-w-10 px-3 py-0.5 rounded-full flex items-center justify-center">
-                        <Text size="xs" c="white">
-                          {Math.round(percentage)}%
-                        </Text>
+                        <span className="text-xs text-white">{Math.round(percentage)}%</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 w-full">
-                    <Progress color={color} value={percentage} className="flex-1" />
+                    <Progress
+                      value={percentage}
+                      style={{ "--mood-color": color } as React.CSSProperties}
+                      className="flex-1 [&_[data-slot=progress-indicator]]:bg-[var(--mood-color)]"
+                    />
                   </div>
                 </div>
               </div>
@@ -178,12 +205,8 @@ const HappyIndex = ({ surveyId }) => {
       </Card>
 
       {/* NPS Overview  */}
-      <Card
-        shadow="sm"
-        radius="md"
-        className="p-4 border border-[#E2E5ED] col-span-1 lg:col-span-2"
-      >
-        <Title order={4}>NPS Overview</Title>
+      <Card className="col-span-1  p-4  lg:col-span-2">
+        <h4 className="text-lg font-semibold">NPS Overview</h4>
         <div className="flex flex-col items-center justify-center mt-4 gap-4">
           <NPSGaugeWithNeedle
             nps={data.nps}
@@ -310,21 +333,17 @@ const HappyIndexSkeleton = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
       {/* Happiness Index Skeleton */}
-      <Card
-        shadow="sm"
-        radius="md"
-        className="p-4 border border-[#E2E5ED] col-span-1 lg:col-span-3"
-      >
-        <Title order={4}>Happiness Index</Title>
+      <Card className="col-span-1 rounded-md border border-[#E2E5ED] p-4 shadow-sm lg:col-span-3">
+        <h4 className="text-lg font-semibold">Happiness Index</h4>
         <div className="flex gap-4 items-center px-12 py-4">
-          <Skeleton height={230} circle />
+          <Skeleton className="size-[230px] rounded-full" />
           <div className="flex flex-col gap-4 w-full">
             {Array.from({ length: 5 }).map((_, index) => (
               <div key={index} className="flex items-center gap-2 w-full">
-                <Skeleton height={45} width={45} radius="xl" />
+                <Skeleton className="size-[45px] rounded-full" />
                 <div className="flex w-full flex-col gap-2">
-                  <Skeleton height={8} width="60%" />
-                  <Skeleton height={8} width="100%" />
+                  <Skeleton className="h-2 w-[60%]" />
+                  <Skeleton className="h-2 w-full" />
                 </div>
               </div>
             ))}
@@ -333,21 +352,17 @@ const HappyIndexSkeleton = () => {
       </Card>
 
       {/* NPS Overview Skeleton */}
-      <Card
-        shadow="sm"
-        radius="md"
-        className="p-4 border border-[#E2E5ED] col-span-1 lg:col-span-2"
-      >
-        <Title order={4}>NPS Overview</Title>
+      <Card className="col-span-1 rounded-md border border-[#E2E5ED] p-4 shadow-sm lg:col-span-2">
+        <h4 className="text-lg font-semibold">NPS Overview</h4>
         <div className="flex flex-col items-center justify-center mt-4 gap-4">
-          <Skeleton width={220} height={140} />
+          <Skeleton className="h-[140px] w-[220px]" />
           <div className="flex justify-around w-full mt-4 gap-2">
             {Array.from({ length: 3 }).map((_, index) => (
               <div key={index} className="flex flex-col items-center gap-2">
-                <Skeleton circle height={30} width={30} />
-                <Skeleton height={12} width={60} />
-                <Skeleton height={24} width={40} />
-                <Skeleton height={12} width={80} />
+                <Skeleton className="size-[30px] rounded-full" />
+                <Skeleton className="h-3 w-[60px]" />
+                <Skeleton className="h-6 w-[40px]" />
+                <Skeleton className="h-3 w-[80px]" />
               </div>
             ))}
           </div>

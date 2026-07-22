@@ -1,7 +1,7 @@
-import { Box, FocusTrap, Input, Radio, Stack, useMantineTheme } from "@mantine/core";
 import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { useContext, useEffect, useRef, useState } from "react";
 
+import { Input } from "@/components/ui/input.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
@@ -10,8 +10,7 @@ import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 import { sampleChoices } from "@/utils/constants/forms.ts";
 
 import { SingleSelectCard } from "../SelectionCard/SingleSelectCard.tsx";
-
-import classes from "../TakeSurvey.module.css";
+import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -27,8 +26,9 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   const selectedFeature = features?.[selectedLanguage];
   const [isOtherInputFocusTrapActive, setIsOtherInputFocusTrapActive] = useState(false);
 
-  const theme = useMantineTheme();
+  const themePrimaryColor = useThemePrimaryColor();
   const otherInputContainerRef = useRef(null);
+  const otherInputRef = useRef<HTMLInputElement>(null);
 
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
@@ -59,9 +59,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
     if (value !== selectedFeature?.other?.title) {
       const res = options?.find((op) => op?.value === value);
       updateResponse(res);
-      const selectedEle = scope.current?.querySelector(
-        `.mantine-focus-auto[data-value="${value}"]`,
-      );
+      const selectedEle = scope.current?.querySelector(`[data-value="${value}"]`);
       if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
         if (selectedEle) {
           await animate(selectedEle, { opacity: [0, 1, 0, 1] }, { duration: 0.75 });
@@ -81,6 +79,12 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
     }
   }, [selectedOp]);
 
+  useEffect(() => {
+    if (isOtherInputFocusTrapActive) {
+      otherInputRef.current?.focus();
+    }
+  }, [isOtherInputFocusTrapActive]);
+
   if (selectedFeature?.other?.isEnabled) {
     data.push(selectedFeature?.other?.title);
   } else {
@@ -88,10 +92,10 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   }
 
   return (
-    <Stack w={"100%"} mr="sm" style={{ overflow: "hidden" }}>
-      <Radio.Group value={selectedOp} onChange={handleSelectedOp} ref={scope}>
-        <SingleSelectCard data={data} selectedValue={selectedOp} />
-      </Radio.Group>
+    <div className="mr-3 flex w-full flex-col gap-4 overflow-hidden">
+      <div ref={scope}>
+        <SingleSelectCard data={data} selectedValue={selectedOp} onChange={handleSelectedOp} />
+      </div>
       <AnimatePresence initial={false}>
         {selectedFeature?.other?.isEnabled && selectedOp === selectedFeature?.other?.title && (
           <motion.div
@@ -111,37 +115,28 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
               }
             }}
           >
-            <Box
-              className={classes.inputBox}
-              style={{
-                borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
-                boxShadow: `0 0 4px 4px rgba(0, 0, 0, 0.05rgba(0, 0, 0, 0.05) 0px 1px 0px,
-                rgba(0, 0, 0, 0.11) 0px 0px 8px)`,
-              }}
+            <div
+              className="w-full max-w-[500px] rounded-[var(--input-border-radius,8px)] border bg-[var(--input-background-color,white)] px-[var(--input-padding,12px)] py-1.5 text-[var(--input-text-color,black)] shadow-sm transition-colors duration-100"
+              style={{ borderColor: themePrimaryColor }}
             >
-              <FocusTrap active={isOtherInputFocusTrapActive}>
-                <Input
-                  placeholder={selectedFeature?.other?.placeholder}
-                  value={response?.other || ""}
-                  onChange={(e) =>
-                    !e.currentTarget.value?.length
-                      ? updateResponse(null)
-                      : updateResponse({ other: e.currentTarget.value })
-                  }
-                  variant="unstyled"
-                  classNames={{
-                    input: classes.input,
-                  }}
-                  data-autofocus
-                />
-              </FocusTrap>
-            </Box>
+              <Input
+                ref={otherInputRef}
+                placeholder={selectedFeature?.other?.placeholder}
+                value={response?.other || ""}
+                onChange={(e) =>
+                  !e.target.value?.length
+                    ? updateResponse(null)
+                    : updateResponse({ other: e.target.value })
+                }
+                className="h-auto w-full border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* using this div to scroll to bottom, If we use motion.div to scrollIntoView animation will not work properly. */}
       <div ref={bDivRef}></div>
-    </Stack>
+    </div>
   );
 }

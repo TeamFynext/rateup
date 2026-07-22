@@ -49,37 +49,37 @@ const FEATURES_WITH_SUBSCRIPTION: {
   {
     feature: TeamFeature.Contacts,
     label: "Contacts",
-    requiredSubscriptions: [sfpn.WhatsAppCampaign],
+    requiredSubscriptions: [sfpn.Whatsapp],
   },
   {
     feature: TeamFeature.Campaigns,
     label: "Campaigns",
-    requiredSubscriptions: [sfpn.WhatsAppCampaign],
+    requiredSubscriptions: [sfpn.Whatsapp],
   },
   {
     feature: TeamFeature.Flows,
     label: "Flows",
-    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppFlow],
+    requiredSubscriptions: [sfpn.Whatsapp],
   },
   {
     feature: TeamFeature.Chatbots,
     label: "Chatbots",
-    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppAutomation],
+    requiredSubscriptions: [sfpn.Whatsapp],
   },
   {
     feature: TeamFeature.Templates,
     label: "Templates",
-    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppTemplate],
+    requiredSubscriptions: [sfpn.Whatsapp],
   },
   {
     feature: TeamFeature.Automation,
     label: "Automation",
-    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppAutomation],
+    requiredSubscriptions: [sfpn.Whatsapp],
   },
   {
     feature: TeamFeature.Loyalty,
     label: "Loyalty",
-    requiredSubscriptions: [sfpn.Loyalty],
+    requiredSubscriptions: [sfpn.Whatsapp],
   },
   {
     feature: TeamFeature.WebForms,
@@ -89,7 +89,6 @@ const FEATURES_WITH_SUBSCRIPTION: {
   {
     feature: TeamFeature.Tickets,
     label: "Tickets",
-    requiredSubscriptions: [sfpn.Ticket],
   },
   { feature: TeamFeature.QrStudio, label: "QR Studio" },
   {

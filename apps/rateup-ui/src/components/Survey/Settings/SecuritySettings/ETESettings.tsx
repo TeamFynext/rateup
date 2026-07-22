@@ -1,4 +1,3 @@
-import { ActionIcon, Badge, Box, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { IconKey } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -7,18 +6,26 @@ import { toast } from "sonner";
 
 import { useAllResponses } from "@/backend/surveys/response/response.query";
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
-import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import { updateEndToEndEncryption } from "../updateSettings.ts";
 
-// end to end encryption settings module
 interface ETESettingsInterface {
   survey: Survey;
 }
-export default function ETESettings(props: ETESettingsInterface) {
-  const { survey } = props;
+
+export default function ETESettings({ survey }: ETESettingsInterface) {
   const { user } = useUser();
   const navigate = useNavigate();
   const [endtoendencryption, setEndToEndEncryption] = useState(survey?.isEncrypted);
@@ -26,101 +33,101 @@ export default function ETESettings(props: ETESettingsInterface) {
   const confirm = useConfirm();
   const editSurvey = useEditSurveyMutation(survey?.id);
   const { data: responses } = useAllResponses(survey?.id);
-  async function onSwitched(e) {
-    if (e.target.checked) {
-      if (!user?.encryptionKeys) {
-        toast.error(
-          translations(
-            "You need to generate encryptionKeys first , head on to settings to generate your keys",
-          ),
-        );
-      } else {
-        const shouldEnable = await confirm({
-          title: translations("End-to-End Encryption"),
-          description: translations(
-            "Are you sure you want to enable end-to-end encryption? Once enabled it cannot be disabled.",
-          ),
-          confirmText: translations("Confirm"),
-        });
 
-        if (!shouldEnable) return;
+  const hasResponses = responses?.map((r) => r?.responses?.length).some((v) => v > 0);
 
-        updateEndToEndEncryption(
-          setEndToEndEncryption,
-          user?.encryptionKeys?.publicKey,
-          editSurvey,
-        );
-      }
+  const isDisabled = (!!endtoendencryption && !!user?.encryptionKeys) || !!hasResponses;
+
+  async function onSwitched(checked: boolean) {
+    if (!checked) return;
+    if (!user?.encryptionKeys) {
+      toast.error(
+        translations(
+          "You need to generate encryptionKeys first , head on to settings to generate your keys",
+        ),
+      );
+      return;
     }
+    const shouldEnable = await confirm({
+      title: translations("End-to-End Encryption"),
+      description: translations(
+        "Are you sure you want to enable end-to-end encryption? Once enabled it cannot be disabled.",
+      ),
+      confirmText: translations("Confirm"),
+    });
+    if (!shouldEnable) return;
+    updateEndToEndEncryption(setEndToEndEncryption, user?.encryptionKeys?.publicKey, editSurvey);
   }
+
+  const switchTooltip = endtoendencryption
+    ? translations("Click here to disable End-to-End Encryption")
+    : translations("Click here to encrypt the response data");
+
   return (
-    <>
-      <Stack gap={0}>
-        <Group justify="space-between">
-          <Group>
-            <RateupSwitch
-              offMessage={translations("Click here to encrypt the response data")}
-              onMessage={translations("Click here to disable End-to-End Encryption")}
-              disabled={
-                (endtoendencryption && !!user?.encryptionKeys) ||
-                responses
-                  ?.map((responses) => responses?.responses?.length)
-                  .some((value) => value > 0)
-              }
-              checked={endtoendencryption}
-              onChange={onSwitched}
-            />
-            <Box className={"switch-heading-and-desc-container"}>
-              <h3>
-                <Group>
-                  {translations("End-to-End Encryption")}
-                  <Badge size="xs" variant="light" color={endtoendencryption ? "lime" : "red"}>
-                    {endtoendencryption ? "Enabled" : "Disabled"}
-                  </Badge>
-                </Group>
-              </h3>
-              <p>Encrypts the response data</p>
-            </Box>
-          </Group>
+    <TooltipProvider>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Tooltip>
+              <TooltipTrigger render={<span className="inline-flex" />}>
+                <Switch
+                  checked={!!endtoendencryption}
+                  onCheckedChange={onSwitched}
+                  disabled={isDisabled}
+                />
+              </TooltipTrigger>
+              <TooltipContent>{switchTooltip}</TooltipContent>
+            </Tooltip>
+
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                {translations("End-to-End Encryption")}
+                <Badge
+                  variant={endtoendencryption ? "secondary" : "destructive"}
+                  className={cn(
+                    "text-xs",
+                    endtoendencryption &&
+                      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+                  )}
+                >
+                  {endtoendencryption ? "Enabled" : "Disabled"}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {translations("Encrypts the response data")}
+              </p>
+            </div>
+          </div>
 
           {!user?.encryptionKeys && (
-            <Tooltip
-              position="left-end"
-              label={translations(
-                "You need to generate encryptionKeys first , head on to settings to generate your keys",
-              )}
-            >
-              <ActionIcon
-                color="red"
-                onClick={() =>
-                  navigate({
-                    to: "/dashboard/settings/account",
-                  })
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => navigate({ to: "/dashboard/settings/account" })}
+                  />
                 }
               >
-                <IconKey />
-              </ActionIcon>
+                <IconKey className="size-4" />
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                {translations(
+                  "You need to generate encryptionKeys first , head on to settings to generate your keys",
+                )}
+              </TooltipContent>
             </Tooltip>
           )}
-        </Group>
-        <Text
-          mt={"0.3125rem"}
-          c={
-            responses
-              ?.map((responses) => responses?.responses?.length)
-              .some((value) => value > 0) && !survey?.isEncrypted
-              ? "red"
-              : "green"
-          }
-          size="xs"
-          fw={900}
-        >
-          {responses?.map((responses) => responses?.responses?.length).some((value) => value > 0) &&
-          !survey?.isEncrypted
-            ? translations("Reset responses to enable end to end encryption")
-            : null}
-        </Text>
-      </Stack>
-    </>
+        </div>
+
+        {hasResponses && !survey?.isEncrypted && (
+          <p className="text-xs font-black text-destructive">
+            {translations("Reset responses to enable end to end encryption")}
+          </p>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }

@@ -1,10 +1,10 @@
-import { Box, Flex, Image, MantineProvider, Radio, ScrollAreaAutosize, Stack } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
-import classNames from "classnames/bind";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import AutosaveInput from "@/components/input/AutosaveInput/index.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import { CreditsCard } from "../../../../../Card/CreditsCard.tsx";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils.ts";
@@ -17,12 +17,7 @@ import {
 import ThemeTitle from "../../ThemeTitle.tsx";
 import { getInlineStyleFromStyleObj } from "../welcomepage/index.tsx";
 
-import surveyThemeStyles from "../../../SurveyTheme.module.css";
-import styles from "./languagePage.module.css";
 import startBtnWrapperStyles from "@/components/Survey/SurveyTheme/SurveyTheme.module.css";
-
-const cx = classNames.bind(styles);
-const surveyThemeStylesCx = classNames.bind(surveyThemeStyles);
 
 function LanguagePage({ survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
@@ -70,7 +65,6 @@ function LanguagePage({ survey }) {
     };
   }
   const buttonStyles = requiredThemeObj?.button?.styles;
-  const inputPrimaryColor = requiredThemeObj?.input?.primaryColor;
 
   const {
     titleText: title,
@@ -123,60 +117,48 @@ function LanguagePage({ survey }) {
 
   return (
     <CreditsCard enableCredits={isUnsplashImage} url={backgroundImageSrc}>
-      <Flex
-        className={cx("preview-language-page-container", {
-          "org-logo-not-present": !isOrgLogoPresent,
-        })}
+      <div
+        className={cn(
+          "flex h-full flex-col gap-4 bg-no-repeat bg-center bg-cover",
+          isOrgLogoPresent ? "pt-4" : "pt-10",
+        )}
         style={{
           backgroundColor,
           backgroundImage: `url(${backgroundImageSrc})`,
         }}
       >
         {isOrgLogoPresent && (
-          <Flex className={cx("logo-container")}>
-            <Image className={cx("logo")} src={logoUrl} style={logoStyles} fit="contain" />
-          </Flex>
+          <div className="flex justify-center">
+            <img
+              src={logoUrl}
+              style={logoStyles}
+              alt="logo"
+              className="max-w-full object-contain"
+            />
+          </div>
         )}
 
-        <Stack className={cx("header-radio-grp-start-btn-container")}>
-          <Stack className={cx("header")}>
-            <Stack className={surveyThemeStylesCx("titleBox")}>
+        <div className="flex flex-1 basis-0 flex-col items-center justify-center gap-8 overflow-hidden px-10">
+          <div className="flex w-full flex-col items-stretch gap-4">
+            <div className={startBtnWrapperStyles["titleBox"]}>
               <ThemeTitle
                 value={newTitle}
                 onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
                 styles={{ color: titleStyles?.color }}
               />
-            </Stack>
-          </Stack>
+            </div>
+          </div>
 
-          <Flex className={cx("languages-list-radio-grp-container")}>
-            <ScrollAreaAutosize mah={"100%"} offsetScrollbars scrollbarSize={10}>
-              <MantineProvider
-                getRootElement={() => {
-                  return typeof window === "undefined"
-                    ? undefined
-                    : document.querySelector(`.${cx("languages-list-radio-grp-container")}`);
-                }}
-                cssVariablesSelector={`.${cx("languages-list-radio-grp-container")}`}
-                theme={{
-                  colors: {
-                    // @ts-ignore
-                    primaryColor: Array(10).fill(inputPrimaryColor),
-                  },
-                  primaryColor: "primaryColor",
-                }}
-              >
-                <Radio.Group value={lang} onChange={setLang} miw={"200px"}>
-                  <SingleSelectCard data={languages} selectedValue={lang} sizeTrim />
-                </Radio.Group>
-              </MantineProvider>
-            </ScrollAreaAutosize>
-          </Flex>
+          <div className="flex shrink items-center justify-center overflow-hidden">
+            <ScrollArea className="max-h-full">
+              <SingleSelectCard data={languages} selectedValue={lang} onChange={setLang} sizeTrim />
+            </ScrollArea>
+          </div>
 
-          <Flex className={`${startBtnWrapperStyles["titleBox"]} ${cx("start-btn-wrapper")}`}>
-            <Box className={`${cx("autosave-input-right-chevron-icon-container")}`}>
+          <div className={cn(startBtnWrapperStyles["titleBox"], "flex justify-center")}>
+            <div className="relative">
               <AutosaveInput
-                className={`${startBtnWrapperStyles["start-btn-input-div"]} ${cx("start-btn-auto-save-input-div")}`}
+                className={startBtnWrapperStyles["start-btn-input-div"]}
                 name="startBtn"
                 value={startBtnLabel}
                 onSave={handleSaveTitleSubtitleStartTextSave}
@@ -193,14 +175,14 @@ function LanguagePage({ survey }) {
                 }}
               />
               <IconChevronRight
-                className={cx("start-btn-right-chevron")}
-                color={buttonStyles.color}
-                size={"1.5rem"}
+                className="absolute right-[0.625rem] top-[calc(50%-0.75rem)]"
+                color={buttonStyles?.color}
+                size="1.5rem"
               />
-            </Box>
-          </Flex>
-        </Stack>
-      </Flex>
+            </div>
+          </div>
+        </div>
+      </div>
     </CreditsCard>
   );
 }

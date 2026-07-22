@@ -1,21 +1,21 @@
-import {
-  Accordion,
-  Box,
-  Button,
-  Center,
-  Checkbox,
-  Divider,
-  Flex,
-  Group,
-  Overlay,
-  ScrollArea,
-  Stack,
-} from "@mantine/core";
+import { IconInfoCircle } from "@tabler/icons-react";
 import { produce } from "immer";
 import { difference } from "lodash";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useSurveyUpdateMutation } from "@/backend/surveys/surveys.query";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion.tsx";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
 
 import { getSurveyThemeKeyOf, supportedPageEditors } from "../../SurveyTheme.constants";
 import { ThemeTabEnum } from "../../SurveyTheme.enums";
@@ -28,9 +28,6 @@ import PageThemeSaveBtn from "../PageThemeSaveButton/indext.tsx";
 import SaveButton from "../SaveButton/index.tsx";
 import ThemeSelector from "../ThemeSelector/index.tsx";
 
-import surveyThemeStyles from "../../SurveyTheme.module.css";
-import styles from "./StylesComponent.module.css";
-
 function StylesComponent({
   survey,
   isThemeObjBeingEditedDefaultTheme,
@@ -40,7 +37,9 @@ function StylesComponent({
   themeSelectorState,
   setThemeSelectorState,
   isAllThemesFetchPending,
+  onSave = onClose,
 }) {
+  const { t: translations } = useTranslation();
   const selectedPageTab = useSelectedPageTab();
   const openEditors = useOpenEditors();
   const setOpenEditors = useSetOpenEditors();
@@ -57,135 +56,133 @@ function StylesComponent({
   const surveyUpdateMutation = useSurveyUpdateMutation(survey?.id);
 
   const handleUseSurveyThemeCheckboxChange = useCallback(
-    async (event) => {
-      const value = event.target.checked;
+    async (checked: boolean) => {
       const webSurveyPagesTheme = survey?.webSurveyPagesTheme;
-      const newWebSurveyPagesTheme = produce(webSurveyPagesTheme, (draft) => {
-        draft[surveyThemeKey]["useSurveyTheme"] = value;
-      });
+      const newWebSurveyPagesTheme = produce(
+        webSurveyPagesTheme,
+        (draft: typeof webSurveyPagesTheme) => {
+          draft[surveyThemeKey]["useSurveyTheme"] = checked;
+        },
+      );
 
       await surveyUpdateMutation.mutateAsync({
         surveyId: survey?.id,
-        data: {
-          webSurveyPagesTheme: newWebSurveyPagesTheme,
-        },
+        data: { webSurveyPagesTheme: newWebSurveyPagesTheme },
       });
     },
     [survey],
   );
 
   return (
-    <Stack className={styles["styles-component-root-div"]}>
+    <div className="flex h-full flex-col gap-[0.875rem]">
       {shouldDisplayThemeSelector && (
         <>
           <ThemeSelector
-            className={styles["theme-selector-div"]}
+            className="flex flex-col flex-wrap justify-start gap-[0.625rem] p-[0.875rem] pb-0"
             allThemesArr={allThemesArr}
             themeSelectorState={themeSelectorState}
             setThemeSelectorState={setThemeSelectorState}
             isAllThemesFetchPending={isAllThemesFetchPending}
             survey={survey}
           />
-          <Divider />
+
+          {isThemeObjBeingEditedDefaultTheme && (
+            <Alert className="mx-3.5 w-auto">
+              <IconInfoCircle />
+              <AlertDescription>
+                {translations(
+                  "The Default Theme can't be edited. Create a new theme to customise it.",
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+          <Separator />
         </>
       )}
 
       {!isSurveyPageTab && (
         <>
-          <Box className={styles["use-survey-theme-checkbox-container"]}>
-            <Checkbox
-              className={styles["use-survey-theme-checkbox"]}
-              checked={selectedPageUseSurveyThemeValue}
-              label="Use Survey Theme"
-              size="1.25rem"
-              onChange={handleUseSurveyThemeCheckboxChange}
-            />
-          </Box>
-          <Divider />
+          <div className="px-[1.1875rem] pt-[0.875rem]">
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <Checkbox
+                checked={selectedPageUseSurveyThemeValue}
+                onCheckedChange={handleUseSurveyThemeCheckboxChange}
+              />
+              Use Survey Theme
+            </label>
+          </div>
+          <Separator />
         </>
       )}
 
-      <ScrollArea
-        type="hover"
-        className={`${styles["styles-component-div"]} styles-component-div`}
-        scrollbarSize={10}
-      >
-        {((isSurveyPageTab && isThemeObjBeingEditedDefaultTheme) || shouldUseSurveyTheme) && (
-          <Overlay className={surveyThemeStyles["overlay"]} zIndex={198}>
-            {isSurveyPageTab && isThemeObjBeingEditedDefaultTheme && (
-              <Center
-                className={styles["default-theme-not-editable-overlay-message-container-root-div"]}
-              >
-                <Flex className={styles["overlay-message-container"]}>
-                  <p className={styles["overlay-message-p"]}>
-                    Default themes are not editable. Choose another theme or create a new one.
-                  </p>
-                </Flex>
-              </Center>
-            )}
-          </Overlay>
-        )}
-        <Accordion
-          className={styles["accordion-root-div"]}
-          multiple
-          onChange={(valuesArr) => {
-            if (openEditors?.length === supportedPageEditors[selectedPageTab]?.length) {
-              const editorsObjArr = supportedPageEditors[selectedPageTab];
-              const allValues = editorsObjArr?.map(({ value }) => value);
-              const diff = difference(allValues, valuesArr);
-              setOpenEditors(diff);
-              return;
-            }
-            const lastEleIndex = valuesArr.length - 1;
-            if (lastEleIndex > 0) {
-              setOpenEditors(valuesArr.splice(lastEleIndex, 1));
-              return;
-            }
-            setOpenEditors(valuesArr);
-          }}
-          value={openEditors}
-        >
-          {editorComponents?.map(({ id, Component, value, label }) => {
-            if (Component) {
-              return (
-                <Accordion.Item key={selectedPageTab + id} value={value}>
-                  <Accordion.Control>{label}</Accordion.Control>
-                  <Accordion.Panel>
-                    <Component />
-                  </Accordion.Panel>
-                </Accordion.Item>
-              );
-            }
-          })}
-        </Accordion>
+      <ScrollArea className="flex flex-1 flex-col px-[0.875rem]">
+        <div className="relative">
+          <Accordion
+            value={openEditors}
+            onValueChange={(valuesArr) => {
+              if (openEditors?.length === supportedPageEditors[selectedPageTab]?.length) {
+                const editorsObjArr = supportedPageEditors[selectedPageTab];
+                const allValues = editorsObjArr?.map(({ value }) => value);
+                const diff = difference(allValues, valuesArr);
+                setOpenEditors(diff);
+                return;
+              }
+              const lastEleIndex = valuesArr.length - 1;
+              if (lastEleIndex > 0) {
+                setOpenEditors(valuesArr.splice(lastEleIndex, 1));
+                return;
+              }
+              setOpenEditors(valuesArr);
+            }}
+          >
+            {editorComponents?.map(({ id, Component, value, label }) => {
+              if (Component) {
+                return (
+                  <AccordionItem key={selectedPageTab + id} value={value}>
+                    <AccordionTrigger>{label}</AccordionTrigger>
+                    <AccordionContent>
+                      <Component />
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              }
+            })}
+          </Accordion>
+        </div>
       </ScrollArea>
-      <Divider />
-      <Group className={styles["close-save-btns-container"]}>
-        <Box className={styles["close-btn-div"]}>
-          <Button className={styles["close-btn"]} onClick={onClose} variant="outline">
+
+      <Separator />
+
+      <div className="relative flex justify-center px-[0.875rem] pb-[0.875rem]">
+        <div className="flex-[0_1_auto]">
+          <Button
+            onClick={onClose}
+            variant="outline"
+            className="h-auto w-full rounded-full px-4 py-2 text-xs leading-normal"
+          >
             Close
           </Button>
-        </Box>
+        </div>
 
         {isSurveyPageTab && (
           <SaveButton
-            className={styles["save-btn-div"]}
+            className="w-auto"
             survey={survey}
             isThemeObjBeingEditedDefaultTheme={isThemeObjBeingEditedDefaultTheme}
             themeObjBeingEdited={themeObjBeingEdited}
-            onSave={onClose}
+            onSave={onSave}
           />
         )}
 
         {!isSurveyPageTab && (
           <PageThemeSaveBtn
-            className={styles["page-theme-save-btn"]}
+            className="h-auto w-auto rounded-full px-4 py-2 text-xs leading-normal"
             disabled={shouldUseSurveyTheme}
             survey={survey}
           />
         )}
-      </Group>
-    </Stack>
+      </div>
+    </div>
   );
 }
 

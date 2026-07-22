@@ -1,14 +1,20 @@
-import { Box, Group, SimpleGrid, Stack } from "@mantine/core";
+import { IconExternalLink } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
+type RedirectError = { url: string; time: string };
 
-import { RateupButtonBlue } from "../../../Button/RateupButtons.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 import {
-  ContainedNumberInput,
-  ContainedTextField,
-} from "../../../input/ContainedInput/ContainedInput.tsx";
-import PaperLayout from "../../../styled/Layouts/PaperLayout.tsx";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
+
 import { updateRedirect } from "../updateSettings.ts";
 
 function RedirectSettings({
@@ -23,6 +29,7 @@ function RedirectSettings({
   debounced,
 }) {
   const { t: translations } = useTranslation();
+
   function validateUrl(url: string) {
     try {
       if (url === "/") return false;
@@ -32,116 +39,138 @@ function RedirectSettings({
       return true;
     }
   }
+
   const areInputsEnabled = !survey?.kioskMode && (redirect?.enable ?? false);
 
-  if (enabledModules.includes("redirect")) {
-    return (
-      <PaperLayout className={`section-div`}>
-        <Group>
-          <RateupSwitch
-            offMessage={translations("Click here to enable Redirect option")}
-            onMessage={translations("Click here to disable Redirect option")}
-            checked={redirect?.enable ?? false}
-            onChange={() => updateRedirect(setRedirect, editSurvey)}
-            disabled={kioskMode}
-          />
-          <Box className={"switch-heading-and-desc-container"}>
-            <h3>{translations("Redirect")}</h3>
-            <p>
+  if (!enabledModules.includes("redirect")) return null;
+
+  const switchTooltip = redirect?.enable
+    ? translations("Click here to disable Redirect option")
+    : translations("Click here to enable Redirect option");
+
+  return (
+    <TooltipProvider>
+      <Card>
+        <CardHeader className="flex flex-row items-center gap-2.25">
+          <IconExternalLink className="size-4 text-primary" />
+          <CardTitle className="font-nunito text-[15px] font-extrabold">
+            {translations("Redirect")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5">
+            <Tooltip>
+              <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
+                <Switch
+                  checked={redirect?.enable ?? false}
+                  onCheckedChange={() => updateRedirect(setRedirect, editSurvey)}
+                  disabled={kioskMode}
+                />
+              </TooltipTrigger>
+              <TooltipContent>{switchTooltip}</TooltipContent>
+            </Tooltip>
+            <span className="text-sm font-medium">{translations("Redirect")}</span>
+            <div />
+            <p className="text-xs text-muted-foreground">
               {kioskMode
                 ? translations("Not available since KioskMode is Enabled")
                 : translations("Redirect to a specific url after the user completes the survey")}
             </p>
-          </Box>
-        </Group>
-        <Stack>
-          <SimpleGrid cols={2}>
-            <ContainedTextField
-              disabled={!areInputsEnabled}
-              withAsterisk
-              placeholder={translations("Target URL for redirection")}
-              required
-              label={translations("Redirect Url")}
-              defaultValue={redirect?.url}
-              onChange={(e) => {
-                if (e.target.value?.trim()?.length === 0) {
-                  return setRedirectError((prev) => ({
-                    ...prev,
-                    url: translations("Url should not be empty"),
-                  }));
-                } else if (validateUrl(e.target.value.trim())) {
-                  return setRedirectError((prev) => ({
-                    ...prev,
-                    url: translations("Enter the Url in Correct format or / for RateUp homepage"),
-                  }));
-                }
-                setRedirectError((prev) => ({
-                  ...prev,
-                  url: "",
-                }));
-                const data = {
-                  ...redirect,
-                  url: e.target.value,
-                };
-                setRedirect(data);
-              }}
-              error={redirectError.url}
-            />
-            <ContainedNumberInput
-              disabled={!areInputsEnabled}
-              withAsterisk
-              placeholder={translations("time in seconds")}
-              required
-              label={translations("Redirect After (in seconds)")}
-              defaultValue={redirect?.time}
-              onChange={(e: number) => {
-                if (e < 2 || e > 60) {
-                  return setRedirectError((prev) => ({
-                    ...prev,
-                    time: translations("Time must be between 2-60"),
-                  }));
-                }
-                setRedirectError((prev) => ({
-                  ...prev,
-                  time: "",
-                }));
-                const data = {
-                  ...redirect,
-                  time: e,
-                };
-                updateRedirect(setRedirect, editSurvey, data);
-              }}
-              error={redirectError.time}
-            />
-          </SimpleGrid>
-          <Group justify="center" mt={"md"}>
-            <RateupButtonBlue
-              title={
-                survey?.notificationEmail?.length
-                  ? translations("Edit Redirect")
-                  : translations("Save Redirect")
-              }
-              radius={"xl"}
+          </div>
+
+          <FieldGroup>
+            <div className="grid grid-cols-2 gap-3">
+              <Field data-invalid={!!redirectError?.url}>
+                <FieldLabel>
+                  {translations("Redirect Url")} <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Input
+                  disabled={!areInputsEnabled}
+                  placeholder={translations("Target URL for redirection")}
+                  defaultValue={redirect?.url}
+                  aria-invalid={!!redirectError?.url}
+                  onChange={(e) => {
+                    const val = e.target.value.trim();
+                    if (val.length === 0) {
+                      return setRedirectError((prev: RedirectError) => ({
+                        ...prev,
+                        url: translations("Url should not be empty"),
+                      }));
+                    }
+                    if (validateUrl(val)) {
+                      return setRedirectError((prev: RedirectError) => ({
+                        ...prev,
+                        url: translations(
+                          "Enter the Url in Correct format or / for RateUp homepage",
+                        ),
+                      }));
+                    }
+                    setRedirectError((prev: RedirectError) => ({ ...prev, url: "" }));
+                    setRedirect({ ...redirect, url: e.target.value });
+                  }}
+                />
+                {redirectError?.url && (
+                  <FieldDescription className="text-destructive">
+                    {redirectError.url}
+                  </FieldDescription>
+                )}
+              </Field>
+
+              <Field data-invalid={!!redirectError?.time}>
+                <FieldLabel>
+                  {translations("Redirect After (in seconds)")}{" "}
+                  <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Input
+                  type="number"
+                  disabled={!areInputsEnabled}
+                  placeholder={translations("time in seconds")}
+                  defaultValue={redirect?.time}
+                  min={2}
+                  max={60}
+                  aria-invalid={!!redirectError?.time}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (val < 2 || val > 60) {
+                      return setRedirectError((prev: RedirectError) => ({
+                        ...prev,
+                        time: translations("Time must be between 2-60"),
+                      }));
+                    }
+                    setRedirectError((prev: RedirectError) => ({ ...prev, time: "" }));
+                    updateRedirect(setRedirect, editSurvey, { ...redirect, time: val });
+                  }}
+                />
+                {redirectError?.time && (
+                  <FieldDescription className="text-destructive">
+                    {redirectError.time}
+                  </FieldDescription>
+                )}
+              </Field>
+            </div>
+          </FieldGroup>
+
+          <div className="flex justify-end">
+            <Button
+              size="sm"
               disabled={
-                redirectError?.time?.length !== 0 ||
-                redirectError?.url?.length !== 0 ||
-                !areInputsEnabled
+                !!redirectError?.time?.length || !!redirectError?.url?.length || !areInputsEnabled
               }
               onClick={() => {
                 if (debounced && !kioskMode && redirect?.enable) {
-                  const data = {
-                    ...redirect,
-                    url: debounced,
-                  };
-                  updateRedirect(setRedirect, editSurvey, data);
+                  updateRedirect(setRedirect, editSurvey, { ...redirect, url: debounced });
                 }
               }}
-            />
-          </Group>
-        </Stack>
-      </PaperLayout>
-    );
-  }
+            >
+              {survey?.notificationEmail?.length
+                ? translations("Edit Redirect")
+                : translations("Save Redirect")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
+  );
 }
 
 export default RedirectSettings;

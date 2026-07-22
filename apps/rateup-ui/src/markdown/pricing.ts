@@ -148,17 +148,13 @@ ${
     : ""
 }
 
-${
-  plan.features?.ticket?.active
-    ? `
+${`
 #### Support Features
 - Shared Inbox
 - Team Collaboration
 - Ticketing System
 - Multi-Agent Support
-`
-    : ""
-}
+`}
 
 `;
   })

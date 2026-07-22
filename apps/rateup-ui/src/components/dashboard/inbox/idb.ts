@@ -1,6 +1,8 @@
 import { openDB } from "idb";
 import { isEqual } from "lodash";
 
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
+
 import type { ContactWithUpdatedAt } from "./store.ts";
 
 const DB_NAME = "chat_contacts_db";
@@ -9,13 +11,22 @@ const STORE_FILTERS = "contacts_by_filter";
 const STORE_MESSAGES = "messages";
 
 async function getDB() {
-  return openDB(DB_NAME, 4, {
-    upgrade(db) {
+  // v5: Inbox Tickets v2 re-keyed the cached rows from contact id to ticket
+  // (conversation) id. Entries written by v4 are keyed by contact and would
+  // collapse a contact's tickets into one row, so that store is dropped on upgrade.
+  return openDB(DB_NAME, 5, {
+    upgrade(db, oldVersion) {
+      if (oldVersion < 5 && db.objectStoreNames.contains(STORE_GLOBAL)) {
+        db.deleteObjectStore(STORE_GLOBAL);
+      }
+      if (oldVersion < 5 && db.objectStoreNames.contains(STORE_FILTERS)) {
+        db.deleteObjectStore(STORE_FILTERS);
+      }
       if (!db.objectStoreNames.contains(STORE_GLOBAL)) {
-        db.createObjectStore(STORE_GLOBAL); // key = contact.id
+        db.createObjectStore(STORE_GLOBAL); // key = getRowKey(row) — the ticket id
       }
       if (!db.objectStoreNames.contains(STORE_FILTERS)) {
-        db.createObjectStore(STORE_FILTERS); // key = filterKey, value = contactIds[]
+        db.createObjectStore(STORE_FILTERS); // key = filterKey, value = rowKeys[]
       }
       if (!db.objectStoreNames.contains(STORE_MESSAGES)) {
         const store = db.createObjectStore(STORE_MESSAGES, { keyPath: "id" });
@@ -28,7 +39,7 @@ async function getDB() {
 export async function saveContactToDB(contact: ContactWithUpdatedAt) {
   if (!contact) return;
   const db = await getDB();
-  await db.put(STORE_GLOBAL, contact, contact.id);
+  await db.put(STORE_GLOBAL, contact, getRowKey(contact));
 }
 
 export async function saveContactsToDB(contacts: ContactWithUpdatedAt[]) {
@@ -36,7 +47,7 @@ export async function saveContactsToDB(contacts: ContactWithUpdatedAt[]) {
   const db = await getDB();
   const tx = db.transaction(STORE_GLOBAL, "readwrite");
   for (const c of contacts) {
-    tx.store.put(c, c.id);
+    tx.store.put(c, getRowKey(c));
   }
   await tx.done;
 }

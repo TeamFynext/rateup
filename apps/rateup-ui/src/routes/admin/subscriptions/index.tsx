@@ -142,24 +142,28 @@ function SubscriptionPage() {
         const features = subscription.features;
         const [opened, { open, close }] = useDisclosure(false);
 
+        // Tickets/menu are no longer subscription-managed; hide them from the badges too.
+        const HIDDEN_FEATURES = ["menu", "ticket"];
+        const activeFeatures = features
+          ? Object.keys(features).filter(
+              (feature) => features[feature]?.active && !HIDDEN_FEATURES.includes(feature),
+            )
+          : [];
+
         return (
           <>
             <div className="flex flex-wrap gap-1 max-w-[300px] cursor-pointer" onClick={open}>
-              {features &&
-                Object.keys(features)
-                  .filter((feature) => features[feature].active)
-                  .slice(0, 3)
-                  .map((feature: SubscriptionFeaturePathName) => (
-                    <FeatureBadge key={feature} featurePathName={feature} />
-                  ))}
-              {features &&
-                Object.keys(features).filter((feature) => features[feature].active).length > 3 && (
-                  <Badge variant="secondary" className="text-xs">
-                    +
-                    {Object.keys(features).filter((feature) => features[feature].active).length - 3}{" "}
-                    more
-                  </Badge>
-                )}
+              {activeFeatures.slice(0, 3).map((feature) => (
+                <FeatureBadge
+                  key={feature}
+                  featurePathName={feature as SubscriptionFeaturePathName}
+                />
+              ))}
+              {activeFeatures.length > 3 && (
+                <Badge variant="secondary" className="text-xs">
+                  +{activeFeatures.length - 3} more
+                </Badge>
+              )}
             </div>
             <SubscriptionEditorModal opened={opened} onClose={close} subscription={subscription} />
           </>

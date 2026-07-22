@@ -19,6 +19,41 @@ import { WaMessageClosedStatus } from "../constants.ts";
 
 dayjs.extend(utc);
 
+/**
+ * Resolve the channel (WhatsApp / Instagram / Facebook / Webchat) a conversation
+ * lives on. `lastMessage.sourcePlatform` alone is unreliable: the last message can
+ * be an INTERNAL note (private or system message), whose `sourcePlatform` is
+ * "INTERNAL" — not the real channel — and "INTERNAL" is truthy so a plain
+ * `|| WHATSAPP` fallback never fires. Resolve in order of confidence:
+ *   1. the last message, when it is a real channel message
+ *   2. the most recent non-internal message the row already carries
+ *   3. the contact's channel identity (igsId → Instagram, psid → Facebook)
+ *   4. WhatsApp as the default
+ */
+export function getContactPlatform(
+  contact?: {
+    lastMessage?: { sourcePlatform?: MessagePlatform | string | null } | null;
+    messages?: Array<
+      { sourcePlatform?: MessagePlatform | string | null } | null | undefined
+    > | null;
+    igsId?: string | null;
+    psid?: string | null;
+  } | null,
+): MessagePlatform {
+  const asChannel = (p?: MessagePlatform | string | null): MessagePlatform | undefined =>
+    p && p !== "INTERNAL" ? (p as MessagePlatform) : undefined;
+
+  return (
+    asChannel(contact?.lastMessage?.sourcePlatform) ??
+    asChannel(contact?.messages?.find((m) => asChannel(m?.sourcePlatform))?.sourcePlatform) ??
+    (contact?.igsId
+      ? MessagePlatform.INSTAGRAM
+      : contact?.psid
+        ? MessagePlatform.FACEBOOK
+        : MessagePlatform.WHATSAPP)
+  );
+}
+
 export interface ParsedWaMessageReturn {
   timeStamp: string;
   messageType: string;

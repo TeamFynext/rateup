@@ -1,5 +1,3 @@
-import { Group } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { useCallback, useState } from "react";
 
 import { useSurveyThemeStateDispatch } from "../../SurveyThemeContext.tsx";
@@ -7,8 +5,6 @@ import ComboBoxComponent from "./ComboBoxComponent/index.tsx";
 import { getOptions } from "./constants.tsx";
 import CreateNewThemeModal from "./CreateNewThemeModal.tsx";
 import RenameThemeModal from "./RenameThemeModal.tsx";
-
-import styles from "./ThemeSelector.module.css";
 
 function ThemeSelector({
   className = "",
@@ -20,8 +16,7 @@ function ThemeSelector({
 }) {
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
-  const [isRenameThemeModalOpened, { open: openRenameThemeModal, close: closeRenameThemeModal }] =
-    useDisclosure();
+  const [isRenameThemeModalOpened, setIsRenameThemeModalOpened] = useState(false);
   const [selectedThemeIdToBeRenamed, setSelectedThemeIdToBeRename] = useState(null);
   const [selectedThemesThemeName, setSelectedThemesThemeName] = useState("");
 
@@ -46,7 +41,7 @@ function ThemeSelector({
         const { name = "" } = themeObj;
         setSelectedThemeIdToBeRename(themeId);
         setSelectedThemesThemeName(name);
-        openRenameThemeModal();
+        setIsRenameThemeModalOpened(true);
       }
     },
     [allThemesArr],
@@ -55,15 +50,16 @@ function ThemeSelector({
   const handleCloseRenameThemeModal = useCallback(() => {
     setSelectedThemeIdToBeRename(null);
     setSelectedThemesThemeName("");
-    closeRenameThemeModal();
+    setIsRenameThemeModalOpened(false);
   }, []);
 
   return (
-    <Group className={className}>
+    <div className={`flex items-center gap-2 ${className}`}>
       <ComboBoxComponent
-        className={`${styles["choose-theme-dropdown"]} choose-theme-dropdown`}
+        className={`flex-1 choose-theme-dropdown`}
         classNames={{
-          option: styles["choose-theme-dropdown-option"],
+          option:
+            "w-full [&>div]:w-full hover:bg-gray-50 data-[combobox-active=true]:bg-primary data-[combobox-active=true]:text-white data-[combobox-active=true]:hover:bg-primary",
         }}
         value={themeSelectorState}
         data={getOptions(allThemesArr)}
@@ -88,7 +84,7 @@ function ThemeSelector({
           oldName={selectedThemesThemeName}
         />
       )}
-    </Group>
+    </div>
   );
 }
 

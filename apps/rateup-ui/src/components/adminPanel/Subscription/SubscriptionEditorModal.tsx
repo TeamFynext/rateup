@@ -120,7 +120,8 @@ export function SubscriptionEditorModal({
             <div className="flex flex-col gap-3 overflow-auto rounded-lg bg-muted p-3">
               {subscription?.features &&
                 Object.keys(subscription.features).map((feature: SubscriptionFeaturePathName) => {
-                  if (feature === "menu") return null;
+                  // Tickets are a free feature — no longer subscription-managed.
+                  if (feature === "menu" || feature === "ticket") return null;
                   return (
                     <FeatureCard
                       key={feature}

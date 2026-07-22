@@ -1,37 +1,35 @@
-import {
-  ActionIcon,
-  Group,
-  Loader,
-  LoadingOverlay,
-  luminance,
-  Stack,
-  Text,
-  useMantineTheme,
-} from "@mantine/core";
-import type { DropzoneProps } from "@mantine/dropzone";
-import { Dropzone } from "@mantine/dropzone";
 import { IconFileFilled, IconUpload, IconX } from "@tabler/icons-react";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+import { cn } from "@/lib/utils";
 import { deleteUploadedFiles, getFileNameFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
-import PaperLayout from "../../../../styled/Layouts/PaperLayout.tsx";
+import { luminance } from "./isLightColor.ts";
+import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
-interface FileInputFormProps extends Partial<DropzoneProps> {
+const MAX_FILE_SIZE = 10 * 1024 ** 2;
+
+interface FileInputFormProps {
   isPreview?: boolean;
 }
-const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
-  const theme = useMantineTheme();
+
+const FileInputForm = ({ isPreview }: FileInputFormProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState("");
+  const [isDragActive, setIsDragActive] = useState(false);
   const { t: translations } = useTranslation();
-  const themePrimaryColor = theme.colors.primaryColor ? theme.colors.primaryColor[5] : "#1C518E";
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const themePrimaryColor = useThemePrimaryColor();
   const dragFileTextColor =
-    luminance(themePrimaryColor) > 0.8 ? `var(--mantine-color-gray-7)` : themePrimaryColor;
+    luminance(themePrimaryColor) > 0.8 ? "var(--foreground)" : themePrimaryColor;
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const handleUploadedFiles = async () => {
@@ -47,7 +45,6 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
         });
       }
       const fileKey = await uploadFile(file, false, { allowAll: true });
-      console.log(fileKey);
       updateResponse(fileKey);
       setIsUploading(false);
     } catch (e) {
@@ -72,71 +69,92 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
     setIsRemoving(false);
   };
 
+  const validateAndSetFile = (selected: File) => {
+    if (selected.size > MAX_FILE_SIZE) {
+      setError(translations("File should not exceed 10mb"));
+      return;
+    }
+    setFile(selected);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragActive(false);
+    if (isPreview) return;
+    const dropped = e.dataTransfer.files[0];
+    if (dropped) validateAndSetFile(dropped);
+  };
+
   return (
-    <Stack>
-      <Dropzone
-        onDrop={(files) => setFile(files[0])}
-        onReject={(files) => {
-          setError(files[0].errors[0].message);
+    <div className="flex flex-col gap-4">
+      <div
+        onClick={() => !isPreview && fileInputRef.current?.click()}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          if (!isPreview) setIsDragActive(true);
         }}
-        maxSize={10 * 1024 ** 2}
-        {...dropzoneprops}
-        style={{
-          borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
-          borderRadius: "8px",
+        onDragOver={(e) => e.preventDefault()}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          setIsDragActive(false);
         }}
-        disabled={isPreview}
+        onDrop={handleDrop}
+        style={{ borderColor: themePrimaryColor }}
+        className={cn(
+          "relative flex min-h-20 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-center transition-colors",
+          isDragActive && "bg-muted/50",
+          isPreview && "pointer-events-none cursor-not-allowed opacity-60",
+        )}
       >
-        <Group justify="center" gap="xl" mih={80} style={{ pointerEvents: "none" }}>
-          <Dropzone.Accept>
-            <IconUpload stroke={1.5} color={`var(--mantine-color-${theme.primaryColor}-filled)`} />
-          </Dropzone.Accept>
-          <Dropzone.Reject>
-            <IconX color="var(--mantine-color-red-6)" stroke={1.5} />
-          </Dropzone.Reject>
-          <Dropzone.Idle>
-            <IconFileFilled color="var(--mantine-color-dimmed)" stroke={1.5} size={"2.5rem"} />
-            <LoadingOverlay
-              visible={isUploading}
-              zIndex={1000}
-              overlayProps={{ radius: "sm", blur: 2 }}
-            />
-          </Dropzone.Idle>
-          <div>
-            <Text size="md" inline c={dragFileTextColor}>
-              {translations("Drag file here or click to select file")}
-            </Text>
-            <Text size="xs" c="dimmed" inline mt={7}>
-              {translations("File should not exceed 10mb")}
-            </Text>
-          </div>
-        </Group>
-      </Dropzone>
-      <Text c="red">{error}</Text>
-      {response && !isPreview ? (
-        <PaperLayout
-          style={{
-            border: `1px solid var(--mantine-color-${theme.primaryColor}-outline)`,
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={(e) => {
+            const selected = e.target.files?.[0];
+            if (selected) validateAndSetFile(selected);
           }}
-        >
-          <Group justify={"space-between"}>
-            <Text>{file?.name || getFileNameFromKey(response)}</Text>
+        />
+        {isDragActive ? (
+          <IconUpload stroke={1.5} style={{ color: themePrimaryColor }} />
+        ) : (
+          <IconFileFilled stroke={1.5} size={"2.5rem"} className="text-muted-foreground" />
+        )}
+        {isUploading && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/60">
+            <Spinner />
+          </div>
+        )}
+        <div>
+          <p className="text-base" style={{ color: dragFileTextColor }}>
+            {translations("Drag file here or click to select file")}
+          </p>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            {translations("File should not exceed 10mb")}
+          </p>
+        </div>
+      </div>
+      {error && <p className="text-destructive">{error}</p>}
+      {response && !isPreview ? (
+        <Card className="border p-4" style={{ borderColor: themePrimaryColor }}>
+          <div className="flex items-center justify-between">
+            <span>{file?.name || getFileNameFromKey(response)}</span>
             {isRemoving ? (
-              <Loader size={"sm"} />
+              <Spinner className="size-4" />
             ) : (
-              <ActionIcon
+              <Button
                 onClick={() => handleRemoveFile(response)}
-                variant="filled"
-                color="gray"
-                radius="lg"
+                variant="secondary"
+                size="icon"
+                className="rounded-full"
               >
-                <IconX style={{ width: "70%", height: "70%" }} stroke={1.5} />
-              </ActionIcon>
+                <IconX stroke={1.5} />
+              </Button>
             )}
-          </Group>
-        </PaperLayout>
+          </div>
+        </Card>
       ) : null}
-    </Stack>
+    </div>
   );
 };
 

@@ -5,7 +5,10 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
-import { useRateupPaymentsPlanMutation } from "@/backend/payment/payment.query";
+import {
+  useRateupPaymentsPlanMutation,
+  useRateupPaymentsPlanUpdateMutation,
+} from "@/backend/payment/payment.query";
 // import { PaymentPlans } from "../../app/admin/rateup";
 import { PaymentType } from "@/types/enums.ts";
 import { widgetIds } from "@/utils/constants/forms.ts";
@@ -24,10 +27,19 @@ enum PaymentPlans {
   razorpay = "Razorpay Plans",
   stripe = "Stripe Products",
 }
-const RateupPlanModal = ({ opened, close, planList }) => {
+const currencyOptions = [
+  { value: "USD", label: "USD ($)" },
+  { value: "INR", label: "INR (₹)" },
+];
+
+const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
   const [checked, setChecked] = useState(false);
   const { t: translations } = useTranslation();
+  const isEdit = Boolean(plan?.id);
   const rateupPaymentsPlanMutation = useRateupPaymentsPlanMutation(close);
+  const rateupPaymentsPlanUpdateMutation = useRateupPaymentsPlanUpdateMutation(close);
+  const razorpayItems =
+    planList?.find((group) => group?.group === PaymentPlans.razorpay)?.items ?? [];
   const schema = z.object({
     name: z
       .string()
@@ -51,6 +63,13 @@ const RateupPlanModal = ({ opened, close, planList }) => {
       .trim()
       .min(1, { message: translations("Features should Not Be empty") }),
     trialDays: z.number(),
+    badge: z.string().trim().optional(),
+    price: z.number().optional(),
+    currency: z.string().optional(),
+    monthlyPrice: z.number().optional(),
+    yearlyPrice: z.number().optional(),
+    monthlyPaymentPlanId: z.string().optional(),
+    yearlyPaymentPlanId: z.string().optional(),
   });
 
   const form = useForm({
@@ -65,6 +84,13 @@ const RateupPlanModal = ({ opened, close, planList }) => {
       description: [],
       features: "",
       trialDays: 0,
+      badge: "",
+      price: 0,
+      currency: "",
+      monthlyPrice: 0,
+      yearlyPrice: 0,
+      monthlyPaymentPlanId: "",
+      yearlyPaymentPlanId: "",
     },
     validate: schemaResolver(schema, {
       sync: true,
@@ -72,23 +98,34 @@ const RateupPlanModal = ({ opened, close, planList }) => {
   });
 
   useEffect(() => {
-    if (form?.values?.paymentPlanId) {
-      const name = planList
-        ?.find((data) => data?.group === PaymentPlans.razorpay)
-        ?.items?.find((item) => item.value === form?.values?.paymentPlanId)?.label;
-      form?.setFieldValue("name", name);
+    if (opened && plan?.id) {
+      form.setValues({
+        id: plan.id,
+        name: plan.name ?? "",
+        displayName: plan.displayName ?? "",
+        displayWidgetId: plan.displayWidgetId ?? "",
+        planType: plan.planType ?? PaymentType.BASE,
+        paymentPlanId: plan.paymentPlanId ?? "",
+        stripeId: plan.stripeId ?? "",
+        description: plan.description ?? [],
+        features: plan.features ? JSON.stringify(plan.features, null, 2) : "",
+        trialDays: plan.trialDays ?? 0,
+        badge: plan.badge ?? "",
+        price: plan.price ?? 0,
+        currency: plan.currency ?? "",
+        monthlyPrice: plan.monthlyPrice ?? 0,
+        yearlyPrice: plan.yearlyPrice ?? 0,
+        monthlyPaymentPlanId: plan.monthlyPaymentPlanId ?? "",
+        yearlyPaymentPlanId: plan.yearlyPaymentPlanId ?? "",
+      });
     }
-    if (form?.values?.stripeId) {
-      const name = planList
-        ?.find((data) => data?.group === PaymentPlans.stripe)
-        ?.items?.find((item) => item.value === form?.values?.stripeId)?.label;
-      form?.setFieldValue("name", name);
-    }
-  }, [form?.values?.paymentPlanId, form?.values?.stripeId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opened, plan?.id]);
 
   useEffect(() => {
-    if (rateupPaymentsPlanMutation?.isSuccess) form?.reset();
-  }, [rateupPaymentsPlanMutation?.isSuccess]);
+    if (rateupPaymentsPlanMutation?.isSuccess || rateupPaymentsPlanUpdateMutation?.isSuccess)
+      form?.reset();
+  }, [rateupPaymentsPlanMutation?.isSuccess, rateupPaymentsPlanUpdateMutation?.isSuccess]);
 
   useEffect(() => {
     if (checked) {
@@ -100,49 +137,39 @@ const RateupPlanModal = ({ opened, close, planList }) => {
   }, [checked]);
 
   const handleSubmit = (values) => {
-    rateupPaymentsPlanMutation.mutate(values);
-    toast.loading(translations("Hold.. your data is getting created..."), {
-      id: "load-data",
-    });
+    const payload = { ...values, currency: values.currency || undefined };
+    if (isEdit) {
+      rateupPaymentsPlanUpdateMutation.mutate({ ...payload, id: plan.id });
+      toast.loading(translations("Hold.. your data is getting updated..."), {
+        id: "load-data",
+      });
+    } else {
+      rateupPaymentsPlanMutation.mutate(payload);
+      toast.loading(translations("Hold.. your data is getting created..."), {
+        id: "load-data",
+      });
+    }
     setChecked(false);
   };
 
   return (
     <FormModalLayout
       opened={opened}
-      title={translations("Add Rateup Plan")}
+      title={isEdit ? translations("Edit Rateup Plan") : translations("Add Rateup Plan")}
       onClose={() => {
         close();
         form?.reset();
       }}
       centered
       size="lg"
-      buttonTitle={"Save"}
+      buttonTitle={isEdit ? "Update" : "Save"}
       includeCancelButton
       onSubmit={form.onSubmit(handleSubmit)}
-      isLoading={rateupPaymentsPlanMutation?.isPending}
+      isLoading={
+        rateupPaymentsPlanMutation?.isPending || rateupPaymentsPlanUpdateMutation?.isPending
+      }
     >
       <SimpleGrid cols={2}>
-        <ContainedSelection
-          label={translations("Razorpay/Stripe Payment Plan")}
-          placeholder={translations("Payment Plan")}
-          data={planList}
-          allowDeselect
-          onChange={(value) => {
-            let fieldId = "";
-            let otherFieldId = "";
-            for (const plan of planList) {
-              if (plan?.items?.find((pl) => pl.value === value)) {
-                fieldId = plan?.group === PaymentPlans.razorpay ? "paymentPlanId" : "stripeId";
-                otherFieldId = plan?.group === PaymentPlans.razorpay ? "stripeId" : "paymentPlanId";
-                break;
-              }
-            }
-            form.setFieldValue(fieldId, value);
-            form.setFieldValue(otherFieldId, "");
-          }}
-          disabled={!planList?.length}
-        />
         <ContainedTextField
           label={translations("Name")}
           placeholder={translations("Name")}
@@ -184,6 +211,49 @@ const RateupPlanModal = ({ opened, close, planList }) => {
           {...form.getInputProps("trialDays")}
           allowNegative={false}
           allowDecimal={false}
+        />
+        <ContainedSelection
+          label={translations("Currency")}
+          placeholder={translations("Currency")}
+          data={currencyOptions}
+          allowDeselect
+          {...form.getInputProps("currency")}
+        />
+        <ContainedTextField
+          label={translations("Badge")}
+          placeholder={translations("e.g. Most Popular")}
+          {...form.getInputProps("badge")}
+        />
+        <ContainedSelection
+          label={translations("Monthly Razorpay Plan")}
+          placeholder={translations("Gateway plan charged monthly")}
+          data={razorpayItems}
+          allowDeselect
+          disabled={!razorpayItems?.length}
+          {...form.getInputProps("monthlyPaymentPlanId")}
+        />
+        <ContainedSelection
+          label={translations("Annual Razorpay Plan")}
+          placeholder={translations("Gateway plan charged yearly")}
+          data={razorpayItems}
+          allowDeselect
+          disabled={!razorpayItems?.length}
+          {...form.getInputProps("yearlyPaymentPlanId")}
+        />
+        <ContainedNumberInput
+          label={translations("Monthly Price")}
+          placeholder={translations("Shown on the card in Monthly")}
+          {...form.getInputProps("monthlyPrice")}
+          allowNegative={false}
+          allowDecimal={true}
+        />
+        <ContainedNumberInput
+          label={translations("Yearly Price (per month)")}
+          description={translations("Per-month price billed annually")}
+          placeholder={translations("Shown on the card in Annual")}
+          {...form.getInputProps("yearlyPrice")}
+          allowNegative={false}
+          allowDecimal={true}
         />
       </SimpleGrid>
       <Stack gap={3} py="xs">

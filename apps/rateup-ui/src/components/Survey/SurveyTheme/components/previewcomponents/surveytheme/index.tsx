@@ -1,4 +1,3 @@
-import { Box } from "@mantine/core";
 import { cloneDeep } from "lodash";
 import { useState } from "react";
 
@@ -15,8 +14,6 @@ import { ThemeTabEnum } from "../../../SurveyTheme.enums";
 import { useSelectedPageTab, useSurveyThemeContextValue } from "../../../SurveyThemeContext.tsx";
 import IsSurveyThemePreviewContextProvider from "./isSurveyThemePreviewContext.tsx";
 import { getSurveyEditViewQuestions } from "./utils.ts";
-
-import styles from "./SurveyThemePreview.module.css";
 
 function SurveyThemeView({
   survey,
@@ -92,17 +89,14 @@ function SurveyThemeView({
   }
 
   return (
-    <Box
-      id={previewId}
-      className={`${styles["survey-theme-preview-container"]} survey-theme-preview-container`}
-    >
+    <div id={previewId} className="h-full w-full [&_.take-survey-layout-web-root-div]:h-full">
       <IsSurveyThemePreviewContextProvider
         isSurveyThemePreview={isSurveyThemePreview}
         isSurveyThemeEditView={isSurveyThemeEditView}
       >
         {componentToBeRendered}
       </IsSurveyThemePreviewContextProvider>
-    </Box>
+    </div>
   );
 }
 

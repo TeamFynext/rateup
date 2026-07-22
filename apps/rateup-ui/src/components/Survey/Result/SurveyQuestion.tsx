@@ -1,5 +1,4 @@
-import { Progress } from "@mantine/core";
-import { IconMoodHappy, IconTarget, IconUsers } from "@tabler/icons-react";
+import { Smile, Target, Users } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -145,17 +144,17 @@ const SurveyQuestion = ({
                           {
                             label: "Responses",
                             value: responseCount,
-                            icon: <IconUsers size={18} color="#2B82DE" />,
+                            icon: <Users size={18} color="#2B82DE" />,
                           },
                           {
                             label: "NPS",
                             value: npsScore >= 0 ? `+${npsScore}` : npsScore,
-                            icon: <IconTarget size={20} color="#2B82DE" />,
+                            icon: <Target size={20} color="#2B82DE" />,
                           },
                           {
                             label: "Happiness Index",
                             value: happinessIndex,
-                            icon: <IconMoodHappy size={20} color="#2B82DE" />,
+                            icon: <Smile size={20} color="#2B82DE" />,
                           },
                         ].map((item) => (
                           <div
@@ -173,20 +172,26 @@ const SurveyQuestion = ({
                         ))}
                       </div>
 
-                      <Progress.Root size="xl" radius={50}>
-                        <Progress.Section
-                          value={Number(getPercentage(promoters, responseCount))}
-                          color="#00BF83"
+                      <div className="flex h-4 w-full overflow-hidden rounded-full">
+                        <div
+                          style={{
+                            width: `${getPercentage(promoters, responseCount)}%`,
+                            backgroundColor: "#00BF83",
+                          }}
                         />
-                        <Progress.Section
-                          value={Number(getPercentage(passives, responseCount))}
-                          color="#FFC107"
+                        <div
+                          style={{
+                            width: `${getPercentage(passives, responseCount)}%`,
+                            backgroundColor: "#FFC107",
+                          }}
                         />
-                        <Progress.Section
-                          value={Number(getPercentage(detractors, responseCount))}
-                          color="#FF6161"
+                        <div
+                          style={{
+                            width: `${getPercentage(detractors, responseCount)}%`,
+                            backgroundColor: "#FF6161",
+                          }}
                         />
-                      </Progress.Root>
+                      </div>
 
                       <div className="flex justify-between items-center">
                         {[

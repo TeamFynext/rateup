@@ -1,26 +1,76 @@
-import { AlertCircle, Archive, BadgeCheck, CheckCircle, Circle, UserX } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  AlertCircle,
+  Archive,
+  AtSign,
+  BadgeCheck,
+  CheckCircle,
+  Circle,
+  Star,
+  UserPlus,
+} from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import type { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import {
+  useAssignInboxToUer,
+  useToggleFavorite,
+} from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import useContactStore, {
+  useContactsStore,
+  useMessagesStore,
+} from "@/components/dashboard/inbox/store.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
 import { formatDateWithRelativeTime, formatToRelativeTime } from "@/utils/dateTime.ts";
 import {
+  getContactPlatform,
   isInboxSessionExpired,
   parseWaMessage,
   returnMessageContentBasedOnParsedMessage,
 } from "@/utils/whatsapp/inbox.ts";
 
-import { getSoucePlatformIconAndColor } from "../../util.tsx";
+import { STATUS_PILL_BASE } from "../../chatdisplay/chatdisplayHeader/ticket.ts";
+import { generateInternalMessageId, getSoucePlatformIconAndColor } from "../../util.tsx";
+
+/**
+ * Inbox Tickets v2 — the lifecycle status shown on a row is DERIVED, never stored:
+ *   closed  → the ticket is in any of the closed states (CLOSED/SPAM/RESOLVED/UNRESOLVED)
+ *   assigned → somebody owns it
+ *   new      → nobody owns it yet
+ */
+type DerivedStatus = "new" | "assigned" | "closed";
+
+export function getDerivedStatus(contact: ContactsWithLastMessage): DerivedStatus {
+  const status = (contact?.conversationStatus ??
+    contact?.waMessageAssignStatus) as WaMessageAssignStatus;
+  if (WaMessageClosedStatus.includes(status)) return "closed";
+  return contact?.assignedUsers?.length ? "assigned" : "new";
+}
+
+const STATUS_LABEL: Record<DerivedStatus, string> = {
+  new: "New",
+  assigned: "Assigned",
+  closed: "Closed",
+};
+
+// Tailwind bg + text for the status pill (the dot inherits via `bg-current`).
+const STATUS_PILL_COLORS: Record<DerivedStatus, string> = {
+  new: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-500",
+  assigned: "bg-primary/10 text-primary",
+  closed: "bg-green-600/10 text-green-600",
+};
 
 interface WaInboxChatSelectCardProps {
   contact: ContactsWithLastMessage;
@@ -45,21 +95,107 @@ export default function WaInboxChatSelectCard({
   const lastMessage = contact?.lastMessage;
   const { t: translations } = useTranslation();
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
+  const { user } = useUser();
+  const qc = useQueryClient();
 
-  const { setSelectedContact, selectedContact } = useContactsStore();
+  const { setSelectedContact, selectedContact, updateContactById } = useContactsStore();
+  const messagesStore = useMessagesStore();
+  const { filterData } = useContactStore();
 
-  const platform = lastMessage?.sourcePlatform;
+  const rowKey = contact ? getRowKey(contact) : "";
+  const isSelected = !!selectedContact && getRowKey(selectedContact) === rowKey;
+
+  const platform = getContactPlatform(contact);
   const lifecycleInfo = useMemo(() => {
     const label = lifeCycleLabels?.find((label) => label.id === contact?.lifecycleId);
     return label;
   }, [contact?.lifecycleId, lifeCycleLabels]);
 
-  const closed = getContactClosedIcon(contact?.waMessageAssignStatus);
-  const Icon = closed?.icon;
+  const displayName =
+    contact?.name ||
+    contact?.whatsappUserName ||
+    contact?.phone ||
+    contact?.igsId ||
+    contact?.psid ||
+    "Unknown";
+
+  const status = getDerivedStatus(contact);
+  const isClosed = status === "closed";
+  const isUnassigned = !isClosed && !contact?.assignedUsers?.length;
+  const unreadCount = contact?.unReadMessageCount ?? 0;
+  const primaryAssignee = contact?.assignedUsers?.[0];
+
+  const { mutate: toggleFavorite } = useToggleFavorite();
+  const assignMut = useAssignInboxToUer(contact?.id, filterData);
+
+  function handleToggleFavorite(e: React.MouseEvent) {
+    e.stopPropagation();
+    toggleFavorite({ conversationId: rowKey, isFavorite: !contact?.isFavorite });
+  }
+
+  function handleAssignToMe(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!user) {
+      toast.error("failed!try again");
+      return;
+    }
+    const contactId = contact.id;
+    const messageId = generateInternalMessageId();
+    const internalMessage = {
+      id: messageId,
+      contactId,
+      waCreatedAt: new Date().toISOString(),
+      messageBody: {
+        send: null,
+        receive: null,
+        internal: {
+          text: { body: `Chat assigned to ${user.userName}` },
+          assignedUsers: [],
+          assignStatus: WaMessageAssignStatus.ASSIGNED,
+          triggeredByUser: { id: user.userId, name: user.userName },
+        },
+        exchangeProcess: "internal",
+      },
+      sourcePlatform: "INTERNAL",
+      sourceIdentifier: null,
+      sendBy: user.userId,
+      sender: { name: user.userName, profilePhoto: user?.profilePhoto },
+      stats: { read: "", sent: "", failed: "", delivered: "" },
+      messageId,
+    };
+    messagesStore.addMessage(`${rowKey}_all`, internalMessage as any);
+    messagesStore.addMessage(`${rowKey}_internal`, internalMessage as any);
+    assignMut.mutate(
+      {
+        messageId,
+        contactId,
+        assignees: [{ userId: user.userId, teamId: user.teams?.[0] }],
+      },
+      {
+        onSuccess: (result) => {
+          // Assigning a closed ticket opens a successor rather than reviving this
+          // row, so only mark this row assigned when the assignment stayed on it.
+          // The refetched list brings the successor in.
+          if (!result?.conversation || result.conversation.id === rowKey) {
+            updateContactById(rowKey, (existing) => ({
+              ...existing,
+              waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+              conversationStatus: WaMessageAssignStatus.ASSIGNED,
+              assignedUsers: [{ id: user.userId, name: user?.userName, teamId: user.teams?.[0] }],
+            }));
+          }
+          qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+        },
+        onError: () => {
+          messagesStore.removeMessage(`${rowKey}_all`, messageId);
+          messagesStore.removeMessage(`${rowKey}_internal`, messageId);
+        },
+      },
+    );
+  }
 
   return (
     <div
-      key={contact?.id}
       onClick={() => {
         if (isSelectionMode) {
           setSelectedChats((prev) =>
@@ -73,196 +209,223 @@ export default function WaInboxChatSelectCard({
         setIsChatDisplayOpen(true);
       }}
       className={cn(
-        "p-3 cursor-pointer transition-all hover:bg-primary/10 border-l-4",
-        selectedContact?.id === contact?.id
-          ? "bg-primary/5 border-primary"
-          : contact?.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED
-            ? "bg-amber-50 dark:bg-amber-500/10 border-amber-400"
-            : "border-transparent",
+        "group box-border flex max-w-full cursor-pointer gap-2.75 border-b border-l-[3px] border-b-border px-4 py-3.25 transition-colors",
+        isSelected
+          ? "border-l-primary bg-primary/10 hover:bg-primary/10"
+          : cn(isUnassigned ? "border-l-amber-500" : "border-l-transparent", "hover:bg-muted"),
       )}
     >
-      <div className="flex items-start space-x-2">
-        {isSelectionMode && (
-          <Checkbox
-            className="border border-muted-foreground shadow-sm"
-            onClick={(e) => e.stopPropagation()}
-            checked={selectedChats.includes(contact.id)}
-            onCheckedChange={(checked) => {
-              if (checked) {
-                setSelectedChats((prev) => [...prev, contact.id]);
-              } else {
-                setSelectedChats((prev) => prev.filter((id) => id !== contact.id));
+      {isSelectionMode && (
+        <Checkbox
+          className="mt-1 shrink-0 border border-muted-foreground shadow-sm"
+          onClick={(e) => e.stopPropagation()}
+          checked={selectedChats.includes(contact.id)}
+          onCheckedChange={(checked) => {
+            if (checked) {
+              setSelectedChats((prev) => [...prev, contact.id]);
+            } else {
+              setSelectedChats((prev) => prev.filter((id) => id !== contact.id));
+            }
+          }}
+        />
+      )}
+
+      {/* Avatar + channel badge */}
+      <div className="relative shrink-0">
+        <CreativeAvatar
+          name={displayName}
+          size="md"
+          showOnlineStatus={true}
+          isOnline={!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp)}
+          onlineStatusPosition="topLeft"
+          src={contact?.profilePic}
+          showRing={true}
+        />
+        <span
+          className={cn(
+            "absolute bottom-0.5 -right-1 flex size-4 items-center justify-center rounded-full [&_svg]:size-2.5",
+            platform === MessagePlatform.WHATSAPP
+              ? "bg-green-600"
+              : platform === MessagePlatform.INSTAGRAM
+                ? "bg-linear-to-br from-purple-600 via-pink-500 to-orange-500"
+                : platform === MessagePlatform.FACEBOOK
+                  ? "bg-blue-400"
+                  : "bg-blue-600",
+            "border-2 border-background",
+          )}
+        >
+          {getSoucePlatformIconAndColor(platform)?.icon}
+        </span>
+      </div>
+
+      {/* Main column */}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="inline-flex min-w-0 items-center gap-1.5">
+            <button
+              type="button"
+              title={contact?.isFavorite ? translations("Unstar") : translations("Star")}
+              onClick={handleToggleFavorite}
+              hidden={!contact?.isFavorite}
+              className={cn(
+                "flex shrink-0 cursor-pointer items-center justify-center border-0 bg-transparent p-0 outline-none transition-opacity",
+                !contact?.isFavorite && "opacity-0 group-hover:opacity-60",
+              )}
+            >
+              <Star
+                className="size-3 text-amber-500"
+                fill={contact?.isFavorite ? "currentColor" : "none"}
+              />
+            </button>
+            <span className="truncate text-sm font-bold">{displayName}</span>
+            {contact?.isIgVerifiedUser && <BadgeCheck className="size-3 shrink-0 text-primary" />}
+          </span>
+          <span className="shrink-0 text-[11px] text-muted-foreground">
+            {lastMessage && formatToRelativeTime(lastMessage?.waCreatedAt, true)}
+          </span>
+        </div>
+
+        {/* Ticket code + subject */}
+        {(contact?.ticketNumber || contact?.ticketSubject) && (
+          <div className="mt-px flex items-center gap-1.5">
+            {!!contact?.ticketNumber && (
+              <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                #{contact.ticketNumber}
+              </span>
+            )}
+            {!!contact?.ticketSubject && (
+              <span
+                className="truncate text-xs font-semibold text-foreground"
+                title={contact?.ticketDescription || contact.ticketSubject}
+              >
+                {contact.ticketSubject}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Last message snippet */}
+        <div
+          className={cn(
+            "mt-0.5 truncate pr-2 text-xs",
+            unreadCount > 0 ? "text-foreground" : "text-muted-foreground",
+          )}
+        >
+          {lastMessage &&
+            returnMessageContentBasedOnParsedMessage(
+              parseWaMessage(lastMessage),
+              lastMessage.messageBody.exchangeProcess,
+            )}
+        </div>
+
+        {/* Chip row */}
+        <div className="mt-1.75 flex flex-wrap items-center gap-1.5">
+          {isClosed ? (
+            <CustomTooltip
+              trigger={
+                <span className={cn(STATUS_PILL_BASE, STATUS_PILL_COLORS.closed)}>
+                  <span className="size-1.25 rounded-full bg-current" />
+                  {translations(STATUS_LABEL.closed)}
+                </span>
               }
-            }}
+              content={
+                <span>
+                  {contact.closedAt ? (
+                    <span>{`Marked as ${contact?.resolutionResult ?? contact?.waMessageAssignStatus} by ${contact.closedUser?.name} at ${formatDateWithRelativeTime(contact.closedAt)}`}</span>
+                  ) : (
+                    translations("Closed")
+                  )}
+                </span>
+              }
+            />
+          ) : (
+            <span className={cn(STATUS_PILL_BASE, STATUS_PILL_COLORS[status])}>
+              <span className="size-1.25 rounded-full bg-current" />
+              {translations(STATUS_LABEL[status])}
+            </span>
+          )}
+
+          {contact?.mentionCount > 0 && (
+            <span className="inline-flex items-center gap-0.75 text-[10px] font-extrabold text-primary">
+              <AtSign className="size-2.75" />
+              {translations("Mention")}
+              {contact.mentionCount > 1 ? ` ${contact.mentionCount}` : ""}
+            </span>
+          )}
+
+          {contact?.contactLabels?.map((label) => (
+            <span
+              key={label.id}
+              className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+              style={{
+                color: label.color,
+                background: `color-mix(in srgb, ${label.color} 14%, transparent)`,
+              }}
+            >
+              {label.name}
+            </span>
+          ))}
+
+          {lifecycleInfo && (
+            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground">
+              {lifecycleInfo?.emoji + " " + lifecycleInfo?.name}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Right rail */}
+      <div className="flex shrink-0 flex-col items-end gap-1.5 pt-0.5">
+        {unreadCount > 0 && (
+          <Badge className="flex h-4.5 min-w-4.5 items-center justify-center rounded-full px-1.5 text-[10px] font-extrabold text-white bg-green-600">
+            {unreadCount}
+          </Badge>
+        )}
+
+        {primaryAssignee && (
+          <CustomTooltip
+            trigger={
+              <span className="flex items-center">
+                <span className="flex size-5.5 items-center justify-center rounded-full text-[9px] font-extrabold text-white bg-primary">
+                  {primaryAssignee?.name?.charAt(0)?.toUpperCase()}
+                </span>
+                {contact?.assignedUsers?.length > 1 && (
+                  <span className="-ml-1 flex size-5.5 items-center justify-center rounded-full text-[9px] font-extrabold bg-muted text-muted-foreground">
+                    +{contact.assignedUsers.length - 1}
+                  </span>
+                )}
+              </span>
+            }
+            content={
+              <div>
+                <p className="mb-1">{translations("Assigned Staff")}:</p>
+                <div className="flex max-w-lg flex-wrap gap-1 py-2">
+                  {contact?.assignedUsers?.map((assignee) => (
+                    <Badge key={assignee?.id} className="h-4 p-2 text-[10px]">
+                      {assignee?.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            }
           />
         )}
-        <div className="relative shrink-0">
-          <CreativeAvatar
-            name={
-              contact?.name ||
-              contact?.whatsappUserName ||
-              contact?.phone ||
-              contact?.igsId ||
-              contact?.psid ||
-              "Unknown"
+
+        {isUnassigned && (
+          <CustomTooltip
+            trigger={
+              <button
+                type="button"
+                onClick={handleAssignToMe}
+                disabled={assignMut.isPending}
+                className="flex size-5.5 cursor-pointer items-center justify-center rounded-full border-0 p-0 outline-none bg-primary/10"
+              >
+                <UserPlus className="size-3 text-primary" />
+              </button>
             }
-            size="lg"
-            showOnlineStatus={true}
-            isOnline={!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp)}
-            onlineStatusPosition="topLeft"
-            src={contact?.profilePic}
-            showRing={true}
+            content={<span>{translations("Assign to me")}</span>}
           />
-          <div
-            className={`absolute -bottom-0.5 -right-0.5 rounded-full p-0.5 ${
-              platform === MessagePlatform.WHATSAPP
-                ? "bg-green-600 border"
-                : platform === MessagePlatform.INSTAGRAM
-                  ? "bg-linear-to-br from-purple-600 via-pink-500 to-orange-500 border"
-                  : platform === MessagePlatform.FACEBOOK
-                    ? "bg-blue-400 border"
-                    : "bg-blue-600 border"
-            }`}
-          >
-            {getSoucePlatformIconAndColor(platform)?.icon}
-          </div>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-0.5">
-            <div className="flex items-center gap-1 flex-1 min-w-0">
-              <p
-                className={`truncate text-[13px] font-bold ${selectedContact?.id === contact?.id && "text-primary"}`}
-              >
-                {contact?.name ||
-                  contact?.whatsappUserName ||
-                  contact?.phone ||
-                  contact?.igsId ||
-                  contact?.psid ||
-                  "Unknown"}
-              </p>
-              {contact?.isIgVerifiedUser && <BadgeCheck size={12} color="blue" />}
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {contact?.lastMessage &&
-                  formatToRelativeTime(contact?.lastMessage?.waCreatedAt, true)}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <p
-              className={`text-xs flex-1 ${contact?.unReadMessageCount > 0 ? "text-black dark:text-white font-medium" : "text-muted-foreground"} break-all line-clamp-1`}
-            >
-              {lastMessage &&
-                returnMessageContentBasedOnParsedMessage(
-                  parseWaMessage(lastMessage),
-                  lastMessage.messageBody.exchangeProcess,
-                )}
-            </p>
-            {contact?.unReadMessageCount > 0 && (
-              <Badge
-                className={`text-white text-[10px] h-4 min-w-[20px] px-1.5 rounded-full shrink-0 ${
-                  platform === MessagePlatform.WHATSAPP
-                    ? "bg-green-600"
-                    : platform === MessagePlatform.INSTAGRAM
-                      ? "bg-pink-500"
-                      : "bg-blue-600"
-                }`}
-              >
-                {contact.unReadMessageCount}
-              </Badge>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between gap-1 min-h-5">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {/* {contact?.lastReceivedMessageTimeStamp &&
-                dayjs().diff(contact.lastReceivedMessageTimeStamp, "hour") <
-                  24 && <Badge className="h-3 text-[10px] p-2">New</Badge>} */}
-              {lifecycleInfo && (
-                <span className="inline-flex items-center gap-[3px] rounded-full px-2 py-0.5 text-[10px] font-bold bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                  {lifecycleInfo?.emoji + " " + lifecycleInfo?.name}
-                </span>
-              )}
-
-              {WaMessageClosedStatus.includes(contact?.waMessageAssignStatus) ? (
-                <div className="flex ">
-                  <CustomTooltip
-                    trigger={<Icon className={`text-[10px] h-4 ${closed.color}`} />}
-                    content={
-                      <span>
-                        {contact.closedAt ? (
-                          <span>{`Marked as ${contact?.waMessageAssignStatus} by ${contact.closedUser?.name} at ${formatDateWithRelativeTime(contact.closedAt)}`}</span>
-                        ) : (
-                          translations("Closed")
-                        )}
-                      </span>
-                    }
-                  />
-                  {contact.closedAt && (
-                    <span className="text-xs text-muted-foreground ml-1">
-                      {formatToRelativeTime(contact.closedAt)}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                contact?.waMessageAssignStatus !== WaMessageAssignStatus.UNASSIGNED &&
-                contact?.assignedUsers?.length > 0 && (
-                  <CustomTooltip
-                    trigger={
-                      <div className="flex space-x-1">
-                        {contact?.assignedUsers?.slice(0, 1).map((a) => {
-                          return (
-                            <span
-                              key={a?.id}
-                              className="inline-flex items-center gap-[5px] rounded-full border border-blue-200/50 bg-blue-50 py-[3px] pr-[9px] pl-1 text-[10px] font-extrabold text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30"
-                            >
-                              <span className="flex size-3.5 items-center justify-center rounded-full bg-blue-500 text-[8px] font-extrabold text-white">
-                                {a?.name?.charAt(0)?.toUpperCase()}
-                              </span>
-                              <span className="truncate max-w-[60px]">{a?.name}</span>
-                            </span>
-                          );
-                        })}
-                        {contact?.assignedUsers.length > 1 && (
-                          <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white shrink-0">
-                            +{contact?.assignedUsers?.length - 1}
-                          </div>
-                        )}
-                      </div>
-                    }
-                    content={
-                      <div>
-                        <p className="mb-1">Assigned Staff:</p>
-                        <div className="flex gap-1 flex-wrap max-w-lg py-2">
-                          {contact?.assignedUsers.map((user) => (
-                            <Badge key={user?.id} className="h-4 p-2 text-[10px]">
-                              {user?.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    }
-                  />
-                )
-              )}
-            </div>
-
-            {contact?.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED && (
-              <div className="flex shrink-0">
-                <CustomTooltip
-                  trigger={
-                    <UserX
-                      className={`text-[10px] h-4 text-gray-500 dark:text-gray-400 rounded-2xl`}
-                    />
-                  }
-                  content={<span>{translations("UnAssigned")}</span>}
-                />
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

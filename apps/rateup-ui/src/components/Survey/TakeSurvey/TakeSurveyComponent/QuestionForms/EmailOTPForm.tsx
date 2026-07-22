@@ -1,22 +1,24 @@
-import { Button, PinInput, Stack, Text, TextInput, useMantineTheme } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
 import { IconMail } from "@tabler/icons-react";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useSendOTPEmail, useValidateOtp } from "@/backend/surveys/surveys.query";
+import { Button } from "@/components/ui/button.tsx";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { emailPattern } from "@/utils/constants.ts";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { handleInputScrollIntoView } from "../util.tsx";
-import FormPaperLayout from "./layout/FormPaperLayout.tsx";
-
-import classes from "../TakeSurvey.module.css";
+import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   const survey = !isPreview ? useSurveyContext() : null;
@@ -28,12 +30,12 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   const [isOtpSend, setIsOtpSend] = useState(false);
   const sendOtpMailMutation = useSendOTPEmail();
   const validateOTP = useValidateOtp();
-  const theme = useMantineTheme();
+  const themePrimaryColor = useThemePrimaryColor();
   const [timerComplete, setTimerComplete] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = selectedQ?.features?.[selectedLanguage];
   const allowedEmailIDs = features ? features?.allowedEmails : [];
-  const isMobile = useMediaQuery("(max-width: 480px)");
+  const isMobile = useIsMobile();
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const { t: translations } = useTranslation();
@@ -107,90 +109,84 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
     ) : null;
 
   return (
-    <Stack w={"100%"}>
+    <div className="flex w-full flex-col gap-4">
       {isOtpSend && !response?.isValid ? (
-        <Stack>
-          <Text fz={"sm"}>{translations("An OTP has been sent to your email")}</Text>
-          <Text fz={"sm"}>{translations("Enter OTP")}</Text>
-          <PinInput
-            length={6}
-            oneTimeCode
-            type={"number"}
+        <div className="flex flex-col gap-4">
+          <p className="text-sm">{translations("An OTP has been sent to your email")}</p>
+          <p className="text-sm">{translations("Enter OTP")}</p>
+          <InputOTP
+            maxLength={6}
+            pattern={REGEXP_ONLY_DIGITS}
             value={otp}
             onChange={setOTP}
             onComplete={handleValidateOTP}
-            ariaLabel="Enter OTP"
-            autoFocus={true}
-            size={isMobile ? "md" : "lg"}
-            color={`var(--mantine-color-${theme.primaryColor}-filled)`}
-          />
+            aria-label="Enter OTP"
+            autoFocus
+          >
+            <InputOTPGroup>
+              {Array.from({ length: 6 }, (_, i) => (
+                <InputOTPSlot key={i} index={i} className={isMobile ? "size-9" : "size-11"} />
+              ))}
+            </InputOTPGroup>
+          </InputOTP>
           {!timerComplete ? (
-            <Text fz={"sm"} c={`var(--mantine-color-${theme.primaryColor}-filled)`}>
+            <p className="text-sm" style={{ color: themePrimaryColor }}>
               {translations(
                 "Note: * The OTP expires in 10 minutes once it is sent. You can resend in",
               )}{" "}
               {timeLeft}
-            </Text>
+            </p>
           ) : !response?.isValid ? (
             <>
-              <Text fz={"sm"} c={`var(--mantine-color-${theme.primaryColor}-filled)`}>
+              <p className="text-sm" style={{ color: themePrimaryColor }}>
                 {translations("Note: * The OTP expires in 10 minutes once it is sent.")}
-              </Text>
+              </p>
               <Button
                 onClick={handleGetOTP}
-                loading={sendOtpMailMutation.isPending}
-                w={"fit-content"}
+                disabled={sendOtpMailMutation.isPending}
+                className="w-fit"
               >
+                {sendOtpMailMutation.isPending && <Spinner data-icon="inline-start" />}
                 {translations("Resend OTP")}
               </Button>
             </>
           ) : null}
-        </Stack>
+        </div>
       ) : (
-        <Stack gap={"sm"}>
-          <Stack gap={1}>
-            <FormPaperLayout>
-              <TextInput
+        <div className="flex flex-col gap-3">
+          <div
+            className="h-fit w-full max-w-[500px] rounded-[var(--input-border-radius,8px)] border bg-[var(--input-background-color,white)] px-[var(--input-padding,12px)] py-1.5 shadow-sm transition-colors duration-100"
+            style={{ borderColor: "var(--tertiary-color)" }}
+          >
+            <div className="flex items-center gap-2">
+              <IconMail size="1.2rem" className="shrink-0 text-muted-foreground" />
+              <Input
                 placeholder="Enter email"
                 value={response?.email || email}
                 onChange={(e) => {
                   setError("");
-                  setEmail(e.currentTarget.value);
+                  setEmail(e.target.value);
                 }}
-                variant="unstyled"
-                classNames={{
-                  input: classes.input,
-                  root: classes.textRoot,
-                }}
-                leftSection={<IconMail size="1.2rem" />}
-                styles={{
-                  section: {
-                    zIndex: 0,
-                  },
-                }}
+                className="h-auto w-full border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
                 onClick={handleInputScrollIntoView}
                 disabled={response?.isValid}
               />
-            </FormPaperLayout>
-          </Stack>
+            </div>
+          </div>
           {!response?.isValid && (
             <Button
               onClick={handleGetOTP}
-              loading={sendOtpMailMutation.isPending}
-              disabled={isPreview || isSurveyThemePreview}
-              w={"fit-content"}
+              disabled={sendOtpMailMutation.isPending || isPreview || isSurveyThemePreview}
+              className="w-fit"
             >
+              {sendOtpMailMutation.isPending && <Spinner data-icon="inline-start" />}
               {translations("Generate OTP")}
             </Button>
           )}
-          {error && (
-            <Text fz={"0.875rem"} c={"red"}>
-              * {error}
-            </Text>
-          )}
-        </Stack>
+          {error && <p className="text-sm text-destructive">* {error}</p>}
+        </div>
       )}
-    </Stack>
+    </div>
   );
 };
 
@@ -211,7 +207,7 @@ const CountDownTimer = ({ initialTime, onComplete }) => {
     return () => clearInterval(intervalId);
   }, [timeLeft]);
 
-  return timeLeft ? <Text span>{`${minutes}:${seconds < 10 ? "0" : ""}${seconds}`}</Text> : null;
+  return timeLeft ? <span>{`${minutes}:${seconds < 10 ? "0" : ""}${seconds}`}</span> : null;
 };
 
 export default EmailOTPForm;

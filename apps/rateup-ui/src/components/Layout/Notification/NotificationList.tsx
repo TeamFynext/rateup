@@ -28,6 +28,8 @@ const NotificationList = ({ close, data, isLoading }) => {
         return <IconSend className="size-4 text-foreground" />;
       case "system":
         return <IconAlertTriangle className="size-4 text-destructive" />;
+      case "subscription":
+        return <IconAlertTriangle className="size-4 text-amber-500" />;
       default:
         return null;
     }
@@ -123,6 +125,21 @@ const NotificationList = ({ close, data, isLoading }) => {
               Meta CAPI failed for{" "}
               <span className="font-medium text-foreground">{data?.contactName}</span>. Error:{" "}
               <span className="font-medium text-destructive">{data?.error}</span>
+            </p>
+          </div>
+        );
+      case "conversation-limit-reached":
+        return (
+          <div className="flex flex-col gap-2">
+            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
+              {data?.message ?? "You've reached your conversation limit."}
+              <Link
+                to="/dashboard/settings/billing"
+                onClick={close}
+                className="ml-1 inline font-medium text-primary hover:underline"
+              >
+                Upgrade plan
+              </Link>
             </p>
           </div>
         );

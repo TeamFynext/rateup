@@ -1,259 +1,267 @@
-import {
-  Box,
-  CheckIcon,
-  Combobox,
-  Grid,
-  Group,
-  MultiSelect,
-  Pill,
-  PillsInput,
-  Stack,
-  Switch,
-  useCombobox,
-} from "@mantine/core";
-import { hasLength, isNotEmpty, useForm } from "@mantine/form";
-import { getHotkeyHandler } from "@mantine/hooks";
-import React, { useEffect, useState } from "react";
+import { IconAdjustmentsHorizontal } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { docsPath, SAVE_HOTKEY } from "@/utils/constants.ts";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+} from "@/components/ui/combobox.tsx";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
+import { docsPath } from "@/utils/constants.ts";
 
 import InfoButton from "../../../Button/InfoButton.tsx";
-import { RateupButtonBlue } from "../../../Button/RateupButtons.tsx";
-import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput.tsx";
-import PaperLayout from "../../../styled/Layouts/PaperLayout.tsx";
 
-import styles from "./GeneralSettings.module.css";
+const DEFAULT_LANGUAGES = ["English", "Malayalam", "Hindi", "Kannada", "Tamil"];
 
-const Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
+type FormValues = {
+  title: string;
+  languages: string[];
+  teams: string[];
+  sendWeeklyReport: boolean;
+};
+
 const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
   const { t: translations } = useTranslation();
-  const settingsForm = useForm({
-    initialValues: {
+  const { data: teamRes } = useTeamsByUser();
+  const editSurvey = useEditSurveyMutation(survey?.id);
+
+  const teamOptions =
+    teamRes?.data?.map((team) => ({
+      value: team?.id,
+      label: team?.name,
+    })) ?? [];
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+    reset,
+  } = useForm<FormValues>({
+    defaultValues: {
       title: survey?.title || "",
       languages: survey?.langauges || [],
       teams: survey?.teams?.map((team) => team?.id) || [],
-      sendWeeklyReport: survey?.sendWeeklyReport || true,
-    },
-    validate: {
-      title: isNotEmpty(translations("Cannot be Empty")),
-      languages: hasLength({ min: 1 }, translations("Must contain atleast one language")),
-      teams: hasLength({ min: 1 }, translations("Must contain atleast one team")),
+      sendWeeklyReport: survey?.sendWeeklyReport ?? true,
     },
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const editSurvey = useEditSurveyMutation(survey?.id);
 
-  const handleSubmit = (values) => {
-    setIsLoading(true);
+  useEffect(() => {
+    if (survey) {
+      reset({
+        title: survey.title || "",
+        languages: survey.languages || [],
+        teams: survey.teams?.map((t: any) => t?.id) || [],
+        sendWeeklyReport: survey.sendWeeklyReport ?? true,
+      });
+    }
+  }, [survey]);
+
+  const selectedTeams = watch("teams");
+
+  const onSubmit = (values: FormValues) => {
     editSurvey.mutate(values, {
       onSettled: () => {
-        setIsLoading(false);
-        if (setSelectedLanguage) setSelectedLanguage(values.languages[0]);
+        if (setSelectedLanguage && values.languages?.[0]) {
+          setSelectedLanguage(values.languages[0]);
+        }
       },
     });
   };
-  const [languages, setLanguages] = useState<string[]>([]);
-  const { data: teamRes } = useTeamsByUser();
-  const teamOptions = teamRes?.data?.map((team) => ({
-    value: team?.id,
-    label: team?.name,
-  }));
-  useEffect(() => {
-    setLanguages(survey?.languages);
-    settingsForm.setFieldValue("sendWeeklyReport", survey?.sendWeeklyReport);
-  }, [survey]);
-
-  useEffect(() => {
-    settingsForm.setFieldValue("languages", languages);
-  }, [languages]);
 
   return (
-    <PaperLayout className={`${styles["general-settings-root-div"]} section-div`}>
-      <Box className={styles["heading-and-desc-container"]}>
-        <Grid style={{ marginBottom: "1rem" }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <h2 className={"settings-section-heading"} style={{ marginRight: "1rem" }}>
-              {translations("Survey Settings")}
-            </h2>
-            <InfoButton docUrl={`${docsPath}/webSurvey/shareSurvey`} />
-          </div>
-        </Grid>
-        <p className={"settings-section-description"}>
-          {translations("Choose the teams to be added")}
-        </p>
-      </Box>
-      <form
-        onSubmit={settingsForm.onSubmit(handleSubmit)}
-        onKeyDown={getHotkeyHandler([
-          [SAVE_HOTKEY, (event: any) => settingsForm.onSubmit(handleSubmit)(event)],
-        ])}
-        className={styles["form"]}
-      >
-        {enabledModules.includes("name") && (
-          <Stack className={styles["form-input-container"]}>
-            <h3>{translations("Survey Name")}</h3>
-            <ContainedTextField
-              className={styles["form-input"]}
-              withAsterisk
-              placeholder={translations("Enter Survey name")}
-              required
-              {...settingsForm.getInputProps("title")}
-            />
-          </Stack>
-        )}
-        {enabledModules.includes("language") && (
-          <Stack className={styles["form-input-container"]}>
-            <h3>{translations("Survey Languages")}</h3>
-            <MultiSelectCreatable
-              value={languages}
-              setValue={setLanguages}
-              errors={settingsForm.errors.languages}
-            />
-          </Stack>
-        )}
-        {enabledModules.includes("teams") && (
-          <Stack className={styles["form-input-container"]}>
-            <h3>{translations("Select Teams")}</h3>
-            <MultiSelect
-              radius="md"
-              placeholder={translations("Select teams")}
-              data={teamOptions}
-              {...settingsForm.getInputProps("teams")}
-              error={settingsForm.errors.teams}
-            />
-          </Stack>
-        )}
-        <Group className={styles["form-input-container"]}>
-          <Switch
-            {...settingsForm.getInputProps("sendWeeklyReport", {
-              type: "checkbox",
-            })}
-          />
-          <h3>{translations("Send weekly report to email")}</h3>
-        </Group>
+    <Card>
+      <CardHeader className="flex flex-row items-center gap-2.25 pb-2">
+        <IconAdjustmentsHorizontal className="size-4 text-primary" />
+        <CardTitle className="font-nunito text-[15px] font-extrabold">
+          {translations("General")}
+        </CardTitle>
+        <InfoButton docUrl={`${docsPath}/webSurvey/shareSurvey`} />
+      </CardHeader>
+      <CardContent className="flex flex-col gap-1">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          onKeyDown={(e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+              e.preventDefault();
+              handleSubmit(onSubmit)(e as any);
+            }
+          }}
+          className="flex flex-col gap-4"
+        >
+          <FieldGroup>
+            {enabledModules.includes("name") && (
+              <Field data-invalid={!!errors.title}>
+                <FieldLabel>
+                  {translations("Survey Name")} <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Input
+                  placeholder={translations("Enter Survey name")}
+                  {...register("title", {
+                    required: translations("Cannot be Empty"),
+                  })}
+                />
+                {errors.title && (
+                  <FieldDescription className="text-destructive">
+                    {errors.title.message}
+                  </FieldDescription>
+                )}
+              </Field>
+            )}
 
-        <RateupButtonBlue
-          className={styles["save-changes-btn"]}
-          title={translations("Save Changes")}
-          type={"submit"}
-          loading={isLoading}
-        />
-      </form>
-    </PaperLayout>
+            {enabledModules.includes("language") && (
+              <Field data-invalid={!!errors.languages}>
+                <FieldLabel>
+                  {translations("Survey Languages")} <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Controller
+                  control={control}
+                  name="languages"
+                  rules={{
+                    validate: (v) =>
+                      v.length > 0 || translations("Must contain atleast one language"),
+                  }}
+                  render={({ field }) => (
+                    <MultiSelectCreatable value={field.value} onValueChange={field.onChange} />
+                  )}
+                />
+                {errors.languages && (
+                  <FieldDescription className="text-destructive">
+                    {errors.languages.message as string}
+                  </FieldDescription>
+                )}
+              </Field>
+            )}
+
+            {enabledModules.includes("teams") && (
+              <Field data-invalid={!!errors.teams}>
+                <FieldLabel>
+                  {translations("Select Teams")} <span className="text-destructive">*</span>
+                </FieldLabel>
+                <MultiSelect
+                  options={teamOptions}
+                  value={selectedTeams}
+                  onValueChange={(v) =>
+                    setValue("teams", v, { shouldDirty: true, shouldValidate: true })
+                  }
+                  placeholder={translations("Select teams")}
+                />
+                {errors.teams && (
+                  <FieldDescription className="text-destructive">
+                    {errors.teams.message as string}
+                  </FieldDescription>
+                )}
+              </Field>
+            )}
+          </FieldGroup>
+
+          <div className="flex items-center gap-3">
+            <Controller
+              control={control}
+              name="sendWeeklyReport"
+              render={({ field }) => (
+                <Switch checked={field.value} onCheckedChange={field.onChange} />
+              )}
+            />
+            <span className="text-sm">{translations("Send weekly report to email")}</span>
+          </div>
+
+          <div className="flex justify-end pt-1">
+            <Button type="submit" size="sm" disabled={editSurvey.isPending}>
+              {editSurvey.isPending && <Spinner data-icon="inline-start" />}
+              {translations("Save Changes")}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
 export default GeneralSettings;
 
-interface iProps {
+// ── MultiSelectCreatable ───────────────────────────────────────────────────────
+
+interface MultiSelectCreatableProps {
   value: string[];
-  setValue: React.Dispatch<React.SetStateAction<string[]>>;
-  errors: any;
+  onValueChange: (v: string[]) => void;
 }
 
-function MultiSelectCreatable({ value, setValue, errors }: iProps) {
-  const combobox = useCombobox({
-    onDropdownClose: () => combobox.resetSelectedOption(),
-    onDropdownOpen: () => combobox.updateSelectedOptionIndex("active"),
-  });
-
-  useEffect(() => {}, [errors]);
-
-  const languages = Array.from(Languages);
-  const [search, setSearch] = useState("");
-  const [data, setData] = useState(languages);
-
-  const exactOptionMatch = data.some((item) => item === search);
+function MultiSelectCreatable({ value = [], onValueChange }: MultiSelectCreatableProps) {
+  const [options, setOptions] = useState(DEFAULT_LANGUAGES);
+  const [inputValue, setInputValue] = useState("");
   const { t: translations } = useTranslation();
-  const handleValueSelect = (val: string) => {
-    if (val === "$create") {
-      setData((current) => [...current, search]);
-      setValue((current) => [...current, search]);
-      setSearch("");
+
+  const trimmed = inputValue.trim();
+  const hasExactMatch = options.some((o) => o.toLowerCase() === trimmed.toLowerCase());
+  const canCreate = trimmed.length > 0 && !hasExactMatch;
+
+  const items = [
+    ...options.map((o) => ({ value: o, label: o })),
+    ...(canCreate ? [{ value: "$create", label: `+ ${translations("Create")} "${trimmed}"` }] : []),
+  ];
+
+  const handleValueChange = (newValues: string[]) => {
+    if (newValues.includes("$create")) {
+      if (!trimmed) return;
+      setOptions((prev) => [...prev, trimmed]);
+      onValueChange([...newValues.filter((v) => v !== "$create"), trimmed]);
     } else {
-      setValue((current) =>
-        current.includes(val) ? current.filter((v) => v !== val) : [...current, val],
-      );
+      onValueChange(newValues);
     }
+    setInputValue("");
   };
 
-  const handleValueRemove = (val: string) =>
-    setValue((current) => current.filter((v) => v !== val));
-
-  const values = value?.map((item) => (
-    <Pill key={item} withRemoveButton onRemove={() => handleValueRemove(item)}>
-      {item}
-    </Pill>
-  ));
-
-  const options = languages
-    .filter((item) => item.toLowerCase().includes(search.trim().toLowerCase()))
-    .map((item) => (
-      <Combobox.Option
-        title={translations("Language")}
-        value={item}
-        key={item}
-        active={value?.includes(item)}
-      >
-        <Group gap="sm">
-          {value?.includes(item) ? <CheckIcon size={12} /> : null}
-          <span>{item}</span>
-        </Group>
-      </Combobox.Option>
-    ));
-
   return (
-    <Combobox store={combobox} onOptionSubmit={handleValueSelect} withinPortal={false}>
-      <Combobox.DropdownTarget>
-        <PillsInput
-          error={errors ? errors : false}
-          withAsterisk
-          onClick={() => combobox.openDropdown()}
-          radius={"12px"}
-        >
-          <Pill.Group>
-            {values}
-
-            <Combobox.EventsTarget>
-              <PillsInput.Field
-                onFocus={() => combobox.openDropdown()}
-                onBlur={() => combobox.closeDropdown()}
-                value={search}
-                placeholder={translations("Select languages")}
-                onChange={(event) => {
-                  combobox.updateSelectedOptionIndex();
-                  setSearch(event.currentTarget.value);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Backspace" && search.length === 0) {
-                    event.preventDefault();
-                    handleValueRemove(value[value.length - 1]);
-                  }
-                }}
-              />
-            </Combobox.EventsTarget>
-          </Pill.Group>
-        </PillsInput>
-      </Combobox.DropdownTarget>
-      <Combobox.Dropdown>
-        <Combobox.Options>
-          {options}
-
-          {!exactOptionMatch && search.trim().length > 0 && (
-            <Combobox.Option value="$create">
-              {translations("+ Create ")}
-              {search}
-            </Combobox.Option>
+    <Combobox items={items} multiple value={value} onValueChange={handleValueChange}>
+      <ComboboxChips>
+        <ComboboxValue>
+          {value.map((v) => (
+            <ComboboxChip key={v}>{v}</ComboboxChip>
+          ))}
+        </ComboboxValue>
+        <ComboboxChipsInput
+          placeholder={value.length ? "" : translations("Select languages")}
+          onChange={(e) => setInputValue((e.target as HTMLInputElement).value)}
+          onKeyDown={(e) => {
+            if (e.key === "Backspace" && !inputValue && value.length) {
+              onValueChange(value.slice(0, -1));
+            }
+          }}
+        />
+      </ComboboxChips>
+      <ComboboxContent>
+        <ComboboxEmpty>{translations("No languages found")}</ComboboxEmpty>
+        <ComboboxList>
+          {(item: { value: string; label: string }) => (
+            <ComboboxItem
+              key={item.value}
+              value={item.value}
+              className={item.value === "$create" ? "text-primary font-medium" : ""}
+            >
+              {item.label}
+            </ComboboxItem>
           )}
-
-          {exactOptionMatch && search.trim().length > 0 && options.length === 0 && (
-            <Combobox.Empty>Nothing found</Combobox.Empty>
-          )}
-        </Combobox.Options>
-      </Combobox.Dropdown>
+        </ComboboxList>
+      </ComboboxContent>
     </Combobox>
   );
 }

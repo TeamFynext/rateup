@@ -16,6 +16,12 @@ const badgeVariants = cva(
         outline: "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
         ghost: "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // Timeline/system events. Unlike the other variants this one wraps
+        // arbitrary rendered content, so it also normalises descendant typography
+        // — otherwise a child that sets its own `text-sm` renders at a different
+        // size from the badge's own label.
+        system:
+          "bg-primary/10 text-primary dark:bg-primary/20 [&_*]:text-xs [&_*]:leading-normal [&_*]:font-medium",
       },
     },
     defaultVariants: {

@@ -1,6 +1,4 @@
-import { BackgroundImage, Flex } from "@mantine/core";
-import { useElementSize } from "@mantine/hooks";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Confetti from "react-confetti";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
@@ -15,7 +13,22 @@ import {
 import ThemeTitle from "../../ThemeTitle.tsx";
 import { getInlineStyleFromStyleObj } from "../welcomepage/index.tsx";
 
-import classes from "../../../SurveyTheme.module.css";
+function useElementSize<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, ...size };
+}
 
 export default function ThankyouPageThemeView({ survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
@@ -29,7 +42,7 @@ export default function ThankyouPageThemeView({ survey }) {
 
   const surveyThemeObj = survey?.webSurveyTheme?.theme;
 
-  const { ref, width, height } = useElementSize();
+  const { ref, width, height } = useElementSize<HTMLDivElement>();
 
   const { titleText: title, subtitleText: subtitle } = editSurveySelectedQuestion || {};
 
@@ -88,30 +101,29 @@ export default function ThankyouPageThemeView({ survey }) {
     : title;
 
   return (
-    <Flex align={"center"} h="100%" style={{ backgroundColor }}>
+    <div className="flex h-full items-center" style={{ backgroundColor }}>
       <CreditsCard
         enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
         url={backgroundImageSrc}
       >
-        <BackgroundImage
+        <div
           ref={ref}
-          className={classes.parentContainer}
-          style={{ height: "100%", width: "100%", objectFit: "contain" }}
-          src={backgroundImageSrc}
+          className="relative h-full w-full bg-cover bg-center p-[25px]"
+          style={{ backgroundImage: `url(${backgroundImageSrc})` }}
         >
           {confettiEnabled && <Confetti width={width} height={height} />}
 
-          <form style={{ width: "100%", height: "100%" }}>
-            <Flex justify={"center"} align={"center"} h={"100%"} direction={"column"}>
+          <form className="h-full w-full">
+            <div className="flex h-full flex-col items-center justify-center">
               <ThemeTitle
                 value={newTitle}
                 onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
                 styles={{ color: titleStyles?.color }}
               />
-            </Flex>
+            </div>
           </form>
-        </BackgroundImage>
+        </div>
       </CreditsCard>
-    </Flex>
+    </div>
   );
 }

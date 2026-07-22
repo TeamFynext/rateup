@@ -1,18 +1,11 @@
-import { isLightColor, luminance, MultiSelect, useMantineTheme } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { InlineMultiSelect } from "@/components/ui/inline-multi-select.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
-
-import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
-import CustomMultiselectForMobile from "../components/CustomMultiselectForMobile/index.tsx";
-import FormPaperLayout from "./layout/FormPaperLayout.tsx";
-
-import classes from "../TakeSurvey.module.css";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -24,21 +17,8 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
   const choices = selectedQ?.choices[selectedLanguage];
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const selectedPreview = useSelectedPreview();
-  const isMobile = useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
 
-  const takeSurveyLayoutWebDomNodeRef = useRef(null);
-
-  const mantineTheme = useMantineTheme();
-  const themePrimaryColor = mantineTheme.colors.primaryColor
-    ? mantineTheme.colors.primaryColor[5]
-    : "#1C518E";
-
-  const pillBgColor =
-    luminance(themePrimaryColor) > 0.8 ? `var(--mantine-color-gray-7)` : themePrimaryColor;
-  const pillTextColor = isLightColor(pillBgColor) ? "#000000" : "#FFFFFF";
-
-  const [selectedOp, setSelectedOp] = useState([]);
+  const [selectedOp, setSelectedOp] = useState<string[]>([]);
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]
@@ -46,6 +26,10 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
       : sampleChoices;
 
   const data = options?.map((op) => op?.value);
+  const comboboxOptions = useMemo(
+    () => data?.map((value) => ({ label: value, value })) ?? [],
+    [data],
+  );
   const { t: translations } = useTranslation();
   useEffect(() => {
     if (response) {
@@ -53,60 +37,20 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
     }
   }, [response]);
 
-  useEffect(() => {
-    const takeSurveyLayoutWebRootDiv = document.querySelector(".take-survey-layout-web-root-div");
-    takeSurveyLayoutWebDomNodeRef.current = takeSurveyLayoutWebRootDiv;
-  }, []);
-
-  const handleSelectedOp = (values) => {
+  const handleSelectedOp = (values: string[]) => {
+    setSelectedOp(values);
     const res = values?.map((val) => options?.find((op) => op?.value === val));
     updateResponse(res);
   };
-  const theme = useMantineTheme();
-  const pos = isMobile ? "top" : "bottom";
-  return !isMobile ? (
-    <FormPaperLayout>
-      <MultiSelect
-        data={data}
+
+  return (
+    <div className="flex flex-col gap-2">
+      <InlineMultiSelect
+        options={comboboxOptions}
         value={selectedOp}
-        onChange={handleSelectedOp}
+        onValueChange={handleSelectedOp}
         placeholder={translations("Select one or more / type in to search")}
-        comboboxProps={{
-          middlewares: {
-            flip: false,
-            shift: false,
-          },
-          position: pos,
-        }}
-        classNames={{
-          input: classes.selectBox,
-          root: classes.input,
-        }}
-        styles={{
-          input: {
-            backgroundColor: "transparent",
-          },
-          dropdown: {
-            borderColor: `var(--mantine-color-${theme.primaryColor}-outline)`,
-            zIndex: 999,
-          },
-          pill: {
-            color: pillTextColor,
-            backgroundColor: pillBgColor,
-          },
-        }}
-        searchable
       />
-    </FormPaperLayout>
-  ) : (
-    <CustomMultiselectForMobile
-      value={selectedOp}
-      data={data}
-      onChange={handleSelectedOp}
-      placeholder={translations("Select one or more")}
-      portalProps={{
-        target: takeSurveyLayoutWebDomNodeRef.current,
-      }}
-    />
+    </div>
   );
 }

@@ -1,91 +1,71 @@
-import { Stack, Text, TextInput, useMantineTheme } from "@mantine/core";
 import { IconMail } from "@tabler/icons-react";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
-import PhoneInputWithCountrySelect from "react-phone-number-input";
 
+import { Input } from "@/components/ui/input.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
-
-import classes from "../TakeSurvey.module.css";
+import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 const ContactForm = ({ features }) => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const selectedFeature = features?.[selectedLanguage];
-  const theme = useMantineTheme();
+  const themePrimaryColor = useThemePrimaryColor();
   const { t: translations } = useTranslation();
   return (
-    <Stack w={"100%"} gap={"lg"}>
+    <div className="flex w-full flex-col gap-5">
       {selectedFeature?.name.isEnabled && (
-        <Stack gap={"xs"}>
-          <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
-            {selectedFeature.name.headText}
-          </Text>
+        <div className="flex flex-col gap-2.5">
+          <span style={{ color: themePrimaryColor }}>{selectedFeature.name.headText}</span>
           <FormPaperLayout>
-            <TextInput
+            <Input
               placeholder={translations("Enter name")}
               value={response?.name || ""}
-              onChange={(e) => updateResponse({ ...response, name: e.currentTarget.value })}
-              variant="unstyled"
-              classNames={{
-                input: classes.input,
-                root: classes.textRoot,
-              }}
+              onChange={(e) => updateResponse({ ...response, name: e.target.value })}
+              className="h-auto w-full border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
               onClick={handleInputScrollIntoView}
             />
           </FormPaperLayout>
-        </Stack>
+        </div>
       )}
       {selectedFeature?.phone.isEnabled && (
-        <Stack gap={"xs"}>
-          <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
-            {selectedFeature.phone.headText}
-          </Text>
-          <FormPaperLayout>
-            <PhoneInputWithCountrySelect
-              defaultCountry={selectedFeature?.phone?.defaultCountryCode || "IN"}
-              international
-              countryCallingCodeEditable={false}
-              placeholder={translations("Enter phone number")}
-              value={response?.phone || null}
-              onChange={(value) => updateResponse({ ...response, phone: value })}
-              className={`${classes.inputPhone} not-prose`}
-              onClick={handleInputScrollIntoView}
-            />
-          </FormPaperLayout>
-        </Stack>
+        <div className="flex flex-col gap-2.5">
+          <span style={{ color: themePrimaryColor }}>{selectedFeature.phone.headText}</span>
+          <PhoneInput
+            defaultCountry={selectedFeature?.phone?.defaultCountryCode || "IN"}
+            international
+            countryCallingCodeEditable={false}
+            placeholder={translations("Enter phone number")}
+            value={response?.phone || undefined}
+            onChange={(value) => updateResponse({ ...response, phone: value })}
+            className="not-prose w-full max-w-[500px]"
+            onClick={handleInputScrollIntoView}
+          />
+        </div>
       )}
       {selectedFeature?.email.isEnabled && (
-        <Stack gap={"xs"}>
-          <Text c={`var(--mantine-color-${theme.primaryColor}-outline)`}>
-            {selectedFeature.email.headText}
-          </Text>
+        <div className="flex flex-col gap-2.5">
+          <span style={{ color: themePrimaryColor }}>{selectedFeature.email.headText}</span>
           <FormPaperLayout>
-            <TextInput
-              placeholder={translations("Enter email")}
-              value={response?.email || ""}
-              onChange={(e) => updateResponse({ ...response, email: e.currentTarget.value })}
-              variant="unstyled"
-              classNames={{
-                input: classes.input,
-                root: classes.textRoot,
-              }}
-              leftSection={<IconMail size="1.2rem" />}
-              styles={{
-                section: {
-                  zIndex: 0,
-                },
-              }}
-              onClick={handleInputScrollIntoView}
-            />
+            <div className="flex items-center gap-2">
+              <IconMail size="1.2rem" className="shrink-0 text-muted-foreground" />
+              <Input
+                placeholder={translations("Enter email")}
+                value={response?.email || ""}
+                onChange={(e) => updateResponse({ ...response, email: e.target.value })}
+                className="h-auto w-full border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
+                onClick={handleInputScrollIntoView}
+              />
+            </div>
           </FormPaperLayout>
-        </Stack>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 };
 

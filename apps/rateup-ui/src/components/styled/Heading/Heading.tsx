@@ -1,38 +1,43 @@
-import type { MantineStyleProp, TitleProps } from "@mantine/core";
-import { Stack, Text, Title } from "@mantine/core";
+import type { ComponentPropsWithoutRef } from "react";
+
+import { cn } from "@/lib/utils";
 
 interface HeadingPropsInterface {
   title?: string;
   subtitle?: string;
   label?: string;
-  titleprops?: TitleProps;
+  titleprops?: ComponentPropsWithoutRef<"h2">;
 }
-const titleStyle: MantineStyleProp = {
-  fontSize: "32px",
-  width: 300,
-  maxWidth: "300px",
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-};
+
 export default function Heading({ label, subtitle, title, titleprops }: HeadingPropsInterface) {
   return (
-    <Stack gap={5} p={0}>
+    <div className="flex flex-col gap-[5px] p-0">
       {title && (
-        <Title order={2} style={titleStyle} {...titleprops} title={title}>
+        <h2
+          {...titleprops}
+          title={title}
+          className={cn(
+            "w-[300px] max-w-[300px] truncate text-[32px] font-semibold",
+            titleprops?.className,
+          )}
+        >
           {title}
-        </Title>
+        </h2>
       )}
       {subtitle && (
-        <Title order={3} {...titleprops} title={subtitle}>
+        <h3
+          {...titleprops}
+          title={subtitle}
+          className={cn("text-xl font-semibold", titleprops?.className)}
+        >
           {subtitle}
-        </Title>
+        </h3>
       )}
       {label && (
-        <Text title={label} c="dark.0">
+        <p title={label} className="text-muted-foreground">
           {label}
-        </Text>
+        </p>
       )}
-    </Stack>
+    </div>
   );
 }

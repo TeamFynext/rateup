@@ -1,23 +1,20 @@
-import {
-  ActionIcon,
-  Badge,
-  Button,
-  Divider,
-  Flex,
-  Group,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import { IconArrowLeft, IconBrandOpenai, IconInfoCircle } from "@tabler/icons-react";
+import { ArrowLeft, Info, Sparkles } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useGenerateLargeTextResponseSummaryByAI } from "@/backend/surveys/response/response.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
-import Heading from "@/components/styled/Heading/Heading.tsx";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 import type { FormElement } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
@@ -54,21 +51,15 @@ const LargeTextResponseSummary = ({
   const ref = useRef(null);
   const [height, setHeight] = useState(null);
   const { t: translations } = useTranslation();
+
   const getResponseSummary = (questionId, teamId?) => {
     if (getSummary.isPending) return;
-    toast.loading("loading", {
-      id: "summary",
-    });
+    toast.loading("loading", { id: "summary" });
     getSummary.mutate(
-      {
-        surveyId,
-        data: { type: summaryTab, questionId, teamId: teamId ?? undefined },
-      },
+      { surveyId, data: { type: summaryTab, questionId, teamId: teamId ?? undefined } },
       {
         onSuccess: () => {
-          toast.success(translations("Summary generated successfully"), {
-            id: "summary",
-          });
+          toast.success(translations("Summary generated successfully"), { id: "summary" });
         },
         onError(error) {
           console.log(error);
@@ -81,9 +72,7 @@ const LargeTextResponseSummary = ({
   };
 
   useEffect(() => {
-    if (ref.current) {
-      setHeight(ref.current.clientHeight);
-    }
+    if (ref.current) setHeight(ref.current.clientHeight);
   }, [ref]);
 
   if (!questions?.length || !subscription.features?.ai?.active) return null;
@@ -94,138 +83,161 @@ const LargeTextResponseSummary = ({
     const teamWiseSummary = questionSummary?.team;
 
     return (
-      <Stack h={height} style={{ minHeight: "50vh" }}>
-        <Group gap={"sm"}>
-          <ActionIcon
+      <div style={{ minHeight: height ?? "50vh" }} className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
             onClick={() => setSummaryTab(ResponseSummaryType.All)}
-            variant="subtle"
-            color="dark.3"
           >
-            <IconArrowLeft />
-          </ActionIcon>
-          <Text fw={800} c={"dark.3"}>
-            {translations("Back")}
-          </Text>
-        </Group>
-        <Stack p={"xl"}>
-          <Text fw={600}>
+            <ArrowLeft className="size-4" />
+          </Button>
+          <span className="font-bold text-muted-foreground">{translations("Back")}</span>
+        </div>
+
+        <div className="flex flex-col gap-4 px-4">
+          <p className="font-semibold">
             {version === 1
               ? getReplacedTitleFromVariable({
                   title: selectedQuestion?.title[defaultLanguage],
                   surveyId,
                 })
               : selectedQuestion?.label}
-          </Text>
-          {teams?.map((team, index) => {
-            const currentTeamSummary = teamWiseSummary?.find((t) => t.teamId === team.value);
-            return (
-              <Stack key={team.value} pl={"xl"} mt={"md"}>
-                <Flex justify={"flex-end"} gap={"sm"}>
-                  <Badge variant="light">{team.label}</Badge>
-                  <Tooltip
-                    label={`${translations("Generate")} ${team.label} ${translations("Summary by AI")}`}
-                  >
-                    <Button
-                      rightSection={
-                        <IconBrandOpenai
-                          className={getSummary.isPending ? styles.rotateInfinitely : null}
-                        />
-                      }
-                      size="sm"
-                      onClick={() => getResponseSummary(selectedQuestion.id, team.value)}
-                    >
-                      {translations("Generate")}
-                    </Button>
-                  </Tooltip>
-                  <Tooltip
-                    label={translations(
-                      "Summary will updated only if there are responses after summary generation",
-                    )}
-                  >
-                    <IconInfoCircle size={"1rem"} color="gray" />
-                  </Tooltip>
-                </Flex>
-                <Flex gap={"xs"}>
-                  <Text fw={600}>Summary:</Text>
-                  <Text fw={600} c={"dark.3"}>
-                    {currentTeamSummary?.summary ?? "---------"}
-                  </Text>
-                </Flex>
-                {index + 1 !== teams.length && <Divider my={"sm"} />}
-              </Stack>
-            );
-          })}
-        </Stack>
-      </Stack>
+          </p>
+
+          <TooltipProvider>
+            {teams?.map((team, index) => {
+              const currentTeamSummary = teamWiseSummary?.find((t) => t.teamId === team.value);
+              return (
+                <div key={team.value} className="flex flex-col gap-3 pl-4 mt-2">
+                  <div className="flex items-center justify-end gap-2">
+                    <Badge variant="secondary">{team.label}</Badge>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            size="sm"
+                            onClick={() => getResponseSummary(selectedQuestion.id, team.value)}
+                          >
+                            <Sparkles
+                              className={`mr-1.5 size-4 ${getSummary.isPending ? styles.rotateInfinitely : ""}`}
+                            />
+                            {translations("Generate")}
+                          </Button>
+                        }
+                      />
+                      <TooltipContent>
+                        {`${translations("Generate")} ${team.label} ${translations("Summary by AI")}`}
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={<Info className="size-4 text-muted-foreground cursor-help" />}
+                      />
+                      <TooltipContent className="max-w-64">
+                        {translations(
+                          "Summary will updated only if there are responses after summary generation",
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-semibold text-sm">Summary:</span>
+                    <span className="font-semibold text-sm text-muted-foreground">
+                      {currentTeamSummary?.summary ?? "---------"}
+                    </span>
+                  </div>
+                  {index + 1 !== teams.length && <Separator className="mt-2" />}
+                </div>
+              );
+            })}
+          </TooltipProvider>
+        </div>
+      </div>
     );
   };
 
   return (
-    <Stack>
-      <Heading subtitle={translations("Large Text Summary")} />
-      <PaperLayout>
-        {summaryTab === ResponseSummaryType.Team ? (
-          <LargeTextTeamwiseSummary />
-        ) : (
-          questions?.map((question, index) => {
-            const summary = currentSummary.find((summary) => summary.questionId === question.id);
-            return (
-              <Stack key={question?.id} mt={"sm"} ref={ref}>
-                <Flex gap={"xs"}>
-                  <Text fw={600}>{index + 1}.</Text>
-                  <Text fw={600}>
-                    {version === 1
-                      ? getReplacedTitleFromVariable({
-                          title: question?.title?.[defaultLanguage],
-                          surveyId,
-                        })
-                      : question?.label}
-                  </Text>
-                  <Tooltip label={translations("Generate Summary by AI")}>
-                    <Button
-                      rightSection={
-                        <IconBrandOpenai
-                          className={getSummary.isPending ? styles.rotateInfinitely : null}
-                        />
-                      }
-                      size="sm"
-                      onClick={() => getResponseSummary(question.id)}
-                    >
-                      {translations("Generate")}
-                    </Button>
-                  </Tooltip>
-                  <Tooltip
-                    label={translations(
-                      "Summary will updated only if there are responses after summary generation",
-                    )}
-                  >
-                    <IconInfoCircle size={"1rem"} color="gray" />
-                  </Tooltip>
-                </Flex>
-                {summary && (
-                  <Stack px={"xl"}>
-                    <Flex gap={"xs"}>
-                      <Text fw={600}>Summary:</Text>
-                      <Text fw={600} c={"dark.3"}>
-                        {summary.all.summary}
-                      </Text>
-                    </Flex>
-                    <RateupButtonSecondary
-                      title={translations("Generate Team wise summary")}
-                      onClick={() => {
-                        setSelectedQuestion(question);
-                        setSummaryTab(ResponseSummaryType.Team);
-                      }}
-                      w={"fit-content"}
-                    />
-                  </Stack>
-                )}
-              </Stack>
-            );
-          })
-        )}
-      </PaperLayout>
-    </Stack>
+    <div className="flex flex-col gap-3">
+      <h3 className="text-base font-semibold text-foreground">
+        {translations("Large Text Summary")}
+      </h3>
+      <Card>
+        <CardContent className="pt-5">
+          <TooltipProvider>
+            {summaryTab === ResponseSummaryType.Team ? (
+              <LargeTextTeamwiseSummary />
+            ) : (
+              <div className="flex flex-col gap-4">
+                {questions?.map((question, index) => {
+                  const summary = currentSummary.find(
+                    (summary) => summary.questionId === question.id,
+                  );
+                  return (
+                    <div key={question?.id} ref={ref} className="flex flex-col gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-sm">{index + 1}.</span>
+                        <span className="font-semibold text-sm flex-1">
+                          {version === 1
+                            ? getReplacedTitleFromVariable({
+                                title: question?.title?.[defaultLanguage],
+                                surveyId,
+                              })
+                            : question?.label}
+                        </span>
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <Button size="sm" onClick={() => getResponseSummary(question.id)}>
+                                <Sparkles
+                                  className={`mr-1.5 size-4 ${getSummary.isPending ? styles.rotateInfinitely : ""}`}
+                                />
+                                {translations("Generate")}
+                              </Button>
+                            }
+                          />
+                          <TooltipContent>{translations("Generate Summary by AI")}</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={<Info className="size-4 text-muted-foreground cursor-help" />}
+                          />
+                          <TooltipContent className="max-w-64">
+                            {translations(
+                              "Summary will updated only if there are responses after summary generation",
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      {summary && (
+                        <div className="flex flex-col gap-2 pl-5">
+                          <div className="flex gap-2">
+                            <span className="font-semibold text-sm">Summary:</span>
+                            <span className="font-semibold text-sm text-muted-foreground">
+                              {summary.all.summary}
+                            </span>
+                          </div>
+                          <RateupButtonSecondary
+                            title={translations("Generate Team wise summary")}
+                            onClick={() => {
+                              setSelectedQuestion(question);
+                              setSummaryTab(ResponseSummaryType.Team);
+                            }}
+                            w={"fit-content"}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </TooltipProvider>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

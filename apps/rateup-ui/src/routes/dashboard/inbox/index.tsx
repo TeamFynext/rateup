@@ -33,14 +33,17 @@ function WhatsAppInbox() {
   const navigate = useNavigate();
 
   const { selectedContact, setSelectedContact, contactsById } = useContactsStore();
-  const { data: fetchedContact } = useContactById(
-    contactId && !contactsById.has(contactId) ? contactId : "",
-  );
+  // Rows are keyed by ticket (conversation) id, so a `?contactId=` deep link has
+  // to be resolved by scanning for that contact's row rather than a Map lookup.
+  const rowForContactId = contactId
+    ? (Array.from(contactsById.values()).find((c) => c?.id === contactId) ?? null)
+    : null;
+  const { data: fetchedContact } = useContactById(contactId && !rowForContactId ? contactId : "");
 
   useEffect(() => {
     if (contactId) {
       if (selectedContact?.id !== contactId) {
-        const contactFromStore = contactsById.get(contactId);
+        const contactFromStore = rowForContactId;
         let consumed = false;
         if (contactFromStore) {
           setSelectedContact(contactFromStore);
@@ -80,7 +83,9 @@ function WhatsAppInbox() {
       navigate({
         to: "/dashboard/inbox",
         replace: true,
-        search: { tab: "All" } as never,
+        // Lowercase: every consumer compares against lowercase tab values, so
+        // "All" silently fell through to the legacy branch.
+        search: { tab: "open" } as never,
       });
     }
   }, [tab]);

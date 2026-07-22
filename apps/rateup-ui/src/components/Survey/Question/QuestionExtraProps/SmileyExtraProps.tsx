@@ -1,11 +1,15 @@
-import { ActionIcon, Collapse, Flex, Group, Stack, Text, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import { useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
-  ContainedColorInput,
-  ContainedSelection,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import { SmileyResponse } from "@/types/enums.ts";
 
@@ -25,14 +29,52 @@ export enum SmileyColorType {
   Gradient = "Gradient",
 }
 
+function ColorInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label?: string;
+  value?: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="flex flex-col gap-1">
+      {label && <Label className="text-xs text-muted-foreground">{label}</Label>}
+      <div
+        className="flex h-9 w-36 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2 hover:bg-accent"
+        onClick={() => inputRef.current?.click()}
+        title={placeholder ?? "Choose a color"}
+      >
+        <span
+          className="size-5 shrink-0 rounded-sm border border-black/10 shadow-sm"
+          style={{ backgroundColor: value ?? "#000000" }}
+        />
+        <input
+          ref={inputRef}
+          type="color"
+          value={value ?? "#000000"}
+          onChange={(e) => onChange(e.target.value)}
+          className="sr-only"
+        />
+        <span className="flex-1 font-mono text-xs text-muted-foreground">
+          {value?.toUpperCase() ?? "#000000"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 const SmileyExtraProps = ({ form }) => {
   const features = form.values.features ? { ...form.values.features } : {};
-  const [opened, { toggle, open }] = useDisclosure(true);
+  const [opened, setOpened] = useState(true);
 
   const handleChange = (field, value) => {
-    const updateData = {
-      [field]: value,
-    };
+    const updateData: Record<string, any> = { [field]: value };
     if (
       field === "colorType" &&
       value === SmileyColorType.Gradient &&
@@ -59,137 +101,156 @@ const SmileyExtraProps = ({ form }) => {
     }
     form.setFieldValue("features", {
       ...features,
-      iconStyle: {
-        ...features?.iconStyle,
-        ...updateData,
-      },
+      iconStyle: { ...features?.iconStyle, ...updateData },
     });
 
-    if (value !== "Default" && !opened) open();
+    if (value !== "Default" && !opened) setOpened(true);
   };
 
-  const updateSmileyColor = (smiley, value) => {
+  const updateSmileyColor = (smiley: number, value: string) => {
     form.setFieldValue("features", {
       ...features,
       iconStyle: {
         ...features?.iconStyle,
-        color: {
-          ...features?.iconStyle?.color,
-          [smiley]: value,
-        },
+        color: { ...features?.iconStyle?.color, [smiley]: value },
       },
     });
   };
 
-  const updateSmileyEmoji = (smiley: number, value) => {
+  const updateSmileyEmoji = (smiley: number, value: string) => {
     form.setFieldValue("features", {
       ...features,
       iconStyle: {
         ...features?.iconStyle,
-        emojies: {
-          ...features?.iconStyle?.emojies,
-          [smiley]: value,
-        },
+        emojies: { ...features?.iconStyle?.emojies, [smiley]: value },
       },
     });
   };
+
+  const isColorDisabled =
+    !features?.iconStyle?.variant ||
+    [SmileyVariantStyle.Custom, SmileyVariantStyle.Emojis, SmileyVariantStyle.Default].includes(
+      features?.iconStyle?.variant,
+    );
 
   return (
-    <Stack gap={"sm"}>
-      <Title size="sm">Emoji Style</Title>
-      <Group justify="space-between">
-        <Flex gap={"lg"}>
-          <ContainedSelection
-            data={Object.values(SmileyVariantStyle)}
-            label={"Variant"}
-            onChange={(value) => handleChange("variant", value)}
-            value={features?.iconStyle?.variant}
-            defaultValue={SmileyVariantStyle.Default}
-            allowDeselect={false}
-          />
-          <ContainedSelection
-            data={Object.values(SmileyColorType)}
-            label={"Color"}
-            onChange={(value) => handleChange("colorType", value)}
-            value={features?.iconStyle?.colorType}
-            defaultValue={SmileyColorType.Default}
-            disabled={
-              !features?.iconStyle?.variant ||
-              [
-                SmileyVariantStyle.Custom,
-                SmileyVariantStyle.Emojis,
-                SmileyVariantStyle.Default,
-              ].includes(features?.iconStyle?.variant)
-            }
-            allowDeselect={false}
-          />
-        </Flex>
-        <ActionIcon onClick={toggle} variant="transparent">
-          {opened ? <IconChevronUp /> : <IconChevronDown />}
-        </ActionIcon>
-      </Group>
+    <div className="flex flex-col gap-3 pt-2">
+      <p className="text-sm font-semibold">Emoji Style</p>
 
-      <Collapse expanded={opened}>
-        {features?.iconStyle?.variant === SmileyVariantStyle.Emojis ? null : features?.iconStyle
-            ?.variant === SmileyVariantStyle.Custom ? (
-          <Stack>
-            <Text size="sm">Click on each smiley to insert corresponding emoji</Text>
-            {Object.values(SmileyResponse)
-              .reverse()
-              .map((smiley, i) => {
-                return (
-                  <Group>
-                    <Text w={100} size="sm" fw={"bold"}>
-                      {smiley}
-                    </Text>{" "}
-                    :{" "}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex gap-4">
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs text-muted-foreground">Variant</Label>
+            <Select
+              value={features?.iconStyle?.variant ?? SmileyVariantStyle.Default}
+              onValueChange={(v) => handleChange("variant", v)}
+            >
+              <SelectTrigger size="sm" className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(SmileyVariantStyle).map((v) => (
+                  <SelectItem key={v} value={v}>
+                    {v}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs text-muted-foreground">Color</Label>
+            <Select
+              value={features?.iconStyle?.colorType ?? SmileyColorType.Default}
+              onValueChange={(v) => handleChange("colorType", v)}
+              disabled={isColorDisabled}
+            >
+              <SelectTrigger size="sm" className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(SmileyColorType).map((v) => (
+                  <SelectItem key={v} value={v}>
+                    {v}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => setOpened((o) => !o)}
+        >
+          {opened ? <IconChevronUp className="size-4" /> : <IconChevronDown className="size-4" />}
+        </Button>
+      </div>
+
+      {opened && (
+        <div>
+          {features?.iconStyle?.variant === SmileyVariantStyle.Custom ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-muted-foreground">
+                Click on each smiley to insert corresponding emoji
+              </p>
+              {Object.values(SmileyResponse)
+                .reverse()
+                .map((smiley, i) => (
+                  <div key={smiley} className="flex items-center gap-2">
+                    <span className="w-24 text-sm font-semibold">{smiley}</span>
+                    <span>:</span>
                     <PopoverEmojiPicker
                       showIcon={
                         features?.iconStyle?.emojies?.[i + 1] ? (
-                          <Text size={"md"}>{features?.iconStyle?.emojies?.[i + 1]}</Text>
+                          <span className="text-base">{features?.iconStyle?.emojies?.[i + 1]}</span>
                         ) : null
                       }
                       onEmojiClick={(emoji) => updateSmileyEmoji(i + 1, emoji)}
                     />
-                  </Group>
-                );
-              })}
-          </Stack>
-        ) : features?.iconStyle?.colorType === SmileyColorType.Individual ? (
-          Object.values(SmileyResponse)
-            .reverse()
-            .map((smiley, i) => {
-              return (
-                <Group my={"xs"}>
-                  {getSmileyIcon(smiley)} :{" "}
-                  <ContainedColorInput
-                    placeholder="Choose a color"
-                    onChange={(value) => updateSmileyColor(i + 1, value)}
-                    value={features?.iconStyle?.color?.[i + 1]}
-                  />
-                </Group>
-              );
-            })
-        ) : features?.iconStyle?.colorType === SmileyColorType.Gradient ? (
-          <Group>
-            <ContainedColorInput
-              label={"Start Color"}
-              onChange={(value) => handleChange("gradientStartColor", value)}
-              value={features?.iconStyle?.gradientStartColor}
-            />
-            <ContainedColorInput
-              label={"End Color"}
-              onChange={(value) => handleChange("gradientEndColor", value)}
-              value={features?.iconStyle?.gradientEndColor}
-            />
-          </Group>
-        ) : null}
-      </Collapse>
-    </Stack>
+                  </div>
+                ))}
+            </div>
+          ) : features?.iconStyle?.colorType === SmileyColorType.Individual ? (
+            <div className="flex flex-col gap-2">
+              {Object.values(SmileyResponse)
+                .reverse()
+                .map((smiley, i) => (
+                  <div key={smiley} className="flex items-center gap-2">
+                    {getSmileyIcon(smiley)}
+                    <span>:</span>
+                    <ColorInput
+                      placeholder="Choose a color"
+                      onChange={(value) => updateSmileyColor(i + 1, value)}
+                      value={features?.iconStyle?.color?.[i + 1]}
+                    />
+                  </div>
+                ))}
+            </div>
+          ) : features?.iconStyle?.colorType === SmileyColorType.Gradient ? (
+            <div className="flex gap-4">
+              <ColorInput
+                label="Start Color"
+                onChange={(value) => handleChange("gradientStartColor", value)}
+                value={features?.iconStyle?.gradientStartColor}
+              />
+              <ColorInput
+                label="End Color"
+                onChange={(value) => handleChange("gradientEndColor", value)}
+                value={features?.iconStyle?.gradientEndColor}
+              />
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
   );
 };
 
-function hexToRgb(hex) {
+function hexToRgb(hex: string) {
   const bigint = parseInt(hex.slice(1), 16);
   const r = (bigint >> 16) & 255;
   const g = (bigint >> 8) & 255;
@@ -197,13 +258,18 @@ function hexToRgb(hex) {
   return [r, g, b];
 }
 
-function rgbToHex(r, g, b) {
+function rgbToHex(r: number, g: number, b: number) {
   return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
 }
 
-export function generateGradient(startColor, endColor, steps, defaultColor) {
+export function generateGradient(
+  startColor: string,
+  endColor: string,
+  steps: number,
+  defaultColor: string,
+) {
   if (!startColor || !endColor) {
-    return Array.from({ length: steps }, (_, _i) => defaultColor);
+    return Array.from({ length: steps }, () => defaultColor);
   }
   const startRGB = hexToRgb(startColor);
   const endRGB = hexToRgb(endColor);
@@ -218,7 +284,6 @@ export function generateGradient(startColor, endColor, steps, defaultColor) {
   }
 
   gradientColors.push(endColor);
-
   return gradientColors;
 }
 

@@ -1,5 +1,4 @@
-import { Box, Center, Container, ScrollArea, Stack, Text } from "@mantine/core";
-import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
+import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { useContext, useEffect, useRef, useState } from "react";
@@ -12,6 +11,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { SurveyContextProvider } from "@/context/SurveyObjContext.tsx";
 import { SurveyThemeContextProvider } from "@/context/SurveyThemeContext.tsx";
+import { useMediaQuery } from "@/hooks/use-media-querry.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { LogicAction, PageType } from "@/types/enums.ts";
 import { encryptResponse } from "@/utils/encryption/index.ts";
@@ -34,7 +34,16 @@ import {
   submitSurvey,
 } from "./util.tsx";
 
-import styles from "./TakeSurvey.module.css";
+function useListState<T>(initialValue: T[]) {
+  const [state, setState] = useState<T[]>(initialValue);
+  const handlers = {
+    append: (item: T) => setState((current) => [...current, item]),
+    setItem: (index: number, item: T) =>
+      setState((current) => current.map((value, i) => (i === index ? item : value))),
+    pop: () => setState((current) => current.slice(0, -1)),
+  };
+  return [state, handlers] as const;
+}
 
 function TakeSurvey({
   survey,
@@ -73,10 +82,9 @@ function TakeSurvey({
 
   const [selectedQ, setSelectedQ] = useState<Question>(null);
   const [alignment, setAlignment] = useState("left");
-  const [
-    isConfirmResponsesModalOpen,
-    { open: openConfirmationResponsesModal, close: closeConfirmResponsesModal },
-  ] = useDisclosure(false);
+  const [isConfirmResponsesModalOpen, setIsConfirmResponsesModalOpen] = useState(false);
+  const openConfirmationResponsesModal = () => setIsConfirmResponsesModalOpen(true);
+  const closeConfirmResponsesModal = () => setIsConfirmResponsesModalOpen(false);
 
   // Questions Array length without PageType Questions(excluding Custom Page type question).
   const questionsLength = getQuestionsLength(survey);
@@ -177,9 +185,9 @@ function TakeSurvey({
 
   if (!questionsLength) {
     return (
-      <Center style={{ height: "100vh" }}>
-        <Text fw={500}>No Questions found!</Text>
-      </Center>
+      <div className="flex h-screen items-center justify-center">
+        <p className="font-medium">No Questions found!</p>
+      </div>
     );
   }
 
@@ -388,13 +396,12 @@ function TakeSurvey({
               prevFn={handlePrev}
               survey={survey}
             >
-              <Container
-                size={"md"}
-                className={styles["take-survey-root-div"]}
+              <div
                 ref={takeSurveyRootDivRef}
+                className="mx-auto h-full w-full max-w-[64em] px-4"
                 style={isSavingResponses ? { pointerEvents: "none" } : {}}
               >
-                <Stack justify="space-between" h={"100%"} gap={"1rem"}>
+                <div className="flex h-full flex-col justify-between gap-4">
                   <ConfirmResponsesModal
                     opened={isConfirmResponsesModalOpen}
                     close={closeConfirmResponsesModal}
@@ -409,9 +416,9 @@ function TakeSurvey({
                   />
 
                   <AnimatePresence initial={false}>
-                    <Box className={`${styles["question-form-title-desc-container"]}`}>
+                    <div className="relative flex-1">
                       <motion.div
-                        className={styles["question-form-title-desc-motion-div"]}
+                        className="absolute flex h-full w-full flex-col justify-center"
                         key={selectedQ.id}
                         transition={{
                           type: "tween",
@@ -428,45 +435,51 @@ function TakeSurvey({
                         }}
                       >
                         <motion.div
-                          className={`${styles["question-and-error-text-containers-wrapper"]}  prose max-w-none`}
+                          className="prose flex h-full max-w-none flex-col gap-2.5 px-[0.3125rem]"
                           layout="position"
                           transition={{
                             type: "tween",
                             duration: 0.2,
                           }}
                         >
-                          <ScrollArea.Autosize type="never" className={styles["question-div"]}>
-                            {selectedQ.type in PageType ? (
-                              <CustomHTML content={selectedQ?.description[selectedLanguage]} />
-                            ) : (
-                              <>
-                                <Box className={`${styles["title-desc-container"]}`}>
-                                  <QuestionTitle
-                                    largeScreen={largeScreen}
-                                    themeStyles={surveyThemeData?.surveyTheme?.title?.styles}
-                                    responses={responsesRef.current}
-                                    surveyId={survey?.id}
-                                    setAlignment={setAlignment}
-                                  />
-                                  {!isHtml(selectedQ?.title[selectedLanguage]) && (
-                                    <QuestionDesc
-                                      largeScreen={largeScreen}
-                                      themeStyles={surveyThemeData?.surveyTheme?.subtitle?.styles}
-                                    />
-                                  )}
-                                </Box>
+                          <ScrollAreaPrimitive.Root className="m-0 min-h-0 w-full max-w-full flex-1 p-0">
+                            <ScrollAreaPrimitive.Viewport className="size-full max-h-full rounded-[inherit] outline-none">
+                              <div className="flex flex-col justify-center py-[0.3125rem]">
+                                {selectedQ.type in PageType ? (
+                                  <CustomHTML content={selectedQ?.description[selectedLanguage]} />
+                                ) : (
+                                  <>
+                                    <div className="mb-2.5">
+                                      <QuestionTitle
+                                        largeScreen={largeScreen}
+                                        themeStyles={surveyThemeData?.surveyTheme?.title?.styles}
+                                        responses={responsesRef.current}
+                                        surveyId={survey?.id}
+                                        setAlignment={setAlignment}
+                                      />
+                                      {!isHtml(selectedQ?.title[selectedLanguage]) && (
+                                        <QuestionDesc
+                                          largeScreen={largeScreen}
+                                          themeStyles={
+                                            surveyThemeData?.surveyTheme?.subtitle?.styles
+                                          }
+                                        />
+                                      )}
+                                    </div>
 
-                                <QuestionForm />
-                              </>
-                            )}
-                          </ScrollArea.Autosize>
+                                    <QuestionForm />
+                                  </>
+                                )}
+                              </div>
+                            </ScrollAreaPrimitive.Viewport>
+                          </ScrollAreaPrimitive.Root>
 
-                          <Box className={styles["error-text-div"]} ref={errorTextDivRef}>
+                          <div ref={errorTextDivRef}>
                             {/* required, response error messages will be rendered here */}
-                          </Box>
+                          </div>
                         </motion.div>
                       </motion.div>
-                    </Box>
+                    </div>
                   </AnimatePresence>
 
                   <NextPrev
@@ -478,8 +491,8 @@ function TakeSurvey({
                     isSavingResponses={isSavingResponses}
                     errorTextDivRef={errorTextDivRef}
                   />
-                </Stack>
-              </Container>
+                </div>
+              </div>
             </NextPrevFuncsAndLastQuestionContextProvider>
           </SurveyThemeContextProvider>
         </SelectedQContext.Provider>
