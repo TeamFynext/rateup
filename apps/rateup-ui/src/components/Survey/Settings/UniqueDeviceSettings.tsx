@@ -14,7 +14,7 @@ const UniqueDeviceSettings = ({ survey, surveyId }) => {
   const { t: translations } = useTranslation();
 
   return (
-    <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5">
+    <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5 py-2.75">
       <Tooltip>
         <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
           <Switch
@@ -29,7 +29,7 @@ const UniqueDeviceSettings = ({ survey, surveyId }) => {
             : translations("Click here to allow only Single user entry from a device")}
         </TooltipContent>
       </Tooltip>
-      <Label htmlFor="unique-device" className="cursor-pointer text-sm font-medium">
+      <Label htmlFor="unique-device" className="cursor-pointer text-[13px] font-semibold">
         {translations("Unique Device Entry")}
       </Label>
       <div />

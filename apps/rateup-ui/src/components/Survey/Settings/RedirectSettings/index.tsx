@@ -1,3 +1,4 @@
+import { IconExternalLink } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 type RedirectError = { url: string; time: string };
@@ -50,8 +51,11 @@ function RedirectSettings({
   return (
     <TooltipProvider>
       <Card>
-        <CardHeader>
-          <CardTitle>{translations("Redirect")}</CardTitle>
+        <CardHeader className="flex flex-row items-center gap-2.25">
+          <IconExternalLink className="size-4 text-primary" />
+          <CardTitle className="font-nunito text-[15px] font-extrabold">
+            {translations("Redirect")}
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5">
@@ -146,8 +150,9 @@ function RedirectSettings({
             </div>
           </FieldGroup>
 
-          <div className="flex justify-center">
+          <div className="flex justify-end">
             <Button
+              size="sm"
               disabled={
                 !!redirectError?.time?.length || !!redirectError?.url?.length || !areInputsEnabled
               }

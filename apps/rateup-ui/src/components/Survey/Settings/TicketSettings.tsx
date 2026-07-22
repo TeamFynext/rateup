@@ -1,3 +1,4 @@
+import { IconTicket } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -73,13 +74,16 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
   return (
     <TooltipProvider>
       <Card>
-        <CardHeader>
-          <CardTitle>{translations("Tickets")}</CardTitle>
+        <CardHeader className="flex flex-row items-center gap-2.25">
+          <IconTicket className="size-4 text-primary" />
+          <CardTitle className="font-nunito text-[15px] font-extrabold">
+            {translations("Tickets & notifications")}
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
           <PremiumFeature isSubscribed={enabledModules.includes("tickets")}>
-            <div className="flex flex-col gap-5">
-              <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5">
+            <div className="flex flex-col divide-y divide-border">
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5 py-2.75">
                 <Tooltip>
                   <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
                     <Switch
@@ -93,10 +97,12 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
                       : translations("Click here to enable ticketing")}
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-sm font-medium">{translations("Enable Ticketing")}</span>
+                <span className="text-[13px] font-semibold">
+                  {translations("Enable Ticketing")}
+                </span>
               </div>
 
-              <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5">
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5 py-2.75">
                 <Tooltip>
                   <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
                     <Switch
@@ -114,13 +120,13 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
                       : translations("Click here to enable auto-generate Tickets on response")}
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-sm font-medium">
+                <span className="text-[13px] font-semibold">
                   {translations("Enable Auto-Generate Ticket")}
                 </span>
               </div>
 
               {enableAutoGenerateTicket && (
-                <FieldGroup>
+                <FieldGroup className="pt-3">
                   <div className="grid grid-cols-2 gap-3">
                     <Field>
                       <FieldLabel>{translations("Select Board")}</FieldLabel>

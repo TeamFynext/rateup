@@ -1,4 +1,4 @@
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconInfoCircle, IconWebhook } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -44,8 +44,11 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey, enabledModules }
   return (
     <TooltipProvider>
       <Card>
-        <CardHeader>
-          <CardTitle>{translations("Webhooks")}</CardTitle>
+        <CardHeader className="flex flex-row items-center gap-2.25">
+          <IconWebhook className="size-4 text-primary" />
+          <CardTitle className="font-nunito text-[15px] font-extrabold">
+            {translations("Webhooks")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <PremiumFeature isSubscribed={enabledModules.includes("webhook")}>
@@ -93,8 +96,8 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey, enabledModules }
                 </Field>
               </FieldGroup>
 
-              <div className="flex justify-center">
-                <Button onClick={handleSave} disabled={editSurvey.isPending}>
+              <div className="flex justify-end">
+                <Button size="sm" onClick={handleSave} disabled={editSurvey.isPending}>
                   {editSurvey.isPending && <Spinner data-icon="inline-start" />}
                   {translations("Save Changes")}
                 </Button>

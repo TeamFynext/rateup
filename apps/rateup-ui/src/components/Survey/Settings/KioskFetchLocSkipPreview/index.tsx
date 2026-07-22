@@ -1,3 +1,4 @@
+import { IconSettings2 } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -37,14 +38,14 @@ function SwitchRow({
   description: string;
 }) {
   return (
-    <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5">
+    <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-0.5 py-2.75">
       <Tooltip>
         <TooltipTrigger render={<span className="inline-flex shrink-0" />}>
           <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
         </TooltipTrigger>
         <TooltipContent>{tooltip}</TooltipContent>
       </Tooltip>
-      <Label htmlFor={id} className="cursor-pointer text-sm font-medium">
+      <Label htmlFor={id} className="cursor-pointer text-[13px] font-semibold">
         {label}
       </Label>
       <div />
@@ -83,10 +84,14 @@ function KioskFetchLocSkipPreview({
   return (
     <TooltipProvider>
       <Card>
-        <CardHeader>
-          <CardTitle>{translations("Survey Behaviour")}</CardTitle>
+        <CardHeader className="flex flex-row items-center gap-2.25">
+          <IconSettings2 className="size-4 text-primary" />
+          <CardTitle className="font-nunito text-[15px] font-extrabold">
+            {translations("Survey Behaviour")}
+          </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-5">
+        {/* Rows carry their own vertical padding; divide-y draws the design's row rules. */}
+        <CardContent className="flex flex-col divide-y divide-border">
           {enabledModules.includes("kiosk") && (
             <SwitchRow
               id="kiosk-mode"

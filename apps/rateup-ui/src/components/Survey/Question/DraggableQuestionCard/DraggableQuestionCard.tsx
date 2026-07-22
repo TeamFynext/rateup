@@ -6,60 +6,16 @@ import React, { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
+import { Button } from "@/components/ui/button.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
-import { PageType, QuestionType } from "@/types/enums.ts";
+import { PageType } from "@/types/enums.ts";
 import { extractText } from "@/utils/index.ts";
 
 import { pageIcons } from "../../Page/PageIcons.ts";
 import { getReplacedTitleFromVariable } from "../../TakeSurvey/TakeSurveyComponent/util.tsx";
 import { reviewPageLogosObj } from "../QuestionReviewPageEditor/constants.tsx";
-import { questionIcons } from "../QuestionTypeSelection.tsx";
-
-const questionTypeColors: Record<string, string> = {
-  // Page types
-  [PageType.Welcome]: "#3B82F6",
-  [PageType.ThankYou]: "#3B82F6",
-  [PageType.Language]: "#6366F1",
-  [PageType.Custom]: "#14B8A6",
-  [PageType.GoogleReview]: "#EF4444",
-  // Question types
-  [QuestionType.Text]: "#8B5CF6",
-  [QuestionType.TextArea]: "#EC4899",
-  [QuestionType.Number]: "#F59E0B",
-  [QuestionType.Email]: "#3B82F6",
-  [QuestionType.Phone]: "#10B981",
-  [QuestionType.Photo]: "#6366F1",
-  [QuestionType.Date]: "#06B6D4",
-  [QuestionType.LD]: "#14B8A6",
-  [QuestionType.YN]: "#10B981",
-  [QuestionType.Rating]: "#22C55E",
-  [QuestionType.Smiley]: "#EAB308",
-  [QuestionType.Opinion]: "#F97316",
-  [QuestionType.MCQ]: "#6366F1",
-  [QuestionType.MSQ]: "#8B5CF6",
-  [QuestionType.CustomNPS]: "#F97316",
-  [QuestionType.PCQ]: "#A855F7",
-  [QuestionType.Testimonial]: "#10B981",
-  [QuestionType.EmailPhone]: "#3B82F6",
-  [QuestionType.DDSS]: "#64748B",
-  [QuestionType.DDMS]: "#64748B",
-  [QuestionType.Contact]: "#14B8A6",
-  [QuestionType.TnC]: "#EF4444",
-  [QuestionType.InfoMessage]: "#0EA5E9",
-  [QuestionType.MultiTextInput]: "#7C3AED",
-  [QuestionType.MCQGrid]: "#6366F1",
-  [QuestionType.File]: "#78716C",
-  [QuestionType.EmailOtp]: "#EF4444",
-  [QuestionType.WOP]: "#F97316",
-  [QuestionType.WaList]: "#22C55E",
-  [QuestionType.WaButtons]: "#3B82F6",
-  [QuestionType.WaTimeSlot]: "#06B6D4",
-  [QuestionType.PhotoPicker]: "#6366F1",
-  [QuestionType.DocumentPicker]: "#78716C",
-};
-
-import { Button } from "@/components/ui/button.tsx";
+import { questionIcons, questionTypeColors } from "../QuestionTypeSelection.tsx";
 
 interface DraggableQuestionCardProps {
   question: Question;

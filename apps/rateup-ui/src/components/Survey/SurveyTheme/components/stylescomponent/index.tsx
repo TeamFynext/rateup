@@ -1,6 +1,8 @@
+import { IconInfoCircle } from "@tabler/icons-react";
 import { produce } from "immer";
 import { difference } from "lodash";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useSurveyUpdateMutation } from "@/backend/surveys/surveys.query";
 import {
@@ -9,6 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion.tsx";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
@@ -34,7 +37,9 @@ function StylesComponent({
   themeSelectorState,
   setThemeSelectorState,
   isAllThemesFetchPending,
+  onSave = onClose,
 }) {
+  const { t: translations } = useTranslation();
   const selectedPageTab = useSelectedPageTab();
   const openEditors = useOpenEditors();
   const setOpenEditors = useSetOpenEditors();
@@ -80,6 +85,17 @@ function StylesComponent({
             isAllThemesFetchPending={isAllThemesFetchPending}
             survey={survey}
           />
+
+          {isThemeObjBeingEditedDefaultTheme && (
+            <Alert className="mx-3.5 w-auto">
+              <IconInfoCircle />
+              <AlertDescription>
+                {translations(
+                  "The Default Theme can't be edited. Create a new theme to customise it.",
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
           <Separator />
         </>
       )}
@@ -154,7 +170,7 @@ function StylesComponent({
             survey={survey}
             isThemeObjBeingEditedDefaultTheme={isThemeObjBeingEditedDefaultTheme}
             themeObjBeingEdited={themeObjBeingEdited}
-            onSave={onClose}
+            onSave={onSave}
           />
         )}
 
