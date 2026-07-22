@@ -225,6 +225,31 @@ export async function updateConversation(conversationId: string, data: UpdateCon
   });
 }
 
+/**
+ * Give a ticket a subject only if it does not already have one.
+ *
+ * The "is it blank?" test is part of the WHERE rather than a read followed by a
+ * write, so an auto-generated title can never overwrite an existing one — not
+ * through a stale copy of the row, and not when two messages of the same ticket
+ * are handled at once. Returns whether it actually wrote.
+ */
+export async function setConversationSubjectIfBlank(conversationId: string, subject: string) {
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+  });
+
+  if (!conversation || conversation.subject) {
+    return false;
+  }
+
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { subject },
+  });
+
+  return true;
+}
+
 export async function getConversationById(conversationId: string) {
   return await prisma.conversation.findUnique({
     where: {

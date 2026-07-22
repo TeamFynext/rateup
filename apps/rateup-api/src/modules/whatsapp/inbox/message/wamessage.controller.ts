@@ -51,6 +51,7 @@ import {
   unblockWhatsappUser,
 } from "../../whatsappSurvey/wasurvey.service.js";
 import {
+  deriveConversationSubject,
   extractMentions,
   handleWaReceivedImages,
   returnAppropriateTimeStamp,
@@ -82,6 +83,7 @@ import {
   getActiveConversationForContact,
   getLastCreatedConversationForContact,
   openConversationForContact,
+  setConversationSubjectIfBlank,
   updateConversation,
 } from "../../../contact/conversation/conversation.service.js";
 import { WaMessageClosedStatus } from "../../constants.js";
@@ -239,6 +241,17 @@ export async function handleWaMessages(
       messageType,
       logs,
     );
+
+    // A ticket with no subject is titled by the message that opened it — the
+    // first message is the best one-line description of what it is about. The
+    // write itself is conditional on the subject still being blank, so a title an
+    // agent typed is never overwritten, even if this copy of the row is stale.
+    if (conversation && !conversation.subject) {
+      const subject = deriveConversationSubject(waMessageBody);
+      if (subject && (await setConversationSubjectIfBlank(conversation.id, subject))) {
+        conversation = { ...conversation, subject };
+      }
+    }
 
     const teamID = teamId && teamId.trim() !== "" ? teamId : null;
 
