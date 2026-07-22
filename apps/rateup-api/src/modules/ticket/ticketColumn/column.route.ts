@@ -16,14 +16,12 @@ import {
   reorderColumnsHandler,
 } from "./column.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
-import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
-import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { verifyColumnAccess } from "./column.auth.js";
 import { verifyBoardAccess } from "../ticketBoard/board.auth.js";
 
 export async function columnRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeaturePathName.Ticket]));
+  // Tickets are a free feature — no subscription gate.
 
   // Create column
   server.post(

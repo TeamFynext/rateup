@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
+import { FreePlanSubscriptionFeatures } from "../subscription/subscription.data.js";
 import { subscriptionGates } from "../../utils/canAccess.js";
 import { TeamFeature, PlatformType, Prisma } from "../../../generated/prisma/client.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
@@ -77,25 +78,10 @@ export async function updateRateupPlanFeature() {
   const rateupPlans = await prisma.rateupPlan.findMany();
   for (const plan of rateupPlans) {
     const feature = plan.features as SubscriptionFeatures;
-    if (feature.whatsapp.automation && feature.whatsapp.automation.automationTrigger) {
-      continue;
-    }
     const newFeature = {
       ...feature,
       whatsapp: {
         ...feature.whatsapp,
-        automation: {
-          active: true,
-          count: {
-            max: 1,
-          },
-          automationTrigger: {
-            active: true,
-            count: {
-              max: 1000,
-            },
-          },
-        },
       },
     };
 
@@ -116,15 +102,6 @@ export async function updateRateupPlanFeature() {
       ...features,
       whatsapp: {
         ...features.whatsapp,
-        automation: {
-          ...features.whatsapp.automation,
-          automationTrigger: {
-            active: true,
-            count: {
-              max: 1000,
-            },
-          },
-        },
       },
     };
 
@@ -229,6 +206,104 @@ export async function updateFreePlanExpiry() {
       expiresAt: dayjs().add(100, "years").toDate(),
     },
   });
+}
+
+// Resets every FREE PLAN subscription's feature set to the current
+// FreePlanSubscriptionFeatures defaults (e.g. after the free-plan limits change).
+export async function migrateFreePlanFeatures() {
+  const result = await prisma.subscription.updateMany({
+    where: {
+      basePlan: {
+        name: "FREE PLAN",
+      },
+    },
+    data: {
+      features: FreePlanSubscriptionFeatures as unknown as object,
+    },
+  });
+  return { updated: result.count };
+}
+
+// The pooled conversation allowance applied to every non-free plan during the
+// legacy → current feature-schema migration.
+const MIGRATION_CONVERSATION_MAX = 1_000_000;
+
+// Projects a subscription's (possibly legacy-shaped) feature JSON onto the CURRENT
+// schema. It PRESERVES the existing values of features that still exist — team,
+// teamMember, webSurvey (and its sub-toggles), reputationManagement, ai — and DROPS
+// retired ones (menu, ticket, loyalty, and the old message-based whatsapp.count plus
+// the whatsapp sub-features flow/survey/campaign/template/automation). WhatsApp is
+// rebuilt around `conversation`, pooled at MIGRATION_CONVERSATION_MAX. Missing keys
+// fall back to safe defaults so a partially-shaped record still migrates cleanly.
+export function migrateFeaturesToCurrentSchema(features: any): SubscriptionFeatures {
+  const f = features ?? {};
+  return {
+    team: {
+      count: { max: f.team?.count?.max ?? 1 },
+      teamMember: {
+        count: { max: f.team?.teamMember?.count?.max ?? 1 },
+        active: f.team?.teamMember?.active ?? true,
+      },
+      active: f.team?.active ?? true,
+    },
+    webSurvey: {
+      count: {
+        max: f.webSurvey?.count?.max ?? 0,
+        monthlyResponseLimit: f.webSurvey?.count?.monthlyResponseLimit ?? 1000,
+      },
+      active: f.webSurvey?.active ?? false,
+      encryption: { active: f.webSurvey?.encryption?.active ?? false },
+      googleReview: { active: f.webSurvey?.googleReview?.active ?? false },
+      emailNotification: { active: f.webSurvey?.emailNotification?.active ?? false },
+      htmlCodePage: { active: f.webSurvey?.htmlCodePage?.active ?? false },
+      webhook: { active: f.webSurvey?.webhook?.active ?? false },
+    },
+    whatsapp: {
+      active: f.whatsapp?.active ?? true,
+      conversation: {
+        active: true,
+        count: { max: MIGRATION_CONVERSATION_MAX },
+      },
+    },
+    reputationManagement: {
+      count: { max: f.reputationManagement?.count?.max ?? 0 },
+      active: f.reputationManagement?.active ?? false,
+    },
+    ai: {
+      count: {
+        promptTokens: f.ai?.count?.promptTokens ?? 0,
+        completionTokens: f.ai?.count?.completionTokens ?? 0,
+      },
+      active: f.ai?.active ?? false,
+    },
+  };
+}
+
+// Rewrites EVERY non-free subscription's feature JSON to the current schema, keeping
+// each org's own values for the surviving features (see migrateFeaturesToCurrentSchema).
+// FREE PLAN is intentionally skipped — it has its own migration (migrateFreePlanFeatures)
+// with free-specific limits that this generic "preserve + 1M conversations" pass would
+// otherwise overwrite. Done per-row (not updateMany) because every org keeps its values.
+export async function migrateNonFreePlanFeatures() {
+  const subscriptions = await prisma.subscription.findMany({
+    select: { orgId: true, features: true, basePlan: { select: { name: true } } },
+  });
+
+  let updated = 0;
+  let skipped = 0;
+  for (const sub of subscriptions) {
+    if (sub.basePlan?.name === "FREE PLAN") {
+      skipped++;
+      continue;
+    }
+    const migrated = migrateFeaturesToCurrentSchema(sub.features);
+    await prisma.subscription.update({
+      where: { orgId: sub.orgId },
+      data: { features: migrated as unknown as object },
+    });
+    updated++;
+  }
+  return { updated, skipped };
 }
 
 export async function backfillWithSQL() {

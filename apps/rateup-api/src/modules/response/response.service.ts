@@ -768,9 +768,7 @@ export async function createResponse(
 
   if (surveyResponse) {
     updateMonthlyStat(
-      surveyResponse.platform === "WHATSAPP"
-        ? SubscriptionFeaturePathName.WhatsAppSurvey
-        : "survey",
+      surveyResponse.platform === "WHATSAPP" ? SubscriptionFeaturePathName.Whatsapp : "survey",
       surveyResponse.surveyTeamMap?.team.orgId,
     );
   }
@@ -1841,7 +1839,7 @@ export async function getSurveyResponseBySurveyId(
 
   const responses =
     await prisma.$queryRaw`SELECT COUNT(*) OVER()::INTEGER , sr.id, sr."contactId", sr."language",
-  sr."tag", sr."responses", sr."createdAt",sr."encryptedResponses",sr."platform", c."phone" FROM "SurveyResponse" sr
+  sr."tag", sr."responses", sr."createdAt",sr."encryptedResponses",sr."platform", sr."surveyTeamMapId", c."phone" FROM "SurveyResponse" sr
   LEFT JOIN "Contact" c on c.id = sr."contactId"
   LEFT JOIN "SurveyTeamMap" st on st.id = sr."surveyTeamMapId"
   LEFT JOIN "Survey" s ON s.id = st."surveyId"

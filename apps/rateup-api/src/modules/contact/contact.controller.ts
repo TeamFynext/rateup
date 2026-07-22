@@ -458,13 +458,14 @@ export async function bulkUpdateWaMessageAssignStatusHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { contactIds, waMessageAssignStatus, messageId } = request.body;
+    const { contactIds, waMessageAssignStatus, messageId, resolutionResult } = request.body;
 
     const contacts = await bulkUpdateWaMessageAssignStatus(
       contactIds,
       waMessageAssignStatus,
       request.userId,
       messageId,
+      resolutionResult,
     );
 
     return reply.code(200).send({

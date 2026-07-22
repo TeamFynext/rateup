@@ -141,6 +141,7 @@ model User {
   AssignedConversations       ConversationAssignedUserTeamMap[] @relation("ConversationAssignedUser")
   removedAssignees            ConversationAssignedUserTeamMap[] @relation("ConversationRemovedUser")
   assignedStafftoConversation ConversationAssignedUserTeamMap[] @relation("ConversationAssignedByUser")
+  inboxMentions               InboxMention[]
 }
 
 model Org {
@@ -210,6 +211,7 @@ model Org {
   Webhook                  Webhook?
   inboxAutomations         InboxAutomation[]
   inboxStats               InboxStats?
+  inboxMentions            InboxMention[]
 }
 
 model UsageStats {
@@ -233,10 +235,10 @@ model UsageStats {
   loyaltyCustomerCount    Int @default(0)
   waAutomationCount       Int @default(0)
 
-  annualMessageCount       Int @default(0)
-  monthlySurveyResponses   Int @default(0)
-  monthlyWaSurveyResponses Int @default(0)
-  monthlyMessagesCount     Int @default(0)
+  annualConversationsCount  Int @default(0)
+  monthlySurveyResponses    Int @default(0)
+  monthlyWaSurveyResponses  Int @default(0)
+  monthlyConversationsCount Int @default(0)
 
   subscriptionStartDate DateTime?
   subscriptionEndDate   DateTime?
@@ -307,19 +309,20 @@ model WhatsappSettings {
   fbUserName String?
 
   type                    String // enums.ts: WaConfigType
-  status                  String             @default("ACTIVE")
-  createdAt               DateTime           @default(now())
+  status                  String                @default("ACTIVE")
+  createdAt               DateTime              @default(now())
   /// [PWaEncryptionKeys]
   encryption              Json? // for flow {publicKey: string, privateKey: string}
   WaTemplate              WaTemplate[]
   LoyaltyWaCommand        LoyaltyWaCommand[]
   metaAssets              MetaAssets[]
   catalog                 CatalogPhoneIdMap?
-  assets                  String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
+  assets                  String[]              @default([]) //enum.ts MetaLoginAssets (assets selected on login)
   conversionsApiDatasetId String?
   conversionData          Json?
-  paymentMethod           String             @default("NATIVE") // NATIVE, SHOPIFY_LINK
+  paymentMethod           String                @default("NATIVE") // NATIVE, SHOPIFY_LINK
   metaBusinessAgent       MetaBusinessAgent?
+  teamAccess              TeamWhatsappChannel[] // teams explicitly granted this channel
 }
 
 model MetaBusinessAgent {
@@ -624,6 +627,12 @@ model Team {
   waMessageSchedule      WaMessageSchedule[]
   featureAccess          TeamFeatureAccess[]
 
+  /// When true the team reaches every channel in the org, including ones connected later.
+  /// When false access is limited to `channelAccess`. Defaults to true so new teams —
+  /// and every team existing at rollout — keep full access until scoped explicitly.
+  allChannels   Boolean               @default(true)
+  channelAccess TeamWhatsappChannel[]
+
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
 }
@@ -636,6 +645,20 @@ model TeamFeatureAccess {
   createdAt DateTime    @default(now())
 
   @@unique([teamId, feature])
+}
+
+/// Grants one team access to one channel. Only consulted while `Team.allChannels` is false —
+/// when that flag is true the team reaches every channel and these rows are cleared.
+model TeamWhatsappChannel {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  team      Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String           @db.Uuid
+  channel   WhatsappSettings @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId String           @db.Uuid
+  createdAt DateTime         @default(now())
+
+  @@unique([teamId, channelId])
+  @@index([channelId])
 }
 
 model TeamMember {
@@ -861,6 +884,7 @@ model Contact {
   Conversations               Conversation[]
   loyaltyAccounts             CustomerLoyaltyAccount[]
   ticketCards                 TicketCard[]
+  inboxMentions               InboxMention[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -1244,17 +1268,19 @@ enum PaymentPlanStatus {
 
 //For Razorpay PLans
 model PaymentPlans {
-  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  planId      String
-  amount      Float
-  currency    String
-  name        String
-  description String?
-  createdAt   Int
-  period      String
-  interval    Int
-  status      PaymentPlanStatus @default(NULL)
-  RateupPlan  RateupPlan?
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId            String
+  amount            Float
+  currency          String
+  name              String
+  description       String?
+  createdAt         Int
+  period            String
+  interval          Int
+  status            PaymentPlanStatus @default(NULL)
+  RateupPlan        RateupPlan?       @relation("RateupPlanLegacy")
+  monthlyRateupPlan RateupPlan?       @relation("RateupPlanMonthly")
+  yearlyRateupPlan  RateupPlan?       @relation("RateupPlanYearly")
 }
 
 enum StripeProductType {
@@ -1286,21 +1312,30 @@ enum PaymentPlanType {
 }
 
 model RateupPlan {
-  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String
-  displayName     String?
-  displayWidgetId String?
-  planType        PaymentPlanType
-  paymentPlan     PaymentPlans?   @relation(fields: [paymentPlanId], references: [id])
-  paymentPlanId   String?         @unique @db.Uuid
-  Subscription    Subscription[]
-  description     String[]        @default([])
-  features        Json?
-  createdAt       DateTime        @default(now())
-  stripeProduct   StripeProducts? @relation(fields: [stripeId], references: [id])
-  stripeId        String?         @unique @db.Uuid
-  trialDays       Int             @default(0)
-  orders          Order[]
+  id                   String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String
+  displayName          String?
+  displayWidgetId      String?
+  planType             PaymentPlanType
+  paymentPlan          PaymentPlans?   @relation("RateupPlanLegacy", fields: [paymentPlanId], references: [id])
+  paymentPlanId        String?         @unique @db.Uuid
+  monthlyPaymentPlan   PaymentPlans?   @relation("RateupPlanMonthly", fields: [monthlyPaymentPlanId], references: [id])
+  monthlyPaymentPlanId String?         @unique @db.Uuid
+  yearlyPaymentPlan    PaymentPlans?   @relation("RateupPlanYearly", fields: [yearlyPaymentPlanId], references: [id])
+  yearlyPaymentPlanId  String?         @unique @db.Uuid
+  Subscription         Subscription[]
+  description          String[]        @default([])
+  features             Json?
+  createdAt            DateTime        @default(now())
+  stripeProduct        StripeProducts? @relation(fields: [stripeId], references: [id])
+  stripeId             String?         @unique @db.Uuid
+  trialDays            Int             @default(0)
+  orders               Order[]
+  badge                String?
+  price                Float?
+  currency             String?
+  monthlyPrice         Float?
+  yearlyPrice          Float?
 }
 
 enum OrderStatus {
@@ -2617,6 +2652,15 @@ enum CloseReason {
   SPAM
 }
 
+/// Resolution *quality* chosen by the agent when closing a conversation/ticket.
+/// Distinct from `CloseReason` (which records *why/who* closed it).
+enum ResolutionResult {
+  RESOLVED
+  ANSWERED
+  NO_RESPONSE
+  DUPLICATE
+}
+
 model Conversation {
   id                     String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   contactId              String                            @db.Uuid
@@ -2641,6 +2685,16 @@ model Conversation {
   lastAgentMessageAt     DateTime?
   messageCount           Int                               @default(0)
   reopenCount            Int                               @default(0)
+  /// Star flag is per-ticket (per-conversation), not per-contact, so one contact's
+  /// tickets can be starred independently.
+  isFavorite             Boolean                           @default(false)
+  /// Ticket identity for the "Inbox Tickets" UI. `number` is the human-facing #code.
+  number                 Int                               @unique @default(autoincrement())
+  subject                String?
+  description            String?
+  /// Resolution quality set when the conversation is closed with a result.
+  resolutionResult       ResolutionResult?
+  inboxMentions          InboxMention[]
   createdAt              DateTime                          @default(now())
   updatedAt              DateTime?                         @updatedAt
 
@@ -2650,6 +2704,28 @@ model Conversation {
   @@index([orgId, status])
   @@index([orgId, createdAt])
   @@index([orgId, lastMessageAt(sort: Desc)])
+  @@index([orgId, isFavorite])
+}
+
+/// Indexable signal for the inbox "@Mentions" filter. One row per (mention, mentioned user).
+/// Written when an internal/private note resolves @mentions; `clearedAt` is set once seen.
+model InboxMention {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId           String        @db.Uuid
+  org             Org           @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  contactId       String        @db.Uuid
+  contact         Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  conversationId  String?       @db.Uuid
+  conversation    Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  mentionedUserId String        @db.Uuid
+  mentionedUser   User          @relation(fields: [mentionedUserId], references: [id], onDelete: Cascade)
+  messageId       String?       @db.Uuid
+  createdAt       DateTime      @default(now())
+  clearedAt       DateTime?
+
+  @@index([orgId, mentionedUserId, clearedAt])
+  @@index([contactId, mentionedUserId, clearedAt])
+  @@index([conversationId])
 }
 
 enum WaMessageOrgTeamType {

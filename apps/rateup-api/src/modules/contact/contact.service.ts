@@ -16,7 +16,7 @@ import {
 } from "./contactGroup/contactGroup.service.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { BATCH_SIZE } from "../../utils/constants/constants.js";
-import { WaMessageAssignStatus } from "../../types/enums.js";
+import { ResolutionResult, WaMessageAssignStatus } from "../../types/enums.js";
 import { triggerConversionsApiForContact } from "../integrations/meta/conversions.service.js";
 import {
   assignWaMessageToUser,
@@ -690,7 +690,10 @@ export async function updateContactById(
     });
 
     if (statusChanged) {
-      await mirrorConversationStatusTx(tx, contactId, nextStatus, transitionActor, { now });
+      await mirrorConversationStatusTx(tx, contactId, nextStatus, transitionActor, {
+        now,
+        resolutionResult: contact.resolutionResult ?? null,
+      });
     }
 
     return updated;
@@ -1747,6 +1750,7 @@ export async function bulkUpdateWaMessageAssignStatus(
   waMessageAssignStatus: WaMessageAssignStatus,
   userId?: string,
   messageId?: string,
+  resolutionResult?: ResolutionResult | null,
 ) {
   const contacts = await prisma.contact.findMany({
     where: {
@@ -1809,7 +1813,13 @@ export async function bulkUpdateWaMessageAssignStatus(
     if (latestIds.length) {
       await tx.conversation.updateMany({
         where: { id: { in: latestIds } },
-        data: conversationStatusData(waMessageAssignStatus, actor, undefined, now),
+        data: conversationStatusData(
+          waMessageAssignStatus,
+          actor,
+          undefined,
+          now,
+          resolutionResult,
+        ),
       });
     }
   });

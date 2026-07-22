@@ -331,7 +331,7 @@ export async function verifyTemplateSubscriptionLimit(
 
     const whatsappTemplateFeature = getNestedProperty(
       subscription.features as any,
-      SubscriptionFeaturePathName.WhatsAppTemplate,
+      SubscriptionFeaturePathName.Whatsapp,
     );
     if (templateCount >= whatsappTemplateFeature?.count?.max) {
       throw new Error(

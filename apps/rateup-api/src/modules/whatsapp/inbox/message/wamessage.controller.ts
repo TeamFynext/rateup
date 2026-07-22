@@ -8,6 +8,9 @@ import {
   WaMediaFileByMediaIdBody,
   WaMessageAssignBody,
   BlockUserBody,
+  FavoriteContactBody,
+  ClearMentionsBody,
+  ReopenConversationBody,
   GenerateInboxResponseBody,
   PrivateWaMessageBody,
   BulkWaMessageAssignBody,
@@ -16,6 +19,8 @@ import {
 import {
   addNewWaMessage,
   assignWaMessageToUser,
+  clearMentionsForConversation,
+  reopenConversation,
   exportWhatsapChats,
   filterChats,
   generateChatFilterData,
@@ -32,6 +37,7 @@ import {
   createInternalWaMessage,
   createWaMessageOrgTeamMap,
   getWaMessageLogs,
+  setConversationFavorite,
 } from "./wamessage.service.js";
 import { ByContactIdParams, ContactCore } from "../../../contact/contact.schema.js";
 import {
@@ -45,6 +51,7 @@ import {
   unblockWhatsappUser,
 } from "../../whatsappSurvey/wasurvey.service.js";
 import {
+  deriveConversationSubject,
   extractMentions,
   handleWaReceivedImages,
   returnAppropriateTimeStamp,
@@ -76,6 +83,7 @@ import {
   getActiveConversationForContact,
   getLastCreatedConversationForContact,
   openConversationForContact,
+  setConversationSubjectIfBlank,
   updateConversation,
 } from "../../../contact/conversation/conversation.service.js";
 import { WaMessageClosedStatus } from "../../constants.js";
@@ -234,6 +242,17 @@ export async function handleWaMessages(
       logs,
     );
 
+    // A ticket with no subject is titled by the message that opened it — the
+    // first message is the best one-line description of what it is about. The
+    // write itself is conditional on the subject still being blank, so a title an
+    // agent typed is never overwritten, even if this copy of the row is stale.
+    if (conversation && !conversation.subject) {
+      const subject = deriveConversationSubject(waMessageBody);
+      if (subject && (await setConversationSubjectIfBlank(conversation.id, subject))) {
+        conversation = { ...conversation, subject };
+      }
+    }
+
     const teamID = teamId && teamId.trim() !== "" ? teamId : null;
 
     // add to wamessageorgteammap
@@ -290,7 +309,14 @@ export async function handleWaMessages(
       {
         type: "inbox",
         inbox: {
-          contact,
+          // The inbox list is ticket-grained, so the payload names the ticket
+          // this message landed on. A bare Contact has no way to say which of
+          // its tickets it means, and the client had to guess.
+          contact: {
+            ...contact,
+            conversationId: conversation?.id ?? null,
+            conversationStatus: conversation?.status ?? null,
+          },
           message: waMessage,
         },
       },
@@ -444,8 +470,9 @@ export async function getWaMessagesByContactIdHandler(
   try {
     const cursor = request.query.cursor || null;
     const phone = request.query.phone || null;
+    const conversationId = request.query.conversationId || null;
     const { contactId } = request.params;
-    const messages = await getWaMessagesByContactId(contactId, cursor, phone);
+    const messages = await getWaMessagesByContactId(contactId, cursor, phone, conversationId);
     reply.send(messages);
   } catch (error) {
     log.error(error);
@@ -462,6 +489,50 @@ export async function markMessagesAsReadHandler(
     reply.code(200).send(res);
   } catch (e) {
     reply.code(500).send(e);
+  }
+}
+
+/** Explicit "clear @mention" action from the UI. Clears only the current user's
+ *  unseen mentions on the given conversation. */
+export async function clearConversationMentionsHandler(
+  request: FastifyRequest<{
+    Body: ClearMentionsBody;
+    Params: ByContactIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    await clearMentionsForConversation(
+      request.user.userId,
+      request.params.contactId,
+      request.body?.conversationId ?? null,
+    );
+    reply.code(200).send({ success: true });
+  } catch (e) {
+    log.error("Error clearing mentions: %o", e);
+    reply.code(500).send("Internal Server Error");
+  }
+}
+
+export async function reopenConversationHandler(
+  request: FastifyRequest<{
+    Body: ReopenConversationBody;
+    Params: ByContactIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await reopenConversation(
+      request.user.orgId,
+      request.user.userId,
+      request.params.contactId,
+      request.body?.conversationId ?? null,
+      request.body?.messageId,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error("Error reopening conversation: %o", e);
+    reply.code(500).send("Internal Server Error");
   }
 }
 
@@ -650,6 +721,24 @@ export async function unblockWhatsappUserHandler(
   }
 }
 
+export async function setContactFavoriteHandler(
+  request: FastifyRequest<{ Body: FavoriteContactBody }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await setConversationFavorite(
+      request.user.orgId,
+      request.body.conversationId,
+      request.body.isFavorite,
+    );
+    if (res.success) return reply.code(200).send(res);
+    reply.code(404).send({ success: false, message: "Conversation not found" });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
 export async function generateChatAnalyticsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const orgId = request.user.orgId;
@@ -704,6 +793,9 @@ export async function createPrivateMessageHandler(
       orgId: orgId,
       exchangeProcess: "privateNote",
       mentionedUsers: mentionedUsers,
+      // Client sends explicit ids when the note came from the mention picker;
+      // these win over the name-based `mentionedUsers` fallback below.
+      mentionedUserIds: body.mentionedUserIds,
       messageId: body.messageId,
     });
     reply.code(200).send(res);

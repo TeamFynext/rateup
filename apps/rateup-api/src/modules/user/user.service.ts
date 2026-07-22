@@ -115,21 +115,9 @@ export async function createUserSignup({
           userId: newUser.id,
         },
       });
-      // creating free plan subscription
-      let overrides: Partial<SubscriptionFeatures> | undefined;
-
-      if (goals?.length > 0 && goals.includes("loyalty-program")) {
-        overrides = {
-          loyalty: {
-            active: true,
-            action: { count: { max: 1 }, active: true },
-            reward: { count: { max: 1 }, active: true },
-            customer: { count: { max: 1 }, active: true },
-          },
-        };
-      }
-
-      await createFreePlanSubscription(org.id, prisma as any, planId, overrides);
+      // Create the free-plan subscription. (Loyalty is no longer a subscription
+      // feature, so signup no longer injects any loyalty-based feature overrides.)
+      await createFreePlanSubscription(org.id, prisma as any, planId);
     });
 
     if (team.id && teamMember.userId) {

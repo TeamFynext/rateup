@@ -124,6 +124,28 @@ const getTeamFeaturesResponseSchema = z.object({
   features: z.array(teamFeatureAccessItemSchema),
 });
 
+// `allChannels: true` means every channel in the org, including ones connected later, so
+// `channelIds` is ignored in that case rather than being frozen to today's channel list.
+const setTeamChannelsSchema = z.object({
+  allChannels: z.boolean(),
+  channelIds: z.array(z.string()).default([]),
+});
+
+const teamChannelItemSchema = z.object({
+  id: z.string(),
+  phone: z.string().nullable().optional(),
+  phoneId: z.string().nullable().optional(),
+  ibaId: z.string().nullable().optional(),
+  fbPageId: z.string().nullable().optional(),
+  phoneDisplayName: z.string().nullable().optional(),
+  status: z.string().optional(),
+});
+
+const getTeamChannelsResponseSchema = z.object({
+  allChannels: z.boolean(),
+  channels: z.array(teamChannelItemSchema),
+});
+
 export type CreateTeamInput = z.infer<typeof createTeamRequestSchema>;
 export type GetTeamsByOrgInput = z.infer<typeof getTeamsByOrgRequestSchema>;
 export type DeleteTeamInput = z.infer<typeof deleteTeamByIdRequestSchema>;
@@ -136,6 +158,7 @@ export type ByTeamIdParams = z.infer<typeof byTeamIdParamsSchema>;
 export type tagQuerySchema = z.infer<typeof tagQuerySchema>;
 export type BySurveyTeamMapIdParams = z.infer<typeof bySurveyTeamMapIdParamsSchema>;
 export type SetTeamFeaturesInput = z.infer<typeof setTeamFeaturesSchema>;
+export type SetTeamChannelsInput = z.infer<typeof setTeamChannelsSchema>;
 
 // Auto-exported after fastify-zod migration
 export {
@@ -155,4 +178,6 @@ export {
   addTeamMemberSchema,
   setTeamFeaturesSchema,
   getTeamFeaturesResponseSchema,
+  setTeamChannelsSchema,
+  getTeamChannelsResponseSchema,
 };

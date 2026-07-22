@@ -9,14 +9,16 @@ import { getNestedProperty } from "./misc/obj.utils.js";
  */
 export const subscriptionGates: Record<TeamFeature, string | null> = {
   [TeamFeature.inbox]: sfpn.Whatsapp,
-  [TeamFeature.campaigns]: sfpn.WhatsAppCampaign,
-  [TeamFeature.flows]: sfpn.WhatsAppFlow,
-  [TeamFeature.chatbots]: sfpn.WhatsAppAutomation,
-  [TeamFeature.templates]: sfpn.WhatsAppTemplate,
-  [TeamFeature.automation]: sfpn.WhatsAppAutomation,
-  [TeamFeature.loyalty]: sfpn.Loyalty,
+  [TeamFeature.campaigns]: sfpn.Whatsapp,
+  [TeamFeature.flows]: sfpn.Whatsapp,
+  [TeamFeature.chatbots]: sfpn.Whatsapp,
+  [TeamFeature.templates]: sfpn.Whatsapp,
+  [TeamFeature.automation]: sfpn.Whatsapp,
+  [TeamFeature.loyalty]: sfpn.Whatsapp,
   [TeamFeature.web_forms]: sfpn.WebSurvey,
-  [TeamFeature.tickets]: sfpn.Ticket,
+  // Tickets are free with no limits (no subscription feature backs them), so
+  // there is no subscription gate — access is governed only by team/RBAC perms.
+  [TeamFeature.tickets]: null,
   [TeamFeature.ai_chatbot]: sfpn.AI,
 
   [TeamFeature.analytics]: null,

@@ -256,25 +256,14 @@ export enum SubscriptionFeaturePathName {
   GoogleReview = "webSurvey.googleReview",
   Encryption = "webSurvey.encryption",
   Whatsapp = "whatsapp",
-  WhatsAppSurvey = "whatsapp.survey",
-  WhatsAppCampaign = "whatsapp.campaign",
-  WhatsAppFlow = "whatsapp.flow",
-  WhatsAppTemplate = "whatsapp.template",
-  WhatsAppAutomation = "whatsapp.automation",
+  WhatsAppConversation = "whatsapp.conversation",
 
   ReputationManagement = "reputationManagement",
   Team = "team",
   TeamMember = "team.teamMember",
   Ticket = "ticket",
   AI = "ai",
-  Loyalty = "loyalty",
-  LoyaltyCustomer = "loyalty.customer",
-  LoyaltyAction = "loyalty.action",
-  LoyaltyReward = "loyalty.reward",
-  WhatsAppAutomationTrigger = "whatsapp.automation.automationTrigger",
-  LeadAdAutomation = "whatsapp.automation.leadAd",
   Webhook = "webSurvey.webhook",
-  CarouselTemplate = "whatsapp.template.carouselTemplate",
 }
 export enum WaFlowLayoutType {
   scl = "SingleColumnLayout",
@@ -431,7 +420,11 @@ export enum LoyaltyTemplateTypes {
 /// The stored inbox status vocabulary, re-exported from the Prisma enum so the
 /// database and the TypeScript view cannot drift. Kept under its historical
 /// name so existing `WaMessageAssignStatus.X` call sites keep working.
-export { CloseReason, InboxStatus as WaMessageAssignStatus } from "../../generated/prisma/enums.js";
+export {
+  CloseReason,
+  InboxStatus as WaMessageAssignStatus,
+  ResolutionResult,
+} from "../../generated/prisma/enums.js";
 export type { InboxStatus } from "../../generated/prisma/enums.js";
 
 /// Internal system messages describe inbox *events*, whose vocabulary is a

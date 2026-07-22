@@ -1,4 +1,9 @@
-import { CloseReason, InboxStatus, WaMessageAssignStatus } from "../../../types/enums.js";
+import {
+  CloseReason,
+  InboxStatus,
+  ResolutionResult,
+  WaMessageAssignStatus,
+} from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
 import {
   ConversationAssigneeUpdateSchema,
@@ -12,6 +17,7 @@ import {
   mapStatusToField,
   transitionInboxStat,
 } from "../../whatsapp/inbox/inboxStats/inboxStats.service.js";
+import { incrementConversationCount } from "../../stats/stats.service.js";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -23,7 +29,7 @@ type TxClient = Omit<
 
 export async function createConversation(input: ConversationCore) {
   const { contactId, ...rest } = input;
-  return await prisma.conversation.create({
+  const conversation = await prisma.conversation.create({
     data: {
       contact: {
         connect: {
@@ -33,6 +39,8 @@ export async function createConversation(input: ConversationCore) {
       ...rest,
     },
   });
+  await incrementConversationCount(rest.orgId);
+  return conversation;
 }
 
 /// Automation and rule closes have no acting user, so `closedBy` stays null and
@@ -74,9 +82,10 @@ export function conversationStatusData(
   actor: InboxActor,
   closeReason?: CloseReason,
   now: Date = new Date(),
+  resolutionResult?: ResolutionResult | null,
 ) {
   if (!isTerminalInboxStatus(status)) {
-    // Reopening clears the previous close stamp.
+    // Reopening clears the previous close stamp (and any resolution result).
     return {
       status,
       closedAt: null,
@@ -84,6 +93,7 @@ export function conversationStatusData(
       resolvedAt: null,
       closeReason: null,
       closedByAutomation: false,
+      resolutionResult: null,
     };
   }
   return {
@@ -93,6 +103,7 @@ export function conversationStatusData(
     closeReason: closeReason ?? resolveCloseReason(status, actor),
     closedByAutomation: actor.source === "automation",
     resolvedAt: status === WaMessageAssignStatus.RESOLVED ? now : null,
+    resolutionResult: resolutionResult ?? null,
   };
 }
 
@@ -105,7 +116,12 @@ export async function mirrorConversationStatusTx(
   contactId: string,
   status: InboxStatus,
   actor: InboxActor,
-  opts: { closeReason?: CloseReason; conversationId?: string; now?: Date } = {},
+  opts: {
+    closeReason?: CloseReason;
+    conversationId?: string;
+    now?: Date;
+    resolutionResult?: ResolutionResult | null;
+  } = {},
 ) {
   const target = opts.conversationId
     ? await tx.conversation.findUnique({ where: { id: opts.conversationId } })
@@ -125,7 +141,7 @@ export async function mirrorConversationStatusTx(
 
   return await tx.conversation.update({
     where: { id: target.id },
-    data: conversationStatusData(status, actor, opts.closeReason, opts.now),
+    data: conversationStatusData(status, actor, opts.closeReason, opts.now, opts.resolutionResult),
   });
 }
 
@@ -138,7 +154,11 @@ export async function setInboxStatus(
   contactId: string,
   status: InboxStatus,
   actor: InboxActor,
-  opts: { closeReason?: CloseReason; conversationId?: string } = {},
+  opts: {
+    closeReason?: CloseReason;
+    conversationId?: string;
+    resolutionResult?: ResolutionResult | null;
+  } = {},
 ) {
   const terminal = isTerminalInboxStatus(status);
   const now = new Date();
@@ -189,12 +209,45 @@ export async function setInboxStatus(
 }
 
 export async function updateConversation(conversationId: string, data: UpdateConversationSchema) {
+  // A bare `status` write here would leave the close stamps as they were — a
+  // closed ticket carrying a live status, which is exactly what put closed
+  // tickets back in the Open tab. Any status change is expanded through the same
+  // transition data `setInboxStatus` uses; fields the caller passed explicitly
+  // still win.
+  const { status, ...rest } = data;
   return await prisma.conversation.update({
     where: {
       id: conversationId,
     },
-    data,
+    data: status
+      ? { ...conversationStatusData(status, resolveInboxActor(rest.closedBy)), ...rest }
+      : rest,
   });
+}
+
+/**
+ * Give a ticket a subject only if it does not already have one.
+ *
+ * The "is it blank?" test is part of the WHERE rather than a read followed by a
+ * write, so an auto-generated title can never overwrite an existing one — not
+ * through a stale copy of the row, and not when two messages of the same ticket
+ * are handled at once. Returns whether it actually wrote.
+ */
+export async function setConversationSubjectIfBlank(conversationId: string, subject: string) {
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+  });
+
+  if (!conversation || conversation.subject) {
+    return false;
+  }
+
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { subject },
+  });
+
+  return true;
 }
 
 export async function getConversationById(conversationId: string) {
@@ -313,6 +366,36 @@ export async function updateConversationAssignees(
   });
 }
 
+/**
+ * Inbox Tickets v2 — a contact's full ticket history, newest first.
+ *
+ * Backs the thread's "previous conversations" strip. Org scoping goes through the
+ * contact rather than `Conversation.orgId`, which is a nullable denormalized copy
+ * and is not reliably populated on older rows.
+ */
+export async function getConversationsByContactId(orgId: string, contactId: string) {
+  return await prisma.conversation.findMany({
+    where: { contactId, contact: { orgId } },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      number: true,
+      subject: true,
+      description: true,
+      status: true,
+      resolutionResult: true,
+      createdAt: true,
+      closedAt: true,
+      lastMessageAt: true,
+      messageCount: true,
+      assignedUsers: {
+        where: { lastRemovedAt: null },
+        select: { userId: true, teamId: true, user: { select: { name: true } } },
+      },
+    },
+  });
+}
+
 export async function getLastCreatedConversationForContact(contactId: string) {
   return await prisma.conversation.findFirst({
     where: {
@@ -344,7 +427,7 @@ export async function openConversationForContact(
   status: InboxStatus = WaMessageAssignStatus.UNASSIGNED,
 ) {
   const previous = await getLastCreatedConversationForContact(contactId);
-  return await prisma.conversation.create({
+  const conversation = await prisma.conversation.create({
     data: {
       contactId,
       orgId,
@@ -352,6 +435,8 @@ export async function openConversationForContact(
       reopenCount: previous ? previous.reopenCount + 1 : 0,
     },
   });
+  await incrementConversationCount(orgId);
+  return conversation;
 }
 
 export async function updateClosedConversationStatus(

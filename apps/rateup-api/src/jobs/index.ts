@@ -5,6 +5,7 @@ async function registerWorkers() {
   await import("./notification.worker.js");
   await import("./outgoingWebhook.worker.js");
   await import("./integration.worker.js");
+  await import("./sendMessage.worker.js");
   await import("../modules/update/update.backfill.queue.js");
 }
 

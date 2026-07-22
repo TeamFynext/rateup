@@ -45,7 +45,7 @@ export async function flowRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   server.addHook(
     "preHandler",
-    getVerifySubscriptionHandler([SubscriptionFeaturePathName.WhatsAppFlow]),
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp]),
   );
   server.addHook("preHandler", requireFeature(TeamFeature.flows));
 

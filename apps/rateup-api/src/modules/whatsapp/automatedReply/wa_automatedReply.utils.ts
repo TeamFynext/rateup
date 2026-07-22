@@ -300,7 +300,7 @@ export async function verifyAutomationLimit(request: FastifyRequest, reply: Fast
 
     const whatsappAutomationFeature = getNestedProperty(
       subscription.features as any,
-      SubscriptionFeaturePathName.WhatsAppAutomation,
+      SubscriptionFeaturePathName.Whatsapp,
     );
     if (automatedReplyCount >= whatsappAutomationFeature?.count?.max) {
       throw new Error(

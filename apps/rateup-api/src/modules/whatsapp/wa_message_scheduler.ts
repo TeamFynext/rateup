@@ -143,7 +143,7 @@ export async function sendSchedulesWaMessages() {
         });
         await updateMonthlyStat(
           schedule.waTemplateId
-            ? SubscriptionFeaturePathName.WhatsAppTemplate
+            ? SubscriptionFeaturePathName.Whatsapp
             : SubscriptionFeaturePathName.Whatsapp,
           schedule.orgId,
         );

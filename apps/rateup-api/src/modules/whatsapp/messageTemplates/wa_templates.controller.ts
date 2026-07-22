@@ -1102,8 +1102,10 @@ export async function sendTemplateToUserCore(
       "TEMPLATE",
       false,
       externalApi,
+      // Payment (order-details) prompts are transactional — exempt from the limit.
+      dbTemplate.templateType === TemplateType.ORDER_DETAILS,
     );
-    await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppTemplate, orgId);
+    await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     log.trace("Template send to user successfully");
   }
   return res;

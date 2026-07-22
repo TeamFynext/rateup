@@ -62,7 +62,7 @@ export async function contactRoutes(server: FastifyInstance) {
     "/",
     {
       preHandler: [
-        getVerifySubscriptionHandler([SubscriptionFeaturePathName.LoyaltyCustomer]),
+        getVerifySubscriptionHandler([SubscriptionFeaturePathName.Whatsapp]),
         verifyLCustomerMaxCountRestrictionHandler,
       ],
       schema: {
