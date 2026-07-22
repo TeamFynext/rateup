@@ -29,7 +29,7 @@ import {
   IconThumbUpFilled,
   IconWheel,
 } from "@tabler/icons-react";
-import React, { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
@@ -84,7 +84,7 @@ export function ElementTypeChip({
         className="flex size-7 shrink-0 items-center justify-center rounded-lg text-white"
         style={{ backgroundColor: questionTypeColors[type] ?? "var(--primary)" }}
       >
-        {Icon && React.createElement(Icon, { size: 15, strokeWidth: 2 })}
+        {Icon && <Icon size={15} strokeWidth={2} />}
       </span>
       <span className="whitespace-nowrap text-[13px] font-semibold text-foreground">
         {getTypeLabel(type as QuestionType | PageType)}
@@ -94,7 +94,7 @@ export function ElementTypeChip({
 }
 
 /** Uppercase group heading used across the element catalogue. */
-export function ElementGroupTitle({ children }: Readonly<{ children: React.ReactNode }>) {
+export function ElementGroupTitle({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <div className="text-[11px] font-bold tracking-[0.08em] text-muted-foreground uppercase">
       {children}

@@ -1,7 +1,6 @@
 import { IconLanguage } from "@tabler/icons-react";
 import { isEqual } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
 import { Button } from "@/components/ui/button.tsx";
@@ -42,8 +41,12 @@ export function EditTheme({
   // To store state of surveyThemeContextProvider.
   const surveyThemeContextProviderValueRef = useRef(null);
 
-  // used to rerender the theme preview when questions are reordered/deleted.
-  const [surveyPreviewCompKey, setSurveyPreviewCompKey] = useState(uuidv4());
+  // Remounts the preview when the question set changes. TakeSurvey (rendered deep
+  // inside the preview) keeps its own state — selected question, answers, slide
+  // direction — which would otherwise point at a deleted or reordered question.
+  // Derived from the ids rather than a random key so theme edits, which flow
+  // through context and must stay live, don't tear the preview down.
+  const surveyPreviewCompKey = questions?.map((question) => question.id).join(",") ?? "";
 
   const { data: allThemesArr, isPending: isAllThemesFetchPending } = useAllThemes();
 
@@ -54,10 +57,6 @@ export function EditTheme({
     setSurveyThemeContextValue(survey?.webSurveyTheme?.theme);
     setThemeSelectorState(survey?.webSurveyThemeId);
   }, [survey]);
-
-  useEffect(() => {
-    setSurveyPreviewCompKey(uuidv4());
-  }, [survey, questions]);
 
   const checkForUnsavedChanges = useCallback(
     () =>
@@ -118,6 +117,7 @@ export function EditTheme({
               isThemeObjBeingEditedDefaultTheme={isThemeObjBeingEditedDefaultTheme}
               themeObjBeingEdited={themeObjBeingEdited}
               onClose={onClose}
+              onSave={() => {}}
               allThemesArr={allThemesArr}
               themeSelectorState={themeSelectorState}
               setThemeSelectorState={setThemeSelectorState}
