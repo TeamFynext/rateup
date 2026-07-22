@@ -3,7 +3,9 @@ import {
   assignWaMessageHandler,
   blockWhatsappUserHandler,
   bulkAssignWaMessageHandler,
+  clearConversationMentionsHandler,
   createPrivateMessageHandler,
+  setContactFavoriteHandler,
   exportWhatsappChatsHandler,
   generateChatAnalyticsHandler,
   generateChatFilterDataHandler,
@@ -24,6 +26,8 @@ import { TeamFeature } from "../../../../utils/permissions.js";
 import {
   blockUserSchema,
   bulkWaMessageAssignBody,
+  clearMentionsSchema,
+  favoriteContactSchema,
   generateInboxResponseBody,
   PaginateQuerySchema,
   waChatExportQuerySchema,
@@ -61,6 +65,17 @@ export async function waMessageRoutes(server: FastifyInstance) {
       },
     },
     markMessagesAsReadHandler,
+  );
+
+  server.post(
+    "/mentions/clear/:contactId",
+    {
+      schema: {
+        params: byContactIdSchema,
+        body: clearMentionsSchema,
+      },
+    },
+    clearConversationMentionsHandler,
   );
 
   server.get("/filterdata", generateChatFilterDataHandler);
@@ -125,6 +140,16 @@ export async function waMessageRoutes(server: FastifyInstance) {
   );
 
   server.get("/count", getContactsCountByInboxTabHandler);
+
+  server.post(
+    "/favorite",
+    {
+      schema: {
+        body: favoriteContactSchema,
+      },
+    },
+    setContactFavoriteHandler,
+  );
 
   server.post(
     "/block-user",

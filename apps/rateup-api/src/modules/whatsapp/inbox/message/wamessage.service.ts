@@ -19,6 +19,7 @@ import { log } from "../../../../utils/logger.js";
 import { callMetaApi } from "../../wa_axios.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
 import axios from "axios";
+import type { InboxStatus } from "../../../../types/enums.js";
 import { WaAssignedChatPermission, WaMessageAssignStatus } from "../../../../types/enums.js";
 import { updateContactById } from "../../../contact/contact.service.js";
 import { wait } from "../../whatsappSurvey/wasurvey.controller.js";
@@ -145,6 +146,7 @@ export async function getWaMessagesByContactId(
   contactId: string,
   cursor: string | null,
   phone?: string,
+  conversationId?: string | null,
 ) {
   let messages: WaMessage[];
   const sourceIdentifierCondition =
@@ -157,6 +159,17 @@ export async function getWaMessagesByContactId(
           ],
         }
       : {};
+  // Scope the thread to one conversation (ticket). Legacy messages predate the
+  // conversation backfill and carry a null conversationId — keep showing them so
+  // an un-backfilled contact's history doesn't vanish; once backfilled, the null
+  // branch matches nothing and the filter becomes strict.
+  const conversationCondition = conversationId
+    ? { OR: [{ conversationId }, { conversationId: null }] }
+    : {};
+  const where = {
+    contactId,
+    AND: [sourceIdentifierCondition, conversationCondition],
+  };
   if (cursor) {
     messages = await prisma.waMessage.findMany({
       skip: 1,
@@ -164,10 +177,7 @@ export async function getWaMessagesByContactId(
       cursor: {
         id: cursor,
       },
-      where: {
-        contactId,
-        ...sourceIdentifierCondition,
-      },
+      where,
       include: {
         sender: {
           select: {
@@ -183,10 +193,7 @@ export async function getWaMessagesByContactId(
   } else {
     messages = await prisma.waMessage.findMany({
       take: 50,
-      where: {
-        contactId,
-        ...sourceIdentifierCondition,
-      },
+      where,
       include: {
         sender: {
           select: {
@@ -293,17 +300,20 @@ export async function filterChats(
     const params: any[] = [orgId, (page - 1) * 20, userId];
     let paramIndex = 4;
     const filters: string[] = [`c."orgId" = $1::uuid`];
-    let orderBy = `c."lastReceivedMessageTimeStamp"`;
-    let allOrderBy = `fc."lastReceivedMessageTimeStamp"`;
+    // Inbox Tickets v2: the list is conversation-grained — one row per ticket, not
+    // per contact. Recency is therefore the conversation's own clock; `createdAt`
+    // covers tickets that exist but have not been messaged in yet.
+    let orderBy = `COALESCE(conv."lastMessageAt", conv."createdAt")`;
+    let allOrderBy = `fc."conversationLastMessageAt"`;
     let sortBy = "DESC";
     if (bodyFilterProps?.sortBy === "oldest") {
       sortBy = "ASC";
     } else if (bodyFilterProps?.sortBy === "newest_wa_created") {
-      orderBy = `c."lastMessageWaCreatedAt"`;
-      allOrderBy = `fc."lastMessageWaCreatedAt"`;
+      orderBy = `COALESCE(conv."lastCustomerMessageAt", conv."lastMessageAt", conv."createdAt")`;
+      allOrderBy = `fc."conversationLastCustomerMessageAt"`;
     } else if (bodyFilterProps?.sortBy === "oldest_wa_created") {
-      orderBy = `c."lastMessageWaCreatedAt"`;
-      allOrderBy = `fc."lastMessageWaCreatedAt"`;
+      orderBy = `COALESCE(conv."lastCustomerMessageAt", conv."lastMessageAt", conv."createdAt")`;
+      allOrderBy = `fc."conversationLastCustomerMessageAt"`;
       sortBy = "ASC";
     }
 
@@ -328,6 +338,27 @@ export async function filterChats(
         filters.push(`c."lifecycleId" = $${paramIndex++}::uuid`);
       }
 
+      // Inbox Tickets v2: favourite / @mention filters. Favourite is per-ticket.
+      if (bodyFilterProps?.favorite) {
+        filters.push(`conv."isFavorite" = TRUE`);
+      }
+
+      if (bodyFilterProps?.mentions) {
+        // $3 is the current userId (see params init). Only unseen mentions for me.
+        // Mentions are matched per-ticket now, but `conversationId` is nullable on
+        // InboxMention (rows written before a note was threaded), so those fall back
+        // to the contact and surface on every one of that contact's tickets.
+        filters.push(`EXISTS (
+          SELECT 1 FROM "InboxMention" m
+          WHERE (
+            m."conversationId" = conv.id
+            OR (m."conversationId" IS NULL AND m."contactId" = c.id)
+          )
+          AND m."mentionedUserId" = $3::uuid
+          AND m."clearedAt" IS NULL
+        )`);
+      }
+
       const org = await prisma.org.findUnique({
         where: { id: orgId },
         select: { waAssignedChatPermission: true },
@@ -338,95 +369,147 @@ export async function filterChats(
       const isNew = bodyFilterProps?.waMessageAssignStatus === "New";
       const isNotSent = bodyFilterProps?.waMessageAssignStatus !== "Sent";
 
+      /**
+       * Assignment moved onto the conversation in v2 (`ConversationAssignedUserTeamMap`),
+       * but every pre-v2 assignment was only ever written contact-grained to
+       * `WaInboxAssign`. Both are checked, or historical tickets read as unassigned.
+       * The same `$n` placeholder is reused across the two branches — one push, one
+       * param, referenced twice.
+       */
+      const assignExists = (convConds: string[], contactConds: string[]) => {
+        const convWhere = [
+          `cam."conversationId" = conv.id`,
+          `cam."lastRemovedAt" IS NULL`,
+          ...convConds,
+        ];
+        const contactWhere = [`winb."contactId" = c.id`, ...contactConds];
+        return `(
+          EXISTS (SELECT 1 FROM "ConversationAssignedUserTeamMap" cam WHERE ${convWhere.join(" AND ")})
+          OR EXISTS (SELECT 1 FROM "WaInboxAssign" winb WHERE ${contactWhere.join(" AND ")})
+        )`;
+      };
+
+      /**
+       * Set when every status this request asks for is a live one (Open, New,
+       * Mine…). A conversation carrying a close stamp is a finished ticket
+       * whatever its `status` column says, so those tabs also require the stamp
+       * to be absent — without it a row left inconsistent by some other writer
+       * shows up in Open right next to the successor ticket that replaced it.
+       */
+      let liveStatusesOnly = false;
+
       if (bodyFilterProps?.waMessageAssignStatus && isNotSent) {
         if (isNew) {
+          liveStatusesOnly = true;
           params.push(WaMessageAssignStatus.UNASSIGNED);
-          filters.push(`c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."waMessageAssignStatus"::TEXT = $${paramIndex++}::TEXT`);
+          filters.push(
+            `COALESCE(conv."lastMessageAt", conv."createdAt") > NOW() - INTERVAL '24 hours' AND conv."status"::TEXT = $${paramIndex++}::TEXT`,
+          );
         } else {
           // FIX: Handle case mismatch (e.g. "Addressed" vs "ADDRESSED")
           const rawStatus = bodyFilterProps.waMessageAssignStatus;
           const assignedStatus = WaMessageAssignStatusTab[rawStatus] || rawStatus.toUpperCase();
 
           if (assignedStatus === "ADDRESSED") {
-            if (bodyFilterProps.status?.length) {
-              params.push(bodyFilterProps.status);
-            } else {
-              params.push(WaMessageClosedStatus);
-            }
-            filters.push(`c."waMessageAssignStatus"::TEXT = ANY($${paramIndex++}::TEXT[])`);
+            // A subset was picked in the filter panel (only SPAM, say), so match it
+            // exactly; the unfiltered tab is "every closed ticket", which includes
+            // anything carrying a close stamp — the mirror of the live-status rule
+            // below, so a stamped row can never fall out of both tabs.
+            const statusSubsetPicked = Boolean(bodyFilterProps.status?.length);
+            params.push(statusSubsetPicked ? bodyFilterProps.status : WaMessageClosedStatus);
+            const statusParam = paramIndex++;
+            filters.push(
+              statusSubsetPicked
+                ? `conv."status"::TEXT = ANY($${statusParam}::TEXT[])`
+                : `(conv."status"::TEXT = ANY($${statusParam}::TEXT[]) OR conv."closedAt" IS NOT NULL)`,
+            );
           } else {
             params.push(assignedStatus);
-            filters.push(`c."waMessageAssignStatus"::TEXT = $${paramIndex++}::TEXT`);
+            filters.push(`conv."status"::TEXT = $${paramIndex++}::TEXT`);
+            liveStatusesOnly = !isTerminalInboxStatus(assignedStatus as InboxStatus);
           }
 
           if (isAssignedToMe) {
             params.push(userId);
-            const assignedQuery = [`winb."assignedUserId" = $${paramIndex++}::uuid`];
+            const userParam = paramIndex++;
+            const convConds = [`cam."userId" = $${userParam}::uuid`];
+            const contactConds = [`winb."assignedUserId" = $${userParam}::uuid`];
 
             if (bodyFilterProps?.assignedTeams?.length) {
               params.push(bodyFilterProps.assignedTeams);
-              assignedQuery.push(`winb."teamId" = ANY($${paramIndex++}::uuid[])`);
+              const teamParam = paramIndex++;
+              convConds.push(`cam."teamId" = ANY($${teamParam}::uuid[])`);
+              contactConds.push(`winb."teamId" = ANY($${teamParam}::uuid[])`);
             }
 
-            filters.push(`EXISTS (
-              SELECT 1 FROM "WaInboxAssign" winb 
-              WHERE winb."contactId" = c.id AND ${assignedQuery.join(" AND ")}
-            )`);
+            filters.push(assignExists(convConds, contactConds));
           }
         }
       }
       if (!bodyFilterProps?.waMessageAssignStatus) {
         if (bodyFilterProps.status?.length) {
           params.push(bodyFilterProps.status);
-          filters.push(`(c."waMessageAssignStatus"::TEXT = ANY($${paramIndex++}::TEXT[]))`);
+          filters.push(`(conv."status"::TEXT = ANY($${paramIndex++}::TEXT[]))`);
+          liveStatusesOnly = bodyFilterProps.status.every(
+            (s) => !isTerminalInboxStatus(s as InboxStatus),
+          );
         }
       }
 
       // --- CLEANED ASSIGNMENT FILTER LOGIC ---
-      
-      const wantsAssignedOnly = !bodyFilterProps?.waMessageAssignStatus && bodyFilterProps?.status?.includes("ASSIGNED");
+
+      const wantsAssignedOnly =
+        !bodyFilterProps?.waMessageAssignStatus && bodyFilterProps?.status?.includes("ASSIGNED");
       const hasTeamFilter = Boolean(bodyFilterProps?.assignedTeams?.length);
       const hasUserFilter = Boolean(bodyFilterProps?.assignedUserIds?.length && !isAssignedToMe);
       const isStrict = hasTeamFilter || hasUserFilter;
 
       // Only evaluate this block if specific teams/users are requested OR we are fetching general 'ASSIGNED' chats
       if (wantsAssignedOnly || isStrict) {
-        let assignConditions: string[] = [];
+        const convConditions: string[] = [];
+        const contactConditions: string[] = [];
 
         // Build team conditions
         if (hasTeamFilter) {
           params.push(bodyFilterProps.assignedTeams);
-          assignConditions.push(`winb."teamId" = ANY($${paramIndex++}::uuid[])`);
+          const teamParam = paramIndex++;
+          convConditions.push(`cam."teamId" = ANY($${teamParam}::uuid[])`);
+          contactConditions.push(`winb."teamId" = ANY($${teamParam}::uuid[])`);
         } else if (waAssignedChatPermission === WaAssignedChatPermission.TeamMembers && !isStrict) {
           // If they are TeamMembers, and NO strict filters are applied, limit to their own teams implicitly
           const teamIds = await getTeamIdsLazy();
           params.push(teamIds);
-          assignConditions.push(`winb."teamId" = ANY($${paramIndex++}::uuid[])`);
+          const teamParam = paramIndex++;
+          convConditions.push(`cam."teamId" = ANY($${teamParam}::uuid[])`);
+          contactConditions.push(`winb."teamId" = ANY($${teamParam}::uuid[])`);
         }
 
         // Build user conditions
         if (hasUserFilter) {
-          if (waAssignedChatPermission === WaAssignedChatPermission.Admins && role === Role.MEMBER) {
-             if (bodyFilterProps.assignedUserIds.includes(userId)) {
-                params.push(userId);
-                assignConditions.push(`winb."assignedUserId" = $${paramIndex++}::uuid`);
-             }
+          if (
+            waAssignedChatPermission === WaAssignedChatPermission.Admins &&
+            role === Role.MEMBER
+          ) {
+            if (bodyFilterProps.assignedUserIds.includes(userId)) {
+              params.push(userId);
+              const userParam = paramIndex++;
+              convConditions.push(`cam."userId" = $${userParam}::uuid`);
+              contactConditions.push(`winb."assignedUserId" = $${userParam}::uuid`);
+            }
           } else {
-             params.push(bodyFilterProps.assignedUserIds);
-             assignConditions.push(`winb."assignedUserId" = ANY($${paramIndex++}::uuid[])`);
+            params.push(bodyFilterProps.assignedUserIds);
+            const userParam = paramIndex++;
+            convConditions.push(`cam."userId" = ANY($${userParam}::uuid[])`);
+            contactConditions.push(`winb."assignedUserId" = ANY($${userParam}::uuid[])`);
           }
         }
 
-        let existsQuery = `EXISTS (SELECT 1 FROM "WaInboxAssign" winb WHERE winb."contactId" = c.id`;
-        if (assignConditions.length > 0) {
-          existsQuery += ` AND ` + assignConditions.join(" AND ");
-        }
-        existsQuery += `)`;
+        const existsQuery = assignExists(convConditions, contactConditions);
 
         if (isStrict) {
           filters.push(existsQuery);
         } else {
-          filters.push(`(c."waMessageAssignStatus" != 'ASSIGNED' OR ${existsQuery})`);
+          filters.push(`(conv."status" != 'ASSIGNED' OR ${existsQuery})`);
         }
       }
 
@@ -451,6 +534,10 @@ export async function filterChats(
         )`);
       }
 
+      if (liveStatusesOnly) {
+        filters.push(`conv."closedAt" IS NULL`);
+      }
+
       filters.push(`c."blockedOnWhatsApp" = ${bodyFilterProps?.blockedUsers ? "TRUE" : "FALSE"}`);
     }
 
@@ -466,8 +553,25 @@ export async function filterChats(
     const whereClause = filters.join(" AND ");
 
     const query = `
-      WITH filtered_contacts AS (
-        SELECT 
+      WITH filtered_conversations AS (
+        SELECT
+          conv."id"                AS "conversationId",
+          conv."number"            AS "ticketNumber",
+          conv."subject"           AS "ticketSubject",
+          conv."description"       AS "ticketDescription",
+          conv."resolutionResult"  AS "resolutionResult",
+          conv."status"            AS "conversationStatus",
+          -- Row freshness for the client's cache: it keeps rows in IndexedDB and
+          -- only replaces one when the response is newer, so a row without this
+          -- was cached forever and a ticket closed since first load kept its old
+          -- status client-side. Contact has no updatedAt column; the ticket's own
+          -- is what changes when it moves.
+          COALESCE(conv."updatedAt", conv."createdAt") AS "updatedAt",
+          conv."createdAt"         AS "ticketCreatedAt",
+          conv."closedAt"          AS "ticketClosedAt",
+          conv."reopenCount"       AS "ticketReopenCount",
+          COALESCE(conv."lastMessageAt", conv."createdAt")         AS "conversationLastMessageAt",
+          COALESCE(conv."lastCustomerMessageAt", conv."createdAt") AS "conversationLastCustomerMessageAt",
           c.id,
           c."name",
           c."phone",
@@ -478,6 +582,7 @@ export async function filterChats(
           c."consent",
           c."whatsappUserName",
           c."blockedOnWhatsApp",
+          conv."isFavorite",
           c."source",
           c."igsId",
           c."psid",
@@ -486,70 +591,137 @@ export async function filterChats(
           c."isIgVerifiedUser",
           c."lifecycleId",
           c."closedAt",
-          json_build_object('id', c."closedBy", 'name', cu.name)  AS "closedUser",
+          json_build_object('id', conv."closedBy", 'name', cu.name)  AS "closedUser",
           COALESCE(c.tags, '{}'::jsonb) as tags,
          (
-          SELECT COUNT(*)::INTEGER 
-          FROM "WaMessage" w 
-          WHERE w."contactId" = c.id
+          SELECT COUNT(*)::INTEGER
+          FROM "WaMessage" w
+          WHERE w."conversationId" = conv.id
           AND w."messageBody"->>'exchangeProcess' = 'receive'
           AND NOT($3::TEXT = ANY(w."readUsers"))
         ) as "unReadMessageCount",
-          c."lastMessageBody",
-          c."lastMessageWaCreatedAt",
-          c."lastMessagePlatform",
-          c."lastMessageSourceIdentifier",
+          -- Fallback preview for environments where historical messages were never
+          -- linked to a conversation. Only safe to use when the contact has a single
+          -- ticket; otherwise it would show a newer ticket's message on an old one.
+          c."lastMessageBody"             AS "contactLastMessageBody",
+          c."lastMessageWaCreatedAt"      AS "contactLastMessageWaCreatedAt",
+          c."lastMessagePlatform"         AS "contactLastMessagePlatform",
+          c."lastMessageSourceIdentifier" AS "contactLastMessageSourceIdentifier",
           c."lastReceivedMetadata"
-        FROM "Contact" c
-        LEFT JOIN "User" cu ON cu.id = c."closedBy"
+        FROM "Conversation" conv
+        INNER JOIN "Contact" c ON c.id = conv."contactId"
+        LEFT JOIN "User" cu ON cu.id = conv."closedBy"
         WHERE ${whereClause}
         ORDER BY ${orderBy} ${sortBy} NULLS LAST
         LIMIT 20 OFFSET $2
       ),
       assigned_users AS (
-        SELECT 
-          winb."contactId",
+        SELECT
+          a."conversationId",
           json_agg(
-            json_build_object('id', u.id, 'teamId', winb."teamId", 'name', u.name)
+            json_build_object('id', a."userId", 'teamId', a."teamId", 'name', a."name")
           ) as users
-        FROM "WaInboxAssign" winb
-        INNER JOIN "User" u ON winb."assignedUserId" = u.id
-        WHERE winb."contactId" IN (SELECT id FROM filtered_contacts)
-        GROUP BY winb."contactId"
+        FROM (
+          -- v2 assignment: per conversation.
+          SELECT cam."conversationId", u.id AS "userId", cam."teamId", u.name
+          FROM "ConversationAssignedUserTeamMap" cam
+          INNER JOIN "User" u ON u.id = cam."userId"
+          WHERE cam."conversationId" IN (SELECT "conversationId" FROM filtered_conversations)
+            AND cam."lastRemovedAt" IS NULL
+          UNION
+          -- Legacy assignment: per contact, projected onto that contact's tickets.
+          SELECT fc."conversationId", u.id AS "userId", winb."teamId", u.name
+          FROM filtered_conversations fc
+          INNER JOIN "WaInboxAssign" winb ON winb."contactId" = fc.id
+          INNER JOIN "User" u ON u.id = winb."assignedUserId"
+        ) a
+        GROUP BY a."conversationId"
       ),
       contact_labels AS (
-        SELECT 
+        SELECT
           clm."contactId",
           json_agg(
             json_build_object('id', cl.id, 'name', cl.name, 'color', cl.color)
           ) as labels
         FROM "ContactLabelMap" clm
         INNER JOIN "ContactLabel" cl ON clm."labelId" = cl.id
-        WHERE clm."contactId" IN (SELECT id FROM filtered_contacts)
+        WHERE clm."contactId" IN (SELECT id FROM filtered_conversations)
         GROUP BY clm."contactId"
+      ),
+      conversation_last_message AS (
+        SELECT DISTINCT ON (w."conversationId")
+          w."conversationId",
+          w."messageBody"       AS "lastMessageBody",
+          w."waCreatedAt"       AS "lastMessageWaCreatedAt",
+          w."sourcePlatform"    AS "lastMessagePlatform",
+          w."sourceIdentifier"  AS "lastMessageSourceIdentifier"
+        FROM "WaMessage" w
+        WHERE w."conversationId" IN (SELECT "conversationId" FROM filtered_conversations)
+        ORDER BY w."conversationId", w."waCreatedAt" DESC
+      ),
+      conversation_mentions AS (
+        SELECT
+          fc."conversationId",
+          COUNT(*)::INTEGER as "mentionCount"
+        FROM filtered_conversations fc
+        INNER JOIN "InboxMention" m
+          ON (
+            m."conversationId" = fc."conversationId"
+            OR (m."conversationId" IS NULL AND m."contactId" = fc.id)
+          )
+        WHERE m."mentionedUserId" = $3::uuid
+          AND m."clearedAt" IS NULL
+        GROUP BY fc."conversationId"
+      ),
+      -- Sibling ticket count, so the thread can offer its history strip without a
+      -- second round trip. Excludes the row's own ticket.
+      contact_ticket_counts AS (
+        SELECT fc."conversationId", COUNT(sib.*)::INTEGER AS "otherTicketCount"
+        FROM filtered_conversations fc
+        LEFT JOIN "Conversation" sib
+          ON sib."contactId" = fc.id AND sib.id <> fc."conversationId"
+        GROUP BY fc."conversationId"
       )
-      SELECT 
+      SELECT
         fc.*,
         COALESCE(au.users, '[]'::json) as "assignedUsers",
         COALESCE(cls.labels, '[]'::json) as "contactLabels",
+        CASE WHEN clm."lastMessageBody" IS NOT NULL THEN clm."lastMessageBody"
+             WHEN COALESCE(ctc."otherTicketCount", 0) = 0 THEN fc."contactLastMessageBody"
+        END AS "lastMessageBody",
+        CASE WHEN clm."lastMessageBody" IS NOT NULL THEN clm."lastMessageWaCreatedAt"
+             WHEN COALESCE(ctc."otherTicketCount", 0) = 0 THEN fc."contactLastMessageWaCreatedAt"
+        END AS "lastMessageWaCreatedAt",
+        CASE WHEN clm."lastMessageBody" IS NOT NULL THEN clm."lastMessagePlatform"::TEXT
+             WHEN COALESCE(ctc."otherTicketCount", 0) = 0 THEN fc."contactLastMessagePlatform"::TEXT
+        END AS "lastMessagePlatform",
+        CASE WHEN clm."lastMessageBody" IS NOT NULL THEN clm."lastMessageSourceIdentifier"
+             WHEN COALESCE(ctc."otherTicketCount", 0) = 0 THEN fc."contactLastMessageSourceIdentifier"
+        END AS "lastMessageSourceIdentifier",
+        COALESCE(cm."mentionCount", 0) as "mentionCount",
+        COALESCE(ctc."otherTicketCount", 0) as "otherTicketCount",
         l."name" as "lifecycleName"
-      FROM filtered_contacts fc
-      LEFT JOIN assigned_users au ON au."contactId" = fc.id
+      FROM filtered_conversations fc
+      LEFT JOIN assigned_users au ON au."conversationId" = fc."conversationId"
       LEFT JOIN contact_labels cls ON cls."contactId" = fc.id
+      LEFT JOIN conversation_last_message clm ON clm."conversationId" = fc."conversationId"
+      LEFT JOIN conversation_mentions cm ON cm."conversationId" = fc."conversationId"
+      LEFT JOIN contact_ticket_counts ctc ON ctc."conversationId" = fc."conversationId"
       LEFT JOIN "Lifecycle" l ON l.id = fc."lifecycleId"
       ORDER BY ${allOrderBy} ${sortBy} NULLS LAST;
     `;
 
-    const contacts: any[] = await prisma.$queryRawUnsafe(query, ...params);
-    if (contacts.length === 0) return [];
+    const conversations: any[] = await prisma.$queryRawUnsafe(query, ...params);
+    if (conversations.length === 0) return [];
 
-    const contactIds = contacts.map((c) => c.id);
+    const conversationIds = conversations.map((row) => row.conversationId);
 
     const messagesRows: any[] = await prisma.$queryRaw`
       WITH ranked AS (
-        SELECT 
+        SELECT
           w.id,
           w."contactId",
+          w."conversationId",
           w."waCreatedAt",
           w."messageBody",
           w."sourcePlatform",
@@ -557,26 +729,27 @@ export async function filterChats(
           w."sendBy",
           w."stats",
           w."messageId",
-          ROW_NUMBER() OVER (PARTITION BY w."contactId" ORDER BY w."waCreatedAt" DESC) AS rn
+          ROW_NUMBER() OVER (PARTITION BY w."conversationId" ORDER BY w."waCreatedAt" DESC) AS rn
         FROM "WaMessage" w
-        WHERE w."contactId" = ANY(${contactIds}::uuid[])
+        WHERE w."conversationId" = ANY(${conversationIds}::uuid[])
       )
-      SELECT 
+      SELECT
         r.*,
         u."name" AS "senderName",
         u."profilePhoto" AS "senderProfilePhoto"
       FROM ranked r
       LEFT JOIN "User" u ON r."sendBy" = u.id
       WHERE r.rn <= 10
-      ORDER BY r."contactId", r."waCreatedAt" DESC
+      ORDER BY r."conversationId", r."waCreatedAt" DESC
     `;
 
-    const messagesByContact = new Map<string, any[]>();
+    const messagesByConversation = new Map<string, any[]>();
     for (const row of messagesRows) {
-      const list = messagesByContact.get(row.contactId) || [];
+      const list = messagesByConversation.get(row.conversationId) || [];
       list.push({
         id: row.id,
         contactId: row.contactId,
+        conversationId: row.conversationId,
         waCreatedAt: row.waCreatedAt,
         messageBody: row.messageBody,
         sourcePlatform: row.sourcePlatform,
@@ -589,21 +762,21 @@ export async function filterChats(
         stats: row.stats,
         messageId: row.messageId,
       });
-      messagesByContact.set(row.contactId, list);
+      messagesByConversation.set(row.conversationId, list);
     }
 
-    return contacts.map((contact: any) => ({
-      ...contact,
-      lastMessage: contact.lastMessageBody
+    return conversations.map((row: any) => ({
+      ...row,
+      lastMessage: row.lastMessageBody
         ? {
-            messageBody: contact.lastMessageBody,
-            waCreatedAt: contact.lastMessageWaCreatedAt,
-            sourcePlatform: contact.lastMessagePlatform,
-            sourceIdentifier: contact.lastMessageSourceIdentifier,
+            messageBody: row.lastMessageBody,
+            waCreatedAt: row.lastMessageWaCreatedAt,
+            sourcePlatform: row.lastMessagePlatform,
+            sourceIdentifier: row.lastMessageSourceIdentifier,
           }
         : null,
-      metadata: contact.lastReceivedMetadata,
-      messages: messagesByContact.get(contact.id) || [],
+      metadata: row.lastReceivedMetadata,
+      messages: messagesByConversation.get(row.conversationId) || [],
     }));
   } catch (error) {
     // If Postgres threw a parameter bounds error earlier, it was swallowed here.
@@ -974,18 +1147,29 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
     new_unassigned_count: number;
   }[] = await prisma.$queryRaw`WITH message_flags AS (
     SELECT
-      c.id AS contact_id,
-      c."waMessageAssignStatus",
-      EXISTS (
-        SELECT 1 FROM "WaInboxAssign" wa 
-        WHERE wa."contactId" = c.id 
-        AND wa."teamId" = ANY(${teamIds}::uuid[])
-        LIMIT 1
+      conv.id AS conversation_id,
+      conv."status" AS "waMessageAssignStatus",
+      (
+        EXISTS (
+          SELECT 1 FROM "ConversationAssignedUserTeamMap" cam
+          WHERE cam."conversationId" = conv.id
+          AND cam."lastRemovedAt" IS NULL
+          AND cam."teamId" = ANY(${teamIds}::uuid[])
+          LIMIT 1
+        )
+        OR EXISTS (
+          SELECT 1 FROM "WaInboxAssign" wa
+          WHERE wa."contactId" = c.id
+          AND wa."teamId" = ANY(${teamIds}::uuid[])
+          LIMIT 1
+        )
       ) AS is_assigned_to_my_team
-    FROM "Contact" c
-    WHERE c."orgId" = ${orgId}::uuid 
-      AND NOT c."blockedOnWhatsApp" 
-      AND c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours'
+    FROM "Conversation" conv
+    INNER JOIN "Contact" c ON c.id = conv."contactId"
+    WHERE c."orgId" = ${orgId}::uuid
+      AND NOT c."blockedOnWhatsApp"
+      AND conv."closedAt" IS NULL
+      AND COALESCE(conv."lastMessageAt", conv."createdAt") > NOW() - INTERVAL '24 hours'
   ), orgDetails AS (
     SELECT o."waAssignedChatPermission" AS permission FROM "Org" o WHERE o."id" = ${orgId}::uuid
   )
@@ -1000,28 +1184,116 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
     COUNT(*) FILTER (WHERE mf."waMessageAssignStatus"::TEXT = ${WaMessageAssignStatus.UNASSIGNED})::INTEGER AS new_unassigned_count
   FROM message_flags mf CROSS JOIN orgDetails;`;
 
+  // Ticket counts per team, from the conversation-grained assignment map with the
+  // legacy contact-grained one folded in. Now org-scoped — the previous version
+  // grouped over all of WaInboxAssign and leaked other orgs' counts.
   const assignedTeamWiseCount = await prisma.$queryRaw`
-  SELECT 
-    "teamId", 
-    COUNT(DISTINCT "contactId")::INTEGER AS "assignedCount"
-  FROM "WaInboxAssign"
-  GROUP BY "teamId";
+  SELECT
+    a."teamId",
+    COUNT(DISTINCT a."conversationId")::INTEGER AS "assignedCount"
+  FROM (
+    SELECT cam."teamId", cam."conversationId"
+    FROM "ConversationAssignedUserTeamMap" cam
+    INNER JOIN "Conversation" conv ON conv.id = cam."conversationId"
+    INNER JOIN "Contact" c ON c.id = conv."contactId"
+    WHERE c."orgId" = ${orgId}::uuid AND cam."lastRemovedAt" IS NULL
+    UNION
+    SELECT winb."teamId", conv.id AS "conversationId"
+    FROM "WaInboxAssign" winb
+    INNER JOIN "Conversation" conv ON conv."contactId" = winb."contactId"
+    INNER JOIN "Contact" c ON c.id = conv."contactId"
+    WHERE c."orgId" = ${orgId}::uuid
+  ) a
+  GROUP BY a."teamId";
   `;
 
+  // Inbox Tickets v2: favourite + @mention nav counts, ticket-grained to match the list.
+  const favouriteCount = await prisma.conversation.count({
+    where: { isFavorite: true, contact: { orgId, blockedOnWhatsApp: false } },
+  });
+
+  /**
+   * "Mine" = the Assigned tickets this user is on, matching the list's `mine`
+   * filter: status ASSIGNED plus an assignment row for the user. Assignment is
+   * conversation-grained in v2 but was contact-grained before it, so both maps
+   * are checked — see `filterChats`.
+   */
+  const mineCount: { count: number }[] = await prisma.$queryRaw`
+    SELECT COUNT(*)::INTEGER AS count
+    FROM "Conversation" conv
+    INNER JOIN "Contact" c ON c.id = conv."contactId"
+    WHERE conv."orgId" = ${orgId}::uuid
+      AND NOT c."blockedOnWhatsApp"
+      AND conv."closedAt" IS NULL
+      AND conv."status"::TEXT = ${WaMessageAssignStatus.ASSIGNED}
+      AND (
+        EXISTS (
+          SELECT 1 FROM "ConversationAssignedUserTeamMap" cam
+          WHERE cam."conversationId" = conv.id
+          AND cam."lastRemovedAt" IS NULL
+          AND cam."userId" = ${userId}::uuid
+        )
+        OR EXISTS (
+          SELECT 1 FROM "WaInboxAssign" winb
+          WHERE winb."contactId" = c.id
+          AND winb."assignedUserId" = ${userId}::uuid
+        )
+      );`;
+
+  // Spam is a status on the conversation, not a tab, on this side.
+  const spamCount = await prisma.conversation.count({
+    where: {
+      orgId,
+      status: WaMessageAssignStatus.SPAM,
+      contact: { blockedOnWhatsApp: false },
+    },
+  });
+  const mentionedConversations = await prisma.inboxMention.findMany({
+    where: { orgId, mentionedUserId: userId, clearedAt: null },
+    select: { conversationId: true, contactId: true },
+  });
+  // A mention with no conversationId predates threading and lands on every one of
+  // that contact's tickets, so it is counted per contact rather than per ticket.
+  const mentionKeys = new Set(
+    mentionedConversations.map((m) => m.conversationId ?? `contact:${m.contactId}`),
+  );
+
   return {
-    new: count[0].new_assigned_count + count[0].new_unassigned_count,
+    // The "New" tab lists UNASSIGNED conversations only (see `filterChats`), so its
+    // badge counts unassigned — not assigned-to-team — to match the list.
+    new: count[0].new_unassigned_count,
     newAssigned: count[0].new_assigned_count,
     newUnassigned: count[0].new_unassigned_count,
     newAssignedTome: 0,
-    assignedToMe: 0,
+    assignedToMe: mineCount[0]?.count ?? 0,
+    mine: mineCount[0]?.count ?? 0,
+    spam: spamCount,
     open: stats.open_count,
     closed: stats.closed_count,
     total: stats.all_count,
+    favourite: favouriteCount,
+    mentions: mentionKeys.size,
     assignedTeamWiseCount,
     // assigned: stats.assigned_count,
     // blocked: stats.blocked_count,
     // unassigned: stats.unassignedCount,
   };
+}
+
+/**
+ * Inbox Tickets v2 — set the favourite/star flag on a single conversation (ticket),
+ * org-scoped via the owning contact.
+ */
+export async function setConversationFavorite(
+  orgId: string,
+  conversationId: string,
+  isFavorite: boolean,
+) {
+  const result = await prisma.conversation.updateMany({
+    where: { id: conversationId, contact: { orgId } },
+    data: { isFavorite },
+  });
+  return { success: result.count > 0, isFavorite };
 }
 
 export interface WaMedia {
@@ -1089,6 +1361,33 @@ export async function markMessagesAsRead(contactId: string, userId: string) {
     contactId,
     userId,
   );
+
+  // NOTE: opening a conversation deliberately does NOT clear the reader's
+  // @mentions — the "@Mentions" tab must keep the conversation until the user
+  // acts on it. Mentions are cleared when the user replies (see
+  // `clearMentionsForConversation`, called from the send path).
+}
+
+/**
+ * Clear the given user's unseen @mentions on a conversation (or, for legacy
+ * mentions with no conversationId, on the contact). Called when the user replies,
+ * so the "@Mentions" tab/badge drops the conversation only after they engage.
+ */
+export async function clearMentionsForConversation(
+  userId: string,
+  contactId: string,
+  conversationId?: string | null,
+) {
+  await prisma.inboxMention.updateMany({
+    where: {
+      mentionedUserId: userId,
+      clearedAt: null,
+      ...(conversationId
+        ? { OR: [{ conversationId }, { conversationId: null, contactId }] }
+        : { contactId }),
+    },
+    data: { clearedAt: new Date() },
+  });
 }
 
 export async function sendContactMessage(
@@ -1336,6 +1635,7 @@ export async function createInternalWaMessage({
   trigerredByUser,
   assignedUsers,
   mentionedUsers,
+  mentionedUserIds,
   exchangeProcess = "internal",
   orgId,
   privateMessageText,
@@ -1351,6 +1651,8 @@ export async function createInternalWaMessage({
         removed: { userId: string; teamId: string }[];
       };
   mentionedUsers?: string[];
+  /** Explicit mentioned user ids from the client mention picker (preferred over name matching). */
+  mentionedUserIds?: string[];
   exchangeProcess?: "internal" | "privateNote";
   orgId?: string;
   privateMessageText?: string;
@@ -1486,7 +1788,15 @@ export async function createInternalWaMessage({
       throw new Error("Contact not found");
     }
 
-    if (mentionedUsers?.length > 0) {
+    if (mentionedUserIds?.length) {
+      // Preferred: the client resolved the mentions to ids, so names with spaces
+      // (which the `@name` text match can't capture) still work.
+      const users = await prisma.user.findMany({
+        where: { id: { in: mentionedUserIds } },
+        select: { id: true, name: true },
+      });
+      mentionedUserDetails = users.map((u) => ({ id: u.id, name: u.name ?? "" }));
+    } else if (mentionedUsers?.length > 0) {
       const users = await prisma.user.findMany({
         where: { name: { in: mentionedUsers } },
         select: { id: true, name: true },
@@ -1522,6 +1832,18 @@ export async function createInternalWaMessage({
         contactId: contact.id,
         contactName: contact.name,
       };
+
+      // Inbox Tickets v2: persist an indexable mention signal so the "@Mentions"
+      // inbox filter can query it (the notification queue alone isn't queryable).
+      await prisma.inboxMention.createMany({
+        data: mentionedUserDetails.map((user) => ({
+          orgId: orgId!,
+          contactId: contact.id,
+          conversationId: conversation?.id ?? null,
+          mentionedUserId: user.id,
+          messageId: wamessage.id,
+        })),
+      });
 
       await Promise.all(
         mentionedUserDetails.map((user) =>
