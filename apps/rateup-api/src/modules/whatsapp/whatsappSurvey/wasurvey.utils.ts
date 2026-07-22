@@ -871,6 +871,8 @@ export function parseToWhatsAppFormat(editorContent) {
         return `\`\`\`${node.content.map(parseNode).join("")}\`\`\``;
       case "listItem":
         return node.content.map(parseNode).join("");
+      case "mention":
+        return `@${node.attrs?.label ?? node.attrs?.id ?? ""}`;
       default:
         return "";
     }

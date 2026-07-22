@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   updateConversationSchema,
   conversationParamsSchema,
+  contactConversationsParamsSchema,
   statsQuerySchema,
   staffIdParamsSchema,
   teamIdParamsSchema,
@@ -10,6 +11,7 @@ import {
   getAverageConversationResponseTimeHandler,
   getConversationOnAccountDistributionHandler,
   getConversationOverviewHandler,
+  getConversationsByContactIdHandler,
   getOverAllQuickStatsOfConversationsHandler,
   getResolvedConversationStatsHandler,
   getStaffConverSationMetricsHandler,
@@ -29,6 +31,18 @@ export async function conversationRoutes(server: FastifyInstance) {
       },
     },
     updateConversationHandler,
+  );
+
+  // Inbox Tickets v2 — a contact's ticket history (the thread's pinned strip).
+  // Declared before "/:conversationId"-style GETs so the literal segment wins.
+  server.get(
+    "/by-contact/:contactId",
+    {
+      schema: {
+        params: contactConversationsParamsSchema,
+      },
+    },
+    getConversationsByContactIdHandler,
   );
 
   server.get(

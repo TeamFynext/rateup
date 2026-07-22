@@ -1,7 +1,7 @@
 import { ContactGroupType } from "../../../generated/prisma/client.js";
 
 import { z } from "zod";
-import { WaMessageAssignStatus } from "../../types/enums.js";
+import { ResolutionResult, WaMessageAssignStatus } from "../../types/enums.js";
 
 const contactCoreSchema = z.object({
   name: z.string(),
@@ -34,6 +34,7 @@ const bulkUpdateContactStatusSchema = z.object({
   contactIds: z.array(z.uuid()),
   waMessageAssignStatus: z.enum(WaMessageAssignStatus),
   messageId: z.string().optional(), // for internal messages
+  resolutionResult: z.enum(ResolutionResult).optional(), // close-with-result taxonomy
 });
 
 const updateContactSchema = z.object({
@@ -49,6 +50,7 @@ const updateContactSchema = z.object({
     .optional(),
   aiWaChat: z.boolean().optional(),
   waMessageAssignStatus: z.enum(WaMessageAssignStatus).optional(),
+  resolutionResult: z.enum(ResolutionResult).optional(), // close-with-result taxonomy
   messageId: z.string().optional(), // for internal messages
   lastReceivedMessageTimeStamp: z.string().optional(),
   whatsappUserName: z.string().optional().nullable(),

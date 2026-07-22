@@ -62,6 +62,9 @@ const PrivateWaMessageBody = z.object({
   text: z.any(),
   messageId: string().optional(),
   platform: z.string(),
+  // Users @-mentioned in the note, resolved by id on the client (robust to names
+  // with spaces, which text extraction can't match).
+  mentionedUserIds: z.array(z.string()).optional(),
 });
 
 const PaginateQuerySchema = z.object({
@@ -69,6 +72,9 @@ const PaginateQuerySchema = z.object({
   page: z.string().optional(),
   active: z.string().optional().nullable(),
   phone: z.string().optional(),
+  // Scope the thread to a single conversation (ticket). Omitted → all of the
+  // contact's messages, as before.
+  conversationId: z.string().optional(),
 });
 
 const waMediaFileByMediaIdBody = z.object({
@@ -92,6 +98,8 @@ const WaChatFilterSchema = z.object({
   category: z.string().optional(),
   lifecycle: z.string().optional(),
   assignedUserIds: z.array(z.string()).optional(),
+  favorite: z.boolean().optional(),
+  mentions: z.boolean().optional(),
 });
 
 const waChatFilterQuerySchema = PaginateQuerySchema.extend({
@@ -128,6 +136,15 @@ const blockUserSchema = z.object({
   phoneNumbersList: z.array(z.string()),
 });
 
+const favoriteContactSchema = z.object({
+  conversationId: z.string(),
+  isFavorite: z.boolean(),
+});
+
+const clearMentionsSchema = z.object({
+  conversationId: z.string().optional(),
+});
+
 const bulkWaMessageAssignBody = z.object({
   contactIds: z.array(z.string()),
   assignee: z.object({
@@ -161,6 +178,8 @@ export type WaMediaFileByMediaIdBody = z.infer<typeof waMediaFileByMediaIdBody>;
 export type WaMessageAssignBody = z.input<typeof waMessageAssignBody>;
 export type BulkWaMessageAssignBody = z.infer<typeof bulkWaMessageAssignBody>;
 export type BlockUserBody = z.infer<typeof blockUserSchema>;
+export type FavoriteContactBody = z.infer<typeof favoriteContactSchema>;
+export type ClearMentionsBody = z.infer<typeof clearMentionsSchema>;
 export type LogsQuery = z.infer<typeof logsQuerySchema>;
 export type GenerateInboxResponseBody = z.infer<typeof generateInboxResponseBody>;
 
@@ -176,6 +195,8 @@ export {
   waMediaFileByMediaIdBody,
   waMessageAssignBody,
   blockUserSchema,
+  favoriteContactSchema,
+  clearMentionsSchema,
   generateInboxResponseBody,
   bulkWaMessageAssignBody,
   logsQuerySchema,

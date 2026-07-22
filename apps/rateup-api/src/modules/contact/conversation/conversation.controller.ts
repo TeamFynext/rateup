@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../utils/logger.js";
 import {
+  ContactConversationsParamsSchema,
   ConversationParamsSchema,
   StaffIdParamsSchema,
   StatsQuerySchema,
@@ -11,6 +12,7 @@ import {
   getAvargeResponseTimeofTodyaInEveryHour,
   getConversationOnAccountDistribution,
   getConversationOverview,
+  getConversationsByContactId,
   getOverAllQuickStatsOfConversations,
   getResolvedCountandTotalCountofDailyInLastNDays,
   getStaffConverSationMetrics,
@@ -19,6 +21,23 @@ import {
   getTeamOverview,
   updateConversation,
 } from "./conversation.service.js";
+
+/** Inbox Tickets v2 — a contact's full ticket history for the thread history strip. */
+export async function getConversationsByContactIdHandler(
+  request: FastifyRequest<{
+    Params: ContactConversationsParamsSchema;
+  }>,
+  reply,
+) {
+  try {
+    const { contactId } = request.params;
+    const res = await getConversationsByContactId(request.user.orgId, contactId);
+    reply.send(res);
+  } catch (error) {
+    log.error({ err: error }, "Error listing conversations for contact:");
+    reply.status(500).send({ error: "An error occurred while listing conversations." });
+  }
+}
 
 export async function updateConversationHandler(
   request: FastifyRequest<{

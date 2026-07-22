@@ -79,10 +79,14 @@ export async function getInboxCountsFromConversations(orgId: string) {
     open_count: number;
     closed_count: number;
   }[] = await prisma.$queryRaw`
+  -- CLOSED / SPAM / RESOLVED / UNRESOLVED are all "closed", and so is anything
+  -- carrying a close stamp: the list treats a stamped ticket as finished even if
+  -- its status column was left behind, and the badges have to agree with it or a
+  -- tab shows a count it cannot fill.
   SELECT
     COUNT(*)::INT                                                               AS all_count,
-    COUNT(*) FILTER (WHERE status IN ('UNASSIGNED','ASSIGNED'))::INT            AS open_count,
-    COUNT(*) FILTER (WHERE status IN ('CLOSED','SPAM','RESOLVED','UNRESOLVED'))::INT AS closed_count
+    COUNT(*) FILTER (WHERE status IN ('UNASSIGNED','ASSIGNED') AND "closedAt" IS NULL)::INT AS open_count,
+    COUNT(*) FILTER (WHERE status IN ('CLOSED','SPAM','RESOLVED','UNRESOLVED') OR "closedAt" IS NOT NULL)::INT AS closed_count
   FROM "Conversation"
   WHERE "orgId" = ${orgId}
 `;
