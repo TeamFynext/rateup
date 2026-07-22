@@ -160,6 +160,15 @@ const TERMINAL_TICKET_STATUSES = new Set([
   WaMessageAssignStatus.UNRESOLVED,
 ]);
 
+/**
+ * A row's status is its *ticket's* status. The contact-level one is the fallback
+ * for rows that predate conversation threading, and it can disagree: one contact
+ * can own a closed ticket and an open one at the same time.
+ */
+function rowStatus(row: ContactWithUpdatedAt): string | undefined {
+  return (row?.conversationStatus ?? row?.waMessageAssignStatus) as string | undefined;
+}
+
 function rowActivityAt(row: ContactWithUpdatedAt): number {
   const stamp =
     row?.conversationLastMessageAt ??
@@ -193,7 +202,7 @@ function liveRowKeyForContact(
   let best: { key: string; open: boolean; at: number } | null = null;
   for (const [key, row] of contactsById) {
     if (row?.id !== contactId) continue;
-    const status = (row.conversationStatus ?? row.waMessageAssignStatus) as WaMessageAssignStatus;
+    const status = rowStatus(row) as WaMessageAssignStatus;
     const open = !TERMINAL_TICKET_STATUSES.has(status);
     const at = rowActivityAt(row);
     // Prefer an open ticket; among equals prefer the most recently active.
@@ -397,10 +406,15 @@ export const useContactsStore = create<ContactsStoreState>()(
 
             const currentList = contactsByFilter[currentFilterKey] || [];
             let contactIncluded = currentList.includes(rowKey);
-            const isUnassigned =
-              updatedContact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED;
-            assignStatusChanged =
-              updatedContact.waMessageAssignStatus !== contact.waMessageAssignStatus;
+            // Rows are tickets, and the API filtered them by the *ticket's*
+            // status, so membership has to be judged on the same value. Judging
+            // it on the contact-level status dropped every row whose contact
+            // differs from its ticket — a closed ticket whose contact has since
+            // been reassigned, say — the moment anything touched the row, and
+            // opening a row touches it (the unread reset writes through here).
+            const ticketStatus = rowStatus(updatedContact);
+            const isUnassigned = ticketStatus === WaMessageAssignStatus.UNASSIGNED;
+            assignStatusChanged = ticketStatus !== rowStatus(contact);
             const statusMatch = currentFilterKey?.match(/status:([^|]*)/);
             let statuses = statusMatch ? statusMatch[1].split(",").filter(Boolean) : [];
             // Closed/Addressed tab with no explicit status sub-filter means "any closed status"
@@ -413,9 +427,9 @@ export const useContactsStore = create<ContactsStoreState>()(
               ];
             }
             const belongsToCurrentFilter =
-              (statuses.length === 0 || statuses.includes(updatedContact.waMessageAssignStatus)) &&
+              (statuses.length === 0 || statuses.includes(ticketStatus)) &&
               (!currentFilterKey?.includes("waMessageAssignStatus:mine") ||
-                (updatedContact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED &&
+                (ticketStatus === WaMessageAssignStatus.ASSIGNED &&
                   updatedContact.assignedUsers?.some((u) => u.id === state.currentUser?.userId))) &&
               // Favourites tab: unstarring a ticket must drop it from the list, not
               // just clear the icon. (`favorite:true` is in the key on that tab.)
@@ -537,17 +551,13 @@ export const useContactsStore = create<ContactsStoreState>()(
                   if (isNew) {
                     if (
                       !isInFilter &&
-                      (!statuses.length || statuses.includes(contact.waMessageAssignStatus))
+                      (!statuses.length || statuses.includes(rowStatus(contact)))
                     ) {
                       newList.push(contactId);
                       changed = true;
                     }
                   }
-                  if (
-                    isInFilter &&
-                    statuses.length &&
-                    !statuses.includes(contact.waMessageAssignStatus)
-                  ) {
+                  if (isInFilter && statuses.length && !statuses.includes(rowStatus(contact))) {
                     newList = contactIds.filter((id) => id !== contactId);
                     changed = true;
                   }
@@ -604,9 +614,9 @@ export const useContactsStore = create<ContactsStoreState>()(
                   const statusMatch = filterKey.match(/status:([^|]*)/);
                   const statuses = statusMatch ? statusMatch[1].split(",").filter(Boolean) : [];
                   const matchesStatus = statuses.length
-                    ? statuses.includes(contact.waMessageAssignStatus)
+                    ? statuses.includes(rowStatus(contact))
                     : [WaMessageAssignStatus.ASSIGNED, WaMessageAssignStatus.UNASSIGNED].includes(
-                        contact.waMessageAssignStatus as WaMessageAssignStatus,
+                        rowStatus(contact) as WaMessageAssignStatus,
                       );
 
                   if (matchesStatus) {
@@ -656,7 +666,7 @@ export const useContactsStore = create<ContactsStoreState>()(
 
                 const contact = state.contactsById.get(contactId);
 
-                const isAssigned = contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED;
+                const isAssigned = rowStatus(contact) === WaMessageAssignStatus.ASSIGNED;
                 const filterList = Object.keys(draft.contactsByFilter).filter((key) =>
                   key.includes("waMessageAssignStatus:mine"),
                 );
