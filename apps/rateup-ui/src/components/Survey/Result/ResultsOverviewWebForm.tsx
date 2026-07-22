@@ -93,51 +93,54 @@ const ResultsOverviewWebForm = ({
         <RateupLoader />
       ) : isError ? (
         <ErrorComponent refetch={refetch} isRefetching={isRefetching} />
+      ) : !npsOverView.length && !choiceWiseOverView.length ? (
+        <NothingFound
+          className="min-h-[70vh]"
+          text={translations("No Data available for Analysis")}
+        />
       ) : (
-        !npsOverView.length &&
-        !choiceWiseOverView.length && (
-          <NothingFound text={translations("No Data available for Analysis")} />
-        )
-      )}
-      {!flowId && <SurveyStatsWebForm surveyId={surveyId} />}
+        <>
+          {!flowId && <SurveyStatsWebForm surveyId={surveyId} />}
 
-      <Card>
-        <CardContent className="pt-4">
-          <div className="flex items-center justify-between">
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <FileDown className="mr-1.5 size-4" />
-              {translations("Export to PDF")}
-            </Button>
-            <CalenderIconDateRangePicker ranges={ranges} setRange={setRanges} />
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <Button variant="outline" size="sm" onClick={handleExport}>
+                  <FileDown className="mr-1.5 size-4" />
+                  {translations("Export to PDF")}
+                </Button>
+                <CalenderIconDateRangePicker ranges={ranges} setRange={setRanges} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <div ref={targetRef} className="flex flex-col gap-6">
+            <HappyIndex surveyId={surveyId} />
+            <OverallResponseGraphWebForm
+              data={graphResponse}
+              timePeriod={timePeriod}
+              setTimePeriod={setTimePeriod}
+              isLoading={isrLoading || isrRefetching}
+            />
+            <SurveyQuestion
+              choiceWise={choiceWiseOverView}
+              NPS={npsOverView}
+              flowQuestions={flowQuestions}
+              questions={questions}
+              version={version}
+              surveyId={surveyId}
+              defaultLanguage={defaultLanguage}
+            />
+            <LargeTextResponseSummary
+              surveyId={surveyId}
+              questions={textAreaQuestions}
+              subscription={subscription}
+              currentSummary={aiResponseSummary}
+              version={version}
+            />
           </div>
-        </CardContent>
-      </Card>
-
-      <div ref={targetRef} className="flex flex-col gap-6">
-        <HappyIndex surveyId={surveyId} />
-        <OverallResponseGraphWebForm
-          data={graphResponse}
-          timePeriod={timePeriod}
-          setTimePeriod={setTimePeriod}
-          isLoading={isrLoading || isrRefetching}
-        />
-        <SurveyQuestion
-          choiceWise={choiceWiseOverView}
-          NPS={npsOverView}
-          flowQuestions={flowQuestions}
-          questions={questions}
-          version={version}
-          surveyId={surveyId}
-          defaultLanguage={defaultLanguage}
-        />
-        <LargeTextResponseSummary
-          surveyId={surveyId}
-          questions={textAreaQuestions}
-          subscription={subscription}
-          currentSummary={aiResponseSummary}
-          version={version}
-        />
-      </div>
+        </>
+      )}
     </div>
   );
 };
