@@ -191,12 +191,40 @@ export async function getWaChatMediaFile(mediaId: string) {
   }
 }
 
+/**
+ * Assigning a contact whose last ticket is closed does not revive that ticket —
+ * the API opens a successor and assigns that instead — so the response names the
+ * ticket the assignment landed on.
+ */
+export interface AssignInboxResult {
+  assignees: { userId: string; teamId: string }[];
+  conversation: { id: string; number: number | null; status: string } | null;
+}
+
 export async function assignInboxToUser(data: {
   contactId: string;
   assignees: { userId: string; teamId: string }[];
   messageId: string; // for internal message
-}): Promise<{ id: string; name: string }[]> {
+}): Promise<AssignInboxResult> {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign`, data)).data;
+}
+
+/**
+ * Reopen a closed ticket. The API opens the successor ticket and carries the
+ * closed ticket's assignees onto it, so the result has the same shape as an
+ * assignment — it *is* one.
+ */
+export async function reopenConversation(data: {
+  contactId: string;
+  conversationId?: string;
+  messageId?: string;
+}): Promise<AssignInboxResult> {
+  return (
+    await axiosClient.post(`${WA_CONTACT_BASE_PATH}/reopen/${data.contactId}`, {
+      conversationId: data.conversationId,
+      messageId: data.messageId,
+    })
+  ).data;
 }
 
 export async function bulkAssignInboxToUser(data: {

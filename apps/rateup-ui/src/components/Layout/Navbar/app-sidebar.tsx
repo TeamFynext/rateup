@@ -245,15 +245,7 @@ function NavItemContent({
       <div className="flex min-w-0 flex-1 items-center gap-2 group-data-[collapsible=icon]:hidden">
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
-            <span
-              className={`block truncate ${
-                item.isSectionHeader
-                  ? "text-[12px] font-bold text-muted-foreground tracking-wide"
-                  : ""
-              }`}
-            >
-              {item.title}
-            </span>
+            <span className={`block truncate`}>{item.title}</span>
             {item.clearFilter && item.showClearButton && (
               <Button
                 size="xs"

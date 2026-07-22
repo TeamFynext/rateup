@@ -8,8 +8,9 @@ import {
 import { toast } from "sonner";
 
 import useContactStore, { useContactsStore } from "@/components/dashboard/inbox/store.ts";
-import { MessagePlatform } from "@/types/enums.ts";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 
+import type { AssignInboxResult } from "./wamessage.api";
 import {
   assignInboxToUser,
   blockWhatsAppUser,
@@ -29,6 +30,7 @@ import {
   getWaMessageLogs,
   markWaMessagesAsRead,
   clearConversationMentions,
+  reopenConversation,
   sendNewWaMessage,
   setConversationFavorite,
   unblockWhatsAppUser,
@@ -125,11 +127,45 @@ export const useGetMediaFile = () => {
   });
 };
 
+/**
+ * Assigning a *closed* ticket does not reopen it — the API leaves the finished
+ * record alone (its closedAt and resolution timings are frozen) and opens a
+ * successor ticket to carry the new engagement. The open thread therefore has to
+ * follow the assignment onto that successor; staying on the closed ticket is why
+ * its "This chat has been closed… Assign it to start the conversation again"
+ * banner survived the assign that was supposed to dismiss it.
+ */
+function followAssignmentToItsTicket(result: AssignInboxResult, contactId: string) {
+  const conversation = result?.conversation;
+  const { selectedContact, setSelectedContact } = useContactsStore.getState();
+  if (!conversation || !selectedContact || selectedContact.id !== contactId) return;
+  // Same ticket — the call site's own optimistic update covers it.
+  if (getRowKey(selectedContact) === conversation.id) return;
+
+  setSelectedContact({
+    ...selectedContact,
+    conversationId: conversation.id,
+    ticketNumber: conversation.number,
+    conversationStatus: conversation.status,
+    waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+    // The successor starts clean: none of the closed ticket's outcome carries over.
+    closedAt: null,
+    ticketClosedAt: null,
+    closedUser: null,
+    resolutionResult: null,
+    unReadMessageCount: 0,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
 export const useAssignInboxToUer = (_contactId, filterData) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: assignInboxToUser,
-    onSuccess: () => {
+    onSuccess: (result, variables) => {
+      // Runs before the caller's own onSuccess, so their `updateContactById`
+      // lands on the ticket the assignment actually went to.
+      followAssignmentToItsTicket(result, variables.contactId);
       qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
       qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
       qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
@@ -139,6 +175,29 @@ export const useAssignInboxToUer = (_contactId, filterData) => {
     },
     onError: (e) => {
       toast.warning(e?.message || "Something went wrong");
+    },
+  });
+};
+
+/**
+ * Reopen a closed ticket, keeping whoever was on it. The API answers with the
+ * successor ticket, and the thread follows it exactly as it does for an assign —
+ * the closed ticket itself stays closed, with its history intact.
+ */
+export const useReopenConversation = (filterData?: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: reopenConversation,
+    onSuccess: (result, variables) => {
+      followAssignmentToItsTicket(result, variables.contactId);
+      qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
+      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
+      qc.invalidateQueries({ queryKey: ["wa-messages", variables.contactId] });
+      toast.success("Ticket reopened");
+    },
+    onError: (e) => {
+      toast.warning(e?.message || "Could not reopen the ticket");
     },
   });
 };

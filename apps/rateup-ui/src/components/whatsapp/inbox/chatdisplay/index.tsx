@@ -31,7 +31,7 @@ export default function WaInboxChatDisplay() {
 
   const { t: translations } = useTranslation();
   const { isLoading } = useMessagesStore();
-  const [showCustomerInfo, setShowCustomerInfo] = useState(false);
+  const [showCustomerInfo, setShowCustomerInfo] = useState(true);
   const contactId = contact?.id;
   const { data: assignedUserList } = useGetAssignedUserForContact(contactId);
   const MAX_FILES = 10;

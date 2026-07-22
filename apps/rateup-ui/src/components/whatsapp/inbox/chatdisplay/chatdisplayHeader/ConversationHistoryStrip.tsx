@@ -10,7 +10,7 @@ import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 import { getSoucePlatformIconAndColor } from "../../util.tsx";
-import { resolutionResultLabel } from "./ticket.ts";
+import { deriveStatus, resolutionResultLabel, STATUS_PILL_BASE } from "./ticket.ts";
 
 interface ConversationHistoryStripProps {
   contact: ContactWithUpdatedAt;
@@ -103,6 +103,18 @@ export default function ConversationHistoryStrip({
         <div className="flex flex-col gap-1.5 px-5 pt-0.5 pb-3">
           {siblings.map((sibling) => {
             const resultLabel = resolutionResultLabel(sibling.resolutionResult);
+            // Same derivation as the thread header and the list rows, so a ticket
+            // reads the same wherever it appears. The endpoint only returns
+            // assignees that are still on the ticket, which is exactly what
+            // decides Assigned vs New.
+            const status = deriveStatus({
+              conversationStatus: sibling.status,
+              assignedUsers: sibling.assignedUsers,
+            });
+            const assignees = (sibling.assignedUsers ?? [])
+              .map((a) => a.user?.name)
+              .filter(Boolean)
+              .join(", ");
             return (
               <button
                 type="button"
@@ -121,8 +133,17 @@ export default function ConversationHistoryStrip({
                   </span>
                 ) : null}
                 <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
-                  {sibling.subject || "Untitled ticket"}
+                  {sibling.subject || ""}
                 </span>
+                <span className={`${STATUS_PILL_BASE} shrink-0 ${status.className}`}>
+                  <span className="size-[5px] rounded-full bg-current" />
+                  {status.label}
+                </span>
+                {assignees && (
+                  <span className="max-w-[9rem] shrink-0 truncate text-[11px] text-muted-foreground">
+                    {assignees}
+                  </span>
+                )}
                 {resultLabel && (
                   <span className="shrink-0 rounded-full bg-green-600/10 px-2 py-0.5 text-[10px] font-bold text-green-600">
                     {resultLabel}

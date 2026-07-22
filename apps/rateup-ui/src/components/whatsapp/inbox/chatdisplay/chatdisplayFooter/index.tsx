@@ -602,8 +602,19 @@ export const WaInboxAssignUserFooter = ({
         ],
       },
       {
-        onSuccess: () => {
-          updateContactById(contactId, (contact) => ({
+        onSuccess: (result) => {
+          // A closed ticket is not revived by assigning it — the API opens a
+          // successor and the thread has already followed it — so the optimistic
+          // "assigned" event moves to the successor's bucket too, or it would sit
+          // in the closed ticket's thread until the refetch corrects it.
+          const assignedRowKey = result?.conversation?.id;
+          if (assignedRowKey && assignedRowKey !== rowKey) {
+            messagesStore.removeMessage(`${rowKey}_all`, id);
+            messagesStore.removeMessage(`${rowKey}_internal`, id);
+            messagesStore.addMessage(`${assignedRowKey}_all`, newMessage as any);
+            messagesStore.addMessage(`${assignedRowKey}_internal`, newMessage as any);
+          }
+          updateContactById(assignedRowKey ?? contactId, (contact) => ({
             ...contact,
             waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
             assignedUsers: [

@@ -5,9 +5,15 @@ import {
   getRowKey,
   type ResolutionResult,
 } from "@/backend/whatsapp/inbox/message/wamessage.api.ts";
-import { useBlockWhatsAppUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useBlockWhatsAppUser,
+  useReopenConversation,
+} from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
+import useContactStore, {
+  useContactsStore,
+  useMessagesStore,
+} from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import {
@@ -62,6 +68,8 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
   const { updateContactById, setSelectedContact } = useContactsStore();
   const confirm = useConfirm();
   const blockmut = useBlockWhatsAppUser();
+  const { filterData } = useContactStore();
+  const reopenMutation = useReopenConversation(filterData);
 
   const closed = isTicketClosed(contact);
   const canBlock =
@@ -165,6 +173,21 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
     );
   }
 
+  /**
+   * Reopen carries the ticket's assignees over: the API opens the successor
+   * ticket and assigns whoever was on this one when it closed (closing revokes
+   * them, so it reads the assignment history). The closed ticket keeps its own
+   * record — its closedAt and resolution timings stay frozen — and the thread
+   * follows the successor from the mutation's onSuccess.
+   */
+  function handleReopen() {
+    reopenMutation.mutate({
+      contactId: contact.id,
+      conversationId: contact.conversationId ?? undefined,
+      messageId: generateInternalMessageId(),
+    });
+  }
+
   const overflow = canBlock ? (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -184,13 +207,14 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
   ) : null;
 
   if (closed) {
+    // return <></>
     return (
       <>
         <Button
           size="sm"
           className="h-8 shrink-0 gap-1.5 border-transparent bg-primary text-primary-foreground shadow-none"
-          disabled={editContactMutation.isPending}
-          onClick={() => applyStatus(WaMessageAssignStatus.NEW, null)}
+          disabled={reopenMutation.isPending}
+          onClick={handleReopen}
         >
           <RotateCcw className="size-3.5" />
           <span className="text-xs font-bold">Reopen</span>

@@ -20,11 +20,13 @@ export default function TicketSubBar({ contact }: Readonly<TicketSubBarProps>) {
   const resultLabel = resolutionResultLabel(contact?.resolutionResult);
 
   return (
-    <div className="flex items-center gap-2.5 border-t border-border bg-muted px-5 py-2">
+    <div className="flex items-center gap-2.5 border-t border-border bg-muted px-5 py-2 ">
       <Ticket className="size-3.5 shrink-0 text-muted-foreground" />
-      <span className="shrink-0 font-mono text-[11px] text-muted-foreground">#{ticketNumber}</span>
+      <span className="shrink-0 font-mono text-[11px] text-muted-foreground mt-auto">
+        #{ticketNumber}
+      </span>
       <span className="truncate text-[13px] font-bold text-foreground">
-        {contact?.ticketSubject || "Untitled ticket"}
+        {contact?.ticketSubject || ""}
       </span>
       <span className="flex-1" />
       {resultLabel && (

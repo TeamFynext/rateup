@@ -29,7 +29,6 @@ import { useTeamsByUser } from "@/backend/team/team.query";
 import { getRowKey, type ResolutionResult } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useEditConversation } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
-import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -38,7 +37,6 @@ import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
-import { TicketType } from "@/utils/enums/ticket.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 import { generateInternalMessageId } from "../util.tsx";
@@ -143,7 +141,6 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
   const editConversation = useEditConversation();
 
   const [copied, setCopied] = useState(false);
-  const [createTicketOpen, setCreateTicketOpen] = useState(false);
   const [assignExpanded, setAssignExpanded] = useState(false);
   const [labelPickerOpen, setLabelPickerOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -669,18 +666,6 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
 
       {/* ---- Board ticket / Mark as spam ---- */}
       <div className="flex flex-col gap-2 px-4.5 pb-4.5">
-        {/* Raises a card on the Kanban ticket board, linked to this contact via
-            TicketCard.contactId. The board is a separate feature from the inbox's
-            own Conversation-based ticket, so this creates a board card rather than
-            navigating to one. */}
-        <button
-          type="button"
-          onClick={() => setCreateTicketOpen(true)}
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[9px] text-[13px] font-semibold cursor-pointer text-primary border border-border"
-        >
-          <Ticket className="size-3.75" />
-          {t("Create ticket on board")}
-        </button>
         <button
           type="button"
           onClick={markAsSpam}
@@ -691,14 +676,6 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
           {t("Mark as spam")}
         </button>
       </div>
-
-      <CreateTicketCard
-        opened={createTicketOpen}
-        close={() => setCreateTicketOpen(false)}
-        type={TicketType.CUSTOM}
-        hasTicketFeature
-        contactId={contact?.id}
-      />
     </div>
   );
 }

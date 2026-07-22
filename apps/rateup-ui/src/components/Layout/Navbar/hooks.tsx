@@ -64,10 +64,6 @@ export function useNavMain({
 }: any) {
   const { t } = useTranslation();
 
-  const LifecycleIcon = () => <IconActivity className="h-3 w-3 text-amber-400" />;
-  const LabelIcon = () => <IconTag className="h-3 w-3 text-blue-400" />;
-  const UserIcon = () => <IconUser className="h-3 w-3 text-green-400" />;
-  const TeamIcon = () => <IconUsers className="h-3 w-3 text-purple-400" />;
   // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)
   const hasTeamFeature = (feature: TeamFeature) =>
     allowedFeatures === null || allowedFeatures.has(feature);
@@ -153,7 +149,7 @@ export function useNavMain({
                           {
                             title: "Lifecycle",
                             isSectionHeader: true,
-                            icon: LifecycleIcon,
+                            icon: IconActivity,
                             showClearButton: !!chatFilterStore.filter.lifecycle,
                             clearFilter: () =>
                               chatFilterStore.setFilter({
@@ -177,7 +173,7 @@ export function useNavMain({
                           {
                             title: "Labels",
                             isSectionHeader: true,
-                            icon: LabelIcon,
+                            icon: IconTag,
                             showClearButton: chatFilterStore.filter.labels?.length > 0,
                             clearFilter: () =>
                               chatFilterStore.setFilter({
@@ -209,7 +205,7 @@ export function useNavMain({
                           {
                             title: "Users",
                             isSectionHeader: true,
-                            icon: UserIcon,
+                            icon: IconUser,
                             showClearButton: chatFilterStore.filter.assignedUserIds?.length > 0,
                             clearFilter: () =>
                               chatFilterStore.setFilter({
@@ -230,7 +226,7 @@ export function useNavMain({
                           {
                             title: "Teams",
                             isSectionHeader: true,
-                            icon: TeamIcon,
+                            icon: IconUsers,
                             showClearButton: chatFilterStore.filter.assignedTeams?.length > 0,
                             clearFilter: () =>
                               chatFilterStore.setFilter({

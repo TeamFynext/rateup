@@ -172,13 +172,18 @@ export default function WaInboxChatSelectCard({
         assignees: [{ userId: user.userId, teamId: user.teams?.[0] }],
       },
       {
-        onSuccess: () => {
-          updateContactById(rowKey, (existing) => ({
-            ...existing,
-            waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
-            conversationStatus: WaMessageAssignStatus.ASSIGNED,
-            assignedUsers: [{ id: user.userId, name: user?.userName, teamId: user.teams?.[0] }],
-          }));
+        onSuccess: (result) => {
+          // Assigning a closed ticket opens a successor rather than reviving this
+          // row, so only mark this row assigned when the assignment stayed on it.
+          // The refetched list brings the successor in.
+          if (!result?.conversation || result.conversation.id === rowKey) {
+            updateContactById(rowKey, (existing) => ({
+              ...existing,
+              waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+              conversationStatus: WaMessageAssignStatus.ASSIGNED,
+              assignedUsers: [{ id: user.userId, name: user?.userName, teamId: user.teams?.[0] }],
+            }));
+          }
           qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
         },
         onError: () => {
