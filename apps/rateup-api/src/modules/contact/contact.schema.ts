@@ -34,7 +34,9 @@ const bulkUpdateContactStatusSchema = z.object({
   contactIds: z.array(z.uuid()),
   waMessageAssignStatus: z.enum(WaMessageAssignStatus),
   messageId: z.string().optional(), // for internal messages
-  resolutionResult: z.enum(ResolutionResult).optional(), // close-with-result taxonomy
+  // Nullable as well as optional: closing without picking a result sends an
+  // explicit null, and reopening sends null to clear the previous one.
+  resolutionResult: z.enum(ResolutionResult).nullish(), // close-with-result taxonomy
 });
 
 const updateContactSchema = z.object({
@@ -50,7 +52,9 @@ const updateContactSchema = z.object({
     .optional(),
   aiWaChat: z.boolean().optional(),
   waMessageAssignStatus: z.enum(WaMessageAssignStatus).optional(),
-  resolutionResult: z.enum(ResolutionResult).optional(), // close-with-result taxonomy
+  // Nullable as well as optional: closing without picking a result sends an
+  // explicit null, and reopening sends null to clear the previous one.
+  resolutionResult: z.enum(ResolutionResult).nullish(), // close-with-result taxonomy
   messageId: z.string().optional(), // for internal messages
   lastReceivedMessageTimeStamp: z.string().optional(),
   whatsappUserName: z.string().optional().nullable(),

@@ -10,6 +10,7 @@ import {
   BlockUserBody,
   FavoriteContactBody,
   ClearMentionsBody,
+  ReopenConversationBody,
   GenerateInboxResponseBody,
   PrivateWaMessageBody,
   BulkWaMessageAssignBody,
@@ -19,6 +20,7 @@ import {
   addNewWaMessage,
   assignWaMessageToUser,
   clearMentionsForConversation,
+  reopenConversation,
   exportWhatsapChats,
   filterChats,
   generateChatFilterData,
@@ -495,6 +497,28 @@ export async function clearConversationMentionsHandler(
     reply.code(200).send({ success: true });
   } catch (e) {
     log.error("Error clearing mentions: %o", e);
+    reply.code(500).send("Internal Server Error");
+  }
+}
+
+export async function reopenConversationHandler(
+  request: FastifyRequest<{
+    Body: ReopenConversationBody;
+    Params: ByContactIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await reopenConversation(
+      request.user.orgId,
+      request.user.userId,
+      request.params.contactId,
+      request.body?.conversationId ?? null,
+      request.body?.messageId,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error("Error reopening conversation: %o", e);
     reply.code(500).send("Internal Server Error");
   }
 }

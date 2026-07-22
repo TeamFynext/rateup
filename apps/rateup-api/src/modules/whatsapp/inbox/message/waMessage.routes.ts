@@ -4,6 +4,7 @@ import {
   blockWhatsappUserHandler,
   bulkAssignWaMessageHandler,
   clearConversationMentionsHandler,
+  reopenConversationHandler,
   createPrivateMessageHandler,
   setContactFavoriteHandler,
   exportWhatsappChatsHandler,
@@ -27,6 +28,7 @@ import {
   blockUserSchema,
   bulkWaMessageAssignBody,
   clearMentionsSchema,
+  reopenConversationSchema,
   favoriteContactSchema,
   generateInboxResponseBody,
   PaginateQuerySchema,
@@ -76,6 +78,17 @@ export async function waMessageRoutes(server: FastifyInstance) {
       },
     },
     clearConversationMentionsHandler,
+  );
+
+  server.post(
+    "/reopen/:contactId",
+    {
+      schema: {
+        params: byContactIdSchema,
+        body: reopenConversationSchema,
+      },
+    },
+    reopenConversationHandler,
   );
 
   server.get("/filterdata", generateChatFilterDataHandler);

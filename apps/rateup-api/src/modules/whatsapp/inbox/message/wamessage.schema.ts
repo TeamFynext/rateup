@@ -145,6 +145,11 @@ const clearMentionsSchema = z.object({
   conversationId: z.string().optional(),
 });
 
+const reopenConversationSchema = z.object({
+  conversationId: z.string().optional(),
+  messageId: z.string().optional(), // for the internal "assigned" event
+});
+
 const bulkWaMessageAssignBody = z.object({
   contactIds: z.array(z.string()),
   assignee: z.object({
@@ -180,6 +185,7 @@ export type BulkWaMessageAssignBody = z.infer<typeof bulkWaMessageAssignBody>;
 export type BlockUserBody = z.infer<typeof blockUserSchema>;
 export type FavoriteContactBody = z.infer<typeof favoriteContactSchema>;
 export type ClearMentionsBody = z.infer<typeof clearMentionsSchema>;
+export type ReopenConversationBody = z.infer<typeof reopenConversationSchema>;
 export type LogsQuery = z.infer<typeof logsQuerySchema>;
 export type GenerateInboxResponseBody = z.infer<typeof generateInboxResponseBody>;
 
@@ -197,6 +203,7 @@ export {
   blockUserSchema,
   favoriteContactSchema,
   clearMentionsSchema,
+  reopenConversationSchema,
   generateInboxResponseBody,
   bulkWaMessageAssignBody,
   logsQuerySchema,

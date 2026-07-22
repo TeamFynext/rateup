@@ -44,8 +44,10 @@ import {
 } from "../../../integrations/external/zapier/zapier.service.js";
 import { faker } from "@faker-js/faker";
 import {
+  getConversationById,
   getLastCreatedConversationForContact,
   openConversationForContact,
+  setInboxStatus,
   updateConversationAssignees,
 } from "../../../contact/conversation/conversation.service.js";
 import { isTerminalInboxStatus } from "../../constants.js";
@@ -1096,7 +1098,15 @@ export async function assignWaMessageToUser(
       },
       orgId,
     );
-    return data.assignees;
+    // The ticket is part of the result: assigning a contact whose last ticket was
+    // closed opens a successor above, and the caller has no other way to learn
+    // which ticket the assignment actually landed on.
+    return {
+      assignees: data.assignees,
+      conversation: conversation
+        ? { id: conversation.id, number: conversation.number, status: conversation.status }
+        : null,
+    };
   } catch (e) {
     if (e) {
       throw e;
@@ -1106,6 +1116,65 @@ export async function assignWaMessageToUser(
       throw error;
     }
   }
+}
+
+/**
+ * Reopen a closed ticket, carrying its assignees over to the ticket that takes
+ * its place.
+ *
+ * A closed ticket is a finished record — it is never revived — so reopening is
+ * "start the next ticket where this one left off": the people who were on it
+ * when it closed are assigned to the successor. Closing revokes assignees, so
+ * the removed rows are the history to read when nothing is still active.
+ *
+ * Assignment is what opens the successor (see `assignWaMessageToUser`), so the
+ * two paths stay identical; a ticket that never had anyone on it reopens
+ * unassigned.
+ */
+export async function reopenConversation(
+  orgId: string,
+  userId: string,
+  contactId: string,
+  conversationId?: string | null,
+  messageId?: string,
+) {
+  const conversation = conversationId
+    ? await getConversationById(conversationId)
+    : await getLastCreatedConversationForContact(contactId);
+
+  const assignmentHistory = conversation
+    ? await prisma.conversationAssignedUserTeamMap.findMany({
+        where: { conversationId: conversation.id },
+        orderBy: [{ lastRemovedAt: "desc" }, { lastAssignedAt: "desc" }],
+      })
+    : [];
+  const stillAssigned = assignmentHistory.filter((row) => !row.lastRemovedAt);
+  const previousAssignees = (stillAssigned.length ? stillAssigned : assignmentHistory).map(
+    (row) => ({ userId: row.userId, teamId: row.teamId }),
+  );
+
+  if (previousAssignees.length) {
+    return await assignWaMessageToUser(
+      { contactId, assignees: previousAssignees, messageId },
+      orgId,
+      userId,
+    );
+  }
+
+  // Nobody to carry over: open the successor unassigned and put the contact back
+  // in the live inbox, which is what `setInboxStatus` does for a non-terminal
+  // status (it leaves the closed ticket itself alone, by design).
+  const successor =
+    conversation && !isTerminalInboxStatus(conversation.status)
+      ? conversation
+      : await openConversationForContact(contactId, orgId, WaMessageAssignStatus.UNASSIGNED);
+  await setInboxStatus(contactId, WaMessageAssignStatus.UNASSIGNED, { source: "user", userId });
+  return {
+    assignees: [],
+    conversation: successor
+      ? { id: successor.id, number: successor.number, status: successor.status }
+      : null,
+  };
 }
 
 export async function getAssignedUserForContact(contactId) {
