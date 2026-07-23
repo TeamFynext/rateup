@@ -9,6 +9,7 @@ import {
   Send,
   ShieldAlert,
   StickyNote,
+  TypeOutline,
   UserCheck,
   UserPlus,
   Zap,
