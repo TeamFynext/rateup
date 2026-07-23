@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -54,6 +53,7 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 export const Route = createFileRoute("/admin/orgs/$orgId/")({
@@ -220,7 +220,8 @@ function OrgById() {
     );
   }
 
-  if (isLoading || isOrgsLoading || !stats || isSubLoading) return <RateupLoader h={"100dvh"} />;
+  if (isLoading || isOrgsLoading || !stats || isSubLoading)
+    return <RateupLoader className="h-dvh" />;
 
   const lastActivity = orgDetails?.AuditLog?.[0]?.createdAt;
   const last = lastActivity ? dayjs(lastActivity) : null;

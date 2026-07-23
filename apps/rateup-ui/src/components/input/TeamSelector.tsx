@@ -1,19 +1,26 @@
-import type { SelectProps } from "@mantine/core";
-import { Card, Group, Skeleton, Text } from "@mantine/core";
 import { Users } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
+import { Card } from "@/components/ui/card.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 
-interface TeamSelectorProps extends SelectProps {
+interface TeamSelectorProps {
+  className?: string;
   value?: string;
   onChange?: (teamId: string) => void;
-  label?: string;
+  label?: React.ReactNode;
   enableAll?: boolean;
   enableDefaultValue?: boolean;
+  placeholder?: string;
+  error?: React.ReactNode;
+  disabled?: boolean;
+  name?: string;
+  /** Extra props from legacy call sites (Mantine layout/select props) are ignored. */
+  [key: string]: any;
 }
 export function TeamSelector({
   value,
@@ -52,15 +59,15 @@ export function TeamSelector({
   }, [teamOptions, value]);
 
   if (isError) {
-    return <Text>{translations("Something went wrong!")}</Text>;
+    return <p>{translations("Something went wrong!")}</p>;
   }
   if (teamsLoading) {
     return (
-      <Card h={40} w={240} radius={"md"} withBorder p={0}>
-        <Group justify="space-between" w={"100%"} my={"auto"}>
-          <Skeleton w={100} h={17} ml={"xs"} />
-          <Skeleton w={20} h={17} mr={"xs"} />
-        </Group>
+      <Card className="h-10 w-60 justify-center rounded-md border p-0">
+        <div className="my-auto flex w-full items-center justify-between">
+          <Skeleton className="ml-2 h-[17px] w-25" />
+          <Skeleton className="mr-2 h-[17px] w-5" />
+        </div>
       </Card>
     );
   }

@@ -130,7 +130,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
                             type="email"
                             aria-invalid={fieldState.invalid}
                             placeholder="abcd@example.com"
-                            className="pl-8 sm:pl-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
+                            className="pl-8 sm:pl-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-xs sm:text-sm"
                           />
                         </div>
                       </div>
@@ -159,7 +159,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
                             type={showPassword ? "text" : "password"}
                             aria-invalid={fieldState.invalid}
                             placeholder="Enter your password"
-                            className="pl-8 sm:pl-10 pr-8 sm:pr-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
+                            className="pl-8 sm:pl-10 pr-8 sm:pr-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-xs sm:text-sm"
                           />
                           <button
                             type="button"
@@ -199,7 +199,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
                       to: "/login/reset-password",
                     })
                   }
-                  className="text-xs sm:text-sm text-rateup-blue hover:text-rateup-blue/80 underline flex items-center space-x-1 transition-colors cursor-pointer"
+                  className="text-xs sm:text-sm text-primary hover:text-primary/80 underline flex items-center space-x-1 transition-colors cursor-pointer"
                 >
                   <Key className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   <span className="text-xs sm:text-sm">Forgot password?</span>

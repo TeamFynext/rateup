@@ -235,7 +235,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
             />
             <Button
               variant="default"
-              className="bg-rateup-blue"
+              className="bg-primary"
               size="sm"
               onClick={() => setIsOpenedAddContactModal(true)}
             >

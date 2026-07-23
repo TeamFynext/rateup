@@ -1,91 +1,76 @@
-import { Avatar, Divider, Group, Stack, Text, Title } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
 
 const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
   const { t: translations } = useTranslation();
   return (
-    <Stack gap={"xl"}>
-      <Group justify="space-around">
-        <Stack gap={1}>
-          <Avatar
-            src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${selectedUser.profilePhoto}`}
-            size={"xl"}
-          />
-          <Title order={4}>{selectedUser?.userName}</Title>
-        </Stack>
-        <Stack>
-          <Group gap={1}>
-            <Text fw={600} size="sm" w={110}>
-              {translations("Email ID")}
-            </Text>
-            <Text size="sm" c={"dimmed"}>
-              {selectedUser?.email}
-            </Text>
-          </Group>
-          <Group gap={1}>
-            <Text fw={600} size="sm" w={110}>
-              {translations("User ID")}
-            </Text>
-            <Text size="sm" c={"dimmed"}>
-              {" "}
-              {selectedUser?.userId}
-            </Text>
-          </Group>
-          <Group gap={1}>
-            <Text fw={600} size="sm" w={110}>
-              {translations("Phone Number")}
-            </Text>
-            <Text size="sm" c={"dimmed"}>
-              {selectedUser?.phone ?? "---"}
-            </Text>
-          </Group>
-        </Stack>
-      </Group>
-      <PaperLayout>
-        <Title order={3}>{translations("Organization")}</Title>
-        <Divider my={"sm"} />
-        <Group justify="space-around">
-          <Stack gap={1}>
-            <Avatar
-              src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${selectedUser.orgLogo}`}
-              size={"lg"}
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-around">
+        <div className="flex flex-col gap-1 items-center">
+          <Avatar className="size-16">
+            <AvatarImage
+              src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${selectedUser.profilePhoto}`}
+              alt={selectedUser?.userName}
             />
-            <Title order={5}>{selectedUser?.orgName}</Title>
-            <Text size="xs" c={"dimmed"}>
-              {selectedUser.role}
-            </Text>
-          </Stack>
-          <Stack>
-            <Group gap={1}>
-              <Text fw={600} size="sm" w={110}>
-                {translations("Org ID")}
-              </Text>
-              <Text size="sm" c={"dimmed"}>
-                {selectedUser.orgId}
-              </Text>
-            </Group>
-            <Group gap={1}>
-              <Text fw={600} size="sm" w={110}>
+            <AvatarFallback>{selectedUser?.userName?.charAt(0)?.toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <h4 className="text-lg font-bold">{selectedUser?.userName}</h4>
+        </div>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-1">
+            <span className="font-semibold text-sm w-[110px]">{translations("Email ID")}</span>
+            <span className="text-sm text-muted-foreground">{selectedUser?.email}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="font-semibold text-sm w-[110px]">{translations("User ID")}</span>
+            <span className="text-sm text-muted-foreground"> {selectedUser?.userId}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="font-semibold text-sm w-[110px]">{translations("Phone Number")}</span>
+            <span className="text-sm text-muted-foreground">{selectedUser?.phone ?? "---"}</span>
+          </div>
+        </div>
+      </div>
+      <div className="w-full overflow-auto rounded-lg bg-card p-4 shadow-md">
+        <h3 className="text-xl font-bold">{translations("Organization")}</h3>
+        <Separator className="my-3" />
+        <div className="flex items-center justify-around">
+          <div className="flex flex-col gap-1 items-center">
+            <Avatar size="lg">
+              <AvatarImage
+                src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${selectedUser.orgLogo}`}
+                alt={selectedUser?.orgName}
+              />
+              <AvatarFallback>{selectedUser?.orgName?.charAt(0)?.toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <h5 className="text-base font-bold">{selectedUser?.orgName}</h5>
+            <span className="text-xs text-muted-foreground">{selectedUser.role}</span>
+          </div>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-1">
+              <span className="font-semibold text-sm w-[110px]">{translations("Org ID")}</span>
+              <span className="text-sm text-muted-foreground">{selectedUser.orgId}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="font-semibold text-sm w-[110px]">
                 {translations("Phone Number")}
-              </Text>
-              <Text size="sm" c={"dimmed"}>
+              </span>
+              <span className="text-sm text-muted-foreground">
                 {selectedUser.orgPhone ?? "---"}
-              </Text>
-            </Group>
-            <Group gap={1}>
-              <Text fw={600} size="sm" w={110}>
-                {translations("Address")}
-              </Text>
-              <Text size="sm" c={"dimmed"}>
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="font-semibold text-sm w-[110px]">{translations("Address")}</span>
+              <span className="text-sm text-muted-foreground">
                 {selectedUser.orgAddress ?? "---"}
-              </Text>
-            </Group>
-          </Stack>
-        </Group>
-      </PaperLayout>
-    </Stack>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -8,10 +8,7 @@ function QuestionDetailedViewBadge({ question }) {
   const label = getTypeLabel(question.type);
 
   return label ? (
-    <Badge
-      variant="outline"
-      className="overflow-visible border-[var(--tertiary-color)] text-[var(--tertiary-color)]"
-    >
+    <Badge variant="outline" className="overflow-visible border-primary text-primary">
       {label}
     </Badge>
   ) : (

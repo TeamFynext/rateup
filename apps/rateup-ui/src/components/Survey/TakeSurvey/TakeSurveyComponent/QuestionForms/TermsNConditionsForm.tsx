@@ -40,12 +40,7 @@ export function TermsNConditionsForm({ tncData }) {
           />
           <span className="-mt-0.5 flex items-center gap-1.5" style={{ color: textColor }}>
             {tnc?.title}
-            <a
-              href="#"
-              onClick={() => setOpened(true)}
-              className="underline"
-              style={{ color: "var(--tertiary-color)" }}
-            >
+            <a href="#" onClick={() => setOpened(true)} className="underline text-primary">
               {tnc?.urlTitle}
             </a>
           </span>

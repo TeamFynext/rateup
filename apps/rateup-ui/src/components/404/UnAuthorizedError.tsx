@@ -1,22 +1,23 @@
-import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import { IconUserShield } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
+
+import { Button } from "@/components/ui/button.tsx";
 
 function UnauthorizedPage() {
   const navigate = useNavigate();
   return (
-    <Stack justify="center" align="center" pt={"200px"}>
-      <Group>
+    <div className="flex flex-col items-center justify-center gap-6 pt-[200px]">
+      <div className="flex items-center gap-2">
         <IconUserShield size={32} stroke={2} />
-        <Title order={3}>Access Denied</Title>
-      </Group>
-      <Text c="dimmed" size="lg" ta="center" w={"50%"}>
+        <h3 className="text-2xl font-semibold text-foreground">Access Denied</h3>
+      </div>
+      <p className="max-w-2xl text-center text-lg text-muted-foreground">
         You don&apos;t have permission to access this page. Please contact your super admin if you
         believe this is an error, or return to the homepage.
-      </Text>
-      <Group justify="center">
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-3">
         <Button
-          size="md"
+          size="default"
           onClick={() =>
             navigate({
               to: "/dashboard",
@@ -26,8 +27,8 @@ function UnauthorizedPage() {
           Go back to home page
         </Button>
         <Button
-          size="md"
-          variant="subtle"
+          size="default"
+          variant="ghost"
           onClick={() =>
             navigate({
               to: "/logout",
@@ -36,8 +37,8 @@ function UnauthorizedPage() {
         >
           Sign in with a different account
         </Button>
-      </Group>
-    </Stack>
+      </div>
+    </div>
   );
 }
 

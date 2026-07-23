@@ -1,71 +1,98 @@
-import { FileInput, Group, NumberInput, Popover, Select, TextInput } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { IconPhoto } from "@tabler/icons-react";
-import { useCallback, useEffect, useState } from "react";
+import type { Editor } from "@tiptap/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import z from "zod";
 
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import { uploadFile } from "@/components/Linktree/LinktreeEditor/ThemeEditor/components/SaveChangesBtn/uploadFile.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 
-import styles from "./InsertImage.module.css";
+const ENTER_URL = "Enter Image Url";
+const UPLOAD_IMAGE = "Upload Image";
 
-function InsertImage() {
-  const { editor } = useRichTextEditorContext();
+const IMAGE_SOURCES = [
+  { value: ENTER_URL, label: ENTER_URL },
+  { value: UPLOAD_IMAGE, label: UPLOAD_IMAGE },
+];
+
+interface ImageFormValues {
+  chooseImageDDState: string;
+  imageUrlTextInput: string;
+  uploadImageFileInputValue: File | null;
+  imgWidth: number;
+  imgHeight: number;
+}
+
+function InsertImage({ editor }: { editor: Editor | null }) {
   const { t: translations } = useTranslation();
   const [isPopoveOpen, setIsPopoverOpen] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
 
-  const form = useForm({
-    initialValues: {
-      chooseImageDDState: "Enter Image Url",
+  const imageSchema = useMemo(
+    () =>
+      z
+        .object({
+          chooseImageDDState: z.string(),
+          imageUrlTextInput: z.string(),
+          // `custom` rather than `instanceof(File)`: File is not available during SSR.
+          uploadImageFileInputValue: z.custom<File | null>(),
+          imgWidth: z.number().min(1, translations("Please enter image width")),
+          imgHeight: z.number().min(1, translations("Please enter image height")),
+        })
+        .superRefine((values, ctx) => {
+          // Compared against the option constants, not their translations — the stored
+          // value is always the English key.
+          if (values.chooseImageDDState === ENTER_URL) {
+            try {
+              new URL(values.imageUrlTextInput);
+            } catch {
+              ctx.addIssue({
+                code: "custom",
+                path: ["imageUrlTextInput"],
+                message: translations("Please enter a valid URL"),
+              });
+            }
+            return;
+          }
+          if (!values.uploadImageFileInputValue) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["uploadImageFileInputValue"],
+              message: translations("Please Choose an image to upload"),
+            });
+          }
+        }),
+    [translations],
+  );
+
+  const form = useForm<ImageFormValues>({
+    resolver: zodResolver(imageSchema),
+    defaultValues: {
+      chooseImageDDState: ENTER_URL,
       imageUrlTextInput: "",
       uploadImageFileInputValue: null,
       imgWidth: 300,
       imgHeight: 300,
     },
-    validate: {
-      imageUrlTextInput: (value, values) => {
-        const chooseImageDDState = values.chooseImageDDState;
-        if (chooseImageDDState === translations("Enter Image Url")) {
-          try {
-            new URL(value);
-          } catch {
-            return translations("Please enter a valid URL");
-          }
-        } else {
-          return null;
-        }
-      },
-      uploadImageFileInputValue: (value, values) => {
-        const chooseImageDDState = values.chooseImageDDState;
-        if (chooseImageDDState === "Upload Image") {
-          if (!value) return translations("Please Choose an image to upload");
-        } else {
-          return null;
-        }
-      },
-      imgWidth: (value) => {
-        if (!value) {
-          return translations("Please enter image width");
-        } else {
-          return null;
-        }
-      },
-      imgHeight: (value) => {
-        if (!value) {
-          return translations("Please enter image height");
-        } else {
-          return null;
-        }
-      },
-    },
   });
 
-  const chooseImageDDState = form.getValues().chooseImageDDState;
+  const chooseImageDDState = form.watch("chooseImageDDState");
 
   const handlePopoverDDFormSubmit = useCallback(
-    async (values) => {
+    async (values: ImageFormValues) => {
       const {
         chooseImageDDState,
         imgWidth,
@@ -73,7 +100,7 @@ function InsertImage() {
         imageUrlTextInput,
         uploadImageFileInputValue,
       } = values;
-      if (chooseImageDDState === "Enter Image Url") {
+      if (chooseImageDDState === ENTER_URL) {
         if (editor) {
           editor
             .chain()
@@ -85,7 +112,7 @@ function InsertImage() {
             .run();
           setIsPopoverOpen(false);
         }
-      } else if (chooseImageDDState === "Upload Image") {
+      } else if (chooseImageDDState === UPLOAD_IMAGE) {
         setIsUploadingFile(true);
         const { url } = await uploadFile("src", uploadImageFileInputValue);
         if (editor) {
@@ -111,102 +138,167 @@ function InsertImage() {
   );
 
   useEffect(() => {
-    if (chooseImageDDState === "Enter Image Url") {
-      form.setFieldValue("uploadImageFileInputValue", null);
+    if (chooseImageDDState === ENTER_URL) {
+      form.setValue("uploadImageFileInputValue", null);
     } else {
-      form.setFieldValue("imageUrlTextInput", "");
+      form.setValue("imageUrlTextInput", "");
     }
-  }, [chooseImageDDState]);
+  }, [chooseImageDDState, form]);
 
   return (
     <Popover
-      position="bottom"
-      withArrow
-      shadow="md"
-      trapFocus
-      onClose={() => {
-        form.reset();
-        setIsPopoverOpen(false);
+      open={isPopoveOpen}
+      onOpenChange={(next) => {
+        // The upload is in flight — don't let a stray click tear the form down.
+        if (isUploadingFile) return;
+        if (!next) form.reset();
+        setIsPopoverOpen(next);
       }}
-      opened={isPopoveOpen}
-      closeOnClickOutside
     >
-      <Popover.Target>
-        <RichTextEditor.Control
-          aria-label="Insert image"
-          title={translations("Insert image")}
-          onClick={() => {
-            if (!isUploadingFile) {
-              setIsPopoverOpen(!isPopoveOpen);
-            }
-          }}
-        >
-          <IconPhoto size={16} />
-        </RichTextEditor.Control>
-      </Popover.Target>
-      <Popover.Dropdown className={styles["image-selector-popover-dropdown-div"]}>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Insert image"
+            title={translations("Insert image")}
+            className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+          />
+        }
+      >
+        <IconPhoto size={16} />
+      </PopoverTrigger>
+      <PopoverContent className="w-auto rounded-2xl p-4">
         <form
-          className={styles["popover-dropdown-form"]}
-          onSubmit={form.onSubmit(handlePopoverDDFormSubmit)}
-          onReset={form.onReset}
+          className="flex w-75 flex-col gap-4 [&_label]:mb-1"
+          onSubmit={form.handleSubmit(handlePopoverDDFormSubmit)}
+          onReset={() => form.reset()}
         >
-          <Select
-            label={translations("Choose Image:")}
-            data={["Enter Image Url", "Upload Image"]}
-            comboboxProps={{
-              withinPortal: false,
-            }}
-            allowDeselect={false}
-            withAsterisk
-            {...form.getInputProps("chooseImageDDState")}
+          <Controller
+            name="chooseImageDDState"
+            control={form.control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel htmlFor={field.name}>
+                  {translations("Choose Image:")}
+                  <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Select items={IMAGE_SOURCES} value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id={field.name} className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {IMAGE_SOURCES.map((source) => (
+                      <SelectItem key={source.value} value={source.value}>
+                        {source.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
           />
 
-          {form.getValues().chooseImageDDState === "Enter Image Url" ? (
-            <TextInput
-              className={styles["image-url-text-input"]}
-              label={translations("Enter Image Url")}
-              placeholder={translations("Enter the url of image")}
-              withAsterisk
-              {...form.getInputProps("imageUrlTextInput")}
+          {chooseImageDDState === ENTER_URL ? (
+            <Controller
+              name="imageUrlTextInput"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>
+                    {translations("Enter Image Url")}
+                    <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    placeholder={translations("Enter the url of image")}
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
           ) : (
-            <FileInput
-              label={translations("Upload Image")}
-              placeholder={translations("Choose Image to Upload")}
-              withAsterisk
-              {...form.getInputProps("uploadImageFileInputValue")}
+            <Controller
+              name="uploadImageFileInputValue"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>
+                    {translations("Upload Image")}
+                    <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Input
+                    name={field.name}
+                    ref={field.ref}
+                    onBlur={field.onBlur}
+                    id={field.name}
+                    type="file"
+                    accept="image/*"
+                    aria-invalid={fieldState.invalid}
+                    onChange={(event) => field.onChange(event.target.files?.[0] ?? null)}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
           )}
 
-          <Group
-            className={styles["width-height-inputs-container"]}
-            wrap="nowrap"
-            align="flex-start"
-          >
-            <NumberInput
-              label={translations("Width")}
-              placeholder={translations("width")}
-              min={300}
-              withAsterisk
-              {...form.getInputProps("imgWidth")}
+          <div className="flex flex-nowrap items-start gap-3">
+            <Controller
+              name="imgWidth"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>
+                    {translations("Width")}
+                    <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    type="number"
+                    min={300}
+                    placeholder={translations("width")}
+                    aria-invalid={fieldState.invalid}
+                    onChange={(event) => field.onChange(Number(event.target.value))}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
 
-            <NumberInput
-              label={translations("Height")}
-              placeholder={translations("height")}
-              min={300}
-              withAsterisk
-              {...form.getInputProps("imgHeight")}
+            <Controller
+              name="imgHeight"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>
+                    {translations("Height")}
+                    <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    type="number"
+                    min={300}
+                    placeholder={translations("height")}
+                    aria-invalid={fieldState.invalid}
+                    onChange={(event) => field.onChange(Number(event.target.value))}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
-          </Group>
+          </div>
 
-          <RateupButtonPrimary
-            loading={isUploadingFile}
-            title={translations("submit")}
-            type="submit"
-          />
+          <Button type="submit" disabled={isUploadingFile}>
+            {isUploadingFile && <Spinner />}
+            {translations("submit")}
+          </Button>
         </form>
-      </Popover.Dropdown>
+      </PopoverContent>
     </Popover>
   );
 }

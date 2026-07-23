@@ -1,4 +1,3 @@
-import { useDebouncedState } from "@mantine/hooks";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -58,6 +57,7 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
+import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
 import {
   CampaignParticipantStatus,
   CampaignStatus,

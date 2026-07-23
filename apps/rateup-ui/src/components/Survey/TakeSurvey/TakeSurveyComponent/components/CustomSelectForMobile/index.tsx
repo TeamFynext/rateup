@@ -34,8 +34,7 @@ function CustomSelectForMobile({
 }: Readonly<CustomSelectForMobileProps>) {
   const themePrimaryColor = useThemePrimaryColor();
 
-  const primaryColor =
-    luminance(themePrimaryColor) > 0.8 ? `var(--mantine-color-gray-7)` : themePrimaryColor;
+  const primaryColor = luminance(themePrimaryColor) > 0.8 ? `#495057` : themePrimaryColor;
 
   const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 

@@ -1,38 +1,32 @@
-import { Box, Center, ScrollArea, Stack, useMantineColorScheme } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
+
+import { useResolvedTheme } from "@/components/theme/theme-provider.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 
 import { rateupLogoUrl } from "../HomePage/constants.tsx";
 
 import styles from "./login-signup-layout.module.css";
 
 function LoginSignupLayout({ children }) {
-  const { colorScheme } = useMantineColorScheme();
+  const colorScheme = useResolvedTheme();
 
   return (
-    <Center h={"100vh"}>
-      <Stack align="center" w={{ base: "100%", sm: "100%", lg: "70%" }} py={"lg"} gap={50}>
+    <div className="flex items-center justify-center h-screen">
+      <div className="flex flex-col items-center w-full sm:w-full lg:w-[70%] py-6 gap-[50px]">
         <Link to="/">
           <Image src={rateupLogoUrl} alt="RateUp Logo" width={85} height={85} />
         </Link>
-        <Box
-          className={`${styles[`color-scheme-${colorScheme}`]} rounded-xl`}
-          p={"xl"}
-          w={{ base: "90%", sm: "90%", xl: "70%", "2xl": "50%" }}
+        <div
+          className={`${styles[`color-scheme-${colorScheme}`]} rounded-xl p-8 w-[90%] sm:w-[90%] xl:w-[70%] 2xl:w-[50%]`}
         >
-          <ScrollArea
-            className={styles["scroll-area-div"]}
-            h={"100%"}
-            w={"100%"}
-            scrollbarSize={5}
-            type="hover"
-          >
+          <ScrollArea className={`${styles["scroll-area-div"]} h-full w-full`}>
             {children}
           </ScrollArea>
-        </Box>
-      </Stack>
+        </div>
+      </div>
       {/* <LoginSignupDecorativeImage /> */}
-    </Center>
+    </div>
   );
 }
 

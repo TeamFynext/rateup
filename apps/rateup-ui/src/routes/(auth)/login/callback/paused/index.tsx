@@ -1,9 +1,9 @@
-import { useMediaQuery } from "@mantine/hooks";
 import { IconLogout } from "@tabler/icons-react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 
 export const Route = createFileRoute("/(auth)/login/callback/paused/")({
   component: PausedPage,

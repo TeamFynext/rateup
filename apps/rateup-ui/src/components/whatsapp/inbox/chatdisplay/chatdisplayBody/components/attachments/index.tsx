@@ -13,7 +13,7 @@ const StoryMentionPreview = ({ url }: { url: string }) => {
   const [expired, setExpired] = useState(false);
   if (expired) {
     return (
-      <span className="text-xs text-[var(--grey-color-7)] p-2 bg-[var(--light-grey-color-5)] rounded-[10px] w-fit">
+      <span className="text-xs text-foreground p-2 bg-muted rounded-[10px] w-fit">
         Story is no longer available
       </span>
     );
@@ -58,7 +58,7 @@ const WaInboxAttachments = ({
       case "story_mention":
         return (
           <div className="flex flex-col gap-2">
-            <span className="text-xs text-[var(--grey-color-7)] p-2 bg-[var(--light-grey-color-5)] rounded-[10px] w-fit">
+            <span className="text-xs text-foreground p-2 bg-muted rounded-[10px] w-fit">
               Mentioned you in their story
             </span>
             {attachment?.content ? <StoryMentionPreview url={attachment.content} /> : null}
@@ -66,11 +66,9 @@ const WaInboxAttachments = ({
         );
       case "ephemeral":
         return (
-          <div className="flex items-center gap-1.5 p-2 bg-[var(--light-grey-color-5)] rounded-[10px] w-fit">
-            <IconPlayerPlayFilled className="text-[var(--grey-color-7)]" size={16} />
-            <span className="text-xs text-[var(--grey-color-7)] font-medium">
-              Disappearing media
-            </span>
+          <div className="flex items-center gap-1.5 p-2 bg-muted rounded-[10px] w-fit">
+            <IconPlayerPlayFilled className="text-foreground" size={16} />
+            <span className="text-xs text-foreground font-medium">Disappearing media</span>
           </div>
         );
 

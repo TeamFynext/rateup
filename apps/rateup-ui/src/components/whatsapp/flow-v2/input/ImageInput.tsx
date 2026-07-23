@@ -1,38 +1,28 @@
-import { schemaResolver, useForm } from "@mantine/form";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod/v4";
 
-import { RateupFileUploadButton } from "@/components/Button/RateupButtons.tsx";
+import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
 
 import { FileConverter } from "./DataSource.tsx";
 
 const ImageInput = (props) => {
-  const resetRef = useRef(null);
-  const choiceSchema = z.object({
-    image: z.string().optional().nullable(),
-  });
+  const resetRef = useRef<(() => void) | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const choiceForm = useForm<z.infer<typeof choiceSchema>>({
-    initialValues: {
-      image: "",
-    },
-    validate: schemaResolver(choiceSchema, {
-      sync: true,
-    }),
-  });
   const clearFile = () => {
-    choiceForm.setFieldValue("image", null);
+    setError(null);
     resetRef.current?.();
     props.onChange("");
   };
   const handleFileChange = async (file: File) => {
     try {
       if (!file) return;
-      if (file.size > 300000) return choiceForm.setFieldError("image", "max image size is 300KB");
-      choiceForm.clearFieldError("image");
+      if (file.size > 300000) {
+        setError("max image size is 300KB");
+        return;
+      }
+      setError(null);
       const base64String = await FileConverter.fileToBase64(file);
-      choiceForm.setFieldValue("image", base64String);
       props.onChange(base64String);
     } catch (error) {
       toast.error("Error converting file to Base64:" + JSON.stringify(error), {
@@ -41,12 +31,12 @@ const ImageInput = (props) => {
     }
   };
   return (
-    <RateupFileUploadButton
+    <FileUploadButton
       clearFile={clearFile}
       handleFileChange={handleFileChange}
       resetRef={resetRef}
       fileSrc={props.value}
-      error={choiceForm.errors.image as string}
+      error={error ?? undefined}
       style={{ marginTop: "25px" }}
       size="md"
       accept="image/png,image/jpeg"

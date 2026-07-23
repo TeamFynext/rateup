@@ -1,18 +1,10 @@
-import {
-  Button,
-  Flex,
-  Image,
-  MantineProvider,
-  Radio,
-  ScrollAreaAutosize,
-  Stack,
-} from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronRight } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { useState } from "react";
 
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { PageType } from "@/types/enums.ts";
 
 import { CreditsCard } from "../../Card/CreditsCard.tsx";
@@ -72,7 +64,6 @@ function LanguageSelectionPage({
     };
   }
   const buttonStyles = requiredThemeObj?.button?.styles;
-  const inputPrimaryColor = requiredThemeObj?.input?.primaryColor;
 
   const { backgroundColor, backgroundImageSrc } = getBgImgAndBgColor(
     shouldUseSurveyTheme ? surveyThemeData : pagesThemeData,
@@ -91,82 +82,60 @@ function LanguageSelectionPage({
 
   return (
     <CreditsCard enableCredits={isUnsplashImage} url={backgroundImageSrc}>
-      <Flex
-        className={cx("preview-language-page-container", {
+      <div
+        className={`flex ${cx("preview-language-page-container", {
           "org-logo-not-present": !isOrgLogoPresent,
-        })}
+        })}`}
         style={{
           backgroundColor,
           backgroundImage: `url(${backgroundImageSrc})`,
         }}
       >
         {isOrgLogoPresent && (
-          <Flex className={cx("logo-container")}>
-            <Image className={cx("logo")} src={logoUrl} style={logoStyles} fit="contain" />
-          </Flex>
+          <div className={`flex ${cx("logo-container")}`}>
+            <img className={cx("logo")} src={logoUrl} style={logoStyles} alt="Logo" />
+          </div>
         )}
 
-        <Stack className={cx("header-radio-grp-start-btn-container")}>
-          <Stack className={cx("header")}>
+        <div className={`flex flex-col gap-4 ${cx("header-radio-grp-start-btn-container")}`}>
+          <div className={`flex flex-col gap-2 ${cx("header")}`}>
             <div
               dangerouslySetInnerHTML={{
                 __html: newTitle,
               }}
               style={{ color: titleStyles?.color }}
             />
-          </Stack>
+          </div>
 
-          <Flex className={cx("languages-list-radio-grp-container")}>
-            <ScrollAreaAutosize mah={"100%"} offsetScrollbars scrollbarSize={10}>
-              <MantineProvider
-                getRootElement={() => {
-                  return typeof window === "undefined"
-                    ? undefined
-                    : document.querySelector(`.${cx("languages-list-radio-grp-container")}`);
-                }}
-                cssVariablesSelector={`.${cx("languages-list-radio-grp-container")}`}
-                theme={{
-                  colors: {
-                    // @ts-ignore
-                    primaryColor: Array(10).fill(inputPrimaryColor),
-                  },
-                  primaryColor: "primaryColor",
-                }}
-              >
-                <Radio.Group value={lang} onChange={setLang} miw={"200px"}>
-                  <SingleSelectCard data={languages} selectedValue={lang} sizeTrim />
-                </Radio.Group>
-              </MantineProvider>
-            </ScrollAreaAutosize>
-          </Flex>
+          <div className={`flex ${cx("languages-list-radio-grp-container")}`}>
+            <div className="max-h-full min-w-50 overflow-auto">
+              <SingleSelectCard data={languages} selectedValue={lang} onChange={setLang} sizeTrim />
+            </div>
+          </div>
 
-          <Flex
-            className={`${surveyThemeStylesCx("buttonBox")} ${cx("start-btn-text-input-wrapper")}`}
-            justify={"center"}
+          <div
+            className={`flex justify-center ${surveyThemeStylesCx("buttonBox")} ${cx("start-btn-text-input-wrapper")}`}
           >
-            <Flex
-              className={cx("start-btn-text-input-container")}
+            <div
+              className={`flex ${cx("start-btn-text-input-container")}`}
               onClick={(e) => e.stopPropagation()}
-              p={0}
+              style={{ padding: 0 }}
             >
               <Button
                 onClick={() => setSelectedLanguage(lang)}
-                rightSection={<IconChevronRight />}
+                className="h-auto rounded-[0.625rem] py-3 pr-4 pl-6.25 text-lg"
                 style={{
                   backgroundColor: buttonStyles?.backgroundColor,
                   color: buttonStyles?.color,
-                  fontSize: "1.125rem",
-                  height: "auto",
-                  padding: "0.75rem 1rem 0.75rem 1.5625rem",
-                  borderRadius: "0.625rem",
                 }}
               >
                 {startButtonText}
+                <IconChevronRight />
               </Button>
-            </Flex>
-          </Flex>
-        </Stack>
-      </Flex>
+            </div>
+          </div>
+        </div>
+      </div>
     </CreditsCard>
   );
 }

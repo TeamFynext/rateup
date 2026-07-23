@@ -154,10 +154,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <div
-            className="h-fit w-full max-w-[500px] rounded-[var(--input-border-radius,8px)] border bg-[var(--input-background-color,white)] px-[var(--input-padding,12px)] py-1.5 shadow-sm transition-colors duration-100"
-            style={{ borderColor: "var(--tertiary-color)" }}
-          >
+          <div className="h-fit w-full max-w-[500px] rounded-[var(--input-border-radius,8px)] border bg-[var(--input-background-color,white)] px-[var(--input-padding,12px)] py-1.5 shadow-sm transition-colors duration-100 border-primary">
             <div className="flex items-center gap-2">
               <IconMail size="1.2rem" className="shrink-0 text-muted-foreground" />
               <Input

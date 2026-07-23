@@ -83,7 +83,7 @@ function Invite() {
           </Link>
         </div>
         <div className="flex flex-col flex-wrap items-center justify-center gap-4">
-          <p className="mb-6 text-2xl font-semibold" style={{ color: "var(--tertiary-color)" }}>
+          <p className="mb-6 text-2xl font-semibold text-primary">
             {title} {translations("Invitation")}
           </p>
 

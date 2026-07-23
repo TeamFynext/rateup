@@ -18,6 +18,35 @@ import {
 } from "@/components/Survey/Question/QuestionExtraProps/SmileyExtraProps.tsx";
 import { cn } from "@/lib/utils";
 
+/**
+ * Smiley colours are stored as palette *names* ("yellow", "blue", …) and used to
+ * be resolved through `var(--mantine-color-<name>-<shade>)`. Those variables are
+ * gone with Mantine, so the three shades this component reads are inlined here.
+ * `rateup-blue` is the brand ramp that used to live in `mantineTheme.ts`.
+ */
+const PALETTE: Record<string, { 3: string; 7: string; 9: string }> = {
+  "rateup-blue": { 3: "#73b4f6", 7: "#2776dc", 9: "#004f98" },
+  dark: { 3: "#5c5f66", 7: "#1a1b1e", 9: "#101113" },
+  gray: { 3: "#dee2e6", 7: "#495057", 9: "#212529" },
+  red: { 3: "#ff8787", 7: "#f03e3e", 9: "#c92a2a" },
+  pink: { 3: "#f783ac", 7: "#d6336c", 9: "#a61e4d" },
+  grape: { 3: "#da77f2", 7: "#ae3ec9", 9: "#862e9c" },
+  violet: { 3: "#9775fa", 7: "#7048e8", 9: "#5f3dc4" },
+  indigo: { 3: "#748ffc", 7: "#4263eb", 9: "#364fc7" },
+  blue: { 3: "#74c0fc", 7: "#1c7ed6", 9: "#1864ab" },
+  cyan: { 3: "#3bc9db", 7: "#1098ad", 9: "#0b7285" },
+  teal: { 3: "#38d9a9", 7: "#0ca678", 9: "#087f5b" },
+  green: { 3: "#69db7c", 7: "#37b24d", 9: "#2b8a3e" },
+  lime: { 3: "#a9e34b", 7: "#74b816", 9: "#5c940d" },
+  yellow: { 3: "#ffd43b", 7: "#f59f00", 9: "#e67700" },
+  orange: { 3: "#ffa94d", 7: "#f76707", 9: "#d9480f" },
+};
+
+/** Resolves a palette name to a shade; passes through anything already a colour. */
+function paletteShade(name: string, shade: 3 | 7 | 9): string {
+  return PALETTE[name]?.[shade] ?? name;
+}
+
 function lighten(color: string, alpha: number): string {
   if (color.startsWith("var(")) return `color-mix(in srgb, ${color}, white ${alpha * 100}%)`;
   const h = color.replace("#", "");
@@ -46,27 +75,23 @@ export const getIconStyle = (
           variant === SmileyVariantStyle.Filled &&
           (!colorType || colorType === SmileyColorType.Default)
         ) {
-          colorString = `var(--mantine-color-${color}-3)`;
+          colorString = paletteShade(color, 3);
         } else {
           colorString =
             colorType && colorType !== SmileyColorType.Default
               ? lighten(color, 0.3)
-              : `var(--mantine-color-${color}-3)`;
+              : paletteShade(color, 3);
         }
         break;
       }
       case "full": {
         colorString =
-          colorType && colorType !== SmileyColorType.Default
-            ? color
-            : `var(--mantine-color-${color}-7)`;
+          colorType && colorType !== SmileyColorType.Default ? color : paletteShade(color, 7);
         break;
       }
       default: {
         colorString =
-          colorType && colorType !== SmileyColorType.Default
-            ? color
-            : `var(--mantine-color-${color}-9)`;
+          colorType && colorType !== SmileyColorType.Default ? color : paletteShade(color, 9);
       }
     }
   }

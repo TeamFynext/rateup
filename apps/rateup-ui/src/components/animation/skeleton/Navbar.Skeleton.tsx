@@ -1,12 +1,12 @@
-import { Skeleton, Stack } from "@mantine/core";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 const NavbarSkeleton = () => {
   return (
-    <Stack align="center" className="border-r pt-2 px-2">
+    <div className="flex flex-col items-center gap-4 border-r pt-2 px-2">
       {Array.from({ length: 11 }).map((_, i) => (
-        <Skeleton h={35} w={35} key={i} />
+        <Skeleton className="h-[35px] w-[35px]" key={i} />
       ))}
-    </Stack>
+    </div>
   );
 };
 

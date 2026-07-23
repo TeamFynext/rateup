@@ -6,7 +6,7 @@ import {
   useImportShopifyProducts,
   useShopifyAvailableProducts,
 } from "@/backend/whatsapp/catalog/products/products.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
@@ -153,15 +153,11 @@ export function ImportFromShopifyModal({
               </div>
             </ScrollArea>
 
-            <RateupButtonPrimary
-              title={
-                selectedIds.size === 0
-                  ? "Select products to import"
-                  : `Import ${selectedIds.size} Product${selectedIds.size !== 1 ? "s" : ""}`
-              }
-              disabled={selectedIds.size === 0 || importMut.isPending}
-              onClick={handleImport}
-            />
+            <Button disabled={selectedIds.size === 0 || importMut.isPending} onClick={handleImport}>
+              {selectedIds.size === 0
+                ? "Select products to import"
+                : `Import ${selectedIds.size} Product${selectedIds.size !== 1 ? "s" : ""}`}
+            </Button>
           </div>
         )}
       </DialogContent>

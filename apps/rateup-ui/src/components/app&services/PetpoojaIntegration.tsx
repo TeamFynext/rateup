@@ -208,7 +208,6 @@ function WaTemplateSendSettings({ integration, updateIntegration }) {
           render={({ field, fieldState }) => (
             <WaTemplateSelector
               withAsterisk
-              searchable
               {...field}
               error={fieldState.error?.message}
               teamId={form.watch("teamId")}

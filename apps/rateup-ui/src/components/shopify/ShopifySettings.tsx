@@ -44,7 +44,7 @@ import { IntegratedApps, ShopifyEvents } from "@/types/enums.ts";
 import type { ShopifyIntegration } from "@/types/global";
 import { shopifyEventData } from "@/utils/constants.ts";
 
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput.tsx";
+import { Input } from "../ui/input.tsx";
 
 const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) => {
   const confirm = useConfirm();
@@ -175,7 +175,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
           <CardDescription>{translations("Your active Shopify store connection")}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <ContainedTextField value={session?.shop} disabled />
+          <Input value={session?.shop ?? ""} readOnly disabled />
           <Separator />
           <div className="flex justify-end">
             <Button

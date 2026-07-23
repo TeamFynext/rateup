@@ -1,4 +1,3 @@
-import { Anchor, Center, Group, Image, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
@@ -6,26 +5,23 @@ import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 export default function RateupRedirectCard({ className = "" }) {
   const { t: translations } = useTranslation();
   return (
-    <Center
-      className={className}
-      bg={`white`}
-      w={150}
-      m={"auto"}
-      px={"sm"}
-      pt={5}
+    <div
+      className={`flex items-center justify-center bg-white w-[150px] mx-auto px-3 pt-1 ${className}`}
       style={{
         borderTopRightRadius: 10,
         borderTopLeftRadius: 10,
       }}
     >
-      <Anchor href="https://www.rateup.app" styles={{ root: { width: "fit-content" } }}>
-        <Group gap={0} align="flex-end" justify="center">
-          <Text fz={10} mb={2} c={"grey"}>
-            {translations("Powered By")}
-          </Text>
-          <Image src={rateupLogoStackedWhiteTransparent} height={30} width={30} fit="contain" />
-        </Group>
-      </Anchor>
-    </Center>
+      <a href="https://www.rateup.app" className="w-fit text-primary no-underline hover:underline">
+        <div className="flex items-end justify-center gap-0">
+          <span className="text-[10px] mb-[2px] text-gray-500">{translations("Powered By")}</span>
+          <img
+            src={rateupLogoStackedWhiteTransparent}
+            className="h-[30px] w-[30px] object-contain"
+            alt="RateUp Logo"
+          />
+        </div>
+      </a>
+    </div>
   );
 }

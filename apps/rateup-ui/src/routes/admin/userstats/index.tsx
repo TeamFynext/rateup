@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Building2, Calendar, Mail, Pause, Play, Shield, UserCheck, Users } from "lucide-react";
@@ -13,7 +12,6 @@ import {
   useUpdateUserPause,
 } from "@/backend/user/user.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
-import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -24,8 +22,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import {
   formatIsoDateStringWithTime,
   isInLastSevenDays,
@@ -416,9 +416,17 @@ function Index() {
           }}
         />
       </div>
-      <FormModalLayout centered opened={opened} onClose={close} title="" size="xl">
-        <UserModal selectedUser={selectedUser} />
-      </FormModalLayout>
+      <Dialog
+        open={opened}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) close();
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-225">
+          <DialogTitle className="sr-only">{translations("User details")}</DialogTitle>
+          <UserModal selectedUser={selectedUser} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

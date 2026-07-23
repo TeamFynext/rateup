@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
@@ -14,7 +15,6 @@ import { fallbackImage } from "@/utils/constants.ts";
 import { dataURItoBlob, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
 import WebcamCapture from "../../../../input/WebCamCapture.tsx";
-import FormModalLayout from "../../../../Modal/FormModalLayout.tsx";
 import { ImageCropModal } from "../../../../Modal/ImageCropModal.tsx";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
@@ -103,9 +103,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         />
       )}
       <div className="flex flex-col gap-2.5">
-        <p className="text-sm" style={{ color: "var(--tertiary-color)" }}>
-          {features?.[selectedLanguage]?.nameQn}
-        </p>
+        <p className="text-sm text-primary">{features?.[selectedLanguage]?.nameQn}</p>
         <FormPaperLayout>
           <Input
             placeholder={translations("Enter name")}
@@ -119,9 +117,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
       </div>
       {features?.[selectedLanguage]?.jobTitle && (
         <div className="flex flex-col gap-2.5">
-          <p className="text-sm" style={{ color: "var(--tertiary-color)" }}>
-            {features?.[selectedLanguage]?.jobTitleQn}
-          </p>
+          <p className="text-sm text-primary">{features?.[selectedLanguage]?.jobTitleQn}</p>
           <FormPaperLayout>
             <Input
               placeholder={translations("Enter job title")}
@@ -135,9 +131,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         </div>
       )}
       <div className="flex flex-col gap-2.5">
-        <p className="text-sm" style={{ color: "var(--tertiary-color)" }}>
-          {features?.[selectedLanguage]?.testimonialQn}
-        </p>
+        <p className="text-sm text-primary">{features?.[selectedLanguage]?.testimonialQn}</p>
         <FormPaperLayout>
           <Textarea
             placeholder={translations("Enter testimonial")}
@@ -151,7 +145,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
       </div>
       {features?.[selectedLanguage]?.rating && (
         <div className="flex flex-col gap-2.5">
-          <p className="text-sm" style={{ color: "var(--tertiary-color)" }}>
+          <p className="text-sm text-primary">
             {features?.[selectedLanguage]?.ratingQn || "Give rating"}
           </p>
           <div className="flex gap-1">
@@ -165,9 +159,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
                 <IconStar
                   size={32}
                   className={
-                    response?.rating >= star
-                      ? "fill-[var(--tertiary-color)] text-[var(--tertiary-color)]"
-                      : "text-gray-300"
+                    response?.rating >= star ? "fill-primary text-primary" : "text-gray-300"
                   }
                 />
               </button>
@@ -177,26 +169,31 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
       )}
       {features?.[selectedLanguage]?.photo && (
         <div className="flex flex-col gap-2.5">
-          <p className="text-sm" style={{ color: "var(--tertiary-color)" }}>
+          <p className="text-sm text-primary">
             {features?.[selectedLanguage]?.photoQn || translations("Upload Photo")}
           </p>
           <div className="flex items-center gap-4">
             <div className="relative rounded-[10px] h-[150px] w-[200px] ">
-              <FormModalLayout
-                title={translations("Camera")}
-                onClose={close}
-                opened={opened}
-                centered
+              <Dialog
+                open={opened}
+                onOpenChange={(nextOpen) => {
+                  if (!nextOpen) close();
+                }}
               >
-                <div>
+                <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-125">
+                  <DialogHeader>
+                    <DialogTitle className="text-center text-3xl font-semibold">
+                      {translations("Camera")}
+                    </DialogTitle>
+                  </DialogHeader>
                   <WebcamCapture
                     height={"100%"}
                     width={"100%"}
                     setCapturedImg={setCapturedImg}
                     close={close}
                   />
-                </div>
-              </FormModalLayout>
+                </DialogContent>
+              </Dialog>
               {isUploading && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[10px] bg-white/60 backdrop-blur-sm">
                   <Spinner />

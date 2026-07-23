@@ -335,12 +335,11 @@ export function Column({
           state.type === "is-column-over"
             ? "border-2 border-dashed border-blue-500/50 bg-blue-500/5"
             : "border border-dashed border-slate-300 dark:border-slate-700"
-        }`}
+        } text-foreground`}
         style={{
           display: "flex",
           maxHeight: "100%",
           flexDirection: "column",
-          color: "var(--board-text)",
           opacity: state.type === "is-dragging" ? 0.4 : 1,
           cursor: state.type === "idle" ? "grab" : "default",
         }}

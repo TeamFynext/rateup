@@ -85,7 +85,7 @@ const ContactDetailedView = ({
           <div className="flex items-start gap-4">
             <Avatar className="w-16 h-16">
               <AvatarImage src={selectedContact.profilePic} />
-              <AvatarFallback className="bg-linear-to-r from-rateup-blue to-blue-600 text-white">
+              <AvatarFallback className="bg-linear-to-r from-primary to-blue-600 text-white">
                 {getInitials(selectedContact.name)}
               </AvatarFallback>
             </Avatar>

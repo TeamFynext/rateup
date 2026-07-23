@@ -1,14 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import { Building, Camera, Edit, Globe, Home, Mail, MapPin, Phone, Upload } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
 import "react-phone-number-input/style.css";
 
-import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import PhoneInputWithCountrySelect, { isValidPhoneNumber } from "react-phone-number-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import SelectR from "react-select";
 import countryList from "react-select-country-list";
 import { toast } from "sonner";
@@ -38,6 +37,7 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import {
   Select,
   SelectContent,
@@ -48,6 +48,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { UserRole } from "@/utils/enums/index.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -595,16 +596,17 @@ function Account() {
                         <FieldLabel htmlFor="businessPhone">
                           {translations("Business Phone")}
                         </FieldLabel>
-                        <PhoneInputWithCountrySelect
+                        <PhoneInput
                           id="businessPhone"
                           defaultCountry="IN"
                           international
                           countryCallingCodeEditable={false}
                           placeholder={translations("Phone Number")}
                           value={field.value || ""}
-                          onChange={(value) => field.onChange(value ?? "")}
+                          onChange={field.onChange}
                           onBlur={field.onBlur}
-                          className="rounded-md border border-gray-300 px-2 py-1 w-full"
+                          aria-invalid={fieldState.invalid}
+                          className="w-full"
                         />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
@@ -827,16 +829,17 @@ function Account() {
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="profilePhone">{translations("Phone Number")}</FieldLabel>
-                    <PhoneInputWithCountrySelect
+                    <PhoneInput
                       id="profilePhone"
                       defaultCountry="IN"
                       international
                       countryCallingCodeEditable={false}
                       placeholder={translations("Phone Number")}
                       value={field.value || ""}
-                      onChange={(value) => field.onChange(value ?? "")}
+                      onChange={field.onChange}
                       onBlur={field.onBlur}
-                      className="rounded-md border border-gray-300 px-2 py-1 w-full"
+                      aria-invalid={fieldState.invalid}
+                      className="w-full"
                     />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>

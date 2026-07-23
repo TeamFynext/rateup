@@ -1,4 +1,3 @@
-import { Select } from "@mantine/core";
 import {
   IconCalendarEventFilled,
   IconMoodSmile,
@@ -18,6 +17,20 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+
+const TIME_PERIODS = [
+  { label: "Hourly", value: "hourly" },
+  { label: "Daily", value: "daily" },
+  { label: "Weekly", value: "weekly" },
+];
 
 const OverallResponseGraphWebForm = ({ data, timePeriod, setTimePeriod, isLoading }) => {
   if (isLoading) {
@@ -48,19 +61,21 @@ const OverallResponseGraphWebForm = ({ data, timePeriod, setTimePeriod, isLoadin
             <IconCalendarEventFilled color="#343A40" stroke={1} size={28} />
           </div>
           <Select
-            data={[
-              { label: "Hourly", value: "hourly" },
-              { label: "Daily", value: "daily" },
-              { label: "Weekly", value: "weekly" },
-            ]}
+            items={TIME_PERIODS}
             value={timePeriod}
-            onChange={(val) => setTimePeriod(val)}
-            size="sm"
-            radius="md"
-            className="w-[120px]"
-            placeholder="Select"
-            variant="default"
-          />
+            onValueChange={(val) => setTimePeriod(val)}
+          >
+            <SelectTrigger size="sm" className="w-30">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              {TIME_PERIODS.map((period) => (
+                <SelectItem key={period.value} value={period.value}>
+                  {period.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

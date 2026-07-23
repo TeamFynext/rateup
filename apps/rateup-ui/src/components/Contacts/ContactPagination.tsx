@@ -2,8 +2,10 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-r
 
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
-import { ContainedSelection } from "../input/ContainedInput/ContainedInput.tsx";
 import { Button } from "../ui/button.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
+
+const pageSizeOptions = PAGE_SIZE.map((size) => ({ value: size, label: size }));
 
 const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
   const totalPages = Math.max(1, Math.round(totalPageCount));
@@ -43,23 +45,27 @@ const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
       <Button variant="outline" size="icon" disabled={isLast} onClick={() => goTo(totalPages - 1)}>
         <ChevronsRight />
       </Button>
-      <ContainedSelection
-        onChange={(value) => {
+      <Select
+        items={pageSizeOptions}
+        value={String(pagination.pageSize)}
+        onValueChange={(value) => {
           setPagination((prev) => ({
             ...prev,
             pageSize: Number(value),
           }));
         }}
-        value={String(pagination.pageSize)}
-        data={PAGE_SIZE}
-        allowDeselect={false}
-        styles={{
-          input: {
-            height: 10,
-            width: 80,
-          },
-        }}
-      />
+      >
+        <SelectTrigger size="sm" className="w-20">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {pageSizeOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 };

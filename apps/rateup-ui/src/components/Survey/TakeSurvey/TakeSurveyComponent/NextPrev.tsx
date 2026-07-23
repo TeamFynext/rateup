@@ -11,7 +11,7 @@ import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
-import { useMediaQuery } from "@/hooks/use-media-querry.ts";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";
 import { validationSupportedTypes } from "@/utils/data.ts";

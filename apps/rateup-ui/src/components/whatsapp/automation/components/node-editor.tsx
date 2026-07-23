@@ -14,8 +14,9 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
+import { EditorContent } from "@tiptap/react";
 import dayjs from "dayjs";
-import { FileWarningIcon, RefreshCwIcon, XIcon } from "lucide-react";
+import { FileWarningIcon, RefreshCwIcon, TypeOutline, XIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm as useRHForm, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -43,10 +44,21 @@ import {
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
-import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
+import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
+import { WaTextCharacterCount } from "@/components/RichTextEditor/wa-editor/character-count.tsx";
+import { useWaEditor } from "@/components/RichTextEditor/wa-editor/use-wa-editor.ts";
+import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
+import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
+import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
+import { CodeToolbar } from "@/components/tiptap/toolbars/code.tsx";
+import { ItalicToolbar } from "@/components/tiptap/toolbars/italic.tsx";
+import { OrderedListToolbar } from "@/components/tiptap/toolbars/ordered-list.tsx";
+import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
+import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
+import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
+import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import {
   Attachment,
   AttachmentAction,
@@ -66,7 +78,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { FileConverter } from "@/components/whatsapp/flow-v2/input/DataSource.tsx";
 import WaTemplateFormElements, {
@@ -422,16 +437,69 @@ const TextNodeEditor: React.FC<NodeComponentProps<"textNode">> = ({
   handleInputChange,
 }) => {
   const typedData = nodeData;
+  const bodyEditor = useWaEditor({
+    content: typedData.body || "",
+    placeholder: "Enter your message text here...",
+    max: 4096,
+    onChange: (value) => handleInputChange("body", value),
+  });
   return (
     <div className={styles.editorSection}>
-      <WaTextEditor
-        content={typedData.body || ""}
-        handleInputChange={(e) => handleInputChange("body", e)}
-        label="Message Text"
-        placeholder="Enter your message text here..."
-        required
-        max={4096}
-      />
+      <div className="text-xs font-bold text-muted-foreground">
+        Message Text <span className="text-red-500">*</span>
+      </div>
+      <div className="flex items-start space-x-2 pb-0">
+        <div className="flex-1">
+          <ToolbarProvider editor={bodyEditor}>
+            <TooltipProvider>
+              <EditorContent
+                editor={bodyEditor}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  borderRadius: "5px",
+                  maxHeight: "200px",
+                  minHeight: "120px",
+                }}
+                className="overflow-y-auto rounded-xl"
+              />
+              <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                <WaTextCharacterCount editor={bodyEditor} max={4096} />
+              </div>
+              <div className="flex flex-wrap p-2">
+                <div className="mt-1 flex items-center">
+                  <InsertEmoji editor={bodyEditor} />
+                </div>
+                <Popover>
+                  <PopoverTrigger>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                      <TypeOutline className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full">
+                    <div className="flex flex-nowrap gap-1">
+                      <div className="flex items-center">
+                        <BoldToolbar />
+                        <ItalicToolbar />
+                        <StrikeThroughToolbar />
+                        <CodeToolbar />
+                      </div>
+                      <div className="flex items-center">
+                        <BlockquoteToolbar />
+                        <BulletListToolbar />
+                        <OrderedListToolbar />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center">
+                  <UndoToolbar />
+                  <RedoToolbar />
+                </div>
+              </div>
+            </TooltipProvider>
+          </ToolbarProvider>
+        </div>
+      </div>
       <FieldMsg name="body" />
       <Switch
         label="Enable link preview"
@@ -477,16 +545,69 @@ const InputNodeEditor: React.FC<
   >
 > = ({ nodeData, handleInputChange }) => {
   const typedData = nodeData;
+  const questionEditor = useWaEditor({
+    content: typedData.question || "",
+    placeholder: "Enter your question text here...",
+    max: 4096,
+    onChange: (value) => handleInputChange("question", value),
+  });
   return (
     <div className={styles.editorSection}>
-      <WaTextEditor
-        content={typedData.question || ""}
-        handleInputChange={(e) => handleInputChange("question", e)}
-        label="Question Text"
-        placeholder="Enter your question text here..."
-        required
-        max={4096}
-      />
+      <div className="text-xs font-bold text-muted-foreground">
+        Question Text <span className="text-red-500">*</span>
+      </div>
+      <div className="flex items-start space-x-2 pb-0">
+        <div className="flex-1">
+          <ToolbarProvider editor={questionEditor}>
+            <TooltipProvider>
+              <EditorContent
+                editor={questionEditor}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  borderRadius: "5px",
+                  maxHeight: "200px",
+                  minHeight: "120px",
+                }}
+                className="overflow-y-auto rounded-xl"
+              />
+              <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                <WaTextCharacterCount editor={questionEditor} max={4096} />
+              </div>
+              <div className="flex flex-wrap p-2">
+                <div className="mt-1 flex items-center">
+                  <InsertEmoji editor={questionEditor} />
+                </div>
+                <Popover>
+                  <PopoverTrigger>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                      <TypeOutline className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full">
+                    <div className="flex flex-nowrap gap-1">
+                      <div className="flex items-center">
+                        <BoldToolbar />
+                        <ItalicToolbar />
+                        <StrikeThroughToolbar />
+                        <CodeToolbar />
+                      </div>
+                      <div className="flex items-center">
+                        <BlockquoteToolbar />
+                        <BulletListToolbar />
+                        <OrderedListToolbar />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center">
+                  <UndoToolbar />
+                  <RedoToolbar />
+                </div>
+              </div>
+            </TooltipProvider>
+          </ToolbarProvider>
+        </div>
+      </div>
       <FieldMsg name="question" />
 
       <ContainedTextField
@@ -547,6 +668,12 @@ const MediaNodeEditor: React.FC<
   > & { nodeType: NodeType; disableCaption?: boolean }
 > = ({ nodeData, handleInputChange, nodeType, disableCaption = false }) => {
   const typedData = nodeData;
+  const captionEditor = useWaEditor({
+    content: typedData.caption || "",
+    placeholder: "Enter caption...",
+    max: 1024,
+    onChange: (value) => handleInputChange("caption", value),
+  });
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mediaError, setMediaError] = useState("");
@@ -804,13 +931,61 @@ const MediaNodeEditor: React.FC<
         </Button>
       )}
       {nodeType !== "audioNode" && !disableCaption && (
-        <WaTextEditor
-          label={"Caption (optional)"}
-          content={typedData.caption || ""}
-          handleInputChange={(e) => handleInputChange("caption", e)}
-          max={1024}
-          placeholder="Enter caption..."
-        />
+        <>
+          <div className="text-xs font-bold text-muted-foreground">Caption (optional)</div>
+          <div className="flex items-start space-x-2 pb-0">
+            <div className="flex-1">
+              <ToolbarProvider editor={captionEditor}>
+                <TooltipProvider>
+                  <EditorContent
+                    editor={captionEditor}
+                    style={{
+                      backgroundColor: "var(--accent)",
+                      borderRadius: "5px",
+                      maxHeight: "200px",
+                      minHeight: "120px",
+                    }}
+                    className="overflow-y-auto rounded-xl"
+                  />
+                  <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                    <WaTextCharacterCount editor={captionEditor} max={1024} />
+                  </div>
+                  <div className="flex flex-wrap p-2">
+                    <div className="mt-1 flex items-center">
+                      <InsertEmoji editor={captionEditor} />
+                    </div>
+                    <Popover>
+                      <PopoverTrigger>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                          <TypeOutline className="h-5 w-5" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full">
+                        <div className="flex flex-nowrap gap-1">
+                          <div className="flex items-center">
+                            <BoldToolbar />
+                            <ItalicToolbar />
+                            <StrikeThroughToolbar />
+                            <CodeToolbar />
+                          </div>
+                          <div className="flex items-center">
+                            <BlockquoteToolbar />
+                            <BulletListToolbar />
+                            <OrderedListToolbar />
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <div className="flex items-center">
+                      <UndoToolbar />
+                      <RedoToolbar />
+                    </div>
+                  </div>
+                </TooltipProvider>
+              </ToolbarProvider>
+            </div>
+          </div>
+        </>
       )}
       {nodeType === "documentNode" && (
         <ContainedTextField
@@ -848,6 +1023,18 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
   handleInputChange,
 }) => {
   const typedData = nodeData;
+  const bodyEditor = useWaEditor({
+    content: typedData.body || "",
+    placeholder: "Enter message text...",
+    max: 1024,
+    onChange: (value) => handleInputChange("body", value),
+  });
+  const footerEditor = useWaEditor({
+    content: typedData.footer || "",
+    placeholder: "Enter footer text...",
+    max: 60,
+    onChange: (value) => handleInputChange("footer", value),
+  });
   const newButtonRef = useRef<HTMLInputElement | null>(null);
   const headerError = useFieldError("header");
 
@@ -918,23 +1105,116 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
       )}
 
       {/* Body - Required */}
-      <WaTextEditor
-        handleInputChange={(e) => handleInputChange("body", e)}
-        content={typedData.body || ""}
-        placeholder="Enter message text..."
-        label="Body Text (Required)"
-        max={1024}
-        required
-      />
+      <div className="text-xs font-bold text-muted-foreground">
+        Body Text (Required) <span className="text-red-500">*</span>
+      </div>
+      <div className="flex items-start space-x-2 pb-0">
+        <div className="flex-1">
+          <ToolbarProvider editor={bodyEditor}>
+            <TooltipProvider>
+              <EditorContent
+                editor={bodyEditor}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  borderRadius: "5px",
+                  maxHeight: "200px",
+                  minHeight: "120px",
+                }}
+                className="overflow-y-auto rounded-xl"
+              />
+              <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                <WaTextCharacterCount editor={bodyEditor} max={1024} />
+              </div>
+              <div className="flex flex-wrap p-2">
+                <div className="mt-1 flex items-center">
+                  <InsertEmoji editor={bodyEditor} />
+                </div>
+                <Popover>
+                  <PopoverTrigger>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                      <TypeOutline className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full">
+                    <div className="flex flex-nowrap gap-1">
+                      <div className="flex items-center">
+                        <BoldToolbar />
+                        <ItalicToolbar />
+                        <StrikeThroughToolbar />
+                        <CodeToolbar />
+                      </div>
+                      <div className="flex items-center">
+                        <BlockquoteToolbar />
+                        <BulletListToolbar />
+                        <OrderedListToolbar />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center">
+                  <UndoToolbar />
+                  <RedoToolbar />
+                </div>
+              </div>
+            </TooltipProvider>
+          </ToolbarProvider>
+        </div>
+      </div>
       <FieldMsg name="body" />
 
-      <WaTextEditor
-        handleInputChange={(e) => handleInputChange("footer", e)}
-        content={typedData.footer || ""}
-        placeholder="Enter footer text..."
-        label="Footer Text"
-        max={60}
-      />
+      <div className="text-xs font-bold text-muted-foreground">Footer Text</div>
+      <div className="flex items-start space-x-2 pb-0">
+        <div className="flex-1">
+          <ToolbarProvider editor={footerEditor}>
+            <TooltipProvider>
+              <EditorContent
+                editor={footerEditor}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  borderRadius: "5px",
+                  maxHeight: "200px",
+                  minHeight: "120px",
+                }}
+                className="overflow-y-auto rounded-xl"
+              />
+              <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                <WaTextCharacterCount editor={footerEditor} max={60} />
+              </div>
+              <div className="flex flex-wrap p-2">
+                <div className="mt-1 flex items-center">
+                  <InsertEmoji editor={footerEditor} />
+                </div>
+                <Popover>
+                  <PopoverTrigger>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                      <TypeOutline className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full">
+                    <div className="flex flex-nowrap gap-1">
+                      <div className="flex items-center">
+                        <BoldToolbar />
+                        <ItalicToolbar />
+                        <StrikeThroughToolbar />
+                        <CodeToolbar />
+                      </div>
+                      <div className="flex items-center">
+                        <BlockquoteToolbar />
+                        <BulletListToolbar />
+                        <OrderedListToolbar />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center">
+                  <UndoToolbar />
+                  <RedoToolbar />
+                </div>
+              </div>
+            </TooltipProvider>
+          </ToolbarProvider>
+        </div>
+      </div>
 
       {/* Buttons - At least one required */}
       <p className="mt-2 text-sm">Buttons (At least one required)</p>
@@ -1005,6 +1285,18 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
   handleInputChange,
 }) => {
   const typedData = nodeData;
+  const bodyEditor = useWaEditor({
+    content: typedData.body || "",
+    placeholder: "Enter message text...",
+    max: 4096,
+    onChange: (value) => handleInputChange("body", value),
+  });
+  const footerEditor = useWaEditor({
+    content: typedData.footer || "",
+    placeholder: "Enter footer text...",
+    max: 60,
+    onChange: (value) => handleInputChange("footer", value),
+  });
   const getTotalRowCount = (sections: any[] = []) => {
     return sections.reduce((count, section) => {
       return count + (section.rows?.length || 0);
@@ -1019,23 +1311,116 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
         label="Header Text"
         maxLength={60}
       />
-      <WaTextEditor
-        handleInputChange={(e) => handleInputChange("body", e)}
-        content={typedData.body || ""}
-        placeholder="Enter message text..."
-        label="Body Text"
-        max={4096}
-        required
-      />
+      <div className="text-xs font-bold text-muted-foreground">
+        Body Text <span className="text-red-500">*</span>
+      </div>
+      <div className="flex items-start space-x-2 pb-0">
+        <div className="flex-1">
+          <ToolbarProvider editor={bodyEditor}>
+            <TooltipProvider>
+              <EditorContent
+                editor={bodyEditor}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  borderRadius: "5px",
+                  maxHeight: "200px",
+                  minHeight: "120px",
+                }}
+                className="overflow-y-auto rounded-xl"
+              />
+              <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                <WaTextCharacterCount editor={bodyEditor} max={4096} />
+              </div>
+              <div className="flex flex-wrap p-2">
+                <div className="mt-1 flex items-center">
+                  <InsertEmoji editor={bodyEditor} />
+                </div>
+                <Popover>
+                  <PopoverTrigger>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                      <TypeOutline className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full">
+                    <div className="flex flex-nowrap gap-1">
+                      <div className="flex items-center">
+                        <BoldToolbar />
+                        <ItalicToolbar />
+                        <StrikeThroughToolbar />
+                        <CodeToolbar />
+                      </div>
+                      <div className="flex items-center">
+                        <BlockquoteToolbar />
+                        <BulletListToolbar />
+                        <OrderedListToolbar />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center">
+                  <UndoToolbar />
+                  <RedoToolbar />
+                </div>
+              </div>
+            </TooltipProvider>
+          </ToolbarProvider>
+        </div>
+      </div>
       <FieldMsg name="body" />
 
-      <WaTextEditor
-        handleInputChange={(e) => handleInputChange("footer", e)}
-        content={typedData.footer || ""}
-        placeholder="Enter footer text..."
-        label="Footer (optional)"
-        max={60}
-      />
+      <div className="text-xs font-bold text-muted-foreground">Footer (optional)</div>
+      <div className="flex items-start space-x-2 pb-0">
+        <div className="flex-1">
+          <ToolbarProvider editor={footerEditor}>
+            <TooltipProvider>
+              <EditorContent
+                editor={footerEditor}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  borderRadius: "5px",
+                  maxHeight: "200px",
+                  minHeight: "120px",
+                }}
+                className="overflow-y-auto rounded-xl"
+              />
+              <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                <WaTextCharacterCount editor={footerEditor} max={60} />
+              </div>
+              <div className="flex flex-wrap p-2">
+                <div className="mt-1 flex items-center">
+                  <InsertEmoji editor={footerEditor} />
+                </div>
+                <Popover>
+                  <PopoverTrigger>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                      <TypeOutline className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full">
+                    <div className="flex flex-nowrap gap-1">
+                      <div className="flex items-center">
+                        <BoldToolbar />
+                        <ItalicToolbar />
+                        <StrikeThroughToolbar />
+                        <CodeToolbar />
+                      </div>
+                      <div className="flex items-center">
+                        <BlockquoteToolbar />
+                        <BulletListToolbar />
+                        <OrderedListToolbar />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center">
+                  <UndoToolbar />
+                  <RedoToolbar />
+                </div>
+              </div>
+            </TooltipProvider>
+          </ToolbarProvider>
+        </div>
+      </div>
 
       <ContainedTextField
         label="Button Text"
@@ -1182,6 +1567,18 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
   handleInputChange,
 }) => {
   const typedData = nodeData;
+  const bodyEditor = useWaEditor({
+    content: typedData.body || "",
+    placeholder: "Enter message text...",
+    max: 1024,
+    onChange: (value) => handleInputChange("body", value),
+  });
+  const footerEditor = useWaEditor({
+    content: typedData.footer || "",
+    placeholder: "Enter footer text...",
+    max: 60,
+    onChange: (value) => handleInputChange("footer", value),
+  });
 
   const getType = () => {
     switch (typedData.headerType) {
@@ -1235,23 +1632,116 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
         )
       )}
 
-      <WaTextEditor
-        handleInputChange={(e) => handleInputChange("body", e)}
-        content={typedData.body || ""}
-        placeholder="Enter message text..."
-        label="Body Text"
-        required
-        max={1024}
-      />
+      <div className="text-xs font-bold text-muted-foreground">
+        Body Text <span className="text-red-500">*</span>
+      </div>
+      <div className="flex items-start space-x-2 pb-0">
+        <div className="flex-1">
+          <ToolbarProvider editor={bodyEditor}>
+            <TooltipProvider>
+              <EditorContent
+                editor={bodyEditor}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  borderRadius: "5px",
+                  maxHeight: "200px",
+                  minHeight: "120px",
+                }}
+                className="overflow-y-auto rounded-xl"
+              />
+              <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                <WaTextCharacterCount editor={bodyEditor} max={1024} />
+              </div>
+              <div className="flex flex-wrap p-2">
+                <div className="mt-1 flex items-center">
+                  <InsertEmoji editor={bodyEditor} />
+                </div>
+                <Popover>
+                  <PopoverTrigger>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                      <TypeOutline className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full">
+                    <div className="flex flex-nowrap gap-1">
+                      <div className="flex items-center">
+                        <BoldToolbar />
+                        <ItalicToolbar />
+                        <StrikeThroughToolbar />
+                        <CodeToolbar />
+                      </div>
+                      <div className="flex items-center">
+                        <BlockquoteToolbar />
+                        <BulletListToolbar />
+                        <OrderedListToolbar />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center">
+                  <UndoToolbar />
+                  <RedoToolbar />
+                </div>
+              </div>
+            </TooltipProvider>
+          </ToolbarProvider>
+        </div>
+      </div>
       <FieldMsg name="body" />
 
-      <WaTextEditor
-        handleInputChange={(e) => handleInputChange("footer", e)}
-        content={typedData.footer || ""}
-        placeholder="Enter footer text..."
-        label="Footer (optional)"
-        max={60}
-      />
+      <div className="text-xs font-bold text-muted-foreground">Footer (optional)</div>
+      <div className="flex items-start space-x-2 pb-0">
+        <div className="flex-1">
+          <ToolbarProvider editor={footerEditor}>
+            <TooltipProvider>
+              <EditorContent
+                editor={footerEditor}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  borderRadius: "5px",
+                  maxHeight: "200px",
+                  minHeight: "120px",
+                }}
+                className="overflow-y-auto rounded-xl"
+              />
+              <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                <WaTextCharacterCount editor={footerEditor} max={60} />
+              </div>
+              <div className="flex flex-wrap p-2">
+                <div className="mt-1 flex items-center">
+                  <InsertEmoji editor={footerEditor} />
+                </div>
+                <Popover>
+                  <PopoverTrigger>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                      <TypeOutline className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full">
+                    <div className="flex flex-nowrap gap-1">
+                      <div className="flex items-center">
+                        <BoldToolbar />
+                        <ItalicToolbar />
+                        <StrikeThroughToolbar />
+                        <CodeToolbar />
+                      </div>
+                      <div className="flex items-center">
+                        <BlockquoteToolbar />
+                        <BulletListToolbar />
+                        <OrderedListToolbar />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center">
+                  <UndoToolbar />
+                  <RedoToolbar />
+                </div>
+              </div>
+            </TooltipProvider>
+          </ToolbarProvider>
+        </div>
+      </div>
 
       <ContainedTextField
         label="Button Text"
@@ -2515,11 +3005,16 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           Allowed Lead Access
         </Badge>
       ) : null}
-      <PhoneInputWithCountry
-        label="Default Phone number"
-        onChange={(value) => handleInputChange("phone", value)}
-        value={typedData?.phone}
-      />
+      <div className="flex flex-col gap-1">
+        <span className="text-xs text-muted-foreground">Default Phone number</span>
+        <PhoneInput
+          defaultCountry="IN"
+          international
+          countryCallingCodeEditable={false}
+          value={typedData?.phone}
+          onChange={(value) => handleInputChange("phone", value)}
+        />
+      </div>
     </div>
   );
 };
@@ -2533,6 +3028,23 @@ export enum CatalogMessages {
 
 const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"catalogNode">) => {
   const typedData = nodeData as CatalogNodeData;
+  const headerEditor = useWaEditor({
+    content: typedData.header || "",
+    placeholder: "Enter header text...",
+    max: 60,
+    onChange: (value) => handleInputChange("header", value),
+  });
+  const bodyEditor = useWaEditor({
+    content: typedData?.body || "",
+    placeholder: "Enter your message text here...",
+    onChange: (value) => handleInputChange("body", value),
+  });
+  const footerEditor = useWaEditor({
+    content: typedData.footer || "",
+    placeholder: "Enter footer text...",
+    max: 60,
+    onChange: (value) => handleInputChange("footer", value),
+  });
   const params = useParams({
     strict: false,
   });
@@ -2643,29 +3155,170 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
       )}
       {(typedData?.type === CatalogMessages.MultiProduct ||
         typedData?.type === CatalogMessages.ProductSet) && (
-        <WaTextEditor
-          handleInputChange={(e) => handleInputChange("header", e)}
-          content={typedData.header || ""}
-          placeholder="Enter header text..."
-          label="Header Text ( Required )"
-          max={60}
-          required
-        />
+        <>
+          <div className="text-xs font-bold text-muted-foreground">
+            Header Text ( Required ) <span className="text-red-500">*</span>
+          </div>
+          <div className="flex items-start space-x-2 pb-0">
+            <div className="flex-1">
+              <ToolbarProvider editor={headerEditor}>
+                <TooltipProvider>
+                  <EditorContent
+                    editor={headerEditor}
+                    style={{
+                      backgroundColor: "var(--accent)",
+                      borderRadius: "5px",
+                      maxHeight: "200px",
+                      minHeight: "120px",
+                    }}
+                    className="overflow-y-auto rounded-xl"
+                  />
+                  <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                    <WaTextCharacterCount editor={headerEditor} max={60} />
+                  </div>
+                  <div className="flex flex-wrap p-2">
+                    <div className="mt-1 flex items-center">
+                      <InsertEmoji editor={headerEditor} />
+                    </div>
+                    <Popover>
+                      <PopoverTrigger>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                          <TypeOutline className="h-5 w-5" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full">
+                        <div className="flex flex-nowrap gap-1">
+                          <div className="flex items-center">
+                            <BoldToolbar />
+                            <ItalicToolbar />
+                            <StrikeThroughToolbar />
+                            <CodeToolbar />
+                          </div>
+                          <div className="flex items-center">
+                            <BlockquoteToolbar />
+                            <BulletListToolbar />
+                            <OrderedListToolbar />
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <div className="flex items-center">
+                      <UndoToolbar />
+                      <RedoToolbar />
+                    </div>
+                  </div>
+                </TooltipProvider>
+              </ToolbarProvider>
+            </div>
+          </div>
+        </>
       )}
-      <WaTextEditor
-        content={typedData?.body || ""}
-        handleInputChange={(e) => handleInputChange("body", e)}
-        label={`Body Text ${typedData?.type === CatalogMessages.SingleProduct ? " ( optional ) " : ""}`}
-        placeholder="Enter your message text here..."
-        required
-      />
-      <WaTextEditor
-        handleInputChange={(e) => handleInputChange("footer", e)}
-        content={typedData.footer || ""}
-        placeholder="Enter footer text..."
-        label="Footer (optional)"
-        max={60}
-      />
+      <div className="text-xs font-bold text-muted-foreground">
+        {`Body Text ${typedData?.type === CatalogMessages.SingleProduct ? " ( optional ) " : ""}`}{" "}
+        <span className="text-red-500">*</span>
+      </div>
+      <div className="flex items-start space-x-2 pb-0">
+        <div className="flex-1">
+          <ToolbarProvider editor={bodyEditor}>
+            <TooltipProvider>
+              <EditorContent
+                editor={bodyEditor}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  borderRadius: "5px",
+                  maxHeight: "200px",
+                  minHeight: "120px",
+                }}
+                className="overflow-y-auto rounded-xl"
+              />
+              <div className="flex flex-wrap p-2">
+                <div className="mt-1 flex items-center">
+                  <InsertEmoji editor={bodyEditor} />
+                </div>
+                <Popover>
+                  <PopoverTrigger>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                      <TypeOutline className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full">
+                    <div className="flex flex-nowrap gap-1">
+                      <div className="flex items-center">
+                        <BoldToolbar />
+                        <ItalicToolbar />
+                        <StrikeThroughToolbar />
+                        <CodeToolbar />
+                      </div>
+                      <div className="flex items-center">
+                        <BlockquoteToolbar />
+                        <BulletListToolbar />
+                        <OrderedListToolbar />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center">
+                  <UndoToolbar />
+                  <RedoToolbar />
+                </div>
+              </div>
+            </TooltipProvider>
+          </ToolbarProvider>
+        </div>
+      </div>
+      <div className="text-xs font-bold text-muted-foreground">Footer (optional)</div>
+      <div className="flex items-start space-x-2 pb-0">
+        <div className="flex-1">
+          <ToolbarProvider editor={footerEditor}>
+            <TooltipProvider>
+              <EditorContent
+                editor={footerEditor}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  borderRadius: "5px",
+                  maxHeight: "200px",
+                  minHeight: "120px",
+                }}
+                className="overflow-y-auto rounded-xl"
+              />
+              <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                <WaTextCharacterCount editor={footerEditor} max={60} />
+              </div>
+              <div className="flex flex-wrap p-2">
+                <div className="mt-1 flex items-center">
+                  <InsertEmoji editor={footerEditor} />
+                </div>
+                <Popover>
+                  <PopoverTrigger>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Format">
+                      <TypeOutline className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full">
+                    <div className="flex flex-nowrap gap-1">
+                      <div className="flex items-center">
+                        <BoldToolbar />
+                        <ItalicToolbar />
+                        <StrikeThroughToolbar />
+                        <CodeToolbar />
+                      </div>
+                      <div className="flex items-center">
+                        <BlockquoteToolbar />
+                        <BulletListToolbar />
+                        <OrderedListToolbar />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center">
+                  <UndoToolbar />
+                  <RedoToolbar />
+                </div>
+              </div>
+            </TooltipProvider>
+          </ToolbarProvider>
+        </div>
+      </div>
       {typedData.type === CatalogMessages.Catalog && (
         <ContainedSelection
           label={"Thumbnail Product (optional)"}

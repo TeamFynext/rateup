@@ -6,19 +6,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import {
-  ContainedDatePickerInput,
-  ContainedMultiSelect,
-  ContainedNumberInput,
-  ContainedSelection,
-  ContainedTextField,
-  ContainedTextInputWithCounter,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
 import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import {
+  DateField,
+  MultiSelectField,
+  NumberField,
+  SelectField,
+  TextField,
+  TextFieldWithCounter,
+} from "@/components/whatsapp/flow-v2/input/fields.tsx";
 import { QuestionType2 } from "@/types/enums.ts";
 import { WaNPSQuestions2 } from "@/utils/constants.ts";
 import { logicSupportedTypes3 } from "@/utils/data.ts";
@@ -34,11 +34,11 @@ import { LogicJumpModal } from "./LogicJumpModal.tsx";
 
 // Field component mapping
 const FieldComponentMap = {
-  text: ContainedTextInputWithCounter,
-  number: ContainedNumberInput,
-  select: ContainedSelection,
-  multiselect: ContainedMultiSelect,
-  date: ContainedDatePickerInput,
+  text: TextFieldWithCounter,
+  number: NumberField,
+  select: SelectField,
+  multiselect: MultiSelectField,
+  date: DateField,
   dataSource: DataSourceInput,
   richText: TiptapMarkdown,
   image: ImageInput,
@@ -151,7 +151,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
 
   const renderField = (field) => {
     const fieldType = initialValues[field].type;
-    const FieldComponent = FieldComponentMap[fieldType] || ContainedTextField;
+    const FieldComponent = FieldComponentMap[fieldType] || TextField;
     const extra = initialValues[field]?.extra || {};
 
     if (["hidden"].includes(fieldType) || field === "visible") return null;

@@ -1,9 +1,9 @@
-import { Box, Container, Image, Stack, Text, Title } from "@mantine/core";
 import type { QueryObserverResult, RefetchOptions } from "@tanstack/react-query";
 
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
-import { RateupButtonPrimary } from "../Button/RateupButtons.tsx";
+import { Button } from "../ui/button.tsx";
+import { Spinner } from "../ui/spinner.tsx";
 
 interface ErrorComponentProps {
   refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<any, Error>>;
@@ -11,48 +11,23 @@ interface ErrorComponentProps {
 }
 const ErrorComponent = ({ refetch, isRefetching }: ErrorComponentProps) => {
   return (
-    <Container
-      flex={1}
-      style={{
-        display: "grid",
-        placeContent: "center",
-      }}
-      h={"100%"}
-    >
-      <Stack ta={"center"} gap={4} h={"100%"} justify="center">
-        <Image
+    <div className="grid h-full flex-1 place-content-center px-4">
+      <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
+        <img
           src={getFileUrlFromKey("/images/error-img.svg", false)}
           alt="Error Image"
-          h={220}
-          w={300}
+          className="h-[220px] w-[300px]"
         />
-        <Title
-          order={1}
-          style={{
-            fontWeight: "bold",
-            letterSpacing: "tight",
-            color: "black",
-          }}
-        >
-          Uh-oh!
-        </Title>
-        <Text
-          style={{
-            color: "gray",
-          }}
-        >
-          Something Went Wrong.
-        </Text>
-        <Box mt={"xs"}>
-          <RateupButtonPrimary
-            title="Try Again"
-            onClick={refetch}
-            variant="outline"
-            loading={isRefetching}
-          />
-        </Box>
-      </Stack>
-    </Container>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Uh-oh!</h1>
+        <p className="text-muted-foreground">Something Went Wrong.</p>
+        <div className="mt-2.5">
+          <Button variant="outline" onClick={() => refetch()} disabled={isRefetching}>
+            {isRefetching && <Spinner />}
+            Try Again
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 

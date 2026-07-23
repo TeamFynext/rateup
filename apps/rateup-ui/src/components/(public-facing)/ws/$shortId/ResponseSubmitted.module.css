@@ -15,7 +15,7 @@
   justify-content: center;
   align-items: center;
   gap: 0.5rem;
-  color: var(--tertiary-color);
+  color: var(--primary);
 }
 
 .thankyou-message-p {
@@ -36,7 +36,7 @@
   gap: 1.5rem;
   font-size: 1.5rem;
   line-height: normal;
-  color: var(--grey-color);
+  color: var(--muted-foreground);
   text-align: center;
 }
 

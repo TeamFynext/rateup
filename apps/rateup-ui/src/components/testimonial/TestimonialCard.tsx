@@ -1,4 +1,3 @@
-import { Rating } from "@mantine/core";
 import { X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ActionCard } from "@/components/common/action-card.tsx";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { StarRating } from "@/components/ui/star-rating.tsx";
 import type { Testimonial } from "@/types/global";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
@@ -78,7 +78,7 @@ function TestimonialCard({ testimonial, currentStyle = null }: Readonly<Testimon
           !currentStyle?.ratingBlock.isRemoved &&
           testimonial?.testimonial.rating != null && (
             <div className="flex items-center gap-2">
-              <Rating value={testimonial?.testimonial.rating} readOnly size="xs" />
+              <StarRating value={testimonial?.testimonial.rating} size="xs" />
             </div>
           )
         }
@@ -105,7 +105,7 @@ function TestimonialCard({ testimonial, currentStyle = null }: Readonly<Testimon
 
             {!currentStyle?.ratingBlock.isRemoved && testimonial?.testimonial.rating != null && (
               <div className="flex items-center gap-2">
-                <Rating value={testimonial?.testimonial.rating} readOnly size="lg" />
+                <StarRating value={testimonial?.testimonial.rating} size="lg" />
               </div>
             )}
 

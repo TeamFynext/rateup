@@ -1,5 +1,8 @@
-import { schemaResolver, useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { EditorContent } from "@tiptap/react";
+import { TypeOutline } from "lucide-react";
 import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type z from "zod";
@@ -8,6 +11,16 @@ import {
   useCreateWaQuickReply,
   useUpdateReply,
 } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
+import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
+import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
+import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
+import { CodeToolbar } from "@/components/tiptap/toolbars/code.tsx";
+import { ItalicToolbar } from "@/components/tiptap/toolbars/italic.tsx";
+import { OrderedListToolbar } from "@/components/tiptap/toolbars/ordered-list.tsx";
+import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
+import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
+import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
+import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -26,10 +39,14 @@ import {
   FieldLabel,
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 
 import { isJSONString } from ".";
-import WaTextEditor from "../waTextEditor.tsx";
+import InsertEmoji from "../InsertEmoji/index.tsx";
+import { WaTextCharacterCount } from "../wa-editor/character-count.tsx";
+import { useWaEditor } from "../wa-editor/use-wa-editor.ts";
 import { quickReplySchema } from "./WaQuickReplySettings.tsx";
 
 const CreateOrEditQuickReply = ({
@@ -46,14 +63,19 @@ const CreateOrEditQuickReply = ({
   const { t } = useTranslation();
   const update = useUpdateReply();
   const create = useCreateWaQuickReply();
-  const form = useForm<z.infer<typeof quickReplySchema>>({
-    initialValues: {
+  type QuickReplyValues = z.infer<typeof quickReplySchema>;
+  const form = useForm<QuickReplyValues>({
+    resolver: zodResolver(quickReplySchema),
+    defaultValues: {
       text: "",
       category: "General",
       topic: "General Inquiry",
       key: "",
     },
-    validate: schemaResolver(quickReplySchema),
+  });
+  const textEditor = useWaEditor({
+    content: form.getValues("text"),
+    onChange: (value) => form.setValue("text", value, { shouldDirty: true, shouldValidate: true }),
   });
 
   useEffect(() => {
@@ -66,21 +88,15 @@ const CreateOrEditQuickReply = ({
           ? defaultValues.text
           : JSON.parse(defaultValues.text),
       };
-      form.setValues(initialValues);
+      form.reset(initialValues);
     }
-  }, [reply]);
+  }, [reply, isEdit, form]);
 
-  function onSubmit() {
-    if (form.validate().hasErrors) return;
+  const onSubmit = form.handleSubmit((values) => {
+    const payload = { ...values, text: JSON.stringify(values.text) };
     if (isEdit) {
       update.mutate(
-        {
-          id: reply.id,
-          data: {
-            ...form.values,
-            text: JSON.stringify(form.values.text),
-          },
-        },
+        { id: reply.id, data: payload },
         {
           onSuccess: () => {
             toast.success("Quick reply Updated");
@@ -96,25 +112,19 @@ const CreateOrEditQuickReply = ({
       );
       return;
     }
-    create.mutate(
-      {
-        ...form.values,
-        text: JSON.stringify(form.values.text),
+    create.mutate(payload, {
+      onSuccess: () => {
+        setOpen(false);
+        toast.success("Quick reply added successfully");
       },
-      {
-        onSuccess: () => {
-          setOpen(false);
-          toast.success("Quick reply added successfully");
-        },
-        onSettled: () => {
-          form.reset();
-        },
-        onError: (error) => {
-          toast.error(error?.message || "Error in adding quick reply");
-        },
+      onSettled: () => {
+        form.reset();
       },
-    );
-  }
+      onError: (error) => {
+        toast.error(error?.message || "Error in adding quick reply");
+      },
+    });
+  });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -126,66 +136,133 @@ const CreateOrEditQuickReply = ({
           </DialogHeader>
           <div className="overflow-auto h-[500px]">
             <FieldGroup className="flex flex-col gap-4 p-1">
-              <Field className="flex flex-col gap-1">
-                <FieldLabel htmlFor="key" className="text-sm font-normal">
-                  {t("Key")}
-                </FieldLabel>
-                <Input
-                  {...form.getInputProps("key")}
-                  id="key"
-                  placeholder="Enter key"
-                  className="placeholder:text-sm"
-                />
-                <FieldDescription className="text-xs">
-                  {t(
-                    "Use a clear, unique key (letters, numbers, or underscores) that represents this reply text for quick lookup",
-                  )}
-                </FieldDescription>
-                {form.errors.key && <FieldError>{form.errors.key}</FieldError>}
-              </Field>
-              <Field className="flex flex-col gap-1">
-                <FieldLabel htmlFor="category">{t("Category")}</FieldLabel>
-                <Input
-                  {...form.getInputProps("category")}
-                  id="category"
-                  placeholder="Enter category"
-                  autoComplete="off"
-                  className="placeholder:text-sm text-sm"
-                />
-                <FieldDescription className="text-xs">
-                  {t(
-                    "Choose a high-level category to organize this reply text, Examples: 'Billing', 'Technical', or 'Account'",
-                  )}
-                </FieldDescription>
-                {form.errors.category && <FieldError>{form.errors.category}</FieldError>}
-              </Field>
-              <Field className="flex flex-col gap-1">
-                <FieldLabel htmlFor="form-rhf-demo-description">{t("Topic")}</FieldLabel>
-                <Input
-                  {...form.getInputProps("topic")}
-                  id="topic"
-                  placeholder="Enter topic"
-                  autoComplete="off"
-                />
-                <FieldDescription className="text-xs">
-                  {t(
-                    "Choose a clear topic that describes the customer issue or task this reply text addresses for easy reference",
-                  )}
-                </FieldDescription>
-                {form.errors.topic && <FieldError>{form.errors.topic}</FieldError>}
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="text">{t("Reply Text")}</FieldLabel>
-                <WaTextEditor
-                  handleInputChange={(value) => {
-                    form.setFieldValue("text", value);
-                  }}
-                  content={form.values.text}
-                  isQuickReplyEditor={true}
-                  mah={300}
-                />
-                {form.errors.text && <FieldError>{form.errors.text}</FieldError>}
-              </Field>
+              <Controller
+                name="key"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field className="flex flex-col gap-1" data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="key" className="text-sm font-normal">
+                      {t("Key")}
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id="key"
+                      placeholder="Enter key"
+                      className="placeholder:text-sm"
+                    />
+                    <FieldDescription className="text-xs">
+                      {t(
+                        "Use a clear, unique key (letters, numbers, or underscores) that represents this reply text for quick lookup",
+                      )}
+                    </FieldDescription>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="category"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field className="flex flex-col gap-1" data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="category">{t("Category")}</FieldLabel>
+                    <Input
+                      {...field}
+                      id="category"
+                      placeholder="Enter category"
+                      autoComplete="off"
+                      className="placeholder:text-sm text-sm"
+                    />
+                    <FieldDescription className="text-xs">
+                      {t(
+                        "Choose a high-level category to organize this reply text, Examples: 'Billing', 'Technical', or 'Account'",
+                      )}
+                    </FieldDescription>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="topic"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field className="flex flex-col gap-1" data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="form-rhf-demo-description">{t("Topic")}</FieldLabel>
+                    <Input {...field} id="topic" placeholder="Enter topic" autoComplete="off" />
+                    <FieldDescription className="text-xs">
+                      {t(
+                        "Choose a clear topic that describes the customer issue or task this reply text addresses for easy reference",
+                      )}
+                    </FieldDescription>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="text"
+                control={form.control}
+                // The tiptap editor owns this value; only the error state is read here.
+                render={({ fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="text">{t("Reply Text")}</FieldLabel>
+                    <div className="flex-1">
+                      <ToolbarProvider editor={textEditor}>
+                        <TooltipProvider>
+                          <EditorContent
+                            editor={textEditor}
+                            style={{
+                              backgroundColor: "var(--accent)",
+                              borderRadius: "5px",
+                              maxHeight: "300px",
+                              minHeight: "120px",
+                            }}
+                            className="overflow-y-auto rounded-xl"
+                          />
+                          <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                            <WaTextCharacterCount editor={textEditor} max={1024} />
+                          </div>
+                          <div className="flex flex-wrap p-2">
+                            <div className="mt-1 flex items-center">
+                              <InsertEmoji editor={textEditor} />
+                            </div>
+                            <Popover>
+                              <PopoverTrigger>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  title="Format"
+                                >
+                                  <TypeOutline className="h-5 w-5" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-full">
+                                <div className="flex flex-nowrap gap-1">
+                                  <div className="flex items-center">
+                                    <BoldToolbar />
+                                    <ItalicToolbar />
+                                    <StrikeThroughToolbar />
+                                    <CodeToolbar />
+                                  </div>
+                                  <div className="flex items-center">
+                                    <BlockquoteToolbar />
+                                    <BulletListToolbar />
+                                    <OrderedListToolbar />
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                            <div className="flex items-center">
+                              <UndoToolbar />
+                              <RedoToolbar />
+                            </div>
+                          </div>
+                        </TooltipProvider>
+                      </ToolbarProvider>
+                    </div>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
             </FieldGroup>
           </div>
 

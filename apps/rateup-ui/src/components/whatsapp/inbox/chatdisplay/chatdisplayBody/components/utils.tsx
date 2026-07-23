@@ -4,7 +4,7 @@ import { Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
+import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Bubble, BubbleContent } from "@/components/ui/bubble.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker.tsx";
@@ -46,7 +46,7 @@ const IgCommentBubble = ({
 }) => {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs text-[var(--grey-color-7)] p-2 bg-[var(--light-grey-color-5)] rounded-[10px] w-fit">
+      <span className="text-xs text-foreground p-2 bg-muted rounded-[10px] w-fit">
         Commented on your post
       </span>
       {messageContent.text ? <WaInboxText messageContent={messageContent.text} /> : null}

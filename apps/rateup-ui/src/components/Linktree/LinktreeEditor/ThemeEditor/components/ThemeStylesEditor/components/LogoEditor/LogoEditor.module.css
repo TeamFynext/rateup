@@ -17,5 +17,5 @@
 }
 
 .delete-logo-btn:disabled {
-  background-color: var(--mantine-color-gray-2);
+  background-color: #e9ecef;
 }

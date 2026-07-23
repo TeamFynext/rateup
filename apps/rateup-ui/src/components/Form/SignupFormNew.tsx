@@ -25,11 +25,12 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
 
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Button } from "../ui/button.tsx";
@@ -778,9 +779,8 @@ export function Step2({ formData, handleBack, handleNext }) {
                 international
                 defaultCountry="IN"
                 value={field.value}
-                onChange={(val) => field.onChange(val || "")}
-                className="h-8 border border-gray-300 rounded-md px-2 text-xs bg-white dark:bg-transparent 
-                [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:outline-none [&>input]:w-full"
+                onChange={field.onChange}
+                className="w-full"
               />
             )}
           />

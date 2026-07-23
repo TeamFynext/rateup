@@ -254,7 +254,7 @@ const RazorpayPlans = () => {
     );
   }
 
-  if (isLoading) return <RateupLoader h={"100dvh"} />;
+  if (isLoading) return <RateupLoader className="h-dvh" />;
 
   const tableData: PlanTableData[] = Array.isArray(plans?.data)
     ? plans?.data

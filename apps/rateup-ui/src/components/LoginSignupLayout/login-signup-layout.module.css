@@ -21,16 +21,12 @@
   padding: 1rem;
 }
 
-.scroll-area-div :global(.mantine-ScrollArea-viewport > div) {
-  height: 100%;
-}
-
 .color-scheme-dark {
-  background-color: var(--mantine-color-gray-filled);
+  background-color: #868e96;
 }
 
 .color-scheme-light {
-  background-color: var(--mantine-color-gray-0);
+  background-color: #f8f9fa;
 }
 
 /* Media Queries */
@@ -41,6 +37,6 @@
     border-radius: initial;
     background-image:
       url("https://djd7kjh9uwow0.cloudfront.net/images/login-signup-pages/abstract-pattern.svg"),
-      linear-gradient(135deg, var(--shade-of-blue-5), var(--shade-of-blue-3));
+      linear-gradient(135deg, #2564ae, #00397b);
   }
 }

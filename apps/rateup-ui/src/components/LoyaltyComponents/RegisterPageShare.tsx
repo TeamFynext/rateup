@@ -1,4 +1,3 @@
-import { Stack, Title } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import { useUserInfo } from "@/backend/user/user.query";
@@ -13,10 +12,12 @@ const RegisterPageShare = () => {
   const { t: translations } = useTranslation();
 
   return (
-    <Stack>
-      <Title order={4}>{translations("Customer Registration page link")}</Title>
+    <div className="flex flex-col gap-4">
+      <h4 className="text-lg font-semibold text-foreground">
+        {translations("Customer Registration page link")}
+      </h4>
       <CopyLinkComponent value={`${FRONTEND_URL}/loyalty/${orgId}/register`} />
-    </Stack>
+    </div>
   );
 };
 

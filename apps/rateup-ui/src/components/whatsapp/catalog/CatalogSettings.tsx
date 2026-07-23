@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { IconLogin2, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -30,6 +29,7 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { ImportFromShopifyModal } from "@/components/whatsapp/catalog/products/ImportFromShopifyModal.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { MetaLoginAssets, WaConfigType } from "@/types/enums.ts";
 
 const CatalogSettings = ({ catalogData }) => {
@@ -247,13 +247,14 @@ const ProductManagementSection = ({ catalogData }) => {
               catalog.
             </p>
           </div>
-          <RateupButtonBlue
-            leftIcon={<IconShoppingBag size={16} />}
+          <Button
+            className="w-fit"
             onClick={openShopifyImport}
-            title="Import from Shopify"
-            w="fit-content"
             disabled={!catalogId || !shopifyIntegration || shopifyLoading}
-          />
+          >
+            <IconShoppingBag size={16} />
+            Import from Shopify
+          </Button>
         </div>
         {!shopifyLoading && !shopifyIntegration && (
           <p className="text-xs text-red-500 italic mt-1 ml-1">

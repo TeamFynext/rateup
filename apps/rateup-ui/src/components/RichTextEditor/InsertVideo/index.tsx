@@ -1,89 +1,141 @@
-import { Group, NumberInput, Popover, Stack, Switch, TextInput, Tooltip } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconVideo } from "@tabler/icons-react";
-import { useRef } from "react";
+import type { Editor } from "@tiptap/react";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import { isYouTubeLink } from "../utils.ts";
 
-function InsertVideo() {
-  const { editor } = useRichTextEditorContext();
-  const form = useForm({
-    initialValues: {
+interface VideoFormValues {
+  src: string;
+  height: number;
+  width: number;
+  customSize: boolean;
+}
+
+function InsertVideo({ editor }: { editor: Editor | null }) {
+  const form = useForm<VideoFormValues>({
+    defaultValues: {
       src: "",
       height: 0,
       width: 0,
       customSize: false,
     },
   });
-  const ref = useRef(null);
+  const [opened, setOpened] = useState(false);
   const { t: translations } = useTranslation();
-  const handleImageVideo = () => {
-    try {
-      const url = form.getValues().src;
-      new URL(url);
-      const videoOption = form.getValues().customSize
-        ? {
-            src: url,
-            width: form.getValues().width,
-            height: form.getValues().height,
-          }
-        : { src: form.getValues().src };
-      if (isYouTubeLink(url)) {
-        editor.commands.setYoutubeVideo(videoOption);
-      } else {
-        editor.commands.setVideo(videoOption);
-      }
-      ref?.current?.click();
-      form.reset();
-    } catch {
-      form.setErrors({ src: "Enter a valid url" });
-    }
-  };
-  return (
-    <Popover position="bottom" withArrow shadow="md">
-      <Popover.Target>
-        <RichTextEditor.Control
-          aria-label="Insert video"
-          title={translations("Insert video")}
-          ref={ref}
-        >
-          <IconVideo size={16} />
-        </RichTextEditor.Control>
-      </Popover.Target>
-      <Popover.Dropdown>
-        <Stack justify="center">
-          <Group>
-            <Tooltip label={translations("Enable Custom size")} refProp="rootRef">
-              <Switch {...form.getInputProps("customSize")} mt={"lg"} />
-            </Tooltip>
-            <NumberInput
-              label={translations("height")}
-              w={100}
-              disabled={!form.getValues().customSize}
-              min={0}
-              {...form.getInputProps("height")}
-            />
-            <NumberInput
-              label={translations("width")}
-              w={100}
-              min={0}
-              disabled={!form.getValues().customSize}
-              {...form.getInputProps("width")}
-            />
-          </Group>
+  const customSize = form.watch("customSize");
 
-          <TextInput
-            type="url"
-            placeholder={translations("Enter the url of video")}
-            {...form.getInputProps("src")}
+  const handleImageVideo = () => {
+    const { src, width, height, customSize } = form.getValues();
+    try {
+      new URL(src);
+    } catch {
+      form.setError("src", { type: "validate", message: "Enter a valid url" });
+      return;
+    }
+    const videoOption = customSize ? { src, width, height } : { src };
+    if (isYouTubeLink(src)) {
+      editor?.commands.setYoutubeVideo(videoOption);
+    } else {
+      editor?.commands.setVideo(videoOption);
+    }
+    setOpened(false);
+    form.reset();
+  };
+
+  return (
+    <Popover open={opened} onOpenChange={setOpened}>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Insert video"
+            title={translations("Insert video")}
+            className="h-8 w-8 p-0 sm:h-9 sm:w-9"
           />
-          <RateupButtonPrimary title={translations("submit")} onClick={handleImageVideo} />
-        </Stack>
-      </Popover.Dropdown>
+        }
+      >
+        <IconVideo size={16} />
+      </PopoverTrigger>
+      <PopoverContent className="w-auto">
+        <div className="flex flex-col justify-center gap-3">
+          <div className="flex items-end gap-3">
+            <Controller
+              name="customSize"
+              control={form.control}
+              render={({ field }) => (
+                <Tooltip>
+                  <TooltipTrigger render={<div className="mb-2.5 w-fit" />}>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </TooltipTrigger>
+                  <TooltipContent>{translations("Enable Custom size")}</TooltipContent>
+                </Tooltip>
+              )}
+            />
+            <Controller
+              name="height"
+              control={form.control}
+              render={({ field }) => (
+                <Field className="w-25">
+                  <FieldLabel htmlFor={field.name}>{translations("height")}</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    type="number"
+                    min={0}
+                    disabled={!customSize}
+                    onChange={(event) => field.onChange(Number(event.target.value))}
+                  />
+                </Field>
+              )}
+            />
+            <Controller
+              name="width"
+              control={form.control}
+              render={({ field }) => (
+                <Field className="w-25">
+                  <FieldLabel htmlFor={field.name}>{translations("width")}</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    type="number"
+                    min={0}
+                    disabled={!customSize}
+                    onChange={(event) => field.onChange(Number(event.target.value))}
+                  />
+                </Field>
+              )}
+            />
+          </div>
+
+          <Controller
+            name="src"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <Input
+                  {...field}
+                  id={field.name}
+                  type="url"
+                  placeholder={translations("Enter the url of video")}
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+          <Button onClick={handleImageVideo}>{translations("submit")}</Button>
+        </div>
+      </PopoverContent>
     </Popover>
   );
 }

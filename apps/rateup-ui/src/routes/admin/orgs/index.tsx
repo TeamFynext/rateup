@@ -243,7 +243,7 @@ function OrgDisplay() {
     );
   }
 
-  if (isLoading) return <RateupLoader h={"100dvh"} />;
+  if (isLoading) return <RateupLoader className="h-dvh" />;
 
   const tableData: OrgTableData[] = orgs.map((org) => ({
     id: org.id,

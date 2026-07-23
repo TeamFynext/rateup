@@ -1,32 +1,28 @@
-import { ActionIcon, Box, Checkbox, Group, Image, SimpleGrid, Stack, Text } from "@mantine/core";
-import { schemaResolver, useForm } from "@mantine/form";
-import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { z } from "zod/v4";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-  RateupFileUploadButton,
-} from "@/components/Button/RateupButtons.tsx";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
-import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import {
   DEFAULT_IMAGE_BASE64_START,
   MAX_DESCRIPTION_COUNT,
   MAX_METADATA_COUNT,
   WaNPSQuestions2,
 } from "@/utils/constants.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { PopoverEmojiPicker } from "../../templates/Details/TextFormateToolBar.tsx";
-
-import inputStyles from "../EditFlow.module.css";
 
 interface Choice {
   id: string;
@@ -38,13 +34,28 @@ interface Choice {
 
 const generateId = () => "_" + Math.random().toString(36).substr(2, 9);
 
+/** RHF resolver that always validates against the latest schema held in `schemaRef`. */
+function schemaRefResolver(schemaRef: React.MutableRefObject<z.ZodTypeAny>) {
+  return (values: any) => {
+    const result = schemaRef.current.safeParse(values);
+    if (result.success) return { values: result.data, errors: {} };
+    const errors: Record<string, { type: string; message: string }> = {};
+    for (const issue of result.error.issues) {
+      const key = issue.path[0] as string;
+      if (key && !errors[key]) errors[key] = { type: "validation", message: issue.message };
+    }
+    return { values: {}, errors };
+  };
+}
+
 export function DataSourceInput(props) {
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
-  const resetRef = useRef<() => void>(null);
-  const choiceResetRef = useRef<() => void>(null);
+  const resetRef = useRef<(() => void) | null>(null);
   const choices = props.value ?? [];
   const maxCharCount = props.maxCharCount ?? 30;
   const maxChoiceCount = props.maxChoice ?? 20;
+  const { t: translations } = useTranslation();
+
   const choiceSchema = props?.onlyTitle
     ? z.object({
         title: z
@@ -77,36 +88,30 @@ export function DataSourceInput(props) {
         metadata: z.string().trim().max(MAX_METADATA_COUNT).optional(),
         image: z.string().optional().nullable(),
       });
-  const choiceForm = useForm({
-    initialValues: props?.onlyTitle
+  const schemaRef = useRef<z.ZodTypeAny>(choiceSchema);
+  schemaRef.current = choiceSchema;
+
+  const form = useForm<any>({
+    resolver: schemaRefResolver(schemaRef),
+    defaultValues: props?.onlyTitle
       ? { title: "" }
-      : {
-          title: "",
-          description: "",
-          metadata: "",
-          image: "",
-        },
-    validate: schemaResolver(choiceSchema, {
-      sync: true,
-    }),
+      : { title: "", description: "", metadata: "", image: "" },
   });
-  const { t: translations } = useTranslation();
-  const handleAddChoice = async () => {
-    const { hasErrors } = choiceForm.validate();
-    if (hasErrors) return;
+
+  const handleAddChoice = async (values: any) => {
     try {
       const choiceObj = {
         id: generateId(),
         ...Object.fromEntries(
-          Object.entries(choiceForm.getValues()).filter(
+          Object.entries(values).filter(
             ([_key, value]) => typeof value === "string" && value.trim() !== "",
           ),
         ),
       };
       props.insertListItem("data-source", choiceObj);
-      choiceForm.reset();
+      form.reset();
     } catch {
-      choiceForm.reset();
+      form.reset();
       setFileUploadLoading(false);
     }
   };
@@ -115,35 +120,16 @@ export function DataSourceInput(props) {
     props.removeListItem("data-source", index);
   };
 
-  const handleFileChange = async (file: File) => {
-    try {
-      if (!file) return;
-      if (file.size > 300000) return choiceForm.setFieldError("image", "max image size is 300KB");
-      choiceForm.clearFieldError("image");
-      const base64String = await FileConverter.fileToBase64(file);
-      choiceForm.setFieldValue("image", base64String);
-    } catch (error) {
-      toast.error("Error converting file to Base64:" + JSON.stringify(error), {
-        id: "file-converting",
-      });
-    }
-  };
-
-  const clearFile = () => {
-    choiceForm.setFieldValue("image", null);
-    choiceResetRef.current?.();
-  };
   const disabled = Object.values(WaNPSQuestions2).includes(props?.metaType) || props.disabled;
+  const submitAdd = form.handleSubmit(handleAddChoice);
 
   return (
-    <Card className="p-4 gap-2">
-      <Text td={"underline"}>CHOICES</Text>
-      <Text fz={"xs"} c={"red"}>
-        {props.error}
-      </Text>
-      <Stack gap={"xs"}>
+    <Card className="gap-2 p-4">
+      <p className="underline">CHOICES</p>
+      <p className="text-xs text-red-500">{props.error}</p>
+      <div className="flex flex-col gap-2">
         {choices?.map((choice, i) => (
-          <Choice
+          <ChoiceRow
             key={choice.id}
             choice={choice}
             choices={choices}
@@ -155,90 +141,142 @@ export function DataSourceInput(props) {
             onlyTitle={props?.onlyTitle ?? false}
           />
         ))}
-      </Stack>
+      </div>
       {(!maxChoiceCount || choices?.length < maxChoiceCount) && (
-        <Group
-          className={maxCharCount && inputStyles.lengthTrackerParent}
-          mt={"xs"}
-          onKeyDown={getHotkeyHandler([["Enter", handleAddChoice]])}
-          style={{ flexDirection: "column" }}
-          display={disabled ? "none" : "flex"}
+        <div
+          className={disabled ? "hidden" : "mt-2 flex flex-col"}
+          onKeyDown={getHotkeyHandler([["Enter", submitAdd]])}
         >
-          <Stack style={{ width: "100%", flexGrow: 1 }} gap={4}>
-            <Group>
-              <ContainedTextField
-                placeholder={translations("Enter title here")}
-                label={translations("Title")}
-                withAsterisk
-                w={"92%"}
-                rightSection={
-                  maxCharCount && (
-                    <LengthTracker
-                      length={(choiceForm.getValues().title as string)?.length}
-                      maxValue={maxCharCount}
-                    />
-                  )
-                }
-                {...choiceForm.getInputProps("title")}
-              />
-              <Box mt={24}>
-                <PopoverEmojiPicker
-                  onEmojiClick={(e) =>
-                    choiceForm.setFieldValue("title", choiceForm.getValues().title + e)
-                  }
+          <div className="flex w-full grow flex-col gap-1">
+            <div className="flex items-start gap-2">
+              <div className="flex-[0_0_92%]">
+                <Controller
+                  name="title"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <div className="flex flex-col gap-1">
+                      <Label>{translations("Title")} *</Label>
+                      <InputGroup aria-invalid={fieldState.invalid}>
+                        <InputGroupInput
+                          placeholder={translations("Enter title here")}
+                          {...field}
+                          value={field.value ?? ""}
+                          aria-invalid={fieldState.invalid}
+                        />
+                        {!!maxCharCount && (
+                          <InputGroupAddon align="inline-end">
+                            <LengthTracker
+                              length={(field.value as string)?.length ?? 0}
+                              maxValue={maxCharCount}
+                            />
+                          </InputGroupAddon>
+                        )}
+                      </InputGroup>
+                      {fieldState.error && (
+                        <p className="text-xs text-red-500">{fieldState.error.message}</p>
+                      )}
+                    </div>
+                  )}
                 />
-              </Box>
-            </Group>
+              </div>
+              <div className="mt-6">
+                <PopoverEmojiPicker
+                  onEmojiClick={(e) => form.setValue("title", (form.getValues("title") ?? "") + e)}
+                />
+              </div>
+            </div>
             {!props?.onlyTitle && (
               <>
-                <ContainedTextField
-                  placeholder={translations("Enter description here")}
-                  label={translations("Description")}
-                  rightSection={
-                    MAX_DESCRIPTION_COUNT && (
-                      <LengthTracker
-                        length={(choiceForm.getValues().description as string)?.length}
-                        maxValue={MAX_DESCRIPTION_COUNT}
-                      />
-                    )
-                  }
-                  {...choiceForm.getInputProps("description")}
-                />
-                <SimpleGrid cols={2}>
-                  <ContainedTextField
-                    placeholder="Enter metadata here"
-                    label={"Metadata"}
-                    rightSection={
-                      MAX_METADATA_COUNT && (
-                        <LengthTracker
-                          length={(choiceForm.getValues().metadata as string)?.length}
-                          maxValue={MAX_METADATA_COUNT}
+                <Controller
+                  name="description"
+                  control={form.control}
+                  render={({ field }) => (
+                    <div className="flex flex-col gap-1">
+                      <Label>{translations("Description")}</Label>
+                      <InputGroup>
+                        <InputGroupInput
+                          placeholder={translations("Enter description here")}
+                          {...field}
+                          value={field.value ?? ""}
                         />
-                      )
-                    }
-                    {...choiceForm.getInputProps("metadata")}
+                        {!!MAX_DESCRIPTION_COUNT && (
+                          <InputGroupAddon align="inline-end">
+                            <LengthTracker
+                              length={(field.value as string)?.length ?? 0}
+                              maxValue={MAX_DESCRIPTION_COUNT}
+                            />
+                          </InputGroupAddon>
+                        )}
+                      </InputGroup>
+                    </div>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Controller
+                    name="metadata"
+                    control={form.control}
+                    render={({ field }) => (
+                      <div className="flex flex-col gap-1">
+                        <Label>Metadata</Label>
+                        <InputGroup>
+                          <InputGroupInput
+                            placeholder="Enter metadata here"
+                            {...field}
+                            value={field.value ?? ""}
+                          />
+                          {!!MAX_METADATA_COUNT && (
+                            <InputGroupAddon align="inline-end">
+                              <LengthTracker
+                                length={(field.value as string)?.length ?? 0}
+                                maxValue={MAX_METADATA_COUNT}
+                              />
+                            </InputGroupAddon>
+                          )}
+                        </InputGroup>
+                      </div>
+                    )}
                   />
-                  <RateupFileUploadButton
-                    clearFile={clearFile}
-                    handleFileChange={handleFileChange}
-                    resetRef={resetRef}
-                    fileSrc={choiceForm.getValues().image as string}
-                    error={choiceForm.errors.image as string}
-                    style={{ marginTop: "20px" }}
+                  <Controller
+                    name="image"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <FileUploadButton
+                        clearFile={() => {
+                          field.onChange(null);
+                          resetRef.current?.();
+                        }}
+                        handleFileChange={async (file) => {
+                          if (file.size > 300000) {
+                            form.setError("image", { message: "max image size is 300KB" });
+                            return;
+                          }
+                          form.clearErrors("image");
+                          const base64String = await FileConverter.fileToBase64(file);
+                          field.onChange(base64String);
+                        }}
+                        resetRef={resetRef}
+                        fileSrc={field.value as string}
+                        error={fieldState.error?.message}
+                        style={{ marginTop: "20px" }}
+                      />
+                    )}
                   />
-                </SimpleGrid>
+                </div>
               </>
             )}
-          </Stack>
-          <RateupButtonSecondary
-            title={translations("Add choice")}
+          </div>
+          <Button
+            type="button"
             size="sm"
-            variant={"outline"}
-            leftIcon={<IconPlus size="1rem" />}
-            onClick={handleAddChoice}
-            loading={fileUploadLoading}
-          />
-        </Group>
+            variant="outline"
+            className="mt-2 w-fit"
+            onClick={submitAdd}
+            disabled={fileUploadLoading}
+          >
+            <PlusIcon />
+            {translations("Add choice")}
+          </Button>
+        </div>
       )}
     </Card>
   );
@@ -276,7 +314,7 @@ interface ChoiceProps {
   onlyTitle: boolean;
 }
 
-function Choice({
+function ChoiceRow({
   choices,
   choice,
   setChoices,
@@ -287,8 +325,7 @@ function Choice({
   onlyTitle,
 }: ChoiceProps) {
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] = useDisclosure(false);
-  const resetRef = useRef<() => void>(null);
-  const choiceResetRef = useRef<() => void>(null);
+  const resetRef = useRef<(() => void) | null>(null);
   const { t: translations } = useTranslation();
   const choiceSchema = z.object(
     onlyTitle
@@ -311,33 +348,26 @@ function Choice({
           image: z.string().optional().nullable(),
         },
   );
+  const schemaRef = useRef<z.ZodTypeAny>(choiceSchema);
+  schemaRef.current = choiceSchema;
 
-  const choiceForm = useForm<z.infer<typeof choiceSchema>>({
-    initialValues: onlyTitle
+  const form = useForm<any>({
+    resolver: schemaRefResolver(schemaRef),
+    defaultValues: onlyTitle
       ? { title: "" }
-      : {
-          title: "",
-          description: "",
-          metadata: "",
-          image: "",
-        },
-    validate: schemaResolver(choiceSchema, {
-      sync: true,
-    }),
+      : { title: "", description: "", metadata: "", image: "" },
   });
 
   useEffect(() => {
     if (choice) {
-      choiceForm.setValues(choice);
+      form.reset(choice);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [choice]);
 
-  const handleEditChoice = async () => {
-    const { hasErrors } = choiceForm.validate();
-    if (hasErrors) return;
-
+  const handleEditChoice = async (values: any) => {
     const choiceObj = Object.fromEntries(
-      Object.entries(choiceForm.getValues()).filter(
+      Object.entries(values).filter(
         ([_key, value]) => typeof value === "string" && value.trim() !== "",
       ),
     );
@@ -346,136 +376,168 @@ function Choice({
     closeEditModal();
   };
 
-  const clearFile = () => {
-    choiceForm.setFieldValue("image", null);
-    choiceResetRef.current?.();
-  };
-
-  const handleFileChange = async (file: File) => {
-    try {
-      if (!file) return;
-      if (file.size > 300000) return choiceForm.setFieldError("image", "max image size is 300KB");
-      choiceForm.clearFieldError("image");
-      const base64String = await FileConverter.fileToBase64(file);
-      choiceForm.setFieldValue("image", base64String);
-    } catch (error) {
-      toast.error(translations("Error converting file to Base64:") + JSON.stringify(error), {
-        id: "file-converting",
-      });
-    }
-  };
-
   return (
-    <Group>
-      <Group style={{ flexShrink: 1, flexGrow: 1 }}>
-        <Checkbox checked={false} readOnly />
+    <div className="flex items-center gap-2">
+      <div className="flex flex-1 shrink items-center gap-2">
+        <Checkbox checked={false} />
         {choice?.image ? (
-          <Image
+          <img
             src={`${DEFAULT_IMAGE_BASE64_START}${choice?.image}`}
-            h={30}
-            w={30}
+            className="h-7.5 w-7.5 object-cover"
             alt={choice?.title}
           />
         ) : (
-          <Box h={30} w={30} />
+          <div className="h-7.5 w-7.5" />
         )}
-        <Box style={{ flexGrow: 1 }}>
-          <>
-            <Text>
-              {translations("Title: ")}
-              {choice?.title}
-            </Text>
-            {choice?.description && (
-              <Text>
-                {translations("Description: ")}
-                {choice?.description}
-              </Text>
-            )}
-            {choice?.metadata && (
-              <Text>
-                {translations("Metadata: ")}
-                {choice?.metadata}
-              </Text>
-            )}
-          </>
-        </Box>
-      </Group>
-      <ActionIcon variant="transparent" onClick={openEditModal} size={"sm"} disabled={disabled}>
-        <IconEdit />
-      </ActionIcon>
-      <ActionIcon
-        variant="transparent"
-        color="red"
+        <div className="flex-1">
+          <p>
+            {translations("Title: ")}
+            {choice?.title}
+          </p>
+          {choice?.description && (
+            <p>
+              {translations("Description: ")}
+              {choice?.description}
+            </p>
+          )}
+          {choice?.metadata && (
+            <p>
+              {translations("Metadata: ")}
+              {choice?.metadata}
+            </p>
+          )}
+        </div>
+      </div>
+      <Button variant="ghost" size="icon-sm" onClick={openEditModal} disabled={disabled}>
+        <PencilIcon />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-destructive"
         onClick={onDelete}
-        size={"sm"}
         disabled={disabled}
       >
-        <IconTrash />
-      </ActionIcon>
-      <FormModalLayout
-        opened={openedEditModal}
-        onClose={closeEditModal}
-        title={translations("Edit Choice")}
-        centered
-      >
-        <Stack justify="center">
-          <Stack style={{ flexGrow: 1 }} gap={4}>
-            <ContainedTextField
-              placeholder={translations("Enter title here")}
-              label={translations("Title")}
-              withAsterisk
-              rightSection={
-                maxCharCount && (
-                  <LengthTracker
-                    length={choiceForm.getValues().title?.length}
-                    maxValue={maxCharCount}
+        <Trash2Icon />
+      </Button>
+      <Dialog open={openedEditModal} onOpenChange={(open) => !open && closeEditModal()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-center">{translations("Edit Choice")}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col justify-center gap-4">
+            <div className="flex grow flex-col gap-2">
+              <Controller
+                name="title"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <div className="flex flex-col gap-1">
+                    <Label>{translations("Title")} *</Label>
+                    <InputGroup aria-invalid={fieldState.invalid}>
+                      <InputGroupInput
+                        placeholder={translations("Enter title here")}
+                        {...field}
+                        value={field.value ?? ""}
+                        aria-invalid={fieldState.invalid}
+                      />
+                      {!!maxCharCount && (
+                        <InputGroupAddon align="inline-end">
+                          <LengthTracker
+                            length={(field.value as string)?.length ?? 0}
+                            maxValue={maxCharCount}
+                          />
+                        </InputGroupAddon>
+                      )}
+                    </InputGroup>
+                    {fieldState.error && (
+                      <p className="text-xs text-red-500">{fieldState.error.message}</p>
+                    )}
+                  </div>
+                )}
+              />
+              {!onlyTitle && (
+                <>
+                  <Controller
+                    name="description"
+                    control={form.control}
+                    render={({ field }) => (
+                      <div className="flex flex-col gap-1">
+                        <Label>{translations("Description")}</Label>
+                        <InputGroup>
+                          <InputGroupInput
+                            placeholder={translations("Enter description here")}
+                            {...field}
+                            value={field.value ?? ""}
+                          />
+                          {!!MAX_DESCRIPTION_COUNT && (
+                            <InputGroupAddon align="inline-end">
+                              <LengthTracker
+                                length={(field.value as string)?.length ?? 0}
+                                maxValue={MAX_DESCRIPTION_COUNT}
+                              />
+                            </InputGroupAddon>
+                          )}
+                        </InputGroup>
+                      </div>
+                    )}
                   />
-                )
-              }
-              {...choiceForm.getInputProps("title")}
-            />
-            {!onlyTitle && (
-              <>
-                {" "}
-                <ContainedTextField
-                  placeholder={translations("Enter description here")}
-                  label={translations("Description")}
-                  rightSection={
-                    MAX_DESCRIPTION_COUNT && (
-                      <LengthTracker
-                        length={(choiceForm.getValues().description as string)?.length}
-                        maxValue={MAX_DESCRIPTION_COUNT}
+                  <Controller
+                    name="metadata"
+                    control={form.control}
+                    render={({ field }) => (
+                      <div className="flex flex-col gap-1">
+                        <Label>{translations("Metadata")}</Label>
+                        <InputGroup>
+                          <InputGroupInput
+                            placeholder={translations("Enter metadata here")}
+                            {...field}
+                            value={field.value ?? ""}
+                          />
+                          {!!MAX_METADATA_COUNT && (
+                            <InputGroupAddon align="inline-end">
+                              <LengthTracker
+                                length={(field.value as string)?.length ?? 0}
+                                maxValue={MAX_METADATA_COUNT}
+                              />
+                            </InputGroupAddon>
+                          )}
+                        </InputGroup>
+                      </div>
+                    )}
+                  />
+                  <Controller
+                    name="image"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <FileUploadButton
+                        clearFile={() => {
+                          field.onChange(null);
+                          resetRef.current?.();
+                        }}
+                        handleFileChange={async (file) => {
+                          if (file.size > 300000) {
+                            form.setError("image", { message: "max image size is 300KB" });
+                            return;
+                          }
+                          form.clearErrors("image");
+                          const base64String = await FileConverter.fileToBase64(file);
+                          field.onChange(base64String);
+                        }}
+                        resetRef={resetRef}
+                        fileSrc={field.value as string}
+                        error={fieldState.error?.message}
                       />
-                    )
-                  }
-                  {...choiceForm.getInputProps("description")}
-                />
-                <ContainedTextField
-                  placeholder={translations("Enter metadata here")}
-                  label={translations("Metadata")}
-                  rightSection={
-                    MAX_METADATA_COUNT && (
-                      <LengthTracker
-                        length={(choiceForm.getValues().metadata as string)?.length}
-                        maxValue={MAX_METADATA_COUNT}
-                      />
-                    )
-                  }
-                  {...choiceForm.getInputProps("metadata")}
-                />
-                <RateupFileUploadButton
-                  clearFile={clearFile}
-                  handleFileChange={handleFileChange}
-                  resetRef={resetRef}
-                  fileSrc={choiceForm.getValues().image as string}
-                  error={choiceForm.errors.image as string}
-                />
-              </>
-            )}
-          </Stack>
-          <RateupButtonBlue title={translations("Update Choice")} onClick={handleEditChoice} />
-        </Stack>
-      </FormModalLayout>
-    </Group>
+                    )}
+                  />
+                </>
+              )}
+            </div>
+            <Button onClick={form.handleSubmit(handleEditChoice)}>
+              {translations("Update Choice")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

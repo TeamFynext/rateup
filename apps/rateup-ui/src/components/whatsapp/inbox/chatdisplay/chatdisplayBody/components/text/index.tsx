@@ -1,4 +1,4 @@
-import { whatsappToHTML } from "@/components/RichTextEditor/waTextEditor.tsx";
+import { whatsappToHTML } from "@/components/RichTextEditor/wa-editor/format.tsx";
 
 interface Props {
   messageContent: string;

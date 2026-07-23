@@ -1,9 +1,9 @@
-import { schemaResolver, useForm } from "@mantine/form";
-import { getHotkeyHandler } from "@mantine/hooks";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -12,11 +12,12 @@ import { useCheckEmailExistMutation } from "@/backend/user/user.query";
 import { useSendResetEmail, useSetNewPassword } from "@/utils/auth/resetPassword.tsx";
 import { rateupLogoStackedWhiteTransparent, SAVE_HOTKEY } from "@/utils/constants.ts";
 import { ResetSteps } from "@/utils/enums/index.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
+import { Field, FieldError, FieldLabel } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
-import { Label } from "../ui/label.tsx";
 import { Loader } from "../ui/loader.tsx";
 
 const ResetPasswordForm = ({ mode }) => {
@@ -68,27 +69,25 @@ const ResetPasswordForm = ({ mode }) => {
 
   type PwdSchemaType = z.infer<typeof pwdSchema>;
 
-  const emailForm = useForm({
-    initialValues: {
+  const emailForm = useForm<z.infer<typeof emailSchema>>({
+    resolver: zodResolver(emailSchema),
+    defaultValues: {
       email: "",
-      password: "",
     },
-
-    validate: schemaResolver(emailSchema),
   });
 
   const pwdForm = useForm<PwdSchemaType>({
-    initialValues: {
+    resolver: zodResolver(pwdSchema),
+    defaultValues: {
       password: "",
       confirmPassword: "",
     },
-    validate: schemaResolver(pwdSchema),
   });
 
   const sendResetEmail = useSendResetEmail();
   const checkEmailMutaion = useCheckEmailExistMutation();
   const isEmailPage = page === ResetSteps.STEP_ONE;
-  const password = pwdForm.values.password;
+  const password = pwdForm.watch("password");
   // const isEmailPage = true;
   const [isLoading, setIsLoading] = useState(false);
   const rules = [
@@ -127,7 +126,9 @@ const ResetPasswordForm = ({ mode }) => {
             email: values.email,
           });
           if (!user?.success) {
-            emailForm.setFieldError("email", translations("User with this email does not exist!"));
+            emailForm.setError("email", {
+              message: translations("User with this email does not exist!"),
+            });
             toast.error(translations("User with this email does not exist!"), {
               id: "user-not-found",
             });
@@ -156,11 +157,11 @@ const ResetPasswordForm = ({ mode }) => {
       {page !== ResetSteps.STEP_TWO ? (
         <Card className="border-none shadow-lg p-4 max-w-2xl sm:min-w-md flex flex-col gap-8">
           <div className="text-center space-y-2 flex flex-col  items-center justify-center gap-1">
-            <div className="w-12 h-12 bg-rateup-blue/10 rounded-full flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
               {isEmailPage ? (
-                <Mail className="w-6 h-6 text-rateup-blue" />
+                <Mail className="w-6 h-6 text-primary" />
               ) : (
-                <Lock className="w-6 h-6 text-rateup-blue" />
+                <Lock className="w-6 h-6 text-primary" />
               )}
             </div>
             <div className="text-2xl font-normal">
@@ -176,27 +177,35 @@ const ResetPasswordForm = ({ mode }) => {
             {isEmailPage ? (
               <form
                 className="space-y-4"
-                onSubmit={emailForm.onSubmit(onSubmit)}
+                onSubmit={emailForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event: any) => emailForm.onSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, (event: any) => emailForm.handleSubmit(onSubmit)(event)],
                 ])}
               >
-                <div className="space-y-2">
-                  <Label htmlFor="email">{translations("Email Address")}</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder={translations("Enter your email address")}
-                    required
-                    className="h-12 bg-gray-100"
-                    {...emailForm.getInputProps("email")}
-                  />
-                </div>
+                <Controller
+                  name="email"
+                  control={emailForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field className="space-y-2" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="email">{translations("Email Address")}</FieldLabel>
+                      <Input
+                        {...field}
+                        id="email"
+                        type="email"
+                        placeholder={translations("Enter your email address")}
+                        required
+                        aria-invalid={fieldState.invalid}
+                        className="h-12 bg-gray-100"
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
 
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-12 bg-rateup-blue hover:bg-rateup-blue/80 cursor-pointer disabled:bg-rateup-blue/70"
+                  className="w-full h-12 bg-primary hover:bg-primary/80 cursor-pointer disabled:bg-primary/70"
                 >
                   {isLoading ? <Loader /> : translations("Reset Password")}
                 </Button>
@@ -204,63 +213,86 @@ const ResetPasswordForm = ({ mode }) => {
             ) : (
               <form
                 className="space-y-4"
-                onSubmit={pwdForm.onSubmit(onSubmit)}
+                onSubmit={pwdForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event: any) => pwdForm.onSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, (event: any) => pwdForm.handleSubmit(onSubmit)(event)],
                 ])}
               >
-                <div className="space-y-1">
-                  <Label htmlFor="password" className="text-gray-700 text-sm">
-                    {translations("New Password")}
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder={translations("Enter your new password")}
-                      className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
-                      {...pwdForm.getInputProps("password")}
-                      onFocus={() => setIsPasswordFocused(true)}
-                      onBlur={() => setIsPasswordFocused(false)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
+                <Controller
+                  name="password"
+                  control={pwdForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field className="space-y-1" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="password" className="text-gray-700 text-sm">
+                        {translations("New Password")}
+                      </FieldLabel>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          {...field}
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder={translations("Enter your new password")}
+                          aria-invalid={fieldState.invalid}
+                          className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-sm"
+                          onFocus={() => setIsPasswordFocused(true)}
+                          onBlur={() => {
+                            field.onBlur();
+                            setIsPasswordFocused(false);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
 
                 {/* Confirm Password */}
-                <div className="space-y-1">
-                  <Label htmlFor="confirmPassword" className="text-gray-700 text-sm">
-                    {translations("Confirm New Password")}
-                  </Label>
-                  <div className="relative">
-                    <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder={translations("Confirm your new password")}
-                      className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
-                      {...pwdForm.getInputProps("confirmPassword")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
+                <Controller
+                  name="confirmPassword"
+                  control={pwdForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field className="space-y-1" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="confirmPassword" className="text-gray-700 text-sm">
+                        {translations("Confirm New Password")}
+                      </FieldLabel>
+                      <div className="relative">
+                        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          {...field}
+                          id="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder={translations("Confirm your new password")}
+                          aria-invalid={fieldState.invalid}
+                          className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
                 <AnimatePresence>
                   {isPasswordFocused && (
                     <motion.div
@@ -292,7 +324,7 @@ const ResetPasswordForm = ({ mode }) => {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-12 bg-rateup-blue hover:bg-rateup-blue/80 cursor-pointer disabled:bg-rateup-blue/70"
+                  className="w-full h-12 bg-primary hover:bg-primary/80 cursor-pointer disabled:bg-primary/70"
                 >
                   {isLoading ? <Loader /> : translations("Update Password")}
                 </Button>
@@ -301,7 +333,7 @@ const ResetPasswordForm = ({ mode }) => {
 
             <Link
               to={"/login"}
-              className="flex py-1 rounded-md items-center justify-center gap-3 text-black cursor-pointer hover:bg-rateup-blue/20 hover:text-rateup-blue"
+              className="flex py-1 rounded-md items-center justify-center gap-3 text-black cursor-pointer hover:bg-primary/20 hover:text-primary"
             >
               <ArrowLeft strokeWidth={1} />
               {translations("Back to Sign In")}
@@ -310,8 +342,8 @@ const ResetPasswordForm = ({ mode }) => {
         </Card>
       ) : (
         <Card className="border-none shadow-lg p-6 max-w-md w-full flex flex-col items-center text-center gap-6">
-          <div className="w-18 h-18 bg-rateup-blue/10 rounded-full flex items-center justify-center">
-            <Mail className="w-10 h-10 text-rateup-blue" />
+          <div className="w-18 h-18 bg-primary/10 rounded-full flex items-center justify-center">
+            <Mail className="w-10 h-10 text-primary" />
           </div>
 
           <div className="flex flex-col gap-4">
@@ -326,7 +358,7 @@ const ResetPasswordForm = ({ mode }) => {
 
           <Link
             to="/login"
-            className="flex items-center justify-center gap-2 text-rateup-blue hover:text-rateup-blue/80 transition-colors text-sm font-medium"
+            className="flex items-center justify-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm font-medium"
           >
             <ArrowLeft strokeWidth={1.5} className="w-4 h-4" />
             {translations("Back to Sign In")}

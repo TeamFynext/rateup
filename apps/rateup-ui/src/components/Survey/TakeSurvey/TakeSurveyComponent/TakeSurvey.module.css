@@ -10,7 +10,7 @@
   transition: background-color 100ms ease;
   background-color: var(--input-background-color, white);
   padding: 6px var(--input-padding, 12px);
-  border-color: var(--light-grey-color);
+  border-color: var(--border);
   border-width: 1px;
   border-style: solid;
   font-size: 16px;
@@ -25,7 +25,7 @@
 }
 
 .inputBox:focus-within {
-  border-color: var(--input-focus-color, var(--tertiary-color));
+  border-color: var(--input-focus-color, var(--primary));
 }
 
 .inputPhone > input {
@@ -90,10 +90,6 @@
   justify-content: center;
 }
 
-.question-div :global(.mantine-ScrollArea-viewport > div) {
-  padding: 0.3125rem 0;
-}
-
 .title-desc-container {
   margin-bottom: 0.625rem;
 }
@@ -118,10 +114,6 @@
   border-radius: 0.625rem;
 }
 
-.next-prev-btns-and-progress-container button :global(.mantine-ActionIcon-icon) {
-  width: 1.5rem;
-}
-
 .next-prev-btns-and-progress-container .prev-btn {
   width: 2.875rem;
 }
@@ -129,10 +121,6 @@
 .next-prev-btns-and-progress-container .submit-next-btn {
   font-size: 1rem;
   padding-right: 0.625rem;
-}
-
-.submit-next-btn :global(.mantine-Button-section) {
-  margin-left: 0.3125rem;
 }
 
 @media (max-width: 480px) {

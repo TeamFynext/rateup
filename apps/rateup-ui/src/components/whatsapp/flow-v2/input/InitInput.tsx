@@ -1,25 +1,37 @@
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import {
-  ContainedSelection,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 
 const InitInput = (props) => {
-  return props?.dataSource?.length > 0 ? (
-    <ContainedSelection
-      label={props.label}
-      data={props.dataSource?.map((data) => ({
-        value: data.id,
-        label: data.title,
-      }))}
-      onChange={props.onChange}
-      placeholder={props.placeholder}
-    />
+  const options = props?.dataSource?.map((data) => ({ value: data.id, label: data.title })) ?? [];
+
+  return options.length > 0 ? (
+    <Field>
+      <FieldLabel>{props.label}</FieldLabel>
+      <Select items={options} value={props.value ?? ""} onValueChange={props.onChange}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder={props.placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </Field>
   ) : (
-    <ContainedTextField
-      label={props.label}
-      onChange={props.onChange}
-      placeholder={props.placeholder}
-    />
+    <Field>
+      <FieldLabel>{props.label}</FieldLabel>
+      <Input onChange={props.onChange} placeholder={props.placeholder} />
+    </Field>
   );
 };
 

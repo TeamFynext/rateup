@@ -5,7 +5,7 @@ import { PageType } from "@/types/enums.ts";
 import { cordinateStyle } from "@/utils/index.ts";
 
 const _buttonStyles = {
-  backgroundColor: "var(--tertiary-color)",
+  backgroundColor: "var(--primary)",
   borderRadius: "48px",
   padding: "10px",
   paddingLeft: "20px",

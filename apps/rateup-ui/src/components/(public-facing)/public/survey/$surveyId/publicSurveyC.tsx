@@ -1,4 +1,3 @@
-import { Button, Image } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { TakeSurveyLayoutWeb } from "@/components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb.tsx";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
 import TakeSurvey from "@/components/Survey/TakeSurvey/TakeSurveyComponent/index.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 import errorPageStyles from "../../../ws/$shortId/ws.module.css";
@@ -48,7 +48,11 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
     return (
       <div className={errorPageStyles["error-page"]}>
         <Link to="/">
-          <Image w={80} src={rateupLogoStackedWhiteTransparent} />
+          <img
+            className="w-[80px] object-contain"
+            src={rateupLogoStackedWhiteTransparent}
+            alt="RateUp Logo"
+          />
         </Link>{" "}
         <p className={errorPageStyles["error-text"]}>
           {translations("Unable to get survey, please try again later")}

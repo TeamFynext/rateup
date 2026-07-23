@@ -1,4 +1,3 @@
-import { useDebouncedValue } from "@mantine/hooks";
 import dayjs from "dayjs";
 import {
   Banknote,
@@ -31,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useDebouncedValue } from "@/hooks/use-debounced-state.ts";
 import { cn } from "@/lib/utils";
 
 import { useCommerce } from "../CommerceContext";

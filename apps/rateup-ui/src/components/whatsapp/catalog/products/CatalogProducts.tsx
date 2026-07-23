@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { IconBrandMeta, IconPlus, IconRefresh } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -10,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 
 import { AddCatalogProductModal } from "./AddCatalogProduct.tsx";
 import ProductItems from "./ProductItems.tsx";

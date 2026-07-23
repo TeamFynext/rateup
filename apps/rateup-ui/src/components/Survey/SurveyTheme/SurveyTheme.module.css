@@ -38,10 +38,6 @@
   flex: 1 1 0;
 }
 
-.theme-preview-container :global(.mantine-Overlay-root) {
-  z-index: 100;
-}
-
 .theme-preview-container :global(.preview-device-selector) {
   position: absolute;
   top: 0.75rem;
@@ -98,12 +94,6 @@
   width: 100%;
 }
 
-.survey-theme-preview-tab-panels-root :global(.mantine-Tabs-panel) {
-  height: 100%;
-  overflow: hidden;
-  border-radius: 1rem;
-}
-
 .styles-component-container {
   flex: 1;
   overflow: hidden;
@@ -111,10 +101,6 @@
 
 .styles-component-container :global(.custom-color-picker-container) {
   max-width: 18.75rem;
-}
-
-.styles-component-container :global(.mantine-Overlay-root) {
-  z-index: 100;
 }
 
 /* styles for different preview view components */
@@ -134,7 +120,7 @@
   position: absolute;
   top: calc(50% - 11px);
   right: -35px;
-  color: var(--grey-color-4);
+  color: var(--muted-foreground);
   z-index: 1;
 }
 

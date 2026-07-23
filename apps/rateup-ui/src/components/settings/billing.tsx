@@ -110,7 +110,7 @@ export function OrderHistory({ orders, refresh, isRefetching }) {
               .map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:border-rateup-blue/30 transition-colors"
+                  className="flex items-center justify-between p-4 border rounded-lg hover:border-primary/30 transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-center">

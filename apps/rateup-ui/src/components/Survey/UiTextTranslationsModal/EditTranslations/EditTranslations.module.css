@@ -1,8 +1,0 @@
-.heading {
-  font-size: 1.25rem;
-}
-
-.edit-translation-grid :global(.mantine-Grid-col) {
-  display: flex;
-  align-items: center;
-}

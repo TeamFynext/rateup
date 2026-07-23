@@ -1,9 +1,8 @@
-import { useForm } from "@mantine/form";
-import { getHotkeyHandler } from "@mantine/hooks";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Download, Info, User } from "lucide-react";
-import { Activity, useEffect, useState } from "react";
+import { Activity, useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
 import {
@@ -16,11 +15,12 @@ import { ContactGroupType } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { importMethod } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
-import { ContainedFileInput } from "../input/ContainedInput/ContainedInput.tsx";
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
+import { Input } from "../ui/input.tsx";
 import { Label } from "../ui/label.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
@@ -28,6 +28,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Skeleton } from "../ui/skeleton.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { Switch } from "../ui/switch.tsx";
+import {
+  buildContactSchema,
+  type ContactFormValues,
+  contactFormDefaults,
+} from "./contact-form-schema.ts";
 import ContactForm from "./ContactForm.tsx";
 
 const CreateContactModal = ({
@@ -53,74 +58,26 @@ const CreateContactModal = ({
   const { t: translations } = useTranslation();
   const { customFields } = useCustomFieldsContext();
 
-  const form = useForm({
-    initialValues: initialValues ?? {
-      name: "",
-      phone: "",
-      email: "",
-      dob: null,
-      source: importMethod.MANUAL,
-      contactType: [],
-      countryCode: "91",
-      customFields: [],
-      updateExisting: false,
-      hasHeaderRow: true,
-      external_id: "",
-      labels: [],
-    },
-    validate: {
-      phone: (value, values) => {
-        if (values.source == importMethod.MANUAL)
-          return !value
-            ? translations("Phone Number cannot be blank")
-            : !isValidPhoneNumber(value)
-              ? translations("Invalid phone number")
-              : null;
-      },
-      name: (value, values) =>
-        values.source == importMethod.MANUAL &&
-        (value.length ? null : translations("Name cannot be blank")),
-      customFields: {
-        "*": (value, _values, path) => {
-          const fieldId = path.split(".")[1];
-          const customField = customFields.find((field) => field.slug === fieldId);
-
-          if (!customField) return null;
-
-          if (value && customField.type === "email") {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(value)) {
-              return translations("Invalid email format.");
-            }
-          }
-
-          if (value && customField.type === "number") {
-            if (isNaN(Number(value))) {
-              return translations("Must be a valid number");
-            }
-          }
-
-          return null;
-        },
-      },
-    },
+  const contactSchema = useMemo(
+    () => buildContactSchema(translations, customFields),
+    [translations, customFields],
+  );
+  const form = useForm<ContactFormValues>({
+    resolver: zodResolver(contactSchema) as any,
+    defaultValues: { ...contactFormDefaults, ...initialValues },
   });
-  const handleSubmit = async () => {
-    const validation = form.validate();
-    if (validation.hasErrors) {
-      if (validation.errors.contactType) {
-        toast.error(validation.errors.contactType as string);
-      }
-      return;
-    }
+
+  const submitContact = (values: ContactFormValues) => {
     setIsCreating(true);
-    if (form.getValues().source == importMethod.CSV && !initialValues) {
-      if (!csvfile) return;
+    if (values.source == importMethod.CSV && !initialValues) {
+      if (!csvfile) {
+        setIsCreating(false);
+        return;
+      }
       const formData = new FormData();
-      formData.append("update", form.getValues().updateExisting?.toString());
-      formData.append("hasHeaderRow", form.getValues().hasHeaderRow?.toString() ?? "true");
-      const contactTypes = form.getValues().contactType;
-      contactTypes.forEach((item, index) => {
+      formData.append("update", values.updateExisting?.toString());
+      formData.append("hasHeaderRow", values.hasHeaderRow?.toString() ?? "true");
+      values.contactType.forEach((item, index) => {
         formData.append(`tags[${index}]`, item);
       });
       formData.append("file", csvfile);
@@ -133,77 +90,69 @@ const CreateContactModal = ({
           close();
         },
       });
-    } else {
-      const contactData = {
-        ...form.getValues(),
-        dob: form.getValues()?.dob ? new Date(form.getValues().dob).toISOString() : null,
-        external_id: form.getValues()?.external_id || undefined,
-        phone: form.getValues()?.phone?.replace(/^\+/, "") || "",
-        source:
-          type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : form.getValues().source,
-        lastReceivedMessageTimeStamp: undefined,
-      };
-      if (initialValues) {
-        editContactMutation.mutate(
-          { data: contactData, contactId: initialValues.id },
-          {
-            onSuccess: () => {
-              setIsCreating(false);
-              contactClose();
-              close();
-              form.reset();
-            },
-            onError: () => {
-              setIsCreating(false);
-            },
-          },
-        );
-      } else {
-        if (createNewContactMutation) {
-          createNewContactMutation.mutate([contactData], {
-            onSuccess: () => {
-              setIsCreating(false);
-              contactClose();
-              close();
-              form.reset();
-            },
-            onError: () => {
-              setIsCreating(false);
-            },
-          });
-        } else {
-          createContactMutation.mutate(contactData, {
-            onSuccess: () => {
-              toast.success("Contact created successfully.", {
-                id: "contact-create",
-              });
-              setIsCreating(false);
-              contactClose();
-              close();
-              form.reset();
-            },
-            onError: (error) => {
-              toast.error(error?.message || `Error creating the contact`, {
-                id: "contact-create",
-              });
-              setIsCreating(false);
-            },
-          });
-        }
-      }
+      return;
     }
+    const contactData = {
+      ...values,
+      dob: values.dob ? new Date(values.dob).toISOString() : null,
+      external_id: values.external_id || undefined,
+      phone: values.phone?.replace(/^\+/, "") || "",
+      source: type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : values.source,
+      lastReceivedMessageTimeStamp: undefined,
+    };
+    if (initialValues) {
+      editContactMutation.mutate(
+        { data: contactData, contactId: initialValues.id },
+        {
+          onSuccess: () => {
+            setIsCreating(false);
+            contactClose();
+            close();
+            form.reset();
+          },
+          onError: () => setIsCreating(false),
+        },
+      );
+      return;
+    }
+    if (createNewContactMutation) {
+      createNewContactMutation.mutate([contactData], {
+        onSuccess: () => {
+          setIsCreating(false);
+          contactClose();
+          close();
+          form.reset();
+        },
+        onError: () => setIsCreating(false),
+      });
+      return;
+    }
+    createContactMutation.mutate(contactData, {
+      onSuccess: () => {
+        toast.success("Contact created successfully.", { id: "contact-create" });
+        setIsCreating(false);
+        contactClose();
+        close();
+        form.reset();
+      },
+      onError: (error) => {
+        toast.error(error?.message || `Error creating the contact`, { id: "contact-create" });
+        setIsCreating(false);
+      },
+    });
   };
+
+  const handleSubmit = form.handleSubmit(submitContact);
 
   useEffect(() => {
     if (initialValues) {
-      form.setValues(initialValues);
-      form.setFieldValue("phone", "+" + initialValues.phone);
+      form.reset({ ...contactFormDefaults, ...initialValues, phone: "+" + initialValues.phone });
     }
-    form.setFieldValue("contactType", customFields?.map((field) => field.slug) || []);
-  }, [initialValues]);
+    form.setValue("contactType", customFields?.map((field) => field.slug) || []);
+  }, [initialValues, customFields, form]);
 
-  const sourceValue = form.getValues().source;
-  const contactTypeValue: string[] = form.getValues().contactType ?? [];
+  const sourceValue = form.watch("source");
+  const contactTypeValue = form.watch("contactType") ?? [];
 
   return (
     <div>
@@ -213,7 +162,7 @@ const CreateContactModal = ({
           handleSubmit();
         }}
         onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
-        onReset={form.reset}
+        onReset={() => form.reset()}
       >
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -222,7 +171,7 @@ const CreateContactModal = ({
                 <Label>{translations("Import Contacts")}</Label>
                 <RadioGroup
                   value={sourceValue}
-                  onValueChange={(value) => form.setFieldValue("source", value)}
+                  onValueChange={(value) => form.setValue("source", value, { shouldDirty: true })}
                   className="flex flex-row items-center gap-4"
                 >
                   <div className="flex items-center gap-2">
@@ -251,11 +200,12 @@ const CreateContactModal = ({
                         id={`contact-type-${data?.slug}`}
                         checked={checked}
                         onCheckedChange={(value) => {
-                          form.setFieldValue(
+                          form.setValue(
                             "contactType",
                             value
                               ? [...contactTypeValue, data?.slug]
                               : contactTypeValue.filter((slug) => slug !== data?.slug),
+                            { shouldDirty: true },
                           );
                         }}
                       />
@@ -277,7 +227,7 @@ const CreateContactModal = ({
           {sourceValue == importMethod.CSV && !initialValues && (
             <div className="flex flex-col gap-4">
               <blockquote className="mx-6 flex items-start gap-2 rounded-md border-l-4 border-l-rateup-blue bg-accent p-3 text-sm">
-                <Info className="mt-0.5 size-5 shrink-0 text-rateup-blue" />
+                <Info className="mt-0.5 size-5 shrink-0 text-primary" />
                 <div className="flex flex-col gap-2">
                   <span>
                     {translations(
@@ -289,7 +239,7 @@ const CreateContactModal = ({
                     download
                     target="_blank"
                     rel="noreferrer"
-                    className="flex w-fit items-center gap-1 rounded-sm text-rateup-blue underline underline-offset-2"
+                    className="flex w-fit items-center gap-1 rounded-sm text-primary underline underline-offset-2"
                   >
                     <Download className="size-4" />
                     {translations("Download Demo Csv File")}
@@ -297,41 +247,45 @@ const CreateContactModal = ({
                 </div>
               </blockquote>
               <div className="mx-6 flex items-center gap-2">
-                <Switch
-                  id="update-existing"
-                  checked={form.getValues().updateExisting}
-                  onCheckedChange={(value) => form.setFieldValue("updateExisting", value)}
+                <Controller
+                  name="updateExisting"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Switch
+                      id="update-existing"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
                 />
                 <Label htmlFor="update-existing" className="font-normal">
                   {translations("Update the existing data while importing")}
                 </Label>
               </div>
               <div className="mx-6 flex items-center gap-2">
-                <Switch
-                  id="has-header-row"
-                  checked={form.getValues().hasHeaderRow}
-                  onCheckedChange={(value) => form.setFieldValue("hasHeaderRow", value)}
+                <Controller
+                  name="hasHeaderRow"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Switch
+                      id="has-header-row"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
                 />
                 <Label htmlFor="has-header-row" className="font-normal">
                   {translations("First row contains column headers (name, phone, ...)")}
                 </Label>
               </div>
-              <ContainedFileInput
-                mx={"lg"}
-                label=""
-                placeholder={translations(
+              <Input
+                type="file"
+                accept=".csv,.xlsx,.ods"
+                aria-label={translations(
                   "Upload a csv file (.csv), excel file (.xlsx) or opendocument file (.ods)",
                 )}
-                accept=".csv,.xlsx,.ods"
-                multiple={false}
-                onChange={setCsvfile}
-                styles={{
-                  input: {
-                    border: ".125rem dashed lightgrey",
-                    height: "3.75rem",
-                    textAlign: "center",
-                  },
-                }}
+                onChange={(event) => setCsvfile(event.target.files?.[0] ?? null)}
+                className="mx-5 h-15 border-2 border-dashed border-gray-300 text-center"
               />
             </div>
           )}

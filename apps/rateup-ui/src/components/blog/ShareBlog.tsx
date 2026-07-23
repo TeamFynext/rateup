@@ -1,4 +1,3 @@
-import { ActionIcon, Button, Group, Popover, Tooltip } from "@mantine/core";
 import {
   IconBrandFacebookFilled,
   IconBrandLinkedinFilled,
@@ -16,6 +15,10 @@ import {
 } from "next-share";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+
 export default function SharePopover() {
   const url = typeof window !== "undefined" ? window.location.href : "";
   const [opened, setOpened] = useState(false);
@@ -28,55 +31,54 @@ export default function SharePopover() {
   };
 
   return (
-    <Popover opened={opened} onChange={setOpened} position="right">
-      <Popover.Target>
-        <ActionIcon variant="light" radius="xl" size="lg" onClick={() => setOpened((o) => !o)}>
-          <IconShare size={18} />
-        </ActionIcon>
-      </Popover.Target>
+    <Popover open={opened} onOpenChange={setOpened}>
+      <PopoverTrigger
+        render={
+          <Button variant="ghost" size="icon-lg" className="rounded-full" aria-label="Share" />
+        }
+      >
+        <IconShare size={18} />
+      </PopoverTrigger>
 
-      <Popover.Dropdown className="flex flex-col gap-3 w-56">
-        <Group justify="space-between">
-          <Tooltip label="Copy link">
-            <Button
-              variant="subtle"
-              leftSection={
-                copied ? <IconCheck size={18} className="text-green-600" /> : <IconCopy size={18} />
-              }
-              onClick={handleCopy}
-              fullWidth
+      <PopoverContent side="right" className="w-56 gap-3">
+        <div className="flex items-center justify-between">
+          <Tooltip>
+            <TooltipTrigger
+              render={<Button variant="ghost" className="w-full" onClick={handleCopy} />}
             >
+              {copied ? <IconCheck size={18} className="text-green-600" /> : <IconCopy size={18} />}
               {copied ? "Copied!" : "Copy Link"}
-            </Button>
+            </TooltipTrigger>
+            <TooltipContent>Copy link</TooltipContent>
           </Tooltip>
-        </Group>
+        </div>
 
-        <Group gap="sm" grow>
+        <div className="flex items-center gap-2 [&>*]:flex-1">
           <FacebookShareButton url={url}>
-            <ActionIcon component="div" radius="xl" color="blue" variant="filled" size="lg">
+            <div className="flex size-10 items-center justify-center rounded-full bg-blue-600 text-white">
               <IconBrandFacebookFilled size={18} />
-            </ActionIcon>
+            </div>
           </FacebookShareButton>
 
           <WhatsappShareButton url={url}>
-            <ActionIcon component="div" radius="xl" color="green" variant="filled" size="lg">
+            <div className="flex size-10 items-center justify-center rounded-full bg-green-600 text-white">
               <IconBrandWhatsappFilled size={18} />
-            </ActionIcon>
+            </div>
           </WhatsappShareButton>
 
           <TwitterShareButton url={url}>
-            <ActionIcon component="div" radius="xl" color="black" variant="filled" size="lg">
+            <div className="flex size-10 items-center justify-center rounded-full bg-black text-white">
               <IconBrandXFilled size={18} />
-            </ActionIcon>
+            </div>
           </TwitterShareButton>
 
           <LinkedinShareButton url={url}>
-            <ActionIcon component="div" radius="xl" color="blue" variant="filled" size="lg">
+            <div className="flex size-10 items-center justify-center rounded-full bg-blue-700 text-white">
               <IconBrandLinkedinFilled size={18} />
-            </ActionIcon>
+            </div>
           </LinkedinShareButton>
-        </Group>
-      </Popover.Dropdown>
+        </div>
+      </PopoverContent>
     </Popover>
   );
 }

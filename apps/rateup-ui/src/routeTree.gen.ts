@@ -9,168 +9,163 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as Sitemap_indexDotxmlRouteImport } from './routes/sitemap_index[.]xml'
-import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
-import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as Sitemap_indexDotxmlRouteImport } from './routes/sitemap_index[.]xml'
 import { Route as marketingIndexRouteImport } from './routes/(marketing)/index'
-import { Route as DotwellKnownApiCatalogRouteImport } from './routes/[.]well-known/api-catalog'
-import { Route as DashboardCommerceRouteRouteImport } from './routes/dashboard/commerce/route'
 import { Route as marketingBlogRouteRouteImport } from './routes/(marketing)/blog/route'
-import { Route as DashboardWhatsappIndexRouteImport } from './routes/dashboard/whatsapp/index'
-import { Route as DashboardTicketsIndexRouteImport } from './routes/dashboard/tickets/index'
-import { Route as DashboardTestimonialIndexRouteImport } from './routes/dashboard/testimonial/index'
-import { Route as DashboardSurveysIndexRouteImport } from './routes/dashboard/surveys/index'
-import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
-import { Route as DashboardQuickAccessLinksIndexRouteImport } from './routes/dashboard/quickAccessLinks/index'
-import { Route as DashboardQrCreatorIndexRouteImport } from './routes/dashboard/qrCreator/index'
-import { Route as DashboardMetaAgentIndexRouteImport } from './routes/dashboard/meta-agent/index'
-import { Route as DashboardInstagramIndexRouteImport } from './routes/dashboard/instagram/index'
-import { Route as DashboardInboxIndexRouteImport } from './routes/dashboard/inbox/index'
-import { Route as DashboardContactsIndexRouteImport } from './routes/dashboard/contacts/index'
-import { Route as DashboardCommerceIndexRouteImport } from './routes/dashboard/commerce/index'
-import { Route as DashboardCampaignIndexRouteImport } from './routes/dashboard/campaign/index'
-import { Route as DashboardAutomationIndexRouteImport } from './routes/dashboard/automation/index'
-import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard/analytics/index'
-import { Route as AuthShopifyIndexRouteImport } from './routes/auth/shopify/index'
-import { Route as AuthOauth2callbackIndexRouteImport } from './routes/auth/oauth2callback/index'
-import { Route as AuthFbIndexRouteImport } from './routes/auth/fb/index'
-import { Route as AdminUserstatsIndexRouteImport } from './routes/admin/userstats/index'
-import { Route as AdminUpdateCenterIndexRouteImport } from './routes/admin/updateCenter/index'
-import { Route as AdminSubscriptionsIndexRouteImport } from './routes/admin/subscriptions/index'
-import { Route as AdminStripeIndexRouteImport } from './routes/admin/stripe/index'
-import { Route as AdminShopifyIndexRouteImport } from './routes/admin/shopify/index'
-import { Route as AdminShareQrIndexRouteImport } from './routes/admin/share-qr/index'
-import { Route as AdminReferralsIndexRouteImport } from './routes/admin/referrals/index'
-import { Route as AdminRazorpayIndexRouteImport } from './routes/admin/razorpay/index'
-import { Route as AdminRateupIndexRouteImport } from './routes/admin/rateup/index'
-import { Route as AdminOrgsIndexRouteImport } from './routes/admin/orgs/index'
-import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
-import { Route as AdminGenerateIndexRouteImport } from './routes/admin/generate/index'
-import { Route as marketingTermsOfServiceIndexRouteImport } from './routes/(marketing)/terms-of-service/index'
-import { Route as marketingPrivacyPolicyIndexRouteImport } from './routes/(marketing)/privacy-policy/index'
-import { Route as marketingPricingIndexRouteImport } from './routes/(marketing)/pricing/index'
-import { Route as marketingPartnerPageIndexRouteImport } from './routes/(marketing)/partner-page/index'
-import { Route as marketingContactUsIndexRouteImport } from './routes/(marketing)/contact-us/index'
-import { Route as marketingBlogIndexRouteImport } from './routes/(marketing)/blog/index'
-import { Route as marketingAboutUsIndexRouteImport } from './routes/(marketing)/about-us/index'
-import { Route as authSignupIndexRouteImport } from './routes/(auth)/signup/index'
-import { Route as authLogoutIndexRouteImport } from './routes/(auth)/logout/index'
-import { Route as authLoginIndexRouteImport } from './routes/(auth)/login/index'
+import { Route as DotwellKnownApiCatalogRouteImport } from './routes/[.]well-known/api-catalog'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardCommerceRouteRouteImport } from './routes/dashboard/commerce/route'
 import { Route as authInviteIndexRouteImport } from './routes/(auth)/invite/index'
-import { Route as marketingBlogSitemapDotxmlRouteImport } from './routes/(marketing)/blog/sitemap[.]xml'
+import { Route as authLoginIndexRouteImport } from './routes/(auth)/login/index'
+import { Route as authLogoutIndexRouteImport } from './routes/(auth)/logout/index'
+import { Route as authSignupIndexRouteImport } from './routes/(auth)/signup/index'
+import { Route as marketingAboutUsIndexRouteImport } from './routes/(marketing)/about-us/index'
+import { Route as marketingBlogIndexRouteImport } from './routes/(marketing)/blog/index'
 import { Route as marketingBlogRssDotxmlRouteImport } from './routes/(marketing)/blog/rss[.]xml'
-import { Route as DashboardWhatsappTemplatesIndexRouteImport } from './routes/dashboard/whatsapp/templates/index'
-import { Route as DashboardWhatsappPaymentsIndexRouteImport } from './routes/dashboard/whatsapp/payments/index'
-import { Route as DashboardWhatsappOrdersIndexRouteImport } from './routes/dashboard/whatsapp/orders/index'
-import { Route as DashboardWhatsappFlowsIndexRouteImport } from './routes/dashboard/whatsapp/flows/index'
-import { Route as DashboardWhatsappFlowbotsIndexRouteImport } from './routes/dashboard/whatsapp/flowbots/index'
-import { Route as DashboardWhatsappConversationalComponentsIndexRouteImport } from './routes/dashboard/whatsapp/conversational-components/index'
-import { Route as DashboardWhatsappCatalogIndexRouteImport } from './routes/dashboard/whatsapp/catalog/index'
-import { Route as DashboardTicketsTicketIdIndexRouteImport } from './routes/dashboard/tickets/$ticketId/index'
-import { Route as DashboardTestimonialCollectionIdIndexRouteImport } from './routes/dashboard/testimonial/$collectionId/index'
-import { Route as DashboardSurveysTemplatesIndexRouteImport } from './routes/dashboard/surveys/templates/index'
-import { Route as DashboardSurveysSurveyIdIndexRouteImport } from './routes/dashboard/surveys/$surveyId/index'
-import { Route as DashboardSettingsUsersIndexRouteImport } from './routes/dashboard/settings/users/index'
-import { Route as DashboardSettingsTeamIndexRouteImport } from './routes/dashboard/settings/team/index'
-import { Route as DashboardSettingsSecurityIndexRouteImport } from './routes/dashboard/settings/security/index'
-import { Route as DashboardSettingsIntegrationsIndexRouteImport } from './routes/dashboard/settings/integrations/index'
-import { Route as DashboardSettingsChannelsIndexRouteImport } from './routes/dashboard/settings/channels/index'
-import { Route as DashboardSettingsBillingIndexRouteImport } from './routes/dashboard/settings/billing/index'
-import { Route as DashboardSettingsAccountIndexRouteImport } from './routes/dashboard/settings/account/index'
-import { Route as DashboardQuickAccessLinksShortUrlIdIndexRouteImport } from './routes/dashboard/quickAccessLinks/$shortUrlId/index'
-import { Route as DashboardQrCreatorShortUrlIdIndexRouteImport } from './routes/dashboard/qrCreator/$shortUrlId/index'
-import { Route as DashboardLoyaltyTransactionsIndexRouteImport } from './routes/dashboard/loyalty/transactions/index'
-import { Route as DashboardLoyaltyTemplatesIndexRouteImport } from './routes/dashboard/loyalty/templates/index'
-import { Route as DashboardLoyaltySettingsIndexRouteImport } from './routes/dashboard/loyalty/settings/index'
-import { Route as DashboardLoyaltyRewardsIndexRouteImport } from './routes/dashboard/loyalty/rewards/index'
-import { Route as DashboardLoyaltyEarningRulesIndexRouteImport } from './routes/dashboard/loyalty/earning-rules/index'
-import { Route as DashboardLoyaltyDashboardIndexRouteImport } from './routes/dashboard/loyalty/dashboard/index'
-import { Route as DashboardLoyaltyCustomersIndexRouteImport } from './routes/dashboard/loyalty/customers/index'
-import { Route as DashboardLoyaltyCommandIndexRouteImport } from './routes/dashboard/loyalty/command/index'
-import { Route as DashboardLoyaltyCashierIndexRouteImport } from './routes/dashboard/loyalty/cashier/index'
-import { Route as DashboardLoyaltyApprovalsIndexRouteImport } from './routes/dashboard/loyalty/approvals/index'
-import { Route as DashboardContactsLifecycleIndexRouteImport } from './routes/dashboard/contacts/lifecycle/index'
-import { Route as DashboardContactsLabelsIndexRouteImport } from './routes/dashboard/contacts/labels/index'
-import { Route as DashboardContactsGroupsIndexRouteImport } from './routes/dashboard/contacts/groups/index'
-import { Route as DashboardContactsCustomFieldsIndexRouteImport } from './routes/dashboard/contacts/custom-fields/index'
-import { Route as DashboardCommerceSettingsIndexRouteImport } from './routes/dashboard/commerce/settings/index'
-import { Route as DashboardCommercePaymentsIndexRouteImport } from './routes/dashboard/commerce/payments/index'
-import { Route as DashboardCommerceOverviewIndexRouteImport } from './routes/dashboard/commerce/overview/index'
-import { Route as DashboardCommerceOrdersIndexRouteImport } from './routes/dashboard/commerce/orders/index'
-import { Route as DashboardCommerceCouponsIndexRouteImport } from './routes/dashboard/commerce/coupons/index'
-import { Route as DashboardCommerceCatalogsIndexRouteImport } from './routes/dashboard/commerce/catalogs/index'
-import { Route as DashboardCampaignCampaignIdIndexRouteImport } from './routes/dashboard/campaign/$campaignId/index'
-import { Route as DashboardAutomationAutomationIdIndexRouteImport } from './routes/dashboard/automation/$automationId/index'
-import { Route as DashboardAnalyticsAuditLogIndexRouteImport } from './routes/dashboard/analytics/audit-log/index'
-import { Route as DashboardAnalyticsStaffidIndexRouteImport } from './routes/dashboard/analytics/$staffid/index'
-import { Route as AuthShopifyRetryIndexRouteImport } from './routes/auth/shopify/retry/index'
-import { Route as AuthShopifyOauth2callbackIndexRouteImport } from './routes/auth/shopify/oauth2callback/index'
-import { Route as AuthShopifyLogoutIndexRouteImport } from './routes/auth/shopify/logout/index'
-import { Route as AdminOrgsOrgIdIndexRouteImport } from './routes/admin/orgs/$orgId/index'
-import { Route as publicFacingWsShortIdIndexRouteImport } from './routes/(public-facing)/ws/$shortId/index'
-import { Route as publicFacingWasShortIdIndexRouteImport } from './routes/(public-facing)/was/$shortId/index'
-import { Route as publicFacingQrShortIdIndexRouteImport } from './routes/(public-facing)/qr/$shortId/index'
-import { Route as publicFacingLtShortIdIndexRouteImport } from './routes/(public-facing)/lt/$shortId/index'
-import { Route as publicFacingloyaltyCashierIndexRouteImport } from './routes/(public-facing)/(loyalty)/cashier/index'
-import { Route as marketingProductsWhatsappSurveyIndexRouteImport } from './routes/(marketing)/products/whatsapp-survey/index'
-import { Route as marketingProductsWhatsappLoyaltyIndexRouteImport } from './routes/(marketing)/products/whatsapp-loyalty/index'
-import { Route as marketingProductsWhatsappFeedbackIndexRouteImport } from './routes/(marketing)/products/whatsapp-feedback/index'
-import { Route as marketingProductsTicketingIndexRouteImport } from './routes/(marketing)/products/ticketing/index'
-import { Route as marketingProductsTestimonialGatewayIndexRouteImport } from './routes/(marketing)/products/testimonial-gateway/index'
-import { Route as marketingProductsQrIndexRouteImport } from './routes/(marketing)/products/qr/index'
-import { Route as marketingProductsQrStudioIndexRouteImport } from './routes/(marketing)/products/qr-studio/index'
-import { Route as marketingProductsOmnichannelInboxIndexRouteImport } from './routes/(marketing)/products/omnichannel-inbox/index'
-import { Route as marketingProductsInboxIndexRouteImport } from './routes/(marketing)/products/inbox/index'
-import { Route as marketingProductsAiReviewIndexRouteImport } from './routes/(marketing)/products/ai-review/index'
-import { Route as marketingProductsAiAutomationIndexRouteImport } from './routes/(marketing)/products/ai-automation/index'
-import { Route as marketingPricingShopifyIndexRouteImport } from './routes/(marketing)/pricing/shopify/index'
-import { Route as marketingBlogSlugIndexRouteImport } from './routes/(marketing)/blog/$slug/index'
-import { Route as authLoginVerifyPhoneNumberIndexRouteImport } from './routes/(auth)/login/verify-phone-number/index'
-import { Route as authLoginVerifyEmailIndexRouteImport } from './routes/(auth)/login/verify-email/index'
-import { Route as authLoginSetupIndexRouteImport } from './routes/(auth)/login/setup/index'
-import { Route as authLoginResetPasswordIndexRouteImport } from './routes/(auth)/login/reset-password/index'
+import { Route as marketingBlogSitemapDotxmlRouteImport } from './routes/(marketing)/blog/sitemap[.]xml'
+import { Route as marketingContactUsIndexRouteImport } from './routes/(marketing)/contact-us/index'
+import { Route as marketingPartnerPageIndexRouteImport } from './routes/(marketing)/partner-page/index'
+import { Route as marketingPricingIndexRouteImport } from './routes/(marketing)/pricing/index'
+import { Route as marketingPrivacyPolicyIndexRouteImport } from './routes/(marketing)/privacy-policy/index'
+import { Route as marketingTermsOfServiceIndexRouteImport } from './routes/(marketing)/terms-of-service/index'
+import { Route as AdminGenerateIndexRouteImport } from './routes/admin/generate/index'
+import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
+import { Route as AdminOrgsIndexRouteImport } from './routes/admin/orgs/index'
+import { Route as AdminRateupIndexRouteImport } from './routes/admin/rateup/index'
+import { Route as AdminRazorpayIndexRouteImport } from './routes/admin/razorpay/index'
+import { Route as AdminReferralsIndexRouteImport } from './routes/admin/referrals/index'
+import { Route as AdminShareQrIndexRouteImport } from './routes/admin/share-qr/index'
+import { Route as AdminShopifyIndexRouteImport } from './routes/admin/shopify/index'
+import { Route as AdminStripeIndexRouteImport } from './routes/admin/stripe/index'
+import { Route as AdminSubscriptionsIndexRouteImport } from './routes/admin/subscriptions/index'
+import { Route as AdminUpdateCenterIndexRouteImport } from './routes/admin/updateCenter/index'
+import { Route as AdminUserstatsIndexRouteImport } from './routes/admin/userstats/index'
+import { Route as AuthFbIndexRouteImport } from './routes/auth/fb/index'
+import { Route as AuthOauth2callbackIndexRouteImport } from './routes/auth/oauth2callback/index'
+import { Route as AuthShopifyIndexRouteImport } from './routes/auth/shopify/index'
+import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard/analytics/index'
+import { Route as DashboardAutomationIndexRouteImport } from './routes/dashboard/automation/index'
+import { Route as DashboardCampaignIndexRouteImport } from './routes/dashboard/campaign/index'
+import { Route as DashboardCommerceIndexRouteImport } from './routes/dashboard/commerce/index'
+import { Route as DashboardContactsIndexRouteImport } from './routes/dashboard/contacts/index'
+import { Route as DashboardInboxIndexRouteImport } from './routes/dashboard/inbox/index'
+import { Route as DashboardInstagramIndexRouteImport } from './routes/dashboard/instagram/index'
+import { Route as DashboardMetaAgentIndexRouteImport } from './routes/dashboard/meta-agent/index'
+import { Route as DashboardQrCreatorIndexRouteImport } from './routes/dashboard/qrCreator/index'
+import { Route as DashboardQuickAccessLinksIndexRouteImport } from './routes/dashboard/quickAccessLinks/index'
+import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
+import { Route as DashboardSurveysIndexRouteImport } from './routes/dashboard/surveys/index'
+import { Route as DashboardTestimonialIndexRouteImport } from './routes/dashboard/testimonial/index'
+import { Route as DashboardTicketsIndexRouteImport } from './routes/dashboard/tickets/index'
+import { Route as DashboardWhatsappIndexRouteImport } from './routes/dashboard/whatsapp/index'
 import { Route as authLoginCompleteLoginIndexRouteImport } from './routes/(auth)/login/complete-login/index'
-import { Route as DashboardInstagramFlowbotsFlowbotIdRouteImport } from './routes/dashboard/instagram/flowbots/$flowbotId'
-import { Route as marketingBlogTagSitemapDotxmlRouteImport } from './routes/(marketing)/blog/tag/sitemap[.]xml'
+import { Route as authLoginResetPasswordIndexRouteImport } from './routes/(auth)/login/reset-password/index'
+import { Route as authLoginSetupIndexRouteImport } from './routes/(auth)/login/setup/index'
+import { Route as authLoginVerifyEmailIndexRouteImport } from './routes/(auth)/login/verify-email/index'
+import { Route as authLoginVerifyPhoneNumberIndexRouteImport } from './routes/(auth)/login/verify-phone-number/index'
+import { Route as marketingBlogSlugIndexRouteImport } from './routes/(marketing)/blog/$slug/index'
 import { Route as marketingBlogAuthorSitemapDotxmlRouteImport } from './routes/(marketing)/blog/author/sitemap[.]xml'
-import { Route as DashboardWhatsappTemplatesTemplateIdIndexRouteImport } from './routes/dashboard/whatsapp/templates/$templateId/index'
-import { Route as DashboardWhatsappFlowbotsFlowbotIdIndexRouteImport } from './routes/dashboard/whatsapp/flowbots/$flowbotId/index'
-import { Route as DashboardWhatsappCatalogCatalogIdIndexRouteImport } from './routes/dashboard/whatsapp/catalog/$catalogId/index'
-import { Route as DashboardSettingsTeamTeamIdIndexRouteImport } from './routes/dashboard/settings/team/$teamId/index'
-import { Route as DashboardSettingsIntegrationsIdIndexRouteImport } from './routes/dashboard/settings/integrations/$id/index'
-import { Route as DashboardSettingsChannelsChannelIndexRouteImport } from './routes/dashboard/settings/channels/$channel/index'
-import { Route as DashboardLoyaltyTemplatesTemplateIdIndexRouteImport } from './routes/dashboard/loyalty/templates/$templateId/index'
-import { Route as DashboardContactsGroupsGroupIdIndexRouteImport } from './routes/dashboard/contacts/groups/$groupId/index'
-import { Route as DashboardAnalyticsTeamTeamidIndexRouteImport } from './routes/dashboard/analytics/team/$teamid/index'
-import { Route as publicFacingWsShortIdResponseSubmittedIndexRouteImport } from './routes/(public-facing)/ws/$shortId/response-submitted/index'
-import { Route as publicFacingWsShortIdEndIndexRouteImport } from './routes/(public-facing)/ws/$shortId/end/index'
-import { Route as publicFacingPublicTestimonialCollectionIdIndexRouteImport } from './routes/(public-facing)/public/testimonial/$collectionId/index'
-import { Route as publicFacingPublicSurveyCsIndexRouteImport } from './routes/(public-facing)/public/survey/cs/index'
-import { Route as publicFacingPublicSurveySurveyIdIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/index'
-import { Route as marketingBlogTagSlugIndexRouteImport } from './routes/(marketing)/blog/tag/$slug/index'
-import { Route as marketingBlogAuthorSlugIndexRouteImport } from './routes/(marketing)/blog/author/$slug/index'
-import { Route as authLoginCallbackPausedIndexRouteImport } from './routes/(auth)/login/callback/paused/index'
-import { Route as authLoginCallbackGoogleIndexRouteImport } from './routes/(auth)/login/callback/google/index'
+import { Route as marketingBlogTagSitemapDotxmlRouteImport } from './routes/(marketing)/blog/tag/sitemap[.]xml'
+import { Route as marketingPricingShopifyIndexRouteImport } from './routes/(marketing)/pricing/shopify/index'
+import { Route as marketingProductsAiAutomationIndexRouteImport } from './routes/(marketing)/products/ai-automation/index'
+import { Route as marketingProductsAiReviewIndexRouteImport } from './routes/(marketing)/products/ai-review/index'
+import { Route as marketingProductsInboxIndexRouteImport } from './routes/(marketing)/products/inbox/index'
+import { Route as marketingProductsOmnichannelInboxIndexRouteImport } from './routes/(marketing)/products/omnichannel-inbox/index'
+import { Route as marketingProductsQrStudioIndexRouteImport } from './routes/(marketing)/products/qr-studio/index'
+import { Route as marketingProductsQrIndexRouteImport } from './routes/(marketing)/products/qr/index'
+import { Route as marketingProductsTestimonialGatewayIndexRouteImport } from './routes/(marketing)/products/testimonial-gateway/index'
+import { Route as marketingProductsTicketingIndexRouteImport } from './routes/(marketing)/products/ticketing/index'
+import { Route as marketingProductsWhatsappFeedbackIndexRouteImport } from './routes/(marketing)/products/whatsapp-feedback/index'
+import { Route as marketingProductsWhatsappLoyaltyIndexRouteImport } from './routes/(marketing)/products/whatsapp-loyalty/index'
+import { Route as marketingProductsWhatsappSurveyIndexRouteImport } from './routes/(marketing)/products/whatsapp-survey/index'
+import { Route as publicFacingloyaltyCashierIndexRouteImport } from './routes/(public-facing)/(loyalty)/cashier/index'
+import { Route as publicFacingLtShortIdIndexRouteImport } from './routes/(public-facing)/lt/$shortId/index'
+import { Route as publicFacingQrShortIdIndexRouteImport } from './routes/(public-facing)/qr/$shortId/index'
+import { Route as publicFacingWasShortIdIndexRouteImport } from './routes/(public-facing)/was/$shortId/index'
+import { Route as publicFacingWsShortIdIndexRouteImport } from './routes/(public-facing)/ws/$shortId/index'
+import { Route as AdminOrgsOrgIdIndexRouteImport } from './routes/admin/orgs/$orgId/index'
+import { Route as AuthShopifyLogoutIndexRouteImport } from './routes/auth/shopify/logout/index'
+import { Route as AuthShopifyOauth2callbackIndexRouteImport } from './routes/auth/shopify/oauth2callback/index'
+import { Route as AuthShopifyRetryIndexRouteImport } from './routes/auth/shopify/retry/index'
+import { Route as DashboardAnalyticsStaffidIndexRouteImport } from './routes/dashboard/analytics/$staffid/index'
+import { Route as DashboardAnalyticsAuditLogIndexRouteImport } from './routes/dashboard/analytics/audit-log/index'
+import { Route as DashboardAutomationAutomationIdIndexRouteImport } from './routes/dashboard/automation/$automationId/index'
+import { Route as DashboardCampaignCampaignIdIndexRouteImport } from './routes/dashboard/campaign/$campaignId/index'
+import { Route as DashboardCommerceCatalogsIndexRouteImport } from './routes/dashboard/commerce/catalogs/index'
+import { Route as DashboardCommerceCouponsIndexRouteImport } from './routes/dashboard/commerce/coupons/index'
+import { Route as DashboardCommerceOrdersIndexRouteImport } from './routes/dashboard/commerce/orders/index'
+import { Route as DashboardCommerceOverviewIndexRouteImport } from './routes/dashboard/commerce/overview/index'
+import { Route as DashboardCommercePaymentsIndexRouteImport } from './routes/dashboard/commerce/payments/index'
+import { Route as DashboardCommerceSettingsIndexRouteImport } from './routes/dashboard/commerce/settings/index'
+import { Route as DashboardContactsCustomFieldsIndexRouteImport } from './routes/dashboard/contacts/custom-fields/index'
+import { Route as DashboardContactsGroupsIndexRouteImport } from './routes/dashboard/contacts/groups/index'
+import { Route as DashboardContactsLabelsIndexRouteImport } from './routes/dashboard/contacts/labels/index'
+import { Route as DashboardContactsLifecycleIndexRouteImport } from './routes/dashboard/contacts/lifecycle/index'
+import { Route as DashboardInstagramFlowbotsFlowbotIdRouteImport } from './routes/dashboard/instagram/flowbots/$flowbotId'
+import { Route as DashboardLoyaltyApprovalsIndexRouteImport } from './routes/dashboard/loyalty/approvals/index'
+import { Route as DashboardLoyaltyCashierIndexRouteImport } from './routes/dashboard/loyalty/cashier/index'
+import { Route as DashboardLoyaltyCommandIndexRouteImport } from './routes/dashboard/loyalty/command/index'
+import { Route as DashboardLoyaltyCustomersIndexRouteImport } from './routes/dashboard/loyalty/customers/index'
+import { Route as DashboardLoyaltyDashboardIndexRouteImport } from './routes/dashboard/loyalty/dashboard/index'
+import { Route as DashboardLoyaltyEarningRulesIndexRouteImport } from './routes/dashboard/loyalty/earning-rules/index'
+import { Route as DashboardLoyaltyRewardsIndexRouteImport } from './routes/dashboard/loyalty/rewards/index'
+import { Route as DashboardLoyaltySettingsIndexRouteImport } from './routes/dashboard/loyalty/settings/index'
+import { Route as DashboardLoyaltyTemplatesIndexRouteImport } from './routes/dashboard/loyalty/templates/index'
+import { Route as DashboardLoyaltyTransactionsIndexRouteImport } from './routes/dashboard/loyalty/transactions/index'
+import { Route as DashboardQrCreatorShortUrlIdIndexRouteImport } from './routes/dashboard/qrCreator/$shortUrlId/index'
+import { Route as DashboardQuickAccessLinksShortUrlIdIndexRouteImport } from './routes/dashboard/quickAccessLinks/$shortUrlId/index'
+import { Route as DashboardSettingsAccountIndexRouteImport } from './routes/dashboard/settings/account/index'
+import { Route as DashboardSettingsBillingIndexRouteImport } from './routes/dashboard/settings/billing/index'
+import { Route as DashboardSettingsChannelsIndexRouteImport } from './routes/dashboard/settings/channels/index'
+import { Route as DashboardSettingsIntegrationsIndexRouteImport } from './routes/dashboard/settings/integrations/index'
+import { Route as DashboardSettingsSecurityIndexRouteImport } from './routes/dashboard/settings/security/index'
+import { Route as DashboardSettingsTeamIndexRouteImport } from './routes/dashboard/settings/team/index'
+import { Route as DashboardSettingsUsersIndexRouteImport } from './routes/dashboard/settings/users/index'
+import { Route as DashboardSurveysSurveyIdIndexRouteImport } from './routes/dashboard/surveys/$surveyId/index'
+import { Route as DashboardSurveysTemplatesIndexRouteImport } from './routes/dashboard/surveys/templates/index'
+import { Route as DashboardTestimonialCollectionIdIndexRouteImport } from './routes/dashboard/testimonial/$collectionId/index'
+import { Route as DashboardTicketsTicketIdIndexRouteImport } from './routes/dashboard/tickets/$ticketId/index'
+import { Route as DashboardWhatsappCatalogIndexRouteImport } from './routes/dashboard/whatsapp/catalog/index'
+import { Route as DashboardWhatsappConversationalComponentsIndexRouteImport } from './routes/dashboard/whatsapp/conversational-components/index'
+import { Route as DashboardWhatsappFlowbotsIndexRouteImport } from './routes/dashboard/whatsapp/flowbots/index'
+import { Route as DashboardWhatsappFlowsIndexRouteImport } from './routes/dashboard/whatsapp/flows/index'
+import { Route as DashboardWhatsappOrdersIndexRouteImport } from './routes/dashboard/whatsapp/orders/index'
+import { Route as DashboardWhatsappPaymentsIndexRouteImport } from './routes/dashboard/whatsapp/payments/index'
+import { Route as DashboardWhatsappTemplatesIndexRouteImport } from './routes/dashboard/whatsapp/templates/index'
 import { Route as authLoginCallbackAppleIndexRouteImport } from './routes/(auth)/login/callback/apple/index'
-import { Route as DashboardWhatsappFlowsV2DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v2/$dbFlowId/index'
-import { Route as DashboardWhatsappFlowsV1DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v1/$dbFlowId/index'
-import { Route as DashboardSettingsIntegrationsZohoCallbackIndexRouteImport } from './routes/dashboard/settings/integrations/zoho/callback/index'
-import { Route as publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport } from './routes/(public-facing)/public/wa/$surveyTeamMapId/redirect/index'
-import { Route as publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/review-us-on-google/index'
-import { Route as publicFacingPublicSurveySurveyIdEndIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/end/index'
+import { Route as authLoginCallbackGoogleIndexRouteImport } from './routes/(auth)/login/callback/google/index'
+import { Route as authLoginCallbackPausedIndexRouteImport } from './routes/(auth)/login/callback/paused/index'
+import { Route as marketingBlogAuthorSlugIndexRouteImport } from './routes/(marketing)/blog/author/$slug/index'
+import { Route as marketingBlogTagSlugIndexRouteImport } from './routes/(marketing)/blog/tag/$slug/index'
+import { Route as publicFacingPublicSurveySurveyIdIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/index'
+import { Route as publicFacingPublicSurveyCsIndexRouteImport } from './routes/(public-facing)/public/survey/cs/index'
+import { Route as publicFacingPublicTestimonialCollectionIdIndexRouteImport } from './routes/(public-facing)/public/testimonial/$collectionId/index'
+import { Route as publicFacingWsShortIdEndIndexRouteImport } from './routes/(public-facing)/ws/$shortId/end/index'
+import { Route as publicFacingWsShortIdResponseSubmittedIndexRouteImport } from './routes/(public-facing)/ws/$shortId/response-submitted/index'
+import { Route as DashboardAnalyticsTeamTeamidIndexRouteImport } from './routes/dashboard/analytics/team/$teamid/index'
+import { Route as DashboardContactsGroupsGroupIdIndexRouteImport } from './routes/dashboard/contacts/groups/$groupId/index'
+import { Route as DashboardLoyaltyTemplatesTemplateIdIndexRouteImport } from './routes/dashboard/loyalty/templates/$templateId/index'
+import { Route as DashboardSettingsChannelsChannelIndexRouteImport } from './routes/dashboard/settings/channels/$channel/index'
+import { Route as DashboardSettingsIntegrationsIdIndexRouteImport } from './routes/dashboard/settings/integrations/$id/index'
+import { Route as DashboardSettingsTeamTeamIdIndexRouteImport } from './routes/dashboard/settings/team/$teamId/index'
+import { Route as DashboardWhatsappCatalogCatalogIdIndexRouteImport } from './routes/dashboard/whatsapp/catalog/$catalogId/index'
+import { Route as DashboardWhatsappFlowbotsFlowbotIdIndexRouteImport } from './routes/dashboard/whatsapp/flowbots/$flowbotId/index'
+import { Route as DashboardWhatsappTemplatesTemplateIdIndexRouteImport } from './routes/dashboard/whatsapp/templates/$templateId/index'
 import { Route as publicFacingloyaltyLoyaltyOrgIdRegisterIndexRouteImport } from './routes/(public-facing)/(loyalty)/loyalty/$orgId/register/index'
+import { Route as publicFacingPublicSurveySurveyIdEndIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/end/index'
+import { Route as publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/review-us-on-google/index'
+import { Route as publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport } from './routes/(public-facing)/public/wa/$surveyTeamMapId/redirect/index'
+import { Route as DashboardSettingsIntegrationsZohoCallbackIndexRouteImport } from './routes/dashboard/settings/integrations/zoho/callback/index'
+import { Route as DashboardWhatsappFlowsV1DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v1/$dbFlowId/index'
+import { Route as DashboardWhatsappFlowsV2DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v2/$dbFlowId/index'
 
-const Sitemap_indexDotxmlRoute = Sitemap_indexDotxmlRouteImport.update({
-  id: '/sitemap_index.xml',
-  path: '/sitemap_index.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
-  id: '/robots.txt',
-  path: '/robots.txt',
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
@@ -178,24 +173,24 @@ const DashboardRouteRoute = DashboardRouteRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRouteRoute = AdminRouteRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AdminRouteRoute,
+const Sitemap_indexDotxmlRoute = Sitemap_indexDotxmlRouteImport.update({
+  id: '/sitemap_index.xml',
+  path: '/sitemap_index.xml',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const marketingIndexRoute = marketingIndexRouteImport.update({
   id: '/(marketing)/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const marketingBlogRouteRoute = marketingBlogRouteRouteImport.update({
+  id: '/(marketing)/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DotwellKnownApiCatalogRoute = DotwellKnownApiCatalogRouteImport.update({
@@ -203,184 +198,65 @@ const DotwellKnownApiCatalogRoute = DotwellKnownApiCatalogRouteImport.update({
   path: '/.well-known/api-catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardCommerceRouteRoute = DashboardCommerceRouteRouteImport.update({
   id: '/commerce',
   path: '/commerce',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const marketingBlogRouteRoute = marketingBlogRouteRouteImport.update({
-  id: '/(marketing)/blog',
-  path: '/blog',
+const authInviteIndexRoute = authInviteIndexRouteImport.update({
+  id: '/(auth)/invite/',
+  path: '/invite/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardWhatsappIndexRoute = DashboardWhatsappIndexRouteImport.update({
-  id: '/whatsapp/',
-  path: '/whatsapp/',
-  getParentRoute: () => DashboardRouteRoute,
+const authLoginIndexRoute = authLoginIndexRouteImport.update({
+  id: '/(auth)/login/',
+  path: '/login/',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardTicketsIndexRoute = DashboardTicketsIndexRouteImport.update({
-  id: '/tickets/',
-  path: '/tickets/',
-  getParentRoute: () => DashboardRouteRoute,
+const authLogoutIndexRoute = authLogoutIndexRouteImport.update({
+  id: '/(auth)/logout/',
+  path: '/logout/',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardTestimonialIndexRoute =
-  DashboardTestimonialIndexRouteImport.update({
-    id: '/testimonial/',
-    path: '/testimonial/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardSurveysIndexRoute = DashboardSurveysIndexRouteImport.update({
-  id: '/surveys/',
-  path: '/surveys/',
-  getParentRoute: () => DashboardRouteRoute,
+const authSignupIndexRoute = authSignupIndexRouteImport.update({
+  id: '/(auth)/signup/',
+  path: '/signup/',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
-  id: '/settings/',
-  path: '/settings/',
-  getParentRoute: () => DashboardRouteRoute,
+const marketingAboutUsIndexRoute = marketingAboutUsIndexRouteImport.update({
+  id: '/(marketing)/about-us/',
+  path: '/about-us/',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardQuickAccessLinksIndexRoute =
-  DashboardQuickAccessLinksIndexRouteImport.update({
-    id: '/quickAccessLinks/',
-    path: '/quickAccessLinks/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardQrCreatorIndexRoute = DashboardQrCreatorIndexRouteImport.update({
-  id: '/qrCreator/',
-  path: '/qrCreator/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardMetaAgentIndexRoute = DashboardMetaAgentIndexRouteImport.update({
-  id: '/meta-agent/',
-  path: '/meta-agent/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardInstagramIndexRoute = DashboardInstagramIndexRouteImport.update({
-  id: '/instagram/',
-  path: '/instagram/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardInboxIndexRoute = DashboardInboxIndexRouteImport.update({
-  id: '/inbox/',
-  path: '/inbox/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardContactsIndexRoute = DashboardContactsIndexRouteImport.update({
-  id: '/contacts/',
-  path: '/contacts/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardCommerceIndexRoute = DashboardCommerceIndexRouteImport.update({
+const marketingBlogIndexRoute = marketingBlogIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => DashboardCommerceRouteRoute,
+  getParentRoute: () => marketingBlogRouteRoute,
 } as any)
-const DashboardCampaignIndexRoute = DashboardCampaignIndexRouteImport.update({
-  id: '/campaign/',
-  path: '/campaign/',
-  getParentRoute: () => DashboardRouteRoute,
+const marketingBlogRssDotxmlRoute = marketingBlogRssDotxmlRouteImport.update({
+  id: '/rss.xml',
+  path: '/rss.xml',
+  getParentRoute: () => marketingBlogRouteRoute,
 } as any)
-const DashboardAutomationIndexRoute =
-  DashboardAutomationIndexRouteImport.update({
-    id: '/automation/',
-    path: '/automation/',
-    getParentRoute: () => DashboardRouteRoute,
+const marketingBlogSitemapDotxmlRoute =
+  marketingBlogSitemapDotxmlRouteImport.update({
+    id: '/sitemap.xml',
+    path: '/sitemap.xml',
+    getParentRoute: () => marketingBlogRouteRoute,
   } as any)
-const DashboardAnalyticsIndexRoute = DashboardAnalyticsIndexRouteImport.update({
-  id: '/analytics/',
-  path: '/analytics/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const AuthShopifyIndexRoute = AuthShopifyIndexRouteImport.update({
-  id: '/auth/shopify/',
-  path: '/auth/shopify/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthOauth2callbackIndexRoute = AuthOauth2callbackIndexRouteImport.update({
-  id: '/auth/oauth2callback/',
-  path: '/auth/oauth2callback/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthFbIndexRoute = AuthFbIndexRouteImport.update({
-  id: '/auth/fb/',
-  path: '/auth/fb/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminUserstatsIndexRoute = AdminUserstatsIndexRouteImport.update({
-  id: '/userstats/',
-  path: '/userstats/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminUpdateCenterIndexRoute = AdminUpdateCenterIndexRouteImport.update({
-  id: '/updateCenter/',
-  path: '/updateCenter/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminSubscriptionsIndexRoute = AdminSubscriptionsIndexRouteImport.update({
-  id: '/subscriptions/',
-  path: '/subscriptions/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminStripeIndexRoute = AdminStripeIndexRouteImport.update({
-  id: '/stripe/',
-  path: '/stripe/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminShopifyIndexRoute = AdminShopifyIndexRouteImport.update({
-  id: '/shopify/',
-  path: '/shopify/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminShareQrIndexRoute = AdminShareQrIndexRouteImport.update({
-  id: '/share-qr/',
-  path: '/share-qr/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminReferralsIndexRoute = AdminReferralsIndexRouteImport.update({
-  id: '/referrals/',
-  path: '/referrals/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminRazorpayIndexRoute = AdminRazorpayIndexRouteImport.update({
-  id: '/razorpay/',
-  path: '/razorpay/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminRateupIndexRoute = AdminRateupIndexRouteImport.update({
-  id: '/rateup/',
-  path: '/rateup/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminOrgsIndexRoute = AdminOrgsIndexRouteImport.update({
-  id: '/orgs/',
-  path: '/orgs/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
-  id: '/orders/',
-  path: '/orders/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminGenerateIndexRoute = AdminGenerateIndexRouteImport.update({
-  id: '/generate/',
-  path: '/generate/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const marketingTermsOfServiceIndexRoute =
-  marketingTermsOfServiceIndexRouteImport.update({
-    id: '/(marketing)/terms-of-service/',
-    path: '/terms-of-service/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingPrivacyPolicyIndexRoute =
-  marketingPrivacyPolicyIndexRouteImport.update({
-    id: '/(marketing)/privacy-policy/',
-    path: '/privacy-policy/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingPricingIndexRoute = marketingPricingIndexRouteImport.update({
-  id: '/(marketing)/pricing/',
-  path: '/pricing/',
+const marketingContactUsIndexRoute = marketingContactUsIndexRouteImport.update({
+  id: '/(marketing)/contact-us/',
+  path: '/contact-us/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const marketingPartnerPageIndexRoute =
@@ -389,425 +265,226 @@ const marketingPartnerPageIndexRoute =
     path: '/partner-page/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const marketingContactUsIndexRoute = marketingContactUsIndexRouteImport.update({
-  id: '/(marketing)/contact-us/',
-  path: '/contact-us/',
+const marketingPricingIndexRoute = marketingPricingIndexRouteImport.update({
+  id: '/(marketing)/pricing/',
+  path: '/pricing/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const marketingBlogIndexRoute = marketingBlogIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => marketingBlogRouteRoute,
-} as any)
-const marketingAboutUsIndexRoute = marketingAboutUsIndexRouteImport.update({
-  id: '/(marketing)/about-us/',
-  path: '/about-us/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authSignupIndexRoute = authSignupIndexRouteImport.update({
-  id: '/(auth)/signup/',
-  path: '/signup/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authLogoutIndexRoute = authLogoutIndexRouteImport.update({
-  id: '/(auth)/logout/',
-  path: '/logout/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authLoginIndexRoute = authLoginIndexRouteImport.update({
-  id: '/(auth)/login/',
-  path: '/login/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authInviteIndexRoute = authInviteIndexRouteImport.update({
-  id: '/(auth)/invite/',
-  path: '/invite/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const marketingBlogSitemapDotxmlRoute =
-  marketingBlogSitemapDotxmlRouteImport.update({
-    id: '/sitemap.xml',
-    path: '/sitemap.xml',
-    getParentRoute: () => marketingBlogRouteRoute,
-  } as any)
-const marketingBlogRssDotxmlRoute = marketingBlogRssDotxmlRouteImport.update({
-  id: '/rss.xml',
-  path: '/rss.xml',
-  getParentRoute: () => marketingBlogRouteRoute,
-} as any)
-const DashboardWhatsappTemplatesIndexRoute =
-  DashboardWhatsappTemplatesIndexRouteImport.update({
-    id: '/whatsapp/templates/',
-    path: '/whatsapp/templates/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardWhatsappPaymentsIndexRoute =
-  DashboardWhatsappPaymentsIndexRouteImport.update({
-    id: '/whatsapp/payments/',
-    path: '/whatsapp/payments/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardWhatsappOrdersIndexRoute =
-  DashboardWhatsappOrdersIndexRouteImport.update({
-    id: '/whatsapp/orders/',
-    path: '/whatsapp/orders/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardWhatsappFlowsIndexRoute =
-  DashboardWhatsappFlowsIndexRouteImport.update({
-    id: '/whatsapp/flows/',
-    path: '/whatsapp/flows/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardWhatsappFlowbotsIndexRoute =
-  DashboardWhatsappFlowbotsIndexRouteImport.update({
-    id: '/whatsapp/flowbots/',
-    path: '/whatsapp/flowbots/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardWhatsappConversationalComponentsIndexRoute =
-  DashboardWhatsappConversationalComponentsIndexRouteImport.update({
-    id: '/whatsapp/conversational-components/',
-    path: '/whatsapp/conversational-components/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardWhatsappCatalogIndexRoute =
-  DashboardWhatsappCatalogIndexRouteImport.update({
-    id: '/whatsapp/catalog/',
-    path: '/whatsapp/catalog/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardTicketsTicketIdIndexRoute =
-  DashboardTicketsTicketIdIndexRouteImport.update({
-    id: '/tickets/$ticketId/',
-    path: '/tickets/$ticketId/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardTestimonialCollectionIdIndexRoute =
-  DashboardTestimonialCollectionIdIndexRouteImport.update({
-    id: '/testimonial/$collectionId/',
-    path: '/testimonial/$collectionId/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardSurveysTemplatesIndexRoute =
-  DashboardSurveysTemplatesIndexRouteImport.update({
-    id: '/surveys/templates/',
-    path: '/surveys/templates/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardSurveysSurveyIdIndexRoute =
-  DashboardSurveysSurveyIdIndexRouteImport.update({
-    id: '/surveys/$surveyId/',
-    path: '/surveys/$surveyId/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardSettingsUsersIndexRoute =
-  DashboardSettingsUsersIndexRouteImport.update({
-    id: '/settings/users/',
-    path: '/settings/users/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardSettingsTeamIndexRoute =
-  DashboardSettingsTeamIndexRouteImport.update({
-    id: '/settings/team/',
-    path: '/settings/team/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardSettingsSecurityIndexRoute =
-  DashboardSettingsSecurityIndexRouteImport.update({
-    id: '/settings/security/',
-    path: '/settings/security/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardSettingsIntegrationsIndexRoute =
-  DashboardSettingsIntegrationsIndexRouteImport.update({
-    id: '/settings/integrations/',
-    path: '/settings/integrations/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardSettingsChannelsIndexRoute =
-  DashboardSettingsChannelsIndexRouteImport.update({
-    id: '/settings/channels/',
-    path: '/settings/channels/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardSettingsBillingIndexRoute =
-  DashboardSettingsBillingIndexRouteImport.update({
-    id: '/settings/billing/',
-    path: '/settings/billing/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardSettingsAccountIndexRoute =
-  DashboardSettingsAccountIndexRouteImport.update({
-    id: '/settings/account/',
-    path: '/settings/account/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardQuickAccessLinksShortUrlIdIndexRoute =
-  DashboardQuickAccessLinksShortUrlIdIndexRouteImport.update({
-    id: '/quickAccessLinks/$shortUrlId/',
-    path: '/quickAccessLinks/$shortUrlId/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardQrCreatorShortUrlIdIndexRoute =
-  DashboardQrCreatorShortUrlIdIndexRouteImport.update({
-    id: '/qrCreator/$shortUrlId/',
-    path: '/qrCreator/$shortUrlId/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardLoyaltyTransactionsIndexRoute =
-  DashboardLoyaltyTransactionsIndexRouteImport.update({
-    id: '/loyalty/transactions/',
-    path: '/loyalty/transactions/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardLoyaltyTemplatesIndexRoute =
-  DashboardLoyaltyTemplatesIndexRouteImport.update({
-    id: '/loyalty/templates/',
-    path: '/loyalty/templates/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardLoyaltySettingsIndexRoute =
-  DashboardLoyaltySettingsIndexRouteImport.update({
-    id: '/loyalty/settings/',
-    path: '/loyalty/settings/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardLoyaltyRewardsIndexRoute =
-  DashboardLoyaltyRewardsIndexRouteImport.update({
-    id: '/loyalty/rewards/',
-    path: '/loyalty/rewards/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardLoyaltyEarningRulesIndexRoute =
-  DashboardLoyaltyEarningRulesIndexRouteImport.update({
-    id: '/loyalty/earning-rules/',
-    path: '/loyalty/earning-rules/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardLoyaltyDashboardIndexRoute =
-  DashboardLoyaltyDashboardIndexRouteImport.update({
-    id: '/loyalty/dashboard/',
-    path: '/loyalty/dashboard/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardLoyaltyCustomersIndexRoute =
-  DashboardLoyaltyCustomersIndexRouteImport.update({
-    id: '/loyalty/customers/',
-    path: '/loyalty/customers/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardLoyaltyCommandIndexRoute =
-  DashboardLoyaltyCommandIndexRouteImport.update({
-    id: '/loyalty/command/',
-    path: '/loyalty/command/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardLoyaltyCashierIndexRoute =
-  DashboardLoyaltyCashierIndexRouteImport.update({
-    id: '/loyalty/cashier/',
-    path: '/loyalty/cashier/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardLoyaltyApprovalsIndexRoute =
-  DashboardLoyaltyApprovalsIndexRouteImport.update({
-    id: '/loyalty/approvals/',
-    path: '/loyalty/approvals/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardContactsLifecycleIndexRoute =
-  DashboardContactsLifecycleIndexRouteImport.update({
-    id: '/contacts/lifecycle/',
-    path: '/contacts/lifecycle/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardContactsLabelsIndexRoute =
-  DashboardContactsLabelsIndexRouteImport.update({
-    id: '/contacts/labels/',
-    path: '/contacts/labels/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardContactsGroupsIndexRoute =
-  DashboardContactsGroupsIndexRouteImport.update({
-    id: '/contacts/groups/',
-    path: '/contacts/groups/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardContactsCustomFieldsIndexRoute =
-  DashboardContactsCustomFieldsIndexRouteImport.update({
-    id: '/contacts/custom-fields/',
-    path: '/contacts/custom-fields/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardCommerceSettingsIndexRoute =
-  DashboardCommerceSettingsIndexRouteImport.update({
-    id: '/settings/',
-    path: '/settings/',
-    getParentRoute: () => DashboardCommerceRouteRoute,
-  } as any)
-const DashboardCommercePaymentsIndexRoute =
-  DashboardCommercePaymentsIndexRouteImport.update({
-    id: '/payments/',
-    path: '/payments/',
-    getParentRoute: () => DashboardCommerceRouteRoute,
-  } as any)
-const DashboardCommerceOverviewIndexRoute =
-  DashboardCommerceOverviewIndexRouteImport.update({
-    id: '/overview/',
-    path: '/overview/',
-    getParentRoute: () => DashboardCommerceRouteRoute,
-  } as any)
-const DashboardCommerceOrdersIndexRoute =
-  DashboardCommerceOrdersIndexRouteImport.update({
-    id: '/orders/',
-    path: '/orders/',
-    getParentRoute: () => DashboardCommerceRouteRoute,
-  } as any)
-const DashboardCommerceCouponsIndexRoute =
-  DashboardCommerceCouponsIndexRouteImport.update({
-    id: '/coupons/',
-    path: '/coupons/',
-    getParentRoute: () => DashboardCommerceRouteRoute,
-  } as any)
-const DashboardCommerceCatalogsIndexRoute =
-  DashboardCommerceCatalogsIndexRouteImport.update({
-    id: '/catalogs/',
-    path: '/catalogs/',
-    getParentRoute: () => DashboardCommerceRouteRoute,
-  } as any)
-const DashboardCampaignCampaignIdIndexRoute =
-  DashboardCampaignCampaignIdIndexRouteImport.update({
-    id: '/campaign/$campaignId/',
-    path: '/campaign/$campaignId/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardAutomationAutomationIdIndexRoute =
-  DashboardAutomationAutomationIdIndexRouteImport.update({
-    id: '/automation/$automationId/',
-    path: '/automation/$automationId/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardAnalyticsAuditLogIndexRoute =
-  DashboardAnalyticsAuditLogIndexRouteImport.update({
-    id: '/analytics/audit-log/',
-    path: '/analytics/audit-log/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const DashboardAnalyticsStaffidIndexRoute =
-  DashboardAnalyticsStaffidIndexRouteImport.update({
-    id: '/analytics/$staffid/',
-    path: '/analytics/$staffid/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const AuthShopifyRetryIndexRoute = AuthShopifyRetryIndexRouteImport.update({
-  id: '/auth/shopify/retry/',
-  path: '/auth/shopify/retry/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthShopifyOauth2callbackIndexRoute =
-  AuthShopifyOauth2callbackIndexRouteImport.update({
-    id: '/auth/shopify/oauth2callback/',
-    path: '/auth/shopify/oauth2callback/',
+const marketingPrivacyPolicyIndexRoute =
+  marketingPrivacyPolicyIndexRouteImport.update({
+    id: '/(marketing)/privacy-policy/',
+    path: '/privacy-policy/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthShopifyLogoutIndexRoute = AuthShopifyLogoutIndexRouteImport.update({
-  id: '/auth/shopify/logout/',
-  path: '/auth/shopify/logout/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminOrgsOrgIdIndexRoute = AdminOrgsOrgIdIndexRouteImport.update({
-  id: '/orgs/$orgId/',
-  path: '/orgs/$orgId/',
+const marketingTermsOfServiceIndexRoute =
+  marketingTermsOfServiceIndexRouteImport.update({
+    id: '/(marketing)/terms-of-service/',
+    path: '/terms-of-service/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AdminGenerateIndexRoute = AdminGenerateIndexRouteImport.update({
+  id: '/generate/',
+  path: '/generate/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const publicFacingWsShortIdIndexRoute =
-  publicFacingWsShortIdIndexRouteImport.update({
-    id: '/(public-facing)/ws/$shortId/',
-    path: '/ws/$shortId/',
+const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
+  id: '/orders/',
+  path: '/orders/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminOrgsIndexRoute = AdminOrgsIndexRouteImport.update({
+  id: '/orgs/',
+  path: '/orgs/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminRateupIndexRoute = AdminRateupIndexRouteImport.update({
+  id: '/rateup/',
+  path: '/rateup/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminRazorpayIndexRoute = AdminRazorpayIndexRouteImport.update({
+  id: '/razorpay/',
+  path: '/razorpay/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminReferralsIndexRoute = AdminReferralsIndexRouteImport.update({
+  id: '/referrals/',
+  path: '/referrals/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminShareQrIndexRoute = AdminShareQrIndexRouteImport.update({
+  id: '/share-qr/',
+  path: '/share-qr/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminShopifyIndexRoute = AdminShopifyIndexRouteImport.update({
+  id: '/shopify/',
+  path: '/shopify/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminStripeIndexRoute = AdminStripeIndexRouteImport.update({
+  id: '/stripe/',
+  path: '/stripe/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSubscriptionsIndexRoute = AdminSubscriptionsIndexRouteImport.update({
+  id: '/subscriptions/',
+  path: '/subscriptions/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUpdateCenterIndexRoute = AdminUpdateCenterIndexRouteImport.update({
+  id: '/updateCenter/',
+  path: '/updateCenter/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUserstatsIndexRoute = AdminUserstatsIndexRouteImport.update({
+  id: '/userstats/',
+  path: '/userstats/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AuthFbIndexRoute = AuthFbIndexRouteImport.update({
+  id: '/auth/fb/',
+  path: '/auth/fb/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthOauth2callbackIndexRoute = AuthOauth2callbackIndexRouteImport.update({
+  id: '/auth/oauth2callback/',
+  path: '/auth/oauth2callback/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthShopifyIndexRoute = AuthShopifyIndexRouteImport.update({
+  id: '/auth/shopify/',
+  path: '/auth/shopify/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardAnalyticsIndexRoute = DashboardAnalyticsIndexRouteImport.update({
+  id: '/analytics/',
+  path: '/analytics/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardAutomationIndexRoute =
+  DashboardAutomationIndexRouteImport.update({
+    id: '/automation/',
+    path: '/automation/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardCampaignIndexRoute = DashboardCampaignIndexRouteImport.update({
+  id: '/campaign/',
+  path: '/campaign/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardCommerceIndexRoute = DashboardCommerceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardCommerceRouteRoute,
+} as any)
+const DashboardContactsIndexRoute = DashboardContactsIndexRouteImport.update({
+  id: '/contacts/',
+  path: '/contacts/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardInboxIndexRoute = DashboardInboxIndexRouteImport.update({
+  id: '/inbox/',
+  path: '/inbox/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardInstagramIndexRoute = DashboardInstagramIndexRouteImport.update({
+  id: '/instagram/',
+  path: '/instagram/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardMetaAgentIndexRoute = DashboardMetaAgentIndexRouteImport.update({
+  id: '/meta-agent/',
+  path: '/meta-agent/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardQrCreatorIndexRoute = DashboardQrCreatorIndexRouteImport.update({
+  id: '/qrCreator/',
+  path: '/qrCreator/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardQuickAccessLinksIndexRoute =
+  DashboardQuickAccessLinksIndexRouteImport.update({
+    id: '/quickAccessLinks/',
+    path: '/quickAccessLinks/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardSurveysIndexRoute = DashboardSurveysIndexRouteImport.update({
+  id: '/surveys/',
+  path: '/surveys/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardTestimonialIndexRoute =
+  DashboardTestimonialIndexRouteImport.update({
+    id: '/testimonial/',
+    path: '/testimonial/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardTicketsIndexRoute = DashboardTicketsIndexRouteImport.update({
+  id: '/tickets/',
+  path: '/tickets/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardWhatsappIndexRoute = DashboardWhatsappIndexRouteImport.update({
+  id: '/whatsapp/',
+  path: '/whatsapp/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const authLoginCompleteLoginIndexRoute =
+  authLoginCompleteLoginIndexRouteImport.update({
+    id: '/(auth)/login/complete-login/',
+    path: '/login/complete-login/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const publicFacingWasShortIdIndexRoute =
-  publicFacingWasShortIdIndexRouteImport.update({
-    id: '/(public-facing)/was/$shortId/',
-    path: '/was/$shortId/',
+const authLoginResetPasswordIndexRoute =
+  authLoginResetPasswordIndexRouteImport.update({
+    id: '/(auth)/login/reset-password/',
+    path: '/login/reset-password/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const publicFacingQrShortIdIndexRoute =
-  publicFacingQrShortIdIndexRouteImport.update({
-    id: '/(public-facing)/qr/$shortId/',
-    path: '/qr/$shortId/',
+const authLoginSetupIndexRoute = authLoginSetupIndexRouteImport.update({
+  id: '/(auth)/login/setup/',
+  path: '/login/setup/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authLoginVerifyEmailIndexRoute =
+  authLoginVerifyEmailIndexRouteImport.update({
+    id: '/(auth)/login/verify-email/',
+    path: '/login/verify-email/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const publicFacingLtShortIdIndexRoute =
-  publicFacingLtShortIdIndexRouteImport.update({
-    id: '/(public-facing)/lt/$shortId/',
-    path: '/lt/$shortId/',
+const authLoginVerifyPhoneNumberIndexRoute =
+  authLoginVerifyPhoneNumberIndexRouteImport.update({
+    id: '/(auth)/login/verify-phone-number/',
+    path: '/login/verify-phone-number/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const publicFacingloyaltyCashierIndexRoute =
-  publicFacingloyaltyCashierIndexRouteImport.update({
-    id: '/(public-facing)/(loyalty)/cashier/',
-    path: '/cashier/',
-    getParentRoute: () => rootRouteImport,
+const marketingBlogSlugIndexRoute = marketingBlogSlugIndexRouteImport.update({
+  id: '/$slug/',
+  path: '/$slug/',
+  getParentRoute: () => marketingBlogRouteRoute,
+} as any)
+const marketingBlogAuthorSitemapDotxmlRoute =
+  marketingBlogAuthorSitemapDotxmlRouteImport.update({
+    id: '/author/sitemap.xml',
+    path: '/author/sitemap.xml',
+    getParentRoute: () => marketingBlogRouteRoute,
   } as any)
-const marketingProductsWhatsappSurveyIndexRoute =
-  marketingProductsWhatsappSurveyIndexRouteImport.update({
-    id: '/(marketing)/products/whatsapp-survey/',
-    path: '/products/whatsapp-survey/',
-    getParentRoute: () => rootRouteImport,
+const marketingBlogTagSitemapDotxmlRoute =
+  marketingBlogTagSitemapDotxmlRouteImport.update({
+    id: '/tag/sitemap.xml',
+    path: '/tag/sitemap.xml',
+    getParentRoute: () => marketingBlogRouteRoute,
   } as any)
-const marketingProductsWhatsappLoyaltyIndexRoute =
-  marketingProductsWhatsappLoyaltyIndexRouteImport.update({
-    id: '/(marketing)/products/whatsapp-loyalty/',
-    path: '/products/whatsapp-loyalty/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingProductsWhatsappFeedbackIndexRoute =
-  marketingProductsWhatsappFeedbackIndexRouteImport.update({
-    id: '/(marketing)/products/whatsapp-feedback/',
-    path: '/products/whatsapp-feedback/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingProductsTicketingIndexRoute =
-  marketingProductsTicketingIndexRouteImport.update({
-    id: '/(marketing)/products/ticketing/',
-    path: '/products/ticketing/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingProductsTestimonialGatewayIndexRoute =
-  marketingProductsTestimonialGatewayIndexRouteImport.update({
-    id: '/(marketing)/products/testimonial-gateway/',
-    path: '/products/testimonial-gateway/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingProductsQrIndexRoute =
-  marketingProductsQrIndexRouteImport.update({
-    id: '/(marketing)/products/qr/',
-    path: '/products/qr/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingProductsQrStudioIndexRoute =
-  marketingProductsQrStudioIndexRouteImport.update({
-    id: '/(marketing)/products/qr-studio/',
-    path: '/products/qr-studio/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingProductsOmnichannelInboxIndexRoute =
-  marketingProductsOmnichannelInboxIndexRouteImport.update({
-    id: '/(marketing)/products/omnichannel-inbox/',
-    path: '/products/omnichannel-inbox/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingProductsInboxIndexRoute =
-  marketingProductsInboxIndexRouteImport.update({
-    id: '/(marketing)/products/inbox/',
-    path: '/products/inbox/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingProductsAiReviewIndexRoute =
-  marketingProductsAiReviewIndexRouteImport.update({
-    id: '/(marketing)/products/ai-review/',
-    path: '/products/ai-review/',
+const marketingPricingShopifyIndexRoute =
+  marketingPricingShopifyIndexRouteImport.update({
+    id: '/(marketing)/pricing/shopify/',
+    path: '/pricing/shopify/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const marketingProductsAiAutomationIndexRoute =
@@ -816,45 +493,200 @@ const marketingProductsAiAutomationIndexRoute =
     path: '/products/ai-automation/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const marketingPricingShopifyIndexRoute =
-  marketingPricingShopifyIndexRouteImport.update({
-    id: '/(marketing)/pricing/shopify/',
-    path: '/pricing/shopify/',
+const marketingProductsAiReviewIndexRoute =
+  marketingProductsAiReviewIndexRouteImport.update({
+    id: '/(marketing)/products/ai-review/',
+    path: '/products/ai-review/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const marketingBlogSlugIndexRoute = marketingBlogSlugIndexRouteImport.update({
-  id: '/$slug/',
-  path: '/$slug/',
-  getParentRoute: () => marketingBlogRouteRoute,
+const marketingProductsInboxIndexRoute =
+  marketingProductsInboxIndexRouteImport.update({
+    id: '/(marketing)/products/inbox/',
+    path: '/products/inbox/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingProductsOmnichannelInboxIndexRoute =
+  marketingProductsOmnichannelInboxIndexRouteImport.update({
+    id: '/(marketing)/products/omnichannel-inbox/',
+    path: '/products/omnichannel-inbox/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingProductsQrStudioIndexRoute =
+  marketingProductsQrStudioIndexRouteImport.update({
+    id: '/(marketing)/products/qr-studio/',
+    path: '/products/qr-studio/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingProductsQrIndexRoute =
+  marketingProductsQrIndexRouteImport.update({
+    id: '/(marketing)/products/qr/',
+    path: '/products/qr/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingProductsTestimonialGatewayIndexRoute =
+  marketingProductsTestimonialGatewayIndexRouteImport.update({
+    id: '/(marketing)/products/testimonial-gateway/',
+    path: '/products/testimonial-gateway/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingProductsTicketingIndexRoute =
+  marketingProductsTicketingIndexRouteImport.update({
+    id: '/(marketing)/products/ticketing/',
+    path: '/products/ticketing/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingProductsWhatsappFeedbackIndexRoute =
+  marketingProductsWhatsappFeedbackIndexRouteImport.update({
+    id: '/(marketing)/products/whatsapp-feedback/',
+    path: '/products/whatsapp-feedback/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingProductsWhatsappLoyaltyIndexRoute =
+  marketingProductsWhatsappLoyaltyIndexRouteImport.update({
+    id: '/(marketing)/products/whatsapp-loyalty/',
+    path: '/products/whatsapp-loyalty/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingProductsWhatsappSurveyIndexRoute =
+  marketingProductsWhatsappSurveyIndexRouteImport.update({
+    id: '/(marketing)/products/whatsapp-survey/',
+    path: '/products/whatsapp-survey/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicFacingloyaltyCashierIndexRoute =
+  publicFacingloyaltyCashierIndexRouteImport.update({
+    id: '/(public-facing)/(loyalty)/cashier/',
+    path: '/cashier/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicFacingLtShortIdIndexRoute =
+  publicFacingLtShortIdIndexRouteImport.update({
+    id: '/(public-facing)/lt/$shortId/',
+    path: '/lt/$shortId/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicFacingQrShortIdIndexRoute =
+  publicFacingQrShortIdIndexRouteImport.update({
+    id: '/(public-facing)/qr/$shortId/',
+    path: '/qr/$shortId/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicFacingWasShortIdIndexRoute =
+  publicFacingWasShortIdIndexRouteImport.update({
+    id: '/(public-facing)/was/$shortId/',
+    path: '/was/$shortId/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicFacingWsShortIdIndexRoute =
+  publicFacingWsShortIdIndexRouteImport.update({
+    id: '/(public-facing)/ws/$shortId/',
+    path: '/ws/$shortId/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AdminOrgsOrgIdIndexRoute = AdminOrgsOrgIdIndexRouteImport.update({
+  id: '/orgs/$orgId/',
+  path: '/orgs/$orgId/',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
-const authLoginVerifyPhoneNumberIndexRoute =
-  authLoginVerifyPhoneNumberIndexRouteImport.update({
-    id: '/(auth)/login/verify-phone-number/',
-    path: '/login/verify-phone-number/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const authLoginVerifyEmailIndexRoute =
-  authLoginVerifyEmailIndexRouteImport.update({
-    id: '/(auth)/login/verify-email/',
-    path: '/login/verify-email/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const authLoginSetupIndexRoute = authLoginSetupIndexRouteImport.update({
-  id: '/(auth)/login/setup/',
-  path: '/login/setup/',
+const AuthShopifyLogoutIndexRoute = AuthShopifyLogoutIndexRouteImport.update({
+  id: '/auth/shopify/logout/',
+  path: '/auth/shopify/logout/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const authLoginResetPasswordIndexRoute =
-  authLoginResetPasswordIndexRouteImport.update({
-    id: '/(auth)/login/reset-password/',
-    path: '/login/reset-password/',
+const AuthShopifyOauth2callbackIndexRoute =
+  AuthShopifyOauth2callbackIndexRouteImport.update({
+    id: '/auth/shopify/oauth2callback/',
+    path: '/auth/shopify/oauth2callback/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const authLoginCompleteLoginIndexRoute =
-  authLoginCompleteLoginIndexRouteImport.update({
-    id: '/(auth)/login/complete-login/',
-    path: '/login/complete-login/',
-    getParentRoute: () => rootRouteImport,
+const AuthShopifyRetryIndexRoute = AuthShopifyRetryIndexRouteImport.update({
+  id: '/auth/shopify/retry/',
+  path: '/auth/shopify/retry/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardAnalyticsStaffidIndexRoute =
+  DashboardAnalyticsStaffidIndexRouteImport.update({
+    id: '/analytics/$staffid/',
+    path: '/analytics/$staffid/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardAnalyticsAuditLogIndexRoute =
+  DashboardAnalyticsAuditLogIndexRouteImport.update({
+    id: '/analytics/audit-log/',
+    path: '/analytics/audit-log/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardAutomationAutomationIdIndexRoute =
+  DashboardAutomationAutomationIdIndexRouteImport.update({
+    id: '/automation/$automationId/',
+    path: '/automation/$automationId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardCampaignCampaignIdIndexRoute =
+  DashboardCampaignCampaignIdIndexRouteImport.update({
+    id: '/campaign/$campaignId/',
+    path: '/campaign/$campaignId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardCommerceCatalogsIndexRoute =
+  DashboardCommerceCatalogsIndexRouteImport.update({
+    id: '/catalogs/',
+    path: '/catalogs/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceCouponsIndexRoute =
+  DashboardCommerceCouponsIndexRouteImport.update({
+    id: '/coupons/',
+    path: '/coupons/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceOrdersIndexRoute =
+  DashboardCommerceOrdersIndexRouteImport.update({
+    id: '/orders/',
+    path: '/orders/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceOverviewIndexRoute =
+  DashboardCommerceOverviewIndexRouteImport.update({
+    id: '/overview/',
+    path: '/overview/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommercePaymentsIndexRoute =
+  DashboardCommercePaymentsIndexRouteImport.update({
+    id: '/payments/',
+    path: '/payments/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardCommerceSettingsIndexRoute =
+  DashboardCommerceSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => DashboardCommerceRouteRoute,
+  } as any)
+const DashboardContactsCustomFieldsIndexRoute =
+  DashboardContactsCustomFieldsIndexRouteImport.update({
+    id: '/contacts/custom-fields/',
+    path: '/contacts/custom-fields/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardContactsGroupsIndexRoute =
+  DashboardContactsGroupsIndexRouteImport.update({
+    id: '/contacts/groups/',
+    path: '/contacts/groups/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardContactsLabelsIndexRoute =
+  DashboardContactsLabelsIndexRouteImport.update({
+    id: '/contacts/labels/',
+    path: '/contacts/labels/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardContactsLifecycleIndexRoute =
+  DashboardContactsLifecycleIndexRouteImport.update({
+    id: '/contacts/lifecycle/',
+    path: '/contacts/lifecycle/',
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardInstagramFlowbotsFlowbotIdRoute =
   DashboardInstagramFlowbotsFlowbotIdRouteImport.update({
@@ -862,118 +694,190 @@ const DashboardInstagramFlowbotsFlowbotIdRoute =
     path: '/instagram/flowbots/$flowbotId',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const marketingBlogTagSitemapDotxmlRoute =
-  marketingBlogTagSitemapDotxmlRouteImport.update({
-    id: '/tag/sitemap.xml',
-    path: '/tag/sitemap.xml',
-    getParentRoute: () => marketingBlogRouteRoute,
-  } as any)
-const marketingBlogAuthorSitemapDotxmlRoute =
-  marketingBlogAuthorSitemapDotxmlRouteImport.update({
-    id: '/author/sitemap.xml',
-    path: '/author/sitemap.xml',
-    getParentRoute: () => marketingBlogRouteRoute,
-  } as any)
-const DashboardWhatsappTemplatesTemplateIdIndexRoute =
-  DashboardWhatsappTemplatesTemplateIdIndexRouteImport.update({
-    id: '/whatsapp/templates/$templateId/',
-    path: '/whatsapp/templates/$templateId/',
+const DashboardLoyaltyApprovalsIndexRoute =
+  DashboardLoyaltyApprovalsIndexRouteImport.update({
+    id: '/loyalty/approvals/',
+    path: '/loyalty/approvals/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardWhatsappFlowbotsFlowbotIdIndexRoute =
-  DashboardWhatsappFlowbotsFlowbotIdIndexRouteImport.update({
-    id: '/whatsapp/flowbots/$flowbotId/',
-    path: '/whatsapp/flowbots/$flowbotId/',
+const DashboardLoyaltyCashierIndexRoute =
+  DashboardLoyaltyCashierIndexRouteImport.update({
+    id: '/loyalty/cashier/',
+    path: '/loyalty/cashier/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardWhatsappCatalogCatalogIdIndexRoute =
-  DashboardWhatsappCatalogCatalogIdIndexRouteImport.update({
-    id: '/whatsapp/catalog/$catalogId/',
-    path: '/whatsapp/catalog/$catalogId/',
+const DashboardLoyaltyCommandIndexRoute =
+  DashboardLoyaltyCommandIndexRouteImport.update({
+    id: '/loyalty/command/',
+    path: '/loyalty/command/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardSettingsTeamTeamIdIndexRoute =
-  DashboardSettingsTeamTeamIdIndexRouteImport.update({
-    id: '/settings/team/$teamId/',
-    path: '/settings/team/$teamId/',
+const DashboardLoyaltyCustomersIndexRoute =
+  DashboardLoyaltyCustomersIndexRouteImport.update({
+    id: '/loyalty/customers/',
+    path: '/loyalty/customers/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardSettingsIntegrationsIdIndexRoute =
-  DashboardSettingsIntegrationsIdIndexRouteImport.update({
-    id: '/settings/integrations/$id/',
-    path: '/settings/integrations/$id/',
+const DashboardLoyaltyDashboardIndexRoute =
+  DashboardLoyaltyDashboardIndexRouteImport.update({
+    id: '/loyalty/dashboard/',
+    path: '/loyalty/dashboard/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardSettingsChannelsChannelIndexRoute =
-  DashboardSettingsChannelsChannelIndexRouteImport.update({
-    id: '/settings/channels/$channel/',
-    path: '/settings/channels/$channel/',
+const DashboardLoyaltyEarningRulesIndexRoute =
+  DashboardLoyaltyEarningRulesIndexRouteImport.update({
+    id: '/loyalty/earning-rules/',
+    path: '/loyalty/earning-rules/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardLoyaltyTemplatesTemplateIdIndexRoute =
-  DashboardLoyaltyTemplatesTemplateIdIndexRouteImport.update({
-    id: '/loyalty/templates/$templateId/',
-    path: '/loyalty/templates/$templateId/',
+const DashboardLoyaltyRewardsIndexRoute =
+  DashboardLoyaltyRewardsIndexRouteImport.update({
+    id: '/loyalty/rewards/',
+    path: '/loyalty/rewards/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardContactsGroupsGroupIdIndexRoute =
-  DashboardContactsGroupsGroupIdIndexRouteImport.update({
-    id: '/contacts/groups/$groupId/',
-    path: '/contacts/groups/$groupId/',
+const DashboardLoyaltySettingsIndexRoute =
+  DashboardLoyaltySettingsIndexRouteImport.update({
+    id: '/loyalty/settings/',
+    path: '/loyalty/settings/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardAnalyticsTeamTeamidIndexRoute =
-  DashboardAnalyticsTeamTeamidIndexRouteImport.update({
-    id: '/analytics/team/$teamid/',
-    path: '/analytics/team/$teamid/',
+const DashboardLoyaltyTemplatesIndexRoute =
+  DashboardLoyaltyTemplatesIndexRouteImport.update({
+    id: '/loyalty/templates/',
+    path: '/loyalty/templates/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const publicFacingWsShortIdResponseSubmittedIndexRoute =
-  publicFacingWsShortIdResponseSubmittedIndexRouteImport.update({
-    id: '/(public-facing)/ws/$shortId/response-submitted/',
-    path: '/ws/$shortId/response-submitted/',
-    getParentRoute: () => rootRouteImport,
+const DashboardLoyaltyTransactionsIndexRoute =
+  DashboardLoyaltyTransactionsIndexRouteImport.update({
+    id: '/loyalty/transactions/',
+    path: '/loyalty/transactions/',
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
-const publicFacingWsShortIdEndIndexRoute =
-  publicFacingWsShortIdEndIndexRouteImport.update({
-    id: '/(public-facing)/ws/$shortId/end/',
-    path: '/ws/$shortId/end/',
-    getParentRoute: () => rootRouteImport,
+const DashboardQrCreatorShortUrlIdIndexRoute =
+  DashboardQrCreatorShortUrlIdIndexRouteImport.update({
+    id: '/qrCreator/$shortUrlId/',
+    path: '/qrCreator/$shortUrlId/',
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
-const publicFacingPublicTestimonialCollectionIdIndexRoute =
-  publicFacingPublicTestimonialCollectionIdIndexRouteImport.update({
-    id: '/(public-facing)/public/testimonial/$collectionId/',
-    path: '/public/testimonial/$collectionId/',
-    getParentRoute: () => rootRouteImport,
+const DashboardQuickAccessLinksShortUrlIdIndexRoute =
+  DashboardQuickAccessLinksShortUrlIdIndexRouteImport.update({
+    id: '/quickAccessLinks/$shortUrlId/',
+    path: '/quickAccessLinks/$shortUrlId/',
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
-const publicFacingPublicSurveyCsIndexRoute =
-  publicFacingPublicSurveyCsIndexRouteImport.update({
-    id: '/(public-facing)/public/survey/cs/',
-    path: '/public/survey/cs/',
-    getParentRoute: () => rootRouteImport,
+const DashboardSettingsAccountIndexRoute =
+  DashboardSettingsAccountIndexRouteImport.update({
+    id: '/settings/account/',
+    path: '/settings/account/',
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
-const publicFacingPublicSurveySurveyIdIndexRoute =
-  publicFacingPublicSurveySurveyIdIndexRouteImport.update({
-    id: '/(public-facing)/public/survey/$surveyId/',
-    path: '/public/survey/$surveyId/',
-    getParentRoute: () => rootRouteImport,
+const DashboardSettingsBillingIndexRoute =
+  DashboardSettingsBillingIndexRouteImport.update({
+    id: '/settings/billing/',
+    path: '/settings/billing/',
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
-const marketingBlogTagSlugIndexRoute =
-  marketingBlogTagSlugIndexRouteImport.update({
-    id: '/tag/$slug/',
-    path: '/tag/$slug/',
-    getParentRoute: () => marketingBlogRouteRoute,
+const DashboardSettingsChannelsIndexRoute =
+  DashboardSettingsChannelsIndexRouteImport.update({
+    id: '/settings/channels/',
+    path: '/settings/channels/',
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
-const marketingBlogAuthorSlugIndexRoute =
-  marketingBlogAuthorSlugIndexRouteImport.update({
-    id: '/author/$slug/',
-    path: '/author/$slug/',
-    getParentRoute: () => marketingBlogRouteRoute,
+const DashboardSettingsIntegrationsIndexRoute =
+  DashboardSettingsIntegrationsIndexRouteImport.update({
+    id: '/settings/integrations/',
+    path: '/settings/integrations/',
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
-const authLoginCallbackPausedIndexRoute =
-  authLoginCallbackPausedIndexRouteImport.update({
-    id: '/(auth)/login/callback/paused/',
-    path: '/login/callback/paused/',
+const DashboardSettingsSecurityIndexRoute =
+  DashboardSettingsSecurityIndexRouteImport.update({
+    id: '/settings/security/',
+    path: '/settings/security/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSettingsTeamIndexRoute =
+  DashboardSettingsTeamIndexRouteImport.update({
+    id: '/settings/team/',
+    path: '/settings/team/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSettingsUsersIndexRoute =
+  DashboardSettingsUsersIndexRouteImport.update({
+    id: '/settings/users/',
+    path: '/settings/users/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSurveysSurveyIdIndexRoute =
+  DashboardSurveysSurveyIdIndexRouteImport.update({
+    id: '/surveys/$surveyId/',
+    path: '/surveys/$surveyId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSurveysTemplatesIndexRoute =
+  DashboardSurveysTemplatesIndexRouteImport.update({
+    id: '/surveys/templates/',
+    path: '/surveys/templates/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardTestimonialCollectionIdIndexRoute =
+  DashboardTestimonialCollectionIdIndexRouteImport.update({
+    id: '/testimonial/$collectionId/',
+    path: '/testimonial/$collectionId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardTicketsTicketIdIndexRoute =
+  DashboardTicketsTicketIdIndexRouteImport.update({
+    id: '/tickets/$ticketId/',
+    path: '/tickets/$ticketId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappCatalogIndexRoute =
+  DashboardWhatsappCatalogIndexRouteImport.update({
+    id: '/whatsapp/catalog/',
+    path: '/whatsapp/catalog/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappConversationalComponentsIndexRoute =
+  DashboardWhatsappConversationalComponentsIndexRouteImport.update({
+    id: '/whatsapp/conversational-components/',
+    path: '/whatsapp/conversational-components/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappFlowbotsIndexRoute =
+  DashboardWhatsappFlowbotsIndexRouteImport.update({
+    id: '/whatsapp/flowbots/',
+    path: '/whatsapp/flowbots/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappFlowsIndexRoute =
+  DashboardWhatsappFlowsIndexRouteImport.update({
+    id: '/whatsapp/flows/',
+    path: '/whatsapp/flows/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappOrdersIndexRoute =
+  DashboardWhatsappOrdersIndexRouteImport.update({
+    id: '/whatsapp/orders/',
+    path: '/whatsapp/orders/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappPaymentsIndexRoute =
+  DashboardWhatsappPaymentsIndexRouteImport.update({
+    id: '/whatsapp/payments/',
+    path: '/whatsapp/payments/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappTemplatesIndexRoute =
+  DashboardWhatsappTemplatesIndexRouteImport.update({
+    id: '/whatsapp/templates/',
+    path: '/whatsapp/templates/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const authLoginCallbackAppleIndexRoute =
+  authLoginCallbackAppleIndexRouteImport.update({
+    id: '/(auth)/login/callback/apple/',
+    path: '/login/callback/apple/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const authLoginCallbackGoogleIndexRoute =
@@ -982,40 +886,112 @@ const authLoginCallbackGoogleIndexRoute =
     path: '/login/callback/google/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const authLoginCallbackAppleIndexRoute =
-  authLoginCallbackAppleIndexRouteImport.update({
-    id: '/(auth)/login/callback/apple/',
-    path: '/login/callback/apple/',
+const authLoginCallbackPausedIndexRoute =
+  authLoginCallbackPausedIndexRouteImport.update({
+    id: '/(auth)/login/callback/paused/',
+    path: '/login/callback/paused/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const DashboardWhatsappFlowsV2DbFlowIdIndexRoute =
-  DashboardWhatsappFlowsV2DbFlowIdIndexRouteImport.update({
-    id: '/whatsapp/flows/v2/$dbFlowId/',
-    path: '/whatsapp/flows/v2/$dbFlowId/',
-    getParentRoute: () => DashboardRouteRoute,
+const marketingBlogAuthorSlugIndexRoute =
+  marketingBlogAuthorSlugIndexRouteImport.update({
+    id: '/author/$slug/',
+    path: '/author/$slug/',
+    getParentRoute: () => marketingBlogRouteRoute,
   } as any)
-const DashboardWhatsappFlowsV1DbFlowIdIndexRoute =
-  DashboardWhatsappFlowsV1DbFlowIdIndexRouteImport.update({
-    id: '/whatsapp/flows/v1/$dbFlowId/',
-    path: '/whatsapp/flows/v1/$dbFlowId/',
-    getParentRoute: () => DashboardRouteRoute,
+const marketingBlogTagSlugIndexRoute =
+  marketingBlogTagSlugIndexRouteImport.update({
+    id: '/tag/$slug/',
+    path: '/tag/$slug/',
+    getParentRoute: () => marketingBlogRouteRoute,
   } as any)
-const DashboardSettingsIntegrationsZohoCallbackIndexRoute =
-  DashboardSettingsIntegrationsZohoCallbackIndexRouteImport.update({
-    id: '/settings/integrations/zoho/callback/',
-    path: '/settings/integrations/zoho/callback/',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
-const publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute =
-  publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport.update({
-    id: '/(public-facing)/public/wa/$surveyTeamMapId/redirect/',
-    path: '/public/wa/$surveyTeamMapId/redirect/',
+const publicFacingPublicSurveySurveyIdIndexRoute =
+  publicFacingPublicSurveySurveyIdIndexRouteImport.update({
+    id: '/(public-facing)/public/survey/$surveyId/',
+    path: '/public/survey/$surveyId/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute =
-  publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRouteImport.update({
-    id: '/(public-facing)/public/survey/$surveyId/review-us-on-google/',
-    path: '/public/survey/$surveyId/review-us-on-google/',
+const publicFacingPublicSurveyCsIndexRoute =
+  publicFacingPublicSurveyCsIndexRouteImport.update({
+    id: '/(public-facing)/public/survey/cs/',
+    path: '/public/survey/cs/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicFacingPublicTestimonialCollectionIdIndexRoute =
+  publicFacingPublicTestimonialCollectionIdIndexRouteImport.update({
+    id: '/(public-facing)/public/testimonial/$collectionId/',
+    path: '/public/testimonial/$collectionId/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicFacingWsShortIdEndIndexRoute =
+  publicFacingWsShortIdEndIndexRouteImport.update({
+    id: '/(public-facing)/ws/$shortId/end/',
+    path: '/ws/$shortId/end/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const publicFacingWsShortIdResponseSubmittedIndexRoute =
+  publicFacingWsShortIdResponseSubmittedIndexRouteImport.update({
+    id: '/(public-facing)/ws/$shortId/response-submitted/',
+    path: '/ws/$shortId/response-submitted/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DashboardAnalyticsTeamTeamidIndexRoute =
+  DashboardAnalyticsTeamTeamidIndexRouteImport.update({
+    id: '/analytics/team/$teamid/',
+    path: '/analytics/team/$teamid/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardContactsGroupsGroupIdIndexRoute =
+  DashboardContactsGroupsGroupIdIndexRouteImport.update({
+    id: '/contacts/groups/$groupId/',
+    path: '/contacts/groups/$groupId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardLoyaltyTemplatesTemplateIdIndexRoute =
+  DashboardLoyaltyTemplatesTemplateIdIndexRouteImport.update({
+    id: '/loyalty/templates/$templateId/',
+    path: '/loyalty/templates/$templateId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSettingsChannelsChannelIndexRoute =
+  DashboardSettingsChannelsChannelIndexRouteImport.update({
+    id: '/settings/channels/$channel/',
+    path: '/settings/channels/$channel/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSettingsIntegrationsIdIndexRoute =
+  DashboardSettingsIntegrationsIdIndexRouteImport.update({
+    id: '/settings/integrations/$id/',
+    path: '/settings/integrations/$id/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardSettingsTeamTeamIdIndexRoute =
+  DashboardSettingsTeamTeamIdIndexRouteImport.update({
+    id: '/settings/team/$teamId/',
+    path: '/settings/team/$teamId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappCatalogCatalogIdIndexRoute =
+  DashboardWhatsappCatalogCatalogIdIndexRouteImport.update({
+    id: '/whatsapp/catalog/$catalogId/',
+    path: '/whatsapp/catalog/$catalogId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappFlowbotsFlowbotIdIndexRoute =
+  DashboardWhatsappFlowbotsFlowbotIdIndexRouteImport.update({
+    id: '/whatsapp/flowbots/$flowbotId/',
+    path: '/whatsapp/flowbots/$flowbotId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappTemplatesTemplateIdIndexRoute =
+  DashboardWhatsappTemplatesTemplateIdIndexRouteImport.update({
+    id: '/whatsapp/templates/$templateId/',
+    path: '/whatsapp/templates/$templateId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const publicFacingloyaltyLoyaltyOrgIdRegisterIndexRoute =
+  publicFacingloyaltyLoyaltyOrgIdRegisterIndexRouteImport.update({
+    id: '/(public-facing)/(loyalty)/loyalty/$orgId/register/',
+    path: '/loyalty/$orgId/register/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const publicFacingPublicSurveySurveyIdEndIndexRoute =
@@ -1024,11 +1000,35 @@ const publicFacingPublicSurveySurveyIdEndIndexRoute =
     path: '/public/survey/$surveyId/end/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const publicFacingloyaltyLoyaltyOrgIdRegisterIndexRoute =
-  publicFacingloyaltyLoyaltyOrgIdRegisterIndexRouteImport.update({
-    id: '/(public-facing)/(loyalty)/loyalty/$orgId/register/',
-    path: '/loyalty/$orgId/register/',
+const publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute =
+  publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRouteImport.update({
+    id: '/(public-facing)/public/survey/$surveyId/review-us-on-google/',
+    path: '/public/survey/$surveyId/review-us-on-google/',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute =
+  publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport.update({
+    id: '/(public-facing)/public/wa/$surveyTeamMapId/redirect/',
+    path: '/public/wa/$surveyTeamMapId/redirect/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DashboardSettingsIntegrationsZohoCallbackIndexRoute =
+  DashboardSettingsIntegrationsZohoCallbackIndexRouteImport.update({
+    id: '/settings/integrations/zoho/callback/',
+    path: '/settings/integrations/zoho/callback/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappFlowsV1DbFlowIdIndexRoute =
+  DashboardWhatsappFlowsV1DbFlowIdIndexRouteImport.update({
+    id: '/whatsapp/flows/v1/$dbFlowId/',
+    path: '/whatsapp/flows/v1/$dbFlowId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappFlowsV2DbFlowIdIndexRoute =
+  DashboardWhatsappFlowsV2DbFlowIdIndexRouteImport.update({
+    id: '/whatsapp/flows/v2/$dbFlowId/',
+    path: '/whatsapp/flows/v2/$dbFlowId/',
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -2019,18 +2019,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap_index.xml': {
-      id: '/sitemap_index.xml'
-      path: '/sitemap_index.xml'
-      fullPath: '/sitemap_index.xml'
-      preLoaderRoute: typeof Sitemap_indexDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/robots.txt': {
-      id: '/robots.txt'
-      path: '/robots.txt'
-      fullPath: '/robots.txt'
-      preLoaderRoute: typeof RobotsDottxtRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -2040,32 +2033,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteRouteImport
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/admin/': {
-      id: '/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
+    '/sitemap_index.xml': {
+      id: '/sitemap_index.xml'
+      path: '/sitemap_index.xml'
+      fullPath: '/sitemap_index.xml'
+      preLoaderRoute: typeof Sitemap_indexDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/(marketing)/': {
       id: '/(marketing)/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof marketingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/blog': {
+      id: '/(marketing)/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof marketingBlogRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.well-known/api-catalog': {
@@ -2075,6 +2068,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotwellKnownApiCatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/commerce': {
       id: '/dashboard/commerce'
       path: '/commerce'
@@ -2082,284 +2089,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCommerceRouteRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/(marketing)/blog': {
-      id: '/(marketing)/blog'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof marketingBlogRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard/whatsapp/': {
-      id: '/dashboard/whatsapp/'
-      path: '/whatsapp'
-      fullPath: '/dashboard/whatsapp/'
-      preLoaderRoute: typeof DashboardWhatsappIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/tickets/': {
-      id: '/dashboard/tickets/'
-      path: '/tickets'
-      fullPath: '/dashboard/tickets/'
-      preLoaderRoute: typeof DashboardTicketsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/testimonial/': {
-      id: '/dashboard/testimonial/'
-      path: '/testimonial'
-      fullPath: '/dashboard/testimonial/'
-      preLoaderRoute: typeof DashboardTestimonialIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/surveys/': {
-      id: '/dashboard/surveys/'
-      path: '/surveys'
-      fullPath: '/dashboard/surveys/'
-      preLoaderRoute: typeof DashboardSurveysIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/settings/': {
-      id: '/dashboard/settings/'
-      path: '/settings'
-      fullPath: '/dashboard/settings/'
-      preLoaderRoute: typeof DashboardSettingsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/quickAccessLinks/': {
-      id: '/dashboard/quickAccessLinks/'
-      path: '/quickAccessLinks'
-      fullPath: '/dashboard/quickAccessLinks/'
-      preLoaderRoute: typeof DashboardQuickAccessLinksIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/qrCreator/': {
-      id: '/dashboard/qrCreator/'
-      path: '/qrCreator'
-      fullPath: '/dashboard/qrCreator/'
-      preLoaderRoute: typeof DashboardQrCreatorIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/meta-agent/': {
-      id: '/dashboard/meta-agent/'
-      path: '/meta-agent'
-      fullPath: '/dashboard/meta-agent/'
-      preLoaderRoute: typeof DashboardMetaAgentIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/instagram/': {
-      id: '/dashboard/instagram/'
-      path: '/instagram'
-      fullPath: '/dashboard/instagram/'
-      preLoaderRoute: typeof DashboardInstagramIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/inbox/': {
-      id: '/dashboard/inbox/'
-      path: '/inbox'
-      fullPath: '/dashboard/inbox/'
-      preLoaderRoute: typeof DashboardInboxIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/contacts/': {
-      id: '/dashboard/contacts/'
-      path: '/contacts'
-      fullPath: '/dashboard/contacts/'
-      preLoaderRoute: typeof DashboardContactsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/commerce/': {
-      id: '/dashboard/commerce/'
-      path: '/'
-      fullPath: '/dashboard/commerce/'
-      preLoaderRoute: typeof DashboardCommerceIndexRouteImport
-      parentRoute: typeof DashboardCommerceRouteRoute
-    }
-    '/dashboard/campaign/': {
-      id: '/dashboard/campaign/'
-      path: '/campaign'
-      fullPath: '/dashboard/campaign/'
-      preLoaderRoute: typeof DashboardCampaignIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/automation/': {
-      id: '/dashboard/automation/'
-      path: '/automation'
-      fullPath: '/dashboard/automation/'
-      preLoaderRoute: typeof DashboardAutomationIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/analytics/': {
-      id: '/dashboard/analytics/'
-      path: '/analytics'
-      fullPath: '/dashboard/analytics/'
-      preLoaderRoute: typeof DashboardAnalyticsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/auth/shopify/': {
-      id: '/auth/shopify/'
-      path: '/auth/shopify'
-      fullPath: '/auth/shopify/'
-      preLoaderRoute: typeof AuthShopifyIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/oauth2callback/': {
-      id: '/auth/oauth2callback/'
-      path: '/auth/oauth2callback'
-      fullPath: '/auth/oauth2callback/'
-      preLoaderRoute: typeof AuthOauth2callbackIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/fb/': {
-      id: '/auth/fb/'
-      path: '/auth/fb'
-      fullPath: '/auth/fb/'
-      preLoaderRoute: typeof AuthFbIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/userstats/': {
-      id: '/admin/userstats/'
-      path: '/userstats'
-      fullPath: '/admin/userstats/'
-      preLoaderRoute: typeof AdminUserstatsIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/updateCenter/': {
-      id: '/admin/updateCenter/'
-      path: '/updateCenter'
-      fullPath: '/admin/updateCenter/'
-      preLoaderRoute: typeof AdminUpdateCenterIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/subscriptions/': {
-      id: '/admin/subscriptions/'
-      path: '/subscriptions'
-      fullPath: '/admin/subscriptions/'
-      preLoaderRoute: typeof AdminSubscriptionsIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/stripe/': {
-      id: '/admin/stripe/'
-      path: '/stripe'
-      fullPath: '/admin/stripe/'
-      preLoaderRoute: typeof AdminStripeIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/shopify/': {
-      id: '/admin/shopify/'
-      path: '/shopify'
-      fullPath: '/admin/shopify/'
-      preLoaderRoute: typeof AdminShopifyIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/share-qr/': {
-      id: '/admin/share-qr/'
-      path: '/share-qr'
-      fullPath: '/admin/share-qr/'
-      preLoaderRoute: typeof AdminShareQrIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/referrals/': {
-      id: '/admin/referrals/'
-      path: '/referrals'
-      fullPath: '/admin/referrals/'
-      preLoaderRoute: typeof AdminReferralsIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/razorpay/': {
-      id: '/admin/razorpay/'
-      path: '/razorpay'
-      fullPath: '/admin/razorpay/'
-      preLoaderRoute: typeof AdminRazorpayIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/rateup/': {
-      id: '/admin/rateup/'
-      path: '/rateup'
-      fullPath: '/admin/rateup/'
-      preLoaderRoute: typeof AdminRateupIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/orgs/': {
-      id: '/admin/orgs/'
-      path: '/orgs'
-      fullPath: '/admin/orgs/'
-      preLoaderRoute: typeof AdminOrgsIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/orders/': {
-      id: '/admin/orders/'
-      path: '/orders'
-      fullPath: '/admin/orders/'
-      preLoaderRoute: typeof AdminOrdersIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/generate/': {
-      id: '/admin/generate/'
-      path: '/generate'
-      fullPath: '/admin/generate/'
-      preLoaderRoute: typeof AdminGenerateIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/(marketing)/terms-of-service/': {
-      id: '/(marketing)/terms-of-service/'
-      path: '/terms-of-service'
-      fullPath: '/terms-of-service/'
-      preLoaderRoute: typeof marketingTermsOfServiceIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/privacy-policy/': {
-      id: '/(marketing)/privacy-policy/'
-      path: '/privacy-policy'
-      fullPath: '/privacy-policy/'
-      preLoaderRoute: typeof marketingPrivacyPolicyIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/pricing/': {
-      id: '/(marketing)/pricing/'
-      path: '/pricing'
-      fullPath: '/pricing/'
-      preLoaderRoute: typeof marketingPricingIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/partner-page/': {
-      id: '/(marketing)/partner-page/'
-      path: '/partner-page'
-      fullPath: '/partner-page/'
-      preLoaderRoute: typeof marketingPartnerPageIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/contact-us/': {
-      id: '/(marketing)/contact-us/'
-      path: '/contact-us'
-      fullPath: '/contact-us/'
-      preLoaderRoute: typeof marketingContactUsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/blog/': {
-      id: '/(marketing)/blog/'
-      path: '/'
-      fullPath: '/blog/'
-      preLoaderRoute: typeof marketingBlogIndexRouteImport
-      parentRoute: typeof marketingBlogRouteRoute
-    }
-    '/(marketing)/about-us/': {
-      id: '/(marketing)/about-us/'
-      path: '/about-us'
-      fullPath: '/about-us/'
-      preLoaderRoute: typeof marketingAboutUsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/signup/': {
-      id: '/(auth)/signup/'
-      path: '/signup'
-      fullPath: '/signup/'
-      preLoaderRoute: typeof authSignupIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/logout/': {
-      id: '/(auth)/logout/'
-      path: '/logout'
-      fullPath: '/logout/'
-      preLoaderRoute: typeof authLogoutIndexRouteImport
+    '/(auth)/invite/': {
+      id: '/(auth)/invite/'
+      path: '/invite'
+      fullPath: '/invite/'
+      preLoaderRoute: typeof authInviteIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/login/': {
@@ -2369,18 +2103,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authLoginIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/invite/': {
-      id: '/(auth)/invite/'
-      path: '/invite'
-      fullPath: '/invite/'
-      preLoaderRoute: typeof authInviteIndexRouteImport
+    '/(auth)/logout/': {
+      id: '/(auth)/logout/'
+      path: '/logout'
+      fullPath: '/logout/'
+      preLoaderRoute: typeof authLogoutIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(marketing)/blog/sitemap.xml': {
-      id: '/(marketing)/blog/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/blog/sitemap.xml'
-      preLoaderRoute: typeof marketingBlogSitemapDotxmlRouteImport
+    '/(auth)/signup/': {
+      id: '/(auth)/signup/'
+      path: '/signup'
+      fullPath: '/signup/'
+      preLoaderRoute: typeof authSignupIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/about-us/': {
+      id: '/(marketing)/about-us/'
+      path: '/about-us'
+      fullPath: '/about-us/'
+      preLoaderRoute: typeof marketingAboutUsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/blog/': {
+      id: '/(marketing)/blog/'
+      path: '/'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof marketingBlogIndexRouteImport
       parentRoute: typeof marketingBlogRouteRoute
     }
     '/(marketing)/blog/rss.xml': {
@@ -2390,487 +2138,263 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingBlogRssDotxmlRouteImport
       parentRoute: typeof marketingBlogRouteRoute
     }
-    '/dashboard/whatsapp/templates/': {
-      id: '/dashboard/whatsapp/templates/'
-      path: '/whatsapp/templates'
-      fullPath: '/dashboard/whatsapp/templates/'
-      preLoaderRoute: typeof DashboardWhatsappTemplatesIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/whatsapp/payments/': {
-      id: '/dashboard/whatsapp/payments/'
-      path: '/whatsapp/payments'
-      fullPath: '/dashboard/whatsapp/payments/'
-      preLoaderRoute: typeof DashboardWhatsappPaymentsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/whatsapp/orders/': {
-      id: '/dashboard/whatsapp/orders/'
-      path: '/whatsapp/orders'
-      fullPath: '/dashboard/whatsapp/orders/'
-      preLoaderRoute: typeof DashboardWhatsappOrdersIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/whatsapp/flows/': {
-      id: '/dashboard/whatsapp/flows/'
-      path: '/whatsapp/flows'
-      fullPath: '/dashboard/whatsapp/flows/'
-      preLoaderRoute: typeof DashboardWhatsappFlowsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/whatsapp/flowbots/': {
-      id: '/dashboard/whatsapp/flowbots/'
-      path: '/whatsapp/flowbots'
-      fullPath: '/dashboard/whatsapp/flowbots/'
-      preLoaderRoute: typeof DashboardWhatsappFlowbotsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/whatsapp/conversational-components/': {
-      id: '/dashboard/whatsapp/conversational-components/'
-      path: '/whatsapp/conversational-components'
-      fullPath: '/dashboard/whatsapp/conversational-components/'
-      preLoaderRoute: typeof DashboardWhatsappConversationalComponentsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/whatsapp/catalog/': {
-      id: '/dashboard/whatsapp/catalog/'
-      path: '/whatsapp/catalog'
-      fullPath: '/dashboard/whatsapp/catalog/'
-      preLoaderRoute: typeof DashboardWhatsappCatalogIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/tickets/$ticketId/': {
-      id: '/dashboard/tickets/$ticketId/'
-      path: '/tickets/$ticketId'
-      fullPath: '/dashboard/tickets/$ticketId/'
-      preLoaderRoute: typeof DashboardTicketsTicketIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/testimonial/$collectionId/': {
-      id: '/dashboard/testimonial/$collectionId/'
-      path: '/testimonial/$collectionId'
-      fullPath: '/dashboard/testimonial/$collectionId/'
-      preLoaderRoute: typeof DashboardTestimonialCollectionIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/surveys/templates/': {
-      id: '/dashboard/surveys/templates/'
-      path: '/surveys/templates'
-      fullPath: '/dashboard/surveys/templates/'
-      preLoaderRoute: typeof DashboardSurveysTemplatesIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/surveys/$surveyId/': {
-      id: '/dashboard/surveys/$surveyId/'
-      path: '/surveys/$surveyId'
-      fullPath: '/dashboard/surveys/$surveyId/'
-      preLoaderRoute: typeof DashboardSurveysSurveyIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/settings/users/': {
-      id: '/dashboard/settings/users/'
-      path: '/settings/users'
-      fullPath: '/dashboard/settings/users/'
-      preLoaderRoute: typeof DashboardSettingsUsersIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/settings/team/': {
-      id: '/dashboard/settings/team/'
-      path: '/settings/team'
-      fullPath: '/dashboard/settings/team/'
-      preLoaderRoute: typeof DashboardSettingsTeamIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/settings/security/': {
-      id: '/dashboard/settings/security/'
-      path: '/settings/security'
-      fullPath: '/dashboard/settings/security/'
-      preLoaderRoute: typeof DashboardSettingsSecurityIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/settings/integrations/': {
-      id: '/dashboard/settings/integrations/'
-      path: '/settings/integrations'
-      fullPath: '/dashboard/settings/integrations/'
-      preLoaderRoute: typeof DashboardSettingsIntegrationsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/settings/channels/': {
-      id: '/dashboard/settings/channels/'
-      path: '/settings/channels'
-      fullPath: '/dashboard/settings/channels/'
-      preLoaderRoute: typeof DashboardSettingsChannelsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/settings/billing/': {
-      id: '/dashboard/settings/billing/'
-      path: '/settings/billing'
-      fullPath: '/dashboard/settings/billing/'
-      preLoaderRoute: typeof DashboardSettingsBillingIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/settings/account/': {
-      id: '/dashboard/settings/account/'
-      path: '/settings/account'
-      fullPath: '/dashboard/settings/account/'
-      preLoaderRoute: typeof DashboardSettingsAccountIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/quickAccessLinks/$shortUrlId/': {
-      id: '/dashboard/quickAccessLinks/$shortUrlId/'
-      path: '/quickAccessLinks/$shortUrlId'
-      fullPath: '/dashboard/quickAccessLinks/$shortUrlId/'
-      preLoaderRoute: typeof DashboardQuickAccessLinksShortUrlIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/qrCreator/$shortUrlId/': {
-      id: '/dashboard/qrCreator/$shortUrlId/'
-      path: '/qrCreator/$shortUrlId'
-      fullPath: '/dashboard/qrCreator/$shortUrlId/'
-      preLoaderRoute: typeof DashboardQrCreatorShortUrlIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/loyalty/transactions/': {
-      id: '/dashboard/loyalty/transactions/'
-      path: '/loyalty/transactions'
-      fullPath: '/dashboard/loyalty/transactions/'
-      preLoaderRoute: typeof DashboardLoyaltyTransactionsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/loyalty/templates/': {
-      id: '/dashboard/loyalty/templates/'
-      path: '/loyalty/templates'
-      fullPath: '/dashboard/loyalty/templates/'
-      preLoaderRoute: typeof DashboardLoyaltyTemplatesIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/loyalty/settings/': {
-      id: '/dashboard/loyalty/settings/'
-      path: '/loyalty/settings'
-      fullPath: '/dashboard/loyalty/settings/'
-      preLoaderRoute: typeof DashboardLoyaltySettingsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/loyalty/rewards/': {
-      id: '/dashboard/loyalty/rewards/'
-      path: '/loyalty/rewards'
-      fullPath: '/dashboard/loyalty/rewards/'
-      preLoaderRoute: typeof DashboardLoyaltyRewardsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/loyalty/earning-rules/': {
-      id: '/dashboard/loyalty/earning-rules/'
-      path: '/loyalty/earning-rules'
-      fullPath: '/dashboard/loyalty/earning-rules/'
-      preLoaderRoute: typeof DashboardLoyaltyEarningRulesIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/loyalty/dashboard/': {
-      id: '/dashboard/loyalty/dashboard/'
-      path: '/loyalty/dashboard'
-      fullPath: '/dashboard/loyalty/dashboard/'
-      preLoaderRoute: typeof DashboardLoyaltyDashboardIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/loyalty/customers/': {
-      id: '/dashboard/loyalty/customers/'
-      path: '/loyalty/customers'
-      fullPath: '/dashboard/loyalty/customers/'
-      preLoaderRoute: typeof DashboardLoyaltyCustomersIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/loyalty/command/': {
-      id: '/dashboard/loyalty/command/'
-      path: '/loyalty/command'
-      fullPath: '/dashboard/loyalty/command/'
-      preLoaderRoute: typeof DashboardLoyaltyCommandIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/loyalty/cashier/': {
-      id: '/dashboard/loyalty/cashier/'
-      path: '/loyalty/cashier'
-      fullPath: '/dashboard/loyalty/cashier/'
-      preLoaderRoute: typeof DashboardLoyaltyCashierIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/loyalty/approvals/': {
-      id: '/dashboard/loyalty/approvals/'
-      path: '/loyalty/approvals'
-      fullPath: '/dashboard/loyalty/approvals/'
-      preLoaderRoute: typeof DashboardLoyaltyApprovalsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/contacts/lifecycle/': {
-      id: '/dashboard/contacts/lifecycle/'
-      path: '/contacts/lifecycle'
-      fullPath: '/dashboard/contacts/lifecycle/'
-      preLoaderRoute: typeof DashboardContactsLifecycleIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/contacts/labels/': {
-      id: '/dashboard/contacts/labels/'
-      path: '/contacts/labels'
-      fullPath: '/dashboard/contacts/labels/'
-      preLoaderRoute: typeof DashboardContactsLabelsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/contacts/groups/': {
-      id: '/dashboard/contacts/groups/'
-      path: '/contacts/groups'
-      fullPath: '/dashboard/contacts/groups/'
-      preLoaderRoute: typeof DashboardContactsGroupsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/contacts/custom-fields/': {
-      id: '/dashboard/contacts/custom-fields/'
-      path: '/contacts/custom-fields'
-      fullPath: '/dashboard/contacts/custom-fields/'
-      preLoaderRoute: typeof DashboardContactsCustomFieldsIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/commerce/settings/': {
-      id: '/dashboard/commerce/settings/'
-      path: '/settings'
-      fullPath: '/dashboard/commerce/settings/'
-      preLoaderRoute: typeof DashboardCommerceSettingsIndexRouteImport
-      parentRoute: typeof DashboardCommerceRouteRoute
-    }
-    '/dashboard/commerce/payments/': {
-      id: '/dashboard/commerce/payments/'
-      path: '/payments'
-      fullPath: '/dashboard/commerce/payments/'
-      preLoaderRoute: typeof DashboardCommercePaymentsIndexRouteImport
-      parentRoute: typeof DashboardCommerceRouteRoute
-    }
-    '/dashboard/commerce/overview/': {
-      id: '/dashboard/commerce/overview/'
-      path: '/overview'
-      fullPath: '/dashboard/commerce/overview/'
-      preLoaderRoute: typeof DashboardCommerceOverviewIndexRouteImport
-      parentRoute: typeof DashboardCommerceRouteRoute
-    }
-    '/dashboard/commerce/orders/': {
-      id: '/dashboard/commerce/orders/'
-      path: '/orders'
-      fullPath: '/dashboard/commerce/orders/'
-      preLoaderRoute: typeof DashboardCommerceOrdersIndexRouteImport
-      parentRoute: typeof DashboardCommerceRouteRoute
-    }
-    '/dashboard/commerce/coupons/': {
-      id: '/dashboard/commerce/coupons/'
-      path: '/coupons'
-      fullPath: '/dashboard/commerce/coupons/'
-      preLoaderRoute: typeof DashboardCommerceCouponsIndexRouteImport
-      parentRoute: typeof DashboardCommerceRouteRoute
-    }
-    '/dashboard/commerce/catalogs/': {
-      id: '/dashboard/commerce/catalogs/'
-      path: '/catalogs'
-      fullPath: '/dashboard/commerce/catalogs/'
-      preLoaderRoute: typeof DashboardCommerceCatalogsIndexRouteImport
-      parentRoute: typeof DashboardCommerceRouteRoute
-    }
-    '/dashboard/campaign/$campaignId/': {
-      id: '/dashboard/campaign/$campaignId/'
-      path: '/campaign/$campaignId'
-      fullPath: '/dashboard/campaign/$campaignId/'
-      preLoaderRoute: typeof DashboardCampaignCampaignIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/automation/$automationId/': {
-      id: '/dashboard/automation/$automationId/'
-      path: '/automation/$automationId'
-      fullPath: '/dashboard/automation/$automationId/'
-      preLoaderRoute: typeof DashboardAutomationAutomationIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/analytics/audit-log/': {
-      id: '/dashboard/analytics/audit-log/'
-      path: '/analytics/audit-log'
-      fullPath: '/dashboard/analytics/audit-log/'
-      preLoaderRoute: typeof DashboardAnalyticsAuditLogIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/analytics/$staffid/': {
-      id: '/dashboard/analytics/$staffid/'
-      path: '/analytics/$staffid'
-      fullPath: '/dashboard/analytics/$staffid/'
-      preLoaderRoute: typeof DashboardAnalyticsStaffidIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/auth/shopify/retry/': {
-      id: '/auth/shopify/retry/'
-      path: '/auth/shopify/retry'
-      fullPath: '/auth/shopify/retry/'
-      preLoaderRoute: typeof AuthShopifyRetryIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/shopify/oauth2callback/': {
-      id: '/auth/shopify/oauth2callback/'
-      path: '/auth/shopify/oauth2callback'
-      fullPath: '/auth/shopify/oauth2callback/'
-      preLoaderRoute: typeof AuthShopifyOauth2callbackIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/shopify/logout/': {
-      id: '/auth/shopify/logout/'
-      path: '/auth/shopify/logout'
-      fullPath: '/auth/shopify/logout/'
-      preLoaderRoute: typeof AuthShopifyLogoutIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/orgs/$orgId/': {
-      id: '/admin/orgs/$orgId/'
-      path: '/orgs/$orgId'
-      fullPath: '/admin/orgs/$orgId/'
-      preLoaderRoute: typeof AdminOrgsOrgIdIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/(public-facing)/ws/$shortId/': {
-      id: '/(public-facing)/ws/$shortId/'
-      path: '/ws/$shortId'
-      fullPath: '/ws/$shortId/'
-      preLoaderRoute: typeof publicFacingWsShortIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(public-facing)/was/$shortId/': {
-      id: '/(public-facing)/was/$shortId/'
-      path: '/was/$shortId'
-      fullPath: '/was/$shortId/'
-      preLoaderRoute: typeof publicFacingWasShortIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(public-facing)/qr/$shortId/': {
-      id: '/(public-facing)/qr/$shortId/'
-      path: '/qr/$shortId'
-      fullPath: '/qr/$shortId/'
-      preLoaderRoute: typeof publicFacingQrShortIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(public-facing)/lt/$shortId/': {
-      id: '/(public-facing)/lt/$shortId/'
-      path: '/lt/$shortId'
-      fullPath: '/lt/$shortId/'
-      preLoaderRoute: typeof publicFacingLtShortIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(public-facing)/(loyalty)/cashier/': {
-      id: '/(public-facing)/(loyalty)/cashier/'
-      path: '/cashier'
-      fullPath: '/cashier/'
-      preLoaderRoute: typeof publicFacingloyaltyCashierIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/whatsapp-survey/': {
-      id: '/(marketing)/products/whatsapp-survey/'
-      path: '/products/whatsapp-survey'
-      fullPath: '/products/whatsapp-survey/'
-      preLoaderRoute: typeof marketingProductsWhatsappSurveyIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/whatsapp-loyalty/': {
-      id: '/(marketing)/products/whatsapp-loyalty/'
-      path: '/products/whatsapp-loyalty'
-      fullPath: '/products/whatsapp-loyalty/'
-      preLoaderRoute: typeof marketingProductsWhatsappLoyaltyIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/whatsapp-feedback/': {
-      id: '/(marketing)/products/whatsapp-feedback/'
-      path: '/products/whatsapp-feedback'
-      fullPath: '/products/whatsapp-feedback/'
-      preLoaderRoute: typeof marketingProductsWhatsappFeedbackIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/ticketing/': {
-      id: '/(marketing)/products/ticketing/'
-      path: '/products/ticketing'
-      fullPath: '/products/ticketing/'
-      preLoaderRoute: typeof marketingProductsTicketingIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/testimonial-gateway/': {
-      id: '/(marketing)/products/testimonial-gateway/'
-      path: '/products/testimonial-gateway'
-      fullPath: '/products/testimonial-gateway/'
-      preLoaderRoute: typeof marketingProductsTestimonialGatewayIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/qr/': {
-      id: '/(marketing)/products/qr/'
-      path: '/products/qr'
-      fullPath: '/products/qr/'
-      preLoaderRoute: typeof marketingProductsQrIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/qr-studio/': {
-      id: '/(marketing)/products/qr-studio/'
-      path: '/products/qr-studio'
-      fullPath: '/products/qr-studio/'
-      preLoaderRoute: typeof marketingProductsQrStudioIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/omnichannel-inbox/': {
-      id: '/(marketing)/products/omnichannel-inbox/'
-      path: '/products/omnichannel-inbox'
-      fullPath: '/products/omnichannel-inbox/'
-      preLoaderRoute: typeof marketingProductsOmnichannelInboxIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/inbox/': {
-      id: '/(marketing)/products/inbox/'
-      path: '/products/inbox'
-      fullPath: '/products/inbox/'
-      preLoaderRoute: typeof marketingProductsInboxIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/ai-review/': {
-      id: '/(marketing)/products/ai-review/'
-      path: '/products/ai-review'
-      fullPath: '/products/ai-review/'
-      preLoaderRoute: typeof marketingProductsAiReviewIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/products/ai-automation/': {
-      id: '/(marketing)/products/ai-automation/'
-      path: '/products/ai-automation'
-      fullPath: '/products/ai-automation/'
-      preLoaderRoute: typeof marketingProductsAiAutomationIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/pricing/shopify/': {
-      id: '/(marketing)/pricing/shopify/'
-      path: '/pricing/shopify'
-      fullPath: '/pricing/shopify/'
-      preLoaderRoute: typeof marketingPricingShopifyIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/blog/$slug/': {
-      id: '/(marketing)/blog/$slug/'
-      path: '/$slug'
-      fullPath: '/blog/$slug/'
-      preLoaderRoute: typeof marketingBlogSlugIndexRouteImport
+    '/(marketing)/blog/sitemap.xml': {
+      id: '/(marketing)/blog/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/blog/sitemap.xml'
+      preLoaderRoute: typeof marketingBlogSitemapDotxmlRouteImport
       parentRoute: typeof marketingBlogRouteRoute
     }
-    '/(auth)/login/verify-phone-number/': {
-      id: '/(auth)/login/verify-phone-number/'
-      path: '/login/verify-phone-number'
-      fullPath: '/login/verify-phone-number/'
-      preLoaderRoute: typeof authLoginVerifyPhoneNumberIndexRouteImport
+    '/(marketing)/contact-us/': {
+      id: '/(marketing)/contact-us/'
+      path: '/contact-us'
+      fullPath: '/contact-us/'
+      preLoaderRoute: typeof marketingContactUsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/login/verify-email/': {
-      id: '/(auth)/login/verify-email/'
-      path: '/login/verify-email'
-      fullPath: '/login/verify-email/'
-      preLoaderRoute: typeof authLoginVerifyEmailIndexRouteImport
+    '/(marketing)/partner-page/': {
+      id: '/(marketing)/partner-page/'
+      path: '/partner-page'
+      fullPath: '/partner-page/'
+      preLoaderRoute: typeof marketingPartnerPageIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/login/setup/': {
-      id: '/(auth)/login/setup/'
-      path: '/login/setup'
-      fullPath: '/login/setup/'
-      preLoaderRoute: typeof authLoginSetupIndexRouteImport
+    '/(marketing)/pricing/': {
+      id: '/(marketing)/pricing/'
+      path: '/pricing'
+      fullPath: '/pricing/'
+      preLoaderRoute: typeof marketingPricingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/privacy-policy/': {
+      id: '/(marketing)/privacy-policy/'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy/'
+      preLoaderRoute: typeof marketingPrivacyPolicyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/terms-of-service/': {
+      id: '/(marketing)/terms-of-service/'
+      path: '/terms-of-service'
+      fullPath: '/terms-of-service/'
+      preLoaderRoute: typeof marketingTermsOfServiceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/generate/': {
+      id: '/admin/generate/'
+      path: '/generate'
+      fullPath: '/admin/generate/'
+      preLoaderRoute: typeof AdminGenerateIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/orders/': {
+      id: '/admin/orders/'
+      path: '/orders'
+      fullPath: '/admin/orders/'
+      preLoaderRoute: typeof AdminOrdersIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/orgs/': {
+      id: '/admin/orgs/'
+      path: '/orgs'
+      fullPath: '/admin/orgs/'
+      preLoaderRoute: typeof AdminOrgsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/rateup/': {
+      id: '/admin/rateup/'
+      path: '/rateup'
+      fullPath: '/admin/rateup/'
+      preLoaderRoute: typeof AdminRateupIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/razorpay/': {
+      id: '/admin/razorpay/'
+      path: '/razorpay'
+      fullPath: '/admin/razorpay/'
+      preLoaderRoute: typeof AdminRazorpayIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/referrals/': {
+      id: '/admin/referrals/'
+      path: '/referrals'
+      fullPath: '/admin/referrals/'
+      preLoaderRoute: typeof AdminReferralsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/share-qr/': {
+      id: '/admin/share-qr/'
+      path: '/share-qr'
+      fullPath: '/admin/share-qr/'
+      preLoaderRoute: typeof AdminShareQrIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/shopify/': {
+      id: '/admin/shopify/'
+      path: '/shopify'
+      fullPath: '/admin/shopify/'
+      preLoaderRoute: typeof AdminShopifyIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/stripe/': {
+      id: '/admin/stripe/'
+      path: '/stripe'
+      fullPath: '/admin/stripe/'
+      preLoaderRoute: typeof AdminStripeIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/subscriptions/': {
+      id: '/admin/subscriptions/'
+      path: '/subscriptions'
+      fullPath: '/admin/subscriptions/'
+      preLoaderRoute: typeof AdminSubscriptionsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/updateCenter/': {
+      id: '/admin/updateCenter/'
+      path: '/updateCenter'
+      fullPath: '/admin/updateCenter/'
+      preLoaderRoute: typeof AdminUpdateCenterIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/userstats/': {
+      id: '/admin/userstats/'
+      path: '/userstats'
+      fullPath: '/admin/userstats/'
+      preLoaderRoute: typeof AdminUserstatsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/auth/fb/': {
+      id: '/auth/fb/'
+      path: '/auth/fb'
+      fullPath: '/auth/fb/'
+      preLoaderRoute: typeof AuthFbIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/oauth2callback/': {
+      id: '/auth/oauth2callback/'
+      path: '/auth/oauth2callback'
+      fullPath: '/auth/oauth2callback/'
+      preLoaderRoute: typeof AuthOauth2callbackIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/shopify/': {
+      id: '/auth/shopify/'
+      path: '/auth/shopify'
+      fullPath: '/auth/shopify/'
+      preLoaderRoute: typeof AuthShopifyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/analytics/': {
+      id: '/dashboard/analytics/'
+      path: '/analytics'
+      fullPath: '/dashboard/analytics/'
+      preLoaderRoute: typeof DashboardAnalyticsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/automation/': {
+      id: '/dashboard/automation/'
+      path: '/automation'
+      fullPath: '/dashboard/automation/'
+      preLoaderRoute: typeof DashboardAutomationIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/campaign/': {
+      id: '/dashboard/campaign/'
+      path: '/campaign'
+      fullPath: '/dashboard/campaign/'
+      preLoaderRoute: typeof DashboardCampaignIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/commerce/': {
+      id: '/dashboard/commerce/'
+      path: '/'
+      fullPath: '/dashboard/commerce/'
+      preLoaderRoute: typeof DashboardCommerceIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/contacts/': {
+      id: '/dashboard/contacts/'
+      path: '/contacts'
+      fullPath: '/dashboard/contacts/'
+      preLoaderRoute: typeof DashboardContactsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/inbox/': {
+      id: '/dashboard/inbox/'
+      path: '/inbox'
+      fullPath: '/dashboard/inbox/'
+      preLoaderRoute: typeof DashboardInboxIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/instagram/': {
+      id: '/dashboard/instagram/'
+      path: '/instagram'
+      fullPath: '/dashboard/instagram/'
+      preLoaderRoute: typeof DashboardInstagramIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/meta-agent/': {
+      id: '/dashboard/meta-agent/'
+      path: '/meta-agent'
+      fullPath: '/dashboard/meta-agent/'
+      preLoaderRoute: typeof DashboardMetaAgentIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/qrCreator/': {
+      id: '/dashboard/qrCreator/'
+      path: '/qrCreator'
+      fullPath: '/dashboard/qrCreator/'
+      preLoaderRoute: typeof DashboardQrCreatorIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/quickAccessLinks/': {
+      id: '/dashboard/quickAccessLinks/'
+      path: '/quickAccessLinks'
+      fullPath: '/dashboard/quickAccessLinks/'
+      preLoaderRoute: typeof DashboardQuickAccessLinksIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/': {
+      id: '/dashboard/settings/'
+      path: '/settings'
+      fullPath: '/dashboard/settings/'
+      preLoaderRoute: typeof DashboardSettingsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/surveys/': {
+      id: '/dashboard/surveys/'
+      path: '/surveys'
+      fullPath: '/dashboard/surveys/'
+      preLoaderRoute: typeof DashboardSurveysIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/testimonial/': {
+      id: '/dashboard/testimonial/'
+      path: '/testimonial'
+      fullPath: '/dashboard/testimonial/'
+      preLoaderRoute: typeof DashboardTestimonialIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/tickets/': {
+      id: '/dashboard/tickets/'
+      path: '/tickets'
+      fullPath: '/dashboard/tickets/'
+      preLoaderRoute: typeof DashboardTicketsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/': {
+      id: '/dashboard/whatsapp/'
+      path: '/whatsapp'
+      fullPath: '/dashboard/whatsapp/'
+      preLoaderRoute: typeof DashboardWhatsappIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/(auth)/login/complete-login/': {
+      id: '/(auth)/login/complete-login/'
+      path: '/login/complete-login'
+      fullPath: '/login/complete-login/'
+      preLoaderRoute: typeof authLoginCompleteLoginIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/login/reset-password/': {
@@ -2880,25 +2404,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authLoginResetPasswordIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/login/complete-login/': {
-      id: '/(auth)/login/complete-login/'
-      path: '/login/complete-login'
-      fullPath: '/login/complete-login/'
-      preLoaderRoute: typeof authLoginCompleteLoginIndexRouteImport
+    '/(auth)/login/setup/': {
+      id: '/(auth)/login/setup/'
+      path: '/login/setup'
+      fullPath: '/login/setup/'
+      preLoaderRoute: typeof authLoginSetupIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/instagram/flowbots/$flowbotId': {
-      id: '/dashboard/instagram/flowbots/$flowbotId'
-      path: '/instagram/flowbots/$flowbotId'
-      fullPath: '/dashboard/instagram/flowbots/$flowbotId'
-      preLoaderRoute: typeof DashboardInstagramFlowbotsFlowbotIdRouteImport
-      parentRoute: typeof DashboardRouteRoute
+    '/(auth)/login/verify-email/': {
+      id: '/(auth)/login/verify-email/'
+      path: '/login/verify-email'
+      fullPath: '/login/verify-email/'
+      preLoaderRoute: typeof authLoginVerifyEmailIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/(marketing)/blog/tag/sitemap.xml': {
-      id: '/(marketing)/blog/tag/sitemap.xml'
-      path: '/tag/sitemap.xml'
-      fullPath: '/blog/tag/sitemap.xml'
-      preLoaderRoute: typeof marketingBlogTagSitemapDotxmlRouteImport
+    '/(auth)/login/verify-phone-number/': {
+      id: '/(auth)/login/verify-phone-number/'
+      path: '/login/verify-phone-number'
+      fullPath: '/login/verify-phone-number/'
+      preLoaderRoute: typeof authLoginVerifyPhoneNumberIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/blog/$slug/': {
+      id: '/(marketing)/blog/$slug/'
+      path: '/$slug'
+      fullPath: '/blog/$slug/'
+      preLoaderRoute: typeof marketingBlogSlugIndexRouteImport
       parentRoute: typeof marketingBlogRouteRoute
     }
     '/(marketing)/blog/author/sitemap.xml': {
@@ -2908,123 +2439,480 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingBlogAuthorSitemapDotxmlRouteImport
       parentRoute: typeof marketingBlogRouteRoute
     }
-    '/dashboard/whatsapp/templates/$templateId/': {
-      id: '/dashboard/whatsapp/templates/$templateId/'
-      path: '/whatsapp/templates/$templateId'
-      fullPath: '/dashboard/whatsapp/templates/$templateId/'
-      preLoaderRoute: typeof DashboardWhatsappTemplatesTemplateIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/whatsapp/flowbots/$flowbotId/': {
-      id: '/dashboard/whatsapp/flowbots/$flowbotId/'
-      path: '/whatsapp/flowbots/$flowbotId'
-      fullPath: '/dashboard/whatsapp/flowbots/$flowbotId/'
-      preLoaderRoute: typeof DashboardWhatsappFlowbotsFlowbotIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/whatsapp/catalog/$catalogId/': {
-      id: '/dashboard/whatsapp/catalog/$catalogId/'
-      path: '/whatsapp/catalog/$catalogId'
-      fullPath: '/dashboard/whatsapp/catalog/$catalogId/'
-      preLoaderRoute: typeof DashboardWhatsappCatalogCatalogIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/settings/team/$teamId/': {
-      id: '/dashboard/settings/team/$teamId/'
-      path: '/settings/team/$teamId'
-      fullPath: '/dashboard/settings/team/$teamId/'
-      preLoaderRoute: typeof DashboardSettingsTeamTeamIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/settings/integrations/$id/': {
-      id: '/dashboard/settings/integrations/$id/'
-      path: '/settings/integrations/$id'
-      fullPath: '/dashboard/settings/integrations/$id/'
-      preLoaderRoute: typeof DashboardSettingsIntegrationsIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/settings/channels/$channel/': {
-      id: '/dashboard/settings/channels/$channel/'
-      path: '/settings/channels/$channel'
-      fullPath: '/dashboard/settings/channels/$channel/'
-      preLoaderRoute: typeof DashboardSettingsChannelsChannelIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/loyalty/templates/$templateId/': {
-      id: '/dashboard/loyalty/templates/$templateId/'
-      path: '/loyalty/templates/$templateId'
-      fullPath: '/dashboard/loyalty/templates/$templateId/'
-      preLoaderRoute: typeof DashboardLoyaltyTemplatesTemplateIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/contacts/groups/$groupId/': {
-      id: '/dashboard/contacts/groups/$groupId/'
-      path: '/contacts/groups/$groupId'
-      fullPath: '/dashboard/contacts/groups/$groupId/'
-      preLoaderRoute: typeof DashboardContactsGroupsGroupIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/analytics/team/$teamid/': {
-      id: '/dashboard/analytics/team/$teamid/'
-      path: '/analytics/team/$teamid'
-      fullPath: '/dashboard/analytics/team/$teamid/'
-      preLoaderRoute: typeof DashboardAnalyticsTeamTeamidIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/(public-facing)/ws/$shortId/response-submitted/': {
-      id: '/(public-facing)/ws/$shortId/response-submitted/'
-      path: '/ws/$shortId/response-submitted'
-      fullPath: '/ws/$shortId/response-submitted/'
-      preLoaderRoute: typeof publicFacingWsShortIdResponseSubmittedIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(public-facing)/ws/$shortId/end/': {
-      id: '/(public-facing)/ws/$shortId/end/'
-      path: '/ws/$shortId/end'
-      fullPath: '/ws/$shortId/end/'
-      preLoaderRoute: typeof publicFacingWsShortIdEndIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(public-facing)/public/testimonial/$collectionId/': {
-      id: '/(public-facing)/public/testimonial/$collectionId/'
-      path: '/public/testimonial/$collectionId'
-      fullPath: '/public/testimonial/$collectionId/'
-      preLoaderRoute: typeof publicFacingPublicTestimonialCollectionIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(public-facing)/public/survey/cs/': {
-      id: '/(public-facing)/public/survey/cs/'
-      path: '/public/survey/cs'
-      fullPath: '/public/survey/cs/'
-      preLoaderRoute: typeof publicFacingPublicSurveyCsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(public-facing)/public/survey/$surveyId/': {
-      id: '/(public-facing)/public/survey/$surveyId/'
-      path: '/public/survey/$surveyId'
-      fullPath: '/public/survey/$surveyId/'
-      preLoaderRoute: typeof publicFacingPublicSurveySurveyIdIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/blog/tag/$slug/': {
-      id: '/(marketing)/blog/tag/$slug/'
-      path: '/tag/$slug'
-      fullPath: '/blog/tag/$slug/'
-      preLoaderRoute: typeof marketingBlogTagSlugIndexRouteImport
+    '/(marketing)/blog/tag/sitemap.xml': {
+      id: '/(marketing)/blog/tag/sitemap.xml'
+      path: '/tag/sitemap.xml'
+      fullPath: '/blog/tag/sitemap.xml'
+      preLoaderRoute: typeof marketingBlogTagSitemapDotxmlRouteImport
       parentRoute: typeof marketingBlogRouteRoute
     }
-    '/(marketing)/blog/author/$slug/': {
-      id: '/(marketing)/blog/author/$slug/'
-      path: '/author/$slug'
-      fullPath: '/blog/author/$slug/'
-      preLoaderRoute: typeof marketingBlogAuthorSlugIndexRouteImport
-      parentRoute: typeof marketingBlogRouteRoute
+    '/(marketing)/pricing/shopify/': {
+      id: '/(marketing)/pricing/shopify/'
+      path: '/pricing/shopify'
+      fullPath: '/pricing/shopify/'
+      preLoaderRoute: typeof marketingPricingShopifyIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/(auth)/login/callback/paused/': {
-      id: '/(auth)/login/callback/paused/'
-      path: '/login/callback/paused'
-      fullPath: '/login/callback/paused/'
-      preLoaderRoute: typeof authLoginCallbackPausedIndexRouteImport
+    '/(marketing)/products/ai-automation/': {
+      id: '/(marketing)/products/ai-automation/'
+      path: '/products/ai-automation'
+      fullPath: '/products/ai-automation/'
+      preLoaderRoute: typeof marketingProductsAiAutomationIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/ai-review/': {
+      id: '/(marketing)/products/ai-review/'
+      path: '/products/ai-review'
+      fullPath: '/products/ai-review/'
+      preLoaderRoute: typeof marketingProductsAiReviewIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/inbox/': {
+      id: '/(marketing)/products/inbox/'
+      path: '/products/inbox'
+      fullPath: '/products/inbox/'
+      preLoaderRoute: typeof marketingProductsInboxIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/omnichannel-inbox/': {
+      id: '/(marketing)/products/omnichannel-inbox/'
+      path: '/products/omnichannel-inbox'
+      fullPath: '/products/omnichannel-inbox/'
+      preLoaderRoute: typeof marketingProductsOmnichannelInboxIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/qr-studio/': {
+      id: '/(marketing)/products/qr-studio/'
+      path: '/products/qr-studio'
+      fullPath: '/products/qr-studio/'
+      preLoaderRoute: typeof marketingProductsQrStudioIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/qr/': {
+      id: '/(marketing)/products/qr/'
+      path: '/products/qr'
+      fullPath: '/products/qr/'
+      preLoaderRoute: typeof marketingProductsQrIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/testimonial-gateway/': {
+      id: '/(marketing)/products/testimonial-gateway/'
+      path: '/products/testimonial-gateway'
+      fullPath: '/products/testimonial-gateway/'
+      preLoaderRoute: typeof marketingProductsTestimonialGatewayIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/ticketing/': {
+      id: '/(marketing)/products/ticketing/'
+      path: '/products/ticketing'
+      fullPath: '/products/ticketing/'
+      preLoaderRoute: typeof marketingProductsTicketingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/whatsapp-feedback/': {
+      id: '/(marketing)/products/whatsapp-feedback/'
+      path: '/products/whatsapp-feedback'
+      fullPath: '/products/whatsapp-feedback/'
+      preLoaderRoute: typeof marketingProductsWhatsappFeedbackIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/whatsapp-loyalty/': {
+      id: '/(marketing)/products/whatsapp-loyalty/'
+      path: '/products/whatsapp-loyalty'
+      fullPath: '/products/whatsapp-loyalty/'
+      preLoaderRoute: typeof marketingProductsWhatsappLoyaltyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/whatsapp-survey/': {
+      id: '/(marketing)/products/whatsapp-survey/'
+      path: '/products/whatsapp-survey'
+      fullPath: '/products/whatsapp-survey/'
+      preLoaderRoute: typeof marketingProductsWhatsappSurveyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public-facing)/(loyalty)/cashier/': {
+      id: '/(public-facing)/(loyalty)/cashier/'
+      path: '/cashier'
+      fullPath: '/cashier/'
+      preLoaderRoute: typeof publicFacingloyaltyCashierIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public-facing)/lt/$shortId/': {
+      id: '/(public-facing)/lt/$shortId/'
+      path: '/lt/$shortId'
+      fullPath: '/lt/$shortId/'
+      preLoaderRoute: typeof publicFacingLtShortIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public-facing)/qr/$shortId/': {
+      id: '/(public-facing)/qr/$shortId/'
+      path: '/qr/$shortId'
+      fullPath: '/qr/$shortId/'
+      preLoaderRoute: typeof publicFacingQrShortIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public-facing)/was/$shortId/': {
+      id: '/(public-facing)/was/$shortId/'
+      path: '/was/$shortId'
+      fullPath: '/was/$shortId/'
+      preLoaderRoute: typeof publicFacingWasShortIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public-facing)/ws/$shortId/': {
+      id: '/(public-facing)/ws/$shortId/'
+      path: '/ws/$shortId'
+      fullPath: '/ws/$shortId/'
+      preLoaderRoute: typeof publicFacingWsShortIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/orgs/$orgId/': {
+      id: '/admin/orgs/$orgId/'
+      path: '/orgs/$orgId'
+      fullPath: '/admin/orgs/$orgId/'
+      preLoaderRoute: typeof AdminOrgsOrgIdIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/auth/shopify/logout/': {
+      id: '/auth/shopify/logout/'
+      path: '/auth/shopify/logout'
+      fullPath: '/auth/shopify/logout/'
+      preLoaderRoute: typeof AuthShopifyLogoutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/shopify/oauth2callback/': {
+      id: '/auth/shopify/oauth2callback/'
+      path: '/auth/shopify/oauth2callback'
+      fullPath: '/auth/shopify/oauth2callback/'
+      preLoaderRoute: typeof AuthShopifyOauth2callbackIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/shopify/retry/': {
+      id: '/auth/shopify/retry/'
+      path: '/auth/shopify/retry'
+      fullPath: '/auth/shopify/retry/'
+      preLoaderRoute: typeof AuthShopifyRetryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/analytics/$staffid/': {
+      id: '/dashboard/analytics/$staffid/'
+      path: '/analytics/$staffid'
+      fullPath: '/dashboard/analytics/$staffid/'
+      preLoaderRoute: typeof DashboardAnalyticsStaffidIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/analytics/audit-log/': {
+      id: '/dashboard/analytics/audit-log/'
+      path: '/analytics/audit-log'
+      fullPath: '/dashboard/analytics/audit-log/'
+      preLoaderRoute: typeof DashboardAnalyticsAuditLogIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/automation/$automationId/': {
+      id: '/dashboard/automation/$automationId/'
+      path: '/automation/$automationId'
+      fullPath: '/dashboard/automation/$automationId/'
+      preLoaderRoute: typeof DashboardAutomationAutomationIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/campaign/$campaignId/': {
+      id: '/dashboard/campaign/$campaignId/'
+      path: '/campaign/$campaignId'
+      fullPath: '/dashboard/campaign/$campaignId/'
+      preLoaderRoute: typeof DashboardCampaignCampaignIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/commerce/catalogs/': {
+      id: '/dashboard/commerce/catalogs/'
+      path: '/catalogs'
+      fullPath: '/dashboard/commerce/catalogs/'
+      preLoaderRoute: typeof DashboardCommerceCatalogsIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/coupons/': {
+      id: '/dashboard/commerce/coupons/'
+      path: '/coupons'
+      fullPath: '/dashboard/commerce/coupons/'
+      preLoaderRoute: typeof DashboardCommerceCouponsIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/orders/': {
+      id: '/dashboard/commerce/orders/'
+      path: '/orders'
+      fullPath: '/dashboard/commerce/orders/'
+      preLoaderRoute: typeof DashboardCommerceOrdersIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/overview/': {
+      id: '/dashboard/commerce/overview/'
+      path: '/overview'
+      fullPath: '/dashboard/commerce/overview/'
+      preLoaderRoute: typeof DashboardCommerceOverviewIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/payments/': {
+      id: '/dashboard/commerce/payments/'
+      path: '/payments'
+      fullPath: '/dashboard/commerce/payments/'
+      preLoaderRoute: typeof DashboardCommercePaymentsIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/commerce/settings/': {
+      id: '/dashboard/commerce/settings/'
+      path: '/settings'
+      fullPath: '/dashboard/commerce/settings/'
+      preLoaderRoute: typeof DashboardCommerceSettingsIndexRouteImport
+      parentRoute: typeof DashboardCommerceRouteRoute
+    }
+    '/dashboard/contacts/custom-fields/': {
+      id: '/dashboard/contacts/custom-fields/'
+      path: '/contacts/custom-fields'
+      fullPath: '/dashboard/contacts/custom-fields/'
+      preLoaderRoute: typeof DashboardContactsCustomFieldsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/contacts/groups/': {
+      id: '/dashboard/contacts/groups/'
+      path: '/contacts/groups'
+      fullPath: '/dashboard/contacts/groups/'
+      preLoaderRoute: typeof DashboardContactsGroupsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/contacts/labels/': {
+      id: '/dashboard/contacts/labels/'
+      path: '/contacts/labels'
+      fullPath: '/dashboard/contacts/labels/'
+      preLoaderRoute: typeof DashboardContactsLabelsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/contacts/lifecycle/': {
+      id: '/dashboard/contacts/lifecycle/'
+      path: '/contacts/lifecycle'
+      fullPath: '/dashboard/contacts/lifecycle/'
+      preLoaderRoute: typeof DashboardContactsLifecycleIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/instagram/flowbots/$flowbotId': {
+      id: '/dashboard/instagram/flowbots/$flowbotId'
+      path: '/instagram/flowbots/$flowbotId'
+      fullPath: '/dashboard/instagram/flowbots/$flowbotId'
+      preLoaderRoute: typeof DashboardInstagramFlowbotsFlowbotIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty/approvals/': {
+      id: '/dashboard/loyalty/approvals/'
+      path: '/loyalty/approvals'
+      fullPath: '/dashboard/loyalty/approvals/'
+      preLoaderRoute: typeof DashboardLoyaltyApprovalsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty/cashier/': {
+      id: '/dashboard/loyalty/cashier/'
+      path: '/loyalty/cashier'
+      fullPath: '/dashboard/loyalty/cashier/'
+      preLoaderRoute: typeof DashboardLoyaltyCashierIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty/command/': {
+      id: '/dashboard/loyalty/command/'
+      path: '/loyalty/command'
+      fullPath: '/dashboard/loyalty/command/'
+      preLoaderRoute: typeof DashboardLoyaltyCommandIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty/customers/': {
+      id: '/dashboard/loyalty/customers/'
+      path: '/loyalty/customers'
+      fullPath: '/dashboard/loyalty/customers/'
+      preLoaderRoute: typeof DashboardLoyaltyCustomersIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty/dashboard/': {
+      id: '/dashboard/loyalty/dashboard/'
+      path: '/loyalty/dashboard'
+      fullPath: '/dashboard/loyalty/dashboard/'
+      preLoaderRoute: typeof DashboardLoyaltyDashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty/earning-rules/': {
+      id: '/dashboard/loyalty/earning-rules/'
+      path: '/loyalty/earning-rules'
+      fullPath: '/dashboard/loyalty/earning-rules/'
+      preLoaderRoute: typeof DashboardLoyaltyEarningRulesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty/rewards/': {
+      id: '/dashboard/loyalty/rewards/'
+      path: '/loyalty/rewards'
+      fullPath: '/dashboard/loyalty/rewards/'
+      preLoaderRoute: typeof DashboardLoyaltyRewardsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty/settings/': {
+      id: '/dashboard/loyalty/settings/'
+      path: '/loyalty/settings'
+      fullPath: '/dashboard/loyalty/settings/'
+      preLoaderRoute: typeof DashboardLoyaltySettingsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty/templates/': {
+      id: '/dashboard/loyalty/templates/'
+      path: '/loyalty/templates'
+      fullPath: '/dashboard/loyalty/templates/'
+      preLoaderRoute: typeof DashboardLoyaltyTemplatesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty/transactions/': {
+      id: '/dashboard/loyalty/transactions/'
+      path: '/loyalty/transactions'
+      fullPath: '/dashboard/loyalty/transactions/'
+      preLoaderRoute: typeof DashboardLoyaltyTransactionsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/qrCreator/$shortUrlId/': {
+      id: '/dashboard/qrCreator/$shortUrlId/'
+      path: '/qrCreator/$shortUrlId'
+      fullPath: '/dashboard/qrCreator/$shortUrlId/'
+      preLoaderRoute: typeof DashboardQrCreatorShortUrlIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/quickAccessLinks/$shortUrlId/': {
+      id: '/dashboard/quickAccessLinks/$shortUrlId/'
+      path: '/quickAccessLinks/$shortUrlId'
+      fullPath: '/dashboard/quickAccessLinks/$shortUrlId/'
+      preLoaderRoute: typeof DashboardQuickAccessLinksShortUrlIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/account/': {
+      id: '/dashboard/settings/account/'
+      path: '/settings/account'
+      fullPath: '/dashboard/settings/account/'
+      preLoaderRoute: typeof DashboardSettingsAccountIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/billing/': {
+      id: '/dashboard/settings/billing/'
+      path: '/settings/billing'
+      fullPath: '/dashboard/settings/billing/'
+      preLoaderRoute: typeof DashboardSettingsBillingIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/channels/': {
+      id: '/dashboard/settings/channels/'
+      path: '/settings/channels'
+      fullPath: '/dashboard/settings/channels/'
+      preLoaderRoute: typeof DashboardSettingsChannelsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/integrations/': {
+      id: '/dashboard/settings/integrations/'
+      path: '/settings/integrations'
+      fullPath: '/dashboard/settings/integrations/'
+      preLoaderRoute: typeof DashboardSettingsIntegrationsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/security/': {
+      id: '/dashboard/settings/security/'
+      path: '/settings/security'
+      fullPath: '/dashboard/settings/security/'
+      preLoaderRoute: typeof DashboardSettingsSecurityIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/team/': {
+      id: '/dashboard/settings/team/'
+      path: '/settings/team'
+      fullPath: '/dashboard/settings/team/'
+      preLoaderRoute: typeof DashboardSettingsTeamIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/users/': {
+      id: '/dashboard/settings/users/'
+      path: '/settings/users'
+      fullPath: '/dashboard/settings/users/'
+      preLoaderRoute: typeof DashboardSettingsUsersIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/surveys/$surveyId/': {
+      id: '/dashboard/surveys/$surveyId/'
+      path: '/surveys/$surveyId'
+      fullPath: '/dashboard/surveys/$surveyId/'
+      preLoaderRoute: typeof DashboardSurveysSurveyIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/surveys/templates/': {
+      id: '/dashboard/surveys/templates/'
+      path: '/surveys/templates'
+      fullPath: '/dashboard/surveys/templates/'
+      preLoaderRoute: typeof DashboardSurveysTemplatesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/testimonial/$collectionId/': {
+      id: '/dashboard/testimonial/$collectionId/'
+      path: '/testimonial/$collectionId'
+      fullPath: '/dashboard/testimonial/$collectionId/'
+      preLoaderRoute: typeof DashboardTestimonialCollectionIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/tickets/$ticketId/': {
+      id: '/dashboard/tickets/$ticketId/'
+      path: '/tickets/$ticketId'
+      fullPath: '/dashboard/tickets/$ticketId/'
+      preLoaderRoute: typeof DashboardTicketsTicketIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/catalog/': {
+      id: '/dashboard/whatsapp/catalog/'
+      path: '/whatsapp/catalog'
+      fullPath: '/dashboard/whatsapp/catalog/'
+      preLoaderRoute: typeof DashboardWhatsappCatalogIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/conversational-components/': {
+      id: '/dashboard/whatsapp/conversational-components/'
+      path: '/whatsapp/conversational-components'
+      fullPath: '/dashboard/whatsapp/conversational-components/'
+      preLoaderRoute: typeof DashboardWhatsappConversationalComponentsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/flowbots/': {
+      id: '/dashboard/whatsapp/flowbots/'
+      path: '/whatsapp/flowbots'
+      fullPath: '/dashboard/whatsapp/flowbots/'
+      preLoaderRoute: typeof DashboardWhatsappFlowbotsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/flows/': {
+      id: '/dashboard/whatsapp/flows/'
+      path: '/whatsapp/flows'
+      fullPath: '/dashboard/whatsapp/flows/'
+      preLoaderRoute: typeof DashboardWhatsappFlowsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/orders/': {
+      id: '/dashboard/whatsapp/orders/'
+      path: '/whatsapp/orders'
+      fullPath: '/dashboard/whatsapp/orders/'
+      preLoaderRoute: typeof DashboardWhatsappOrdersIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/payments/': {
+      id: '/dashboard/whatsapp/payments/'
+      path: '/whatsapp/payments'
+      fullPath: '/dashboard/whatsapp/payments/'
+      preLoaderRoute: typeof DashboardWhatsappPaymentsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/templates/': {
+      id: '/dashboard/whatsapp/templates/'
+      path: '/whatsapp/templates'
+      fullPath: '/dashboard/whatsapp/templates/'
+      preLoaderRoute: typeof DashboardWhatsappTemplatesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/(auth)/login/callback/apple/': {
+      id: '/(auth)/login/callback/apple/'
+      path: '/login/callback/apple'
+      fullPath: '/login/callback/apple/'
+      preLoaderRoute: typeof authLoginCallbackAppleIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/login/callback/google/': {
@@ -3034,46 +2922,130 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authLoginCallbackGoogleIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/login/callback/apple/': {
-      id: '/(auth)/login/callback/apple/'
-      path: '/login/callback/apple'
-      fullPath: '/login/callback/apple/'
-      preLoaderRoute: typeof authLoginCallbackAppleIndexRouteImport
+    '/(auth)/login/callback/paused/': {
+      id: '/(auth)/login/callback/paused/'
+      path: '/login/callback/paused'
+      fullPath: '/login/callback/paused/'
+      preLoaderRoute: typeof authLoginCallbackPausedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/whatsapp/flows/v2/$dbFlowId/': {
-      id: '/dashboard/whatsapp/flows/v2/$dbFlowId/'
-      path: '/whatsapp/flows/v2/$dbFlowId'
-      fullPath: '/dashboard/whatsapp/flows/v2/$dbFlowId/'
-      preLoaderRoute: typeof DashboardWhatsappFlowsV2DbFlowIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+    '/(marketing)/blog/author/$slug/': {
+      id: '/(marketing)/blog/author/$slug/'
+      path: '/author/$slug'
+      fullPath: '/blog/author/$slug/'
+      preLoaderRoute: typeof marketingBlogAuthorSlugIndexRouteImport
+      parentRoute: typeof marketingBlogRouteRoute
     }
-    '/dashboard/whatsapp/flows/v1/$dbFlowId/': {
-      id: '/dashboard/whatsapp/flows/v1/$dbFlowId/'
-      path: '/whatsapp/flows/v1/$dbFlowId'
-      fullPath: '/dashboard/whatsapp/flows/v1/$dbFlowId/'
-      preLoaderRoute: typeof DashboardWhatsappFlowsV1DbFlowIdIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+    '/(marketing)/blog/tag/$slug/': {
+      id: '/(marketing)/blog/tag/$slug/'
+      path: '/tag/$slug'
+      fullPath: '/blog/tag/$slug/'
+      preLoaderRoute: typeof marketingBlogTagSlugIndexRouteImport
+      parentRoute: typeof marketingBlogRouteRoute
     }
-    '/dashboard/settings/integrations/zoho/callback/': {
-      id: '/dashboard/settings/integrations/zoho/callback/'
-      path: '/settings/integrations/zoho/callback'
-      fullPath: '/dashboard/settings/integrations/zoho/callback/'
-      preLoaderRoute: typeof DashboardSettingsIntegrationsZohoCallbackIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/(public-facing)/public/wa/$surveyTeamMapId/redirect/': {
-      id: '/(public-facing)/public/wa/$surveyTeamMapId/redirect/'
-      path: '/public/wa/$surveyTeamMapId/redirect'
-      fullPath: '/public/wa/$surveyTeamMapId/redirect/'
-      preLoaderRoute: typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport
+    '/(public-facing)/public/survey/$surveyId/': {
+      id: '/(public-facing)/public/survey/$surveyId/'
+      path: '/public/survey/$surveyId'
+      fullPath: '/public/survey/$surveyId/'
+      preLoaderRoute: typeof publicFacingPublicSurveySurveyIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(public-facing)/public/survey/$surveyId/review-us-on-google/': {
-      id: '/(public-facing)/public/survey/$surveyId/review-us-on-google/'
-      path: '/public/survey/$surveyId/review-us-on-google'
-      fullPath: '/public/survey/$surveyId/review-us-on-google/'
-      preLoaderRoute: typeof publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRouteImport
+    '/(public-facing)/public/survey/cs/': {
+      id: '/(public-facing)/public/survey/cs/'
+      path: '/public/survey/cs'
+      fullPath: '/public/survey/cs/'
+      preLoaderRoute: typeof publicFacingPublicSurveyCsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public-facing)/public/testimonial/$collectionId/': {
+      id: '/(public-facing)/public/testimonial/$collectionId/'
+      path: '/public/testimonial/$collectionId'
+      fullPath: '/public/testimonial/$collectionId/'
+      preLoaderRoute: typeof publicFacingPublicTestimonialCollectionIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public-facing)/ws/$shortId/end/': {
+      id: '/(public-facing)/ws/$shortId/end/'
+      path: '/ws/$shortId/end'
+      fullPath: '/ws/$shortId/end/'
+      preLoaderRoute: typeof publicFacingWsShortIdEndIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public-facing)/ws/$shortId/response-submitted/': {
+      id: '/(public-facing)/ws/$shortId/response-submitted/'
+      path: '/ws/$shortId/response-submitted'
+      fullPath: '/ws/$shortId/response-submitted/'
+      preLoaderRoute: typeof publicFacingWsShortIdResponseSubmittedIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/analytics/team/$teamid/': {
+      id: '/dashboard/analytics/team/$teamid/'
+      path: '/analytics/team/$teamid'
+      fullPath: '/dashboard/analytics/team/$teamid/'
+      preLoaderRoute: typeof DashboardAnalyticsTeamTeamidIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/contacts/groups/$groupId/': {
+      id: '/dashboard/contacts/groups/$groupId/'
+      path: '/contacts/groups/$groupId'
+      fullPath: '/dashboard/contacts/groups/$groupId/'
+      preLoaderRoute: typeof DashboardContactsGroupsGroupIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/loyalty/templates/$templateId/': {
+      id: '/dashboard/loyalty/templates/$templateId/'
+      path: '/loyalty/templates/$templateId'
+      fullPath: '/dashboard/loyalty/templates/$templateId/'
+      preLoaderRoute: typeof DashboardLoyaltyTemplatesTemplateIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/channels/$channel/': {
+      id: '/dashboard/settings/channels/$channel/'
+      path: '/settings/channels/$channel'
+      fullPath: '/dashboard/settings/channels/$channel/'
+      preLoaderRoute: typeof DashboardSettingsChannelsChannelIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/integrations/$id/': {
+      id: '/dashboard/settings/integrations/$id/'
+      path: '/settings/integrations/$id'
+      fullPath: '/dashboard/settings/integrations/$id/'
+      preLoaderRoute: typeof DashboardSettingsIntegrationsIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/team/$teamId/': {
+      id: '/dashboard/settings/team/$teamId/'
+      path: '/settings/team/$teamId'
+      fullPath: '/dashboard/settings/team/$teamId/'
+      preLoaderRoute: typeof DashboardSettingsTeamTeamIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/catalog/$catalogId/': {
+      id: '/dashboard/whatsapp/catalog/$catalogId/'
+      path: '/whatsapp/catalog/$catalogId'
+      fullPath: '/dashboard/whatsapp/catalog/$catalogId/'
+      preLoaderRoute: typeof DashboardWhatsappCatalogCatalogIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/flowbots/$flowbotId/': {
+      id: '/dashboard/whatsapp/flowbots/$flowbotId/'
+      path: '/whatsapp/flowbots/$flowbotId'
+      fullPath: '/dashboard/whatsapp/flowbots/$flowbotId/'
+      preLoaderRoute: typeof DashboardWhatsappFlowbotsFlowbotIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/templates/$templateId/': {
+      id: '/dashboard/whatsapp/templates/$templateId/'
+      path: '/whatsapp/templates/$templateId'
+      fullPath: '/dashboard/whatsapp/templates/$templateId/'
+      preLoaderRoute: typeof DashboardWhatsappTemplatesTemplateIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/(public-facing)/(loyalty)/loyalty/$orgId/register/': {
+      id: '/(public-facing)/(loyalty)/loyalty/$orgId/register/'
+      path: '/loyalty/$orgId/register'
+      fullPath: '/loyalty/$orgId/register/'
+      preLoaderRoute: typeof publicFacingloyaltyLoyaltyOrgIdRegisterIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(public-facing)/public/survey/$surveyId/end/': {
@@ -3083,12 +3055,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof publicFacingPublicSurveySurveyIdEndIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(public-facing)/(loyalty)/loyalty/$orgId/register/': {
-      id: '/(public-facing)/(loyalty)/loyalty/$orgId/register/'
-      path: '/loyalty/$orgId/register'
-      fullPath: '/loyalty/$orgId/register/'
-      preLoaderRoute: typeof publicFacingloyaltyLoyaltyOrgIdRegisterIndexRouteImport
+    '/(public-facing)/public/survey/$surveyId/review-us-on-google/': {
+      id: '/(public-facing)/public/survey/$surveyId/review-us-on-google/'
+      path: '/public/survey/$surveyId/review-us-on-google'
+      fullPath: '/public/survey/$surveyId/review-us-on-google/'
+      preLoaderRoute: typeof publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/(public-facing)/public/wa/$surveyTeamMapId/redirect/': {
+      id: '/(public-facing)/public/wa/$surveyTeamMapId/redirect/'
+      path: '/public/wa/$surveyTeamMapId/redirect'
+      fullPath: '/public/wa/$surveyTeamMapId/redirect/'
+      preLoaderRoute: typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/settings/integrations/zoho/callback/': {
+      id: '/dashboard/settings/integrations/zoho/callback/'
+      path: '/settings/integrations/zoho/callback'
+      fullPath: '/dashboard/settings/integrations/zoho/callback/'
+      preLoaderRoute: typeof DashboardSettingsIntegrationsZohoCallbackIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/flows/v1/$dbFlowId/': {
+      id: '/dashboard/whatsapp/flows/v1/$dbFlowId/'
+      path: '/whatsapp/flows/v1/$dbFlowId'
+      fullPath: '/dashboard/whatsapp/flows/v1/$dbFlowId/'
+      preLoaderRoute: typeof DashboardWhatsappFlowsV1DbFlowIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/flows/v2/$dbFlowId/': {
+      id: '/dashboard/whatsapp/flows/v2/$dbFlowId/'
+      path: '/whatsapp/flows/v2/$dbFlowId'
+      fullPath: '/dashboard/whatsapp/flows/v2/$dbFlowId/'
+      preLoaderRoute: typeof DashboardWhatsappFlowsV2DbFlowIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
   }
 }

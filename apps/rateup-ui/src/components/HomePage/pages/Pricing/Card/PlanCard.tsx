@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { IconCircleCheck, IconX } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
@@ -7,9 +6,10 @@ import { Card } from "@/components/ui/card.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { gAnalyticsAndFbEvent } from "@/utils/gtag.ts";
 
-import { RateupButtonPrimary } from "../../../../Button/RateupButtons.tsx";
+import { Button } from "../../../../ui/button.tsx";
 import { NumberAnimate } from "../Animate/NumberAnimate.tsx";
 import { PlanCardWidth, Title4 } from "../Utils/constants.ts";
 
@@ -104,9 +104,8 @@ const PlanCard = ({
             <p style={{ fontSize: "clamp(30px, 25.712px + 0.714vw, 36px)" }}>Lets Talk!</p>
           </div>
           <div className="mb-6 flex items-center justify-center">
-            <RateupButtonPrimary
-              title="Contact Sales"
-              color={cardMainColor}
+            <Button
+              className={ButtonStyles["button-hover"]}
               onClick={() => {
                 gAnalyticsAndFbEvent(
                   "contact_sales",
@@ -115,10 +114,9 @@ const PlanCard = ({
                 );
                 open();
               }}
-              radius={"xl"}
-              size="md"
-              className={ButtonStyles["button-hover"]}
-            />
+            >
+              Contact Sales
+            </Button>
           </div>
         </div>
       ) : (
@@ -128,12 +126,8 @@ const PlanCard = ({
           </div>
 
           <div className="mb-6 flex items-center justify-center">
-            <RateupButtonPrimary
-              title={title}
-              color={cardMainColor}
-              radius={"xl"}
+            <Button
               className={ButtonStyles["button-hover"]}
-              size="md"
               onClick={() => {
                 gAnalyticsAndFbEvent(
                   "subscribe_pricing",
@@ -166,7 +160,9 @@ const PlanCard = ({
                   });
                 }
               }}
-            />
+            >
+              {title}
+            </Button>
           </div>
         </div>
       )}

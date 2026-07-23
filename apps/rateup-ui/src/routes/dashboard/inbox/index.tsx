@@ -1,4 +1,3 @@
-import { useMediaQuery } from "@mantine/hooks";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -13,6 +12,7 @@ import Analytics from "@/components/whatsapp/inbox/analytics/analaytics.tsx";
 import WaInboxChatDisplay from "@/components/whatsapp/inbox/chatdisplay/index.tsx";
 import WaInboxChatSelect from "@/components/whatsapp/inbox/chatselect/index.tsx";
 import InboxSettings from "@/components/whatsapp/inbox/InboxSettings/index.tsx";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 
 import ChatDisplayContext, {
   useIsChatDisplayOpen,

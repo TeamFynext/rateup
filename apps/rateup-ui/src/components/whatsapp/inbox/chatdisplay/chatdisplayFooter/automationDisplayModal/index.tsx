@@ -7,10 +7,10 @@ import {
   useAllWaAutomatedReplies,
   useInitiateWaAutomatedReplyMutation,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
-import SimpleModalLayout from "@/components/Modal/SimpleModalLayout.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils.ts";
 
@@ -42,13 +42,16 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
   }
 
   return (
-    <>
-      <SimpleModalLayout
-        opened={props?.opened}
-        onClose={onClose}
-        title="Initiate Automation"
-        centered={true}
-      >
+    <Dialog
+      open={props?.opened}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
+    >
+      <DialogContent className="max-h-[90vh] w-full overflow-auto sm:max-w-125">
+        <DialogHeader className="items-center">
+          <DialogTitle className="text-2xl font-bold">Initiate Automation</DialogTitle>
+        </DialogHeader>
         {isLoading && (
           <div className="flex items-center justify-center p-6">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -101,7 +104,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
         ) : (
           !isLoading && <NothingFound text={"No Automations found"} />
         )}
-      </SimpleModalLayout>
-    </>
+      </DialogContent>
+    </Dialog>
   );
 }

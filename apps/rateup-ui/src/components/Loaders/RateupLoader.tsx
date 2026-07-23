@@ -1,12 +1,21 @@
-import type { CenterProps } from "@mantine/core";
-import { Center } from "@mantine/core";
+import type { HTMLAttributes } from "react";
+
+import { cn } from "@/lib/utils.ts";
 
 import { Spinner } from "../ui/spinner.tsx";
 
-export default function RateupLoader(props: Readonly<CenterProps>) {
+export default function RateupLoader({
+  className,
+  style,
+  ...props
+}: Readonly<HTMLAttributes<HTMLDivElement>>) {
   return (
-    <Center h="100%" {...props}>
+    <div
+      className={cn("flex h-full items-center justify-center", className)}
+      style={style}
+      {...props}
+    >
       <Spinner />
-    </Center>
+    </div>
   );
 }

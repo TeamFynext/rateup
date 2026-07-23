@@ -1,24 +1,9 @@
-import {
-  Alert,
-  Box,
-  Divider,
-  Flex,
-  Grid,
-  Group,
-  Overlay,
-  ScrollAreaAutosize,
-  SimpleGrid,
-  Stack,
-  Text,
-  Textarea,
-  Title,
-  useComputedColorScheme,
-} from "@mantine/core";
-import { schemaResolver, useForm } from "@mantine/form";
-import { getHotkeyHandler, useToggle } from "@mantine/hooks";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { IconAsterisk, IconImageInPicture, IconInfoCircle } from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import type { FieldPath } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { z } from "zod/v4";
@@ -32,18 +17,27 @@ import {
   useUpdateTemplateMutation,
   useWaTemplateById,
 } from "@/backend/whatsapp/whatsapp.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-import {
-  ContainedNumberInput,
-  ContainedSelection,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import { LinkCopyElement } from "@/components/input/LinkCopyElement.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 import {
   QuickReplyButton,
   ResponseMessageContainer,
@@ -55,6 +49,7 @@ import CardCarousel, {
   ProductCardCarouselPreview,
 } from "@/components/whatsapp/templates/Details/CardCarousel.tsx";
 import { HeaderWithFormatting } from "@/components/whatsapp/templates/Details/HeaderWithFormating.tsx";
+import type { TemplateFormValues } from "@/components/whatsapp/templates/Details/template-form.ts";
 import { TextFormateToolBar } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating.tsx";
 import type { WaTemplateDefaultValues } from "@/components/whatsapp/templates/Schema/templateSchema.ts";
@@ -65,6 +60,7 @@ import {
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge.tsx";
 import { WhatsAppChatShell } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
+import { useToggle } from "@/hooks/use-toggle.ts";
 import {
   OrderType,
   SubscriptionFeaturePathName,
@@ -80,11 +76,10 @@ import {
   WHATSAPP_TEMPLATE_LANGUAGE,
 } from "@/utils/constants.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
+import { toSelectOptions } from "@/utils/select-options.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 import { parseStringWithVariables, parseTemplate } from "@/utils/whatsapp/templates.tsx";
-
-import styles from "@/components/dashboard/whatsapp/templates/templateId.module.css";
-import buttonInputStyles from "@/components/whatsapp/templates/Details/ButtonInput.module.css";
 
 export function WhatsappTemplateById({
   forceTemplateType,
@@ -105,8 +100,9 @@ export function WhatsappTemplateById({
   const inputRef = useRef(null);
   const [value, toggle] = useToggle([true, false]);
   const { update } = useRouteParams();
-  const form = useForm<z.infer<typeof templateSchema>>({
-    initialValues: {
+  const form = useForm<TemplateFormValues>({
+    resolver: zodResolver(templateSchema) as any,
+    defaultValues: {
       name: "",
       header: null,
       language: "en",
@@ -135,50 +131,68 @@ export function WhatsappTemplateById({
         whatsappSettingsPhoneId: "",
       },
     },
-    validate: schemaResolver(templateSchema, {
-      sync: true,
-    }),
   });
   const configForm = useForm<z.infer<typeof configSchema>>({
-    initialValues: {
+    resolver: zodResolver(configSchema),
+    defaultValues: {
       price: 0,
       tax: 0,
       orderType: null,
       name: "",
     },
-    validate: schemaResolver(configSchema, {
-      sync: true,
-    }),
   });
-  const isOrderCreate = form.values.templateType === TemplateType.ORDER_DETAILS;
-  const colorScheme = useComputedColorScheme("light");
-  const bubbleBg = colorScheme === "dark" ? "#202c33" : "#fff";
+  const values = form.watch();
+  const configValues = configForm.watch();
+  const formErrors = form.formState.errors;
+
+  /**
+   * Most writes here target runtime-built paths (`buttons.3.text`,
+   * `defaultValues.catalog.mpm.sections.0.title`), which cannot be expressed as a
+   * statically-known `FieldPath`. This keeps the cast in one place.
+   */
+  const setTemplateValue = (path: string, value: unknown) =>
+    form.setValue(path as FieldPath<TemplateFormValues>, value as never, {
+      shouldDirty: true,
+      shouldValidate: form.formState.isSubmitted,
+    });
+  const registerField = (path: string) => form.register(path as FieldPath<TemplateFormValues>);
+  const errorAt = (path: string) =>
+    (path.split(".").reduce<any>((node, part) => node?.[part], formErrors as any)?.message ??
+      undefined) as string | undefined;
+
+  // Only the mutations are used. The list is still rendered from the watched `values`
+  // rather than `fields`, because a row's rendering depends on values edited after it was
+  // appended (e.g. a url containing COPY_CODE switches the row to the OTP editor), which
+  // the `fields` snapshot would not reflect.
+  const {
+    append: appendButton,
+    insert: insertButton,
+    remove: removeButton,
+  } = useFieldArray({ control: form.control, name: "buttons" });
+
+  const isOrderCreate = values.templateType === TemplateType.ORDER_DETAILS;
+  // Chat bubble background; the shadcn card token resolves per-theme.
+  const bubbleBg = "var(--card)";
 
   useEffect(() => {
     if (editingItem) {
-      form.resetDirty();
-      form.setValues(parseTemplate(editingItem));
+      form.reset(parseTemplate(editingItem) as TemplateFormValues);
       const selectedPhoneId =
         editingItem?.whatsappSettingsPhoneId ||
         editingItem?.defaultValues?.whatsappSettingsPhoneId ||
         "";
-      form.setFieldValue("whatsappSettingsPhoneId", selectedPhoneId);
-      form.setFieldValue("defaultValues.whatsappSettingsPhoneId", selectedPhoneId);
-      configForm.setValues(editingItem?.config);
+      setTemplateValue("whatsappSettingsPhoneId", selectedPhoneId);
+      setTemplateValue("defaultValues.whatsappSettingsPhoneId", selectedPhoneId);
+      configForm.reset(editingItem?.config);
       update({ templateId: editingItem?.data?.name });
     }
   }, [editingItem]);
 
   useEffect(() => {
-    if (
-      form.values.whatsappSettingsPhoneId !== form.values.defaultValues?.whatsappSettingsPhoneId
-    ) {
-      form.setFieldValue(
-        "defaultValues.whatsappSettingsPhoneId",
-        form.values.whatsappSettingsPhoneId,
-      );
+    if (values.whatsappSettingsPhoneId !== values.defaultValues?.whatsappSettingsPhoneId) {
+      setTemplateValue("defaultValues.whatsappSettingsPhoneId", values.whatsappSettingsPhoneId);
     }
-  }, [form.values.whatsappSettingsPhoneId]);
+  }, [values.whatsappSettingsPhoneId]);
 
   const { data: subscription } = useSubscription();
   const templateTypes = useMemo(
@@ -200,7 +214,7 @@ export function WhatsappTemplateById({
       checkoutBtn = false,
       flowBtn = false,
       catalogBtn = false;
-    form.values.buttons.forEach((b) => {
+    values.buttons.forEach((b) => {
       if (b.type === WHATSAPP_BUTTON_TYPE.SPM) {
         spmBtn = true;
       }
@@ -218,36 +232,50 @@ export function WhatsappTemplateById({
       }
     });
     return { spmBtn, mpmBtn, checkoutBtn, flowBtn, catalogBtn };
-  }, [form.values.buttons]);
+  }, [values.buttons]);
+
+  const templateTypeOptions = toSelectOptions(templateTypes);
+  const categoryOptions = toSelectOptions(WHATSAPP_TEMPLATE_CATEGORY);
+  const languageOptions = toSelectOptions(WHATSAPP_TEMPLATE_LANGUAGE);
+  const orderTypeOptions = toSelectOptions(Object.values(OrderType));
+  const broadcastTypeOptions = toSelectOptions(
+    isOrderCreate
+      ? [WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT, WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE]
+      : checkoutBtn
+        ? [WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE, WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO]
+        : Object.values(WHATSAPP_TEMPLATE_BROADCAST_TYPE)?.filter(
+            (data) => data !== WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT,
+          ),
+  );
 
   useEffect(() => {
     const currentTemplateType = form.getValues().templateType;
     const previousTemplateType = editingItem?.templateType;
     if (currentTemplateType != TemplateType.CAROUSEL) {
-      form.setFieldValue("productCarousel", []);
-      form.setFieldValue("mediaCarousel", []);
+      setTemplateValue("productCarousel", []);
+      setTemplateValue("mediaCarousel", []);
     }
     switch (form.getValues().templateType) {
       case TemplateType.ORDER_DETAILS:
-        form.setFieldValue("category", "UTILITY");
-        form.setFieldValue("buttons", [
+        setTemplateValue("category", "UTILITY");
+        setTemplateValue("buttons", [
           {
             type: WHATSAPP_BUTTON_TYPE.ORDER_DETAILS,
             text: "Review and Pay",
           },
         ]);
-        form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
+        setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
         break;
       case TemplateType.PAYMENT_CONFIRMATION:
-        form.setFieldValue("category", "UTILITY");
-        form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
-        form.setFieldValue("buttons", []);
+        setTemplateValue("category", "UTILITY");
+        setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
+        setTemplateValue("buttons", []);
         break;
       case TemplateType.CAROUSEL:
-        form.setFieldValue("category", "MARKETING");
-        form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
-        form.setFieldValue("buttons", []);
-        form.setFieldValue("footer", "");
+        setTemplateValue("category", "MARKETING");
+        setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
+        setTemplateValue("buttons", []);
+        setTemplateValue("footer", "");
         break;
       default:
         if (
@@ -260,9 +288,9 @@ export function WhatsappTemplateById({
           const buttons = editingItem?.data?.components?.find(
             (component) => component.type.toLowerCase() === "buttons",
           )?.buttons;
-          form.setFieldValue("buttons", buttons || []);
+          setTemplateValue("buttons", buttons || []);
         } else {
-          form.setFieldValue("buttons", []);
+          setTemplateValue("buttons", []);
         }
         break;
     }
@@ -281,32 +309,35 @@ export function WhatsappTemplateById({
     },
   );
 
-  const { data: catalog } = useConnectedWaCatalog(form.values.whatsappSettingsPhoneId);
+  const { data: catalog } = useConnectedWaCatalog(values.whatsappSettingsPhoneId);
   const productRetailerIds = useMemo(
     () => (catalog ? catalog.products?.map((p) => p.retailer_id) : []),
     [catalog],
   );
   useEffect(() => {
-    const selectedCatalogId = form.values.defaultValues?.catalog?.catalogId;
-    if (catalog && (!selectedCatalogId.length || selectedCatalogId !== catalog.catalogId))
-      form.setFieldValue("defaultValues.catalog.catalogId", catalog.catalogId);
+    // `catalogId` is absent whenever a saved template is loaded without one, so it has
+    // to stay optional here — the empty-string check it used to do was redundant with
+    // the inequality anyway.
+    const selectedCatalogId = values.defaultValues?.catalog?.catalogId;
+    if (catalog && selectedCatalogId !== catalog.catalogId)
+      setTemplateValue("defaultValues.catalog.catalogId", catalog.catalogId);
   }, [catalog]);
   useEffect(() => {
-    const variables = parseStringWithVariables(form.values.body);
-    const current = form.values.example || [];
+    const variables = parseStringWithVariables(values.body);
+    const current = values.example || [];
 
     if (current.length === variables.length) return;
 
     if (current.length > variables.length) {
-      form.setFieldValue("example", current.slice(0, variables.length));
+      setTemplateValue("example", current.slice(0, variables.length));
     } else {
       const newExamples = [...current];
       while (newExamples.length < variables.length) {
         newExamples.push("");
       }
-      form.setFieldValue("example", newExamples);
+      setTemplateValue("example", newExamples);
     }
-  }, [form.values.body]);
+  }, [values.body]);
   const updateTemplateMutation = useUpdateTemplateMutation(
     templateId,
     () => {
@@ -333,32 +364,43 @@ export function WhatsappTemplateById({
   );
   if (templateId && isPending) return <RateupLoader />;
 
+  /** First validation message from an RHF error tree, for the toast. */
+  function firstErrorMessage(errors: unknown): string | undefined {
+    for (const value of Object.values((errors ?? {}) as Record<string, any>)) {
+      if (typeof value?.message === "string") return value.message;
+      if (value && typeof value === "object") {
+        const nested = firstErrorMessage(value);
+        if (nested) return nested;
+      }
+    }
+    return undefined;
+  }
+
   async function handleSubmit(saveAsDraft: boolean = false) {
-    const { hasErrors, errors } = form.validate();
-    if (hasErrors) {
-      toast.error((Object.values(errors)?.[0] as string) ?? "Error in Template");
+    const isValid = await form.trigger();
+    if (!isValid) {
+      toast.error(firstErrorMessage(form.formState.errors) ?? "Error in Template");
       return;
     }
     if (isOrderCreate) {
-      const { hasErrors: configHasErrors, errors: configErrors } = configForm.validate();
-      if (configHasErrors) {
-        toast.error((Object.values(configErrors)?.[0] as string) ?? "Error in Template");
+      const configIsValid = await configForm.trigger();
+      if (!configIsValid) {
+        toast.error(firstErrorMessage(configForm.formState.errors) ?? "Error in Template");
         return;
       }
     }
-    const dynamicVariableArray = parseStringWithVariables(form.values.body || "");
-    const hasEmptyExamples = (form.values.example || []).some((val) => !val || val.trim() === "");
+    const dynamicVariableArray = parseStringWithVariables(values.body || "");
+    const hasEmptyExamples = (values.example || []).some((val) => !val || val.trim() === "");
 
     if (dynamicVariableArray?.length > 0) {
       if (!isArrayInCorrectOrder(dynamicVariableArray)) {
         toast.error("Dynamic variables name should is sequential numeric order");
         return;
-      } else if (form.values.example.length !== dynamicVariableArray.length || hasEmptyExamples) {
+      } else if (values.example.length !== dynamicVariableArray.length || hasEmptyExamples) {
         toast.error("Please provide example values for all dynamic variables");
         return;
       }
     }
-    const values = form.values;
     if (values?.buttons?.length > 12) {
       toast.error(translations("Max number of button in buttons should be 12"));
       return;
@@ -517,14 +559,14 @@ export function WhatsappTemplateById({
     setSelectedText(selectedText?.trim());
   };
   const getNextVariable = () => {
-    const variables = parseStringWithVariables(form.values.body);
+    const variables = parseStringWithVariables(values.body);
     if (variables.length === 0) return "{{1}}";
     const numbers = variables.map(Number);
     const max = Math.max(...numbers);
     return `{{${max + 1}}}`;
   };
   const applyFormatting = (style) => {
-    const content = form.values.body;
+    const content = values.body;
     if (style.startsWith("{{")) {
       insertValue(getNextVariable());
       return;
@@ -533,13 +575,13 @@ export function WhatsappTemplateById({
     const formattedText = `${style}${selectedText}${style}`;
     contentHistory.current.push(content);
     const newContent = content.replace(selectedText, formattedText);
-    form.setFieldValue("body", newContent);
+    setTemplateValue("body", newContent);
   };
 
   const undo = () => {
     if (contentHistory.current.length > 0) {
       const previousContent = contentHistory.current.pop();
-      form.setFieldValue("body", previousContent);
+      setTemplateValue("body", previousContent);
     }
   };
 
@@ -550,7 +592,7 @@ export function WhatsappTemplateById({
     const end = input.selectionEnd;
     const text = input.value;
     const newText = text.substring(0, start) + value + text.substring(end);
-    form.setFieldValue("body", newText);
+    setTemplateValue("body", newText);
     const newCursorPosition = start + value.length;
     requestAnimationFrame(() => {
       input.setSelectionRange(newCursorPosition, newCursorPosition);
@@ -573,13 +615,13 @@ export function WhatsappTemplateById({
       newObject = { type: e, text };
     }
     if (e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
-      const btn = form.values?.buttons?.filter((data) => data.type === (e as WHATSAPP_BUTTON_TYPE));
+      const btn = values?.buttons?.filter((data) => data.type === (e as WHATSAPP_BUTTON_TYPE));
       if (btn?.length > 0) {
         toast.error(`Only one button allowed for this type`);
         return;
       }
     }
-    const newData = form.values.buttons ?? [];
+    const newData = values.buttons ?? [];
     if (e === WHATSAPP_BUTTON_TYPE.ORDER_DETAILS) {
       const otherBtns = newData.find((b) => b.type !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY);
       if (otherBtns) {
@@ -588,12 +630,10 @@ export function WhatsappTemplateById({
         );
         return;
       }
-      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE);
-      form.setFieldValue("defaultValues", {
+      setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE);
+      setTemplateValue("defaultValues", {
         whatsappSettingsPhoneId:
-          form.values.whatsappSettingsPhoneId ||
-          form.values.defaultValues?.whatsappSettingsPhoneId ||
-          "",
+          values.whatsappSettingsPhoneId || values.defaultValues?.whatsappSettingsPhoneId || "",
         orderDetails: {
           productType: "digital-goods",
           discount: 0.0,
@@ -627,29 +667,29 @@ export function WhatsappTemplateById({
     }, -1);
 
     if (lastIndex === -1 || e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
-      form.insertListItem("buttons", newObject);
+      appendButton(newObject);
     } else {
-      form.insertListItem("buttons", newObject, lastIndex + 1);
+      insertButton(lastIndex + 1, newObject);
     }
     if (e === WHATSAPP_BUTTON_TYPE.SPM) {
-      form.setFieldValue("header", null);
-      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT);
+      setTemplateValue("header", null);
+      setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT);
     }
     if (e === WHATSAPP_BUTTON_TYPE.CATALOG) {
-      form.setFieldValue("header", null);
-      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
-      form.setFieldValue("category", "MARKETING");
+      setTemplateValue("header", null);
+      setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
+      setTemplateValue("category", "MARKETING");
     }
     if (e === WHATSAPP_BUTTON_TYPE.MPM) {
-      form.setFieldValue("header", "");
-      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
-      form.setFieldValue("category", "MARKETING");
+      setTemplateValue("header", "");
+      setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
+      setTemplateValue("category", "MARKETING");
     }
   };
   const deleteButton = (index: number) => {
-    form.removeListItem("buttons", index);
+    removeButton(index);
   };
-  const dynamicVariables = parseStringWithVariables(form.values.body);
+  const dynamicVariables = parseStringWithVariables(values.body);
 
   const requiredIcon = (
     <sup>
@@ -657,67 +697,64 @@ export function WhatsappTemplateById({
     </sup>
   );
 
+  /** Blocks interaction with a section while the saved template is in read-only mode.
+   *  Its container must be `relative`, otherwise the overlay escapes to the nearest
+   *  positioned ancestor and covers the whole page (Preview / Edit buttons included). */
   function ReadonlyOverlay() {
     if (editingItem?.data?.id && value) {
-      return <Overlay color="#fff" backgroundOpacity={0} zIndex={10} />;
+      return <div className="absolute inset-0 z-10" />;
     }
     return null;
   }
 
   const messageContent = (
-    <Stack miw="200px" gap={3} p={"md"}>
+    <div className="flex flex-col p-4">
       <ResponseMessageContainer backgroundColor={bubbleBg}>
-        <Box bg={"var(--light-grey-color-2)"} display={isOrderCreate ? "block" : "none"}>
-          <Text fz={"xs"}>
+        <div>
+          <p className="text-xs">
             {translations("ORDER")} #{"{{Order number}}"}
-          </Text>
-          <Divider variant="dashed" color={"black"} />
+          </p>
+          <Separator className="border-dashed" />
 
-          <Group>
+          <div className="flex items-center">
             <IconImageInPicture height={50} size={32} />
-            <Box>
-              <Text fz={"xs"}>{"{{Product name}}"}</Text>
-              <Text fz={"xs"}>
+            <div>
+              <p className="text-xs">{"{{Product name}}"}</p>
+              <p className="text-xs">
                 {translations("Quantity")} {"{{#}}"}
-              </Text>
-            </Box>
-          </Group>
-          <Divider variant="dashed" color={"black"} />
-          <Group justify="space-between">
-            <Text fz={"xs"}>{translations("Total")}</Text>
-            <Text fz={"xs"}>${"{{}}"}</Text>
-          </Group>
-        </Box>
-        {HeaderWithFormatting(form.values?.header, form.values?.format)}
-        <Text
-          fz={"0.95rem"}
+              </p>
+            </div>
+          </div>
+          <Separator className="border-dashed" />
+          <div className="flex items-center justify-between">
+            <p className="text-xs">{translations("Total")}</p>
+            <p className="text-xs">${"{{}}"}</p>
+          </div>
+        </div>
+        {HeaderWithFormatting(values?.header, values?.format)}
+        <p
           style={{
             wordBreak: "break-all",
             whiteSpace: "pre-wrap",
             fontFamily: "inherit",
           }}
-          component="pre"
         >
-          {TextWithFormatting(form.values?.body, form.values?.example, form?.values?.category)}
-        </Text>
-        <Text
-          c="dimmed"
-          fz={"0.7rem"}
+          {TextWithFormatting(values?.body, values?.example, values?.category)}
+        </p>
+        <p
+          className="text-muted-foreground"
           style={{
             wordBreak: "break-all",
           }}
-          display={
-            form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION ? "block" : "none"
-          }
         >
-          {form.values?.category === WaTemplateCategory.AUTHENTICATION
-            ? form.values?.code_expiration_minutes
-              ? `Expires in ${form.values?.code_expiration_minutes} minutes.`
+          {values?.category === WaTemplateCategory.AUTHENTICATION
+            ? values?.code_expiration_minutes
+              ? `Expires in ${values?.code_expiration_minutes} minutes.`
               : ""
-            : form.values.footer}
-        </Text>
+            : values.footer}
+        </p>
       </ResponseMessageContainer>
-      {form.values?.buttons?.slice(0, 2).map((data) => (
+      {values?.buttons?.slice(0, 2).map((data) => (
         <QuickReplyButton
           text={data?.text}
           key={data?.text}
@@ -725,14 +762,14 @@ export function WhatsappTemplateById({
           style={{ backgroundColor: bubbleBg }}
         />
       ))}
-      {form.values?.buttons?.length > 2 && (
+      {values?.buttons?.length > 2 && (
         <QuickReplyButton
           text={translations("See all options")}
           style={{ backgroundColor: bubbleBg }}
         />
       )}
-      <ScrollAreaAutosize maw={"220px"}>
-        <Box
+      <ScrollArea>
+        <div
           style={{
             display: "flex",
             flexDirection: "row",
@@ -741,21 +778,23 @@ export function WhatsappTemplateById({
             padding: 4,
           }}
         >
-          {form.values.mediaCarousel?.map((card, index) => (
-            <Stack w={"180px"} bg={bubbleBg} key={index} gap={1} style={{ borderRadius: "10px" }}>
+          {values.mediaCarousel?.map((card, index) => (
+            <div
+              className="flex w-45 flex-col gap-px"
+              key={index}
+              style={{ borderRadius: "10px", background: bubbleBg }}
+            >
               {HeaderWithFormatting(card?.header, card?.format)}
-              <Text
-                fz={"0.95rem"}
+              <p
+                className="p-2.5"
                 style={{
                   wordBreak: "break-all",
                   whiteSpace: "pre-wrap",
                   fontFamily: "inherit",
                 }}
-                component="pre"
-                p={"xs"}
               >
-                {TextWithFormatting(card?.body, card?.example, form?.values?.category)}
-              </Text>
+                {TextWithFormatting(card?.body, card?.example, values?.category)}
+              </p>
               {card?.buttons.map((data) => (
                 <QuickReplyButton
                   text={data?.text}
@@ -764,332 +803,359 @@ export function WhatsappTemplateById({
                   style={{ backgroundColor: bubbleBg }}
                 />
               ))}
-            </Stack>
+            </div>
           ))}
           <ProductCardCarouselPreview form={form} catalog={catalog} />
-        </Box>
-      </ScrollAreaAutosize>
-    </Stack>
+        </div>
+      </ScrollArea>
+    </div>
   );
 
   return (
     <form>
-      <Box
-        onKeyDown={getHotkeyHandler([
-          [SAVE_HOTKEY, (event: any) => form.onSubmit((_e) => handleSubmit(true))(event)],
-        ])}
+      <div
+        className="flex flex-col gap-4"
+        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => handleSubmit(true)]])}
       >
-        <Flex
-          mih={50}
-          gap="md"
-          justify="space-between"
-          align="center"
-          direction="row"
-          wrap="wrap"
-          mb={"1rem"}
-        >
-          <Title order={2} c={"var(--grey-color)"}>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="truncate text-2xl font-semibold">
             {editingItem ? editingItem?.data?.name : translations("Create Template")}
-          </Title>
-          <Flex mih={50} gap="xs" justify="flex-start" align="center" direction="row" wrap="wrap">
+          </h2>
+          <div className="flex flex-wrap items-center gap-2.5">
             <PhonePreviewButton platform="whatsapp" label={translations("Preview")}>
               <WhatsAppChatShell>{messageContent}</WhatsAppChatShell>
             </PhonePreviewButton>
             {editingItem?.data?.id && value ? (
-              <RateupButtonPrimary title={translations("Edit")} onClick={toggle} />
+              <Button onClick={() => toggle()}>{translations("Edit")}</Button>
             ) : (
               <React.Fragment>
                 {!isOrderCreate && (
-                  <RateupButtonPrimary
-                    title={translations("Save as draft")}
-                    loading={isSubmittingDraft}
+                  <Button
                     variant="outline"
+                    disabled={isSubmittingDraft}
                     onClick={() => handleSubmit(true)}
-                  />
+                  >
+                    {isSubmittingDraft && <Spinner />}
+                    {translations("Save as draft")}
+                  </Button>
                 )}
 
-                <RateupButtonPrimary
-                  title={translations("Save & Submit")}
-                  loading={isSubmitting}
-                  onClick={() => handleSubmit(false)}
-                />
+                <Button disabled={isSubmitting} onClick={() => handleSubmit(false)}>
+                  {isSubmitting && <Spinner />}
+                  {translations("Save & Submit")}
+                </Button>
               </React.Fragment>
             )}
-          </Flex>
-        </Flex>
-        <PaperLayout className={styles["template-content-container"]} h={"85dvh"}>
-          <Stack gap={"xs"}>
-            <Alert
-              variant="filled"
-              color="red"
-              icon={<IconInfoCircle />}
-              display={
-                createTemplateMutation.isError ||
-                saveTemplateAsDraftMutation.isError ||
-                updateTemplateMutation.isError
-                  ? "block"
-                  : "none"
-              }
-            >
-              {updateTemplateMutation.error?.message ||
-                saveTemplateAsDraftMutation?.error?.message ||
-                createTemplateMutation?.error?.message ||
-                "Error Saving Changes"}
-            </Alert>
-            <Group justify="space-between" pos={"relative"}>
-              <WaTemplateStatusBadge status={form.values.status} />
+          </div>
+        </div>
+        <div className="w-full overflow-auto rounded-lg bg-card p-4 shadow-md md:p-6">
+          <div className="flex flex-col gap-6">
+            {(createTemplateMutation.isError ||
+              saveTemplateAsDraftMutation.isError ||
+              updateTemplateMutation.isError) && (
+              <Alert variant="destructive">
+                <IconInfoCircle />
+                <AlertDescription>
+                  {updateTemplateMutation.error?.message ||
+                    saveTemplateAsDraftMutation?.error?.message ||
+                    createTemplateMutation?.error?.message ||
+                    "Error Saving Changes"}
+                </AlertDescription>
+              </Alert>
+            )}
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <WaTemplateStatusBadge status={values.status} />
               {editingItem?.data?.id && (
                 <LinkCopyElement
+                  className="w-full max-w-xs"
                   link={editingItem?.data?.id}
                   value={editingItem?.data?.id}
                   label={translations("Template ID")}
-                  style={{
-                    zIndex: 11,
-                  }}
                 />
               )}
+            </div>
+            <div className="relative grid grid-cols-1 gap-4 md:grid-cols-2">
               <ReadonlyOverlay />
-            </Group>
-            <SimpleGrid cols={2} pos={"relative"}>
-              <ReadonlyOverlay />
-              <ContainedTextField
-                label={
-                  <Group gap={4} wrap="nowrap">
-                    <Text fz={14} fw={500}>
-                      {translations("Template Name")}
-                    </Text>
+              <Field>
+                <FieldLabel>
+                  <div className="flex items-center gap-1 flex-nowrap">
+                    <p className="text-sm font-medium">{translations("Template Name")}</p>
                     {requiredIcon}
-                    <Text c="blue" size="xs">
+                    <p className="text-xs text-blue-600">
                       ({translations("Lower-case letters and underscores only")})
-                    </Text>
-                  </Group>
-                }
-                placeholder={translations("Name")}
-                {...form.getInputProps("name")}
-                rightSection={
-                  <LengthTracker length={form?.values?.name?.length} maxValue={512} atStart />
-                }
-                disabled={!!editingItem?.data?.id}
-              />
-              <ContainedSelection
-                label={
-                  <Group gap={4} wrap="nowrap">
-                    <Text fz={14} fw={500}>
-                      TemplateType
-                    </Text>
+                    </p>
+                  </div>
+                </FieldLabel>
+                <InputGroup>
+                  <InputGroupInput
+                    placeholder={translations("Name")}
+                    disabled={!!editingItem?.data?.id}
+                    aria-invalid={!!formErrors.name}
+                    {...registerField("name")}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <LengthTracker length={values?.name?.length} maxValue={512} atStart />
+                  </InputGroupAddon>
+                </InputGroup>
+                {formErrors.name && <FieldError>{formErrors.name.message}</FieldError>}
+              </Field>
+              <Field>
+                <FieldLabel>
+                  <div className="flex items-center gap-1 flex-nowrap">
+                    <p className="text-sm font-medium">TemplateType</p>
                     {requiredIcon}
-                  </Group>
-                }
-                placeholder={translations("TemplateType")}
-                {...form.getInputProps("templateType")}
-                data={templateTypes}
-                allowDeselect={false}
-              />
+                  </div>
+                </FieldLabel>
+                <Select
+                  items={templateTypeOptions}
+                  value={values.templateType ?? ""}
+                  onValueChange={(value) => setTemplateValue("templateType", value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={translations("TemplateType")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templateTypes.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        disabled={option.disabled}
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
               {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
                 form.getValues().templateType !== TemplateType.CAROUSEL && (
-                  <ContainedSelection
-                    label={
-                      <Group gap={4} wrap="nowrap">
-                        <Text fz={14} fw={500}>
-                          Category
-                        </Text>
+                  <Field>
+                    <FieldLabel>
+                      <div className="flex items-center gap-1 flex-nowrap">
+                        <p className="text-sm font-medium">Category</p>
                         {requiredIcon}
-                      </Group>
-                    }
-                    placeholder={translations("Category")}
-                    {...form.getInputProps("category")}
-                    data={WHATSAPP_TEMPLATE_CATEGORY}
-                    allowDeselect={false}
-                    disabled={isOrderCreate || catalogBtn || spmBtn || mpmBtn || checkoutBtn}
-                  />
+                      </div>
+                    </FieldLabel>
+                    <Select
+                      items={categoryOptions}
+                      value={values.category ?? ""}
+                      onValueChange={(value) => setTemplateValue("category", value)}
+                      disabled={isOrderCreate || catalogBtn || spmBtn || mpmBtn || checkoutBtn}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={translations("Category")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categoryOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
                 )}
 
-              <ContainedSelection
-                label={
-                  <Group gap={4} wrap="nowrap">
-                    <Text fz={14} fw={500}>
-                      {translations("Language")}
-                    </Text>
+              <Field>
+                <FieldLabel>
+                  <div className="flex items-center gap-1 flex-nowrap">
+                    <p className="text-sm font-medium">{translations("Language")}</p>
                     {requiredIcon}
-                  </Group>
-                }
-                placeholder={translations("Language")}
-                {...form.getInputProps("language")}
-                searchable
-                data={WHATSAPP_TEMPLATE_LANGUAGE}
-                allowDeselect={false}
-              />
+                  </div>
+                </FieldLabel>
+                <Select
+                  items={languageOptions}
+                  value={values.language ?? ""}
+                  onValueChange={(value) => setTemplateValue("language", value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={translations("Language")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {languageOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
               <div>
                 <AccountSelector
-                  value={form.values.whatsappSettingsPhoneId}
+                  value={values.whatsappSettingsPhoneId}
                   onChange={(value) => {
-                    form.setFieldValue("whatsappSettingsPhoneId", value ?? "");
-                    form.setFieldValue("defaultValues.whatsappSettingsPhoneId", value ?? "");
+                    setTemplateValue("whatsappSettingsPhoneId", value ?? "");
+                    setTemplateValue("defaultValues.whatsappSettingsPhoneId", value ?? "");
                   }}
                   label={translations("Account")}
                   className="h-10"
                 />
               </div>
-            </SimpleGrid>
-            {form.values?.category !== WaTemplateCategory.AUTHENTICATION &&
+            </div>
+            {values?.category !== WaTemplateCategory.AUTHENTICATION &&
               form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
               form.getValues().templateType !== TemplateType.CAROUSEL && (
-                <Grid pos={"relative"}>
+                <div className="relative grid grid-cols-1 gap-4 md:grid-cols-2">
                   <ReadonlyOverlay />
-                  <Grid.Col span={6}>
-                    <ContainedSelection
-                      label={
-                        <>
-                          <Group gap={4} wrap="nowrap">
-                            <Text fz={14} fw={500} w={"max-content"}>
+                  <div>
+                    <Field>
+                      <FieldLabel>
+                        <div>
+                          <div className="flex items-center gap-1 flex-nowrap">
+                            <p className="text-sm font-medium">
                               {translations("Broadcast header")}{" "}
-                            </Text>
+                            </p>
                             {requiredIcon}
-                          </Group>
-                          <Text fz={13}>
+                          </div>
+                          <p className="text-[13px]">
                             {translations(
                               "Highlight your brand here, use images or videos, to stand out",
                             )}
-                          </Text>
-                        </>
-                      }
-                      placeholder={translations("Broadcast Type")}
-                      onChange={(e) => {
-                        const currentHeader = form.values.header;
-                        if (currentHeader) {
-                          const isFile = currentHeader instanceof File;
-                          if (e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT || isFile) {
-                            form.setFieldValue("header", null);
+                          </p>
+                        </div>
+                      </FieldLabel>
+                      <Select
+                        items={broadcastTypeOptions}
+                        value={values.format ?? ""}
+                        onValueChange={(value) => {
+                          const currentHeader = values.header;
+                          if (currentHeader) {
+                            const isFile = currentHeader instanceof File;
+                            if (value === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT || isFile) {
+                              setTemplateValue("header", null);
+                            }
                           }
-                        }
-                        form.setFieldValue("format", e);
-                      }}
-                      value={form.values.format}
-                      data={
-                        isOrderCreate
-                          ? [
-                              WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT,
-                              WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
-                            ]
-                          : checkoutBtn
-                            ? [
-                                WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
-                                WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO,
-                              ]
-                            : Object.values(WHATSAPP_TEMPLATE_BROADCAST_TYPE)?.filter(
-                                (data) => data !== WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT,
-                              )
-                      }
-                      allowDeselect={false}
-                      disabled={spmBtn || catalogBtn || mpmBtn}
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={"auto"}>
-                    <Stack
-                      h={"100%"}
-                      justify="center"
-                      w={form.values?.format === "TEXT" ? "100%" : 300}
-                    >
-                      <BroadCastTypeValue form={form} type={form.values?.format} />
-                    </Stack>
-                  </Grid.Col>
-                </Grid>
+                          setTemplateValue("format", value);
+                        }}
+                        disabled={spmBtn || catalogBtn || mpmBtn}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder={translations("Broadcast Type")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {broadcastTypeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </div>
+                  <div className="flex flex-col justify-end">
+                    <BroadCastTypeValue form={form} type={values?.format} />
+                  </div>
+                </div>
               )}
 
-            <Stack gap={0} pos={"relative"}>
+            <div className="relative flex flex-col gap-2">
               <ReadonlyOverlay />
-              {form.values?.category !== WaTemplateCategory.AUTHENTICATION && (
+              {values?.category !== WaTemplateCategory.AUTHENTICATION && (
                 <>
-                  <Group gap={4} wrap="nowrap">
-                    <Text fz={14} fw={500}>
-                      {translations("Body")}
-                    </Text>
-                    {requiredIcon}
-                  </Group>
-                  <Text fz={13}>
-                    {translations(
-                      "Make your messages personal using variables and get more replies!",
-                    )}
-                  </Text>
-                  <TextFormateToolBar
-                    applyFormatting={applyFormatting}
-                    insertValue={insertValue}
-                    undo={undo}
-                    dynamicVariables={dynamicVariables}
-                  />
-                  <Textarea
-                    ref={inputRef}
-                    styles={{
-                      input: {
-                        borderRadius: "0px 0px 12px 12px",
-                        paddingRight: 90,
-                      },
-                      section: {
-                        width: "fit-content",
-                      },
-                    }}
-                    placeholder={translations("Enter the text")}
-                    autosize
-                    minRows={3}
-                    onSelect={handleSelect}
-                    {...form.getInputProps("body")}
-                    rightSection={
-                      <LengthTracker length={form?.values?.body?.length} maxValue={1024} atStart />
-                    }
-                  />
+                  <div>
+                    <div className="flex items-center gap-1 flex-nowrap">
+                      <p className="text-sm font-medium">{translations("Body")}</p>
+                      {requiredIcon}
+                    </div>
+                    <p className="text-[13px] text-muted-foreground">
+                      {translations(
+                        "Make your messages personal using variables and get more replies!",
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <TextFormateToolBar
+                      applyFormatting={applyFormatting}
+                      insertValue={insertValue}
+                      undo={undo}
+                      dynamicVariables={dynamicVariables}
+                    />
+                    <div className="relative">
+                      <Textarea
+                        ref={inputRef}
+                        className="field-sizing-content rounded-t-none rounded-b-xl pr-22.5"
+                        placeholder={translations("Enter the text")}
+                        rows={3}
+                        onSelect={handleSelect}
+                        aria-invalid={!!formErrors.body}
+                        {...registerField("body")}
+                      />
+                      <div className="pointer-events-none absolute right-2 bottom-2">
+                        <LengthTracker length={values?.body?.length} maxValue={1024} atStart />
+                      </div>
+                    </div>
+                    {formErrors.body && <FieldError>{formErrors.body.message}</FieldError>}
+                  </div>
                 </>
               )}
-            </Stack>
-            <Stack gap={0} pos={"relative"}>
+            </div>
+            <div className="relative flex flex-col gap-4">
               <ReadonlyOverlay />
-              {form.values?.category !== WaTemplateCategory.AUTHENTICATION &&
-                dynamicVariables?.map((data, index) => (
-                  <ContainedTextField
-                    key={data}
-                    placeholder={`${translations("Enter the content for")} {{${data}}}`}
-                    {...form.getInputProps(`example.${index}`)}
-                  />
-                ))}
+              {values?.category !== WaTemplateCategory.AUTHENTICATION &&
+                dynamicVariables?.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {dynamicVariables.map((data, index) => (
+                      <Field key={data} data-invalid={!!errorAt(`example.${index}`)}>
+                        <Input
+                          placeholder={`${translations("Enter the content for")} {{${data}}}`}
+                          aria-invalid={!!errorAt(`example.${index}`)}
+                          {...registerField(`example.${index}`)}
+                        />
+                        {errorAt(`example.${index}`) && (
+                          <FieldError>{errorAt(`example.${index}`)}</FieldError>
+                        )}
+                      </Field>
+                    ))}
+                  </div>
+                )}
 
               {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
                 form.getValues().templateType !== TemplateType.CAROUSEL && (
                   <>
-                    {form.values?.category !== WaTemplateCategory.AUTHENTICATION ? (
-                      <ContainedTextField
-                        label={
-                          <>
-                            <Text fz={14} fw={500}>
+                    {values?.category !== WaTemplateCategory.AUTHENTICATION ? (
+                      <Field data-invalid={!!formErrors.footer}>
+                        <FieldLabel>
+                          <div>
+                            <p className="text-sm font-medium">
                               {translations("Footer (Optional)")}
-                            </Text>
-                            <Text fz={13}>
+                            </p>
+                            <p className="text-[13px]">
                               {translations(
                                 "Footers are great to add any disclaimers or to add a thoughtful PS",
                               )}
-                            </Text>
-                          </>
-                        }
-                        placeholder={translations("Footer")}
-                        {...form.getInputProps("footer")}
-                        rightSection={
-                          <LengthTracker
-                            length={form?.values?.footer?.length}
-                            maxValue={60}
-                            atStart
+                            </p>
+                          </div>
+                        </FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput
+                            placeholder={translations("Footer")}
+                            aria-invalid={!!formErrors.footer}
+                            {...registerField("footer")}
                           />
-                        }
-                      />
+                          <InputGroupAddon align="inline-end">
+                            <LengthTracker length={values?.footer?.length} maxValue={60} atStart />
+                          </InputGroupAddon>
+                        </InputGroup>
+                        {formErrors.footer && <FieldError>{formErrors.footer.message}</FieldError>}
+                      </Field>
                     ) : (
-                      <ContainedNumberInput
-                        label={
-                          <Text fz={14} fw={500}>
+                      <Field>
+                        <FieldLabel>
+                          <p className="text-sm font-medium">
                             {translations("Code Expiration (minutes)")}
-                          </Text>
-                        }
-                        placeholder={translations("Expiration time")}
-                        min={1}
-                        max={90}
-                        {...form.getInputProps("code_expiration_minutes")}
-                      />
+                          </p>
+                        </FieldLabel>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={90}
+                          placeholder={translations("Expiration time")}
+                          value={values.code_expiration_minutes ?? ""}
+                          onChange={(event) =>
+                            setTemplateValue("code_expiration_minutes", Number(event.target.value))
+                          }
+                        />
+                      </Field>
                     )}
 
                     <ButtonSelection
@@ -1099,14 +1165,17 @@ export function WhatsappTemplateById({
                       checkoutBtn={checkoutBtn}
                       catalogBtn={catalogBtn}
                       spmBtn={spmBtn}
-                      btnLen={form?.values?.buttons?.length}
+                      btnLen={values?.buttons?.length}
                       disabled={isOrderCreate}
-                      category={form.values?.category as any}
+                      category={values?.category as any}
                     />
-                    {form.values?.buttons?.length > 0 && (
-                      <>
-                        {form.values?.buttons?.map((data, index) => (
-                          <Group className={buttonInputStyles.buttonBox} key={index}>
+                    {values?.buttons?.length > 0 && (
+                      <div className="flex flex-col gap-3">
+                        {values?.buttons?.map((data, index) => (
+                          <div
+                            className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-muted p-3"
+                            key={index}
+                          >
                             <ButtonInput
                               form={form}
                               deleteButton={deleteButton}
@@ -1115,70 +1184,96 @@ export function WhatsappTemplateById({
                               catalog={catalog}
                               productRetailerIds={productRetailerIds}
                             />
-                          </Group>
+                          </div>
                         ))}
-                      </>
+                      </div>
                     )}
                     {isOrderCreate && (
-                      <>
-                        <Group gap={4} wrap="nowrap">
-                          <Text fz={14} fw={500}>
-                            {translations("Config")}
-                          </Text>
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center gap-1 flex-nowrap">
+                          <p className="text-sm font-medium">{translations("Config")}</p>
                           {requiredIcon}
-                        </Group>
-                        <ContainedTextField
-                          label={
-                            <Group gap={4} wrap="nowrap">
-                              <Text fz={14} fw={500}>
-                                {translations("Name")}
-                              </Text>
-                              {requiredIcon}
-                            </Group>
-                          }
-                          placeholder={"name"}
-                          {...configForm.getInputProps("name")}
-                        />
-                        <ContainedNumberInput
-                          label={
-                            <Group gap={4} wrap="nowrap">
-                              <Text fz={14} fw={500}>
-                                {translations("Price")}
-                              </Text>
-                              {requiredIcon}
-                            </Group>
-                          }
-                          placeholder={translations("price")}
-                          min={0}
-                          {...configForm.getInputProps("price")}
-                        />
-                        <ContainedNumberInput
-                          label={
-                            <Group gap={4} wrap="nowrap">
-                              <Text fz={14} fw={500}>
-                                {translations("Tax")}
-                              </Text>
-                              {requiredIcon}
-                            </Group>
-                          }
-                          placeholder={translations("tax")}
-                          min={0}
-                          {...configForm.getInputProps("tax")}
-                        />
-                        <ContainedSelection
-                          label={
-                            <Text fz={14} fw={500}>
-                              {translations("OrderType")}
-                            </Text>
-                          }
-                          placeholder={translations("order type")}
-                          data={Object.values(OrderType)}
-                          description={
-                            'When this field is passed in we hide the "Review and Pay" button and only show the "Pay Now" button in the order details bubble'
-                          }
-                          {...configForm.getInputProps("orderType")}
-                        />
-                      </>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                          <Field>
+                            <FieldLabel>
+                              <div className="flex items-center gap-1 flex-nowrap">
+                                <p className="text-sm font-medium">{translations("Name")}</p>
+                                {requiredIcon}
+                              </div>
+                            </FieldLabel>
+                            <Input placeholder={"name"} {...configForm.register("name")} />
+                          </Field>
+                          <Field>
+                            <FieldLabel>
+                              <div className="flex items-center gap-1 flex-nowrap">
+                                <p className="text-sm font-medium">{translations("Price")}</p>
+                                {requiredIcon}
+                              </div>
+                            </FieldLabel>
+                            <Input
+                              type="number"
+                              min={0}
+                              placeholder={translations("price")}
+                              value={configValues.price ?? 0}
+                              onChange={(event) =>
+                                configForm.setValue("price", Number(event.target.value), {
+                                  shouldDirty: true,
+                                })
+                              }
+                            />
+                          </Field>
+                          <Field>
+                            <FieldLabel>
+                              <div className="flex items-center gap-1 flex-nowrap">
+                                <p className="text-sm font-medium">{translations("Tax")}</p>
+                                {requiredIcon}
+                              </div>
+                            </FieldLabel>
+                            <Input
+                              type="number"
+                              min={0}
+                              placeholder={translations("tax")}
+                              value={configValues.tax ?? 0}
+                              onChange={(event) =>
+                                configForm.setValue("tax", Number(event.target.value), {
+                                  shouldDirty: true,
+                                })
+                              }
+                            />
+                          </Field>
+                          <Field>
+                            <FieldLabel>
+                              <p className="text-sm font-medium">{translations("OrderType")}</p>
+                            </FieldLabel>
+                            <Select
+                              items={orderTypeOptions}
+                              value={configValues.orderType ?? ""}
+                              onValueChange={(value) =>
+                                configForm.setValue("orderType", value as OrderType, {
+                                  shouldDirty: true,
+                                })
+                              }
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder={translations("order type")} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {orderTypeOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FieldDescription>
+                              When this field is passed in we hide the &quot;Review and Pay&quot;
+                              button and only show the &quot;Pay Now&quot; button in the order
+                              details bubble
+                            </FieldDescription>
+                          </Field>
+                        </div>
+                      </div>
                     )}
                   </>
                 )}
@@ -1189,10 +1284,10 @@ export function WhatsappTemplateById({
                   productRetailerIds={productRetailerIds}
                 />
               )}
-            </Stack>
-          </Stack>
-        </PaperLayout>
-      </Box>
+            </div>
+          </div>
+        </div>
+      </div>
     </form>
   );
 }

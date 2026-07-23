@@ -41,10 +41,6 @@
   padding: 0.3125rem 1rem;
 }
 
-.links-list-container :global(.mantine-ScrollArea-viewport > div) {
-  height: 100%;
-}
-
 /* LinksList.tsx styles */
 
 .link-cards-container-div {
@@ -67,7 +63,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 2rem;
-  background-color: var(--mantine-color-gray-0);
+  background-color: #f8f9fa;
   border-radius: 0.625rem;
 }
 
@@ -83,7 +79,7 @@
 }
 
 .drag-handle-div svg {
-  color: var(--mantine-color-gray-7);
+  color: #495057;
 }
 
 .title-and-url-container {
@@ -136,9 +132,4 @@
   height: auto;
   padding: 0.3125rem;
   cursor: pointer;
-}
-
-.delete-btn :global(.mantine-Button-section) {
-  margin-right: 0.3125rem;
-  pointer-events: none;
 }

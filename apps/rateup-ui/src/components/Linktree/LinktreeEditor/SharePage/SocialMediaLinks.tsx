@@ -1,9 +1,8 @@
-import { useDisclosure } from "@mantine/hooks";
-
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useDisclosure } from "@/hooks/useDisclosure";
 
-import FormModalLayout from "../../../Modal/FormModalLayout.tsx";
 import IFrameModal from "../../../Survey/ShareSurvey/IFrameModal.tsx";
 import { getLink, socialMediaLinks } from "./constants.tsx";
 
@@ -39,15 +38,21 @@ function SocialMediaLinks({ linktreeName, linktreeShareUrl, isPublished }) {
         })}
       </TooltipProvider>
 
-      <FormModalLayout
-        title="Generate IFrame"
-        opened={isIframeModalOpen}
-        onClose={closeIframeModal}
-        size="lg"
-        centered
+      <Dialog
+        open={isIframeModalOpen}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) closeIframeModal();
+        }}
       >
-        <IFrameModal close={closeIframeModal} shareUrl={linktreeShareUrl} />
-      </FormModalLayout>
+        <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-175">
+          <DialogHeader>
+            <DialogTitle className="text-center text-3xl font-semibold">
+              Generate IFrame
+            </DialogTitle>
+          </DialogHeader>
+          <IFrameModal close={closeIframeModal} shareUrl={linktreeShareUrl} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
