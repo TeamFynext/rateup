@@ -9,6 +9,7 @@ import {
   WaMessageAssignBody,
   BlockUserBody,
   FavoriteContactBody,
+  SpamContactBody,
   ClearMentionsBody,
   ReopenConversationBody,
   GenerateInboxResponseBody,
@@ -38,6 +39,7 @@ import {
   createWaMessageOrgTeamMap,
   getWaMessageLogs,
   setConversationFavorite,
+  setContactSpam,
 } from "./wamessage.service.js";
 import { ByContactIdParams, ContactCore } from "../../../contact/contact.schema.js";
 import {
@@ -201,10 +203,11 @@ export async function handleWaMessages(
       if (sourcePlatform === PlatformType.WHATSAPP) {
         waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
       }
-      if (
-        contact.waMessageAssignStatus !== WaMessageAssignStatus.SPAM &&
-        WaMessageClosedStatus.includes(contact.waMessageAssignStatus)
-      ) {
+      // A closed chat reopens when the customer writes back — unless they are a
+      // spam contact, whose messages stay filed against the closed ticket instead
+      // of resurfacing in the inbox. (Was a SPAM *status* check before spam moved
+      // onto the contact.)
+      if (!contact.isSpam && WaMessageClosedStatus.includes(contact.waMessageAssignStatus)) {
         contact = await updateContactById(contact.id, {
           waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
         });
@@ -715,6 +718,30 @@ export async function unblockWhatsappUserHandler(
     const res = await unblockWhatsappUser(request.user.orgId, request.body.phoneNumbersList);
     if (res.success) return reply.code(200).send();
     reply.code(400).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+/**
+ * Mark a contact as spam, or take them back out of it. Contact-grained — the body
+ * carries a contactId, never a conversationId — because spam describes the person.
+ */
+export async function setContactSpamHandler(
+  request: FastifyRequest<{ Body: SpamContactBody }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await setContactSpam(
+      request.user.orgId,
+      request.body.contactId,
+      request.body.isSpam,
+      request.userId,
+      request.body.messageId,
+    );
+    if (res.success) return reply.code(200).send(res);
+    reply.code(404).send({ success: false, message: "Contact not found" });
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

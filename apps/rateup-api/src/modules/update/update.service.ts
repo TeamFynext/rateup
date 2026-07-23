@@ -510,6 +510,7 @@ export async function recalculateInboxStats(orgId: string) {
       c.id AS contact_id,
       c."waMessageAssignStatus",
       c."blockedOnWhatsApp",
+      c."isSpam",
       c."lastReceivedMessageTimeStamp" IS NOT NULL AS has_receive
     FROM "Contact" c
     WHERE c."orgId" = ${orgId}::uuid
@@ -518,7 +519,8 @@ export async function recalculateInboxStats(orgId: string) {
     COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'UNASSIGNED' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS unassigned_count,
     COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'ASSIGNED' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS assigned_count,
     COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'CLOSED' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS closed_count,
-    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'SPAM' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS spam_count,
+    -- Spam is a contact flag now, not a status, so it is counted from the flag.
+    COUNT(*) FILTER (WHERE mf."isSpam" AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS spam_count,
     COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'RESOLVED' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS resolved_count,
     COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = 'UNRESOLVED' AND mf.has_receive AND NOT mf."blockedOnWhatsApp")::INTEGER AS unresolved_count,
     COUNT(*) FILTER (WHERE mf."blockedOnWhatsApp")::INTEGER AS blocked_count,

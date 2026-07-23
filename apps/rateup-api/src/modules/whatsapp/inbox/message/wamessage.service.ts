@@ -21,7 +21,11 @@ import { getWaSettings } from "../../settings/wa_settings.service.js";
 import { getScopedSourceIdentifiers } from "../../settings/wa_channel_access.js";
 import axios from "axios";
 import type { InboxStatus } from "../../../../types/enums.js";
-import { WaAssignedChatPermission, WaMessageAssignStatus } from "../../../../types/enums.js";
+import {
+  CloseReason,
+  WaAssignedChatPermission,
+  WaMessageAssignStatus,
+} from "../../../../types/enums.js";
 import { updateContactById } from "../../../contact/contact.service.js";
 import { wait } from "../../whatsappSurvey/wasurvey.controller.js";
 import { sendMessage } from "../../whatsappSurvey/wasurvey.service.js";
@@ -48,10 +52,12 @@ import {
   getConversationById,
   getLastCreatedConversationForContact,
   openConversationForContact,
+  resolveClosedByUserId,
+  resolveInboxActor,
   setInboxStatus,
   updateConversationAssignees,
 } from "../../../contact/conversation/conversation.service.js";
-import { isTerminalInboxStatus } from "../../constants.js";
+import { isTerminalInboxStatus, NOT_SPAM_EVENT } from "../../constants.js";
 import { notificationQueue, sendMessageQueue } from "../../../../utils/redisConnection.js";
 import dayjs from "dayjs";
 
@@ -326,26 +332,46 @@ export async function filterChats(
       }
     }
 
+    /**
+     * The Spam tab is the one **contact-grained** list: spam is a flag on the
+     * contact, so it lists one row per spam contact rather than one per ticket.
+     * The row still carries that contact's most recent ticket (see the FROM
+     * clause below) so opening it lands on a real thread.
+     */
+    const spamMode = Boolean(bodyFilterProps?.spam);
+
     // Inbox Tickets v2: the list is conversation-grained — one row per ticket, not
     // per contact. Recency is therefore the conversation's own clock; `createdAt`
-    // covers tickets that exist but have not been messaged in yet.
-    let orderBy = `COALESCE(conv."lastMessageAt", conv."createdAt")`;
+    // covers tickets that exist but have not been messaged in yet. In spam mode a
+    // contact may have no ticket at all, hence the contact-level fallback.
+    let orderBy = `COALESCE(conv."lastMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp")`;
     let allOrderBy = `fc."conversationLastMessageAt"`;
     let sortBy = "DESC";
     if (bodyFilterProps?.sortBy === "oldest") {
       sortBy = "ASC";
     } else if (bodyFilterProps?.sortBy === "newest_wa_created") {
-      orderBy = `COALESCE(conv."lastCustomerMessageAt", conv."lastMessageAt", conv."createdAt")`;
+      orderBy = `COALESCE(conv."lastCustomerMessageAt", conv."lastMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp")`;
       allOrderBy = `fc."conversationLastCustomerMessageAt"`;
     } else if (bodyFilterProps?.sortBy === "oldest_wa_created") {
-      orderBy = `COALESCE(conv."lastCustomerMessageAt", conv."lastMessageAt", conv."createdAt")`;
+      orderBy = `COALESCE(conv."lastCustomerMessageAt", conv."lastMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp")`;
       allOrderBy = `fc."conversationLastCustomerMessageAt"`;
       sortBy = "ASC";
     }
 
     const isSearchMode = bodyFilterProps?.searchTerm?.length > 0;
 
-    if (!isSearchMode) {
+    /**
+     * Spam contacts are hidden from every other tab — that is what marking spam is
+     * for — and the Spam tab shows only them. Blocked is the one exception: a
+     * contact who is both still belongs in Blocked, or they would vanish entirely.
+     */
+    if (spamMode) {
+      filters.push(`c."isSpam" = TRUE`);
+    } else if (!bodyFilterProps?.blockedUsers) {
+      filters.push(`c."isSpam" = FALSE`);
+    }
+
+    if (!isSearchMode && !spamMode) {
       if (bodyFilterProps?.waMessageAssignStatus === "UnAssigned") {
         filters.push(`(c."lastReceivedMessageTimeStamp" IS NOT NULL)`);
       }
@@ -596,8 +622,8 @@ export async function filterChats(
           conv."createdAt"         AS "ticketCreatedAt",
           conv."closedAt"          AS "ticketClosedAt",
           conv."reopenCount"       AS "ticketReopenCount",
-          COALESCE(conv."lastMessageAt", conv."createdAt")         AS "conversationLastMessageAt",
-          COALESCE(conv."lastCustomerMessageAt", conv."createdAt") AS "conversationLastCustomerMessageAt",
+          COALESCE(conv."lastMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp")         AS "conversationLastMessageAt",
+          COALESCE(conv."lastCustomerMessageAt", conv."createdAt", c."lastReceivedMessageTimeStamp") AS "conversationLastCustomerMessageAt",
           c.id,
           c."name",
           c."phone",
@@ -608,6 +634,8 @@ export async function filterChats(
           c."consent",
           c."whatsappUserName",
           c."blockedOnWhatsApp",
+          c."isSpam",
+          c."spamMarkedAt",
           conv."isFavorite",
           c."source",
           c."igsId",
@@ -634,8 +662,22 @@ export async function filterChats(
           c."lastMessagePlatform"         AS "contactLastMessagePlatform",
           c."lastMessageSourceIdentifier" AS "contactLastMessageSourceIdentifier",
           c."lastReceivedMetadata"
-        FROM "Conversation" conv
-        INNER JOIN "Contact" c ON c.id = conv."contactId"
+        ${
+          spamMode
+            ? // Contact-grained: one row per spam contact, carrying their most recent
+              // ticket (LEFT, so a contact with no ticket at all still lists — the row
+              // then keys on the contact id client-side).
+              `FROM "Contact" c
+        LEFT JOIN LATERAL (
+          SELECT cv.*
+          FROM "Conversation" cv
+          WHERE cv."contactId" = c.id
+          ORDER BY COALESCE(cv."lastMessageAt", cv."createdAt") DESC
+          LIMIT 1
+        ) conv ON TRUE`
+            : `FROM "Conversation" conv
+        INNER JOIN "Contact" c ON c.id = conv."contactId"`
+        }
         LEFT JOIN "User" cu ON cu.id = conv."closedBy"
         WHERE ${whereClause}
         ORDER BY ${orderBy} ${sortBy} NULLS LAST
@@ -1261,6 +1303,7 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
     INNER JOIN "Contact" c ON c.id = conv."contactId"
     WHERE c."orgId" = ${orgId}::uuid
       AND NOT c."blockedOnWhatsApp"
+      AND NOT c."isSpam"
       AND conv."closedAt" IS NULL
       AND COALESCE(conv."lastMessageAt", conv."createdAt") > NOW() - INTERVAL '24 hours'
   ), orgDetails AS (
@@ -1302,7 +1345,7 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
 
   // Inbox Tickets v2: favourite + @mention nav counts, ticket-grained to match the list.
   const favouriteCount = await prisma.conversation.count({
-    where: { isFavorite: true, contact: { orgId, blockedOnWhatsApp: false } },
+    where: { isFavorite: true, contact: { orgId, blockedOnWhatsApp: false, isSpam: false } },
   });
 
   /**
@@ -1317,6 +1360,7 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
     INNER JOIN "Contact" c ON c.id = conv."contactId"
     WHERE conv."orgId" = ${orgId}::uuid
       AND NOT c."blockedOnWhatsApp"
+      AND NOT c."isSpam"
       AND conv."closedAt" IS NULL
       AND conv."status"::TEXT = ${WaMessageAssignStatus.ASSIGNED}
       AND (
@@ -1333,16 +1377,13 @@ export async function getContactsCountByInbox(orgId: string, userId: string, rol
         )
       );`;
 
-  // Spam is a status on the conversation, not a tab, on this side.
-  const spamCount = await prisma.conversation.count({
-    where: {
-      orgId,
-      status: WaMessageAssignStatus.SPAM,
-      contact: { blockedOnWhatsApp: false },
-    },
+  // Spam is contact-grained, and so is its badge: it counts contacts, not tickets,
+  // to match the one-row-per-contact Spam tab.
+  const spamCount = await prisma.contact.count({
+    where: { orgId, isSpam: true },
   });
   const mentionedConversations = await prisma.inboxMention.findMany({
-    where: { orgId, mentionedUserId: userId, clearedAt: null },
+    where: { orgId, mentionedUserId: userId, clearedAt: null, contact: { isSpam: false } },
     select: { conversationId: true, contactId: true },
   });
   // A mention with no conversationId predates threading and lands on every one of
@@ -1387,6 +1428,89 @@ export async function setConversationFavorite(
     data: { isFavorite },
   });
   return { success: result.count > 0, isFavorite };
+}
+
+/**
+ * Mark a **contact** as spam, or take them back out of it.
+ *
+ * Spam is contact-grained on purpose: it describes the person, not one of their
+ * tickets, so it is a flag on `Contact` rather than an `InboxStatus`. Marking
+ * closes whatever tickets are still open (`closeReason = SPAM`) and revokes their
+ * assignees, the same way any other close does — the contact then disappears from
+ * every inbox tab and appears once in Spam.
+ *
+ * Unmarking only clears the flag: the closed tickets stay closed, since they were
+ * genuinely finished. The contact's next inbound message opens a fresh ticket.
+ */
+export async function setContactSpam(
+  orgId: string,
+  contactId: string,
+  isSpam: boolean,
+  userId?: string,
+  messageId?: string,
+) {
+  const contact = await prisma.contact.findFirst({
+    where: { id: contactId, orgId },
+    select: { id: true, isSpam: true },
+  });
+  if (!contact) return { success: false, isSpam: false };
+  if (contact.isSpam === isSpam) return { success: true, isSpam };
+
+  const actor = resolveInboxActor(userId);
+  const actingUserId = resolveClosedByUserId(actor);
+  const now = new Date();
+
+  if (isSpam) {
+    await prisma.$transaction(async (tx) => {
+      await tx.contact.update({
+        where: { id: contactId },
+        data: {
+          isSpam: true,
+          spamMarkedAt: now,
+          spamMarkedBy: actingUserId,
+          waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+          closedAt: now,
+          closedBy: actingUserId,
+        },
+      });
+      // Every live ticket, not just the latest: the contact is gone from the inbox
+      // now, so a ticket left open would be unreachable from any tab.
+      await tx.conversation.updateMany({
+        where: { contactId, closedAt: null },
+        data: {
+          status: WaMessageAssignStatus.CLOSED,
+          closedAt: now,
+          closedBy: actingUserId,
+          closeReason: CloseReason.SPAM,
+          closedByAutomation: actor.source === "automation",
+          resolutionResult: null,
+        },
+      });
+      // Assignments are revoked, not deleted, so a reopen can still read who was on
+      // the ticket — mirrors what closing does everywhere else.
+      await tx.conversationAssignedUserTeamMap.updateMany({
+        where: { Conversation: { contactId }, lastRemovedAt: null },
+        data: { lastRemovedAt: now, lastRemovedBy: actingUserId },
+      });
+      await tx.waInboxAssign.deleteMany({ where: { contactId } });
+    });
+  } else {
+    await prisma.contact.update({
+      where: { id: contactId },
+      data: { isSpam: false, spamMarkedAt: null, spamMarkedBy: null },
+    });
+  }
+
+  // The thread keeps a record of both directions. SPAM survives here as an *event*
+  // label (see `InboxEventLabel`) even though it is no longer a stored status.
+  await createInternalWaMessage({
+    contactId,
+    waMessageAssignStatus: isSpam ? WaMessageAssignStatus.SPAM : NOT_SPAM_EVENT,
+    trigerredByUser: userId || "RateUp",
+    messageId: messageId ?? crypto.randomUUID(),
+  });
+
+  return { success: true, isSpam };
 }
 
 export interface WaMedia {
@@ -1802,6 +1926,18 @@ export async function createInternalWaMessage({
     }
 
     switch (waMessageAssignStatus) {
+      // Spam is a property of the *contact*, so its two events say "contact", not
+      // "chat" — the same event lands on whichever ticket is current.
+      case WaMessageAssignStatus.SPAM:
+        messageText = "marked this contact as spam";
+        assignStatus = WaMessageAssignStatus.SPAM;
+        break;
+
+      case NOT_SPAM_EVENT:
+        messageText = "marked this contact as not spam";
+        assignStatus = NOT_SPAM_EVENT;
+        break;
+
       case WaMessageAssignStatus.ASSIGNED:
         messageText = assignedUserDetails.length
           ? `Chat assigned to ${assignedUserDetails.map((u) => u.name).join(", ")}`
