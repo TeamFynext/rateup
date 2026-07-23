@@ -1,5 +1,3 @@
-import { useForm } from "@mantine/form";
-import { getHotkeyHandler } from "@mantine/hooks";
 import { Download, Info, User } from "lucide-react";
 import { Activity, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,15 +10,17 @@ import {
 } from "@/backend/campaign/contacts/contacts.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import { useBridgedForm } from "@/hooks/useBridgedForm";
 import { ContactGroupType } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { importMethod } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
-import { ContainedFileInput } from "../input/ContainedInput/ContainedInput.tsx";
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
+import { Input } from "../ui/input.tsx";
 import { Label } from "../ui/label.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
@@ -53,8 +53,8 @@ const CreateContactModal = ({
   const { t: translations } = useTranslation();
   const { customFields } = useCustomFieldsContext();
 
-  const form = useForm({
-    initialValues: initialValues ?? {
+  const form = useBridgedForm({
+    defaultValues: initialValues ?? {
       name: "",
       phone: "",
       email: "",
@@ -277,7 +277,7 @@ const CreateContactModal = ({
           {sourceValue == importMethod.CSV && !initialValues && (
             <div className="flex flex-col gap-4">
               <blockquote className="mx-6 flex items-start gap-2 rounded-md border-l-4 border-l-rateup-blue bg-accent p-3 text-sm">
-                <Info className="mt-0.5 size-5 shrink-0 text-rateup-blue" />
+                <Info className="mt-0.5 size-5 shrink-0 text-primary" />
                 <div className="flex flex-col gap-2">
                   <span>
                     {translations(
@@ -289,7 +289,7 @@ const CreateContactModal = ({
                     download
                     target="_blank"
                     rel="noreferrer"
-                    className="flex w-fit items-center gap-1 rounded-sm text-rateup-blue underline underline-offset-2"
+                    className="flex w-fit items-center gap-1 rounded-sm text-primary underline underline-offset-2"
                   >
                     <Download className="size-4" />
                     {translations("Download Demo Csv File")}
@@ -316,22 +316,14 @@ const CreateContactModal = ({
                   {translations("First row contains column headers (name, phone, ...)")}
                 </Label>
               </div>
-              <ContainedFileInput
-                mx={"lg"}
-                label=""
-                placeholder={translations(
+              <Input
+                type="file"
+                accept=".csv,.xlsx,.ods"
+                aria-label={translations(
                   "Upload a csv file (.csv), excel file (.xlsx) or opendocument file (.ods)",
                 )}
-                accept=".csv,.xlsx,.ods"
-                multiple={false}
-                onChange={setCsvfile}
-                styles={{
-                  input: {
-                    border: ".125rem dashed lightgrey",
-                    height: "3.75rem",
-                    textAlign: "center",
-                  },
-                }}
+                onChange={(event) => setCsvfile(event.target.files?.[0] ?? null)}
+                className="mx-5 h-15 border-2 border-dashed border-gray-300 text-center"
               />
             </div>
           )}

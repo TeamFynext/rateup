@@ -1,8 +1,8 @@
-import { Stack, useMantineColorScheme } from "@mantine/core";
 import { useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { useCreateAppleUserMutation, useCreateUserMutation } from "@/backend/user/user.query";
+import { useResolvedTheme } from "@/components/theme/theme-provider.tsx";
 import {
   useConsumeVerificationCode,
   useEmailSend,
@@ -25,7 +25,7 @@ const AuthForm = ({ mode, authType }: { mode: string; authType?: string | string
   const rid = searchParams.rid;
   const consumeVerificationCode = useConsumeVerificationCode();
   const sendEmail = useEmailSend();
-  const { colorScheme } = useMantineColorScheme();
+  const colorScheme = useResolvedTheme();
 
   useEffect(() => {
     if (mode === AuthMode.VERIFY) {
@@ -76,14 +76,15 @@ const AuthForm = ({ mode, authType }: { mode: string; authType?: string | string
   }
 
   return (
-    <Stack
+    <div
       className={`
+          flex flex-col gap-4
           ${styles[`${authType ? "auth-type-signup-form" : ""}`]}
           ${styles[`color-scheme-${colorScheme}`]}
         `}
     >
       {jsxToReturn}
-    </Stack>
+    </div>
   );
 };
 

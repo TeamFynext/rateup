@@ -1,20 +1,5 @@
 /* Length Tracker Styles BEGIN */
 /* Displays a char count at right side of input */
-.lengthTrackerParent :global(.mantine-TextInput-section) {
-  min-width: 70px;
-}
-
-.lengthTrackerParent :global(.mantine-Textarea-section) {
-  min-width: 70px;
-}
-
-.lengthTrackerParent :global(.mantine-TextInput-input) {
-  padding-right: 70px;
-}
-
-.lengthTrackerParent :global(.mantine-Textarea-input) {
-  padding-right: 70px;
-}
 
 /* Length Tracker Styles END */
 

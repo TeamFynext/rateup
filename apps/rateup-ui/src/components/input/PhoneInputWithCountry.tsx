@@ -1,4 +1,3 @@
-import { Box, Group, Stack, Text } from "@mantine/core";
 import type { DefaultInputComponentProps } from "react-phone-number-input";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
@@ -19,18 +18,15 @@ const PhoneInputWithCountry = ({
   ...props
 }: Props) => {
   return (
-    <Stack gap={0}>
-      <Group gap={2}>
-        <Text size="xs" c={"var(--grey-color)"}>
-          {label}
-        </Text>
-        {withAsterisk && (
-          <Text size="xs" c={"red"}>
-            *
-          </Text>
-        )}
-      </Group>
-      <Box className={styles.inputBox} style={{ borderColor: error && "red", borderRadius }}>
+    <div className="flex flex-col gap-0">
+      <div className="flex items-center gap-[2px]">
+        <span className="text-xs text-muted-foreground">{label}</span>
+        {withAsterisk && <span className="text-xs text-red-500">*</span>}
+      </div>
+      <div
+        className={styles.inputBox}
+        style={{ borderColor: error ? "red" : undefined, borderRadius }}
+      >
         <PhoneInputWithCountrySelect
           defaultCountry="IN"
           international
@@ -40,13 +36,9 @@ const PhoneInputWithCountry = ({
           rules={{ required: withAsterisk }}
           {...props}
         />
-      </Box>
-      {error && (
-        <Text size="xs" c="red">
-          {error}
-        </Text>
-      )}
-    </Stack>
+      </div>
+      {error && <span className="text-xs text-red-500">{error}</span>}
+    </div>
   );
 };
 

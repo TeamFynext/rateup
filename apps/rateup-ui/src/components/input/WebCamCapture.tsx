@@ -1,9 +1,8 @@
-import { Group, Image, Stack } from "@mantine/core";
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Webcam from "react-webcam";
 
-import { RateupButtonBlue } from "../Button/RateupButtons.tsx";
+import { Button } from "../ui/button.tsx";
 
 const videoConstraints = {
   width: 1280,
@@ -30,9 +29,9 @@ const WebcamCapture = ({ height = 720, width = 1280, setCapturedImg, close }: We
     setImgSrc(imageSrc);
   }, [webcamRef]);
   return (
-    <Stack>
+    <div className="flex flex-col gap-4">
       {imgSrc ? (
-        <Image src={imgSrc} alt="Captured Photo" />
+        <img src={imgSrc} alt="Captured Photo" />
       ) : (
         <Webcam
           audio={false}
@@ -43,21 +42,22 @@ const WebcamCapture = ({ height = 720, width = 1280, setCapturedImg, close }: We
           videoConstraints={videoConstraints}
         />
       )}
-      <Group justify="center">
+      <div className="flex justify-center gap-4">
         {imgSrc ? (
-          <RateupButtonBlue title={translations("Retake")} onClick={() => setImgSrc(null)} />
+          <Button onClick={() => setImgSrc(null)}>{translations("Retake")}</Button>
         ) : (
-          <RateupButtonBlue title={translations("Capture photo")} onClick={capture} />
+          <Button onClick={capture}>{translations("Capture photo")}</Button>
         )}
-        <RateupButtonBlue
-          title={translations("save")}
+        <Button
           onClick={() => {
             setCapturedImg(imgSrc);
             close();
           }}
-        />
-      </Group>
-    </Stack>
+        >
+          {translations("save")}
+        </Button>
+      </div>
+    </div>
   );
 };
 export default WebcamCapture;

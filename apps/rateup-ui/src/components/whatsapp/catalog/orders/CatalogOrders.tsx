@@ -5,8 +5,8 @@ import { useMemo, useState } from "react";
 
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
-import { RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
@@ -61,14 +61,15 @@ const CatalogOrders = ({ catalogId }) => {
       id: "products",
       cell: (info) => {
         return (
-          <RateupButtonSecondary
-            variant="light"
-            title="Details"
+          <Button
+            variant="ghost"
             onClick={() => {
               setSelectedOrder(info.getValue());
               setIsModalOpen(true);
             }}
-          />
+          >
+            Details
+          </Button>
         );
       },
     },

@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { getHotkeyHandler } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import { Folder } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -15,6 +14,7 @@ import {
 import { ContactGroupType } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { TeamSelector } from "../input/TeamSelector.tsx";
 import { Avatar, AvatarImage } from "../ui/avatar.tsx";

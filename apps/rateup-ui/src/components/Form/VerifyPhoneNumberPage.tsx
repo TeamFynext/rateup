@@ -1,5 +1,3 @@
-import { Flex, NavLink, Text, TextInput, Title } from "@mantine/core";
-import { getHotkeyHandler } from "@mantine/hooks";
 import { IconArrowAutofitLeft, IconSend } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -10,9 +8,12 @@ import { clearLoginAttemptInfo, consumeCode } from "supertokens-auth-react/recip
 import { fetchUserProfile } from "@/backend/user/user.api";
 import { resendOTP } from "@/utils/auth/index.tsx";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
-import { RateupButtonBlue } from "../Button/RateupButtons.tsx";
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
+import { Button } from "../ui/button.tsx";
+import { Input } from "../ui/input.tsx";
+import { Spinner } from "../ui/spinner.tsx";
 
 import styles from "./AuthForm.module.css";
 
@@ -82,14 +83,14 @@ function VerifyPhoneNumberPage() {
   }
   return (
     <>
-      <Title order={2} className={styles["login-signup-form-heading"]}>
+      <h2 className={`text-2xl font-bold ${styles["login-signup-form-heading"]}`}>
         {translations("Verify your Phone Number")}
-      </Title>
-      <Text className={styles["verify-email-para"]}>
+      </h2>
+      <p className={styles["verify-email-para"]}>
         {translations(
           "Kindly enter the OTP we have sent via SMS to authenticate your phone number.",
         )}
-      </Text>
+      </p>
       <form
         className={`
             ${styles["login-sign-up-form"]}
@@ -97,41 +98,46 @@ function VerifyPhoneNumberPage() {
           `}
         onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleOTPInput]])}
       >
-        <TextInput
-          classNames={styles}
-          withAsterisk
-          placeholder={translations("OTP Code")}
-          mt={"lg"}
-          onChange={(e) => setOtpNumber(e.target.value)}
-          mb={"md"}
-        />
-        <RateupButtonBlue
+        <div className={`${styles["root"]} mt-5 mb-4`}>
+          <Input
+            className={styles["input"]}
+            required
+            placeholder={translations("OTP Code")}
+            value={otpNumber}
+            onChange={(e) => setOtpNumber(e.target.value)}
+          />
+        </div>
+        <Button
           type="button"
-          title={translations("Verify OTP")}
-          loading={isLoading}
+          disabled={isLoading}
           className={styles["login-signup-form-submit-btn"]}
           onClick={handleOTPInput}
-        />
-        <Flex justify={"end"} gap={0}>
-          <NavLink
-            onClick={resendOTP}
-            component="div"
-            label={translations("Resend OTP")}
-            leftSection={<IconSend size="1rem" stroke={1.5} />}
-            variant="subtle"
-            w={"max-content"}
-            mb={"md"}
-          />
-        </Flex>
+        >
+          {isLoading && <Spinner />}
+          {translations("Verify OTP")}
+        </Button>
+        <div className="flex justify-end gap-0">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => resendOTP()}
+            className="mb-4 w-max justify-start"
+          >
+            <IconSend size="1rem" stroke={1.5} />
+            {translations("Resend OTP")}
+          </Button>
+        </div>
       </form>
-      <Link to="/logout" style={{ textDecoration: "none" }}>
-        <NavLink
-          component="div"
-          style={{ fontWeight: 620 }}
-          label={translations("Logout")}
-          leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
-          variant="subtle"
-        />
+      <Link to="/logout" className="no-underline">
+        <Button
+          type="button"
+          variant="ghost"
+          render={<div />}
+          className="w-full justify-start font-semibold"
+        >
+          <IconArrowAutofitLeft size="1rem" stroke={1.5} />
+          {translations("Logout")}
+        </Button>
       </Link>
     </>
   );

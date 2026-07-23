@@ -26,9 +26,7 @@ function InputStyles() {
     <div className="flex w-full flex-col gap-4">
       <div className="flex w-full justify-between">
         <div className="w-full">
-          <h2 className="mb-[0.3125rem] text-xs font-medium text-[var(--mantine-color-gray-7)]">
-            Color
-          </h2>
+          <h2 className="mb-[0.3125rem] text-xs font-medium text-[#495057]">Color</h2>
           <CustomColorPicker
             value={input?.primaryColor}
             onChange={handleColorPickerChange}

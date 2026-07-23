@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useGenerateLargeTextResponseSummaryByAI } from "@/backend/surveys/response/response.query";
-import { RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -219,14 +218,16 @@ const LargeTextResponseSummary = ({
                               {summary.all.summary}
                             </span>
                           </div>
-                          <RateupButtonSecondary
-                            title={translations("Generate Team wise summary")}
+                          <Button
+                            variant="outline"
+                            className="w-fit"
                             onClick={() => {
                               setSelectedQuestion(question);
                               setSummaryTab(ResponseSummaryType.Team);
                             }}
-                            w={"fit-content"}
-                          />
+                          >
+                            {translations("Generate Team wise summary")}
+                          </Button>
                         </div>
                       )}
                     </div>

@@ -1,9 +1,0 @@
-.contact-card {
-  &[data-checked] {
-    background-color: rgb(250, 250, 250);
-  }
-}
-
-.contact-card:hover {
-  background-color: rgb(250, 250, 250);
-}

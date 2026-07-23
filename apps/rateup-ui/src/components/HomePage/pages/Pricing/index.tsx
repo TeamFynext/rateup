@@ -1,10 +1,10 @@
-import { useMediaQuery } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 
 import { MotionTransition } from "../../../animation/MotionTransition.tsx";
 import RateupLoader from "../../../Loaders/RateupLoader.tsx";
@@ -108,16 +108,16 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
     >
       <div className="text-center" style={{ display: isAccount ? "none" : "block" }}>
         <p
+          className="text-muted-foreground"
           style={{
-            color: "var(--grey-color-4)",
             fontSize: "clamp(14px, 9.008px + 0.833vw, 21.008px)",
           }}
         >
           Our Pricing Plans
         </p>
         <p
+          className="text-primary"
           style={{
-            color: "var(--tertiary-color)",
             fontSize: "clamp(24px, 15.424px + 1.429vw, 36px)",
           }}
         >
@@ -139,30 +139,6 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
             <ToggleGroupItem value="WhatsApp">WhatsApp</ToggleGroupItem>
             <ToggleGroupItem value="Custom">Custom</ToggleGroupItem>
           </ToggleGroup>
-          {/* <Flex align="center" pos={"relative"} gap={"xs"}>
-            <Switch
-              color={"var(--shade-of-blue-5)"}
-              classNames={classes}
-              checked={checked}
-              onChange={(event) => setChecked(event.currentTarget.checked)}
-              size="lg"
-            />
-            <Image
-              src={"/images/subscriptionArrow.png"}
-              h={32}
-              w={67}
-              pos={"absolute"}
-              bottom={"40px"}
-              left={"40px"}
-              alt="image of arrow"
-            />
-            <Stack gap={0} fz={"clamp(14px, 12.576px + 0.238vw, 16px)"}>
-              <Text c={"var(--light-grey-color-5)"}>Subscribe Annually</Text>
-              <Text c={"var(--shade-of-blue-5"}>
-                Save Upto {DISCOUNT_PERCENTAGE} Months
-              </Text>
-            </Stack>
-          </Flex> */}
         </div>
       )}
 

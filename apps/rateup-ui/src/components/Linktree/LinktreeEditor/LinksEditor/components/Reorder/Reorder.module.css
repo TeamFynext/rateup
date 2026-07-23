@@ -1,20 +1,22 @@
 .dragHandle {
   display: flex;
   height: 100%;
-  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-1));
-  padding-right: var(--mantine-spacing-xs);
+  color: light-dark(#868e96, #a6a7ab);
+  padding-right: 0.625rem;
 }
 
 .item {
   display: flex;
-  border-radius: var(--mantine-radius-md);
-  border: 1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
-  padding: var(--mantine-spacing-xs) 0px;
-  padding-left: var(--mantine-spacing-xs);
-  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-5));
-  margin-bottom: var(--mantine-spacing-sm);
+  border-radius: 0.5rem;
+  border: 1px solid light-dark(#e9ecef, #2c2e33);
+  padding: 0.625rem 0px;
+  padding-left: 0.625rem;
+  background-color: light-dark(#ffffff, #2c2e33);
+  margin-bottom: 0.75rem;
 }
 
 .itemDragging {
-  box-shadow: var(--mantine-shadow-sm);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.1);
 }

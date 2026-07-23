@@ -437,9 +437,9 @@ function UsersPage() {
                           <SelectContent>
                             <SelectItem value={UserRole.SUPADM}>
                               <div className="flex items-center gap-2">
-                                <Shield className="w-3.5 h-3.5 text-rateup-blue" />
+                                <Shield className="w-3.5 h-3.5 text-primary" />
                                 <span>{translations("Super Admin")}</span>
-                                <Badge className="bg-rateup-blue text-[10px] h-4 px-1.5">
+                                <Badge className="bg-primary text-[10px] h-4 px-1.5">
                                   {translations("Full Access")}
                                 </Badge>
                               </div>
@@ -586,7 +586,7 @@ function UsersPage() {
                       )}
                     </div>
 
-                    <h4 className="text-sm mb-1 group-hover:text-rateup-blue transition-colors line-clamp-1">
+                    <h4 className="text-sm mb-1 group-hover:text-primary transition-colors line-clamp-1">
                       {member.name}
                     </h4>
 
@@ -1210,9 +1210,9 @@ function EditMember({
                     <SelectContent>
                       <SelectItem value={UserRole.SUPADM}>
                         <div className="flex items-center gap-2">
-                          <Shield className="w-3.5 h-3.5 text-rateup-blue" />
+                          <Shield className="w-3.5 h-3.5 text-primary" />
                           <span>{translations("Super Admin")}</span>
-                          <Badge className="bg-rateup-blue text-[10px] h-4 px-1.5">
+                          <Badge className="bg-primary text-[10px] h-4 px-1.5">
                             {translations("Full Access")}
                           </Badge>
                         </div>
@@ -1261,7 +1261,7 @@ function EditMember({
                   <div className="space-y-2 p-3 bg-gray-50 rounded-lg border">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-rateup-blue" />
+                        <MessageSquare className="w-4 h-4 text-primary" />
                         <div>
                           <p className="text-sm">{translations("Access to Inbox")}</p>
                           <p className="text-xs text-muted-foreground">

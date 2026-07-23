@@ -11,17 +11,7 @@
 }
 
 .color-scheme-dark {
-  background-color: var(--mantine-color-gray-filled);
-}
-
-.auth-form-container :global(.mantine-ScrollArea-viewport) {
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-}
-
-.SIGNUP-auth-form-container :global(.mantine-ScrollArea-viewport) {
-  align-items: flex-start;
+  background-color: #868e96;
 }
 
 .auth-type-signup-form {
@@ -42,7 +32,7 @@
 /* login signup pages common styles */
 .login-signup-form-heading {
   font-size: 1.5rem;
-  color: var(--tertiary-color);
+  color: var(--primary);
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
@@ -59,7 +49,7 @@
   display: inline;
   margin-bottom: 1rem;
   text-decoration: none;
-  color: var(--tertiary-color);
+  color: var(--primary);
   font-size: 14px;
 }
 
@@ -82,8 +72,8 @@
   width: 100%;
   height: 2.125rem;
   border-radius: 6px;
-  border: 1px solid var(--tertiary-color);
-  color: var(--shade-of-blue-5);
+  border: 1px solid var(--primary);
+  color: var(--primary);
   font-size: 14px;
 }
 
@@ -109,7 +99,7 @@
 .resend-change-email-navlink-component {
   font-weight: 600;
   color: rgb(34, 139, 230);
-  background-color: var(--light-grey-color);
+  background-color: var(--muted);
 }
 
 .inputBox {
@@ -117,7 +107,7 @@
   color: var(--input-text-color, black);
   border-radius: 1rem;
   padding: 6px var(--input-padding, 12px);
-  border-color: var(--mantine-color-gray-4);
+  border-color: #ced4da;
   border-width: 1px;
   border-style: solid;
 }
@@ -136,13 +126,13 @@
 }
 
 .phone-input-container {
-  border: 1px solid var(--mantine-color-gray-4);
+  border: 1px solid #ced4da;
   padding: 0 1rem;
   border-radius: 1rem;
 }
 
 .phone-input-container.phone-input-focused {
-  border: 1px solid var(--mantine-primary-color-filled);
+  border: 1px solid var(--primary);
   outline: 0;
 }
 
@@ -151,19 +141,19 @@
 }
 
 .phone-input-error {
-  border-color: var(--mantine-color-error);
+  border-color: var(--destructive);
 }
 
 .phone-input-error.phone-input-container.phone-input-focused {
-  border-color: var(--mantine-color-error);
+  border-color: var(--destructive);
 }
 
 .phone-input-error input {
-  color: var(--mantine-color-error);
+  color: var(--destructive);
 }
 
 .phone-input-err-text {
-  color: var(--mantine-color-error);
+  color: var(--destructive);
   font-size: 0.75rem;
 }
 
@@ -173,10 +163,6 @@
   outline: none;
   height: 3.125rem;
   border-radius: 1rem;
-}
-
-.terms-of-service-and-privacy-policy-checkbox-div :global(.mantine-Checkbox-body) {
-  padding-left: 1rem;
 }
 
 /* Media Queries */

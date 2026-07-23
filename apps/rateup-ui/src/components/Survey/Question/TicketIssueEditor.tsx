@@ -201,7 +201,7 @@ const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: 
     setActiveTab(QuestionTabsEnum.Edit);
   };
 
-  if (isPending) return <RateupLoader h={100} />;
+  if (isPending) return <RateupLoader className="h-25" />;
 
   return (
     <div className="flex h-full flex-col justify-between">

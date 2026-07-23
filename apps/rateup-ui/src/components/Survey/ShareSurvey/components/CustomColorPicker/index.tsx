@@ -80,7 +80,7 @@ function CustomColorPicker({
       value={!value?.length ? "#000000" : value}
       onChange={handleInputChange}
       className={cn(
-        "shrink-0 cursor-pointer rounded-[0.875rem] border-2 border-[var(--mantine-color-gray-6)] p-[3px]",
+        "shrink-0 cursor-pointer rounded-[0.875rem] border-2 border-[#868e96] p-[3px]",
         size === Size.md ? "h-9 w-10" : "h-[50px] w-[60px]",
         elementToBeDisplayed && "sr-only",
       )}
@@ -112,9 +112,9 @@ function CustomColorPicker({
       <input
         type="text"
         className={cn(
-          "flex-none rounded-2xl border-2 border-[var(--mantine-color-gray-6)] text-center uppercase outline-none",
+          "flex-none rounded-2xl border-2 border-[#868e96] text-center uppercase outline-none",
           size === Size.md ? "h-9 flex-1 p-2.5 text-sm" : "px-3.5 py-2.5 text-base",
-          isFocused && "border-[var(--tertiary-color)]",
+          isFocused && "border-primary",
         )}
         size={7}
         maxLength={7}

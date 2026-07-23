@@ -41,7 +41,7 @@ function VerifyEmailPage({ sendEmail }) {
         <div className="space-y-3">
           <div className="flex justify-center py-2">
             <div className="relative w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center">
-              <Mail className="w-8 h-8 text-rateup-blue" strokeWidth={1.5} />
+              <Mail className="w-8 h-8 text-primary" strokeWidth={1.5} />
 
               {emailSent && (
                 <div className="absolute -top-1 -right-1 animate-in zoom-in duration-300">
@@ -70,7 +70,7 @@ function VerifyEmailPage({ sendEmail }) {
               onClick={() => countdown === 0 && handleResendEmail()}
               disabled={countdown > 0}
               variant="outline"
-              className="w-full h-10 border-2 border-gray-300 hover:border-rateup-blue hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white text-sm"
+              className="w-full h-10 border-2 border-gray-300 hover:border-primary hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white text-sm"
             >
               <Send className="w-4 h-4 mr-2" />
               {countdown > 0 ? `Resend in ${countdown}s` : "Resend verification email"}
@@ -83,7 +83,7 @@ function VerifyEmailPage({ sendEmail }) {
                 })
               }
               variant="outline"
-              className="w-full h-10 border-2 border-gray-300 hover:border-rateup-blue hover:bg-blue-50 text-sm"
+              className="w-full h-10 border-2 border-gray-300 hover:border-primary hover:bg-blue-50 text-sm"
             >
               <Home className="w-4 h-4 mr-2" />
               Back to Sign In

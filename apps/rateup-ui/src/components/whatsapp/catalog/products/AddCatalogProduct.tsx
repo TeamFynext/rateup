@@ -1,14 +1,15 @@
-import { useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import z from "zod";
 
 import {
   useCreateBatchCatalogProducts,
   useCreateShopifyProduct,
   useUpdateCatalogProducts,
 } from "@/backend/whatsapp/catalog/products/products.query";
-import { ContainedTagInput } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -35,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { TagsInput } from "@/components/ui/tags-input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { CatalogProductType } from "@/types/enums.ts";
@@ -111,44 +113,63 @@ function SourceToggle({
   );
 }
 
-const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
-  const form = useForm({
-    initialValues: getInitialValues(),
-    validate: (values) => {
-      if (values.type === CatalogProductType.PRODUCT_ITEM) {
-        return {
-          retailer_id: !values.retailer_id.length ? "required" : null,
-          title: !values.title.length ? "required" : null,
-          description: !values.description.length ? "required" : null,
-          condition: !values.condition.length ? "required" : null,
-          price: values.price < 0 ? "required" : null,
-          sale_price: values.sale_price < 0 ? "required" : null,
-          currencyCode: !values.currencyCode.length ? "required" : null,
-          availability: !values.availability.length ? "required" : null,
-          brand: !values.brand.length ? "required" : null,
-        };
-      }
-      if (values.type === CatalogProductType.HOTEL) {
-        return {
-          hotel_id: !values.hotel_id.length ? "required" : null,
-          name: !values.name.length ? "required" : null,
-          description: !values.description.length ? "required" : null,
-          base_price: values.base_price < 0 ? "required" : null,
-          currencyCode: !values.currencyCode.length ? "required" : null,
-        };
-      }
-      if (values.type === CatalogProductType.HOTEL_ROOM) {
-        return {
-          hotel_retailer_id: !values.hotel_retailer_id.length ? "required" : null,
-          hotel_room_id: !values.hotel_room_id.length ? "required" : null,
-          name: !values.name.length ? "required" : null,
-          description: !values.description.length ? "required" : null,
-          base_price: values.base_price < 0 ? "required" : null,
-          currencyCode: !values.currencyCode.length ? "required" : null,
-        };
-      }
-    },
+/** Conditional required-field validation mirroring the original Mantine `validate`. */
+const catalogProductSchema = z
+  .object({ type: z.any() })
+  .passthrough()
+  .superRefine((values: any, ctx) => {
+    const require = (field: string, invalid: boolean) => {
+      if (invalid) ctx.addIssue({ code: "custom", path: [field], message: "required" });
+    };
+    if (values.type === CatalogProductType.PRODUCT_ITEM) {
+      require("retailer_id", !values.retailer_id?.length);
+      require("title", !values.title?.length);
+      require("description", !values.description?.length);
+      require("condition", !values.condition?.length);
+      require("price", values.price < 0);
+      require("sale_price", values.sale_price < 0);
+      require("currencyCode", !values.currencyCode?.length);
+      require("availability", !values.availability?.length);
+      require("brand", !values.brand?.length);
+    } else if (values.type === CatalogProductType.HOTEL) {
+      require("hotel_id", !values.hotel_id?.length);
+      require("name", !values.name?.length);
+      require("description", !values.description?.length);
+      require("base_price", values.base_price < 0);
+      require("currencyCode", !values.currencyCode?.length);
+    } else if (values.type === CatalogProductType.HOTEL_ROOM) {
+      require("hotel_retailer_id", !values.hotel_retailer_id?.length);
+      require("hotel_room_id", !values.hotel_room_id?.length);
+      require("name", !values.name?.length);
+      require("description", !values.description?.length);
+      require("base_price", values.base_price < 0);
+      require("currencyCode", !values.currencyCode?.length);
+    }
   });
+
+/** Controller-wrapped TagsInput for RHF array fields. */
+function TagController({
+  control,
+  name,
+  maxTags,
+}: Readonly<{ control: any; name: string; maxTags?: number }>) {
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field }) => (
+        <TagsInput value={field.value ?? []} onValueChange={field.onChange} maxTags={maxTags} />
+      )}
+    />
+  );
+}
+
+const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
+  const form = useForm<any>({
+    resolver: zodResolver(catalogProductSchema),
+    defaultValues: getInitialValues(),
+  });
+  const errors = form.formState.errors;
 
   useEffect(() => {
     if (catalogData) {
@@ -158,22 +179,18 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           : catalogData?.vertical === "hotels"
             ? CatalogProductType.HOTEL
             : CatalogProductType.HOTEL_ROOM;
-      form.setFieldValue("type", type);
       if (productData) {
         if (productData.image?.length) setImageUpload("url");
         const initialValues = getInitialValues(type);
-        Object.keys(getInitialValues(type)).map((key) => {
+        Object.keys(getInitialValues(type)).forEach((key) => {
           initialValues[key] = productData[key];
         });
-        form.setInitialValues(initialValues);
-        // @ts-expect-error form is typed from PRODUCT_ITEM initial values; union shapes are valid at runtime
-        form.setValues(initialValues);
+        form.reset(initialValues);
       } else {
-        form.setInitialValues(getInitialValues(type));
-        // @ts-expect-error form is typed from PRODUCT_ITEM initial values; union shapes are valid at runtime
-        form.setValues(getInitialValues(type));
+        form.reset(getInitialValues(type));
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [catalogData, productData]);
 
   const createBatch = useCreateBatchCatalogProducts(catalogData?.catalogId);
@@ -187,14 +204,12 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
   const [video, setVideo] = useState(null);
 
   const isSaving = createBatch.isPending || updateProducts.isPending || createShopifyMut.isPending;
-  const type = form.getValues().type;
+  const type = form.watch("type");
 
-  async function handleSave() {
+  async function handleSave(values: any) {
     // ── Shopify mode ──────────────────────────────────────────────────────
     if (addToShopify && type === CatalogProductType.PRODUCT_ITEM) {
-      const values = form.getValues() as any;
-
-      form.setErrors({});
+      form.clearErrors();
       const errs: Record<string, string> = {};
       if (!values.title?.length) errs.title = "required";
       if (!values.description?.length) errs.description = "required";
@@ -202,7 +217,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
       if (values.price < 0) errs.price = "required";
       if (!values.currencyCode?.length) errs.currencyCode = "required";
       if (Object.keys(errs).length > 0) {
-        form.setErrors(errs);
+        Object.entries(errs).forEach(([k, v]) => form.setError(k as any, { message: v }));
         return;
       }
 
@@ -245,11 +260,10 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
     }
 
     // ── Meta catalog mode ─────────────────────────────────────────────────
-    if (form.validate().hasErrors) return;
     toast.loading(productData ? "Updating product…" : "Uploading product…", {
       id: "catalog-product",
     });
-    const { type: formType, ...rest } = form.values;
+    const { type: formType, ...rest } = values;
 
     try {
       if (imageUpload === "upload" && image) {
@@ -304,55 +318,47 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               <FieldLegend>Product details</FieldLegend>
               <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {!addToShopify && (
-                  <Field data-invalid={!!form.errors.retailer_id}>
+                  <Field data-invalid={!!errors.retailer_id}>
                     <FieldLabel htmlFor="retailer_id">Product retailer ID *</FieldLabel>
                     <Input
                       id="retailer_id"
-                      {...form.getInputProps("retailer_id")}
+                      {...form.register("retailer_id")}
                       disabled={!!productData}
-                      aria-invalid={!!form.errors.retailer_id}
+                      aria-invalid={!!errors.retailer_id}
                     />
-                    <FieldError>{form.errors.retailer_id as string}</FieldError>
+                    <FieldError>{errors.retailer_id?.message as string}</FieldError>
                   </Field>
                 )}
 
-                <Field data-invalid={!!form.errors.title}>
+                <Field data-invalid={!!errors.title}>
                   <FieldLabel htmlFor="title">Product title *</FieldLabel>
-                  <Input
-                    id="title"
-                    {...form.getInputProps("title")}
-                    aria-invalid={!!form.errors.title}
-                  />
-                  <FieldError>{form.errors.title as string}</FieldError>
+                  <Input id="title" {...form.register("title")} aria-invalid={!!errors.title} />
+                  <FieldError>{errors.title?.message as string}</FieldError>
                 </Field>
 
-                <Field data-invalid={!!form.errors.brand}>
+                <Field data-invalid={!!errors.brand}>
                   <FieldLabel htmlFor="brand">Brand *</FieldLabel>
-                  <Input
-                    id="brand"
-                    {...form.getInputProps("brand")}
-                    aria-invalid={!!form.errors.brand}
-                  />
-                  <FieldError>{form.errors.brand as string}</FieldError>
+                  <Input id="brand" {...form.register("brand")} aria-invalid={!!errors.brand} />
+                  <FieldError>{errors.brand?.message as string}</FieldError>
                 </Field>
 
                 {!addToShopify && (
                   <Field>
                     <FieldLabel htmlFor="link">Website URL</FieldLabel>
-                    <Input id="link" {...form.getInputProps("link")} />
+                    <Input id="link" {...form.register("link")} />
                   </Field>
                 )}
 
-                <Field className="sm:col-span-2" data-invalid={!!form.errors.description}>
+                <Field className="sm:col-span-2" data-invalid={!!errors.description}>
                   <FieldLabel htmlFor="description">Product description *</FieldLabel>
                   <Textarea
                     id="description"
                     rows={3}
                     maxLength={5000}
-                    {...form.getInputProps("description")}
-                    aria-invalid={!!form.errors.description}
+                    {...form.register("description")}
+                    aria-invalid={!!errors.description}
                   />
-                  <FieldError>{form.errors.description as string}</FieldError>
+                  <FieldError>{errors.description?.message as string}</FieldError>
                 </Field>
               </FieldGroup>
             </FieldSet>
@@ -361,39 +367,39 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
             <FieldSet>
               <FieldLegend>Pricing & availability</FieldLegend>
               <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field data-invalid={!!form.errors.price}>
+                <Field data-invalid={!!errors.price}>
                   <FieldLabel htmlFor="price">Price *</FieldLabel>
                   <Input
                     id="price"
                     type="number"
                     min={0}
-                    value={form.values.price}
-                    onChange={(e) => form.setFieldValue("price", Number(e.target.value))}
-                    aria-invalid={!!form.errors.price}
+                    value={form.watch("price")}
+                    onChange={(e) => form.setValue("price", Number(e.target.value))}
+                    aria-invalid={!!errors.price}
                   />
-                  <FieldError>{form.errors.price as string}</FieldError>
+                  <FieldError>{errors.price?.message as string}</FieldError>
                 </Field>
 
                 {!addToShopify && (
-                  <Field data-invalid={!!form.errors.sale_price}>
+                  <Field data-invalid={!!errors.sale_price}>
                     <FieldLabel htmlFor="sale_price">Sale price *</FieldLabel>
                     <Input
                       id="sale_price"
                       type="number"
                       min={0}
-                      value={form.values.sale_price}
-                      onChange={(e) => form.setFieldValue("sale_price", Number(e.target.value))}
-                      aria-invalid={!!form.errors.sale_price}
+                      value={form.watch("sale_price")}
+                      onChange={(e) => form.setValue("sale_price", Number(e.target.value))}
+                      aria-invalid={!!errors.sale_price}
                     />
-                    <FieldError>{form.errors.sale_price as string}</FieldError>
+                    <FieldError>{errors.sale_price?.message as string}</FieldError>
                   </Field>
                 )}
 
-                <Field data-invalid={!!form.errors.currencyCode}>
+                <Field data-invalid={!!errors.currencyCode}>
                   <FieldLabel htmlFor="currency">Currency *</FieldLabel>
                   <Select
-                    value={form.values.currencyCode}
-                    onValueChange={(v) => form.setFieldValue("currencyCode", v)}
+                    value={form.watch("currencyCode")}
+                    onValueChange={(v) => form.setValue("currencyCode", v)}
                     items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
                   >
                     <SelectTrigger id="currency">
@@ -407,15 +413,15 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <FieldError>{form.errors.currencyCode as string}</FieldError>
+                  <FieldError>{errors.currencyCode?.message as string}</FieldError>
                 </Field>
 
                 {!addToShopify && (
-                  <Field data-invalid={!!form.errors.availability}>
+                  <Field data-invalid={!!errors.availability}>
                     <FieldLabel htmlFor="availability">Availability *</FieldLabel>
                     <Select
-                      value={form.values.availability}
-                      onValueChange={(v) => form.setFieldValue("availability", v)}
+                      value={form.watch("availability")}
+                      onValueChange={(v) => form.setValue("availability", v)}
                       items={CATALOG_PRODUCT_AVAILABILITY.map((a) => ({ value: a, label: a }))}
                     >
                       <SelectTrigger id="availability">
@@ -429,16 +435,16 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FieldError>{form.errors.availability as string}</FieldError>
+                    <FieldError>{errors.availability?.message as string}</FieldError>
                   </Field>
                 )}
 
                 {!addToShopify && (
-                  <Field data-invalid={!!form.errors.condition}>
+                  <Field data-invalid={!!errors.condition}>
                     <FieldLabel htmlFor="condition">Product condition *</FieldLabel>
                     <Select
-                      value={form.values.condition}
-                      onValueChange={(v) => form.setFieldValue("condition", v)}
+                      value={form.watch("condition")}
+                      onValueChange={(v) => form.setValue("condition", v)}
                       items={CATALOG_PRODUCT_CONDITIONS.map((c) => ({ value: c, label: c }))}
                     >
                       <SelectTrigger id="condition">
@@ -452,7 +458,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FieldError>{form.errors.condition as string}</FieldError>
+                    <FieldError>{errors.condition?.message as string}</FieldError>
                   </Field>
                 )}
               </FieldGroup>
@@ -472,7 +478,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                       onChange={(e) => setImage(e.target.files?.[0] ?? null)}
                     />
                   ) : (
-                    <Input {...form.getInputProps("image.0.url")} placeholder="Enter image link" />
+                    <Input {...form.register("image.0.url")} placeholder="Enter image link" />
                   )}
                   <FieldDescription>Minimum 500×500.</FieldDescription>
                 </Field>
@@ -480,7 +486,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                 {!addToShopify && (
                   <Field>
                     <FieldLabel>Image tags</FieldLabel>
-                    <ContainedTagInput {...form.getInputProps("image.0.tag")} label={undefined} />
+                    <TagController control={form.control} name="image.0.tag" />
                   </Field>
                 )}
 
@@ -495,10 +501,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                         onChange={(e) => setVideo(e.target.files?.[0] ?? null)}
                       />
                     ) : (
-                      <Input
-                        {...form.getInputProps("video.0.url")}
-                        placeholder="Enter video link"
-                      />
+                      <Input {...form.register("video.0.url")} placeholder="Enter video link" />
                     )}
                   </Field>
                 )}
@@ -506,7 +509,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                 {!addToShopify && (
                   <Field>
                     <FieldLabel>Video tags</FieldLabel>
-                    <ContainedTagInput {...form.getInputProps("video.0.tag")} label={undefined} />
+                    <TagController control={form.control} name="video.0.tag" />
                   </Field>
                 )}
               </FieldGroup>
@@ -519,11 +522,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                 <FieldGroup>
                   <Field>
                     <FieldLabel>Internal labels</FieldLabel>
-                    <ContainedTagInput
-                      {...form.getInputProps("internal_label")}
-                      maxTags={5}
-                      label={undefined}
-                    />
+                    <TagController control={form.control} name="internal_label" maxTags={5} />
                     <FieldDescription>Up to 5 labels, for your own filtering.</FieldDescription>
                   </Field>
                 </FieldGroup>
@@ -537,33 +536,33 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
             <FieldSet>
               <FieldLegend>Hotel details</FieldLegend>
               <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field data-invalid={!!form.errors.hotel_id}>
+                <Field data-invalid={!!errors.hotel_id}>
                   <FieldLabel htmlFor="hotel_id">Hotel ID *</FieldLabel>
-                  <Input id="hotel_id" {...form.getInputProps("hotel_id")} />
-                  <FieldError>{form.errors.hotel_id as string}</FieldError>
+                  <Input id="hotel_id" {...form.register("hotel_id")} />
+                  <FieldError>{errors.hotel_id?.message as string}</FieldError>
                 </Field>
-                <Field data-invalid={!!form.errors.name}>
+                <Field data-invalid={!!errors.name}>
                   <FieldLabel htmlFor="hotel_name">Hotel name *</FieldLabel>
-                  <Input id="hotel_name" {...form.getInputProps("name")} />
-                  <FieldError>{form.errors.name as string}</FieldError>
+                  <Input id="hotel_name" {...form.register("name")} />
+                  <FieldError>{errors.name?.message as string}</FieldError>
                 </Field>
-                <Field className="sm:col-span-2" data-invalid={!!form.errors.description}>
+                <Field className="sm:col-span-2" data-invalid={!!errors.description}>
                   <FieldLabel htmlFor="hotel_desc">Description *</FieldLabel>
                   <Textarea
                     id="hotel_desc"
                     rows={4}
                     maxLength={5000}
-                    {...form.getInputProps("description")}
+                    {...form.register("description")}
                   />
-                  <FieldError>{form.errors.description as string}</FieldError>
+                  <FieldError>{errors.description?.message as string}</FieldError>
                 </Field>
                 <Field>
                   <FieldLabel>Address</FieldLabel>
-                  <Input {...form.getInputProps("address.address")} />
+                  <Input {...form.register("address.address")} />
                 </Field>
                 <Field>
                   <FieldLabel>City</FieldLabel>
-                  <Input {...form.getInputProps("address.city")} />
+                  <Input {...form.register("address.city")} />
                 </Field>
               </FieldGroup>
             </FieldSet>
@@ -571,22 +570,22 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
             <FieldSet>
               <FieldLegend>Pricing</FieldLegend>
               <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field data-invalid={!!form.errors.base_price}>
+                <Field data-invalid={!!errors.base_price}>
                   <FieldLabel htmlFor="hotel_price">Price *</FieldLabel>
                   <Input
                     id="hotel_price"
                     type="number"
                     min={0}
-                    value={form.values.base_price}
-                    onChange={(e) => form.setFieldValue("base_price", Number(e.target.value))}
+                    value={form.watch("base_price")}
+                    onChange={(e) => form.setValue("base_price", Number(e.target.value))}
                   />
-                  <FieldError>{form.errors.base_price as string}</FieldError>
+                  <FieldError>{errors.base_price?.message as string}</FieldError>
                 </Field>
-                <Field data-invalid={!!form.errors.currencyCode}>
+                <Field data-invalid={!!errors.currencyCode}>
                   <FieldLabel htmlFor="hotel_currency">Currency *</FieldLabel>
                   <Select
-                    value={form.values.currencyCode}
-                    onValueChange={(v) => form.setFieldValue("currencyCode", v)}
+                    value={form.watch("currencyCode")}
+                    onValueChange={(v) => form.setValue("currencyCode", v)}
                     items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
                   >
                     <SelectTrigger id="hotel_currency">
@@ -600,7 +599,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <FieldError>{form.errors.currencyCode as string}</FieldError>
+                  <FieldError>{errors.currencyCode?.message as string}</FieldError>
                 </Field>
               </FieldGroup>
             </FieldSet>
@@ -610,27 +609,19 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field>
                   <FieldLabel>Image link</FieldLabel>
-                  <Input {...form.getInputProps("image.0.url")} />
+                  <Input {...form.register("image.0.url")} />
                 </Field>
                 <Field>
                   <FieldLabel>Image tags</FieldLabel>
-                  <ContainedTagInput {...form.getInputProps("image.0.tag")} label={undefined} />
+                  <TagController control={form.control} name="image.0.tag" />
                 </Field>
                 <Field>
                   <FieldLabel>Tags</FieldLabel>
-                  <ContainedTagInput
-                    {...form.getInputProps("tags")}
-                    maxTags={5}
-                    label={undefined}
-                  />
+                  <TagController control={form.control} name="tags" maxTags={5} />
                 </Field>
                 <Field>
                   <FieldLabel>Number tags</FieldLabel>
-                  <ContainedTagInput
-                    {...form.getInputProps("numbertags")}
-                    maxTags={5}
-                    label={undefined}
-                  />
+                  <TagController control={form.control} name="numbertags" maxTags={5} />
                   <FieldDescription>
                     Decimals only — commas not allowed (e.g. 2024)
                   </FieldDescription>
@@ -645,29 +636,29 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
             <FieldSet>
               <FieldLegend>Room details</FieldLegend>
               <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field data-invalid={!!form.errors.hotel_retailer_id}>
+                <Field data-invalid={!!errors.hotel_retailer_id}>
                   <FieldLabel htmlFor="hotel_retailer_id">Hotel retailer ID *</FieldLabel>
-                  <Input id="hotel_retailer_id" {...form.getInputProps("hotel_retailer_id")} />
-                  <FieldError>{form.errors.hotel_retailer_id as string}</FieldError>
+                  <Input id="hotel_retailer_id" {...form.register("hotel_retailer_id")} />
+                  <FieldError>{errors.hotel_retailer_id?.message as string}</FieldError>
                 </Field>
-                <Field data-invalid={!!form.errors.hotel_room_id}>
+                <Field data-invalid={!!errors.hotel_room_id}>
                   <FieldLabel htmlFor="hotel_room_id">Hotel room ID *</FieldLabel>
-                  <Input id="hotel_room_id" {...form.getInputProps("hotel_room_id")} />
-                  <FieldError>{form.errors.hotel_room_id as string}</FieldError>
+                  <Input id="hotel_room_id" {...form.register("hotel_room_id")} />
+                  <FieldError>{errors.hotel_room_id?.message as string}</FieldError>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="room_name">Name</FieldLabel>
-                  <Input id="room_name" {...form.getInputProps("name")} />
+                  <Input id="room_name" {...form.register("name")} />
                 </Field>
-                <Field className="sm:col-span-2" data-invalid={!!form.errors.description}>
+                <Field className="sm:col-span-2" data-invalid={!!errors.description}>
                   <FieldLabel htmlFor="room_desc">Description *</FieldLabel>
                   <Textarea
                     id="room_desc"
                     rows={3}
                     maxLength={5000}
-                    {...form.getInputProps("description")}
+                    {...form.register("description")}
                   />
-                  <FieldError>{form.errors.description as string}</FieldError>
+                  <FieldError>{errors.description?.message as string}</FieldError>
                 </Field>
               </FieldGroup>
             </FieldSet>
@@ -675,22 +666,22 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
             <FieldSet>
               <FieldLegend>Pricing</FieldLegend>
               <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field data-invalid={!!form.errors.base_price}>
+                <Field data-invalid={!!errors.base_price}>
                   <FieldLabel htmlFor="room_price">Price *</FieldLabel>
                   <Input
                     id="room_price"
                     type="number"
                     min={0}
-                    value={form.values.base_price}
-                    onChange={(e) => form.setFieldValue("base_price", Number(e.target.value))}
+                    value={form.watch("base_price")}
+                    onChange={(e) => form.setValue("base_price", Number(e.target.value))}
                   />
-                  <FieldError>{form.errors.base_price as string}</FieldError>
+                  <FieldError>{errors.base_price?.message as string}</FieldError>
                 </Field>
-                <Field data-invalid={!!form.errors.currencyCode}>
+                <Field data-invalid={!!errors.currencyCode}>
                   <FieldLabel htmlFor="room_currency">Currency *</FieldLabel>
                   <Select
-                    value={form.values.currencyCode}
-                    onValueChange={(v) => form.setFieldValue("currencyCode", v)}
+                    value={form.watch("currencyCode")}
+                    onValueChange={(v) => form.setValue("currencyCode", v)}
                     items={CURRENCY_CODES.map((c) => ({ value: c, label: c }))}
                   >
                     <SelectTrigger id="room_currency">
@@ -704,7 +695,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <FieldError>{form.errors.currencyCode as string}</FieldError>
+                  <FieldError>{errors.currencyCode?.message as string}</FieldError>
                 </Field>
               </FieldGroup>
             </FieldSet>
@@ -714,11 +705,11 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field>
                   <FieldLabel>Image link</FieldLabel>
-                  <Input {...form.getInputProps("image.0.url")} />
+                  <Input {...form.register("image.0.url")} />
                 </Field>
                 <Field>
                   <FieldLabel>Image tags</FieldLabel>
-                  <ContainedTagInput {...form.getInputProps("image.0.tag")} label={undefined} />
+                  <TagController control={form.control} name="image.0.tag" />
                 </Field>
               </FieldGroup>
             </FieldSet>
@@ -730,7 +721,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
         <Button variant="outline" onClick={cancel} disabled={isSaving}>
           Cancel
         </Button>
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={form.handleSubmit(handleSave)} disabled={isSaving}>
           {isSaving && <Loader2 data-icon="inline-start" className="animate-spin" />}
           {addToShopify ? "Add to Shopify" : productData ? "Save changes" : "Add product"}
         </Button>

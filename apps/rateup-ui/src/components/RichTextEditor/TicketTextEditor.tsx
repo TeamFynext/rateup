@@ -1,12 +1,14 @@
-import { Button } from "@mantine/core";
-import { Link, RichTextEditor } from "@mantine/tiptap";
 import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import { Color, TextStyle } from "@tiptap/extension-text-style";
 import Youtube from "@tiptap/extension-youtube";
-import { useEditor } from "@tiptap/react";
+import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+
+import { EditorToolbar } from "@/components/tiptap/toolbars/editor-toolbar.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
 import InsertEmoji from "./InsertEmoji/index.tsx";
 import InsertImage from "./InsertImage/index.tsx";
@@ -35,69 +37,28 @@ export default function TicketTextEditor({ content, onUpdate, placeholder = "", 
     },
   });
 
+  if (!editor) return null;
+
   return (
-    <RichTextEditor editor={editor}>
-      <RichTextEditor.Toolbar>
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.ColorPicker
-            colors={[
-              "#25262b",
-              "#868e96",
-              "#fa5252",
-              "#e64980",
-              "#be4bdb",
-              "#7950f2",
-              "#4c6ef5",
-              "#228be6",
-              "#15aabf",
-              "#12b886",
-              "#40c057",
-              "#82c91e",
-              "#fab005",
-              "#fd7e14",
-            ]}
-          />
-          <RichTextEditor.UnsetColor />
-        </RichTextEditor.ControlsGroup>
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.Bold />
-          <RichTextEditor.Italic />
-          <RichTextEditor.Underline />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.BulletList />
-          <RichTextEditor.OrderedList />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.Link />
-          <RichTextEditor.Unlink />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.Undo />
-          <RichTextEditor.Redo />
-        </RichTextEditor.ControlsGroup>
-        <RichTextEditor.ControlsGroup>
-          <InsertEmoji />
-          <InsertImage />
-        </RichTextEditor.ControlsGroup>
+    <div className="relative w-full overflow-hidden rounded-md border bg-card">
+      <EditorToolbar editor={editor} />
+      <div className="flex flex-row flex-wrap items-center gap-1.5 border-b px-2 py-1">
+        <InsertEmoji editor={editor} />
+        <InsertImage editor={editor} />
         {saveBtn && (
           <Button
-            size="compact-sm"
+            size="sm"
+            className="ml-auto"
             onClick={() => {
               onUpdate(editor.getHTML());
               editor.commands.clearContent();
             }}
-            ml={"auto"}
-            variant="filled"
           >
             Submit
           </Button>
         )}
-      </RichTextEditor.Toolbar>
-      <RichTextEditor.Content />
-    </RichTextEditor>
+      </div>
+      <EditorContent editor={editor} className="w-full cursor-text p-3" />
+    </div>
   );
 }

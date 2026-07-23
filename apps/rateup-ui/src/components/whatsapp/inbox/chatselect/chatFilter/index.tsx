@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums.ts";
 
-import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput.tsx";
+import { MultiSelect } from "../../../../ui/multi-select.tsx";
 
 export interface ChatFilter {
   messageType: "all" | "replied" | "unread" | "usermessages";
@@ -233,19 +233,16 @@ export default function WaInboxChatFilter() {
             </label>
 
             <div className="mt-2">
-              <ContainedMultiSelect
-                variant="filled"
-                radius="md"
+              <MultiSelect
                 value={filter.assignedTeams || []}
-                onChange={(values) =>
+                onValueChange={(values) =>
                   setFilter({
                     ...filter,
                     assignedTeams: values,
                   })
                 }
                 placeholder={translations("Select teams (type in to search)")}
-                data={teamOptions}
-                searchable
+                options={teamOptions}
               />
             </div>
           </div>

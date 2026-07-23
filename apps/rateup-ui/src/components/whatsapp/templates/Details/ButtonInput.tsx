@@ -1,23 +1,29 @@
-import { ActionIcon, Box, Divider, Group, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
-import type { UseFormReturnType } from "@mantine/form";
 import { IconChevronDown, IconPlus, IconTrash, IconVariable, IconX } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 import type { z } from "zod/v4";
 
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import type { BridgedForm } from "@/hooks/useBridgedForm";
 import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
+import { toSelectOptions } from "@/utils/select-options.ts";
 
-import {
-  ContainedDateTimePickerInput,
-  ContainedMultiSelect,
-  ContainedNumberInput,
-  ContainedSelection,
-  ContainedTextField,
-} from "../../../input/ContainedInput/ContainedInput.tsx";
 import { LengthTracker } from "../../../input/LengthTracker.tsx";
+import { Field, FieldDescription, FieldLabel } from "../../../ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../../../ui/input-group.tsx";
+import { Input } from "../../../ui/input.tsx";
+import { MultiSelect } from "../../../ui/multi-select.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../ui/select.tsx";
 import { FlowSelector } from "../../flows/FlowSelector/FlowSelector.tsx";
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector.tsx";
 import type { templateSchema } from "../Schema/templateSchema.ts";
@@ -67,161 +73,156 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
     case WHATSAPP_BUTTON_TYPE.QUICK_REPLY:
       return (
         <>
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Button text")}
-              </Text>
-            }
-            rightSection={
-              <LengthTracker
-                length={form.values?.buttons?.[index]?.text?.length}
-                maxValue={25}
-                atStart
-              />
-            }
-            flex={1}
-            {...form.getInputProps(`buttons.${index}.text`)}
-          />
-          <ActionIcon mt={24} variant="transparent" onClick={() => deleteButton(index)}>
+          <Field className="flex-1">
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Button text")}</p>
+            </FieldLabel>
+            <InputGroup>
+              <InputGroupInput {...form.getFieldProps(`buttons.${index}.text`)} />
+              <InputGroupAddon align="inline-end">
+                <LengthTracker
+                  length={form.values?.buttons?.[index]?.text?.length}
+                  maxValue={25}
+                  atStart
+                />
+              </InputGroupAddon>
+            </InputGroup>
+          </Field>
+          <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
             <IconX />
-          </ActionIcon>
+          </Button>
         </>
       );
     case WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE:
       return (
-        <SimpleGrid cols={buttonState.totalFields}>
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Type of action")}
-              </Text>
-            }
-            value={
-              buttonState.isWebSurvey
-                ? translations("RateUp Web Survey")
-                : translations("Visit a Website")
-            }
-            readOnly
-          />
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Button text")}
-              </Text>
-            }
-            rightSection={
-              <LengthTracker
-                length={form.values?.buttons?.[index]?.text?.length}
-                maxValue={25}
-                atStart
-              />
-            }
-            {...form.getInputProps(`buttons.${index}.text`)}
-          />
+        <div className="grid">
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Type of action")}</p>
+            </FieldLabel>
+            <Input
+              value={
+                buttonState.isWebSurvey
+                  ? translations("RateUp Web Survey")
+                  : translations("Visit a Website")
+              }
+              readOnly
+            />
+          </Field>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Button text")}</p>
+            </FieldLabel>
+            <InputGroup>
+              <InputGroupInput {...form.getFieldProps(`buttons.${index}.text`)} />
+              <InputGroupAddon align="inline-end">
+                <LengthTracker
+                  length={form.values?.buttons?.[index]?.text?.length}
+                  maxValue={25}
+                  atStart
+                />
+              </InputGroupAddon>
+            </InputGroup>
+          </Field>
           {buttonState.isWebSurvey ? (
             <WebsurveySelector
               onlyPublished
               searchable
-              label={
-                <Text fz={14} fw={500}>
-                  {translations("Web Survey")}
-                </Text>
-              }
-              comboboxProps={{ position: "top" }}
+              label={<p className="text-sm font-medium">{translations("Web Survey")}</p>}
               form={form}
               index={index}
             />
           ) : (
             <>
-              <ContainedTextField
-                label={
-                  <Text fz={14} fw={500}>
-                    {translations("Website Url")}
-                  </Text>
-                }
-                rightSection={
-                  <Group gap="xs">
-                    {buttonState.showInsertIcon && (
-                      <Tooltip label={translations("Insert variable {{1}}")}>
-                        <ActionIcon
-                          size="sm"
-                          variant="subtle"
-                          onClick={() => {
-                            const currentUrl = form.values?.buttons?.[index]?.url || "";
-                            form.setFieldValue(`buttons.${index}.url`, currentUrl + "{{1}}");
-                          }}
-                        >
-                          <IconVariable size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                    )}
-                    <LengthTracker length={buttonState.combinedLength} maxValue={2000} atStart />
-                  </Group>
-                }
-                flex={1}
-                {...form.getInputProps(`buttons.${index}.url`)}
-                type="url"
-              />
+              <Field className="flex-1">
+                <FieldLabel>
+                  <p className="text-sm font-medium">{translations("Website Url")}</p>
+                </FieldLabel>
+                <InputGroup>
+                  <InputGroupInput type="url" {...form.getFieldProps(`buttons.${index}.url`)} />
+                  <InputGroupAddon align="inline-end">
+                    <div className="flex items-center gap-2.5">
+                      {buttonState.showInsertIcon && (
+                        <CustomTooltip
+                          content={<span>{""}</span>}
+                          trigger={
+                            <span>
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => {
+                                  const currentUrl = form.values?.buttons?.[index]?.url || "";
+                                  form.setFieldValue(`buttons.${index}.url`, currentUrl + "{{1}}");
+                                }}
+                              >
+                                <IconVariable size={16} />
+                              </Button>
+                            </span>
+                          }
+                        />
+                      )}
+                      <LengthTracker length={buttonState.combinedLength} maxValue={2000} atStart />
+                    </div>
+                  </InputGroupAddon>
+                </InputGroup>
+              </Field>
               {buttonState.hasVariableInUrl && (
-                <ContainedTextField
-                  label={
-                    <Text fz={14} fw={500}>
-                      {translations("Example")}
-                    </Text>
-                  }
-                  placeholder={translations("Enter example for {{1}}")}
-                  rightSection={
-                    <LengthTracker length={buttonState.combinedLength} maxValue={2000} atStart />
-                  }
-                  flex={1}
-                  {...form.getInputProps(`buttons.${index}.example`)}
-                />
+                <Field className="flex-1">
+                  <FieldLabel>
+                    <p className="text-sm font-medium">{translations("Example")}</p>
+                  </FieldLabel>
+                  <InputGroup>
+                    <InputGroupInput
+                      placeholder={translations("Enter example for {{1}}")}
+                      {...form.getFieldProps(`buttons.${index}.example`)}
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <LengthTracker length={buttonState.combinedLength} maxValue={2000} atStart />
+                    </InputGroupAddon>
+                  </InputGroup>
+                </Field>
               )}
             </>
           )}
-          <Box
+          <div
             style={{
               display: "flex",
               alignItems: "flex-end",
               paddingBottom: "8px",
             }}
           >
-            <ActionIcon variant="transparent" onClick={() => deleteButton(index)}>
+            <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
               <IconX />
-            </ActionIcon>
-          </Box>
-        </SimpleGrid>
+            </Button>
+          </div>
+        </div>
       );
     case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
       return (
         <>
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Type of action")}
-              </Text>
-            }
-            value={"Call phone number"}
-            readOnly
-          />
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Button text")}
-              </Text>
-            }
-            rightSection={
-              <LengthTracker
-                length={form.values?.buttons?.[index]?.text?.length}
-                maxValue={25}
-                atStart
-              />
-            }
-            {...form.getInputProps(`buttons.${index}.text`)}
-          />
-          <Box flex={1}>
-            <Text>{translations("Phone Number")}</Text>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Type of action")}</p>
+            </FieldLabel>
+            <Input value={"Call phone number"} readOnly />
+          </Field>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Button text")}</p>
+            </FieldLabel>
+            <InputGroup>
+              <InputGroupInput {...form.getFieldProps(`buttons.${index}.text`)} />
+              <InputGroupAddon align="inline-end">
+                <LengthTracker
+                  length={form.values?.buttons?.[index]?.text?.length}
+                  maxValue={25}
+                  atStart
+                />
+              </InputGroupAddon>
+            </InputGroup>
+          </Field>
+          <div>
+            <p>{translations("Phone Number")}</p>
             <PhoneInputWithCountrySelect
               defaultCountry="IN"
               international
@@ -235,269 +236,266 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
                   : styles.inputPhone
               }
             />
-            <Text fz={"xs"} c={"var(--mantine-color-red-6)"}>
+            <p className="text-xs text-destructive">
               {form?.errors?.[`buttons.${index}.phone_number`]}
-            </Text>
-          </Box>
-          <ActionIcon mt={24} variant="transparent" onClick={() => deleteButton(index)}>
+            </p>
+          </div>
+          <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
             <IconX />
-          </ActionIcon>
+          </Button>
         </>
       );
     case WHATSAPP_BUTTON_TYPE.OTP:
       return (
         <>
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Type of action")}
-              </Text>
-            }
-            defaultValue={"otp"}
-            readOnly
-          />
-          <ContainedTextField
-            label={translations("Button text")}
-            {...form.getInputProps(`buttons.${index}.text`)}
-            placeholder="Copy code"
-          />
-          <ActionIcon mt={24} variant="transparent" onClick={() => deleteButton(index)}>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Type of action")}</p>
+            </FieldLabel>
+            <Input defaultValue={"otp"} readOnly />
+          </Field>
+          <Field>
+            <FieldLabel>translations("Button text")</FieldLabel>
+            <Input placeholder="Copy code" {...form.getFieldProps(`buttons.${index}.text`)} />
+          </Field>
+          <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
             <IconX />
-          </ActionIcon>
+          </Button>
         </>
       );
 
     case WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE:
       return (
         <>
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Type of action")}
-              </Text>
-            }
-            value={"Copy offer code"}
-            readOnly
-          />
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Button text")}
-              </Text>
-            }
-            value={"Copy offer code"}
-            disabled
-            rightSection={<div></div>}
-          />
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Offer code")}
-              </Text>
-            }
-            placeholder={translations("Enter sample code")}
-            rightSection={
-              <LengthTracker
-                length={form.values?.buttons?.[index]?.example?.length}
-                maxValue={15}
-                atStart
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Type of action")}</p>
+            </FieldLabel>
+            <Input value={"Copy offer code"} readOnly />
+          </Field>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Button text")}</p>
+            </FieldLabel>
+            <InputGroup>
+              <InputGroupInput value={"Copy offer code"} disabled />
+              <InputGroupAddon align="inline-end">
+                <div></div>
+              </InputGroupAddon>
+            </InputGroup>
+          </Field>
+          <Field className="flex-1">
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Offer code")}</p>
+            </FieldLabel>
+            <InputGroup>
+              <InputGroupInput
+                placeholder={translations("Enter sample code")}
+                {...form.getFieldProps(`buttons.${index}.example`)}
               />
-            }
-            flex={1}
-            {...form.getInputProps(`buttons.${index}.example`)}
-          />
-          <ActionIcon mt={24} variant="transparent" onClick={() => deleteButton(index)}>
+              <InputGroupAddon align="inline-end">
+                <LengthTracker
+                  length={form.values?.buttons?.[index]?.example?.length}
+                  maxValue={15}
+                  atStart
+                />
+              </InputGroupAddon>
+            </InputGroup>
+          </Field>
+          <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
             <IconX />
-          </ActionIcon>
+          </Button>
         </>
       );
     case WHATSAPP_BUTTON_TYPE.FLOW:
       return (
         <>
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Type of action")}
-              </Text>
-            }
-            value={"Open a Flow"}
-            readOnly
-          />
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Button text")}
-              </Text>
-            }
-            rightSection={
-              <LengthTracker
-                length={form.values?.buttons?.[index]?.text?.length}
-                maxValue={25}
-                atStart
-              />
-            }
-            {...form.getInputProps(`buttons.${index}.text`)}
-          />
-          <FlowSelector
-            onlyPublished
-            id={"flowId"}
-            {...form.getInputProps(`buttons.${index}.flow_id`)}
-            searchable
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Flow")}
-              </Text>
-            }
-            comboboxProps={{ position: "top" }}
-          />
-          <ActionIcon mt={24} variant="transparent" onClick={() => deleteButton(index)}>
-            <IconX />
-          </ActionIcon>
-        </>
-      );
-    case WHATSAPP_BUTTON_TYPE.ORDER_DETAILS:
-      return (
-        <Stack>
-          <Group>
-            <ContainedTextField
-              label={
-                <Text fz={14} fw={500}>
-                  {translations("Type of action")}
-                </Text>
-              }
-              value={"Open order details"}
-              readOnly
-            />
-            <ContainedTextField
-              label={
-                <Text fz={14} fw={500}>
-                  {translations("Button text")}
-                </Text>
-              }
-              rightSection={
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Type of action")}</p>
+            </FieldLabel>
+            <Input value={"Open a Flow"} readOnly />
+          </Field>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Button text")}</p>
+            </FieldLabel>
+            <InputGroup>
+              <InputGroupInput {...form.getFieldProps(`buttons.${index}.text`)} />
+              <InputGroupAddon align="inline-end">
                 <LengthTracker
                   length={form.values?.buttons?.[index]?.text?.length}
                   maxValue={25}
                   atStart
                 />
-              }
-              {...form.getInputProps(`buttons.${index}.text`)}
-              disabled
-            />
+              </InputGroupAddon>
+            </InputGroup>
+          </Field>
+          <FlowSelector
+            onlyPublished
+            id={"flowId"}
+            {...form.getInputProps(`buttons.${index}.flow_id`)}
+            searchable
+            label={<p className="text-sm font-medium">{translations("Flow")}</p>}
+          />
+          <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
+            <IconX />
+          </Button>
+        </>
+      );
+    case WHATSAPP_BUTTON_TYPE.ORDER_DETAILS:
+      return (
+        <div className="flex flex-col">
+          <div className="flex items-center">
+            <Field>
+              <FieldLabel>
+                <p className="text-sm font-medium">{translations("Type of action")}</p>
+              </FieldLabel>
+              <Input value={"Open order details"} readOnly />
+            </Field>
+            <Field>
+              <FieldLabel>
+                <p className="text-sm font-medium">{translations("Button text")}</p>
+              </FieldLabel>
+              <InputGroup>
+                <InputGroupInput disabled {...form.getFieldProps(`buttons.${index}.text`)} />
+                <InputGroupAddon align="inline-end">
+                  <LengthTracker
+                    length={form.values?.buttons?.[index]?.text?.length}
+                    maxValue={25}
+                    atStart
+                  />
+                </InputGroupAddon>
+              </InputGroup>
+            </Field>
             {form.values.category === "MARKETING" && (
-              <ActionIcon
-                mt={24}
-                variant="transparent"
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => {
                   deleteButton(index);
                 }}
               >
                 <IconX />
-              </ActionIcon>
+              </Button>
             )}
-          </Group>
+          </div>
           {form.values.category === "MARKETING" && <OrderDetailsButtonForm form={form} />}
-        </Stack>
+        </div>
       );
     case WHATSAPP_BUTTON_TYPE.CATALOG:
       return (
         <>
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Type of action")}
-              </Text>
-            }
-            value={"View catalog"}
-            readOnly
-          />
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Button text")}
-              </Text>
-            }
-            {...form.getInputProps(`buttons.${index}.text`)}
-            readOnly
-          />
-          <Stack p={0}>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Type of action")}</p>
+            </FieldLabel>
+            <Input value={"View catalog"} readOnly />
+          </Field>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Button text")}</p>
+            </FieldLabel>
+            <Input readOnly {...form.getFieldProps(`buttons.${index}.text`)} />
+          </Field>
+          <div className="flex flex-col p-0">
             <AccountSelector
               label={"Select catalog linked account"}
               {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
             />
             {!catalog && (
-              <Text size="sm" c={"red"}>
-                No catalogs are linked to selected account
-              </Text>
+              <p className="text-destructive">No catalogs are linked to selected account</p>
             )}
-          </Stack>
-          <ContainedSelection
-            data={productRetailerIds}
-            label={
-              <Text fz={14} fw={500}>
-                {"Thumbnail product retailer id"}
-              </Text>
-            }
-            {...form.getInputProps("defaultValues.catalog.thumbnail_product_retailer_id")}
-          />
-          <ActionIcon
-            mt={24}
-            variant="transparent"
+          </div>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{"Thumbnail product retailer id"}</p>
+            </FieldLabel>
+            <Select
+              items={toSelectOptions(productRetailerIds)}
+              value={form.values["defaultValues"]["catalog"]["thumbnail_product_retailer_id"] ?? ""}
+              onValueChange={(value) =>
+                form.setFieldValue("defaultValues.catalog.thumbnail_product_retailer_id", value)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {toSelectOptions(productRetailerIds).map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => {
               form.setFieldValue("defaultValues.catalog.thumbnail_product_retailer_id", "");
               deleteButton(index);
             }}
           >
             <IconX />
-          </ActionIcon>
+          </Button>
         </>
       );
     case WHATSAPP_BUTTON_TYPE.MPM:
       return (
-        <Stack>
-          <Group>
-            <ContainedTextField
-              label={
-                <Text fz={14} fw={500}>
-                  {translations("Type of action")}
-                </Text>
-              }
-              value={"View Catalog items"}
-              readOnly
-            />
-            <ContainedTextField
-              label={
-                <Text fz={14} fw={500}>
-                  {translations("Button text")}
-                </Text>
-              }
-              {...form.getInputProps(`buttons.${index}.text`)}
-              readOnly
-            />
-            <Stack>
+        <div className="flex flex-col">
+          <div className="flex items-center">
+            <Field>
+              <FieldLabel>
+                <p className="text-sm font-medium">{translations("Type of action")}</p>
+              </FieldLabel>
+              <Input value={"View Catalog items"} readOnly />
+            </Field>
+            <Field>
+              <FieldLabel>
+                <p className="text-sm font-medium">{translations("Button text")}</p>
+              </FieldLabel>
+              <Input readOnly {...form.getFieldProps(`buttons.${index}.text`)} />
+            </Field>
+            <div className="flex flex-col">
               <AccountSelector
                 label={"Select catalog linked account"}
                 {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
               />
               {!catalog && (
-                <Text size="sm" c={"red"}>
-                  No catalogs are linked to selected account
-                </Text>
+                <p className="text-destructive">No catalogs are linked to selected account</p>
               )}
-            </Stack>
+            </div>
 
-            <ContainedSelection
-              data={productRetailerIds}
-              label={
-                <Text fz={14} fw={500}>
-                  {"Thumbnail product retailer id"}
-                </Text>
-              }
-              {...form.getInputProps("defaultValues.catalog.thumbnail_product_retailer_id")}
-            />
-            <ActionIcon
-              mt={24}
-              variant="transparent"
+            <Field>
+              <FieldLabel>
+                <p className="text-sm font-medium">{"Thumbnail product retailer id"}</p>
+              </FieldLabel>
+              <Select
+                items={toSelectOptions(productRetailerIds)}
+                value={
+                  form.values["defaultValues"]["catalog"]["thumbnail_product_retailer_id"] ?? ""
+                }
+                onValueChange={(value) =>
+                  form.setFieldValue("defaultValues.catalog.thumbnail_product_retailer_id", value)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {toSelectOptions(productRetailerIds).map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => {
                 form.setFieldValue("defaultValues.catalog", {
                   thumbnail_product_retailer_id: "",
@@ -512,104 +510,111 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               }}
             >
               <IconX />
-            </ActionIcon>
-          </Group>
-          <RateupButtonSecondary
-            radius={"md"}
-            w={"fit-content"}
-            leftIcon={<IconPlus size={15} />}
-            rightIcon={<IconChevronDown size={15} />}
-            title="Add Sections"
-            onClick={handleAddMPMSections}
-          />
+            </Button>
+          </div>
+          <Button variant="outline" className="w-fit" onClick={handleAddMPMSections}>
+            <IconPlus size={15} />
+            Add Sections
+            <IconChevronDown size={15} />
+          </Button>
           {form.values.defaultValues?.catalog?.mpm?.sections?.map((_sec, index) => (
-            <Group
-              bg={"var(--light-grey-color-4)"}
-              p={"md"}
-              key={index}
-              style={{ borderRadius: "10px" }}
-            >
-              <ContainedTextField
-                label={
-                  <Text fz={14} fw={500}>
-                    Section Title
-                  </Text>
-                }
-                key={form.key(`defaultValues.catalog.mpm.sections.${index}.title`)}
-                {...form.getInputProps(`defaultValues.catalog.mpm.sections.${index}.title`)}
-              />
-              <ContainedMultiSelect
-                data={productRetailerIds}
-                label={
-                  <Text fz={14} fw={500}>
-                    {"Product Retailer Ids"}
-                  </Text>
-                }
-                {...form.getInputProps(`defaultValues.catalog.mpm.sections.${index}.products`)}
-                nothingFoundMessage={"products not found"}
-              />
-              <ActionIcon
-                mt={24}
-                variant="transparent"
+            <div className="flex items-center p-4" key={index} style={{ borderRadius: "10px" }}>
+              <Field>
+                <FieldLabel>
+                  <p className="text-sm font-medium">Section Title</p>
+                </FieldLabel>
+                <Input
+                  key={form.key(`defaultValues.catalog.mpm.sections.${index}.title`)}
+                  {...form.getFieldProps(`defaultValues.catalog.mpm.sections.${index}.title`)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel>
+                  <p className="text-sm font-medium">{"Product Retailer Ids"}</p>
+                </FieldLabel>
+                <MultiSelect
+                  options={toSelectOptions(productRetailerIds)}
+                  value={
+                    form.values["defaultValues"]["catalog"]["mpm"]["sections"][`${index}`][
+                      "products"
+                    ] ?? []
+                  }
+                  onValueChange={(value) =>
+                    form.setFieldValue(
+                      `defaultValues.catalog.mpm.sections.${index}.products`,
+                      value,
+                    )
+                  }
+                />
+              </Field>
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => form.removeListItem("defaultValues.catalog.mpm.sections", index)}
               >
                 <IconTrash color="red" size={15} />
-              </ActionIcon>
-            </Group>
+              </Button>
+            </div>
           ))}
-        </Stack>
+        </div>
       );
     case WHATSAPP_BUTTON_TYPE.SPM:
       return (
         <>
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Type of action")}
-              </Text>
-            }
-            value={"View Single Product"}
-            readOnly
-          />
-          <ContainedTextField
-            label={
-              <Text fz={14} fw={500}>
-                {translations("Button text")}
-              </Text>
-            }
-            {...form.getInputProps(`buttons.${index}.text`)}
-            readOnly
-          />
-          <Stack>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Type of action")}</p>
+            </FieldLabel>
+            <Input value={"View Single Product"} readOnly />
+          </Field>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{translations("Button text")}</p>
+            </FieldLabel>
+            <Input readOnly {...form.getFieldProps(`buttons.${index}.text`)} />
+          </Field>
+          <div className="flex flex-col">
             <AccountSelector
               label={"Select catalog linked account"}
               {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
             />
             {!catalog && (
-              <Text size="sm" c={"red"}>
-                No catalogs are linked to selected account
-              </Text>
+              <p className="text-destructive">No catalogs are linked to selected account</p>
             )}
-          </Stack>
-          <ContainedSelection
-            data={productRetailerIds}
-            label={
-              <Text fz={14} fw={500}>
-                {"Product retailer id"}
-              </Text>
-            }
-            {...form.getInputProps("defaultValues.catalog.spm.product_retailer_id")}
-          />
-          <ActionIcon
-            mt={24}
-            variant="transparent"
+          </div>
+          <Field>
+            <FieldLabel>
+              <p className="text-sm font-medium">{"Product retailer id"}</p>
+            </FieldLabel>
+            <Select
+              items={toSelectOptions(productRetailerIds)}
+              value={form.values["defaultValues"]["catalog"]["spm"]["product_retailer_id"] ?? ""}
+              onValueChange={(value) =>
+                form.setFieldValue("defaultValues.catalog.spm.product_retailer_id", value)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {toSelectOptions(productRetailerIds).map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => {
               form.setFieldValue("defaultValues.catalog.spm.product_retailer_id", "");
               deleteButton(index);
             }}
           >
             <IconX />
-          </ActionIcon>
+          </Button>
         </>
       );
     default:
@@ -620,115 +625,195 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
 const OrderDetailsButtonForm = ({
   form,
 }: {
-  form: UseFormReturnType<z.infer<typeof templateSchema>>;
+  form: BridgedForm<z.infer<typeof templateSchema>>;
 }) => {
   return (
-    <Stack>
-      <Group>
-        <ContainedSelection
-          data={["physical-goods", "digital-goods"]}
-          {...form.getInputProps("defaultValues.orderDetails.productType")}
-          label={"Product Type"}
-        />
-        <ContainedTextField
-          {...form.getInputProps("defaultValues.orderDetails.item.name")}
-          label={"Product Name"}
-        />
-        <ContainedNumberInput
-          allowNegative={false}
-          {...form.getInputProps("defaultValues.orderDetails.item.price")}
-          label={"Product Price"}
-        />
-        <ContainedNumberInput
-          allowNegative={false}
-          {...form.getInputProps("defaultValues.orderDetails.item.salePrice")}
-          label={"Product Sale Price"}
-        />
-        <ContainedNumberInput
-          allowNegative={false}
-          allowDecimal={false}
-          {...form.getInputProps("defaultValues.orderDetails.item.quantity")}
-          label={"Quantity"}
-        />
-        <ContainedTextField
-          {...form.getInputProps("defaultValues.orderDetails.item.origin")}
-          label={"Country of origin"}
-        />
-      </Group>
-      <Divider label={"Product Importer Info"} />
-      <Group>
-        <ContainedTextField
-          {...form.getInputProps("defaultValues.orderDetails.item.importerName")}
-          label={"Importer Name"}
-        />
-        <ContainedTextField
-          {...form.getInputProps("defaultValues.orderDetails.item.importerAddress1")}
-          label={"Importer Address"}
-        />
-        <ContainedTextField
-          {...form.getInputProps("defaultValues.orderDetails.item.importerCity")}
-          label={"City"}
-        />
-        <ContainedTextField
-          {...form.getInputProps("defaultValues.orderDetails.item.importerPostalCode")}
-          label={"Postal Code"}
-        />
-        <ContainedTextField
-          {...form.getInputProps("defaultValues.orderDetails.item.importerZoneCode")}
-          label={"Zone Code"}
-        />
-      </Group>
-      <Divider />
-      <Group>
-        <ContainedNumberInput
-          allowNegative={false}
-          {...form.getInputProps("defaultValues.orderDetails.shipping")}
-          label={"Shipping Amount"}
-        />
-        <ContainedNumberInput
-          allowNegative={false}
-          {...form.getInputProps("defaultValues.orderDetails.tax")}
-          label={"Tax amount"}
-        />
-        <ContainedTextField
-          {...form.getInputProps("defaultValues.orderDetails.taxDescription")}
-          label={"Tax Description"}
-        />
-        <ContainedNumberInput
-          allowNegative={false}
-          allowDecimal={false}
-          {...form.getInputProps("defaultValues.orderDetails.discount")}
-          label={"Discount Amount"}
-        />
-        <ContainedTextField
-          {...form.getInputProps("defaultValues.orderDetails.discountDescription")}
-          label={"Discount Description"}
-        />
-        <ContainedDateTimePickerInput
-          clearable
-          {...form.getInputProps("defaultValues.orderDetails.expiry")}
-          label={"Expiry Date"}
-        />
-      </Group>
-      <Divider label={"Payment Info"} />
-      <Group>
-        <ContainedSelection
-          data={["razorpay", "payu", "zaakpay"]}
-          {...form.getInputProps("defaultValues.orderDetails.paymentType")}
-          label={"Payment gateway name"}
-          description={
+    <div className="flex flex-col">
+      <div className="flex items-center">
+        <Field>
+          <FieldLabel>"Product Type"</FieldLabel>
+          <Select
+            items={toSelectOptions(["physical-goods", "digital-goods"])}
+            value={form.values["defaultValues"]["orderDetails"]["productType"] ?? ""}
+            onValueChange={(value) =>
+              form.setFieldValue("defaultValues.orderDetails.productType", value)
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {toSelectOptions(["physical-goods", "digital-goods"]).map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field>
+          <FieldLabel>"Product Name"</FieldLabel>
+          <Input {...form.getFieldProps("defaultValues.orderDetails.item.name")} />
+        </Field>
+        <Field>
+          <FieldLabel>"Product Price"</FieldLabel>
+          <Input
+            type="number"
+            min={0}
+            value={form.values["defaultValues"]["orderDetails"]["item"]["price"] ?? ""}
+            onChange={(event) =>
+              form.setFieldValue(
+                "defaultValues.orderDetails.item.price",
+                Number(event.target.value),
+              )
+            }
+          />
+        </Field>
+        <Field>
+          <FieldLabel>"Product Sale Price"</FieldLabel>
+          <Input
+            type="number"
+            min={0}
+            value={form.values["defaultValues"]["orderDetails"]["item"]["salePrice"] ?? ""}
+            onChange={(event) =>
+              form.setFieldValue(
+                "defaultValues.orderDetails.item.salePrice",
+                Number(event.target.value),
+              )
+            }
+          />
+        </Field>
+        <Field>
+          <FieldLabel>"Quantity"</FieldLabel>
+          <Input
+            type="number"
+            min={0}
+            step={1}
+            value={form.values["defaultValues"]["orderDetails"]["item"]["quantity"] ?? ""}
+            onChange={(event) =>
+              form.setFieldValue(
+                "defaultValues.orderDetails.item.quantity",
+                Number(event.target.value),
+              )
+            }
+          />
+        </Field>
+        <Field>
+          <FieldLabel>"Country of origin"</FieldLabel>
+          <Input {...form.getFieldProps("defaultValues.orderDetails.item.origin")} />
+        </Field>
+      </div>
+      <Separator />
+      <div className="flex items-center">
+        <Field>
+          <FieldLabel>"Importer Name"</FieldLabel>
+          <Input {...form.getFieldProps("defaultValues.orderDetails.item.importerName")} />
+        </Field>
+        <Field>
+          <FieldLabel>"Importer Address"</FieldLabel>
+          <Input {...form.getFieldProps("defaultValues.orderDetails.item.importerAddress1")} />
+        </Field>
+        <Field>
+          <FieldLabel>"City"</FieldLabel>
+          <Input {...form.getFieldProps("defaultValues.orderDetails.item.importerCity")} />
+        </Field>
+        <Field>
+          <FieldLabel>"Postal Code"</FieldLabel>
+          <Input {...form.getFieldProps("defaultValues.orderDetails.item.importerPostalCode")} />
+        </Field>
+        <Field>
+          <FieldLabel>"Zone Code"</FieldLabel>
+          <Input {...form.getFieldProps("defaultValues.orderDetails.item.importerZoneCode")} />
+        </Field>
+      </div>
+      <Separator />
+      <div className="flex items-center">
+        <Field>
+          <FieldLabel>"Shipping Amount"</FieldLabel>
+          <Input
+            type="number"
+            min={0}
+            value={form.values["defaultValues"]["orderDetails"]["shipping"] ?? ""}
+            onChange={(event) =>
+              form.setFieldValue("defaultValues.orderDetails.shipping", Number(event.target.value))
+            }
+          />
+        </Field>
+        <Field>
+          <FieldLabel>"Tax amount"</FieldLabel>
+          <Input
+            type="number"
+            min={0}
+            value={form.values["defaultValues"]["orderDetails"]["tax"] ?? ""}
+            onChange={(event) =>
+              form.setFieldValue("defaultValues.orderDetails.tax", Number(event.target.value))
+            }
+          />
+        </Field>
+        <Field>
+          <FieldLabel>"Tax Description"</FieldLabel>
+          <Input {...form.getFieldProps("defaultValues.orderDetails.taxDescription")} />
+        </Field>
+        <Field>
+          <FieldLabel>"Discount Amount"</FieldLabel>
+          <Input
+            type="number"
+            min={0}
+            step={1}
+            value={form.values["defaultValues"]["orderDetails"]["discount"] ?? ""}
+            onChange={(event) =>
+              form.setFieldValue("defaultValues.orderDetails.discount", Number(event.target.value))
+            }
+          />
+        </Field>
+        <Field>
+          <FieldLabel>"Discount Description"</FieldLabel>
+          <Input {...form.getFieldProps("defaultValues.orderDetails.discountDescription")} />
+        </Field>
+        <Field>
+          <FieldLabel>"Expiry Date"</FieldLabel>
+          <Input
+            type="datetime-local"
+            {...form.getFieldProps("defaultValues.orderDetails.expiry")}
+          />
+        </Field>
+      </div>
+      <Separator />
+      <div className="flex items-center">
+        <Field>
+          <FieldLabel>"Payment gateway name"</FieldLabel>
+          <Select
+            items={toSelectOptions(["razorpay", "payu", "zaakpay"])}
+            value={form.values["defaultValues"]["orderDetails"]["paymentType"] ?? ""}
+            onValueChange={(value) =>
+              form.setFieldValue("defaultValues.orderDetails.paymentType", value)
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {toSelectOptions(["razorpay", "payu", "zaakpay"]).map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldDescription>
             "Name of payment gateway you have configured on your WhatsApp Business Account"
-          }
-        />
-        <ContainedTextField
-          {...form.getInputProps("defaultValues.orderDetails.paymentConfigName")}
-          label={"Payment gateway configuration name"}
-          description={
-            "Configuration name of payment gateway you have configured on your WhatsApp Business Account"
-          }
-        />
-      </Group>
-    </Stack>
+          </FieldDescription>
+        </Field>
+        <Field>
+          <FieldLabel>"Payment gateway configuration name"</FieldLabel>
+          <Input {...form.getFieldProps("defaultValues.orderDetails.paymentConfigName")} />
+          <FieldDescription>
+            "Configuration name of payment gateway you have configured on your WhatsApp Business
+            Account"
+          </FieldDescription>
+        </Field>
+      </div>
+    </div>
   );
 };
 export default ButtonInput;

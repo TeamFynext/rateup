@@ -1,4 +1,5 @@
-import { schemaResolver, useForm } from "@mantine/form";
+import { EditorContent } from "@tiptap/react";
+import { TypeOutline } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -8,6 +9,16 @@ import {
   useCreateWaQuickReply,
   useUpdateReply,
 } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
+import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
+import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
+import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
+import { CodeToolbar } from "@/components/tiptap/toolbars/code.tsx";
+import { ItalicToolbar } from "@/components/tiptap/toolbars/italic.tsx";
+import { OrderedListToolbar } from "@/components/tiptap/toolbars/ordered-list.tsx";
+import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
+import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
+import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
+import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -26,10 +37,15 @@ import {
   FieldLabel,
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip.tsx";
+import { useBridgedForm } from "@/hooks/useBridgedForm";
 
 import { isJSONString } from ".";
-import WaTextEditor from "../waTextEditor.tsx";
+import InsertEmoji from "../InsertEmoji/index.tsx";
+import { WaTextCharacterCount } from "../wa-editor/character-count.tsx";
+import { useWaEditor } from "../wa-editor/use-wa-editor.ts";
 import { quickReplySchema } from "./WaQuickReplySettings.tsx";
 
 const CreateOrEditQuickReply = ({
@@ -46,14 +62,18 @@ const CreateOrEditQuickReply = ({
   const { t } = useTranslation();
   const update = useUpdateReply();
   const create = useCreateWaQuickReply();
-  const form = useForm<z.infer<typeof quickReplySchema>>({
-    initialValues: {
+  const form = useBridgedForm<z.infer<typeof quickReplySchema>>({
+    defaultValues: {
       text: "",
       category: "General",
       topic: "General Inquiry",
       key: "",
     },
-    validate: schemaResolver(quickReplySchema),
+    schema: quickReplySchema,
+  });
+  const textEditor = useWaEditor({
+    content: form.values.text,
+    onChange: (value) => form.setFieldValue("text", value),
   });
 
   useEffect(() => {
@@ -176,14 +196,61 @@ const CreateOrEditQuickReply = ({
               </Field>
               <Field>
                 <FieldLabel htmlFor="text">{t("Reply Text")}</FieldLabel>
-                <WaTextEditor
-                  handleInputChange={(value) => {
-                    form.setFieldValue("text", value);
-                  }}
-                  content={form.values.text}
-                  isQuickReplyEditor={true}
-                  mah={300}
-                />
+                <div className="flex-1">
+                  <ToolbarProvider editor={textEditor}>
+                    <TooltipProvider>
+                      <EditorContent
+                        editor={textEditor}
+                        style={{
+                          backgroundColor: "var(--accent)",
+                          borderRadius: "5px",
+                          maxHeight: "300px",
+                          minHeight: "120px",
+                        }}
+                        className="overflow-y-auto rounded-xl"
+                      />
+                      <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                        <WaTextCharacterCount editor={textEditor} max={1024} />
+                      </div>
+                      <div className="flex flex-wrap p-2">
+                        <div className="mt-1 flex items-center">
+                          <InsertEmoji editor={textEditor} />
+                        </div>
+                        <Popover>
+                          <PopoverTrigger>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              title="Format"
+                            >
+                              <TypeOutline className="h-5 w-5" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full">
+                            <div className="flex flex-nowrap gap-1">
+                              <div className="flex items-center">
+                                <BoldToolbar />
+                                <ItalicToolbar />
+                                <StrikeThroughToolbar />
+                                <CodeToolbar />
+                              </div>
+                              <div className="flex items-center">
+                                <BlockquoteToolbar />
+                                <BulletListToolbar />
+                                <OrderedListToolbar />
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                        <div className="flex items-center">
+                          <UndoToolbar />
+                          <RedoToolbar />
+                        </div>
+                      </div>
+                    </TooltipProvider>
+                  </ToolbarProvider>
+                </div>
                 {form.errors.text && <FieldError>{form.errors.text}</FieldError>}
               </Field>
             </FieldGroup>

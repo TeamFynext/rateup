@@ -1,5 +1,3 @@
-import { Chip, Group, SimpleGrid, Stack, Text } from "@mantine/core";
-import { schemaResolver, useForm } from "@mantine/form";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -9,19 +7,24 @@ import {
   useRateupPaymentsPlanMutation,
   useRateupPaymentsPlanUpdateMutation,
 } from "@/backend/payment/payment.query";
+import { Badge } from "@/components/ui/badge.tsx";
+import { useBridgedForm } from "@/hooks/useBridgedForm";
 // import { PaymentPlans } from "../../app/admin/rateup";
 import { PaymentType } from "@/types/enums.ts";
+import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { widgetIds } from "@/utils/constants/forms.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
+import { toSelectOptions } from "@/utils/select-options.ts";
 import { getSampleSubscriptionFeatures } from "@/utils/subscription/subscription.ts";
 
-import {
-  ContainedJsonInput,
-  ContainedNumberInput,
-  ContainedSelection,
-  ContainedTagInput,
-  ContainedTextField,
-} from "../input/ContainedInput/ContainedInput.tsx";
-import FormModalLayout from "./FormModalLayout.tsx";
+import { Button } from "../ui/button.tsx";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field.tsx";
+import { Input } from "../ui/input.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
+import { Spinner } from "../ui/spinner.tsx";
+import { TagsInput } from "../ui/tags-input.tsx";
+import { Textarea } from "../ui/textarea.tsx";
 
 enum PaymentPlans {
   razorpay = "Razorpay Plans",
@@ -38,8 +41,11 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
   const isEdit = Boolean(plan?.id);
   const rateupPaymentsPlanMutation = useRateupPaymentsPlanMutation(close);
   const rateupPaymentsPlanUpdateMutation = useRateupPaymentsPlanUpdateMutation(close);
-  const razorpayItems =
-    planList?.find((group) => group?.group === PaymentPlans.razorpay)?.items ?? [];
+  const razorpayOptions = toSelectOptions(
+    planList?.find((group) => group?.group === PaymentPlans.razorpay)?.items ?? [],
+  );
+  const widgetIdOptions = toSelectOptions(widgetIds);
+  const planTypeOptions = toSelectOptions(Object.values(PaymentType));
   const schema = z.object({
     name: z
       .string()
@@ -72,8 +78,8 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
     yearlyPaymentPlanId: z.string().optional(),
   });
 
-  const form = useForm({
-    initialValues: {
+  const form = useBridgedForm({
+    defaultValues: {
       id: "",
       name: "",
       displayName: "",
@@ -92,9 +98,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
       monthlyPaymentPlanId: "",
       yearlyPaymentPlanId: "",
     },
-    validate: schemaResolver(schema, {
-      sync: true,
-    }),
+    schema,
   });
 
   useEffect(() => {
@@ -152,129 +156,243 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
     setChecked(false);
   };
 
+  const closeModal = () => {
+    close();
+    form?.reset();
+  };
+  const submitPlan = form.onSubmit(handleSubmit);
+  const isSaving =
+    rateupPaymentsPlanMutation?.isPending || rateupPaymentsPlanUpdateMutation?.isPending;
+
   return (
-    <FormModalLayout
-      opened={opened}
-      title={isEdit ? translations("Edit Rateup Plan") : translations("Add Rateup Plan")}
-      onClose={() => {
-        close();
-        form?.reset();
+    <Dialog
+      open={opened}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) closeModal();
       }}
-      centered
-      size="lg"
-      buttonTitle={isEdit ? "Update" : "Save"}
-      includeCancelButton
-      onSubmit={form.onSubmit(handleSubmit)}
-      isLoading={
-        rateupPaymentsPlanMutation?.isPending || rateupPaymentsPlanUpdateMutation?.isPending
-      }
     >
-      <SimpleGrid cols={2}>
-        <ContainedTextField
-          label={translations("Name")}
-          placeholder={translations("Name")}
-          withAsterisk
-          {...form.getInputProps("name")}
-        />
-        <ContainedTextField
-          label={translations("Dispaly Name")}
-          placeholder={translations("Display Name")}
-          withAsterisk
-          {...form.getInputProps("displayName")}
-        />
-        <ContainedSelection
-          label={translations("Display Widget Id")}
-          placeholder={translations("Widget Id")}
-          data={widgetIds}
-          allowDeselect
-          {...form.getInputProps("displayWidgetId")}
-        />
-        <ContainedSelection
-          label={translations("Plan Type")}
-          placeholder={translations("Plan Type")}
-          data={Object.values(PaymentType)}
-          defaultValue="BASE"
-          withAsterisk
-          allowDeselect={false}
-          {...form.getInputProps("planType")}
-        />
-        <ContainedTagInput
-          label={translations("Description")}
-          description={"Use || for split"}
-          placeholder={translations("Type Description and press enter")}
-          withAsterisk
-          {...form.getInputProps("description")}
-          splitChars={["||"]}
-        />
-        <ContainedNumberInput
-          label={"Trial Days"}
-          {...form.getInputProps("trialDays")}
-          allowNegative={false}
-          allowDecimal={false}
-        />
-        <ContainedSelection
-          label={translations("Currency")}
-          placeholder={translations("Currency")}
-          data={currencyOptions}
-          allowDeselect
-          {...form.getInputProps("currency")}
-        />
-        <ContainedTextField
-          label={translations("Badge")}
-          placeholder={translations("e.g. Most Popular")}
-          {...form.getInputProps("badge")}
-        />
-        <ContainedSelection
-          label={translations("Monthly Razorpay Plan")}
-          placeholder={translations("Gateway plan charged monthly")}
-          data={razorpayItems}
-          allowDeselect
-          disabled={!razorpayItems?.length}
-          {...form.getInputProps("monthlyPaymentPlanId")}
-        />
-        <ContainedSelection
-          label={translations("Annual Razorpay Plan")}
-          placeholder={translations("Gateway plan charged yearly")}
-          data={razorpayItems}
-          allowDeselect
-          disabled={!razorpayItems?.length}
-          {...form.getInputProps("yearlyPaymentPlanId")}
-        />
-        <ContainedNumberInput
-          label={translations("Monthly Price")}
-          placeholder={translations("Shown on the card in Monthly")}
-          {...form.getInputProps("monthlyPrice")}
-          allowNegative={false}
-          allowDecimal={true}
-        />
-        <ContainedNumberInput
-          label={translations("Yearly Price (per month)")}
-          description={translations("Per-month price billed annually")}
-          placeholder={translations("Shown on the card in Annual")}
-          {...form.getInputProps("yearlyPrice")}
-          allowNegative={false}
-          allowDecimal={true}
-        />
-      </SimpleGrid>
-      <Stack gap={3} py="xs">
-        <Group justify="space-between">
-          <Group gap={0}>
-            <Text fz={"xs"}>{translations("Features - (give data in json format)")}</Text>
-            <Text fz={"xs"} c="red">
-              *
-            </Text>
-          </Group>
-          <Chip size="xs" checked={checked} onChange={setChecked} variant="light">
-            {translations("Sample Feature")}
-          </Chip>
-        </Group>
-        <ContainedJsonInput
-          placeholder={translations("Features")}
-          withAsterisk
-          {...form.getInputProps("features")}
-        />
-      </Stack>
-    </FormModalLayout>
+      <DialogContent
+        className="max-h-[90vh] overflow-auto sm:max-w-175"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <DialogHeader>
+          <DialogTitle className="text-center text-3xl font-semibold">
+            {isEdit ? translations("Edit Rateup Plan") : translations("Add Rateup Plan")}
+          </DialogTitle>
+        </DialogHeader>
+        <form
+          className="p-5"
+          onSubmit={submitPlan}
+          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submitPlan]])}
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <Field>
+              <FieldLabel>
+                {translations("Name")}
+                <span className="text-destructive"> *</span>
+              </FieldLabel>
+              <Input placeholder={translations("Name")} {...form.getFieldProps("name")} />
+              {form.errors.name && <FieldError>{form.errors.name}</FieldError>}
+            </Field>
+            <Field>
+              <FieldLabel>
+                {translations("Dispaly Name")}
+                <span className="text-destructive"> *</span>
+              </FieldLabel>
+              <Input
+                placeholder={translations("Display Name")}
+                {...form.getFieldProps("displayName")}
+              />
+              {form.errors.displayName && <FieldError>{form.errors.displayName}</FieldError>}
+            </Field>
+            <Field>
+              <FieldLabel>{translations("Display Widget Id")}</FieldLabel>
+              <Select
+                items={widgetIdOptions}
+                value={form.values.displayWidgetId ?? ""}
+                onValueChange={(value) => form.setFieldValue("displayWidgetId", value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={translations("Widget Id")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {widgetIdOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel>
+                {translations("Plan Type")}
+                <span className="text-destructive"> *</span>
+              </FieldLabel>
+              <Select
+                items={planTypeOptions}
+                value={form.values.planType ?? ""}
+                onValueChange={(value) => form.setFieldValue("planType", value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={translations("Plan Type")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {planTypeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel>
+                {translations("Description")}
+                <span className="text-destructive"> *</span>
+              </FieldLabel>
+              <TagsInput
+                value={form.values.description ?? []}
+                onValueChange={(value) => form.setFieldValue("description", value)}
+                placeholder={translations("Type Description and press enter")}
+              />
+              {form.errors.description && <FieldError>{form.errors.description}</FieldError>}
+              <FieldDescription>Use || for split</FieldDescription>
+            </Field>
+            <Field>
+              <FieldLabel>Trial Days</FieldLabel>
+              <Input
+                type="number"
+                min={0}
+                step={1}
+                value={form.values.trialDays ?? 0}
+                onChange={(event) => form.setFieldValue("trialDays", Number(event.target.value))}
+              />
+            </Field>
+            <Field>
+              <FieldLabel>{translations("Currency")}</FieldLabel>
+              <Select
+                items={currencyOptions}
+                value={form.values.currency ?? ""}
+                onValueChange={(value) => form.setFieldValue("currency", value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={translations("Currency")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencyOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel>{translations("Badge")}</FieldLabel>
+              <Input
+                placeholder={translations("e.g. Most Popular")}
+                {...form.getFieldProps("badge")}
+              />
+            </Field>
+            <Field>
+              <FieldLabel>{translations("Monthly Razorpay Plan")}</FieldLabel>
+              <Select
+                items={razorpayOptions}
+                value={form.values.monthlyPaymentPlanId ?? ""}
+                onValueChange={(value) => form.setFieldValue("monthlyPaymentPlanId", value)}
+                disabled={!razorpayOptions.length}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={translations("Gateway plan charged monthly")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {razorpayOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel>{translations("Annual Razorpay Plan")}</FieldLabel>
+              <Select
+                items={razorpayOptions}
+                value={form.values.yearlyPaymentPlanId ?? ""}
+                onValueChange={(value) => form.setFieldValue("yearlyPaymentPlanId", value)}
+                disabled={!razorpayOptions.length}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={translations("Gateway plan charged yearly")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {razorpayOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel>{translations("Monthly Price")}</FieldLabel>
+              <Input
+                type="number"
+                min={0}
+                placeholder={translations("Shown on the card in Monthly")}
+                value={form.values.monthlyPrice ?? 0}
+                onChange={(event) => form.setFieldValue("monthlyPrice", Number(event.target.value))}
+              />
+            </Field>
+            <Field>
+              <FieldLabel>{translations("Yearly Price (per month)")}</FieldLabel>
+              <Input
+                type="number"
+                min={0}
+                placeholder={translations("Shown on the card in Annual")}
+                value={form.values.yearlyPrice ?? 0}
+                onChange={(event) => form.setFieldValue("yearlyPrice", Number(event.target.value))}
+              />
+              <FieldDescription>{translations("Per-month price billed annually")}</FieldDescription>
+            </Field>
+          </div>
+          <div className="flex flex-col gap-[3px] py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-0">
+                <span className="text-xs">
+                  {translations("Features - (give data in json format)")}
+                </span>
+                <span className="text-xs text-red-500">*</span>
+              </div>
+              <Badge
+                variant={checked ? "default" : "outline"}
+                className="cursor-pointer"
+                render={<button type="button" onClick={() => setChecked(!checked)} />}
+              >
+                {translations("Sample Feature")}
+              </Badge>
+            </div>
+            <Textarea
+              placeholder={translations("Features")}
+              rows={8}
+              className="font-mono text-xs"
+              {...form.getFieldProps("features")}
+            />
+            {form.errors.features && <FieldError>{form.errors.features}</FieldError>}
+          </div>
+          <DialogFooter className="mt-4">
+            <Button type="reset" variant="ghost" onClick={closeModal}>
+              {translations("Cancel")}
+            </Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving && <Spinner />}
+              {isEdit ? "Update" : "Save"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

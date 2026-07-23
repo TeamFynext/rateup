@@ -110,13 +110,13 @@ function GoogleReview({
         </div>
         {reviewSuggestions?.length >= 3 && (
           <div className="w-full max-w-[320px]">
-            <p className="mb-2.5 text-center font-bold text-[var(--grey-color-2)]">
+            <p className="mb-2.5 text-center font-bold text-muted-foreground">
               {translations("Need Inspirations?")}
             </p>
-            <div className="flex w-full flex-col items-center justify-center gap-4 rounded-[0.625rem] border border-[var(--mantine-color-gray-5)] p-4">
+            <div className="flex w-full flex-col items-center justify-center gap-4 rounded-[0.625rem] border border-[#adb5bd] p-4">
               <Button
                 variant="outline"
-                className="rounded-[1.25rem] border-[var(--tertiary-color)] bg-[whitesmoke] text-[var(--tertiary-color)] hover:bg-[whitesmoke]"
+                className="rounded-[1.25rem] border-primary bg-[whitesmoke] text-primary hover:bg-[whitesmoke]"
                 onClick={handleRegenerate}
               >
                 <WandIcon data-icon="inline-start" />

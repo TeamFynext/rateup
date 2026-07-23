@@ -7,8 +7,6 @@ import {
   WaFlowFormElementType as wft,
 } from "@/types/enums.ts";
 
-import MMImageCropModalStyles from "@/components/Modal/ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
-
 export const docsPath = "https://docs.rateup.app";
 export const imagesPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images`;
 
@@ -305,12 +303,6 @@ export const WHATSAPP_TEMPLATE_LANGUAGE = [
   { label: "Vietnamese", value: "vi" },
   { label: "Zulu", value: "zu" },
 ];
-
-export const mmImageCropModalClassnames = {
-  content: MMImageCropModalStyles["modal-content"],
-  header: MMImageCropModalStyles["modal-header"],
-  body: MMImageCropModalStyles["modal-body"],
-};
 
 export const shopifyEventData = [
   { label: "On Orders create", value: ShopifyEvents.ORDERS_CREATE },

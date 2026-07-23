@@ -2,7 +2,7 @@ import { useContext, useState } from "react";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 
-import { ContainedTextArea } from "../../../../input/ContainedInput/ContainedInput.tsx";
+import { Textarea } from "../../../../ui/textarea.tsx";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
@@ -23,16 +23,11 @@ export function TextAreaForm() {
 
   return (
     <FormPaperLayout>
-      <ContainedTextArea
+      <Textarea
         value={inputValue}
         onChange={handleChange}
-        variant="unstyled"
-        size="sm"
-        classNames={{
-          input: classes.input,
-        }}
-        p={0}
         onClick={handleInputScrollIntoView}
+        className={`resize-none border-none bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 ${classes.input}`}
       />
     </FormPaperLayout>
   );

@@ -1,7 +1,10 @@
-import { Box, Button, Group, LoadingOverlay, NumberInput } from "@mantine/core";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { LoadingOverlay } from "@/components/ui/loading-overlay.tsx";
 import { useCropperJS } from "@/hooks/useCropperJS.ts";
 import { mimeTypesForImage } from "@/utils/constants.ts";
 
@@ -113,24 +116,20 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
 
   return (
     <>
-      <NumberInput
-        label={translations("Zoom the Image")}
-        step={0.1}
-        min={0.1}
-        max={1}
-        value={scale}
-        onChange={(e) => setScale(Number(e))}
-        decimalScale={1}
-        fixedDecimalScale
-      />
-
-      <Box className={styles["cropper-container"]}>
-        <LoadingOverlay
-          visible={!isReady}
-          zIndex={1000}
-          overlayProps={{ radius: "sm", blur: 2 }}
-          loaderProps={{ type: "bars" }}
+      <Field>
+        <FieldLabel>{translations("Zoom the Image")}</FieldLabel>
+        <Input
+          type="number"
+          step={0.1}
+          min={0.1}
+          max={1}
+          value={scale}
+          onChange={(e) => setScale(Number(e.target.value))}
         />
+      </Field>
+
+      <div className={styles["cropper-container"]}>
+        <LoadingOverlay visible={!isReady} />
 
         <cropper-canvas ref={canvasRef} style={{ height: "100%", width: "100%" }} background>
           <cropper-image ref={imageRef} src={imageUrl} alt="crop" rotatable scalable translatable />
@@ -157,17 +156,15 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
             <cropper-handle action="sw-resize" />
           </cropper-selection>
         </cropper-canvas>
-      </Box>
+      </div>
 
-      <Group className={styles["cancel-save-btn-container"]} justify="right">
-        <Button className={styles["cancel-btn"]} onClick={handleCancelBtnClick}>
+      <div className={`${styles["cancel-save-btn-container"]} flex justify-end gap-2`}>
+        <Button variant="outline" onClick={handleCancelBtnClick}>
           {translations("Cancel")}
         </Button>
 
-        <Button className={styles["save-btn"]} onClick={handleSaveBtnClick}>
-          {translations("Save")}
-        </Button>
-      </Group>
+        <Button onClick={handleSaveBtnClick}>{translations("Save")}</Button>
+      </div>
     </>
   );
 }

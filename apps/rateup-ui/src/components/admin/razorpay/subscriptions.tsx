@@ -132,7 +132,7 @@ const RazorpaySubscriptions = () => {
     },
   ];
 
-  if (isLoading) return <RateupLoader h={"100dvh"} />;
+  if (isLoading) return <RateupLoader className="h-dvh" />;
 
   const tableData: SubscriptionTableData[] = isFetched ? subscriptions : [];
 

@@ -12,19 +12,34 @@ import {
   useDeprecateFlowMutation,
 } from "@/backend/whatsapp/flow/flow.query";
 import { ActionCard } from "@/components/common/action-card.tsx";
-import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput.tsx";
-import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { Field, FieldError } from "@/components/ui/field.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { WaFlowStatus } from "@/types/enums.ts";
+import { SAVE_HOTKEY } from "@/utils/constants.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import styles from "./FlowCard.module.css";
 
@@ -67,6 +82,12 @@ function FlowCard({
     label: team?.name,
   }));
   const { t: translations } = useTranslation();
+
+  const closeCloneDialog = () => {
+    setCloneDialogOpened(false);
+    setTeamId("");
+    setTeamIdError("");
+  };
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -227,38 +248,62 @@ function FlowCard({
           })
         }
       />
-      <FormModalLayout
-        opened={cloneDialogOpened}
-        onClose={() => {
-          setCloneDialogOpened(false);
-          setTeamId("");
-          setTeamIdError("");
+      <Dialog
+        open={cloneDialogOpened}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) closeCloneDialog();
         }}
-        title={translations("Clone Whatsapp Flow")}
-        centered
-        onSubmit={onSubmit}
-        buttonTitle={"Clone"}
-        includeCancelButton
       >
-        <div className="flex flex-col gap-4">
-          <p className="text-muted-foreground">
-            {translations("Select the team in which the whatsapp flow copy to be created.")}
-          </p>
-          <ContainedSelection
-            radius="md"
-            placeholder={translations("Select team (type in to search)")}
-            data={teamOptions}
-            searchable
-            styles={{ root: { width: "100%" } }}
-            value={teamId}
-            onChange={(value) => {
-              setTeamId(value);
-              setTeamIdError("");
-            }}
-            error={teamIdError}
-          />
-        </div>
-      </FormModalLayout>
+        <DialogContent
+          className="max-h-[90vh] overflow-auto sm:max-w-125"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-center text-3xl font-semibold">
+              {translations("Clone Whatsapp Flow")}
+            </DialogTitle>
+          </DialogHeader>
+          <form
+            className="p-5"
+            onSubmit={onSubmit}
+            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, onSubmit]])}
+          >
+            <div className="flex flex-col gap-4">
+              <p className="text-muted-foreground">
+                {translations("Select the team in which the whatsapp flow copy to be created.")}
+              </p>
+              <Field className="w-full">
+                <Select
+                  items={teamOptions}
+                  value={teamId ?? ""}
+                  onValueChange={(value) => {
+                    setTeamId(value as string);
+                    setTeamIdError("");
+                  }}
+                >
+                  <SelectTrigger className="w-full" aria-invalid={!!teamIdError}>
+                    <SelectValue placeholder={translations("Select team (type in to search)")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teamOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {teamIdError && <FieldError>{teamIdError}</FieldError>}
+              </Field>
+            </div>
+            <DialogFooter className="mt-4">
+              <Button type="reset" variant="ghost" onClick={closeCloneDialog}>
+                {translations("Cancel")}
+              </Button>
+              <Button type="submit">Clone</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -9,6 +9,10 @@
 /* @import "@fontsource/noto-color-emoji"; */
 @import "@fontsource-variable/nunito";
 
+/* Tiptap editor content styles (.ProseMirror, placeholder, --editor-* tokens).
+   Global because editors are inlined across many routes. */
+@import "./components/tiptap/tiptap.css";
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -28,7 +32,6 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.923 0.003 48.717);
   --input: oklch(0.923 0.003 48.717);
-  --input-background: #f3f3f5;
   --ring: oklch(0.709 0.01 56.259);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
@@ -43,106 +46,6 @@
   --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
   --sidebar-border: oklch(0.923 0.003 48.717);
   --sidebar-ring: oklch(0.709 0.01 56.259);
-
-  /* old colors */
-  --primary-color: #ffffff;
-  --secondary-color: #000000;
-  /* legacy color */
-  --tertiary-color: var(--primary);
-  --homepage-blue: #013553;
-  --shade-of-blue-1: #d0d9ee;
-  --shade-of-blue: #edf2ff;
-  --shade-of-blue-2: #3f5ba9;
-  --shade-of-blue-3: #00397b;
-  --shade-of-blue-4: #225fa4;
-  --shade-of-blue-5: #2564ae;
-  --shade-of-blue-6: #d6e9ff;
-  --shade-of-blue-7: #cce4ff;
-  --shade-of-blue-8: #0f4b90;
-  --shade-of-blue-9: #0a3a71;
-  --shade-of-blue-10: #013758;
-  --shade-of-blue-11: #0277be;
-  --shade-of-blue-12: #387adf;
-  --shade-of-blue-13: #50c4ed;
-  --shade-of-blue-14: #004f98;
-  --shade-of-blue-15: #0197f6;
-  --shade-of-blue-16: #387adf;
-  --shade-of-blue-17: #50c4ed;
-  --shade-of-blue-18: #2942cc;
-  --grey-color: #494949;
-  --grey-color-2: #73737a;
-  --grey-color-3: #595959;
-  --grey-color-4: #9c9c9c;
-  --grey-color-4-5: #cacaca;
-  --grey-color-5: #f5f5f5;
-  --grey-color-6: #7a8289;
-  --grey-color-7: #343a40;
-  --light-grey-color: #f0f0f0;
-  --bg-grey-color: #f7f7f7;
-  --shade-of-brown: #af6b2e;
-  --shade-of-brown-selected: #b06b2e;
-  --shade-of-brown-unselected: #a3a3a3;
-  --shade-of-black: #161616;
-  --orange-400: #f8951d;
-  --light-blue-4: #e5f1ff;
-  --light-blue-5: #e2e5ed;
-  --hover-border-color: rgba(28, 81, 142, 0.2);
-  --light-grey-color-2: #efefef;
-  --light-grey-color-3: #f4f4f4;
-  --light-grey-color-4: #dfdfdf;
-  --light-grey-color-5: #b7b7b7;
-  --light-grey-color-6: #eef1f9;
-  --light-dark-color-2: rgba(29, 29, 29, 0.5);
-  --wa-green: #075e55;
-  --wa-alert-info: #dbf2f1;
-  --wa-blue: #58a6fb;
-  --wa-gray: #f6f6f6;
-  --wa-dark-green: #084943;
-  --gift-green-light: #9fce6d;
-  --gift-green: #06ac6e;
-  --gift-grey: #787878;
-  --gift-grey-2: #d9d9d9;
-  --gift-grey-3: #e6e6e6;
-  --gift-grey-4: #848484;
-  --gift-black: #2f2f2f;
-  --sucess-green: #39c907;
-  --active-green-2: #69f0ae;
-  --active-green-3: #36d07e;
-  --pink: #cc2960;
-  --text-color-sp: light-dark(var(--grey-color), white);
-  /* colors of ticket board */
-  --board-bg: #f5f5f5;
-  --board-text: oklch(0.985 0 0);
-  --board-scrollbar: #7a8289;
-  --board-card-over: var(--mantine-color-text);
-  --is-column-over: oklch(0.208 0.042 265.755);
-  --board-card-bg: white;
-  --board-card-text: black;
-  --ticket-bg: light-dark(var(--grey-color-5), var(--light-grey-color-5));
-  --board-card-shadow: #e5e5e5;
-  --font-size: 16px;
-  --rateup-orange: #ff9500;
-  --rateup-gold: #eb7d00;
-  --rateup-orange-foreground: oklch(1 0 0);
-  --rateup-graytext: #343a40;
-  --rateup-lightgraytext: #7a8289;
-  --rateup-dark-blue: #001747;
-  --rateup-dark-blue-2: #052259;
-  --rateup-dark-blue-3: #000a1f;
-  --rateup-blue: var(--primary);
-  --rateup-blue-2: #2d74e0;
-  --rateup-blue-3: #66d7ff;
-  --rateup-light-blue: #c4d7f5;
-  --rateup-light-blue-2: #93c6f5;
-  --rateup-light-blue-3: #bcd8ff;
-  --rateup-blue-4: #1c518e;
-  --rateup-blue-5: #1a5bbf;
-  --chat-light-blue-1: #3b82f6;
-  --chat-light-blue-2: #60a5fa;
-  --rateup-blue-foreground: oklch(1 0 0);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  /* end of old colors */
   --custom-shadow-base: 0 1px 3px rgba(11, 31, 72, 0.05);
   --custom-shadow-hover: 0 8px 28px rgba(11, 31, 72, 0.1);
 }
@@ -230,40 +133,19 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
   /* RateUp colors */
-  --color-rateup-orange: var(--rateup-orange);
-  --color-rateup-orange-foreground: var(--rateup-orange-foreground);
-  --color-rateup-blue: var(--rateup-blue);
-  --color-rateup-blue-2: var(--rateup-blue-2);
-  --color-rateup-blue-3: var(--rateup-blue-3);
-  --color-rateup-dark-blue-3: var(--rateup-dark-blue-3);
-  --color-rateup-dark-blue: var(--rateup-dark-blue);
-  --color-rateup-blue-foreground: var(--rateup-blue-foreground);
-  --color-rateup-graytext: var(--rateup-graytext);
-  --color-rateup-lightgraytext: var(--rateup-lightgraytext);
-  --color-rateup-darkblue: var(--rateup-dark-blue);
-  --color-rateup-darkblue-2: var(--rateup-dark-blue-2);
-  --color-rateup-light-blue: var(--rateup-light-blue);
-  --color-rateup-light-blue-2: var(--rateup-light-blue-2);
-  --color-rateup-light-blue-3: var(--rateup-light-blue-3);
-  --color-chat-light-blue-2: var(--chat-light-blue-2);
-  --color-chat-light-blue-1: var(--chat-light-blue-1);
-  --color-rateup-gold: var(--rateup-gold);
-  --color-grey-color-5: var(--grey-color-5);
-  --color-grey-color-6: var(--grey-color-6);
-  --color-grey-color-7: var(--grey-color-7);
-  --color-light-blue-5: var(--light-blue-5);
-  --color-active-green-2: var(--active-green-2);
-  --color-active-green-3: var(--active-green-3);
-  --color-rateup-blue-4: var(--rateup-blue-4);
-  --color-rateup-blue-5: var(--rateup-blue-5);
-  --color-shade-of-blue: var(--shade-of-blue);
-  --color-shade-of-blue-14: var(--shade-of-blue-14);
+  --color-rateup-orange: #ff9500;
+  --color-rateup-graytext: #343a40;
+  --color-rateup-darkblue: #001747;
+  --color-rateup-blue-4: #1c518e;
 
   /* WhatsApp Feedback theme configurations */
   --color-fb-green: #2a6254;
   --color-fb-green-2: #3d7a68;
   --color-wa-green: #25d366;
+  --color-wa-blue: #58a6fb;
+  --color-wa-gray: #f6f6f6;
   --color-periwinkle: #b8d0ca;
   --color-periwinkle-2: #a6c2bb;
   --color-chip-dark: #102820;
@@ -274,41 +156,17 @@
   --color-ink-200: #d9dad7;
   --color-ink-400: #8b8e8a;
   --color-ink-500: #666864;
-  --color-ink-700: #2e302e;
   --color-ink-800: #1a1b1a;
   --color-ink-900: #0a0b0a;
 
   --color-blue-50: #eef4fb;
   --color-blue-100: #d6e4f3;
 
-  --color-warm-300: #ffd54c;
-  --color-warm-600: #d97a0f;
-
-  --animate-float-a: floatA 4s ease-in-out infinite;
-  --animate-float-b: floatB 4.4s ease-in-out infinite;
   --animate-panel-fade: panelFade 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-blink: blink 1.2s infinite both;
   --shadow-custom-base: var(--custom-shadow-base);
   --shadow-custom-hover: var(--custom-shadow-hover);
 
-  @keyframes floatA {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-6px);
-    }
-  }
-  @keyframes floatB {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-8px);
-    }
-  }
   @keyframes panelFade {
     from {
       opacity: 0;
@@ -423,15 +281,6 @@
   .cards-grid-global-class {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
-}
-
-.ProseMirror ul,
-.ProseMirror ol {
-  @apply list-disc list-outside; /* or list-decimal for ol */
-}
-
-.ProseMirror ol {
-  @apply list-decimal;
 }
 
 .animate-fade-in {

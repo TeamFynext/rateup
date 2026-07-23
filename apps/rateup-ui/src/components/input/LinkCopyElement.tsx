@@ -1,28 +1,53 @@
-import type { TextInputProps } from "@mantine/core";
-import { ActionIcon, CopyButton, TextInput } from "@mantine/core";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
+import type { ComponentProps, ReactNode } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-interface LinkCopyElementProps extends TextInputProps {
+import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
+
+interface LinkCopyElementProps extends Omit<ComponentProps<"input">, "value"> {
   link: string;
+  label?: ReactNode;
+  value?: string;
 }
-export function LinkCopyElement({ link, label, ...props }: LinkCopyElementProps) {
+
+export function LinkCopyElement({
+  link,
+  label,
+  className,
+  style,
+  value: _value,
+  ...props
+}: LinkCopyElementProps) {
   const { t: translations } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    await navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <TextInput
-      label={label ?? translations("Register URL")}
-      readOnly
-      value={link}
-      rightSection={
-        <CopyButton value={link}>
-          {({ copied, copy }) => (
-            <ActionIcon variant={"subtle"} onClick={copy} disabled={props.disabled}>
-              {copied ? <IconCheck color={"teal"} /> : <IconCopy />}
-            </ActionIcon>
-          )}
-        </CopyButton>
-      }
-      {...props}
-    />
+    <Field className={className} style={style}>
+      <FieldLabel>{label ?? translations("Register URL")}</FieldLabel>
+      <InputGroup>
+        <InputGroupInput readOnly value={link} {...props} />
+        <InputGroupAddon align="inline-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={copy}
+            disabled={props.disabled}
+            aria-label={translations("Copy")}
+          >
+            {copied ? <IconCheck className="text-teal-600" /> : <IconCopy />}
+          </Button>
+        </InputGroupAddon>
+      </InputGroup>
+    </Field>
   );
 }

@@ -1,16 +1,3 @@
-import type { MantineStyleProp } from "@mantine/core";
-import {
-  ActionIcon,
-  Box,
-  Container,
-  Flex,
-  Group,
-  Image,
-  Stack,
-  Text,
-  TextInput,
-  useMantineTheme,
-} from "@mantine/core";
 import {
   IconCamera,
   IconCopy,
@@ -21,13 +8,15 @@ import {
   IconPlus,
 } from "@tabler/icons-react";
 
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
 
 import classes from "./Message.module.css";
 
 export interface ResponseMessageContainerProps {
   children: React.ReactNode;
-  style?: MantineStyleProp;
+  style?: React.CSSProperties;
   backgroundColor?: string;
 }
 export function ResponseMessageContainer({
@@ -36,23 +25,23 @@ export function ResponseMessageContainer({
   backgroundColor = "#fff",
 }: ResponseMessageContainerProps) {
   return (
-    <Container
-      px="10px"
-      py="6px"
-      className={`${classes.common} ${classes.response}`}
-      style={{
-        "--color": backgroundColor,
-        ...style,
-      }}
+    <div
+      className={`${classes.common} ${classes.response} mx-auto px-2.5 py-1.5`}
+      style={
+        {
+          "--color": backgroundColor,
+          ...style,
+        } as React.CSSProperties
+      }
     >
       {children}
-    </Container>
+    </div>
   );
 }
 
 export interface SentMessageContainerProps {
   children: React.ReactNode;
-  style?: MantineStyleProp;
+  style?: React.CSSProperties;
   backgroundColor?: string;
 }
 export function SentMessageContainer({
@@ -61,51 +50,38 @@ export function SentMessageContainer({
   backgroundColor = "#d9fdd3",
 }: SentMessageContainerProps) {
   return (
-    <Container
-      p="4px"
-      className={`${classes.common} ${classes.sent}`}
-      style={{
-        "--color": backgroundColor,
-        ...style,
-      }}
+    <div
+      className={`${classes.common} ${classes.sent} mx-auto p-1`}
+      style={
+        {
+          "--color": backgroundColor,
+          ...style,
+        } as React.CSSProperties
+      }
     >
       {children}
-    </Container>
+    </div>
   );
 }
 
 interface QuickReplyButtonProps {
   text: string;
-  style?: MantineStyleProp;
+  style?: React.CSSProperties;
   onClick?: any;
   type?: any;
 }
 export function QuickReplyButton({ text, style, onClick, type }: QuickReplyButtonProps) {
-  const theme = useMantineTheme();
   return (
-    <Box
-      style={{
-        backgroundColor: "white",
-        borderRadius: "8px",
-        cursor: "pointer",
-        width: "80%",
-        zIndex: 1,
-        ...style,
-      }}
+    <div
+      className="z-1 w-4/5 cursor-pointer rounded-lg bg-white p-1.5"
+      style={style}
       onClick={onClick || (() => {})}
-      p="6px"
     >
-      <Group justify="center" c={theme.colors.blue[5]} gap={5}>
+      <div className="flex items-center justify-center gap-1.5 text-blue-500">
         {getIcon(type)}
-        <Text
-          style={{
-            wordBreak: "break-all",
-          }}
-        >
-          {text}
-        </Text>
-      </Group>
-    </Box>
+        <p className="break-all">{text}</p>
+      </div>
+    </div>
   );
 }
 
@@ -124,49 +100,40 @@ const getIcon = (type) => {
 
 export function SendMessageMock() {
   return (
-    <Group
-      p="2px"
-      wrap="nowrap"
-      bg={"var(--wa-gray)"}
-      style={{
-        borderRadius: "0px 0px 12px 12px",
-      }}
-      gap={0}
-    >
-      <Flex mb={"md"}>
-        <ActionIcon variant="transparent" c="var(--wa-blue)">
+    <div className="flex flex-nowrap gap-0 rounded-b-xl bg-wa-gray p-0.5">
+      <div className="mb-4 flex">
+        <Button variant="ghost" size="icon-xs" className="text-wa-blue">
           <IconPlus size={15} />
-        </ActionIcon>
-        <TextInput
-          radius={"md"}
-          size="20px"
-          mt={4}
-          readOnly
-          rightSection={
-            <ActionIcon variant="transparent" c="var(--wa-blue)">
-              <IconNote size={15} />
-            </ActionIcon>
-          }
-        />
-        <ActionIcon variant="transparent" c="var(--wa-blue)">
+        </Button>
+        <div className="relative mt-1">
+          <Input readOnly className="h-5 rounded-md pr-7" />
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            className="absolute top-1/2 right-0 -translate-y-1/2 text-wa-blue"
+          >
+            <IconNote size={15} />
+          </Button>
+        </div>
+        <Button variant="ghost" size="icon-xs" className="text-wa-blue">
           <IconCamera size={15} />
-        </ActionIcon>
-        <ActionIcon variant="transparent" c="var(--wa-blue)">
+        </Button>
+        <Button variant="ghost" size="icon-xs" className="text-wa-blue">
           <IconMicrophone size={15} />
-        </ActionIcon>
-      </Flex>
-    </Group>
+        </Button>
+      </div>
+    </div>
   );
 }
 
 function WaMessageHeader(props) {
-  return <Text fw={"bold"} {...props} />;
+  return <p className="font-bold" {...props} />;
 }
 function WaMessageBody(props) {
-  return <Text {...props} />;
+  return <p {...props} />;
 }
 function WaMessageFooter(props) {
-  return <Text fz={"sm"} c="dimmed" {...props} />;
+  return <p className="text-sm text-muted-foreground" {...props} />;
 }
 
 interface WaResponseMessageProps {
@@ -189,26 +156,20 @@ export function WaResponseMessage({
     );
   }
   return (
-    <Stack
-      style={{
-        // TODO: find out why zIndex is needed
-        zIndex: 1,
-      }}
-      gap={3}
-      p={0}
-    >
+    // TODO: find out why zIndex is needed
+    <div className="z-1 flex flex-col gap-0.75 p-0">
       <ResponseMessageContainer>
-        <Stack gap={4}>
-          <Image src={image} radius={6} />
+        <div className="flex flex-col gap-1">
+          {image && <img src={image} alt="" className="rounded-md" />}
           {header && <WaMessageHeader>{header}</WaMessageHeader>}
           {body && <WaMessageBody>{body}</WaMessageBody>}
           {footer && <WaMessageFooter>{footer}</WaMessageFooter>}
-        </Stack>
+        </div>
       </ResponseMessageContainer>
       {/* update changes in whatsapp */}
       {quickReplyButtons.map((text, i) => (
         <QuickReplyButton key={i} text={typeof text === "string" ? text : text.value} />
       ))}
-    </Stack>
+    </div>
   );
 }

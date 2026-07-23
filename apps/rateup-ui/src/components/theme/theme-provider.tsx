@@ -86,3 +86,22 @@ export function useTheme() {
   if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider");
   return context;
 }
+
+/**
+ * The theme actually in effect — `"system"` resolved against the OS preference.
+ * Use this when you need a concrete `"light" | "dark"`, e.g. to pick a class name.
+ */
+export function useResolvedTheme(): "light" | "dark" {
+  const { theme } = useTheme();
+  const [systemTheme, setSystemTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const media = globalThis.matchMedia("(prefers-color-scheme: dark)");
+    const sync = () => setSystemTheme(media.matches ? "dark" : "light");
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  return theme === "system" ? systemTheme : theme;
+}

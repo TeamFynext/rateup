@@ -1,7 +1,6 @@
 // In Next.js, this file would be called: app/providers.tsx
 
 // Since QueryClientProvider relies on useContext under the hood, we have to put 'use client' on top
-import { ModalsProvider } from "@mantine/modals";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import {
   dehydrate,
@@ -87,14 +86,12 @@ export default function Providers({ children }) {
             suspend when a modal is actually opened (near-instant, small chunk),
             not during normal page rendering. */}
         <Suspense fallback={null}>
-          <ModalsProvider>
-            <UserProvider>
-              <RouteChangeHandler />
-              <HydrationBoundary state={dehydrate(queryClient)}>
-                <TooltipProvider>{children}</TooltipProvider>
-              </HydrationBoundary>
-            </UserProvider>
-          </ModalsProvider>
+          <UserProvider>
+            <RouteChangeHandler />
+            <HydrationBoundary state={dehydrate(queryClient)}>
+              <TooltipProvider>{children}</TooltipProvider>
+            </HydrationBoundary>
+          </UserProvider>
         </Suspense>
         <TanStackDevtools
           config={{

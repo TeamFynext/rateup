@@ -1,4 +1,3 @@
-import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { createRootRoute, HeadContent, Outlet, redirect, Scripts } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,15 +7,10 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import Error from "@/components/not-found.tsx";
 import { ThemeProvider } from "@/components/theme/theme-provider.tsx";
 
-import "@mantine/core/styles.css";
-import "@mantine/dates/styles.css";
-import "@mantine/dropzone/styles.css";
-import "@mantine/tiptap/styles.css";
 import "keen-slider/keen-slider.min.css";
 import "react-phone-number-input/style.css";
 
 import { Toaster } from "@/components/ui/sonner.tsx";
-import { theme } from "@/config/mantineTheme.ts";
 import { cn } from "@/lib/utils.ts";
 import { isProduction, rateupUrl } from "@/utils/constants.ts";
 import {
@@ -149,7 +143,6 @@ function RootLayout() {
     <html lang={i18n.language} suppressHydrationWarning className={cn("h-full antialiased")}>
       <head>
         <HeadContent />
-        <ColorSchemeScript />
       </head>
       <body>
         {isProduction ? (
@@ -179,13 +172,11 @@ function RootLayout() {
         ) : null}
 
         <ThemeProvider defaultTheme="light" storageKey="theme">
-          <MantineProvider theme={theme}>
-            <Suspense fallback={<RateupLoader h={"100dvh"} />}>
-              <LocaleProviders>
-                <Outlet />
-              </LocaleProviders>
-            </Suspense>
-          </MantineProvider>
+          <Suspense fallback={<RateupLoader className="h-dvh" />}>
+            <LocaleProviders>
+              <Outlet />
+            </LocaleProviders>
+          </Suspense>
           <Toaster richColors />
         </ThemeProvider>
         <Scripts />

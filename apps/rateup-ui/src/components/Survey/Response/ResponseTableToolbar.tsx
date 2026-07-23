@@ -29,7 +29,7 @@ import { docsPath } from "@/utils/constants.ts";
 
 import InfoButton from "../../Button/InfoButton.tsx";
 import RefreshButton from "../../Button/RefreshButton.tsx";
-import { ContainedMultiSelect } from "../../input/ContainedInput/ContainedInput.tsx";
+import { MultiSelect } from "../../ui/multi-select.tsx";
 import { useResponseFilterStore } from "./store.ts";
 
 interface ResponseTableToolbarProps<TData> {
@@ -365,11 +365,11 @@ export function ResponseTableToolbar<TData>({
           </div>
 
           {CFData && CFData.length > 0 && (
-            <ContainedMultiSelect
+            <MultiSelect
               placeholder={translations("Campaign")}
               value={campaignIds}
-              onChange={setCampaignIds}
-              data={CFData.map(({ id, name }) => ({
+              onValueChange={setCampaignIds}
+              options={CFData.map(({ id, name }) => ({
                 value: id,
                 label: name,
               }))}

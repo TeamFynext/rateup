@@ -6,10 +6,7 @@ export default function FormPaperLayout(props: any) {
   return (
     <div
       {...props}
-      className={cn(classes.inputBox, "h-fit shadow-sm", props.className)}
-      style={{
-        borderColor: "var(--tertiary-color)",
-      }}
+      className={cn(classes.inputBox, "h-fit border-primary shadow-sm", props.className)}
     >
       {props.children}
     </div>

@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +20,6 @@ import { QuestionType } from "@/types/enums.ts";
 import { getFileNameFromKey, getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { getResponse, getResponseArrayByQuestionType } from "@/utils/response.ts";
 
-import PreviewModal from "../../Modal/PreviewModal.tsx";
 import { HoverCardComponent } from "../HoverCard/HoverCard.tsx";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util.tsx";
 import { fuzzyFilter } from "./Filter.ts";
@@ -231,12 +231,28 @@ function BadgeorTextorPreview({
           <Eye className="size-4" />
           {translations("Preview")}
         </Button>
-        <PreviewModal
-          headerTitle={translations("Preview")}
-          onClose={close}
-          imgObject={response}
-          opened={previewModalOpened}
-        />
+        <Dialog
+          open={previewModalOpened}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) close();
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-extrabold">
+                {translations("Preview")}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4">
+              <img
+                className="rounded-lg object-cover"
+                src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${response}`}
+                alt={translations("Preview")}
+              />
+              <Button onClick={close}>{translations("Close")}</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </>
     );
   } else if (questionType === QuestionType.DocumentPicker) {
@@ -281,12 +297,28 @@ function BadgeorTextorPreview({
                 {translations("Preview")}
               </Button>
             </div>
-            <PreviewModal
-              headerTitle={translations("Preview")}
-              onClose={close}
-              imgObject={response?.photo}
-              opened={previewModalOpened}
-            />
+            <Dialog
+              open={previewModalOpened}
+              onOpenChange={(nextOpen) => {
+                if (!nextOpen) close();
+              }}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-extrabold">
+                    {translations("Preview")}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col gap-4">
+                  <img
+                    className="rounded-lg object-cover"
+                    src={`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${response?.photo}`}
+                    alt={translations("Preview")}
+                  />
+                  <Button onClick={close}>{translations("Close")}</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </>
         ) : null}
         <HoverCardComponent content={response?.content} questionType={questionType} />

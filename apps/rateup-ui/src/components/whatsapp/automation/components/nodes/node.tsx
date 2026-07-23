@@ -3,7 +3,7 @@ import type { NodeProps } from "@xyflow/react";
 import type { JSX, ReactNode } from "react";
 import { memo } from "react";
 
-import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
+import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import {
   Attachment,
   AttachmentContent,

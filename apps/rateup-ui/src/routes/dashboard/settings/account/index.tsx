@@ -1,11 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import { Building, Camera, Edit, Globe, Home, Mail, MapPin, Phone, Upload } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
 import "react-phone-number-input/style.css";
 
-import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import PhoneInputWithCountrySelect, { isValidPhoneNumber } from "react-phone-number-input";
@@ -48,6 +47,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { UserRole } from "@/utils/enums/index.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 

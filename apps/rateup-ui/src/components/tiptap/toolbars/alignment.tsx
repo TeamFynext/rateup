@@ -109,7 +109,7 @@ export const AlignmentTooolbar = () => {
         <DropdownMenuGroup className=" w-40">
           {alignmentOptions.map((option, index) => (
             <DropdownMenuItem
-              onClick={() => {
+              onSelect={() => {
                 handleAlign(option.value);
               }}
               key={index}

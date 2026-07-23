@@ -1,18 +1,3 @@
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Center,
-  Flex,
-  Group,
-  MultiSelect,
-  ScrollAreaAutosize,
-  Select,
-  Stack,
-  Text,
-  Title,
-  useMantineTheme,
-} from "@mantine/core";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
@@ -22,11 +7,21 @@ import type { Updater } from "use-immer";
 import { useImmer } from "use-immer";
 
 import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
-  ContainedSelection,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import { cn } from "@/lib/utils";
 import type { QuestionType } from "@/types/enums.ts";
 import {
   LogicAction,
@@ -49,8 +44,52 @@ import {
   getScreenObjById,
 } from "@/utils/whatsapp/flow.utils";
 
-import { RateupButtonBlue, RateupButtonSecondary } from "../../../../Button/RateupButtons.tsx";
 import { EditFlowContext } from "./EditFlowContext.ts";
+
+interface SelectOption {
+  label: string;
+  value: string;
+}
+
+/** Normalises the `string[] | {label,value}[]` shapes the logic utils return. */
+const toOptions = (data: any[]): SelectOption[] =>
+  (data ?? []).map((d) => (typeof d === "string" ? { label: d, value: d } : d));
+
+/** Labelled shadcn Select used throughout the logic editor. */
+function SelectField({
+  label,
+  data,
+  value,
+  onChange,
+  placeholder,
+  className,
+}: Readonly<{
+  label?: string;
+  data: any[];
+  value?: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+}>) {
+  const options = toOptions(data);
+  return (
+    <div className={cn("flex flex-col gap-1", className)}>
+      {label && <Label>{label}</Label>}
+      <Select value={value ?? ""} onValueChange={onChange} items={options}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 interface LogicEditorProps {
   afterSave: () => void;
@@ -150,53 +189,14 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   };
 
   return (
-    <Flex style={{ flexDirection: "column", height: "100%" }}>
-      <Group gap={"xs"}>
-        <Title order={3}>{translations("Logic Jumps for Screen:")}</Title>
-        <Title c="whatsapp-green" fw={500} order={3}>
-          {screen.title}
-        </Title>{" "}
-        {/* TODO: fix native font weight not working */}
-      </Group>
-      <ScrollAreaAutosize
-        style={{
-          flexGrow: 1,
-        }}
-      >
-        <Stack
-          gap={"xs"}
-          style={{
-            flex: 1,
-            borderRadius: "12px",
-          }}
-          my="xs"
-          py="xs"
-        >
-          {/* Todo: added again after fixing if conditon problem-now name includes hyphen
-            eg: if(form.rt-5) to if(form.rt_5)
-          */}
-          {/* <Text>Question Jump</Text>
-          {componentLeventLogicJumps.map((logicJump, index) => (
-            <ConditionsActionMapBlock
-              key={index}
-              logic={logicJump}
-              index={index}
-              updateLogicJumps={updateComponentLeventLogicJumps}
-              isComponentLevel
-            />
-          ))}
-          <Button
-            variant="outline"
-            leftSection={<IconPlus />}
-            fullWidth
-            onClick={() => handleAddNewJump(true)}
-            style={{
-              flexShrink: 0,
-            }}
-          >
-            Add Logic Jump
-          </Button> */}
-          <Text>Screen Jump</Text>
+    <div className="flex h-full flex-col">
+      <div className="flex items-center gap-2">
+        <h3 className="text-lg font-semibold">{translations("Logic Jumps for Screen:")}</h3>
+        <h3 className="text-lg font-medium text-(--whatsapp-green)">{screen.title}</h3>
+      </div>
+      <ScrollArea className="grow">
+        <div className="my-2 flex flex-1 flex-col gap-2 rounded-xl py-2">
+          <p>Screen Jump</p>
           {logicJumps.map((logicJump, index) => (
             <ConditionsActionMapBlock
               key={index}
@@ -207,40 +207,26 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
           ))}
           <Button
             variant="outline"
-            leftSection={<IconPlus />}
-            fullWidth
+            className="w-full shrink-0"
             onClick={() => handleAddNewJump(false)}
-            style={{
-              flexShrink: 0,
-            }}
           >
+            <IconPlus />
             {translations("Add Logic Jump")}
           </Button>
-        </Stack>
-      </ScrollAreaAutosize>
-      <Stack>
-        <Group
-          justify="space-between"
-          style={{
-            flexGrow: 1,
-          }}
-        >
-          <RateupButtonSecondary
-            title={translations("Close ")}
-            size="md"
-            variant="outline"
-            color="var(--tertiary-color)"
-            onClick={() => afterSave()}
-          />
-          <RateupButtonBlue
-            title={translations("Save")}
-            size="md"
-            onClick={handleSave}
-            loading={updateFlowMutation.isPending}
-          />
-        </Group>
-      </Stack>
-    </Flex>
+        </div>
+      </ScrollArea>
+      <div className="flex flex-col">
+        <div className="flex grow items-center justify-between">
+          <Button variant="outline" size="lg" onClick={() => afterSave()}>
+            {translations("Close ")}
+          </Button>
+          <Button size="lg" onClick={handleSave} disabled={updateFlowMutation.isPending}>
+            {updateFlowMutation.isPending && <Spinner />}
+            {translations("Save")}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -295,18 +281,9 @@ function AtomicConditionBlock({
   // TODO: remove these states & update the condition directly in the parent component
 
   return (
-    <Group
-      gap="xs"
-      style={{
-        backgroundColor: "white",
-        borderRadius: "12px",
-        position: "relative",
-      }}
-      miw={"300px"}
-      p={"xs"}
-    >
-      <Stack gap={"2px"}>
-        <Select
+    <div className="relative flex min-w-75 items-center gap-2 rounded-xl bg-background p-2">
+      <div className="flex flex-col gap-0.5">
+        <SelectField
           label={translations("For Question")}
           data={logicSupportedQuestionsInScreen.map((q) => ({
             label: getQuestionLabel(q, selectedLanguage), // TODO: show index too
@@ -314,12 +291,11 @@ function AtomicConditionBlock({
           }))}
           value={selectedQId}
           onChange={(value) => setSelectedQId(value)}
-          style={{
-            flexShrink: 0,
-          }}
+          className="shrink-0"
         />
         {/* Condition Selector */}
-        <Select
+        <SelectField
+          label="If condition"
           data={
             isComponentLevel
               ? Object.entries(LogicConditionComponentLevel).map(([key, value]) => ({
@@ -330,8 +306,6 @@ function AtomicConditionBlock({
           }
           value={selectedCondition}
           onChange={setSelectedCondition as any}
-          label="If condition"
-          allowDeselect={false}
         />
 
         {/* Match Data */}
@@ -346,34 +320,29 @@ function AtomicConditionBlock({
             selectedCondition === LogicCondition.Equals) ? (
           // Array Selector
           <MultiSelect
-            data={getResponses(selectedQ, selectedLanguage)}
+            options={toOptions(getResponses(selectedQ, selectedLanguage))}
             value={Array.isArray(matchData) ? matchData : []}
-            onChange={setMatchData}
+            onValueChange={setMatchData}
             placeholder={translations("Select Responses")}
-            searchable
           />
         ) : isComponentLevel ? (
-          <ContainedTextField
+          <Input
             placeholder="Enter the condition value"
             onChange={(e) => setMatchData(e.target.value)}
             value={matchData}
           />
         ) : (
-          <Select
+          <SelectField
             value={Array.isArray(matchData) ? "" : matchData}
             data={getResponses(selectedQ, selectedLanguage)}
             onChange={setMatchData}
           />
         )}
-      </Stack>
-      <ActionIcon
-        style={{ position: "absolute", right: "12px" }}
-        onClick={handleDelete}
-        variant="outline"
-      >
+      </div>
+      <Button variant="outline" size="icon-sm" className="absolute right-3" onClick={handleDelete}>
         <IconTrash />
-      </ActionIcon>
-    </Group>
+      </Button>
+    </div>
   );
 }
 
@@ -439,7 +408,6 @@ function ConditionsActionMapBlock({
     })) ?? []),
   ];
 
-  const { colors } = useMantineTheme();
   const { t: translations } = useTranslation();
   useEffect(() => {
     updateLogicJumps((draft) => {
@@ -450,45 +418,18 @@ function ConditionsActionMapBlock({
   }, [selectedAction, selectedActionSuccess, selectedActionFail, isComponentLevel]);
 
   return (
-    <Flex
-      gap="xs"
-      style={{
-        backgroundColor: colors["green"][0],
-        borderRadius: "inherit",
-        position: "relative",
-        minWidth: "fit-content",
-      }}
-      p={"xs"}
-      align={"stretch"}
-    >
+    <div className="relative flex min-w-fit items-stretch gap-2 rounded-[inherit] bg-green-50 p-2 dark:bg-green-950/40">
       {isComponentLevel && (
-        <Box style={{ flexGrow: 1, textAlign: "center" }}>
-          <Title order={4} mb="sm">
-            Type
-          </Title>
-          <Stack
-            style={{
-              textAlign: "left",
-            }}
-          >
-            <ContainedSelection
-              label={"type"}
-              data={["IF"]}
-              defaultValue="IF"
-              allowDeselect={false}
-            />
-          </Stack>
-        </Box>
+        <div className="grow text-center">
+          <h4 className="mb-2 text-base font-semibold">Type</h4>
+          <div className="flex flex-col gap-3 text-left">
+            <SelectField label="type" data={["IF"]} value="IF" onChange={() => {}} />
+          </div>
+        </div>
       )}
-      <Box style={{ flexGrow: 1, textAlign: "center" }}>
-        <Title order={4} mb="sm">
-          {translations("Conditions")}
-        </Title>
-        <Stack
-          style={{
-            textAlign: "left",
-          }}
-        >
+      <div className="grow text-center">
+        <h4 className="mb-2 text-base font-semibold">{translations("Conditions")}</h4>
+        <div className="flex flex-col gap-3 text-left">
           {logic.conditions.map((condition, conditionIndex) => (
             <Fragment key={conditionIndex}>
               <AtomicConditionBlock
@@ -513,92 +454,41 @@ function ConditionsActionMapBlock({
                 isComponentLevel={isComponentLevel}
               />
               {conditionIndex !== logic.conditions.length - 1 && (
-                <Text
-                  style={{
-                    textAlign: "center",
-                  }}
-                >
-                  {translations("AND")}
-                </Text>
+                <p className="text-center">{translations("AND")}</p>
               )}
             </Fragment>
           ))}
-          {/* {!isComponentLevel && (
-            <Button
-              leftSection={<IconPlus />}
-              variant={"subtle"}
-              color="black"
-              maw={200}
-              onClick={() => {
-                updateLogicJumps((draft) => {
-                  if (isComponentLevel) {
-                    (draft as FlowLogicJumpComponentLevel[])[
-                      index
-                    ].conditions.push({
-                      condition: LogicConditionComponentLevel.EqualsTo,
-                      response: undefined,
-                      questionId: "",
-                    });
-                  } else {
-                    (draft as FlowLogicJump[])[index].conditions.push({
-                      condition: LogicCondition.Submitted,
-                      response: undefined,
-                      questionId: "",
-                    });
-                  }
-                });
-              }}
-            >
-              {translations("Add Condition")}
-            </Button>
-          )} */}
-        </Stack>
-      </Box>
+        </div>
+      </div>
       {/* Action Selector */}
-      <Flex direction={"column"} miw={"250px"}>
-        <Title
-          order={4}
-          style={{
-            textAlign: "center",
-          }}
-        >
-          {translations("Action")}
-        </Title>
-        <Center
-          style={{
-            flexGrow: 1,
-            borderRadius: "12px",
-          }}
-          my="sm"
-          px="sm"
-          mb="52px"
-          bg="white"
-        >
+      <div className="flex min-w-62.5 flex-col">
+        <h4 className="text-center text-base font-semibold">{translations("Action")}</h4>
+        <div className="my-3 mb-13 flex grow items-center justify-center rounded-xl bg-background px-3">
           {isComponentLevel ? (
-            <Stack>
-              <Select
+            <div className="flex flex-col gap-3">
+              <SelectField
                 label="Success Action"
                 data={possibleActionsComponentLevel}
                 value={selectedActionSuccess}
                 onChange={setSelectedActionSuccess as any}
               />
-              <Select
+              <SelectField
                 label="Fail Action"
                 data={possibleActionsComponentLevel}
                 value={selectedActionFail}
                 onChange={setSelectedActionFail as any}
               />
-            </Stack>
+            </div>
           ) : (
-            <Select
+            <SelectField
               label={translations("Action")}
               data={possibleActions}
               value={selectedAction as LogicAction}
               onChange={setSelectedAction as any}
             />
           )}
-        </Center>
-      </Flex>
-    </Flex>
+        </div>
+      </div>
+    </div>
   );
 }

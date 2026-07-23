@@ -4,8 +4,11 @@ import { Color } from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
+import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, type Extension, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -21,6 +24,10 @@ import {
   useQuestionUpdateMutation,
 } from "@/backend/surveys/questions/questions.query";
 import HTMLEditor from "@/components/RichTextEditor/HTMLEditor.tsx";
+import { TipTapFloatingMenu } from "@/components/tiptap/extensions/floating-menu";
+import { FloatingToolbar } from "@/components/tiptap/extensions/floating-toolbar";
+import { ImageExtension } from "@/components/tiptap/extensions/image";
+import { ImagePlaceholder } from "@/components/tiptap/extensions/image-placeholder";
 import SearchAndReplace from "@/components/tiptap/extensions/search-and-replace";
 import { EditorToolbar } from "@/components/tiptap/toolbars/editor-toolbar.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
@@ -58,8 +65,6 @@ import SmileyExtraProps from "./QuestionExtraProps/SmileyExtraProps.tsx";
 import TestimonialExtraProps from "./QuestionExtraProps/TestimonialExtraProps.tsx";
 import TncExtraProps from "./QuestionExtraProps/TncExtraProps.tsx";
 import WOPExtraProps from "./QuestionExtraProps/WOPExtraProps.tsx";
-
-import styles from "./QuestionDetailedView.module.css";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -340,10 +345,7 @@ export function QuestionDetailedView({
             {translations("Save")}
           </Button>
         </div>
-        <ScrollArea
-          className={cn(styles["editor-scroll-area-div"], "min-h-0")}
-          style={{ flex: "1 1 0" }}
-        >
+        <ScrollArea className={cn("min-h-0")} style={{ flex: "1 1 0" }}>
           <div className="flex flex-col gap-4 p-4">
             <div className="flex items-start justify-between ">
               <div
@@ -365,7 +367,6 @@ export function QuestionDetailedView({
                 >
                   {question?.type === PageType.Custom ? (
                     <HTMLEditor
-                      className={styles["html-editor-div"]}
                       titleValue={allValues?.title?.[selectedLanguage]}
                       descriptionValue={allValues?.description?.[selectedLanguage]}
                       onTitleChange={(v) =>
@@ -377,7 +378,6 @@ export function QuestionDetailedView({
                     />
                   ) : (
                     <QuestionTitleEditor
-                      className={styles["rich-text-editor"]}
                       content={allValues?.title?.[selectedLanguage]}
                       onChange={(v) =>
                         setValue(`title.${selectedLanguage}` as any, v, { shouldDirty: true })
@@ -436,7 +436,7 @@ export function getNpsColor(npstype) {
     case NPSWeightage.DETRACTOR:
       return "red";
     default:
-      return "var(--tertiary-color)";
+      return "var(--primary)";
   }
 }
 
@@ -508,20 +508,47 @@ function QuestionTitleEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
-        heading: { levels: [1, 2, 3, 4] },
+        orderedList: {
+          HTMLAttributes: {
+            class: "list-decimal",
+          },
+        },
+        bulletList: {
+          HTMLAttributes: {
+            class: "list-disc",
+          },
+        },
+        heading: {
+          levels: [1, 2, 3, 4],
+        },
       }),
-      Placeholder.configure({ placeholder }),
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      Placeholder.configure({
+        emptyNodeClass: "is-editor-empty",
+        placeholder,
+        includeChildren: false,
+      }),
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
       TextStyle,
+      Subscript,
+      Superscript,
       Underline,
       Link,
       Color,
-      Highlight.configure({ multicolor: true }),
+      Highlight.configure({
+        multicolor: true,
+      }),
+      ImageExtension,
+      ImagePlaceholder,
       SearchAndReplace,
+      Typography,
     ] as Extension[],
     content,
     editorProps: {
-      attributes: { class: "max-w-full focus:outline-none" },
+      attributes: {
+        class: "max-w-full focus:outline-none",
+      },
     },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
@@ -535,10 +562,14 @@ function QuestionTitleEditor({
     }
   }, [content, editor]);
 
+  if (!editor) return null;
+
   return (
-    <div className={`overflow-hidden rounded-md border bg-card ${className}`}>
+    <div className={cn("relative w-full overflow-hidden rounded-md border bg-card", className)}>
       <EditorToolbar editor={editor} />
-      <EditorContent editor={editor} className="min-h-[120px] cursor-text p-3" />
+      <FloatingToolbar editor={editor} />
+      <TipTapFloatingMenu editor={editor} />
+      <EditorContent editor={editor} className="min-h-[120px] w-full min-w-full cursor-text p-3" />
     </div>
   );
 }

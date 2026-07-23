@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { IconLogout, IconPencilMinus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 
 import { ConnectMetaAccountButton } from "./connect-meta-account-button.tsx";
 import { WaSettingEditModal } from "./wa-setting-edit-modal.tsx";

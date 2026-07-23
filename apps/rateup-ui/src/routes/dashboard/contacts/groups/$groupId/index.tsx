@@ -1,4 +1,3 @@
-import { useDebouncedState } from "@mantine/hooks";
 import { createFileRoute, useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import type { ColumnDef, ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { Image } from "@unpic/react";
@@ -33,6 +32,7 @@ import { Spinner } from "@/components/ui/spinner.tsx";
 import { getInitials } from "@/components/ui/utils.ts";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -176,7 +176,7 @@ function ContactGroup() {
           <div className="relative flex items-center gap-5 flex-1">
             <div className="relative shrink-0 group">
               <div
-                className="w-16 h-16 rounded-2xl bg-linear-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 cursor-pointer overflow-hidden relative transition-all hover:ring-rateup-blue"
+                className="w-16 h-16 rounded-2xl bg-linear-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 cursor-pointer overflow-hidden relative transition-all hover:ring-primary"
                 onClick={() => setShowEditIconDialog(true)}
               >
                 {groupDetails?.icon ? (
@@ -196,7 +196,7 @@ function ContactGroup() {
                   <Upload className="w-5 h-5 text-white" />
                 </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-linear-to-br from-rateup-blue to-blue-600 flex items-center justify-center shadow-md ring-4 ring-white">
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-linear-to-br from-primary to-blue-600 flex items-center justify-center shadow-md ring-4 ring-white">
                 <Users className="w-3.5 h-3.5 text-white" />
               </div>
             </div>
@@ -214,13 +214,13 @@ function ContactGroup() {
                           if (e.key === "Enter") handleSaveGroupName();
                           if (e.key === "Escape") handleCancelEditName();
                         }}
-                        className="h-9 text-xl border-2 border-rateup-blue focus:ring-1 focus:ring-rateup-blue/20 w-64"
+                        className="h-9 text-xl border-2 border-primary focus:ring-1 focus:ring-primary/20 w-64"
                         autoFocus
                       />
                       <Button
                         size="sm"
                         onClick={handleSaveGroupName}
-                        className="h-9 w-9 p-0 bg-linear-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700"
+                        className="h-9 w-9 p-0 bg-linear-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700"
                       >
                         {editContactGroupMutation.isPending ? (
                           <Spinner className="w-4 h-4" />
@@ -249,7 +249,7 @@ function ContactGroup() {
                           setGroupName(groupDetails?.name);
                           setIsEditingName(true);
                         }}
-                        className="h-8 w-8 p-0 hover:bg-blue-50 text-rateup-blue"
+                        className="h-8 w-8 p-0 hover:bg-blue-50 text-primary"
                       >
                         <Edit className="w-3.5 h-3.5" />
                       </Button>
@@ -269,7 +269,7 @@ function ContactGroup() {
 
               {!isEditingName && (
                 <div className="flex flex-col items-center justify-center px-5 py-2 rounded-xl bg-linear-to-br from-blue-50 to-indigo-50 border border-blue-100 shrink-0 ml-auto">
-                  <div className="text-3xl bg-linear-to-r from-rateup-blue to-indigo-600 bg-clip-text text-transparent">
+                  <div className="text-3xl bg-linear-to-r from-primary to-indigo-600 bg-clip-text text-transparent">
                     {groupDetails?._count?.contacts || 0}
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">Total Members</div>
@@ -418,7 +418,7 @@ function ContactGroupIconEditDialog({ opened, setOpened, group }) {
             />
             <Button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full h-12 gap-3 bg-linear-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700"
+              className="w-full h-12 gap-3 bg-linear-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700"
             >
               <Upload className="w-5 h-5" />
               Upload New Icon

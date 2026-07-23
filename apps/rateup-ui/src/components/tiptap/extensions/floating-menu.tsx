@@ -269,9 +269,9 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
   );
 
   useEffect(() => {
-    if (!editor?.view) return;
+    if (!editor?.options.element) return;
 
-    const editorElement = editor.view.dom;
+    const editorElement: any = editor.options.element;
     const handleEditorKeyDown = (e: Event) => handleKeyDown(e as KeyboardEvent);
 
     editorElement.addEventListener("keydown", handleEditorKeyDown);

@@ -7,13 +7,14 @@ import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 import { cn } from "@/lib/utils";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
-import { RateupButtonBlue } from "../../../Button/RateupButtons.tsx";
 import Preview from "../../../Survey/ShareSurvey/Preview/Preview.tsx";
 import LogoTabpanel from "../../../Survey/ShareSurvey/ShareQR/LogoTabPanel/index.tsx";
 import {
   initialLogoTabPanelState,
   logoTabPanelReducer,
 } from "../../../Survey/ShareSurvey/ShareQR/LogoTabPanel/LogoTabPanelReducer.tsx";
+import { Button } from "../../../ui/button.tsx";
+import { Spinner } from "../../../ui/spinner.tsx";
 import { useLinktreeObj } from "../LinktreeContext/LinktreeContext.tsx";
 
 import styles from "./ShareLinktree.module.css";
@@ -79,11 +80,10 @@ function ShareLinktree({ url, isPublished, title }) {
             surveyTitle={title}
             isSurveyPublished={isPublished}
           />
-          <RateupButtonBlue
-            loading={isSavingSettings}
-            title="Save Settings"
-            onClick={handleSaveOfShareSettings}
-          />
+          <Button disabled={isSavingSettings} onClick={handleSaveOfShareSettings}>
+            {isSavingSettings && <Spinner />}
+            Save Settings
+          </Button>
         </div>
       )}
     </div>

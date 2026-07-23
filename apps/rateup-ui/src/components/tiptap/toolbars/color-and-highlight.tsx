@@ -1,4 +1,7 @@
 "use client";
+import type { Extension } from "@tiptap/core";
+import type { ColorOptions } from "@tiptap/extension-color";
+import type { HighlightOptions } from "@tiptap/extension-highlight";
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
 
 /* eslint-disable */
@@ -13,6 +16,8 @@ import { cn } from "@/lib/utils";
 
 import { MobileToolbarGroup, MobileToolbarItem } from "./mobile-toolbar-group";
 import { useToolbar } from "./toolbar-provider";
+
+export type TextStylingExtensions = Extension<ColorOptions, any> | Extension<HighlightOptions, any>;
 
 const TEXT_COLORS = [
   { name: "Default", color: "var(--editor-text-default)" },

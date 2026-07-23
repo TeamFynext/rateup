@@ -1,10 +1,10 @@
-import { useMediaQuery } from "@mantine/hooks";
 import { produce } from "immer";
 import { useCallback, useEffect } from "react";
 
 import { usePageVisitsOrLinkClicksUpdateMutation } from "@/backend/linktree/linktree.query";
 import UnsplashCreditText from "@/components/Linktree/LinktreeEditor/ThemeEditor/components/UnsplashCreditText/index.tsx";
 import { initialState as defaultTheme } from "@/components/Linktree/LinktreeEditor/ThemeEditor/ThemeContext/constants.ts";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { imagesPath } from "@/utils/constants.ts";
 
 import styles from "./lt.module.css";

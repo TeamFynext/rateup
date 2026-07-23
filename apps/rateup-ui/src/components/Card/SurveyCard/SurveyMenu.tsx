@@ -1,6 +1,3 @@
-import { ActionIcon, Group, Menu, MultiSelect, Radio, Stack, Text } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import {
   IconCopy,
   IconDots,
@@ -18,9 +15,28 @@ import { toast } from "sonner";
 
 import { deleteSurvey, deleteSurveyForOneTeam, updateSurvey } from "@/backend/surveys/survey.api";
 import { useCloneSurveyMutation } from "@/backend/surveys/surveys.query";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
-
-import FormModalLayout from "../../Modal/FormModalLayout.tsx";
+import { useBridgedForm } from "@/hooks/useBridgedForm";
+import { useDisclosure } from "@/hooks/useDisclosure";
+import { SAVE_HOTKEY } from "@/utils/constants.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 interface SurveyMenuProps {
   survey: Survey;
@@ -46,8 +62,8 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
     label: team?.name,
   }));
 
-  const cloneForm = useForm({
-    initialValues: {
+  const cloneForm = useBridgedForm({
+    defaultValues: {
       teamIds: [],
     },
     validate: {
@@ -138,110 +154,146 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
     refetchSurveys();
   }
 
-  return (
-    <Menu width={200}>
-      <FormModalLayout
-        opened={opened}
-        onClose={() => {
-          close();
-          cloneForm.reset();
-        }}
-        title={translations("Clone Survey")}
-        centered
-        onSubmit={cloneForm.onSubmit(onSubmit)}
-        buttonTitle={translations("Submit")}
-        includeCancelButton
-      >
-        <Stack>
-          <Text c="dimmed">
-            {translations("Select the team/teams in which the survey copy to be created.")}
-          </Text>
-          <Group>
-            <Radio.Group
-              value={teamChoice}
-              onChange={(value) => setTeamChoice(value)}
-              name="selectTeams"
-              label={translations("Select teams")}
-              withAsterisk
-            >
-              <Group mt="xs">
-                <Radio checked label={translations("All teams")} value="all" />
-                <Radio label={translations("Select Manually")} value="manual" />
-              </Group>
-            </Radio.Group>
+  const closeCloneModal = () => {
+    close();
+    cloneForm.reset();
+  };
+  const submitClone = cloneForm.onSubmit(onSubmit);
 
-            {teamChoice === "manual" && (
-              <MultiSelect
-                radius="md"
-                value={selectedTeams}
-                onChange={setSelectedTeams}
-                placeholder={translations("Select teams (type in to search)")}
-                data={teamOptions}
-                searchable
-                error={cloneForm.errors.teamIds}
-                styles={{ root: { width: "100%" } }}
-              />
-            )}
-          </Group>
-        </Stack>
-      </FormModalLayout>
-      <Menu.Target>
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
+  return (
+    <DropdownMenu>
+      <Dialog
+        open={opened}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) closeCloneModal();
+        }}
+      >
+        <DialogContent
+          className="max-h-[90vh] overflow-auto sm:max-w-125"
+          onClick={(e) => e.stopPropagation()}
         >
-          <IconDots />
-        </ActionIcon>
-      </Menu.Target>
-      <Menu.Dropdown
+          <DialogHeader>
+            <DialogTitle className="text-center text-3xl font-semibold">
+              {translations("Clone Survey")}
+            </DialogTitle>
+          </DialogHeader>
+          <form
+            className="p-5"
+            onSubmit={submitClone}
+            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submitClone]])}
+          >
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-muted-foreground">
+                {translations("Select the team/teams in which the survey copy to be created.")}
+              </p>
+              <div className="flex flex-col gap-2">
+                <Field>
+                  <FieldLabel>
+                    {translations("Select teams")}
+                    <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <RadioGroup
+                    value={teamChoice}
+                    onValueChange={(value) => setTeamChoice(value as string)}
+                    name="selectTeams"
+                    className="mt-2 flex flex-row items-center gap-4"
+                  >
+                    <FieldLabel className="items-center font-normal">
+                      <RadioGroupItem value="all" />
+                      {translations("All teams")}
+                    </FieldLabel>
+                    <FieldLabel className="items-center font-normal">
+                      <RadioGroupItem value="manual" />
+                      {translations("Select Manually")}
+                    </FieldLabel>
+                  </RadioGroup>
+                </Field>
+
+                {teamChoice === "manual" && (
+                  <Field>
+                    <MultiSelect
+                      value={selectedTeams}
+                      onValueChange={setSelectedTeams}
+                      placeholder={translations("Select teams (type in to search)")}
+                      options={teamOptions}
+                      className="w-full"
+                    />
+                    {cloneForm.errors.teamIds && (
+                      <FieldError>{cloneForm.errors.teamIds}</FieldError>
+                    )}
+                  </Field>
+                )}
+              </div>
+            </div>
+            <DialogFooter className="mt-4">
+              <Button type="reset" variant="ghost" onClick={closeCloneModal}>
+                {translations("Cancel")}
+              </Button>
+              <Button type="submit">{translations("Submit")}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          />
+        }
+      >
+        <IconDots />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-50"
         onClick={(e) => {
           e.stopPropagation();
         }}
       >
-        <Menu.Item
-          leftSection={survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />}
-          onClick={() => surveyUpdateMutation.mutate({ active: !survey?.active })}
-        >
+        <DropdownMenuItem onClick={() => surveyUpdateMutation.mutate({ active: !survey?.active })}>
+          {survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />}
           {survey?.active ? translations("Pause Survey") : translations("Resume Survey")}
-        </Menu.Item>
+        </DropdownMenuItem>
 
-        <Menu.Item
-          leftSection={<IconShare />}
+        <DropdownMenuItem
           onClick={() => {
             navigate({
               to: `${pathname}/${survey?.id}?tab=Share`,
             });
           }}
         >
+          <IconShare />
           {translations("Share")}
-        </Menu.Item>
-        <Menu.Item
-          leftSection={<IconCopy />}
+        </DropdownMenuItem>
+        <DropdownMenuItem
           onClick={() => {
             open();
           }}
         >
+          <IconCopy />
           {translations("Clone")}
-        </Menu.Item>
-        <Menu.Item leftSection={<IconTrash />} onClick={handleDeleteSurvey}>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDeleteSurvey}>
+          <IconTrash />
           {translations("Delete")}
-        </Menu.Item>
+        </DropdownMenuItem>
 
-        <Menu.Item
-          leftSection={<IconSettings />}
+        <DropdownMenuItem
           onClick={() => {
             navigate({
               to: `${pathname}/${survey?.id}?tab=Settings`,
             });
           }}
         >
+          <IconSettings />
           {translations("Settings")}
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

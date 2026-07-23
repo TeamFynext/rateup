@@ -23,10 +23,6 @@
   min-width: 100px;
 }
 
-.upload-bg-img-btn :global(.mantine-Button-section) {
-  margin-right: 0.3125rem;
-}
-
 .delete-bg-img-btn-container {
   flex: 0.2;
 }
@@ -44,5 +40,5 @@
 }
 
 .delete-bg-img-btn:disabled {
-  background-color: var(--mantine-color-gray-2);
+  background-color: #e9ecef;
 }

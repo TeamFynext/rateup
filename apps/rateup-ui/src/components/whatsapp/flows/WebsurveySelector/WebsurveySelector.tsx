@@ -1,17 +1,28 @@
-import type { SelectProps } from "@mantine/core";
-import { Skeleton } from "@mantine/core";
-
 import { useSurveys } from "@/backend/surveys/surveys.query";
+import { Label } from "@/components/ui/label.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { SurveyType } from "@/types/enums.ts";
 
-import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput.tsx";
-
-interface WebsurveySelectorProps extends SelectProps {
+interface WebsurveySelectorProps {
   onChange?: (flowId: string) => void;
   onlyPublished?: boolean;
   form: any;
   carousel?: string;
-  index: number;
+  index?: number;
+  label?: React.ReactNode;
+  placeholder?: string;
+  error?: React.ReactNode;
+  disabled?: boolean;
+  className?: string;
+  /** Accepted for call-site compatibility; the shadcn Select filters natively. */
+  searchable?: boolean;
 }
 
 export function WebsurveySelector({
@@ -19,12 +30,16 @@ export function WebsurveySelector({
   form,
   carousel,
   index,
-  ...props
+  label = "Websurvey",
+  placeholder = "Select websurvey",
+  error,
+  disabled,
+  className,
 }: Readonly<WebsurveySelectorProps>) {
   const { isPending, data } = useSurveys();
 
   if (isPending || !data) {
-    return <Skeleton h={46} mt={"sm"} w={50} />;
+    return <Skeleton className="mt-2 h-11 w-12" />;
   }
 
   const filteredWebSurvey = Array.isArray(data)
@@ -40,7 +55,7 @@ export function WebsurveySelector({
     label: survey?.title,
   }));
 
-  const handleChange = (url) => {
+  const handleChange = (url: string) => {
     const arr = url?.split("?");
     if (carousel) {
       form.setFieldValue(`${carousel}.url`, `${arr?.[0]}{{1}}`);
@@ -50,6 +65,7 @@ export function WebsurveySelector({
       form.setFieldValue(`buttons.${index}.example`, [arr?.[1]]);
     }
   };
+
   let value = "";
   if (carousel) {
     const fields = carousel.split(".");
@@ -61,15 +77,28 @@ export function WebsurveySelector({
       `?${form.values.buttons[index].example}`,
     );
   }
+
   return (
-    <ContainedSelection
-      data={selectOptions}
-      placeholder="Select websurvey"
-      label="Websurvey"
-      allowDeselect={false}
-      value={value}
-      onChange={handleChange}
-      {...props}
-    />
+    <div className={className}>
+      {label && <Label className="mb-1">{label}</Label>}
+      <Select
+        value={value ?? ""}
+        onValueChange={handleChange}
+        items={selectOptions}
+        disabled={disabled}
+      >
+        <SelectTrigger className="w-full" aria-invalid={!!error}>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {selectOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+    </div>
   );
 }

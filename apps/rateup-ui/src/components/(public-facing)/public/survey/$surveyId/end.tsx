@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { CreditsCard } from "@/components/Card/CreditsCard.tsx";
 import { getBgImgAndBgColor } from "@/components/Layout/TakeSurveyLayout/utils.ts";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
-import { useMediaQuery } from "@/hooks/use-media-querry.ts";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 
 import BodyComp from "./BodyComp.tsx";
 

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
-import { useMediaQuery } from "@/hooks/use-media-querry.ts";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { LDResponse } from "@/types/enums.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";

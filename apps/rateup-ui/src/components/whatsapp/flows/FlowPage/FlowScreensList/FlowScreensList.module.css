@@ -18,12 +18,6 @@
   padding: 0 0.625rem;
 }
 
-.add-new-screen-input-div :global(.mantine-InputWrapper-root) {
-  flex: 1 1 auto;
-  min-width: 200px;
-  margin-bottom: 1rem;
-}
-
 .screens-list-div {
   display: flex;
   flex-direction: column;
@@ -41,7 +35,7 @@
   justify-content: space-between;
   gap: 1.25rem;
   padding: 0.625rem 1rem;
-  border: 1px solid var(--mantine-color-gray-3);
+  border: 1px solid #dee2e6;
   border-radius: 1rem;
   /* box-shadow: 0 0 10px 5px rgba(54, 54, 54, 0.1); */
 }
@@ -57,10 +51,6 @@
 }
 
 /* Create Flow Screen Modal */
-
-.create-flow-screen-modal-root :global(.mantine-Modal-title) {
-  font-weight: bold;
-}
 
 .create-flow-screen-modal-form {
   display: flex;

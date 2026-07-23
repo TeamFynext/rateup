@@ -1,20 +1,24 @@
-import type { BoxComponentProps } from "@mantine/core";
-import { ActionIcon, Anchor, Image, Indicator, Modal, Stack } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { RichTextEditor } from "@mantine/tiptap";
 import { IconFileFilled, IconRobot, IconTrash, IconWaveSine, IconX } from "@tabler/icons-react";
-import Mention from "@tiptap/extension-mention";
-import Placeholder from "@tiptap/extension-placeholder";
-import { CharacterCount } from "@tiptap/extensions";
 import { Plugin } from "@tiptap/pm/state";
-import { Extension, generateHTML, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import parse from "html-react-parser";
-import { LayoutTemplate, Paperclip, TypeOutline, X, Zap } from "lucide-react";
+import { EditorContent, useEditor } from "@tiptap/react";
+import { LayoutTemplate, Paperclip, RemoveFormatting, TypeOutline, X, Zap } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
+import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
+import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
+import { CodeToolbar } from "@/components/tiptap/toolbars/code.tsx";
+import { ItalicToolbar } from "@/components/tiptap/toolbars/italic.tsx";
+import { OrderedListToolbar } from "@/components/tiptap/toolbars/ordered-list.tsx";
+import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
+import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
+import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
+import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
+import { Dialog, DialogContent } from "@/components/ui/dialog.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { cn } from "@/lib/utils";
 import { MessagePlatform } from "@/types/enums.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
@@ -38,10 +42,10 @@ import InsertInboxFile from "./InsertInboxMedia/InsertInboxFile.tsx";
 import InsertInboxImage from "./InsertInboxMedia/InsertInboxImage.tsx";
 import InsertInboxVideo from "./InsertInboxMedia/InsertInboxVideo.tsx";
 import type { MentionUser } from "./mention/MentionList.tsx";
-import { createMentionSuggestion } from "./mention/suggestion.ts";
+import { createWaExtensions } from "./wa-editor/extensions.ts";
+import { parseFromWhatsAppFormat } from "./wa-editor/format.tsx";
 import { isJSONString, WaQuickReply } from "./WaQuickReply/index.tsx";
-
-interface WaTextEditorProps extends BoxComponentProps {
+interface WaTextEditorProps {
   handleInputChange: (value) => void;
   content: string;
   className?: string;
@@ -70,25 +74,6 @@ interface WaTextEditorProps extends BoxComponentProps {
   quickRepliesOpen?: boolean;
   onQuickRepliesOpenChange?: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
-
-const CustomEnter = Extension.create({
-  name: "customEnter",
-
-  addOptions() {
-    return {
-      onEnter: () => {},
-    };
-  },
-
-  addKeyboardShortcuts() {
-    return {
-      Enter: () => {
-        this.options.onEnter();
-        return true;
-      },
-    };
-  },
-});
 
 function WaTextEditor({
   handleInputChange,
@@ -129,33 +114,10 @@ function WaTextEditor({
   // ref so the mention list stays current as `mentionUsers` updates.
   const mentionUsersRef = useRef<MentionUser[]>([]);
   mentionUsersRef.current = mentionUsers ?? [];
-  const extensions = useMemo(() => {
-    const ext = [
-      StarterKit.configure({ link: false }),
-      Placeholder.configure({
-        placeholder,
-      }),
-      CharacterCount.configure({
-        limit: max,
-      }),
-    ];
-    if (customEnter)
-      ext.push(
-        CustomEnter.configure({
-          onEnter: customEnter,
-        }) as any,
-      );
-    if (enableMention)
-      ext.push(
-        Mention.configure({
-          HTMLAttributes: {
-            class: "rounded bg-primary/10 px-1 font-medium text-primary",
-          },
-          suggestion: createMentionSuggestion(() => mentionUsersRef.current),
-        }) as any,
-      );
-    return ext;
-  }, [customEnter, enableMention]);
+  const extensions = useMemo(
+    () => createWaExtensions({ placeholder, max, customEnter, enableMention, mentionUsersRef }),
+    [customEnter, enableMention, placeholder, max],
+  );
   const [searchTerm, setSearchTerm] = useState("");
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -342,25 +304,12 @@ function WaTextEditor({
         {media.length > 0 &&
           media.map((me) => {
             return (
-              <Indicator
-                label={
-                  <IconX
-                    onClick={() => removeMedia(me.key)}
-                    size={"1rem"}
-                    style={{ cursor: "pointer" }}
-                  />
-                }
-                size={16}
-                color="red"
-                inline
-                key={me?.key}
-              >
-                <Stack
-                  w={50}
-                  h={50}
-                  bd={"2px solid white"}
-                  justify="center"
-                  align="center"
+              <div className="relative inline-flex" key={me?.key}>
+                <span className="absolute -top-2 -right-2 z-10 flex size-4 items-center justify-center rounded-full bg-red-600 text-white">
+                  <IconX onClick={() => removeMedia(me.key)} size={12} className="cursor-pointer" />
+                </span>
+                <div
+                  className="w-[50px] h-[50px] border-2 border-white flex flex-col justify-center items-center relative"
                   style={{ zIndex: 9999 }}
                   onClick={() => {
                     if (["audio", "document"].includes(me.type)) return;
@@ -369,16 +318,16 @@ function WaTextEditor({
                   }}
                 >
                   {me.type === "image" && (
-                    <Image src={me.url} width={48} height={48} alt={me.name} />
+                    <img src={me.url} className="w-[48px] h-[48px] object-cover" alt={me.name} />
                   )}
                   {me.type === "video" && <video src={me.url} width={48} height={48} />}
                   {me.type === "document" && (
-                    <Anchor href={me.url}>
+                    <a href={me.url}>
                       <IconFileFilled color="white" size={"2rem"} />
-                    </Anchor>
+                    </a>
                   )}
-                </Stack>
-              </Indicator>
+                </div>
+              </div>
             );
           })}
         <ShowMedia opened={opened} close={close} />
@@ -433,175 +382,176 @@ function WaTextEditor({
       )}
       <div className={`flex items-start ${border ? "p-4" : ""} pb-0 space-x-2`}>
         <div className="flex-1">
-          <RichTextEditor
-            classNames={{
-              content: `rounded-xl overflow-y-auto`,
-            }}
-            editor={editor}
-            styles={{
-              root: {
-                border: "none",
-              },
-              control: {
-                border: "none",
-              },
-              content: {
-                maxHeight: `${mah}px`,
-                minHeight: `${mih}px`,
-              },
-            }}
-          >
-            {inbox && !quickRepliesControlled && (
-              <div className="flex items-center justify-end px-2 pb-1">
-                <CustomTooltip
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      onClick={() => setShowQuickReplies((prev) => !prev)}
-                    >
-                      <Zap className="w-4 h-4 text-cyan-600" />
-                    </Button>
-                  }
-                  content={<p>Quick Replies</p>}
+          <ToolbarProvider editor={editor}>
+            <TooltipProvider>
+              {inbox && !quickRepliesControlled && (
+                <div className="flex items-center justify-end px-2 pb-1">
+                  <CustomTooltip
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={() => setShowQuickReplies((prev) => !prev)}
+                      >
+                        <Zap className="w-4 h-4 text-cyan-600" />
+                      </Button>
+                    }
+                    content={<p>Quick Replies</p>}
+                  />
+                </div>
+              )}
+              <div className="relative">
+                <EditorContent
+                  editor={editor}
+                  style={{
+                    backgroundColor: "var(--accent)",
+                    borderRadius: "5px",
+                    maxHeight: `${mah}px`,
+                    minHeight: `${mih}px`,
+                  }}
+                  className={`overflow-y-auto rounded-xl ${
+                    editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""
+                  }`}
                 />
               </div>
-            )}
-            <div className="relative">
-              <RichTextEditor.Content
-                bg={"var(--accent)"}
-                style={{
-                  borderRadius: "5px",
-                }}
-                className={`${editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""}`}
-              />
-            </div>
-            <div
-              className={`${hideCharacterCount ? "hidden" : "flex"} items-center justify-end px-2 pt-1 space-x-1`}
-            >
-              {!hideCharacterCount && <WaTextCharacterCount editor={editor} max={max} />}
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="flex flex-wrap p-2">
-                <RichTextEditor.ControlsGroup className="mt-1">
-                  <InsertEmoji />
-                </RichTextEditor.ControlsGroup>
-                <Popover>
-                  <PopoverTrigger>
-                    <CustomTooltip
-                      trigger={
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <TypeOutline className="w-5 h-5" />
-                        </Button>
-                      }
-                      content={<span>Format Message</span>}
-                    />
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full">
-                    <div className="flex gap-1 flex-nowrap">
-                      <RichTextEditor.ControlsGroup>
-                        <RichTextEditor.Bold />
-                        <RichTextEditor.Italic />
-                        <RichTextEditor.Strikethrough />
-                        <RichTextEditor.ClearFormatting />
-                        <RichTextEditor.Code />
-                      </RichTextEditor.ControlsGroup>
-
-                      <RichTextEditor.ControlsGroup>
-                        <RichTextEditor.Blockquote />
-                        <RichTextEditor.BulletList />
-                        <RichTextEditor.OrderedList />
-                      </RichTextEditor.ControlsGroup>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-                <CustomTooltip
-                  trigger={
-                    <Button variant="ghost">
-                      <RichTextEditor.ControlsGroup>
-                        <RichTextEditor.Undo />
-                        <RichTextEditor.Redo />
-                      </RichTextEditor.ControlsGroup>
-                    </Button>
-                  }
-                  content={<span>Undo/Redo</span>}
-                />
-                {inbox && !isQuickReplyEditor && (
+              <div
+                className={`${hideCharacterCount ? "hidden" : "flex"} items-center justify-end px-2 pt-1 space-x-1`}
+              >
+                {!hideCharacterCount && <WaTextCharacterCount editor={editor} max={max} />}
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex flex-wrap p-2">
+                  <div className="mt-1 flex items-center">
+                    <InsertEmoji editor={editor} />
+                  </div>
                   <Popover>
                     <PopoverTrigger>
                       <CustomTooltip
                         trigger={
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Paperclip className="w-5 h-5" />
+                            <TypeOutline className="w-5 h-5" />
                           </Button>
                         }
-                        content={<span>Insert Media</span>}
+                        content={<span>Format Message</span>}
                       />
                     </PopoverTrigger>
                     <PopoverContent className="w-full">
-                      <div className="flex items-center justify-center flex-nowrap">
-                        <RichTextEditor.ControlsGroup>
-                          {platform !== MessagePlatform.INSTAGRAM && <InsertInboxFile />}
-                          <InsertInboxImage />
-                          <InsertInboxVideo />
-                          <InsertInboxAudio />
-                        </RichTextEditor.ControlsGroup>
+                      <div className="flex gap-1 flex-nowrap">
+                        <div className="flex items-center">
+                          <BoldToolbar />
+                          <ItalicToolbar />
+                          <StrikeThroughToolbar />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Clear formatting"
+                            aria-label="Clear formatting"
+                            className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                            onClick={() =>
+                              editor?.chain().focus().unsetAllMarks().clearNodes().run()
+                            }
+                          >
+                            <RemoveFormatting className="h-4 w-4" />
+                          </Button>
+                          <CodeToolbar />
+                        </div>
 
-                        <RichTextEditor.ControlsGroup>
-                          {!(
-                            platform === MessagePlatform.INSTAGRAM ||
-                            platform === MessagePlatform.FACEBOOK
-                          ) && (
-                            <>
-                              <InboxContactsControl />
-                              <InboxLocationControl />
-                            </>
-                          )}
-                        </RichTextEditor.ControlsGroup>
+                        <div className="flex items-center">
+                          <BlockquoteToolbar />
+                          <BulletListToolbar />
+                          <OrderedListToolbar />
+                        </div>
                       </div>
                     </PopoverContent>
                   </Popover>
-                )}
-                {inbox && platform === MessagePlatform.WHATSAPP && (
-                  <div className="flex">
-                    <CustomTooltip
-                      trigger={
-                        <Button variant="ghost" onClick={() => openModal()} size="sm">
-                          <LayoutTemplate className="w-4 h-4" />
-                        </Button>
-                      }
-                      content={<span>Template</span>}
-                    />
-                    <CustomTooltip
-                      trigger={
-                        <Button variant="ghost" onClick={() => openFlowModal()} size="sm">
-                          <IconWaveSine className="w-4 h-4" />
-                        </Button>
-                      }
-                      content={<span>Flow</span>}
-                    />
-                    <CustomTooltip
-                      trigger={
-                        <Button variant="ghost" onClick={() => openAutomationModal()} size="sm">
-                          <IconRobot className="w-4 h-4" />
-                        </Button>
-                      }
-                      content={<span>Automation</span>}
-                    />
+                  <CustomTooltip
+                    trigger={
+                      <Button variant="ghost">
+                        <div className="flex items-center">
+                          <UndoToolbar />
+                          <RedoToolbar />
+                        </div>
+                      </Button>
+                    }
+                    content={<span>Undo/Redo</span>}
+                  />
+                  {inbox && !isQuickReplyEditor && (
+                    <Popover>
+                      <PopoverTrigger>
+                        <CustomTooltip
+                          trigger={
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Paperclip className="w-5 h-5" />
+                            </Button>
+                          }
+                          content={<span>Insert Media</span>}
+                        />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full">
+                        <div className="flex items-center justify-center flex-nowrap">
+                          <div className="flex items-center">
+                            {platform !== MessagePlatform.INSTAGRAM && <InsertInboxFile />}
+                            <InsertInboxImage />
+                            <InsertInboxVideo />
+                            <InsertInboxAudio />
+                          </div>
+
+                          <div className="flex items-center">
+                            {!(
+                              platform === MessagePlatform.INSTAGRAM ||
+                              platform === MessagePlatform.FACEBOOK
+                            ) && (
+                              <>
+                                <InboxContactsControl />
+                                <InboxLocationControl />
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                  {inbox && platform === MessagePlatform.WHATSAPP && (
+                    <div className="flex">
+                      <CustomTooltip
+                        trigger={
+                          <Button variant="ghost" onClick={() => openModal()} size="sm">
+                            <LayoutTemplate className="w-4 h-4" />
+                          </Button>
+                        }
+                        content={<span>Template</span>}
+                      />
+                      <CustomTooltip
+                        trigger={
+                          <Button variant="ghost" onClick={() => openFlowModal()} size="sm">
+                            <IconWaveSine className="w-4 h-4" />
+                          </Button>
+                        }
+                        content={<span>Flow</span>}
+                      />
+                      <CustomTooltip
+                        trigger={
+                          <Button variant="ghost" onClick={() => openAutomationModal()} size="sm">
+                            <IconRobot className="w-4 h-4" />
+                          </Button>
+                        }
+                        content={<span>Automation</span>}
+                      />
+                    </div>
+                  )}
+                  {inbox && platform !== MessagePlatform.WEBCHAT && <VoiceRecorder />}
+                </div>
+
+                {inbox && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-muted-foreground">Channel - to:</span>
+                    <AccountSelectComponent />
                   </div>
                 )}
-                {inbox && platform !== MessagePlatform.WEBCHAT && <VoiceRecorder />}
               </div>
-
-              {inbox && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-muted-foreground">Channel - to:</span>
-                  <AccountSelectComponent />
-                </div>
-              )}
-            </div>
-          </RichTextEditor>
+            </TooltipProvider>
+          </ToolbarProvider>
         </div>
         <div className="mt-5">{(inbox || privateMessage) && sendMessageButton}</div>
       </div>
@@ -633,25 +583,33 @@ const ShowMedia = ({ opened, close }) => {
   const { selectedMedia: media, removeMedia } = useMediaStore();
   if (!media) return null;
   return (
-    <Modal onClose={close} opened={opened} centered>
-      <Stack>
-        <ActionIcon
-          color="red"
-          onClick={async () => {
-            await removeMedia(media.key);
-            close();
-          }}
-        >
-          <IconTrash />
-        </ActionIcon>
-        {media.type === "image" && (
-          <img src={media.url} width={"100%"} height={"100%"} alt={media.name} />
-        )}
-        {media.type === "video" && (
-          <video src={media.url} width={"100%"} height={"100%"} controls />
-        )}
-      </Stack>
-    </Modal>
+    <Dialog
+      open={opened}
+      onOpenChange={(next) => {
+        if (!next) close();
+      }}
+    >
+      <DialogContent>
+        <div className="flex flex-col gap-4">
+          <Button
+            size="icon"
+            className="bg-red-600 text-white hover:bg-red-700"
+            onClick={async () => {
+              await removeMedia(media.key);
+              close();
+            }}
+          >
+            <IconTrash />
+          </Button>
+          {media.type === "image" && (
+            <img src={media.url} className="w-full h-full object-contain" alt={media.name} />
+          )}
+          {media.type === "video" && (
+            <video src={media.url} width={"100%"} height={"100%"} controls />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -685,303 +643,3 @@ const WaTextCharacterCount = ({ editor, max }) => {
     </div>
   );
 };
-
-/**
- * Collect the user ids of every mention node in a tiptap doc. Sent alongside a
- * private note so the backend resolves mentions by id (robust to names that
- * contain spaces, which the text-based `@name` extraction can't match).
- */
-export function extractMentionUserIds(editorContent: any): string[] {
-  const ids = new Set<string>();
-  const walk = (node: any) => {
-    if (!node) return;
-    if (node.type === "mention" && node.attrs?.id) ids.add(String(node.attrs.id));
-    if (Array.isArray(node.content)) node.content.forEach(walk);
-  };
-  walk(editorContent);
-  return Array.from(ids);
-}
-
-export function parseToWhatsAppFormat(editorContent) {
-  function formatText(text, type = "*") {
-    const trimmedEnd = text.trimEnd();
-    const trimmedStart = text.trimStart();
-    const trimmed = text.trim();
-
-    const leadingSpaces = " ".repeat(text.length - trimmedStart.length);
-    const trailingSpaces = " ".repeat(text.length - trimmedEnd.length);
-    const formattedText = trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
-    return `${leadingSpaces}${type}${trimmed}${type}${formattedText}`;
-  }
-  const parseNode = (node) => {
-    if (!node) return "";
-    switch (node.type) {
-      case "paragraph":
-        return node?.content?.map(parseNode).join("");
-      case "text":
-        let text = node.text;
-        if (node.marks) {
-          node.marks.forEach((mark) => {
-            switch (mark.type) {
-              case "bold":
-                text = formatText(text, "*");
-                break;
-              case "italic":
-                text = formatText(text, "_");
-                break;
-              case "strike":
-                text = formatText(text, "~");
-                break;
-              case "code":
-                text = `\`${text}\``;
-                break;
-              default:
-                break;
-            }
-          });
-        }
-        return text;
-      case "bulletList":
-        return node.content.map((item) => `* ${parseNode(item)}`).join("\n");
-      case "orderedList":
-        return node.content.map((item, index) => `${index + 1}. ${parseNode(item)}`).join("\n");
-      case "blockquote":
-        return node.content.map((item) => `> ${parseNode(item)}`).join("\n");
-      case "codeBlock":
-        return `\`\`\`${node.content.map(parseNode).join("")}\`\`\``;
-      case "listItem":
-        return node.content.map(parseNode).join("");
-      case "mention":
-        return `@${node.attrs?.label ?? node.attrs?.id ?? ""}`;
-      default:
-        return "";
-    }
-  };
-
-  return editorContent.content.map(parseNode).join("\n");
-}
-interface TiptapNode {
-  type: string;
-  content?: TiptapNode[];
-  marks?: { type: string }[];
-  text?: string;
-}
-
-export function parseFromWhatsAppFormat(text: string): {
-  type: "doc";
-  content: TiptapNode[];
-} {
-  // Helper to create text node with marks
-  const createTextNode = (text: string, marks: string[] = []): TiptapNode => ({
-    type: "text",
-    text,
-    ...(marks.length && { marks: marks.map((type) => ({ type })) }),
-  });
-
-  const paragraphs = text.split("\n\n");
-  const content: TiptapNode[] = [];
-
-  for (const paragraph of paragraphs) {
-    if (!paragraph.trim()) continue;
-
-    const paragraphNode: TiptapNode = {
-      type: "paragraph",
-      content: [],
-    };
-
-    let currentIndex = 0;
-    let currentText = "";
-    const activeMarks: string[] = [];
-
-    while (currentIndex < paragraph.length) {
-      const char = paragraph[currentIndex];
-
-      // Handle WhatsApp style formatting
-      switch (char) {
-        case "*": {
-          // Check if it's opening or closing bold
-          const isClosing = activeMarks.includes("bold");
-          if (currentText) {
-            paragraphNode.content?.push(createTextNode(currentText, [...activeMarks]));
-            currentText = "";
-          }
-          if (isClosing) {
-            activeMarks.splice(activeMarks.indexOf("bold"), 1);
-          } else {
-            activeMarks.push("bold");
-          }
-          break;
-        }
-        case "_": {
-          // Check for italic
-          const isClosing = activeMarks.includes("italic");
-          if (currentText) {
-            paragraphNode.content?.push(createTextNode(currentText, [...activeMarks]));
-            currentText = "";
-          }
-          if (isClosing) {
-            activeMarks.splice(activeMarks.indexOf("italic"), 1);
-          } else {
-            activeMarks.push("italic");
-          }
-          break;
-        }
-        case "~": {
-          // Check for strikethrough
-          const isClosing = activeMarks.includes("strike");
-          if (currentText) {
-            paragraphNode.content?.push(createTextNode(currentText, [...activeMarks]));
-            currentText = "";
-          }
-          if (isClosing) {
-            activeMarks.splice(activeMarks.indexOf("strike"), 1);
-          } else {
-            activeMarks.push("strike");
-          }
-          break;
-        }
-        case "`": {
-          // Check for code
-          const isClosing = activeMarks.includes("code");
-          if (currentText) {
-            paragraphNode.content?.push(createTextNode(currentText, [...activeMarks]));
-            currentText = "";
-          }
-          if (isClosing) {
-            activeMarks.splice(activeMarks.indexOf("code"), 1);
-          } else {
-            activeMarks.push("code");
-          }
-          break;
-        }
-        default:
-          currentText += char;
-      }
-
-      currentIndex++;
-    }
-
-    // Add any remaining text
-    if (currentText) {
-      paragraphNode.content?.push(createTextNode(currentText, [...activeMarks]));
-    }
-
-    // Add paragraph if it has content
-    if (paragraphNode.content?.length) {
-      content.push(paragraphNode);
-    }
-  }
-
-  return {
-    type: "doc",
-    content,
-  };
-}
-
-export function parseWhatsAppToReact(text: string): React.ReactNode {
-  const parseNode = (node: TiptapNode): React.ReactNode => {
-    if (!node) return null;
-    switch (node.type) {
-      case "paragraph":
-        return <p>{node.content?.map(parseNode)}</p>;
-      case "text":
-        const text = node.text;
-        if (node.marks) {
-          return node.marks.reduce((acc, mark) => {
-            switch (mark.type) {
-              case "bold":
-                return <strong>{acc}</strong>;
-              case "italic":
-                return <em>{acc}</em>;
-              case "strike":
-                return <s>{acc}</s>;
-              case "code":
-                return <code>{acc}</code>;
-              default:
-                return acc;
-            }
-          }, text);
-        }
-        return text;
-      case "bulletList":
-        return (
-          <ul>
-            {node.content?.map((item, index) => (
-              <li key={index}>{parseNode(item)}</li>
-            ))}
-          </ul>
-        );
-      case "orderedList":
-        return (
-          <ol>
-            {node.content?.map((item, index) => (
-              <li key={index}>{parseNode(item)}</li>
-            ))}
-          </ol>
-        );
-      case "blockquote":
-        return <blockquote>{node.content?.map(parseNode)}</blockquote>;
-      case "codeBlock":
-        return (
-          <pre>
-            <code>{node.content?.map(parseNode)}</code>
-          </pre>
-        );
-      case "listItem":
-        return node.content?.map(parseNode);
-      default:
-        return null;
-    }
-  };
-
-  const parsedContent = parseFromWhatsAppFormat(text);
-  return parsedContent.content.map((node, index) => (
-    <React.Fragment key={index}>{parseNode(node)}</React.Fragment>
-  ));
-}
-
-export function parseJsonToReact(value) {
-  if (typeof value === "string") return value;
-  if (!value?.content?.[0]?.content) return "";
-  return parse(generateHTML(value, [StarterKit]));
-}
-
-export function whatsappToHTML(text) {
-  if (!text) return "";
-
-  let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-  html = html
-    // Bold (*text*)
-    .replace(/\*(.*?)\*/g, "<strong>$1</strong>")
-    // Italic (_text_)
-    .replace(/_(.*?)_/g, "<em>$1</em>")
-    // Strikethrough (~text~)
-    .replace(/~(.*?)~/g, "<s>$1</s>")
-    // Inline code (`code`)
-    .replace(/`(.*?)`/g, "<code>$1</code>");
-
-  // Alignment markers
-  html = html
-    .replace(/\[center\]([\s\S]*?)(?=\[|$)/g, '<div style="text-align:center;">$1</div>')
-    .replace(/\[right\]([\s\S]*?)(?=\[|$)/g, '<div style="text-align:right;">$1</div>')
-    .replace(/\[left\]([\s\S]*?)(?=\[|$)/g, '<div style="text-align:left;">$1</div>');
-
-  // --- Handle checkboxes / bullets / numbered lists ---
-  html = html.replace(/(^|\\n)[\s]*[☑☐]\s?(.*?)(?=\\n|$)/g, "$1<div>☐ $2</div>");
-
-  // Replace lines that start with "-" or "*" or "•"
-  html = html.replace(/(^|\\n)[\s]*[-*•]\s+(.*?)(?=\\n|$)/g, "$1<div>• $2</div>");
-
-  // Replace numbered list lines "1. text"
-  html = html.replace(/(^|\\n)[\s]*\d+\.\s+(.*?)(?=\\n|$)/g, "$1<div>$2</div>");
-
-  // --- Paragraphs & line breaks ---
-  // Replace escaped newlines (\n or \\n) with <br>
-  html = html.replace(/\\n|\\\\n|\n/g, "<br>");
-
-  // Optional: convert multiple <br> sequences into paragraph breaks
-  html = html.replace(/(<br>\s*){2,}/g, "</p><p>");
-
-  return `<p style="font-size:0.875rem;line-spacing:1.25rem;">${html}</p>`;
-}

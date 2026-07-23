@@ -1,5 +1,5 @@
 .list {
-  border: 1px solid var(--mantine-color-gray-3);
+  border: 1px solid #dee2e6;
   border-radius: 0.625rem;
   overflow: hidden;
   max-width: max-content;

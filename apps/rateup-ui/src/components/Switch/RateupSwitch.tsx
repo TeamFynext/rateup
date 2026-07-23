@@ -1,36 +1,63 @@
-import type { SwitchProps } from "@mantine/core";
-import { Switch, Tooltip } from "@mantine/core";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-interface RateupSwitchProps extends SwitchProps {
-  offMessage: string;
-  onMessage: string;
+import { Label } from "@/components/ui/label.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+
+interface RateupSwitchProps {
+  offMessage?: string;
+  onMessage?: string;
+  /** Called with the new checked state. */
+  onChange?: (checked: boolean) => void;
+  checked?: boolean;
+  label?: React.ReactNode;
+  disabled?: boolean;
+  className?: string;
 }
 
-const RateupSwitch = ({ offMessage, onMessage, onChange, checked, ...rest }: RateupSwitchProps) => {
-  const [isOn, setIsOn] = useState(checked);
-
-  const handleToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newState = event.currentTarget.checked;
-    setIsOn(newState);
-    if (onChange) {
-      onChange(event); // Forward the change event to the parent handler
-    }
-  };
+/**
+ * A switch that explains what toggling it will do, via a tooltip whose text
+ * depends on the current state.
+ *
+ * NOTE: currently unreachable — the only consumer is `FieldComponentMap` in
+ * `flow-v2/ElementsList/InlineElementEditor.tsx`, whose `renderField` returns
+ * `null` for every `type: "checkbox"` field (they are all named `visible`).
+ */
+const RateupSwitch = ({
+  offMessage,
+  onMessage,
+  onChange,
+  checked,
+  label,
+  disabled,
+  className,
+}: RateupSwitchProps) => {
+  const [isOn, setIsOn] = useState(checked ?? false);
 
   useEffect(() => {
-    setIsOn(checked || false);
+    setIsOn(checked ?? false);
   }, [checked]);
 
+  const handleToggle = (next: boolean) => {
+    setIsOn(next);
+    onChange?.(next);
+  };
+
+  const message = isOn ? onMessage : offMessage;
+
+  const control = (
+    <div className={className}>
+      {label && <Label className="mb-1 block">{label}</Label>}
+      <Switch checked={isOn} onCheckedChange={handleToggle} disabled={disabled} />
+    </div>
+  );
+
+  if (!message) return control;
+
   return (
-    <Tooltip
-      label={isOn ? onMessage : offMessage}
-      position="top"
-      withArrow
-      refProp="rootRef"
-      disabled={isOn ? !onMessage : !offMessage}
-    >
-      <Switch checked={isOn} onChange={handleToggle} w={"fit-content"} {...rest} />
+    <Tooltip>
+      <TooltipTrigger render={<div className="w-fit" />}>{control}</TooltipTrigger>
+      <TooltipContent>{message}</TooltipContent>
     </Tooltip>
   );
 };

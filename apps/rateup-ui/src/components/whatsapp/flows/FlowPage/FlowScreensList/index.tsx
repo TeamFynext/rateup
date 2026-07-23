@@ -1,6 +1,4 @@
 import { DragDropContext } from "@hello-pangea/dnd";
-import { Box, Group, Text, useMantineTheme } from "@mantine/core";
-import { useCounter, useDisclosure } from "@mantine/hooks";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { useContext, useEffect, useRef } from "react";
@@ -8,6 +6,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { useCounter } from "@/hooks/use-counter.ts";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { WaFlowFormElementType, WaFlowStatus } from "@/types/enums.ts";
 import type { WaFlowFormElement } from "@/types/global";
 import { reorder } from "@/utils/questions.ts";
@@ -35,7 +35,6 @@ function FlowScreensList({
   onDeleteElement,
 }: FlowScreensListProps) {
   const { flowJson, updateFlowJson } = useContext(EditFlowContext);
-  const theme = useMantineTheme();
   const params = useParams({
     strict: false,
   });
@@ -93,28 +92,15 @@ function FlowScreensList({
   }
 
   return (
-    <Box className={styles["flow-screens-list-container"]}>
+    <div className={styles["flow-screens-list-container"]}>
       {flowEditable || (
-        <Group
-          justify="center"
-          style={{
-            borderRadius: "4px",
-            backgroundColor: theme.colors.red[1],
-          }}
-          p="4"
-        >
-          <IconAlertTriangle color={theme.colors.red[9]} />
-          <Text
-            style={{
-              color: theme.colors.red[9],
-            }}
-          >
-            {translations("Cannot Edit a Published Flow")}
-          </Text>
-        </Group>
+        <div className="flex items-center justify-center gap-2 rounded-sm bg-red-100 p-1 text-red-900 dark:bg-red-950/40 dark:text-red-400">
+          <IconAlertTriangle />
+          <p>{translations("Cannot Edit a Published Flow")}</p>
+        </div>
       )}
       <DragDropContext onDragEnd={onDragEnd}>
-        <Box className={styles["screens-list-div"]}>
+        <div className={styles["screens-list-div"]}>
           <ScreenListItem
             onDeleteElement={onDeleteElement}
             onElementClick={onElementClick}
@@ -124,13 +110,13 @@ function FlowScreensList({
             pageNo={pageNo}
             handlers={handlers}
           />
-        </Box>
+        </div>
       </DragDropContext>
       <CreateFlowScreenModal
         opened={isCreateFlowScreenModalOpen}
         close={closeCreateFlowScreenModal}
       />
-    </Box>
+    </div>
   );
 }
 

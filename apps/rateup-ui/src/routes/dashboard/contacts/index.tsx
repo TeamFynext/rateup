@@ -1,4 +1,3 @@
-import { useDebouncedState } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
@@ -8,10 +7,11 @@ import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import ContactMenu from "@/components/Contacts/ContactMenu.tsx";
 import { CONTACT_SORT, contactColumn } from "@/components/Contacts/utils/utils.tsx";
-import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
 import { DataTableToolbar } from "../../../components/dashboard/contacts/components/data-table-toolbar.tsx";
@@ -103,16 +103,21 @@ function Contacts() {
 
 export function FilterSelect({ setFilterByTag, filterByTag, contactArray }) {
   const { t: translations } = useTranslation();
+  // The selection lives in the table's column filters as one comma-joined entry.
+  const selected = (filterByTag?.find((item) => item.id === "filterGroupName")?.value ?? "")
+    .split(",")
+    .filter(Boolean);
+
   return (
-    <ContainedMultiSelect
-      data={[{ group: "Groups", items: contactArray ?? [] }]}
-      defaultValue={filterByTag}
-      onChange={(e) => {
+    <MultiSelect
+      options={contactArray ?? []}
+      value={selected}
+      onValueChange={(values) => {
         setFilterByTag((prev) => {
-          if (e.length === 0) {
-            return prev.filter((item) => item.id !== "filterGroupName");
-          }
-          return [...prev, { id: "filterGroupName", value: e.join(",") }];
+          const rest = prev.filter((item) => item.id !== "filterGroupName");
+          return values.length === 0
+            ? rest
+            : [...rest, { id: "filterGroupName", value: values.join(",") }];
         });
       }}
       placeholder={translations("Filter contacts")}

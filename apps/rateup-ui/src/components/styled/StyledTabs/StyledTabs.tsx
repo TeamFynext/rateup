@@ -1,25 +1,23 @@
-import type { TabsProps } from "@mantine/core";
-import { Tabs } from "@mantine/core";
+import { Tabs } from "@/components/ui/tabs.tsx";
+import { cn } from "@/lib/utils";
 
 import classes from "./StyledTabs.module.css";
 import classesRateUp from "./StyledTabsRateUp.module.css";
 
-interface StyledTabsProps extends TabsProps {
+interface StyledTabsProps extends React.ComponentProps<typeof Tabs> {
   enableRateUpBlueTheme?: boolean;
 }
+
+/** shadcn Tabs root carrying the app's pill styling. Panels are supplied as `TabsContent`. */
 export default function StyledTabs(props: Readonly<StyledTabsProps>) {
-  const { enableRateUpBlueTheme, ...rest } = props;
+  const { enableRateUpBlueTheme, className, ...rest } = props;
   return (
     <Tabs
-      keepMounted={false}
-      classNames={{
-        ...classes,
-        ...(enableRateUpBlueTheme ? classesRateUp : {}),
-      }}
-      styles={{
-        list: { margin: "auto" },
-      }}
-      variant="pills"
+      className={cn(
+        classes.root,
+        enableRateUpBlueTheme ? classesRateUp.root : undefined,
+        className,
+      )}
       {...rest}
     />
   );

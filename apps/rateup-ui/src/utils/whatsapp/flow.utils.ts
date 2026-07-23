@@ -1,4 +1,3 @@
-import type { UseFormReturnType } from "@mantine/form";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone.js";
 import utc from "dayjs/plugin/utc.js";
@@ -100,7 +99,8 @@ export function getQuestionResponses(qType: qt) {
 export const qTypesWithAmbiguousChoices = [qt.YN, qt.LD, qt.Rating, qt.Smiley, qt.Opinion];
 
 interface validateOptionsProps {
-  form: UseFormReturnType<any>;
+  /** Any form exposing a `values` object (Mantine-shaped or the RHF bridge). */
+  form: { values: any };
   path: string;
 }
 /**

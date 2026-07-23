@@ -1,5 +1,3 @@
-import { schemaResolver, useForm } from "@mantine/form";
-import { getHotkeyHandler } from "@mantine/hooks";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -9,9 +7,11 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
+import { useBridgedForm } from "@/hooks/useBridgedForm";
 import { useSendResetEmail, useSetNewPassword } from "@/utils/auth/resetPassword.tsx";
 import { rateupLogoStackedWhiteTransparent, SAVE_HOTKEY } from "@/utils/constants.ts";
 import { ResetSteps } from "@/utils/enums/index.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
@@ -68,21 +68,21 @@ const ResetPasswordForm = ({ mode }) => {
 
   type PwdSchemaType = z.infer<typeof pwdSchema>;
 
-  const emailForm = useForm({
-    initialValues: {
+  const emailForm = useBridgedForm({
+    defaultValues: {
       email: "",
       password: "",
     },
 
-    validate: schemaResolver(emailSchema),
+    schema: emailSchema,
   });
 
-  const pwdForm = useForm<PwdSchemaType>({
-    initialValues: {
+  const pwdForm = useBridgedForm<PwdSchemaType>({
+    defaultValues: {
       password: "",
       confirmPassword: "",
     },
-    validate: schemaResolver(pwdSchema),
+    schema: pwdSchema,
   });
 
   const sendResetEmail = useSendResetEmail();
@@ -156,11 +156,11 @@ const ResetPasswordForm = ({ mode }) => {
       {page !== ResetSteps.STEP_TWO ? (
         <Card className="border-none shadow-lg p-4 max-w-2xl sm:min-w-md flex flex-col gap-8">
           <div className="text-center space-y-2 flex flex-col  items-center justify-center gap-1">
-            <div className="w-12 h-12 bg-rateup-blue/10 rounded-full flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
               {isEmailPage ? (
-                <Mail className="w-6 h-6 text-rateup-blue" />
+                <Mail className="w-6 h-6 text-primary" />
               ) : (
-                <Lock className="w-6 h-6 text-rateup-blue" />
+                <Lock className="w-6 h-6 text-primary" />
               )}
             </div>
             <div className="text-2xl font-normal">
@@ -196,7 +196,7 @@ const ResetPasswordForm = ({ mode }) => {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-12 bg-rateup-blue hover:bg-rateup-blue/80 cursor-pointer disabled:bg-rateup-blue/70"
+                  className="w-full h-12 bg-primary hover:bg-primary/80 cursor-pointer disabled:bg-primary/70"
                 >
                   {isLoading ? <Loader /> : translations("Reset Password")}
                 </Button>
@@ -219,7 +219,7 @@ const ResetPasswordForm = ({ mode }) => {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder={translations("Enter your new password")}
-                      className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+                      className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-sm"
                       {...pwdForm.getInputProps("password")}
                       onFocus={() => setIsPasswordFocused(true)}
                       onBlur={() => setIsPasswordFocused(false)}
@@ -245,7 +245,7 @@ const ResetPasswordForm = ({ mode }) => {
                       id="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder={translations("Confirm your new password")}
-                      className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+                      className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-sm"
                       {...pwdForm.getInputProps("confirmPassword")}
                     />
                     <button
@@ -292,7 +292,7 @@ const ResetPasswordForm = ({ mode }) => {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-12 bg-rateup-blue hover:bg-rateup-blue/80 cursor-pointer disabled:bg-rateup-blue/70"
+                  className="w-full h-12 bg-primary hover:bg-primary/80 cursor-pointer disabled:bg-primary/70"
                 >
                   {isLoading ? <Loader /> : translations("Update Password")}
                 </Button>
@@ -301,7 +301,7 @@ const ResetPasswordForm = ({ mode }) => {
 
             <Link
               to={"/login"}
-              className="flex py-1 rounded-md items-center justify-center gap-3 text-black cursor-pointer hover:bg-rateup-blue/20 hover:text-rateup-blue"
+              className="flex py-1 rounded-md items-center justify-center gap-3 text-black cursor-pointer hover:bg-primary/20 hover:text-primary"
             >
               <ArrowLeft strokeWidth={1} />
               {translations("Back to Sign In")}
@@ -310,8 +310,8 @@ const ResetPasswordForm = ({ mode }) => {
         </Card>
       ) : (
         <Card className="border-none shadow-lg p-6 max-w-md w-full flex flex-col items-center text-center gap-6">
-          <div className="w-18 h-18 bg-rateup-blue/10 rounded-full flex items-center justify-center">
-            <Mail className="w-10 h-10 text-rateup-blue" />
+          <div className="w-18 h-18 bg-primary/10 rounded-full flex items-center justify-center">
+            <Mail className="w-10 h-10 text-primary" />
           </div>
 
           <div className="flex flex-col gap-4">
@@ -326,7 +326,7 @@ const ResetPasswordForm = ({ mode }) => {
 
           <Link
             to="/login"
-            className="flex items-center justify-center gap-2 text-rateup-blue hover:text-rateup-blue/80 transition-colors text-sm font-medium"
+            className="flex items-center justify-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm font-medium"
           >
             <ArrowLeft strokeWidth={1.5} className="w-4 h-4" />
             {translations("Back to Sign In")}

@@ -16,7 +16,7 @@ import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
-import { useMediaQuery } from "@/hooks/use-media-querry.ts";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
@@ -223,9 +223,7 @@ const MCQGridMobileForm = ({
               )}
             />
           </div>
-          {index + 1 < questions?.length && (
-            <Separator className="my-3 bg-[var(--mantine-color-gray-6)]" />
-          )}
+          {index + 1 < questions?.length && <Separator className="my-3 bg-[#868e96]" />}
         </div>
       ))}
     </ScrollArea>

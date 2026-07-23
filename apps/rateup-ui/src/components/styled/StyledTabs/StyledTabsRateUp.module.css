@@ -1,6 +1,6 @@
 .list {
   position: sticky;
   border-radius: var(--tabs-radius);
-  background-color: var(--mantine-color-body);
-  border: 1px solid var(--tertiary-color);
+  background-color: var(--background);
+  border: 1px solid var(--primary);
 }

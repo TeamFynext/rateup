@@ -1,8 +1,8 @@
-import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 
 import NothingFound from "../../../NothingFound/NothingFound.tsx";
 import { useLinktreeObj } from "../LinktreeContext/LinktreeContext.tsx";

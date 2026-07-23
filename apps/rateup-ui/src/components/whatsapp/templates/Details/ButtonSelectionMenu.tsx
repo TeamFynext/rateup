@@ -1,5 +1,3 @@
-import type { MenuProps } from "@mantine/core";
-import { Box, Button, Group, Menu, rem, Stack, Text, Tooltip } from "@mantine/core";
 import {
   IconAdjustments,
   IconBuildingStore,
@@ -18,9 +16,19 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
+import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
 import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
 
-interface ButtonSelectionProps extends MenuProps {
+interface ButtonSelectionProps {
   handleMenuSelection: (value: string, text?: string) => void;
   flowBtn: boolean;
   btnLen: number;
@@ -31,6 +39,32 @@ interface ButtonSelectionProps extends MenuProps {
   spmBtn: boolean;
   category?: "AUTHENTICATION" | "MARKETING" | "UTILITY";
 }
+
+interface MenuEntry {
+  icon: React.ReactNode;
+  label: string;
+  disabled: boolean;
+  tooltip?: string;
+  onClick: () => void;
+}
+
+interface MenuSection {
+  label: string;
+  items: MenuEntry[];
+}
+
+/** Renders one menu item, wrapping it in a tooltip only when a blocking reason applies. */
+function MenuEntryItem({ entry }: Readonly<{ entry: MenuEntry }>) {
+  const item = (
+    <DropdownMenuItem disabled={entry.disabled} onClick={entry.onClick}>
+      {entry.icon}
+      {entry.label}
+    </DropdownMenuItem>
+  );
+  if (!entry.tooltip) return item;
+  return <CustomTooltip trigger={<div>{item}</div>} content={<span>{entry.tooltip}</span>} />;
+}
+
 export const ButtonSelection = ({
   handleMenuSelection,
   flowBtn,
@@ -41,267 +75,199 @@ export const ButtonSelection = ({
   catalogBtn,
   spmBtn,
   category,
-  ...restProps
 }: ButtonSelectionProps) => {
   const { t: translations } = useTranslation();
+
+  /** First applicable "remove X first" reason for the given blockers, or "" when unblocked. */
+  const blockedBy = (opts: {
+    flow?: boolean;
+    mpm?: boolean;
+    checkout?: boolean;
+    catalog?: boolean;
+    spm?: boolean;
+  }) =>
+    (opts.flow && flowBtn && translations("Remove flow button to add other buttons")) ||
+    (opts.mpm && mpmBtn && translations("Remove MPM button to add other buttons")) ||
+    (opts.checkout && checkoutBtn && "Remove Checkout button to add other buttons") ||
+    (opts.catalog && catalogBtn && "Remove View Catalog button to add other buttons") ||
+    (opts.spm && spmBtn && "Remove SPM button to add other buttons") ||
+    "";
+
+  const ctaBlockers = { mpm: true, checkout: true, catalog: true, spm: true };
+  const ctaBlocked = mpmBtn || checkoutBtn || catalogBtn || spmBtn;
+  const iconCls = "size-3.5";
+
+  const sections: MenuSection[] =
+    category === "AUTHENTICATION"
+      ? [
+          {
+            label: translations("Authentication Buttons"),
+            items: [
+              {
+                icon: <IconCopy className={iconCls} />,
+                label: translations("OTP (One-Time Password)"),
+                disabled: btnLen > 0,
+                tooltip: btnLen > 0 ? translations("Only one authentication button allowed") : "",
+                onClick: () => handleMenuSelection(WHATSAPP_BUTTON_TYPE.OTP),
+              },
+            ],
+          },
+        ]
+      : [
+          {
+            label: translations("Rateup Interactive Buttons"),
+            items: [
+              {
+                icon: <IconWaveSine className={iconCls} />,
+                label: translations("Whatsapp Flow"),
+                disabled: btnLen > 0 || flowBtn,
+                tooltip: btnLen > 0 || flowBtn ? "Already added" : "",
+                onClick: () => handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW),
+              },
+              {
+                icon: <IconWorld className={iconCls} />,
+                label: translations("Rateup Web Survey"),
+                disabled: ctaBlocked,
+                tooltip: blockedBy(ctaBlockers),
+                onClick: () => handleMenuSelection(WHATSAPP_BUTTON_TYPE.WEBSURVEY),
+              },
+            ],
+          },
+          {
+            label: translations("Quick Reply Buttons"),
+            items: [
+              {
+                icon: <IconAdjustments className={iconCls} />,
+                label: translations("Custom"),
+                disabled: mpmBtn || catalogBtn || spmBtn,
+                tooltip: blockedBy({ mpm: true, catalog: true, spm: true }),
+                onClick: () => handleMenuSelection(WHATSAPP_BUTTON_TYPE.QUICK_REPLY),
+              },
+            ],
+          },
+          {
+            label: translations("Call-To-Action Buttons"),
+            items: [
+              {
+                icon: <IconPhone className={iconCls} />,
+                label: translations("Call phone number"),
+                disabled: ctaBlocked,
+                tooltip: blockedBy(ctaBlockers),
+                onClick: () => handleMenuSelection(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER),
+              },
+              {
+                icon: <IconCopy className={iconCls} />,
+                label: translations("Copy offer code"),
+                disabled: ctaBlocked,
+                tooltip: blockedBy(ctaBlockers),
+                onClick: () => handleMenuSelection(WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE),
+              },
+              {
+                icon: <IconLink className={iconCls} />,
+                label: translations("Visit website"),
+                disabled: ctaBlocked,
+                tooltip: blockedBy(ctaBlockers),
+                onClick: () => handleMenuSelection(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE),
+              },
+            ],
+          },
+          {
+            label: translations("Catalog Buttons"),
+            items: [
+              {
+                icon: <IconBuildingStore className={iconCls} />,
+                label: "View Catalog",
+                disabled: btnLen > 0,
+                tooltip: btnLen > 0 ? "Remove all buttons to add View catalog button" : "",
+                onClick: () => handleMenuSelection(WHATSAPP_BUTTON_TYPE.CATALOG, "View catalog"),
+              },
+              {
+                icon: <IconShoppingCart className={iconCls} />,
+                label: "MPM (Multi-Product)",
+                disabled: btnLen > 0,
+                tooltip: btnLen > 0 ? "Remove all button to add a MPM button" : "",
+                onClick: () => handleMenuSelection(WHATSAPP_BUTTON_TYPE.MPM, "View items"),
+              },
+              {
+                icon: <IconShoppingBag className={iconCls} />,
+                label: "SPM (Single-Product)",
+                disabled: btnLen > 0,
+                tooltip: btnLen > 0 ? "Remove all buttons to add SPM button" : "",
+                onClick: () => handleMenuSelection(WHATSAPP_BUTTON_TYPE.SPM, "View"),
+              },
+              {
+                icon: <IconCreditCardPay className={iconCls} />,
+                label: "Checkout Button",
+                disabled: flowBtn || mpmBtn || catalogBtn || spmBtn,
+                tooltip: blockedBy({ flow: true, mpm: true, catalog: true, spm: true }),
+                onClick: () => handleMenuSelection(WHATSAPP_BUTTON_TYPE.ORDER_DETAILS, "Buy now"),
+              },
+            ],
+          },
+        ];
+
+  const trigger = (
+    <Button variant="outline" className="max-w-min rounded-xl" disabled={disabled}>
+      <IconPlus size={16} />
+      {translations("Add Action Button")}
+      <IconChevronDown size={16} />
+    </Button>
+  );
+
   return (
-    <Stack gap={4}>
-      <Text fz={14} fw={500}>
-        {translations("Buttons (Optional)")}
-      </Text>
-      <Text fz={13}>
+    <div className="flex flex-col gap-1">
+      <p className="text-sm font-medium">{translations("Buttons (Optional)")}</p>
+      <p className="text-[13px]">
         {translations(
           "Insert buttons so your customers can take action and engage with your message!",
         )}
-      </Text>
-      <Menu shadow="md" width={200} {...restProps}>
-        <Menu.Target>
-          <Tooltip
-            label={
-              category === "AUTHENTICATION"
-                ? translations("Only authentication buttons are allowed for this template")
-                : translations(
-                    "Only one button is supported for this type of template. The button text is not editable.",
-                  )
-            }
-            disabled={!disabled}
-          >
-            <Button
-              maw={"min-content"}
-              variant="outline"
-              radius={12}
-              leftSection={<IconPlus size={16} />}
-              rightSection={<IconChevronDown size={16} />}
-              disabled={disabled}
-            >
-              {translations("Add Action Button")}
-            </Button>
-          </Tooltip>
-        </Menu.Target>
+      </p>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            disabled ? (
+              <div>
+                <CustomTooltip
+                  trigger={<div>{trigger}</div>}
+                  content={
+                    <span>
+                      {category === "AUTHENTICATION"
+                        ? translations("Only authentication buttons are allowed for this template")
+                        : translations(
+                            "Only one button is supported for this type of template. The button text is not editable.",
+                          )}
+                    </span>
+                  }
+                />
+              </div>
+            ) : (
+              <div>{trigger}</div>
+            )
+          }
+        />
 
-        <Menu.Dropdown>
-          {category === "AUTHENTICATION" ? (
-            <>
-              <Menu.Label>{translations("Authentication Buttons")}</Menu.Label>
-              <Tooltip
-                label={btnLen > 0 ? translations("Only one authentication button allowed") : ""}
-                display={btnLen === 0 ? "none" : "block"}
-              >
-                <Box>
-                  <Menu.Item
-                    disabled={btnLen > 0}
-                    leftSection={<IconCopy style={{ width: rem(14), height: rem(14) }} />}
-                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.OTP)}
-                  >
-                    {translations("OTP (One-Time Password)")}
-                  </Menu.Item>
-                </Box>
-              </Tooltip>
-              {/* Zero-tap does not require a button, so no menu item */}
-            </>
-          ) : (
-            <>
-              <Menu.Label>{translations("Rateup Interactive Buttons")}</Menu.Label>
-              <Tooltip
-                label={(btnLen > 0 || flowBtn) && "Already added"}
-                display={btnLen === 0 ? "none" : "block"}
-              >
-                <Box>
-                  <Menu.Item
-                    disabled={btnLen > 0 || flowBtn}
-                    leftSection={<IconWaveSine style={{ width: rem(14), height: rem(14) }} />}
-                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW)}
-                  >
-                    {translations("Whatsapp Flow")}
-                  </Menu.Item>
-                </Box>
-              </Tooltip>
-              <Tooltip
-                label={
-                  (mpmBtn && translations("Remove MPM button to add other buttons")) ||
-                  (checkoutBtn && "Remove Checkout button to add other buttons") ||
-                  (catalogBtn && "Remove View Catalog button to add other buttons") ||
-                  (spmBtn && "Remove SPM button to add other buttons")
-                }
-                display={!mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn ? "none" : "block"}
-              >
-                <Box>
-                  <Menu.Item
-                    disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
-                    leftSection={<IconWorld style={{ width: rem(14), height: rem(14) }} />}
-                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.WEBSURVEY)}
-                  >
-                    {translations("Rateup Web Survey")}
-                  </Menu.Item>
-                </Box>
-              </Tooltip>
-              <Menu.Divider />
-              <Menu.Label>{translations("Quick Reply Buttons")}</Menu.Label>
-              <Tooltip
-                label={
-                  (mpmBtn && translations("Remove MPM button to add other buttons")) ||
-                  (catalogBtn && "Remove View Catalog button to add other buttons") ||
-                  (spmBtn && "Remove SPM button to add other buttons")
-                }
-                display={!mpmBtn && !catalogBtn && !spmBtn ? "none" : "block"}
-              >
-                <Box>
-                  <Menu.Item
-                    disabled={mpmBtn || catalogBtn || spmBtn}
-                    leftSection={<IconAdjustments style={{ width: rem(14), height: rem(14) }} />}
-                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.QUICK_REPLY)}
-                  >
-                    {translations("Custom")}
-                  </Menu.Item>
-                </Box>
-              </Tooltip>
-              <Menu.Divider />
-
-              <Menu.Label>{translations("Call-To-Action Buttons")}</Menu.Label>
-              <Tooltip
-                label={
-                  (mpmBtn && translations("Remove MPM button to add other buttons")) ||
-                  (checkoutBtn && "Remove Checkout button to add other buttons") ||
-                  (catalogBtn && "Remove View Catalog button to add other buttons") ||
-                  (spmBtn && "Remove SPM button to add other buttons")
-                }
-                display={!mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn ? "none" : "block"}
-              >
-                <Box>
-                  <Menu.Item
-                    disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
-                    leftSection={<IconPhone style={{ width: rem(14), height: rem(14) }} />}
-                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER)}
-                  >
-                    {translations("Call phone number")}
-                  </Menu.Item>
-                </Box>
-              </Tooltip>
-              <Tooltip
-                label={
-                  (mpmBtn && translations("Remove MPM button to add other buttons")) ||
-                  (checkoutBtn && "Remove Checkout button to add other buttons") ||
-                  (catalogBtn && "Remove View Catalog button to add other buttons") ||
-                  (spmBtn && "Remove SPM button to add other buttons")
-                }
-                display={!mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn ? "none" : "block"}
-              >
-                <Box>
-                  <Menu.Item
-                    disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
-                    leftSection={<IconCopy style={{ width: rem(14), height: rem(14) }} />}
-                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE)}
-                  >
-                    {translations("Copy offer code")}
-                  </Menu.Item>
-                </Box>
-              </Tooltip>
-              <Tooltip
-                label={
-                  (mpmBtn && translations("Remove MPM button to add other buttons")) ||
-                  (checkoutBtn && "Remove Checkout button to add other buttons") ||
-                  (catalogBtn && "Remove View Catalog button to add other buttons") ||
-                  (spmBtn && "Remove SPM button to add other buttons")
-                }
-                display={!mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn ? "none" : "block"}
-              >
-                <Box>
-                  <Menu.Item
-                    disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
-                    leftSection={<IconLink style={{ width: rem(14), height: rem(14) }} />}
-                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)}
-                  >
-                    {translations("Visit website")}
-                  </Menu.Item>
-                </Box>
-              </Tooltip>
-              <Menu.Divider />
-
-              <Menu.Label>{translations("Catalog Buttons")}</Menu.Label>
-              <Tooltip
-                label={btnLen > 0 && "Remove all buttons to add View catalog button"}
-                display={!btnLen ? "none" : "block"}
-              >
-                <Box>
-                  <Menu.Item
-                    disabled={btnLen > 0}
-                    leftSection={<IconBuildingStore style={{ width: rem(14), height: rem(14) }} />}
-                    onClick={() =>
-                      handleMenuSelection(WHATSAPP_BUTTON_TYPE.CATALOG, "View catalog")
-                    }
-                  >
-                    View Catalog
-                  </Menu.Item>
-                </Box>
-              </Tooltip>
-              <Tooltip
-                label={btnLen > 0 ? "Remove all button to add a MPM button" : ""}
-                display={btnLen === 0 ? "none" : "block"}
-              >
-                <Box>
-                  <Menu.Item
-                    disabled={btnLen > 0}
-                    leftSection={<IconShoppingCart style={{ width: rem(14), height: rem(14) }} />}
-                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.MPM, "View items")}
-                  >
-                    MPM (Multi-Product)
-                  </Menu.Item>
-                </Box>
-              </Tooltip>
-              <Tooltip
-                label={btnLen > 0 && "Remove all buttons to add SPM button"}
-                display={!btnLen ? "none" : "block"}
-              >
-                <Box>
-                  <Menu.Item
-                    disabled={btnLen > 0}
-                    leftSection={<IconShoppingBag style={{ width: rem(14), height: rem(14) }} />}
-                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.SPM, "View")}
-                  >
-                    SPM (Single-Product)
-                  </Menu.Item>
-                </Box>
-              </Tooltip>
-              <Tooltip
-                label={
-                  flowBtn
-                    ? translations("Remove flow button to add other buttons")
-                    : mpmBtn
-                      ? translations("Remove MPM button to add other buttons")
-                      : catalogBtn
-                        ? "Remove View catalog button to add other buttons"
-                        : spmBtn
-                          ? "Remove SPM button to add other buttons"
-                          : ""
-                }
-                display={!flowBtn && !mpmBtn && !catalogBtn && !spmBtn ? "none" : "block"}
-              >
-                <Box>
-                  <Menu.Item
-                    disabled={flowBtn || mpmBtn || catalogBtn || spmBtn}
-                    leftSection={<IconCreditCardPay style={{ width: rem(14), height: rem(14) }} />}
-                    onClick={() =>
-                      handleMenuSelection(WHATSAPP_BUTTON_TYPE.ORDER_DETAILS, "Buy now")
-                    }
-                  >
-                    Checkout Button
-                  </Menu.Item>
-                </Box>
-              </Tooltip>
-            </>
-          )}
-        </Menu.Dropdown>
-      </Menu>
-      <Group fz={14} gap={"xs"} wrap="nowrap">
+        <DropdownMenuContent className="w-50">
+          {sections.map((section, sectionIndex) => (
+            <div key={section.label}>
+              {sectionIndex > 0 && <DropdownMenuSeparator />}
+              <DropdownMenuLabel>{section.label}</DropdownMenuLabel>
+              {section.items.map((entry) => (
+                <MenuEntryItem key={entry.label} entry={entry} />
+              ))}
+            </div>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <div className="flex flex-nowrap items-center gap-2 text-sm">
         <IconBulb size={16} />
         {translations("If you add more than three buttons, they will appear in a list.")}
-      </Group>
-      <Group fz={14} gap={"xs"} wrap="nowrap" c="blue">
+      </div>
+      <div className="flex flex-nowrap items-center gap-2 text-sm text-blue-600">
         <IconInfoCircle size={16} />
         {translations(
           "Custom buttons must be placed either at the beginning or at the end of the button list.",
         )}
-      </Group>
-    </Stack>
+      </div>
+    </div>
   );
 };

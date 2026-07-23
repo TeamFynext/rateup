@@ -191,7 +191,7 @@ export function CreateSurveyModal({
   };
   return isLoading ? (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center rounded-sm bg-background/50 backdrop-blur-[2px]">
-      <Spinner className="size-8" style={{ color: "var(--tertiary-color)" }} />
+      <Spinner className="size-8 text-primary" />
     </div>
   ) : (
     <Dialog

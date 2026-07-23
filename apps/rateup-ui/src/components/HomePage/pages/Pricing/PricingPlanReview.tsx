@@ -1,4 +1,3 @@
-import { Rating } from "@mantine/core";
 import { motion } from "motion/react";
 
 import { Card } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel.tsx";
+import { StarRating } from "@/components/ui/star-rating";
 
 const reviews = [
   {
@@ -58,7 +58,7 @@ export const PricingPlanReview = () => {
               {reviews.map((review, index) => (
                 <CarouselItem key={index} className="px-15">
                   <div className="flex flex-col items-center justify-center gap-2">
-                    <Rating value={5} />
+                    <StarRating value={5} />
                     <p className="text-sm italic">
                       {quote} {review.description} {quote}
                     </p>

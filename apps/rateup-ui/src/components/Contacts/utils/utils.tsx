@@ -69,7 +69,7 @@ const contactDetailsColumn: ColumnDef<any>[] = [
     cell: (info) => (
       <div className="flex gap-1 items-center">
         <Avatar>
-          <AvatarFallback className="rounded-lg bg-blue-200 text-rateup-blue p-1 text-xs">
+          <AvatarFallback className="rounded-lg bg-blue-200 text-primary p-1 text-xs">
             {getInitials(info?.getValue() as string)}
           </AvatarFallback>
         </Avatar>

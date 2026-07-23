@@ -1,8 +1,9 @@
-import { useDisclosure } from "@mantine/hooks";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-import FormModalLayout from "../Modal/FormModalLayout.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog.tsx";
 import { ScrollArea } from "../ui/scroll-area.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table.tsx";
 
@@ -31,27 +32,33 @@ const ContactImportErrorModal = ({ isError = false, body }) => {
   ));
 
   return (
-    <FormModalLayout
-      centered
-      opened={opened}
-      onClose={close}
-      title={translations("Failed contact import")}
-      size={"xl"}
+    <Dialog
+      open={opened}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) close();
+      }}
     >
-      {responseError === "VALIDATION_ERR" && (
-        <ScrollArea className="max-h-125">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{translations("Name")}</TableHead>
-                <TableHead>{translations("Phone")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>{rows}</TableBody>
-          </Table>
-        </ScrollArea>
-      )}
-    </FormModalLayout>
+      <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-225">
+        <DialogHeader>
+          <DialogTitle className="text-center text-3xl font-semibold">
+            {translations("Failed contact import")}
+          </DialogTitle>
+        </DialogHeader>
+        {responseError === "VALIDATION_ERR" && (
+          <ScrollArea className="max-h-125">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{translations("Name")}</TableHead>
+                  <TableHead>{translations("Phone")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>{rows}</TableBody>
+            </Table>
+          </ScrollArea>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 

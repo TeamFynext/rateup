@@ -1,4 +1,3 @@
-import { useDebouncedState } from "@mantine/hooks";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { RefreshCw, Search } from "lucide-react";
@@ -11,13 +10,13 @@ import {
   useContactGroup,
 } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
+import { useDebouncedState } from "@/hooks/use-debounced-state.ts";
 import { FilterSelect } from "@/routes/dashboard/contacts/index.tsx";
 import { ContactGroupType } from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { contactAddType } from "@/utils/enums/index.ts";
 
 import RateupLoader from "../Loaders/RateupLoader.tsx";
-import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
 import { Button } from "../ui/button.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
 import { Input } from "../ui/input.tsx";
@@ -221,7 +220,7 @@ const AddCustomerModal = ({
                 />
               </div>
             </div>
-            <PaperLayout>
+            <div className="w-full overflow-auto rounded-lg bg-card p-4 shadow-md">
               <ScrollArea className="h-50">
                 <Table>
                   <TableHeader>
@@ -262,7 +261,7 @@ const AddCustomerModal = ({
                 setPagination={setPagination}
                 totalPageCount={totalPageCount}
               />
-            </PaperLayout>
+            </div>
             <div className="flex items-center justify-end gap-2">
               <Button variant="secondary" onClick={close}>
                 {translations("cancel")}

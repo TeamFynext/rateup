@@ -371,7 +371,7 @@ export function BusinessHoursEditorDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {t("Cancel")}
             </Button>
-            <Button type="submit" className="bg-linear-to-r from-rateup-blue to-rateup-blue">
+            <Button type="submit" className="bg-linear-to-r from-primary to-primary">
               {editing ? t("Update Hours") : t("Save Hours")}
             </Button>
           </DialogFooter>

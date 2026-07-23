@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 import { useCallback, useRef, useState } from "react";
 
@@ -6,6 +5,7 @@ import ImageCropModal from "@/components/Modal/ModalManagerModals/ImageCropModal
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
+import { useDisclosure } from "@/hooks/useDisclosure";
 
 import { useThemeDispatch, useThemeObj } from "../../../../ThemeContext/ThemeContext.tsx";
 

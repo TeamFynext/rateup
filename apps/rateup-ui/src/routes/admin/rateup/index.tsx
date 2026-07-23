@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Calendar, CreditCard, Edit, Package, Star, Trash2, Zap } from "lucide-react";
@@ -23,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 
 import { DataTableToolbar } from "../../../components/admin/rateup/data-table-toolbar.tsx";
 
@@ -212,7 +212,7 @@ function RateupPlan() {
     );
   }
 
-  if (isPending || isRazorPayPlansLoading) return <RateupLoader h={"100dvh"} />;
+  if (isPending || isRazorPayPlansLoading) return <RateupLoader className="h-dvh" />;
 
   const razorPayPlanFiltered =
     razorPayPlans?.data?.map((filteredPlan) => ({

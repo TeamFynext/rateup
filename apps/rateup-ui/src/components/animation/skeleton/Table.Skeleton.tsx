@@ -1,5 +1,4 @@
-import { Skeleton } from "@mantine/core";
-
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { TableCell, TableHead, TableRow } from "@/components/ui/table.tsx";
 import useTableLoadingDataCount from "@/hooks/useTableLoadingDataCount.tsx";
 
@@ -19,7 +18,9 @@ export const TableHeadSkeleton = () => {
     <TableRow>
       {columns.map((_, i) => (
         <TableHead key={i}>
-          <Skeleton height={30} maw={i === 0 ? "30%" : "80%"} miw={i === 0 ? 30 : 80} />
+          <Skeleton
+            className={i === 0 ? "h-7.5 max-w-[30%] min-w-7.5" : "h-7.5 max-w-[80%] min-w-20"}
+          />
         </TableHead>
       ))}
     </TableRow>
@@ -33,7 +34,9 @@ export const TableBodySkeleton = () => {
         <TableRow key={rowIndex}>
           {columns.map((_, i) => (
             <TableCell key={i}>
-              <Skeleton height={30} maw={i === 0 ? "30%" : "100%"} miw={i === 0 ? 30 : 100} />
+              <Skeleton
+                className={i === 0 ? "h-7.5 max-w-[30%] min-w-7.5" : "h-7.5 w-full min-w-25"}
+              />
             </TableCell>
           ))}
         </TableRow>

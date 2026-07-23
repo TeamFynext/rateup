@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useClickOutside, useScrollIntoView } from "@mantine/hooks";
 import axios from "axios";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { ArrowRight, Home, MessageCircle, Minus, MoreHorizontal, Send, Smile } from "lucide-react";
@@ -13,10 +12,12 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { useClickOutside } from "@/hooks/use-click-outside.ts";
+import { useScrollIntoView } from "@/hooks/use-scroll-into-view.ts";
 import { getBrowserId } from "@/lib/browserId.ts";
 
 import PhoneInputWithCountry from "../input/PhoneInputWithCountry.tsx";
-import { parseWhatsAppToReact } from "../RichTextEditor/waTextEditor.tsx";
+import { parseWhatsAppToReact } from "../RichTextEditor/wa-editor/format.tsx";
 
 interface SupportWidgetProps {
   whatsappNumber?: string;

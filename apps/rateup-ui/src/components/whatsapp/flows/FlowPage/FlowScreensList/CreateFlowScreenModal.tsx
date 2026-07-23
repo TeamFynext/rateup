@@ -1,10 +1,23 @@
-import { useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useContext, useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import z from "zod";
 
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
+import { Field, FieldError, FieldGroup } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { SAVE_HOTKEY } from "@/utils/constants.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
 import {
   getNewScreenObj,
@@ -12,11 +25,15 @@ import {
   updateFlowJsonNavigationAndDataPassing,
 } from "@/utils/whatsapp/flow.utils";
 
-import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput.tsx";
-import FormModalLayout from "../../../../Modal/FormModalLayout.tsx";
 import { EditFlowContext } from "../EditFlow/EditFlowContext.ts";
 
-function getInitialValues(screens) {
+interface FlowScreenFormValues {
+  screenId: string;
+  screenTitle: string;
+  footerBtnLabel: string;
+}
+
+function getInitialValues(screens): FlowScreenFormValues {
   return {
     screenId: getUniqueRandomAlphaId(
       6,
@@ -26,11 +43,13 @@ function getInitialValues(screens) {
     footerBtnLabel: "Next",
   };
 }
+
 interface CreateFlowScreenModalProps {
   opened: boolean;
   close: () => void;
   screenId?: string;
 }
+
 function CreateFlowScreenModal({
   opened,
   close,
@@ -43,75 +62,88 @@ function CreateFlowScreenModal({
   const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const { t: translations } = useTranslation();
-  const form = useForm({
-    initialValues: getInitialValues(flowJson.screens),
-    validate: {
-      screenId: (value) => {
-        if (!/^[a-zA-Z,_]*$/.test(value)) {
-          toast.error(
-            translations(
-              "Error Occured. Please report this bug to the developer. code: #flowsidval",
-            ),
-          );
-          return "Id should contain only alphabets and _";
-        } else if (value === "") {
-          return translations("Screen Id is required");
-        } else {
-          return null;
-        }
-      },
-      screenTitle: (value) => {
-        if (value === "") return translations("Screen Title is required");
-        else return null;
-      },
-      footerBtnLabel: (value) => {
-        if (value === "") return translations("Screen Title is required");
-        else return null;
-      },
-    },
+
+  const schema = z.object({
+    screenId: z
+      .string()
+      .min(1, translations("Screen Id is required"))
+      .regex(/^[a-zA-Z,_]*$/, translations("Id should contain only alphabets and _")),
+    screenTitle: z.string().min(1, translations("Screen Title is required")),
+    footerBtnLabel: z.string().min(1, translations("Screen Title is required")),
   });
 
-  const handleCreate = useCallback((values) => {
-    updateFlowJson((draft) => {
-      if (!screenId) {
-        draft.screens.push(getNewScreenObj(values));
-        updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
-      } else {
-        const screenToBeEdited = getScreenObjById(draft.screens, screenId);
-        screenToBeEdited["title"] = values.screenTitle;
-      }
-      form.setValues(getInitialValues(draft.screens));
-    });
-    close();
-  }, []);
+  const form = useForm<FlowScreenFormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: getInitialValues(flowJson.screens),
+  });
+
+  const handleCreate = useCallback(
+    (values: FlowScreenFormValues) => {
+      updateFlowJson((draft) => {
+        if (!screenId) {
+          draft.screens.push(getNewScreenObj(values));
+          updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
+        } else {
+          const screenToBeEdited = getScreenObjById(draft.screens, screenId);
+          screenToBeEdited["title"] = values.screenTitle;
+        }
+        form.reset(getInitialValues(draft.screens));
+      });
+      close();
+    },
+    [screenId, dbFlow, updateFlowJson, close, form],
+  );
 
   useEffect(() => {
     if (screenId) {
       const screenToBeEdited = getScreenObjById(flowJson.screens, screenId);
       const layoutChildren = screenToBeEdited.layout["children"][0]["children"];
       const footerObj = layoutChildren[layoutChildren.length - 1];
-      form.setValues({
+      form.reset({
         screenId: screenToBeEdited.id,
         screenTitle: screenToBeEdited.title,
         footerBtnLabel: footerObj.label,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const submit = form.handleSubmit(handleCreate);
+
   return (
-    <FormModalLayout
-      opened={opened}
-      title={screenId ? translations("Edit Screen") : translations("Create Screen")}
-      onClose={close}
-      centered
-      onSubmit={form.onSubmit(handleCreate)}
-      buttonTitle={screenId ? translations("Edit") : translations("Create")}
-    >
-      <ContainedTextField
-        placeholder={translations("Enter Screen Title")}
-        {...form.getInputProps("screenTitle")}
-      />
-    </FormModalLayout>
+    <Dialog open={opened} onOpenChange={(open) => !open && close()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-center text-xl font-medium">
+            {screenId ? translations("Edit Screen") : translations("Create Screen")}
+          </DialogTitle>
+        </DialogHeader>
+        <form onSubmit={submit} onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submit]])}>
+          <FieldGroup>
+            <Controller
+              name="screenTitle"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    placeholder={translations("Enter Screen Title")}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+            <DialogFooter className="sm:justify-center">
+              <Button type="submit">
+                {screenId ? translations("Edit") : translations("Create")}
+              </Button>
+            </DialogFooter>
+          </FieldGroup>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

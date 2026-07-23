@@ -27,13 +27,13 @@ export function FloatingToolbar({ editor }: { editor: Editor | null }) {
 
   // Prevent default context menu on mobile
   useEffect(() => {
-    if (!editor?.view || !isMobile) return;
+    if (!editor?.options.element || !isMobile) return;
 
     const handleContextMenu = (e: Event) => {
       e.preventDefault();
     };
 
-    const el = editor.view.dom;
+    const el: any = editor.options.element;
     el.addEventListener("contextmenu", handleContextMenu);
 
     return () => el.removeEventListener("contextmenu", handleContextMenu);

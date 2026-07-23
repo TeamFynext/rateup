@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { IconBrandMeta } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { MetaLoginAssets } from "@/types/enums.ts";
 
 import { MetaLoginButton } from "./meta-login-button.tsx";

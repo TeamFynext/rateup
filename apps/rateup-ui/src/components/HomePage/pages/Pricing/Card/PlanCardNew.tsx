@@ -1,7 +1,7 @@
-import { Spoiler } from "@mantine/core";
 import { CheckCircle2, Flame } from "lucide-react";
 
 import { currencyLabel } from "@/components/menu/util/currencyData.ts";
+import { Spoiler } from "@/components/ui/spoiler.tsx";
 import { cn } from "@/lib/utils.ts";
 
 type BillingPeriod = "monthly" | "yearly";
@@ -81,8 +81,8 @@ const PlanCardNew = ({
 
         <Spoiler
           maxHeight={310}
-          pb={"xs"}
-          styles={{ control: { fontSize: "14px", color: "#1C518E" } }}
+          className="pb-2.5"
+          controlClassName="text-sm text-[#1C518E]"
           showLabel={"Show all available features"}
           hideLabel={"See less"}
         >

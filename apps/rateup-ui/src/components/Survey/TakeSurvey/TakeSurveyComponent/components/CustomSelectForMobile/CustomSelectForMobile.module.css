@@ -21,13 +21,13 @@
   height: 2.25rem;
   padding: 0 1rem;
   border-radius: 0.625rem;
-  border: 1px solid var(--mantine-color-gray-3, #ced4da);
+  border: 1px solid #dee2e6;
   font-size: 0.875rem;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--mantine-color-gray-5, #adb5bd);
+  border-color: #adb5bd;
 }
 
 .options-container-root {
@@ -57,7 +57,7 @@
   gap: 0.625rem;
   width: 100%;
   padding: 10px 1rem;
-  border: 1px solid var(--mantine-color-gray-2);
+  border: 1px solid #e9ecef;
   border-radius: 0.625rem;
   background-color: transparent;
 }

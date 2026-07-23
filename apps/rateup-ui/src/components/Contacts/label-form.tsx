@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { TagsInput } from "@mantine/core";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -22,6 +21,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { TagsInput } from "@/components/ui/tags-input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 
 type CustomFieldType = "multivalue" | "number" | "text" | "email";
@@ -213,7 +213,7 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
                 <TagsInput
                   id="custom-field-list-values"
                   value={field.value}
-                  onChange={field.onChange}
+                  onValueChange={field.onChange}
                   aria-invalid={fieldState.invalid}
                   placeholder={t("Enter values and press Enter")}
                 />

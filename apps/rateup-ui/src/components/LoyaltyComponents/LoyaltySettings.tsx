@@ -1,7 +1,7 @@
-import { isNotEmpty, useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
+import { EditorContent } from "@tiptap/react";
+import { TypeOutline } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -13,6 +13,19 @@ import {
 } from "@/backend/loyalty/settings/settings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
+import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
+import { WaTextCharacterCount } from "@/components/RichTextEditor/wa-editor/character-count.tsx";
+import { useWaEditor } from "@/components/RichTextEditor/wa-editor/use-wa-editor.ts";
+import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
+import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
+import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
+import { CodeToolbar } from "@/components/tiptap/toolbars/code.tsx";
+import { ItalicToolbar } from "@/components/tiptap/toolbars/italic.tsx";
+import { OrderedListToolbar } from "@/components/tiptap/toolbars/ordered-list.tsx";
+import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
+import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
+import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
+import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -32,6 +45,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import {
   Select,
@@ -41,11 +55,13 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { isNotEmpty, useBridgedForm } from "@/hooks/useBridgedForm";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { TemplateType, WaAutomatedReplyResponseType } from "@/types/enums.ts";
 
 import { AccountSelector } from "../input/AccountSelector.tsx";
-import WaTextEditor from "../RichTextEditor/waTextEditor.tsx";
 import { DataTable } from "../Table/data-table.tsx";
 
 interface LoyaltyTemplateConfig {
@@ -159,9 +175,8 @@ const LoyaltyWaTemplateConfig = ({
     whatsappSettingsPhoneId: "",
   };
 
-  const form = useForm<LoyaltyTemplateFormValues>({
-    mode: "controlled",
-    initialValues,
+  const form = useBridgedForm<LoyaltyTemplateFormValues>({
+    defaultValues: initialValues,
     validate: {
       requestMessage: isNotEmpty("required"),
       waTemplateId: (value, values) =>
@@ -175,6 +190,10 @@ const LoyaltyWaTemplateConfig = ({
           : null,
       whatsappSettingsPhoneId: isNotEmpty("required"),
     },
+  });
+  const contentEditor = useWaEditor({
+    content: form.values.content,
+    onChange: (value) => form.setFieldValue("content", value),
   });
 
   const hanldeTemplateConfig = async () => {
@@ -337,7 +356,6 @@ const LoyaltyWaTemplateConfig = ({
                   {form.values.responseType === WaAutomatedReplyResponseType.Template ? (
                     <WaTemplateSelector
                       templateType={TemplateType.LOYALTY}
-                      comboboxProps={{ withinPortal: false }}
                       label={getLoyaltyTemplateLabel(form.values.type)?.templateLabel}
                       description={getLoyaltyTemplateLabel(form.values.type)?.templateDescription}
                       value={form.values.waTemplateId}
@@ -349,12 +367,61 @@ const LoyaltyWaTemplateConfig = ({
                       <p className="text-xs text-muted-foreground">
                         {getLoyaltyTemplateLabel(form.values.type).templateDescription}
                       </p>
-                      <WaTextEditor
-                        handleInputChange={(value) => {
-                          form.setFieldValue("content", value);
-                        }}
-                        content={form.values.content}
-                      />
+                      <div className="flex-1">
+                        <ToolbarProvider editor={contentEditor}>
+                          <TooltipProvider>
+                            <EditorContent
+                              editor={contentEditor}
+                              style={{
+                                backgroundColor: "var(--accent)",
+                                borderRadius: "5px",
+                                maxHeight: "200px",
+                                minHeight: "120px",
+                              }}
+                              className="overflow-y-auto rounded-xl"
+                            />
+                            <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                              <WaTextCharacterCount editor={contentEditor} max={1024} />
+                            </div>
+                            <div className="flex flex-wrap p-2">
+                              <div className="mt-1 flex items-center">
+                                <InsertEmoji editor={contentEditor} />
+                              </div>
+                              <Popover>
+                                <PopoverTrigger>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    title="Format"
+                                  >
+                                    <TypeOutline className="h-5 w-5" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full">
+                                  <div className="flex flex-nowrap gap-1">
+                                    <div className="flex items-center">
+                                      <BoldToolbar />
+                                      <ItalicToolbar />
+                                      <StrikeThroughToolbar />
+                                      <CodeToolbar />
+                                    </div>
+                                    <div className="flex items-center">
+                                      <BlockquoteToolbar />
+                                      <BulletListToolbar />
+                                      <OrderedListToolbar />
+                                    </div>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                              <div className="flex items-center">
+                                <UndoToolbar />
+                                <RedoToolbar />
+                              </div>
+                            </div>
+                          </TooltipProvider>
+                        </ToolbarProvider>
+                      </div>
                     </div>
                   )}
                   {responseMessageError && (

@@ -1,8 +1,18 @@
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { EditorContent } from "@tiptap/react";
 import dayjs from "dayjs";
-import { Ban, MessageSquare, Send, StickyNote, UserCheck, UserPlus, Zap } from "lucide-react";
+import {
+  Ban,
+  MessageSquare,
+  Send,
+  StickyNote,
+  TypeOutline,
+  UserCheck,
+  UserPlus,
+  Zap,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -23,15 +33,30 @@ import useContactStore, {
   useMessagesStore,
 } from "@/components/dashboard/inbox/store.ts";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder.tsx";
-import WaTextEditor, {
+import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
+import {
   extractMentionUserIds,
   parseToWhatsAppFormat,
-} from "@/components/RichTextEditor/waTextEditor.tsx";
+} from "@/components/RichTextEditor/wa-editor/format.tsx";
+import { useWaEditor } from "@/components/RichTextEditor/wa-editor/use-wa-editor.ts";
+import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
+import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
+import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
+import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
+import { CodeToolbar } from "@/components/tiptap/toolbars/code.tsx";
+import { ItalicToolbar } from "@/components/tiptap/toolbars/italic.tsx";
+import { OrderedListToolbar } from "@/components/tiptap/toolbars/ordered-list.tsx";
+import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
+import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
+import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
+import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
@@ -123,6 +148,14 @@ export default function WaInboxChatDisplayFooter({
     () => (orgMembers?.data ?? []).map((m) => ({ id: m.id, name: m.name })),
     [orgMembers],
   );
+
+  const privateNoteEditor = useWaEditor({
+    content: body.text.body,
+    placeholder: "Add a private note",
+    enableMention: true,
+    mentionUsers,
+    onChange: (value) => setBody({ ...body, text: { ...body.text, body: value } }),
+  });
 
   useEffect(() => {
     if (body.type === "location" && body.location) {
@@ -492,7 +525,6 @@ export default function WaInboxChatDisplayFooter({
                 }}
                 content={body.text.body}
                 mih={67}
-                flex={1}
                 inbox={true}
                 customEnter={() => submiRef.current()}
                 editable={!isSessionExpired && !isRecording && !audioUrl && body.type === "text"}
@@ -508,22 +540,63 @@ export default function WaInboxChatDisplayFooter({
           </TabsContent>
 
           <TabsContent value="private">
-            <WaTextEditor
-              handleInputChange={(value) => {
-                setBody({ ...body, text: { ...body.text, body: value } });
-              }}
-              content={body.text.body}
-              mih={67}
-              flex={1}
-              privateMessage={true}
-              editable={true}
-              placeholder="Add a private note"
-              sendMessageButton={<SendPrivateMessageComponent />}
-              border={true}
-              hideCharacterCount={true}
-              enableMention={true}
-              mentionUsers={mentionUsers}
-            />
+            <div className="flex items-start space-x-2 p-4 pb-0">
+              <div className="flex-1">
+                <ToolbarProvider editor={privateNoteEditor}>
+                  <TooltipProvider>
+                    <EditorContent
+                      editor={privateNoteEditor}
+                      style={{
+                        backgroundColor: "var(--accent)",
+                        borderRadius: "5px",
+                        maxHeight: "200px",
+                        minHeight: "67px",
+                      }}
+                      className="overflow-y-auto rounded-xl"
+                    />
+                    <div className="flex flex-wrap p-2">
+                      <div className="mt-1 flex items-center">
+                        <InsertEmoji editor={privateNoteEditor} />
+                      </div>
+                      <Popover>
+                        <PopoverTrigger>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            title="Format Message"
+                          >
+                            <TypeOutline className="h-5 w-5" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full">
+                          <div className="flex flex-nowrap gap-1">
+                            <div className="flex items-center">
+                              <BoldToolbar />
+                              <ItalicToolbar />
+                              <StrikeThroughToolbar />
+                              <CodeToolbar />
+                            </div>
+                            <div className="flex items-center">
+                              <BlockquoteToolbar />
+                              <BulletListToolbar />
+                              <OrderedListToolbar />
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      <div className="flex items-center">
+                        <UndoToolbar />
+                        <RedoToolbar />
+                      </div>
+                    </div>
+                  </TooltipProvider>
+                </ToolbarProvider>
+              </div>
+              <div className="mt-5">
+                <SendPrivateMessageComponent />
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

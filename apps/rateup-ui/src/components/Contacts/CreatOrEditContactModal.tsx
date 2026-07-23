@@ -1,4 +1,3 @@
-import { useForm } from "@mantine/form";
 import { CheckCircle2, UserPlus } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +9,7 @@ import {
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
+import { useBridgedForm } from "@/hooks/useBridgedForm";
 import { ContactGroupType } from "@/types/enums.ts";
 import { importMethod } from "@/utils/enums/index.ts";
 
@@ -48,8 +48,8 @@ const CreateOrEditContactModal = ({
   const { customFields = [] } = useCustomFieldsContext();
   const createContactMutation = useCreateContactMutation();
   const editContactMutation = useEditContactMutation();
-  const form = useForm({
-    initialValues: initialValues ?? {
+  const form = useBridgedForm({
+    defaultValues: initialValues ?? {
       name: "",
       phone: "",
       email: "",
@@ -169,7 +169,7 @@ const CreateOrEditContactModal = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {!initialValues && (
-              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-rateup-blue to-blue-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-blue-600 flex items-center justify-center">
                 <UserPlus className="w-4 h-4 text-white" />
               </div>
             )}
@@ -185,7 +185,7 @@ const CreateOrEditContactModal = ({
           <div className="flex items-center gap-3 pb-3 border-b">
             <Avatar className="w-16 h-16">
               <AvatarImage src={initialValues.profilePic} />
-              <AvatarFallback className="bg-linear-to-br from-rateup-blue to-blue-600 text-white">
+              <AvatarFallback className="bg-linear-to-br from-primary to-blue-600 text-white">
                 {getInitials(initialValues.name)}
               </AvatarFallback>
             </Avatar>

@@ -1,4 +1,3 @@
-import { Spoiler } from "@mantine/core";
 import { useNavigate } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { CheckCircle2 } from "lucide-react";
@@ -8,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import { currencyLabel } from "@/components/menu/util/currencyData.ts";
 import { BookDemoModal1 } from "@/components/RateupHomePage/helper/BookDemoModal";
+import { Spoiler } from "@/components/ui/spoiler.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
 
@@ -179,8 +179,8 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
 
             <Spoiler
               maxHeight={310}
-              pb={"xs"}
-              styles={{ control: { fontSize: "14px", color: "#1C518E" } }}
+              className="pb-2.5"
+              controlClassName="text-sm text-[#1C518E]"
               showLabel={"Show all available features"}
               hideLabel={"See less"}
             >

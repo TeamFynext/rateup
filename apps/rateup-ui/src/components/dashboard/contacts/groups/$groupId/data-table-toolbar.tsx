@@ -88,7 +88,7 @@ export function DataTableToolbar<TData, TValue>({
             <Button
               size="sm"
               onClick={() => setIsOpenedAddModal(true)}
-              className="gap-2 h-8 bg-linear-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700 shadow-md"
+              className="gap-2 h-8 bg-linear-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 shadow-md"
             >
               <Plus className="w-3.5 h-3.5" />
               <span className="text-sm">Add Members</span>
@@ -100,7 +100,7 @@ export function DataTableToolbar<TData, TValue>({
                 placeholder="Search by name or phone..."
                 value={filter.searchTerm}
                 onChange={(e) => setFilter({ searchTerm: e.currentTarget.value })}
-                className="pl-10 h-8 border-gray-200 focus:ring-2 focus:ring-rateup-blue/20 placeholder:text-sm"
+                className="pl-10 h-8 border-gray-200 focus:ring-2 focus:ring-primary/20 placeholder:text-sm"
               />
               {filter.searchTerm && (
                 <Button
