@@ -33,7 +33,7 @@ function Preview({
   const previewContainerRef = useRef(undefined);
   const { t: translations } = useTranslation();
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
-  const FALLBACK_LOGO = "/images/rateup-star.svg";
+  const FALLBACK_LOGO = "/images/rateup-icon.png";
 
   const finalLogoSrc = logoSrc || FALLBACK_LOGO;
 
