@@ -16,7 +16,7 @@ import {
 } from "./contactGroup/contactGroup.service.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { BATCH_SIZE } from "../../utils/constants/constants.js";
-import { ResolutionResult, WaMessageAssignStatus } from "../../types/enums.js";
+import { CloseReason, ResolutionResult, WaMessageAssignStatus } from "../../types/enums.js";
 import { triggerConversionsApiForContact } from "../integrations/meta/conversions.service.js";
 import {
   assignWaMessageToUser,
@@ -646,7 +646,14 @@ export async function updateContactById(
     });
   }
 
-  const nextStatus = contact.waMessageAssignStatus;
+  /**
+   * SPAM is no longer a stored status — spam is a flag on the contact. Callers
+   * that still ask for it (automation "set status" actions, older clients) are
+   * translated here: the contact is flagged and the ticket simply closes, with
+   * `closeReason = SPAM` carrying the why. `POST /message/spam` is the direct route.
+   */
+  const markingSpam = contact.waMessageAssignStatus === WaMessageAssignStatus.SPAM;
+  const nextStatus = markingSpam ? WaMessageAssignStatus.CLOSED : contact.waMessageAssignStatus;
   const statusChanged =
     nextStatus !== undefined && contactRecord.waMessageAssignStatus !== nextStatus;
   const closing = statusChanged && WaMessageClosedStatus.includes(nextStatus);
@@ -672,6 +679,13 @@ export async function updateContactById(
               closedBy: resolveClosedByUserId(transitionActor),
             }
           : {}),
+        ...(markingSpam
+          ? {
+              isSpam: true,
+              spamMarkedAt: now,
+              spamMarkedBy: resolveClosedByUserId(transitionActor),
+            }
+          : {}),
         notes: contact.notes,
         lifecycleId: contact.lifecycleId,
       },
@@ -692,6 +706,7 @@ export async function updateContactById(
     if (statusChanged) {
       await mirrorConversationStatusTx(tx, contactId, nextStatus, transitionActor, {
         now,
+        ...(markingSpam ? { closeReason: CloseReason.SPAM } : {}),
         resolutionResult: contact.resolutionResult ?? null,
       });
     }
@@ -922,7 +937,11 @@ export async function updateContactById(
       await createInternalWaMessage({
         trigerredByUser: userId || "RateUp",
         contactId: updatedContact.id,
-        waMessageAssignStatus: updatedContact.waMessageAssignStatus,
+        // The thread records the *event* the caller asked for: a spam mark reads as
+        // spam even though the ticket underneath it is stored as CLOSED.
+        waMessageAssignStatus: markingSpam
+          ? WaMessageAssignStatus.SPAM
+          : updatedContact.waMessageAssignStatus,
         messageId: contact.messageId,
       });
     }
@@ -1747,11 +1766,15 @@ export async function updateLifecycleStageofContacts(lifecycleId, contactIds) {
 
 export async function bulkUpdateWaMessageAssignStatus(
   contactIds: string[],
-  waMessageAssignStatus: WaMessageAssignStatus,
+  requestedStatus: WaMessageAssignStatus,
   userId?: string,
   messageId?: string,
   resolutionResult?: ResolutionResult | null,
 ) {
+  // Same translation as `updateContactById`: SPAM is a contact flag now, and the
+  // tickets underneath it simply close.
+  const markingSpam = requestedStatus === WaMessageAssignStatus.SPAM;
+  const waMessageAssignStatus = markingSpam ? WaMessageAssignStatus.CLOSED : requestedStatus;
   const contacts = await prisma.contact.findMany({
     where: {
       id: { in: contactIds },
@@ -1789,6 +1812,9 @@ export async function bulkUpdateWaMessageAssignStatus(
               closedBy: resolveClosedByUserId(actor),
             }
           : {}),
+        ...(markingSpam
+          ? { isSpam: true, spamMarkedAt: now, spamMarkedBy: resolveClosedByUserId(actor) }
+          : {}),
       },
     });
 
@@ -1816,7 +1842,7 @@ export async function bulkUpdateWaMessageAssignStatus(
         data: conversationStatusData(
           waMessageAssignStatus,
           actor,
-          undefined,
+          markingSpam ? CloseReason.SPAM : undefined,
           now,
           resolutionResult,
         ),
@@ -1914,7 +1940,8 @@ export async function bulkUpdateWaMessageAssignStatus(
         await createInternalWaMessage({
           trigerredByUser: userId,
           contactId: contact.id,
-          waMessageAssignStatus,
+          // The thread records the event that was asked for, not its storage form.
+          waMessageAssignStatus: markingSpam ? WaMessageAssignStatus.SPAM : waMessageAssignStatus,
           messageId,
         });
       }

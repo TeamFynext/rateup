@@ -100,6 +100,9 @@ const WaChatFilterSchema = z.object({
   assignedUserIds: z.array(z.string()).optional(),
   favorite: z.boolean().optional(),
   mentions: z.boolean().optional(),
+  /// Spam tab. Contact-grained — one row per spam contact, not one per ticket —
+  /// and mutually exclusive with the status/assignment filters.
+  spam: z.boolean().optional(),
 });
 
 const waChatFilterQuerySchema = PaginateQuerySchema.extend({
@@ -139,6 +142,13 @@ const blockUserSchema = z.object({
 const favoriteContactSchema = z.object({
   conversationId: z.string(),
   isFavorite: z.boolean(),
+});
+
+/// Spam is contact-grained: the body names a contact, never a conversation.
+const spamContactSchema = z.object({
+  contactId: z.string(),
+  isSpam: z.boolean(),
+  messageId: z.string().optional(), // id of the optimistic internal event message
 });
 
 const clearMentionsSchema = z.object({
@@ -184,6 +194,7 @@ export type WaMessageAssignBody = z.input<typeof waMessageAssignBody>;
 export type BulkWaMessageAssignBody = z.infer<typeof bulkWaMessageAssignBody>;
 export type BlockUserBody = z.infer<typeof blockUserSchema>;
 export type FavoriteContactBody = z.infer<typeof favoriteContactSchema>;
+export type SpamContactBody = z.infer<typeof spamContactSchema>;
 export type ClearMentionsBody = z.infer<typeof clearMentionsSchema>;
 export type ReopenConversationBody = z.infer<typeof reopenConversationSchema>;
 export type LogsQuery = z.infer<typeof logsQuerySchema>;
@@ -202,6 +213,7 @@ export {
   waMessageAssignBody,
   blockUserSchema,
   favoriteContactSchema,
+  spamContactSchema,
   clearMentionsSchema,
   reopenConversationSchema,
   generateInboxResponseBody,
