@@ -2,7 +2,16 @@ import { IconExclamationCircle } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { Ban, MessageSquare, Send, StickyNote, UserCheck, UserPlus, Zap } from "lucide-react";
+import {
+  Ban,
+  MessageSquare,
+  Send,
+  ShieldAlert,
+  StickyNote,
+  UserCheck,
+  UserPlus,
+  Zap,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -15,6 +24,7 @@ import {
   useAssignInboxToUer,
   useCreatePrivateMessage,
   useSendNewWaMessage,
+  useSetContactSpam,
   useUnBlockWhatsAppUser,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
@@ -723,6 +733,45 @@ export const WaInboxBlockedContactFooter = ({ contact }) => {
         disabled={unblockMut.isPending}
       >
         <span className="text-xs font-bold">Unblock contact</span>
+      </Button>
+    </Alert>
+  );
+};
+
+/**
+ * A spam contact's thread is read-only, and the way out is "Not spam" — the same
+ * shape as the blocked banner, since both are contact-level states rather than
+ * anything to do with the ticket.
+ */
+export const WaInboxSpamContactFooter = ({ contact }) => {
+  const confirm = useConfirm();
+  const spamMutation = useSetContactSpam();
+
+  async function handleNotSpam() {
+    const confirmed = await confirm({
+      title: `Remove ${contact?.name ?? contact?.phone} from spam`,
+      description: "Are you sure this contact is not spam?",
+      confirmText: "Not spam",
+      cancelText: "Cancel",
+    });
+    if (!confirmed) return;
+    spamMutation.mutate({ contactId: contact.id, isSpam: false });
+  }
+
+  return (
+    <Alert className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-6 py-2.5 dark:bg-amber-950/40">
+      <ShieldAlert className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
+      <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
+        This contact is marked as spam.
+      </AlertTitle>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-8 shrink-0"
+        onClick={handleNotSpam}
+        disabled={spamMutation.isPending}
+      >
+        <span className="text-xs font-bold">Not spam</span>
       </Button>
     </Alert>
   );

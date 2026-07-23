@@ -12,6 +12,7 @@ import {
   Phone,
   Plus,
   ShieldAlert,
+  ShieldOff,
   Shuffle,
   Ticket,
   User,
@@ -27,7 +28,10 @@ import {
 } from "@/backend/campaign/contacts/contacts.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { getRowKey, type ResolutionResult } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import { useEditConversation } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useEditConversation,
+  useSetContactSpam,
+} from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
@@ -36,7 +40,7 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
-import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
+import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
 
 import { generateInternalMessageId } from "../util.tsx";
@@ -137,6 +141,7 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
   const teams = teamRes?.data ?? [];
 
   const editContactMutation = useEditContactMutation(null);
+  const spamMutation = useSetContactSpam();
   const assignLabels = useAssignContactLabelsToContactId();
   const editConversation = useEditConversation();
 
@@ -244,10 +249,11 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
   };
 
   /**
-   * Mark as spam goes through the same path the chat header uses: an optimistic
-   * internal system message plus a contact status write.
+   * Spam is a *contact* flag, not a ticket status: this hits the dedicated
+   * endpoint, which closes the contact's open tickets and drops them out of every
+   * tab but Spam. The same button takes them back out again.
    */
-  const markAsSpam = () => {
+  const toggleSpam = (next: boolean) => {
     if (!contact?.id) return;
     const messageId = generateInternalMessageId();
     const newMessage = {
@@ -258,9 +264,9 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
         send: null,
         receive: null,
         internal: {
-          text: { body: "marked this chat as spam" },
+          text: { body: next ? "marked this contact as spam" : "marked this contact as not spam" },
           assignedUsers: [],
-          assignStatus: WaMessageAssignStatus.SPAM,
+          assignStatus: next ? WaMessageAssignStatus.SPAM : NOT_SPAM_EVENT,
           triggeredByUser: { id: user.userId, name: user.userName },
         },
         exchangeProcess: "internal",
@@ -276,21 +282,9 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
     messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
     messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
 
-    editContactMutation.mutate(
+    spamMutation.mutate(
+      { contactId: contact.id, isSpam: next, messageId },
       {
-        contactId: contact.id,
-        data: { waMessageAssignStatus: WaMessageAssignStatus.SPAM, messageId },
-      },
-      {
-        onSuccess: () => {
-          updateContactById(contact.id, (c) => ({
-            ...c,
-            waMessageAssignStatus: WaMessageAssignStatus.SPAM,
-            closedAt: new Date().toISOString(),
-            closedUser: { name: user?.userName, id: user.userId },
-            assignedUsers: [],
-          }));
-        },
         onError: () => {
           messagesStore.removeMessage(`${rowKey}_all`, messageId);
           messagesStore.removeMessage(`${rowKey}_internal`, messageId);
@@ -388,6 +382,78 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
               </span>
             </div>
           </div>
+        )}
+      </Section>
+
+      {/* ---- Title & Description ----
+           Directly under Assignment, per the design: the ticket's own words are
+           what an agent reads first, so they sit above the contact/meta sections
+           rather than at the foot of the panel. */}
+      <Section
+        label={t("Title & Description")}
+        action={
+          !editingTicket &&
+          contact?.conversationId && (
+            <button
+              type="button"
+              title={t("Edit title and description")}
+              onClick={() => {
+                setSubjectDraft(contact?.ticketSubject || "");
+                setDescriptionDraft(contact?.ticketDescription || "");
+                setEditingTicket(true);
+              }}
+              className="cursor-pointer"
+            >
+              <Pencil className="size-3.25 text-muted-foreground" />
+            </button>
+          )
+        }
+      >
+        {editingTicket ? (
+          <div className="flex flex-col gap-2">
+            <Input
+              value={subjectDraft}
+              onChange={(e) => setSubjectDraft(e.target.value)}
+              placeholder={t("Ticket title")}
+              className="h-8 text-[13px] font-bold"
+            />
+            <Textarea
+              value={descriptionDraft}
+              onChange={(e) => setDescriptionDraft(e.target.value)}
+              rows={4}
+              placeholder={t("Description")}
+              className="text-[13px] resize-y"
+            />
+            <div className="flex gap-1.5">
+              <Button
+                size="sm"
+                className="h-7 text-[11px]"
+                onClick={saveTicket}
+                disabled={editConversation.isPending}
+              >
+                {t("Save")}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-[11px]"
+                onClick={() => setEditingTicket(false)}
+              >
+                {t("Cancel")}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="text-[13px] font-bold mb-1.5 text-foreground">
+              {contact?.ticketSubject || t("Untitled ticket")}
+            </div>
+            {contact?.ticketDescription && (
+              <div className="text-[13px] leading-relaxed text-foreground">
+                {contact.ticketDescription}
+              </div>
+            )}
+          </>
         )}
       </Section>
 
@@ -594,86 +660,20 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
         </div>
       </Section>
 
-      {/* ---- Title & Description ---- */}
-      <div className="p-4.5">
-        <div className="flex items-center justify-between mb-2.5">
-          <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-            {t("Title & Description")}
-          </span>
-          {!editingTicket && contact?.conversationId && (
-            <button
-              type="button"
-              title={t("Edit title and description")}
-              onClick={() => {
-                setSubjectDraft(contact?.ticketSubject || "");
-                setDescriptionDraft(contact?.ticketDescription || "");
-                setEditingTicket(true);
-              }}
-              className="cursor-pointer"
-            >
-              <Pencil className="size-3.25 text-muted-foreground" />
-            </button>
-          )}
-        </div>
-
-        {editingTicket ? (
-          <div className="flex flex-col gap-2">
-            <Input
-              value={subjectDraft}
-              onChange={(e) => setSubjectDraft(e.target.value)}
-              placeholder={t("Ticket title")}
-              className="h-8 text-[13px] font-bold"
-            />
-            <Textarea
-              value={descriptionDraft}
-              onChange={(e) => setDescriptionDraft(e.target.value)}
-              rows={4}
-              placeholder={t("Description")}
-              className="text-[13px] resize-y"
-            />
-            <div className="flex gap-1.5">
-              <Button
-                size="sm"
-                className="h-7 text-[11px]"
-                onClick={saveTicket}
-                disabled={editConversation.isPending}
-              >
-                {t("Save")}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-[11px]"
-                onClick={() => setEditingTicket(false)}
-              >
-                {t("Cancel")}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="text-[13px] font-bold mb-1.5 text-foreground">
-              {contact?.ticketSubject || t("Untitled ticket")}
-            </div>
-            {contact?.ticketDescription && (
-              <div className="text-[13px] leading-relaxed text-foreground">
-                {contact.ticketDescription}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* ---- Board ticket / Mark as spam ---- */}
+      {/* ---- Board ticket / spam (contact-level, so it toggles both ways) ---- */}
       <div className="flex flex-col gap-2 px-4.5 pb-4.5">
         <button
           type="button"
-          onClick={markAsSpam}
-          disabled={editContactMutation.isPending}
+          onClick={() => toggleSpam(!contact?.isSpam)}
+          disabled={spamMutation.isPending}
           className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[9px] text-[13px] font-semibold cursor-pointer text-muted-foreground border border-border"
         >
-          <ShieldAlert className="size-3.75" />
-          {t("Mark as spam")}
+          {contact?.isSpam ? (
+            <ShieldOff className="size-3.75" />
+          ) : (
+            <ShieldAlert className="size-3.75" />
+          )}
+          {contact?.isSpam ? t("Not spam") : t("Mark contact as spam")}
         </button>
       </div>
     </div>

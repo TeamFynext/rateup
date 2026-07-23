@@ -6,6 +6,7 @@ import {
   BadgeCheck,
   CheckCircle,
   Circle,
+  ShieldAlert,
   Star,
   UserPlus,
 } from "lucide-react";
@@ -320,6 +321,14 @@ export default function WaInboxChatSelectCard({
 
         {/* Chip row */}
         <div className="mt-1.75 flex flex-wrap items-center gap-1.5">
+          {/* Spam is a contact flag, so it outranks the ticket's own status pill —
+              in the Spam tab the row IS the contact, not one of their tickets. */}
+          {contact?.isSpam && (
+            <span className={cn(STATUS_PILL_BASE, "bg-red-500/10 text-red-600 dark:text-red-500")}>
+              <ShieldAlert className="size-2.75" />
+              {translations("Spam")}
+            </span>
+          )}
           {isClosed ? (
             <CustomTooltip
               trigger={

@@ -89,7 +89,16 @@ const ChatselectPanelHeader = ({
   // total — both fall back to what is actually loaded.
   const rowCount =
     countKey && !filter?.searchTerm?.length ? sectionCounts[countKey] : loadedRowCount;
-  const rowCountLabel = `${rowCount} ${rowCount === 1 ? translations("conversation") : translations("conversations")}`;
+  // The Spam tab is contact-grained — one row per contact — so it counts contacts.
+  const rowNoun =
+    tab === "spam"
+      ? rowCount === 1
+        ? translations("contact")
+        : translations("contacts")
+      : rowCount === 1
+        ? translations("conversation")
+        : translations("conversations");
+  const rowCountLabel = `${rowCount} ${rowNoun}`;
 
   useEffect(() => {
     if (filter.searchTerm.length && !showSearchBar) setShowSearchBar(true);
