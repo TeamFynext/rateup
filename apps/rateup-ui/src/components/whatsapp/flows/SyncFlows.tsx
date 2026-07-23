@@ -1,5 +1,7 @@
 import { IconChevronLeft, IconChevronRight, IconRefresh } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import type { UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -29,8 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table.tsx";
 import { useListState } from "@/hooks/use-list-state.ts";
-import type { BridgedForm } from "@/hooks/useBridgedForm";
-import { useBridgedForm } from "@/hooks/useBridgedForm";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { WaFlowFormElementType } from "@/types/enums.ts";
 import type { WaFlowFormChoice, WaFlowFormElement, WaFlowWa } from "@/types/global";
@@ -110,7 +110,7 @@ function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
         {
           waFlowIds: flows.map((flow) => flow.id),
           teamIds: [selectedTeam], // TODO: allow user to select multiple teams?
-          mapData: form.values.map,
+          mapData: form.getValues("map"),
         },
         {
           onSuccess: () => {
@@ -126,13 +126,14 @@ function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
     }
   }
 
-  const form = useBridgedForm<{ map: Record<string, any> }>({
+  const form = useForm<{ map: Record<string, any> }>({
     defaultValues: {
       map: {},
     },
   });
+  const values = form.watch();
 
-  const isOptionsValid = validateOptions({ form, path: `map.${flow.id}` });
+  const isOptionsValid = validateOptions({ values, path: `map.${flow.id}` });
   const isLastFlow = currentFlowIndex === flows.length - 1;
 
   return (
@@ -171,7 +172,7 @@ function ConfigureFlow({
   handleNext,
 }: {
   flow: WaFlowWa;
-  form: BridgedForm<any>;
+  form: UseFormReturn<{ map: Record<string, any> }>;
   handleNext: () => void;
 }) {
   const { data: flowJson, isLoading, error, isError } = useWaFlowJson(flow.id);
@@ -204,7 +205,7 @@ function ConfigureFlow({
   if (isLoading || !flowJson) return <RateupLoader />;
 
   const flowPath = `map.${flow.id}`;
-  if (!form.values.map[flow.id]) form.setFieldValue(flowPath, {});
+  if (!form.getValues("map")[flow.id]) setMapValue(form, flowPath, {});
 
   return (
     <>
@@ -235,8 +236,8 @@ function ConfigureFlow({
                   const qPath = `${flowPath}.${fc.name}`;
 
                   // setting first question type as default
-                  if (!getNestedProperty(form.values, qPath))
-                    form.setFieldValue(qPath, { type: qTypes[0] });
+                  if (!getNestedProperty(form.watch(), qPath))
+                    setMapValue(form, qPath, { type: qTypes[0] });
 
                   // For opt in checkboxes we need to show which of the options go with 'checked' and 'unchecked' state
                   const choices =
@@ -267,9 +268,9 @@ function ConfigureFlow({
                         </div>
                         <Select
                           items={qTypes.map((t) => ({ label: t, value: t }))}
-                          value={getNestedProperty(form.values, qPath)?.type ?? ""}
+                          value={getNestedProperty(form.watch(), qPath)?.type ?? ""}
                           onValueChange={(value) => {
-                            form.setFieldValue(qPath, {
+                            setMapValue(form, qPath, {
                               type: value,
                             });
                           }}
@@ -295,11 +296,14 @@ function ConfigureFlow({
                             {choices.map((choice) => {
                               const choicePath = `${qPath}.${choice.id}`;
                               let qRes = [];
-                              const qType = getNestedProperty(form.values, qPath)?.type;
+                              const qType = getNestedProperty(form.watch(), qPath)?.type;
                               if (qType) {
                                 qRes = getQuestionResponses(qType);
-                                if (qRes?.length > 0 && !getNestedProperty(form.values, choicePath))
-                                  form.setFieldValue(choicePath, qRes[0]);
+                                if (
+                                  qRes?.length > 0 &&
+                                  !getNestedProperty(form.watch(), choicePath)
+                                )
+                                  setMapValue(form, choicePath, qRes[0]);
                               }
                               return (
                                 <div className="flex items-center" key={choice.id}>
@@ -307,9 +311,9 @@ function ConfigureFlow({
                                   {qTypesWithAmbiguousChoices.includes(qType) ? (
                                     <Select
                                       items={qRes.map((r) => ({ label: r, value: r }))}
-                                      value={getNestedProperty(form.values, choicePath) ?? ""}
+                                      value={getNestedProperty(form.watch(), choicePath) ?? ""}
                                       onValueChange={(value) => {
-                                        form.setFieldValue(choicePath, value);
+                                        setMapValue(form, choicePath, value);
                                       }}
                                     >
                                       <SelectTrigger>
@@ -441,4 +445,16 @@ export function SyncFlowsButton({ disabled = false }) {
       />
     </>
   );
+}
+
+/**
+ * Writes to a `map.<flowId>.<questionId>` path. These are built at runtime from flow data,
+ * so they cannot be expressed as a statically-known RHF `FieldPath`.
+ */
+function setMapValue(
+  form: UseFormReturn<{ map: Record<string, any> }>,
+  path: string,
+  value: unknown,
+) {
+  form.setValue(path as never, value as never, { shouldDirty: true });
 }

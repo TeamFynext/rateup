@@ -32,7 +32,6 @@ import {
 } from "@/backend/campaign/contacts/contacts.query";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
-import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
 import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -40,6 +39,7 @@ import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
   Select,
@@ -463,18 +463,20 @@ export default function WaInboxContactDetails({
                       name="phone"
                       control={control}
                       render={({ field }) => (
-                        <PhoneInputWithCountry
+                        <PhoneInput
                           defaultCountry="IN"
                           international
                           countryCallingCodeEditable={false}
                           value={field.value}
                           onChange={field.onChange}
-                          borderRadius={4}
                           placeholder={t("Enter the phone")}
-                          error={errors.phone?.message}
+                          aria-invalid={!!errors.phone}
                         />
                       )}
                     />
+                    {errors.phone?.message && (
+                      <span className="text-xs text-destructive">{errors.phone.message}</span>
+                    )}
                   </motion.div>
 
                   {/* Email Field */}

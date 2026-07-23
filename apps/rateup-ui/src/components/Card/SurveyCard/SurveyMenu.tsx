@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   IconCopy,
   IconDots,
@@ -10,8 +11,10 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import z from "zod";
 
 import { deleteSurvey, deleteSurveyForOneTeam, updateSurvey } from "@/backend/surveys/survey.api";
 import { useCloneSurveyMutation } from "@/backend/surveys/surveys.query";
@@ -33,7 +36,6 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
-import { useBridgedForm } from "@/hooks/useBridgedForm";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
@@ -62,39 +64,37 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
     label: team?.name,
   }));
 
-  const cloneForm = useBridgedForm({
+  const cloneForm = useForm<{ teamIds: string[] }>({
+    resolver: zodResolver(
+      z.object({
+        teamIds: z.array(z.string()).min(1, translations("Must contain atleast one team")),
+      }),
+    ),
     defaultValues: {
       teamIds: [],
     },
-    validate: {
-      teamIds: (values) => (values?.length ? null : translations("Must contain atleast one team")),
-    },
   });
+  const cloneTeamIds = cloneForm.watch("teamIds");
 
   useEffect(() => {
-    cloneForm.setFieldValue("teamIds", selectedTeams);
-  }, [selectedTeams]);
+    cloneForm.setValue("teamIds", selectedTeams, { shouldDirty: true, shouldValidate: true });
+  }, [selectedTeams, cloneForm]);
 
   useEffect(() => {
     setSelectedTeams([]);
   }, [teamChoice]);
 
   useEffect(() => {
-    if (teamChoice === "all" && !arraysEqual(cloneForm?.values?.teamIds, allTeams)) {
-      cloneForm.setFieldValue("teamIds", allTeams);
+    if (teamChoice === "all" && !arraysEqual(cloneTeamIds, allTeams)) {
+      cloneForm.setValue("teamIds", allTeams, { shouldDirty: true, shouldValidate: true });
     }
-  }, [allTeams, teamChoice, cloneForm?.values?.teamIds]);
+  }, [allTeams, teamChoice, cloneTeamIds, cloneForm]);
 
-  const onSubmit = (_values) => {
-    const validationRes = cloneForm.validate();
-    if (validationRes.hasErrors) {
-      console.error(validationRes.errors);
-      return;
-    }
+  const onSubmit = (values: { teamIds: string[] }) => {
     toast.loading(translations("Hold on, your survey is getting clonned..."), {
       id: "load-data",
     });
-    cloneSurvey.mutate({ id: survey?.id, teamIds: cloneForm.values.teamIds });
+    cloneSurvey.mutate({ id: survey?.id, teamIds: values.teamIds });
   };
 
   const cloneSurvey = useCloneSurveyMutation({
@@ -158,7 +158,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
     close();
     cloneForm.reset();
   };
-  const submitClone = cloneForm.onSubmit(onSubmit);
+  const submitClone = cloneForm.handleSubmit(onSubmit);
 
   return (
     <DropdownMenu>
@@ -218,8 +218,8 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
                       options={teamOptions}
                       className="w-full"
                     />
-                    {cloneForm.errors.teamIds && (
-                      <FieldError>{cloneForm.errors.teamIds}</FieldError>
+                    {cloneForm.formState.errors.teamIds && (
+                      <FieldError>{cloneForm.formState.errors.teamIds.message}</FieldError>
                     )}
                   </Field>
                 )}

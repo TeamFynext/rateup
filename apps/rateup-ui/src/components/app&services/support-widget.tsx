@@ -16,8 +16,8 @@ import { useClickOutside } from "@/hooks/use-click-outside.ts";
 import { useScrollIntoView } from "@/hooks/use-scroll-into-view.ts";
 import { getBrowserId } from "@/lib/browserId.ts";
 
-import PhoneInputWithCountry from "../input/PhoneInputWithCountry.tsx";
 import { parseWhatsAppToReact } from "../RichTextEditor/wa-editor/format.tsx";
+import { PhoneInput } from "../ui/phone-input.tsx";
 
 interface SupportWidgetProps {
   whatsappNumber?: string;
@@ -328,15 +328,15 @@ export default function SupportWidget({
                               <FieldLabel htmlFor="support-phone">
                                 Phone <span className="text-orange-500">*</span>
                               </FieldLabel>
-                              <PhoneInputWithCountry
+                              <PhoneInput
                                 id="support-phone"
                                 defaultCountry="IN"
                                 international
                                 value={field.value}
                                 onChange={field.onChange}
                                 onBlur={field.onBlur}
-                                borderRadius={8}
-                                className="h-8 flex-1 rounded-lg border border-border bg-background px-1 text-sm shadow-sm"
+                                aria-invalid={fieldState.invalid}
+                                className="w-full"
                                 placeholder="Phone number"
                               />
                               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

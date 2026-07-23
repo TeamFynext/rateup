@@ -40,13 +40,14 @@ export const BroadCastTypeValue = ({ form, type }) => {
   if (type === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT) {
     const headerProps = form.getInputProps("header");
     return (
-      <div className="mt-4 flex flex-col gap-1">
+      <div className="flex w-full flex-col gap-1.5">
         <Label className="text-sm font-medium">Text</Label>
-        <InputGroup aria-invalid={!!headerProps.error}>
+        <InputGroup>
           <InputGroupInput
-            {...headerProps}
+            {...form.getFieldProps("header")}
             value={headerProps.value ?? ""}
             placeholder={translations("Header")}
+            aria-invalid={!!headerProps.error}
           />
           <InputGroupAddon align="inline-end">
             <LengthTracker length={form?.values?.header?.length ?? 0} maxValue={60} atStart />
@@ -74,7 +75,7 @@ export const BroadCastTypeValue = ({ form, type }) => {
   };
 
   return (
-    <div className="mt-6 max-w-100">
+    <div className="flex w-full max-w-100 flex-col gap-1.5">
       <input
         ref={fileInputRef}
         type="file"
@@ -93,7 +94,7 @@ export const BroadCastTypeValue = ({ form, type }) => {
       {error ? (
         <p className="text-xs text-destructive">{error}</p>
       ) : (
-        config.helper && <p className="mt-1 text-xs text-muted-foreground">{config.helper}</p>
+        config.helper && <p className="text-xs text-muted-foreground">{config.helper}</p>
       )}
     </div>
   );

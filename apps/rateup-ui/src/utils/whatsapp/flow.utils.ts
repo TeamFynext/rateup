@@ -99,8 +99,8 @@ export function getQuestionResponses(qType: qt) {
 export const qTypesWithAmbiguousChoices = [qt.YN, qt.LD, qt.Rating, qt.Smiley, qt.Opinion];
 
 interface validateOptionsProps {
-  /** Any form exposing a `values` object (Mantine-shaped or the RHF bridge). */
-  form: { values: any };
+  /** Current form values (e.g. `form.watch()`). */
+  values: any;
   path: string;
 }
 /**
@@ -109,8 +109,8 @@ interface validateOptionsProps {
  * @param param0
  * @returns
  */
-export function validateOptions({ form, path }: validateOptionsProps) {
-  const questions = getNestedProperty(form.values, path);
+export function validateOptions({ values, path }: validateOptionsProps) {
+  const questions = getNestedProperty(values, path);
   if (!questions) {
     return false;
   }

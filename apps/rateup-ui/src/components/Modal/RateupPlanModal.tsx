@@ -1,4 +1,6 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -8,7 +10,6 @@ import {
   useRateupPaymentsPlanUpdateMutation,
 } from "@/backend/payment/payment.query";
 import { Badge } from "@/components/ui/badge.tsx";
-import { useBridgedForm } from "@/hooks/useBridgedForm";
 // import { PaymentPlans } from "../../app/admin/rateup";
 import { PaymentType } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
@@ -55,6 +56,9 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
       .string()
       .trim()
       .min(1, { message: translations("Display Name should Not Be empty") }),
+    // Carried in form state for the update call rather than edited directly.
+    id: z.string().optional(),
+    stripeId: z.string().optional(),
     displayWidgetId: z.string().optional(),
     planType: z
       .string()
@@ -78,7 +82,8 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
     yearlyPaymentPlanId: z.string().optional(),
   });
 
-  const form = useBridgedForm({
+  const form = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
     defaultValues: {
       id: "",
       name: "",
@@ -98,12 +103,12 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
       monthlyPaymentPlanId: "",
       yearlyPaymentPlanId: "",
     },
-    schema,
   });
+  const values = form.watch();
 
   useEffect(() => {
     if (opened && plan?.id) {
-      form.setValues({
+      form.reset({
         id: plan.id,
         name: plan.name ?? "",
         displayName: plan.displayName ?? "",
@@ -134,9 +139,9 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
   useEffect(() => {
     if (checked) {
       const sampleFeature = JSON.stringify(getSampleSubscriptionFeatures(10));
-      form?.setFieldValue("features", sampleFeature);
+      form.setValue("features", sampleFeature, { shouldDirty: true });
     } else {
-      form?.setFieldValue("features", "");
+      form.setValue("features", "", { shouldDirty: true });
     }
   }, [checked]);
 
@@ -160,7 +165,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
     close();
     form?.reset();
   };
-  const submitPlan = form.onSubmit(handleSubmit);
+  const submitPlan = form.handleSubmit(handleSubmit);
   const isSaving =
     rateupPaymentsPlanMutation?.isPending || rateupPaymentsPlanUpdateMutation?.isPending;
 
@@ -191,26 +196,29 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 {translations("Name")}
                 <span className="text-destructive"> *</span>
               </FieldLabel>
-              <Input placeholder={translations("Name")} {...form.getFieldProps("name")} />
-              {form.errors.name && <FieldError>{form.errors.name}</FieldError>}
+              <Input placeholder={translations("Name")} {...form.register("name")} />
+              {form.formState.errors.name && (
+                <FieldError>{form.formState.errors.name.message}</FieldError>
+              )}
             </Field>
             <Field>
               <FieldLabel>
                 {translations("Dispaly Name")}
                 <span className="text-destructive"> *</span>
               </FieldLabel>
-              <Input
-                placeholder={translations("Display Name")}
-                {...form.getFieldProps("displayName")}
-              />
-              {form.errors.displayName && <FieldError>{form.errors.displayName}</FieldError>}
+              <Input placeholder={translations("Display Name")} {...form.register("displayName")} />
+              {form.formState.errors.displayName && (
+                <FieldError>{form.formState.errors.displayName.message}</FieldError>
+              )}
             </Field>
             <Field>
               <FieldLabel>{translations("Display Widget Id")}</FieldLabel>
               <Select
                 items={widgetIdOptions}
-                value={form.values.displayWidgetId ?? ""}
-                onValueChange={(value) => form.setFieldValue("displayWidgetId", value)}
+                value={values.displayWidgetId ?? ""}
+                onValueChange={(value) =>
+                  form.setValue("displayWidgetId", value, { shouldDirty: true })
+                }
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={translations("Widget Id")} />
@@ -231,8 +239,8 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               </FieldLabel>
               <Select
                 items={planTypeOptions}
-                value={form.values.planType ?? ""}
-                onValueChange={(value) => form.setFieldValue("planType", value)}
+                value={values.planType ?? ""}
+                onValueChange={(value) => form.setValue("planType", value, { shouldDirty: true })}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={translations("Plan Type")} />
@@ -252,11 +260,15 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 <span className="text-destructive"> *</span>
               </FieldLabel>
               <TagsInput
-                value={form.values.description ?? []}
-                onValueChange={(value) => form.setFieldValue("description", value)}
+                value={values.description ?? []}
+                onValueChange={(value) =>
+                  form.setValue("description", value, { shouldDirty: true })
+                }
                 placeholder={translations("Type Description and press enter")}
               />
-              {form.errors.description && <FieldError>{form.errors.description}</FieldError>}
+              {form.formState.errors.description && (
+                <FieldError>{form.formState.errors.description.message}</FieldError>
+              )}
               <FieldDescription>Use || for split</FieldDescription>
             </Field>
             <Field>
@@ -265,16 +277,18 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 type="number"
                 min={0}
                 step={1}
-                value={form.values.trialDays ?? 0}
-                onChange={(event) => form.setFieldValue("trialDays", Number(event.target.value))}
+                value={values.trialDays ?? 0}
+                onChange={(event) =>
+                  form.setValue("trialDays", Number(event.target.value), { shouldDirty: true })
+                }
               />
             </Field>
             <Field>
               <FieldLabel>{translations("Currency")}</FieldLabel>
               <Select
                 items={currencyOptions}
-                value={form.values.currency ?? ""}
-                onValueChange={(value) => form.setFieldValue("currency", value)}
+                value={values.currency ?? ""}
+                onValueChange={(value) => form.setValue("currency", value, { shouldDirty: true })}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={translations("Currency")} />
@@ -290,17 +304,16 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
             </Field>
             <Field>
               <FieldLabel>{translations("Badge")}</FieldLabel>
-              <Input
-                placeholder={translations("e.g. Most Popular")}
-                {...form.getFieldProps("badge")}
-              />
+              <Input placeholder={translations("e.g. Most Popular")} {...form.register("badge")} />
             </Field>
             <Field>
               <FieldLabel>{translations("Monthly Razorpay Plan")}</FieldLabel>
               <Select
                 items={razorpayOptions}
-                value={form.values.monthlyPaymentPlanId ?? ""}
-                onValueChange={(value) => form.setFieldValue("monthlyPaymentPlanId", value)}
+                value={values.monthlyPaymentPlanId ?? ""}
+                onValueChange={(value) =>
+                  form.setValue("monthlyPaymentPlanId", value, { shouldDirty: true })
+                }
                 disabled={!razorpayOptions.length}
               >
                 <SelectTrigger className="w-full">
@@ -319,8 +332,10 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               <FieldLabel>{translations("Annual Razorpay Plan")}</FieldLabel>
               <Select
                 items={razorpayOptions}
-                value={form.values.yearlyPaymentPlanId ?? ""}
-                onValueChange={(value) => form.setFieldValue("yearlyPaymentPlanId", value)}
+                value={values.yearlyPaymentPlanId ?? ""}
+                onValueChange={(value) =>
+                  form.setValue("yearlyPaymentPlanId", value, { shouldDirty: true })
+                }
                 disabled={!razorpayOptions.length}
               >
                 <SelectTrigger className="w-full">
@@ -341,8 +356,10 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 type="number"
                 min={0}
                 placeholder={translations("Shown on the card in Monthly")}
-                value={form.values.monthlyPrice ?? 0}
-                onChange={(event) => form.setFieldValue("monthlyPrice", Number(event.target.value))}
+                value={values.monthlyPrice ?? 0}
+                onChange={(event) =>
+                  form.setValue("monthlyPrice", Number(event.target.value), { shouldDirty: true })
+                }
               />
             </Field>
             <Field>
@@ -351,8 +368,10 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 type="number"
                 min={0}
                 placeholder={translations("Shown on the card in Annual")}
-                value={form.values.yearlyPrice ?? 0}
-                onChange={(event) => form.setFieldValue("yearlyPrice", Number(event.target.value))}
+                value={values.yearlyPrice ?? 0}
+                onChange={(event) =>
+                  form.setValue("yearlyPrice", Number(event.target.value), { shouldDirty: true })
+                }
               />
               <FieldDescription>{translations("Per-month price billed annually")}</FieldDescription>
             </Field>
@@ -377,9 +396,11 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               placeholder={translations("Features")}
               rows={8}
               className="font-mono text-xs"
-              {...form.getFieldProps("features")}
+              {...form.register("features")}
             />
-            {form.errors.features && <FieldError>{form.errors.features}</FieldError>}
+            {form.formState.errors.features && (
+              <FieldError>{form.formState.errors.features.message}</FieldError>
+            )}
           </div>
           <DialogFooter className="mt-4">
             <Button type="reset" variant="ghost" onClick={closeModal}>

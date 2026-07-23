@@ -3,7 +3,7 @@ import { IconBrandWhatsapp, IconUserPlus } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { importMethod } from "@/utils/enums/index.ts";
 
 interface UnknownContactModalProps {
@@ -185,7 +186,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
                   defaultCountry="IN"
                   value={field.value}
                   onChange={field.onChange}
-                  className="border border-input focus-within:ring-1 focus-within:ring-ring focus-within:border-ring rounded-md px-3 py-1.5 text-xs sm:text-sm bg-background [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full bg-white [&>input]:bg-white dark:bg-zinc-950 dark:[&>input]:bg-zinc-950"
+                  className="w-full"
                 />
               )}
             />

@@ -1,7 +1,8 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Download, Info, User } from "lucide-react";
-import { Activity, useEffect, useState } from "react";
+import { Activity, useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
 import {
@@ -10,7 +11,6 @@ import {
 } from "@/backend/campaign/contacts/contacts.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
-import { useBridgedForm } from "@/hooks/useBridgedForm";
 import { ContactGroupType } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { importMethod } from "@/utils/enums/index.ts";
@@ -28,6 +28,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Skeleton } from "../ui/skeleton.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { Switch } from "../ui/switch.tsx";
+import {
+  buildContactSchema,
+  type ContactFormValues,
+  contactFormDefaults,
+} from "./contact-form-schema.ts";
 import ContactForm from "./ContactForm.tsx";
 
 const CreateContactModal = ({
@@ -53,74 +58,26 @@ const CreateContactModal = ({
   const { t: translations } = useTranslation();
   const { customFields } = useCustomFieldsContext();
 
-  const form = useBridgedForm({
-    defaultValues: initialValues ?? {
-      name: "",
-      phone: "",
-      email: "",
-      dob: null,
-      source: importMethod.MANUAL,
-      contactType: [],
-      countryCode: "91",
-      customFields: [],
-      updateExisting: false,
-      hasHeaderRow: true,
-      external_id: "",
-      labels: [],
-    },
-    validate: {
-      phone: (value, values) => {
-        if (values.source == importMethod.MANUAL)
-          return !value
-            ? translations("Phone Number cannot be blank")
-            : !isValidPhoneNumber(value)
-              ? translations("Invalid phone number")
-              : null;
-      },
-      name: (value, values) =>
-        values.source == importMethod.MANUAL &&
-        (value.length ? null : translations("Name cannot be blank")),
-      customFields: {
-        "*": (value, _values, path) => {
-          const fieldId = path.split(".")[1];
-          const customField = customFields.find((field) => field.slug === fieldId);
-
-          if (!customField) return null;
-
-          if (value && customField.type === "email") {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(value)) {
-              return translations("Invalid email format.");
-            }
-          }
-
-          if (value && customField.type === "number") {
-            if (isNaN(Number(value))) {
-              return translations("Must be a valid number");
-            }
-          }
-
-          return null;
-        },
-      },
-    },
+  const contactSchema = useMemo(
+    () => buildContactSchema(translations, customFields),
+    [translations, customFields],
+  );
+  const form = useForm<ContactFormValues>({
+    resolver: zodResolver(contactSchema) as any,
+    defaultValues: { ...contactFormDefaults, ...initialValues },
   });
-  const handleSubmit = async () => {
-    const validation = form.validate();
-    if (validation.hasErrors) {
-      if (validation.errors.contactType) {
-        toast.error(validation.errors.contactType as string);
-      }
-      return;
-    }
+
+  const submitContact = (values: ContactFormValues) => {
     setIsCreating(true);
-    if (form.getValues().source == importMethod.CSV && !initialValues) {
-      if (!csvfile) return;
+    if (values.source == importMethod.CSV && !initialValues) {
+      if (!csvfile) {
+        setIsCreating(false);
+        return;
+      }
       const formData = new FormData();
-      formData.append("update", form.getValues().updateExisting?.toString());
-      formData.append("hasHeaderRow", form.getValues().hasHeaderRow?.toString() ?? "true");
-      const contactTypes = form.getValues().contactType;
-      contactTypes.forEach((item, index) => {
+      formData.append("update", values.updateExisting?.toString());
+      formData.append("hasHeaderRow", values.hasHeaderRow?.toString() ?? "true");
+      values.contactType.forEach((item, index) => {
         formData.append(`tags[${index}]`, item);
       });
       formData.append("file", csvfile);
@@ -133,77 +90,69 @@ const CreateContactModal = ({
           close();
         },
       });
-    } else {
-      const contactData = {
-        ...form.getValues(),
-        dob: form.getValues()?.dob ? new Date(form.getValues().dob).toISOString() : null,
-        external_id: form.getValues()?.external_id || undefined,
-        phone: form.getValues()?.phone?.replace(/^\+/, "") || "",
-        source:
-          type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : form.getValues().source,
-        lastReceivedMessageTimeStamp: undefined,
-      };
-      if (initialValues) {
-        editContactMutation.mutate(
-          { data: contactData, contactId: initialValues.id },
-          {
-            onSuccess: () => {
-              setIsCreating(false);
-              contactClose();
-              close();
-              form.reset();
-            },
-            onError: () => {
-              setIsCreating(false);
-            },
-          },
-        );
-      } else {
-        if (createNewContactMutation) {
-          createNewContactMutation.mutate([contactData], {
-            onSuccess: () => {
-              setIsCreating(false);
-              contactClose();
-              close();
-              form.reset();
-            },
-            onError: () => {
-              setIsCreating(false);
-            },
-          });
-        } else {
-          createContactMutation.mutate(contactData, {
-            onSuccess: () => {
-              toast.success("Contact created successfully.", {
-                id: "contact-create",
-              });
-              setIsCreating(false);
-              contactClose();
-              close();
-              form.reset();
-            },
-            onError: (error) => {
-              toast.error(error?.message || `Error creating the contact`, {
-                id: "contact-create",
-              });
-              setIsCreating(false);
-            },
-          });
-        }
-      }
+      return;
     }
+    const contactData = {
+      ...values,
+      dob: values.dob ? new Date(values.dob).toISOString() : null,
+      external_id: values.external_id || undefined,
+      phone: values.phone?.replace(/^\+/, "") || "",
+      source: type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : values.source,
+      lastReceivedMessageTimeStamp: undefined,
+    };
+    if (initialValues) {
+      editContactMutation.mutate(
+        { data: contactData, contactId: initialValues.id },
+        {
+          onSuccess: () => {
+            setIsCreating(false);
+            contactClose();
+            close();
+            form.reset();
+          },
+          onError: () => setIsCreating(false),
+        },
+      );
+      return;
+    }
+    if (createNewContactMutation) {
+      createNewContactMutation.mutate([contactData], {
+        onSuccess: () => {
+          setIsCreating(false);
+          contactClose();
+          close();
+          form.reset();
+        },
+        onError: () => setIsCreating(false),
+      });
+      return;
+    }
+    createContactMutation.mutate(contactData, {
+      onSuccess: () => {
+        toast.success("Contact created successfully.", { id: "contact-create" });
+        setIsCreating(false);
+        contactClose();
+        close();
+        form.reset();
+      },
+      onError: (error) => {
+        toast.error(error?.message || `Error creating the contact`, { id: "contact-create" });
+        setIsCreating(false);
+      },
+    });
   };
+
+  const handleSubmit = form.handleSubmit(submitContact);
 
   useEffect(() => {
     if (initialValues) {
-      form.setValues(initialValues);
-      form.setFieldValue("phone", "+" + initialValues.phone);
+      form.reset({ ...contactFormDefaults, ...initialValues, phone: "+" + initialValues.phone });
     }
-    form.setFieldValue("contactType", customFields?.map((field) => field.slug) || []);
-  }, [initialValues]);
+    form.setValue("contactType", customFields?.map((field) => field.slug) || []);
+  }, [initialValues, customFields, form]);
 
-  const sourceValue = form.getValues().source;
-  const contactTypeValue: string[] = form.getValues().contactType ?? [];
+  const sourceValue = form.watch("source");
+  const contactTypeValue = form.watch("contactType") ?? [];
 
   return (
     <div>
@@ -213,7 +162,7 @@ const CreateContactModal = ({
           handleSubmit();
         }}
         onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
-        onReset={form.reset}
+        onReset={() => form.reset()}
       >
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -222,7 +171,7 @@ const CreateContactModal = ({
                 <Label>{translations("Import Contacts")}</Label>
                 <RadioGroup
                   value={sourceValue}
-                  onValueChange={(value) => form.setFieldValue("source", value)}
+                  onValueChange={(value) => form.setValue("source", value, { shouldDirty: true })}
                   className="flex flex-row items-center gap-4"
                 >
                   <div className="flex items-center gap-2">
@@ -251,11 +200,12 @@ const CreateContactModal = ({
                         id={`contact-type-${data?.slug}`}
                         checked={checked}
                         onCheckedChange={(value) => {
-                          form.setFieldValue(
+                          form.setValue(
                             "contactType",
                             value
                               ? [...contactTypeValue, data?.slug]
                               : contactTypeValue.filter((slug) => slug !== data?.slug),
+                            { shouldDirty: true },
                           );
                         }}
                       />
@@ -297,20 +247,32 @@ const CreateContactModal = ({
                 </div>
               </blockquote>
               <div className="mx-6 flex items-center gap-2">
-                <Switch
-                  id="update-existing"
-                  checked={form.getValues().updateExisting}
-                  onCheckedChange={(value) => form.setFieldValue("updateExisting", value)}
+                <Controller
+                  name="updateExisting"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Switch
+                      id="update-existing"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
                 />
                 <Label htmlFor="update-existing" className="font-normal">
                   {translations("Update the existing data while importing")}
                 </Label>
               </div>
               <div className="mx-6 flex items-center gap-2">
-                <Switch
-                  id="has-header-row"
-                  checked={form.getValues().hasHeaderRow}
-                  onCheckedChange={(value) => form.setFieldValue("hasHeaderRow", value)}
+                <Controller
+                  name="hasHeaderRow"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Switch
+                      id="has-header-row"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
                 />
                 <Label htmlFor="has-header-row" className="font-normal">
                   {translations("First row contains column headers (name, phone, ...)")}

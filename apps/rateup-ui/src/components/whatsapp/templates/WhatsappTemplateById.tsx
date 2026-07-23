@@ -1,6 +1,9 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { IconAsterisk, IconImageInPicture, IconInfoCircle } from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import type { FieldPath } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { z } from "zod/v4";
@@ -46,6 +49,7 @@ import CardCarousel, {
   ProductCardCarouselPreview,
 } from "@/components/whatsapp/templates/Details/CardCarousel.tsx";
 import { HeaderWithFormatting } from "@/components/whatsapp/templates/Details/HeaderWithFormating.tsx";
+import type { TemplateFormValues } from "@/components/whatsapp/templates/Details/template-form.ts";
 import { TextFormateToolBar } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating.tsx";
 import type { WaTemplateDefaultValues } from "@/components/whatsapp/templates/Schema/templateSchema.ts";
@@ -57,8 +61,6 @@ import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateSta
 import { WhatsAppChatShell } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { useToggle } from "@/hooks/use-toggle.ts";
-import { useBridgedForm } from "@/hooks/useBridgedForm";
-import { cn } from "@/lib/utils";
 import {
   OrderType,
   SubscriptionFeaturePathName,
@@ -79,9 +81,6 @@ import { toSelectOptions } from "@/utils/select-options.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 import { parseStringWithVariables, parseTemplate } from "@/utils/whatsapp/templates.tsx";
 
-import styles from "@/components/dashboard/whatsapp/templates/templateId.module.css";
-import buttonInputStyles from "@/components/whatsapp/templates/Details/ButtonInput.module.css";
-
 export function WhatsappTemplateById({
   forceTemplateType,
 }: Readonly<{ forceTemplateType?: TemplateType }>) {
@@ -101,8 +100,8 @@ export function WhatsappTemplateById({
   const inputRef = useRef(null);
   const [value, toggle] = useToggle([true, false]);
   const { update } = useRouteParams();
-  const form = useBridgedForm<z.infer<typeof templateSchema>>({
-    schema: templateSchema,
+  const form = useForm<TemplateFormValues>({
+    resolver: zodResolver(templateSchema) as any,
     defaultValues: {
       name: "",
       header: null,
@@ -133,8 +132,8 @@ export function WhatsappTemplateById({
       },
     },
   });
-  const configForm = useBridgedForm<z.infer<typeof configSchema>>({
-    schema: configSchema,
+  const configForm = useForm<z.infer<typeof configSchema>>({
+    resolver: zodResolver(configSchema),
     defaultValues: {
       price: 0,
       tax: 0,
@@ -142,34 +141,58 @@ export function WhatsappTemplateById({
       name: "",
     },
   });
-  const isOrderCreate = form.values.templateType === TemplateType.ORDER_DETAILS;
+  const values = form.watch();
+  const configValues = configForm.watch();
+  const formErrors = form.formState.errors;
+
+  /**
+   * Most writes here target runtime-built paths (`buttons.3.text`,
+   * `defaultValues.catalog.mpm.sections.0.title`), which cannot be expressed as a
+   * statically-known `FieldPath`. This keeps the cast in one place.
+   */
+  const setTemplateValue = (path: string, value: unknown) =>
+    form.setValue(path as FieldPath<TemplateFormValues>, value as never, {
+      shouldDirty: true,
+      shouldValidate: form.formState.isSubmitted,
+    });
+  const registerField = (path: string) => form.register(path as FieldPath<TemplateFormValues>);
+  const errorAt = (path: string) =>
+    (path.split(".").reduce<any>((node, part) => node?.[part], formErrors as any)?.message ??
+      undefined) as string | undefined;
+
+  // Only the mutations are used. The list is still rendered from the watched `values`
+  // rather than `fields`, because a row's rendering depends on values edited after it was
+  // appended (e.g. a url containing COPY_CODE switches the row to the OTP editor), which
+  // the `fields` snapshot would not reflect.
+  const {
+    append: appendButton,
+    insert: insertButton,
+    remove: removeButton,
+  } = useFieldArray({ control: form.control, name: "buttons" });
+
+  const isOrderCreate = values.templateType === TemplateType.ORDER_DETAILS;
   // Chat bubble background; the shadcn card token resolves per-theme.
   const bubbleBg = "var(--card)";
 
   useEffect(() => {
     if (editingItem) {
-      form.setValues(parseTemplate(editingItem));
+      form.reset(parseTemplate(editingItem) as TemplateFormValues);
       const selectedPhoneId =
         editingItem?.whatsappSettingsPhoneId ||
         editingItem?.defaultValues?.whatsappSettingsPhoneId ||
         "";
-      form.setFieldValue("whatsappSettingsPhoneId", selectedPhoneId);
-      form.setFieldValue("defaultValues.whatsappSettingsPhoneId", selectedPhoneId);
-      configForm.setValues(editingItem?.config);
+      setTemplateValue("whatsappSettingsPhoneId", selectedPhoneId);
+      setTemplateValue("defaultValues.whatsappSettingsPhoneId", selectedPhoneId);
+      configForm.reset(editingItem?.config);
       update({ templateId: editingItem?.data?.name });
     }
   }, [editingItem]);
 
   useEffect(() => {
-    if (
-      form.values.whatsappSettingsPhoneId !== form.values.defaultValues?.whatsappSettingsPhoneId
-    ) {
-      form.setFieldValue(
-        "defaultValues.whatsappSettingsPhoneId",
-        form.values.whatsappSettingsPhoneId,
-      );
+    if (values.whatsappSettingsPhoneId !== values.defaultValues?.whatsappSettingsPhoneId) {
+      setTemplateValue("defaultValues.whatsappSettingsPhoneId", values.whatsappSettingsPhoneId);
     }
-  }, [form.values.whatsappSettingsPhoneId]);
+  }, [values.whatsappSettingsPhoneId]);
 
   const { data: subscription } = useSubscription();
   const templateTypes = useMemo(
@@ -191,7 +214,7 @@ export function WhatsappTemplateById({
       checkoutBtn = false,
       flowBtn = false,
       catalogBtn = false;
-    form.values.buttons.forEach((b) => {
+    values.buttons.forEach((b) => {
       if (b.type === WHATSAPP_BUTTON_TYPE.SPM) {
         spmBtn = true;
       }
@@ -209,7 +232,7 @@ export function WhatsappTemplateById({
       }
     });
     return { spmBtn, mpmBtn, checkoutBtn, flowBtn, catalogBtn };
-  }, [form.values.buttons]);
+  }, [values.buttons]);
 
   const templateTypeOptions = toSelectOptions(templateTypes);
   const categoryOptions = toSelectOptions(WHATSAPP_TEMPLATE_CATEGORY);
@@ -229,30 +252,30 @@ export function WhatsappTemplateById({
     const currentTemplateType = form.getValues().templateType;
     const previousTemplateType = editingItem?.templateType;
     if (currentTemplateType != TemplateType.CAROUSEL) {
-      form.setFieldValue("productCarousel", []);
-      form.setFieldValue("mediaCarousel", []);
+      setTemplateValue("productCarousel", []);
+      setTemplateValue("mediaCarousel", []);
     }
     switch (form.getValues().templateType) {
       case TemplateType.ORDER_DETAILS:
-        form.setFieldValue("category", "UTILITY");
-        form.setFieldValue("buttons", [
+        setTemplateValue("category", "UTILITY");
+        setTemplateValue("buttons", [
           {
             type: WHATSAPP_BUTTON_TYPE.ORDER_DETAILS,
             text: "Review and Pay",
           },
         ]);
-        form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
+        setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
         break;
       case TemplateType.PAYMENT_CONFIRMATION:
-        form.setFieldValue("category", "UTILITY");
-        form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
-        form.setFieldValue("buttons", []);
+        setTemplateValue("category", "UTILITY");
+        setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
+        setTemplateValue("buttons", []);
         break;
       case TemplateType.CAROUSEL:
-        form.setFieldValue("category", "MARKETING");
-        form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
-        form.setFieldValue("buttons", []);
-        form.setFieldValue("footer", "");
+        setTemplateValue("category", "MARKETING");
+        setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
+        setTemplateValue("buttons", []);
+        setTemplateValue("footer", "");
         break;
       default:
         if (
@@ -265,9 +288,9 @@ export function WhatsappTemplateById({
           const buttons = editingItem?.data?.components?.find(
             (component) => component.type.toLowerCase() === "buttons",
           )?.buttons;
-          form.setFieldValue("buttons", buttons || []);
+          setTemplateValue("buttons", buttons || []);
         } else {
-          form.setFieldValue("buttons", []);
+          setTemplateValue("buttons", []);
         }
         break;
     }
@@ -286,32 +309,35 @@ export function WhatsappTemplateById({
     },
   );
 
-  const { data: catalog } = useConnectedWaCatalog(form.values.whatsappSettingsPhoneId);
+  const { data: catalog } = useConnectedWaCatalog(values.whatsappSettingsPhoneId);
   const productRetailerIds = useMemo(
     () => (catalog ? catalog.products?.map((p) => p.retailer_id) : []),
     [catalog],
   );
   useEffect(() => {
-    const selectedCatalogId = form.values.defaultValues?.catalog?.catalogId;
-    if (catalog && (!selectedCatalogId.length || selectedCatalogId !== catalog.catalogId))
-      form.setFieldValue("defaultValues.catalog.catalogId", catalog.catalogId);
+    // `catalogId` is absent whenever a saved template is loaded without one, so it has
+    // to stay optional here — the empty-string check it used to do was redundant with
+    // the inequality anyway.
+    const selectedCatalogId = values.defaultValues?.catalog?.catalogId;
+    if (catalog && selectedCatalogId !== catalog.catalogId)
+      setTemplateValue("defaultValues.catalog.catalogId", catalog.catalogId);
   }, [catalog]);
   useEffect(() => {
-    const variables = parseStringWithVariables(form.values.body);
-    const current = form.values.example || [];
+    const variables = parseStringWithVariables(values.body);
+    const current = values.example || [];
 
     if (current.length === variables.length) return;
 
     if (current.length > variables.length) {
-      form.setFieldValue("example", current.slice(0, variables.length));
+      setTemplateValue("example", current.slice(0, variables.length));
     } else {
       const newExamples = [...current];
       while (newExamples.length < variables.length) {
         newExamples.push("");
       }
-      form.setFieldValue("example", newExamples);
+      setTemplateValue("example", newExamples);
     }
-  }, [form.values.body]);
+  }, [values.body]);
   const updateTemplateMutation = useUpdateTemplateMutation(
     templateId,
     () => {
@@ -363,19 +389,18 @@ export function WhatsappTemplateById({
         return;
       }
     }
-    const dynamicVariableArray = parseStringWithVariables(form.values.body || "");
-    const hasEmptyExamples = (form.values.example || []).some((val) => !val || val.trim() === "");
+    const dynamicVariableArray = parseStringWithVariables(values.body || "");
+    const hasEmptyExamples = (values.example || []).some((val) => !val || val.trim() === "");
 
     if (dynamicVariableArray?.length > 0) {
       if (!isArrayInCorrectOrder(dynamicVariableArray)) {
         toast.error("Dynamic variables name should is sequential numeric order");
         return;
-      } else if (form.values.example.length !== dynamicVariableArray.length || hasEmptyExamples) {
+      } else if (values.example.length !== dynamicVariableArray.length || hasEmptyExamples) {
         toast.error("Please provide example values for all dynamic variables");
         return;
       }
     }
-    const values = form.values;
     if (values?.buttons?.length > 12) {
       toast.error(translations("Max number of button in buttons should be 12"));
       return;
@@ -534,14 +559,14 @@ export function WhatsappTemplateById({
     setSelectedText(selectedText?.trim());
   };
   const getNextVariable = () => {
-    const variables = parseStringWithVariables(form.values.body);
+    const variables = parseStringWithVariables(values.body);
     if (variables.length === 0) return "{{1}}";
     const numbers = variables.map(Number);
     const max = Math.max(...numbers);
     return `{{${max + 1}}}`;
   };
   const applyFormatting = (style) => {
-    const content = form.values.body;
+    const content = values.body;
     if (style.startsWith("{{")) {
       insertValue(getNextVariable());
       return;
@@ -550,13 +575,13 @@ export function WhatsappTemplateById({
     const formattedText = `${style}${selectedText}${style}`;
     contentHistory.current.push(content);
     const newContent = content.replace(selectedText, formattedText);
-    form.setFieldValue("body", newContent);
+    setTemplateValue("body", newContent);
   };
 
   const undo = () => {
     if (contentHistory.current.length > 0) {
       const previousContent = contentHistory.current.pop();
-      form.setFieldValue("body", previousContent);
+      setTemplateValue("body", previousContent);
     }
   };
 
@@ -567,7 +592,7 @@ export function WhatsappTemplateById({
     const end = input.selectionEnd;
     const text = input.value;
     const newText = text.substring(0, start) + value + text.substring(end);
-    form.setFieldValue("body", newText);
+    setTemplateValue("body", newText);
     const newCursorPosition = start + value.length;
     requestAnimationFrame(() => {
       input.setSelectionRange(newCursorPosition, newCursorPosition);
@@ -590,13 +615,13 @@ export function WhatsappTemplateById({
       newObject = { type: e, text };
     }
     if (e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
-      const btn = form.values?.buttons?.filter((data) => data.type === (e as WHATSAPP_BUTTON_TYPE));
+      const btn = values?.buttons?.filter((data) => data.type === (e as WHATSAPP_BUTTON_TYPE));
       if (btn?.length > 0) {
         toast.error(`Only one button allowed for this type`);
         return;
       }
     }
-    const newData = form.values.buttons ?? [];
+    const newData = values.buttons ?? [];
     if (e === WHATSAPP_BUTTON_TYPE.ORDER_DETAILS) {
       const otherBtns = newData.find((b) => b.type !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY);
       if (otherBtns) {
@@ -605,12 +630,10 @@ export function WhatsappTemplateById({
         );
         return;
       }
-      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE);
-      form.setFieldValue("defaultValues", {
+      setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE);
+      setTemplateValue("defaultValues", {
         whatsappSettingsPhoneId:
-          form.values.whatsappSettingsPhoneId ||
-          form.values.defaultValues?.whatsappSettingsPhoneId ||
-          "",
+          values.whatsappSettingsPhoneId || values.defaultValues?.whatsappSettingsPhoneId || "",
         orderDetails: {
           productType: "digital-goods",
           discount: 0.0,
@@ -644,29 +667,29 @@ export function WhatsappTemplateById({
     }, -1);
 
     if (lastIndex === -1 || e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
-      form.insertListItem("buttons", newObject);
+      appendButton(newObject);
     } else {
-      form.insertListItem("buttons", newObject, lastIndex + 1);
+      insertButton(lastIndex + 1, newObject);
     }
     if (e === WHATSAPP_BUTTON_TYPE.SPM) {
-      form.setFieldValue("header", null);
-      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT);
+      setTemplateValue("header", null);
+      setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT);
     }
     if (e === WHATSAPP_BUTTON_TYPE.CATALOG) {
-      form.setFieldValue("header", null);
-      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
-      form.setFieldValue("category", "MARKETING");
+      setTemplateValue("header", null);
+      setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
+      setTemplateValue("category", "MARKETING");
     }
     if (e === WHATSAPP_BUTTON_TYPE.MPM) {
-      form.setFieldValue("header", "");
-      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
-      form.setFieldValue("category", "MARKETING");
+      setTemplateValue("header", "");
+      setTemplateValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
+      setTemplateValue("category", "MARKETING");
     }
   };
   const deleteButton = (index: number) => {
-    form.removeListItem("buttons", index);
+    removeButton(index);
   };
-  const dynamicVariables = parseStringWithVariables(form.values.body);
+  const dynamicVariables = parseStringWithVariables(values.body);
 
   const requiredIcon = (
     <sup>
@@ -674,6 +697,9 @@ export function WhatsappTemplateById({
     </sup>
   );
 
+  /** Blocks interaction with a section while the saved template is in read-only mode.
+   *  Its container must be `relative`, otherwise the overlay escapes to the nearest
+   *  positioned ancestor and covers the whole page (Preview / Edit buttons included). */
   function ReadonlyOverlay() {
     if (editingItem?.data?.id && value) {
       return <div className="absolute inset-0 z-10" />;
@@ -705,7 +731,7 @@ export function WhatsappTemplateById({
             <p className="text-xs">${"{{}}"}</p>
           </div>
         </div>
-        {HeaderWithFormatting(form.values?.header, form.values?.format)}
+        {HeaderWithFormatting(values?.header, values?.format)}
         <p
           style={{
             wordBreak: "break-all",
@@ -713,7 +739,7 @@ export function WhatsappTemplateById({
             fontFamily: "inherit",
           }}
         >
-          {TextWithFormatting(form.values?.body, form.values?.example, form?.values?.category)}
+          {TextWithFormatting(values?.body, values?.example, values?.category)}
         </p>
         <p
           className="text-muted-foreground"
@@ -721,14 +747,14 @@ export function WhatsappTemplateById({
             wordBreak: "break-all",
           }}
         >
-          {form.values?.category === WaTemplateCategory.AUTHENTICATION
-            ? form.values?.code_expiration_minutes
-              ? `Expires in ${form.values?.code_expiration_minutes} minutes.`
+          {values?.category === WaTemplateCategory.AUTHENTICATION
+            ? values?.code_expiration_minutes
+              ? `Expires in ${values?.code_expiration_minutes} minutes.`
               : ""
-            : form.values.footer}
+            : values.footer}
         </p>
       </ResponseMessageContainer>
-      {form.values?.buttons?.slice(0, 2).map((data) => (
+      {values?.buttons?.slice(0, 2).map((data) => (
         <QuickReplyButton
           text={data?.text}
           key={data?.text}
@@ -736,7 +762,7 @@ export function WhatsappTemplateById({
           style={{ backgroundColor: bubbleBg }}
         />
       ))}
-      {form.values?.buttons?.length > 2 && (
+      {values?.buttons?.length > 2 && (
         <QuickReplyButton
           text={translations("See all options")}
           style={{ backgroundColor: bubbleBg }}
@@ -752,7 +778,7 @@ export function WhatsappTemplateById({
             padding: 4,
           }}
         >
-          {form.values.mediaCarousel?.map((card, index) => (
+          {values.mediaCarousel?.map((card, index) => (
             <div
               className="flex w-45 flex-col gap-px"
               key={index}
@@ -767,7 +793,7 @@ export function WhatsappTemplateById({
                   fontFamily: "inherit",
                 }}
               >
-                {TextWithFormatting(card?.body, card?.example, form?.values?.category)}
+                {TextWithFormatting(card?.body, card?.example, values?.category)}
               </p>
               {card?.buttons.map((data) => (
                 <QuickReplyButton
@@ -787,12 +813,15 @@ export function WhatsappTemplateById({
 
   return (
     <form>
-      <div onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => handleSubmit(true)]])}>
-        <div className="flex gap-4 justify-between items-center">
-          <h2 className="text-2xl font-semibold">
+      <div
+        className="flex flex-col gap-4"
+        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, () => handleSubmit(true)]])}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="truncate text-2xl font-semibold">
             {editingItem ? editingItem?.data?.name : translations("Create Template")}
           </h2>
-          <div className="flex gap-2.5 justify-start items-center">
+          <div className="flex flex-wrap items-center gap-2.5">
             <PhonePreviewButton platform="whatsapp" label={translations("Preview")}>
               <WhatsAppChatShell>{messageContent}</WhatsAppChatShell>
             </PhonePreviewButton>
@@ -819,13 +848,8 @@ export function WhatsappTemplateById({
             )}
           </div>
         </div>
-        <div
-          className={cn(
-            "w-full overflow-auto rounded-lg bg-card p-4 shadow-md",
-            styles["template-content-container"],
-          )}
-        >
-          <div className="flex flex-col gap-2.5">
+        <div className="w-full overflow-auto rounded-lg bg-card p-4 shadow-md md:p-6">
+          <div className="flex flex-col gap-6">
             {(createTemplateMutation.isError ||
               saveTemplateAsDraftMutation.isError ||
               updateTemplateMutation.isError) && (
@@ -839,21 +863,18 @@ export function WhatsappTemplateById({
                 </AlertDescription>
               </Alert>
             )}
-            <div className="flex items-center justify-between">
-              <WaTemplateStatusBadge status={form.values.status} />
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <WaTemplateStatusBadge status={values.status} />
               {editingItem?.data?.id && (
                 <LinkCopyElement
+                  className="w-full max-w-xs"
                   link={editingItem?.data?.id}
                   value={editingItem?.data?.id}
                   label={translations("Template ID")}
-                  style={{
-                    zIndex: 11,
-                  }}
                 />
               )}
-              <ReadonlyOverlay />
             </div>
-            <div className="relative grid grid-cols-2 gap-4">
+            <div className="relative grid grid-cols-1 gap-4 md:grid-cols-2">
               <ReadonlyOverlay />
               <Field>
                 <FieldLabel>
@@ -869,13 +890,14 @@ export function WhatsappTemplateById({
                   <InputGroupInput
                     placeholder={translations("Name")}
                     disabled={!!editingItem?.data?.id}
-                    {...form.getFieldProps("name")}
+                    aria-invalid={!!formErrors.name}
+                    {...registerField("name")}
                   />
                   <InputGroupAddon align="inline-end">
-                    <LengthTracker length={form?.values?.name?.length} maxValue={512} atStart />
+                    <LengthTracker length={values?.name?.length} maxValue={512} atStart />
                   </InputGroupAddon>
                 </InputGroup>
-                {form.errors.name && <FieldError>{form.errors.name}</FieldError>}
+                {formErrors.name && <FieldError>{formErrors.name.message}</FieldError>}
               </Field>
               <Field>
                 <FieldLabel>
@@ -886,8 +908,8 @@ export function WhatsappTemplateById({
                 </FieldLabel>
                 <Select
                   items={templateTypeOptions}
-                  value={form.values.templateType ?? ""}
-                  onValueChange={(value) => form.setFieldValue("templateType", value)}
+                  value={values.templateType ?? ""}
+                  onValueChange={(value) => setTemplateValue("templateType", value)}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder={translations("TemplateType")} />
@@ -916,8 +938,8 @@ export function WhatsappTemplateById({
                     </FieldLabel>
                     <Select
                       items={categoryOptions}
-                      value={form.values.category ?? ""}
-                      onValueChange={(value) => form.setFieldValue("category", value)}
+                      value={values.category ?? ""}
+                      onValueChange={(value) => setTemplateValue("category", value)}
                       disabled={isOrderCreate || catalogBtn || spmBtn || mpmBtn || checkoutBtn}
                     >
                       <SelectTrigger className="w-full">
@@ -943,8 +965,8 @@ export function WhatsappTemplateById({
                 </FieldLabel>
                 <Select
                   items={languageOptions}
-                  value={form.values.language ?? ""}
-                  onValueChange={(value) => form.setFieldValue("language", value)}
+                  value={values.language ?? ""}
+                  onValueChange={(value) => setTemplateValue("language", value)}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder={translations("Language")} />
@@ -960,22 +982,22 @@ export function WhatsappTemplateById({
               </Field>
               <div>
                 <AccountSelector
-                  value={form.values.whatsappSettingsPhoneId}
+                  value={values.whatsappSettingsPhoneId}
                   onChange={(value) => {
-                    form.setFieldValue("whatsappSettingsPhoneId", value ?? "");
-                    form.setFieldValue("defaultValues.whatsappSettingsPhoneId", value ?? "");
+                    setTemplateValue("whatsappSettingsPhoneId", value ?? "");
+                    setTemplateValue("defaultValues.whatsappSettingsPhoneId", value ?? "");
                   }}
                   label={translations("Account")}
                   className="h-10"
                 />
               </div>
             </div>
-            {form.values?.category !== WaTemplateCategory.AUTHENTICATION &&
+            {values?.category !== WaTemplateCategory.AUTHENTICATION &&
               form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
               form.getValues().templateType !== TemplateType.CAROUSEL && (
-                <div className="relative grid grid-cols-12 gap-4">
+                <div className="relative grid grid-cols-1 gap-4 md:grid-cols-2">
                   <ReadonlyOverlay />
-                  <div className="col-span-6">
+                  <div>
                     <Field>
                       <FieldLabel>
                         <div>
@@ -994,16 +1016,16 @@ export function WhatsappTemplateById({
                       </FieldLabel>
                       <Select
                         items={broadcastTypeOptions}
-                        value={form.values.format ?? ""}
+                        value={values.format ?? ""}
                         onValueChange={(value) => {
-                          const currentHeader = form.values.header;
+                          const currentHeader = values.header;
                           if (currentHeader) {
                             const isFile = currentHeader instanceof File;
                             if (value === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT || isFile) {
-                              form.setFieldValue("header", null);
+                              setTemplateValue("header", null);
                             }
                           }
-                          form.setFieldValue("format", value);
+                          setTemplateValue("format", value);
                         }}
                         disabled={spmBtn || catalogBtn || mpmBtn}
                       >
@@ -1020,65 +1042,78 @@ export function WhatsappTemplateById({
                       </Select>
                     </Field>
                   </div>
-                  <div className="col-span-auto">
-                    <div className="flex flex-col justify-center">
-                      <BroadCastTypeValue form={form} type={form.values?.format} />
-                    </div>
+                  <div className="flex flex-col justify-end">
+                    <BroadCastTypeValue form={form} type={values?.format} />
                   </div>
                 </div>
               )}
 
-            <div className="flex flex-col gap-0">
+            <div className="relative flex flex-col gap-2">
               <ReadonlyOverlay />
-              {form.values?.category !== WaTemplateCategory.AUTHENTICATION && (
+              {values?.category !== WaTemplateCategory.AUTHENTICATION && (
                 <>
-                  <div className="flex items-center gap-1 flex-nowrap">
-                    <p className="text-sm font-medium">{translations("Body")}</p>
-                    {requiredIcon}
-                  </div>
-                  <p className="text-[13px]">
-                    {translations(
-                      "Make your messages personal using variables and get more replies!",
-                    )}
-                  </p>
-                  <TextFormateToolBar
-                    applyFormatting={applyFormatting}
-                    insertValue={insertValue}
-                    undo={undo}
-                    dynamicVariables={dynamicVariables}
-                  />
-                  <div className="relative">
-                    <Textarea
-                      ref={inputRef}
-                      className="field-sizing-content rounded-t-none rounded-b-xl pr-[90px]"
-                      placeholder={translations("Enter the text")}
-                      rows={3}
-                      onSelect={handleSelect}
-                      {...form.getInputProps("body")}
-                    />
-                    <div className="pointer-events-none absolute right-2 bottom-2">
-                      <LengthTracker length={form?.values?.body?.length} maxValue={1024} atStart />
+                  <div>
+                    <div className="flex items-center gap-1 flex-nowrap">
+                      <p className="text-sm font-medium">{translations("Body")}</p>
+                      {requiredIcon}
                     </div>
+                    <p className="text-[13px] text-muted-foreground">
+                      {translations(
+                        "Make your messages personal using variables and get more replies!",
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <TextFormateToolBar
+                      applyFormatting={applyFormatting}
+                      insertValue={insertValue}
+                      undo={undo}
+                      dynamicVariables={dynamicVariables}
+                    />
+                    <div className="relative">
+                      <Textarea
+                        ref={inputRef}
+                        className="field-sizing-content rounded-t-none rounded-b-xl pr-22.5"
+                        placeholder={translations("Enter the text")}
+                        rows={3}
+                        onSelect={handleSelect}
+                        aria-invalid={!!formErrors.body}
+                        {...registerField("body")}
+                      />
+                      <div className="pointer-events-none absolute right-2 bottom-2">
+                        <LengthTracker length={values?.body?.length} maxValue={1024} atStart />
+                      </div>
+                    </div>
+                    {formErrors.body && <FieldError>{formErrors.body.message}</FieldError>}
                   </div>
                 </>
               )}
             </div>
-            <div className="flex flex-col gap-0">
+            <div className="relative flex flex-col gap-4">
               <ReadonlyOverlay />
-              {form.values?.category !== WaTemplateCategory.AUTHENTICATION &&
-                dynamicVariables?.map((data, index) => (
-                  <Input
-                    key={data}
-                    placeholder={`${translations("Enter the content for")} {{${data}}}`}
-                    {...form.getFieldProps(`example.${index}`)}
-                  />
-                ))}
+              {values?.category !== WaTemplateCategory.AUTHENTICATION &&
+                dynamicVariables?.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {dynamicVariables.map((data, index) => (
+                      <Field key={data} data-invalid={!!errorAt(`example.${index}`)}>
+                        <Input
+                          placeholder={`${translations("Enter the content for")} {{${data}}}`}
+                          aria-invalid={!!errorAt(`example.${index}`)}
+                          {...registerField(`example.${index}`)}
+                        />
+                        {errorAt(`example.${index}`) && (
+                          <FieldError>{errorAt(`example.${index}`)}</FieldError>
+                        )}
+                      </Field>
+                    ))}
+                  </div>
+                )}
 
               {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
                 form.getValues().templateType !== TemplateType.CAROUSEL && (
                   <>
-                    {form.values?.category !== WaTemplateCategory.AUTHENTICATION ? (
-                      <Field>
+                    {values?.category !== WaTemplateCategory.AUTHENTICATION ? (
+                      <Field data-invalid={!!formErrors.footer}>
                         <FieldLabel>
                           <div>
                             <p className="text-sm font-medium">
@@ -1094,16 +1129,14 @@ export function WhatsappTemplateById({
                         <InputGroup>
                           <InputGroupInput
                             placeholder={translations("Footer")}
-                            {...form.getFieldProps("footer")}
+                            aria-invalid={!!formErrors.footer}
+                            {...registerField("footer")}
                           />
                           <InputGroupAddon align="inline-end">
-                            <LengthTracker
-                              length={form?.values?.footer?.length}
-                              maxValue={60}
-                              atStart
-                            />
+                            <LengthTracker length={values?.footer?.length} maxValue={60} atStart />
                           </InputGroupAddon>
                         </InputGroup>
+                        {formErrors.footer && <FieldError>{formErrors.footer.message}</FieldError>}
                       </Field>
                     ) : (
                       <Field>
@@ -1117,12 +1150,9 @@ export function WhatsappTemplateById({
                           min={1}
                           max={90}
                           placeholder={translations("Expiration time")}
-                          value={form.values.code_expiration_minutes ?? ""}
+                          value={values.code_expiration_minutes ?? ""}
                           onChange={(event) =>
-                            form.setFieldValue(
-                              "code_expiration_minutes",
-                              Number(event.target.value),
-                            )
+                            setTemplateValue("code_expiration_minutes", Number(event.target.value))
                           }
                         />
                       </Field>
@@ -1135,15 +1165,15 @@ export function WhatsappTemplateById({
                       checkoutBtn={checkoutBtn}
                       catalogBtn={catalogBtn}
                       spmBtn={spmBtn}
-                      btnLen={form?.values?.buttons?.length}
+                      btnLen={values?.buttons?.length}
                       disabled={isOrderCreate}
-                      category={form.values?.category as any}
+                      category={values?.category as any}
                     />
-                    {form.values?.buttons?.length > 0 && (
-                      <>
-                        {form.values?.buttons?.map((data, index) => (
+                    {values?.buttons?.length > 0 && (
+                      <div className="flex flex-col gap-3">
+                        {values?.buttons?.map((data, index) => (
                           <div
-                            className={cn("flex items-center", buttonInputStyles.buttonBox)}
+                            className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-muted p-3"
                             key={index}
                           >
                             <ButtonInput
@@ -1156,84 +1186,94 @@ export function WhatsappTemplateById({
                             />
                           </div>
                         ))}
-                      </>
+                      </div>
                     )}
                     {isOrderCreate && (
-                      <>
+                      <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-1 flex-nowrap">
                           <p className="text-sm font-medium">{translations("Config")}</p>
                           {requiredIcon}
                         </div>
-                        <Field>
-                          <FieldLabel>
-                            <div className="flex items-center gap-1 flex-nowrap">
-                              <p className="text-sm font-medium">{translations("Name")}</p>
-                              {requiredIcon}
-                            </div>
-                          </FieldLabel>
-                          <Input placeholder={"name"} {...configForm.getFieldProps("name")} />
-                        </Field>
-                        <Field>
-                          <FieldLabel>
-                            <div className="flex items-center gap-1 flex-nowrap">
-                              <p className="text-sm font-medium">{translations("Price")}</p>
-                              {requiredIcon}
-                            </div>
-                          </FieldLabel>
-                          <Input
-                            type="number"
-                            min={0}
-                            placeholder={translations("price")}
-                            value={configForm.values.price ?? 0}
-                            onChange={(event) =>
-                              configForm.setFieldValue("price", Number(event.target.value))
-                            }
-                          />
-                        </Field>
-                        <Field>
-                          <FieldLabel>
-                            <div className="flex items-center gap-1 flex-nowrap">
-                              <p className="text-sm font-medium">{translations("Tax")}</p>
-                              {requiredIcon}
-                            </div>
-                          </FieldLabel>
-                          <Input
-                            type="number"
-                            min={0}
-                            placeholder={translations("tax")}
-                            value={configForm.values.tax ?? 0}
-                            onChange={(event) =>
-                              configForm.setFieldValue("tax", Number(event.target.value))
-                            }
-                          />
-                        </Field>
-                        <Field>
-                          <FieldLabel>
-                            <p className="text-sm font-medium">{translations("OrderType")}</p>
-                          </FieldLabel>
-                          <Select
-                            items={orderTypeOptions}
-                            value={configForm.values.orderType ?? ""}
-                            onValueChange={(value) => configForm.setFieldValue("orderType", value)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder={translations("order type")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {orderTypeOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FieldDescription>
-                            When this field is passed in we hide the &quot;Review and Pay&quot;
-                            button and only show the &quot;Pay Now&quot; button in the order details
-                            bubble
-                          </FieldDescription>
-                        </Field>
-                      </>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                          <Field>
+                            <FieldLabel>
+                              <div className="flex items-center gap-1 flex-nowrap">
+                                <p className="text-sm font-medium">{translations("Name")}</p>
+                                {requiredIcon}
+                              </div>
+                            </FieldLabel>
+                            <Input placeholder={"name"} {...configForm.register("name")} />
+                          </Field>
+                          <Field>
+                            <FieldLabel>
+                              <div className="flex items-center gap-1 flex-nowrap">
+                                <p className="text-sm font-medium">{translations("Price")}</p>
+                                {requiredIcon}
+                              </div>
+                            </FieldLabel>
+                            <Input
+                              type="number"
+                              min={0}
+                              placeholder={translations("price")}
+                              value={configValues.price ?? 0}
+                              onChange={(event) =>
+                                configForm.setValue("price", Number(event.target.value), {
+                                  shouldDirty: true,
+                                })
+                              }
+                            />
+                          </Field>
+                          <Field>
+                            <FieldLabel>
+                              <div className="flex items-center gap-1 flex-nowrap">
+                                <p className="text-sm font-medium">{translations("Tax")}</p>
+                                {requiredIcon}
+                              </div>
+                            </FieldLabel>
+                            <Input
+                              type="number"
+                              min={0}
+                              placeholder={translations("tax")}
+                              value={configValues.tax ?? 0}
+                              onChange={(event) =>
+                                configForm.setValue("tax", Number(event.target.value), {
+                                  shouldDirty: true,
+                                })
+                              }
+                            />
+                          </Field>
+                          <Field>
+                            <FieldLabel>
+                              <p className="text-sm font-medium">{translations("OrderType")}</p>
+                            </FieldLabel>
+                            <Select
+                              items={orderTypeOptions}
+                              value={configValues.orderType ?? ""}
+                              onValueChange={(value) =>
+                                configForm.setValue("orderType", value as OrderType, {
+                                  shouldDirty: true,
+                                })
+                              }
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder={translations("order type")} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {orderTypeOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FieldDescription>
+                              When this field is passed in we hide the &quot;Review and Pay&quot;
+                              button and only show the &quot;Pay Now&quot; button in the order
+                              details bubble
+                            </FieldDescription>
+                          </Field>
+                        </div>
+                      </div>
                     )}
                   </>
                 )}

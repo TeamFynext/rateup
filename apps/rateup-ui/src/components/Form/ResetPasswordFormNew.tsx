@@ -1,13 +1,14 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
-import { useBridgedForm } from "@/hooks/useBridgedForm";
 import { useSendResetEmail, useSetNewPassword } from "@/utils/auth/resetPassword.tsx";
 import { rateupLogoStackedWhiteTransparent, SAVE_HOTKEY } from "@/utils/constants.ts";
 import { ResetSteps } from "@/utils/enums/index.ts";
@@ -15,8 +16,8 @@ import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
+import { Field, FieldError, FieldLabel } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
-import { Label } from "../ui/label.tsx";
 import { Loader } from "../ui/loader.tsx";
 
 const ResetPasswordForm = ({ mode }) => {
@@ -68,27 +69,25 @@ const ResetPasswordForm = ({ mode }) => {
 
   type PwdSchemaType = z.infer<typeof pwdSchema>;
 
-  const emailForm = useBridgedForm({
+  const emailForm = useForm<z.infer<typeof emailSchema>>({
+    resolver: zodResolver(emailSchema),
     defaultValues: {
       email: "",
-      password: "",
     },
-
-    schema: emailSchema,
   });
 
-  const pwdForm = useBridgedForm<PwdSchemaType>({
+  const pwdForm = useForm<PwdSchemaType>({
+    resolver: zodResolver(pwdSchema),
     defaultValues: {
       password: "",
       confirmPassword: "",
     },
-    schema: pwdSchema,
   });
 
   const sendResetEmail = useSendResetEmail();
   const checkEmailMutaion = useCheckEmailExistMutation();
   const isEmailPage = page === ResetSteps.STEP_ONE;
-  const password = pwdForm.values.password;
+  const password = pwdForm.watch("password");
   // const isEmailPage = true;
   const [isLoading, setIsLoading] = useState(false);
   const rules = [
@@ -127,7 +126,9 @@ const ResetPasswordForm = ({ mode }) => {
             email: values.email,
           });
           if (!user?.success) {
-            emailForm.setFieldError("email", translations("User with this email does not exist!"));
+            emailForm.setError("email", {
+              message: translations("User with this email does not exist!"),
+            });
             toast.error(translations("User with this email does not exist!"), {
               id: "user-not-found",
             });
@@ -176,22 +177,30 @@ const ResetPasswordForm = ({ mode }) => {
             {isEmailPage ? (
               <form
                 className="space-y-4"
-                onSubmit={emailForm.onSubmit(onSubmit)}
+                onSubmit={emailForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event: any) => emailForm.onSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, (event: any) => emailForm.handleSubmit(onSubmit)(event)],
                 ])}
               >
-                <div className="space-y-2">
-                  <Label htmlFor="email">{translations("Email Address")}</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder={translations("Enter your email address")}
-                    required
-                    className="h-12 bg-gray-100"
-                    {...emailForm.getInputProps("email")}
-                  />
-                </div>
+                <Controller
+                  name="email"
+                  control={emailForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field className="space-y-2" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="email">{translations("Email Address")}</FieldLabel>
+                      <Input
+                        {...field}
+                        id="email"
+                        type="email"
+                        placeholder={translations("Enter your email address")}
+                        required
+                        aria-invalid={fieldState.invalid}
+                        className="h-12 bg-gray-100"
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
 
                 <Button
                   type="submit"
@@ -204,63 +213,86 @@ const ResetPasswordForm = ({ mode }) => {
             ) : (
               <form
                 className="space-y-4"
-                onSubmit={pwdForm.onSubmit(onSubmit)}
+                onSubmit={pwdForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
-                  [SAVE_HOTKEY, (event: any) => pwdForm.onSubmit(onSubmit)(event)],
+                  [SAVE_HOTKEY, (event: any) => pwdForm.handleSubmit(onSubmit)(event)],
                 ])}
               >
-                <div className="space-y-1">
-                  <Label htmlFor="password" className="text-gray-700 text-sm">
-                    {translations("New Password")}
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder={translations("Enter your new password")}
-                      className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-sm"
-                      {...pwdForm.getInputProps("password")}
-                      onFocus={() => setIsPasswordFocused(true)}
-                      onBlur={() => setIsPasswordFocused(false)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
+                <Controller
+                  name="password"
+                  control={pwdForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field className="space-y-1" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="password" className="text-gray-700 text-sm">
+                        {translations("New Password")}
+                      </FieldLabel>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          {...field}
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder={translations("Enter your new password")}
+                          aria-invalid={fieldState.invalid}
+                          className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-sm"
+                          onFocus={() => setIsPasswordFocused(true)}
+                          onBlur={() => {
+                            field.onBlur();
+                            setIsPasswordFocused(false);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
 
                 {/* Confirm Password */}
-                <div className="space-y-1">
-                  <Label htmlFor="confirmPassword" className="text-gray-700 text-sm">
-                    {translations("Confirm New Password")}
-                  </Label>
-                  <div className="relative">
-                    <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder={translations("Confirm your new password")}
-                      className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-sm"
-                      {...pwdForm.getInputProps("confirmPassword")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
+                <Controller
+                  name="confirmPassword"
+                  control={pwdForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field className="space-y-1" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="confirmPassword" className="text-gray-700 text-sm">
+                        {translations("Confirm New Password")}
+                      </FieldLabel>
+                      <div className="relative">
+                        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          {...field}
+                          id="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder={translations("Confirm your new password")}
+                          aria-invalid={fieldState.invalid}
+                          className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </Field>
+                  )}
+                />
                 <AnimatePresence>
                   {isPasswordFocused && (
                     <motion.div

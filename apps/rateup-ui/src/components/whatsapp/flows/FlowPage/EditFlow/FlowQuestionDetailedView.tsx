@@ -1,7 +1,10 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { isEqual } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
+import type { UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -42,8 +45,6 @@ import {
   WA_FLOW_HEADING_CHAR_LIMIT,
 } from "@/components/whatsapp/whatsappConfig.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
-import type { BridgedForm } from "@/hooks/useBridgedForm";
-import { useBridgedForm } from "@/hooks/useBridgedForm";
 import {
   DocumentMimeType,
   InputType,
@@ -166,26 +167,41 @@ function ElementEditor({
   }
 
   const formInitialValues = getInitialQuestionValues(question, surveyLanguages, SurveyType.WaFlow);
-  const form = useBridgedForm<any>({
+  const form = useForm<any>({
     defaultValues: formInitialValues,
-    validate: {
-      title: (title) => {
-        const value = title[selectedLanguage];
-        if (value.trim().length > WA_FLOW_HEADING_CHAR_LIMIT) {
-          return `Max ${WA_FLOW_HEADING_CHAR_LIMIT} characters allowed`;
-        }
-      },
-      description: (description) => {
-        const value = description[selectedLanguage];
-        if (value.trim().length > WA_FLOW_BODY_CHAR_LIMIT) {
-          return `Max ${WA_FLOW_BODY_CHAR_LIMIT} characters allowed`;
-        }
-      },
-      label: (label) => {
-        return validateLabel(label[selectedLanguage]);
-      },
-    },
   });
+  const values = form.watch();
+
+  /**
+   * Validates the fields of the language currently being edited and writes the results
+   * onto the form. Kept synchronous — `handleSave` returns "saved" / "error" to its
+   * callers, so it cannot await RHF's async `trigger()`.
+   */
+  /** Writes a `<field>.<language>` path; these are built from the active locale. */
+  const setLocalised = (path: string, value: unknown) =>
+    form.setValue(path, value, { shouldDirty: true });
+
+  const validateSelectedLanguage = () => {
+    const current = form.getValues();
+    const issues: Array<[string, string]> = [];
+
+    const title = current.title?.[selectedLanguage] ?? "";
+    if (title.trim().length > WA_FLOW_HEADING_CHAR_LIMIT) {
+      issues.push(["title", `Max ${WA_FLOW_HEADING_CHAR_LIMIT} characters allowed`]);
+    }
+    const description = current.description?.[selectedLanguage] ?? "";
+    if (description.trim().length > WA_FLOW_BODY_CHAR_LIMIT) {
+      issues.push(["description", `Max ${WA_FLOW_BODY_CHAR_LIMIT} characters allowed`]);
+    }
+    const labelError = validateLabel(current.label?.[selectedLanguage]);
+    if (labelError) issues.push(["label", labelError]);
+
+    form.clearErrors(["title", "description", "label"]);
+    for (const [name, message] of issues) {
+      form.setError(name, { type: "validation", message });
+    }
+    return issues.length === 0;
+  };
 
   const fileSchema = z
     .object({
@@ -242,8 +258,8 @@ function ElementEditor({
     }
   };
 
-  const extraConfigForm = useBridgedForm<any>({
-    schema: fileSchema,
+  const extraConfigForm = useForm<any>({
+    resolver: zodResolver(fileSchema) as any,
     defaultValues: {
       "photo-source": PhotoSource.cameraGallery,
       "max-file-size-kb": 5120,
@@ -257,7 +273,7 @@ function ElementEditor({
   });
   useEffect(() => {
     if (question.extraConfig) {
-      extraConfigForm.setValues(question.extraConfig);
+      extraConfigForm.reset({ ...extraConfigForm.getValues(), ...question.extraConfig });
     }
   }, [question.extraConfig]);
 
@@ -273,7 +289,7 @@ function ElementEditor({
   }, [watchedChoices]);
 
   function getIncompleteLanguages() {
-    return validateAllLanguagesArePopulated(form.values, surveyLanguages, ["choices"]);
+    return validateAllLanguagesArePopulated(form.getValues(), surveyLanguages, ["choices"]);
   }
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
@@ -283,8 +299,7 @@ function ElementEditor({
     }
 
     // Form validation
-    const formValidation = form.validate();
-    if (formValidation.hasErrors) {
+    if (!validateSelectedLanguage()) {
       toast.error(translations("Fix errors before saving"));
       return "error";
     }
@@ -307,12 +322,11 @@ function ElementEditor({
         QuestionType.Phone,
       ].includes(question.type as QuestionType)
     ) {
-      const { hasErrors: extraConfigErrors } = extraConfigForm.validate();
-      if (extraConfigErrors) return "error";
+      if (!fileSchema.safeParse(extraConfigForm.getValues()).success) return "error";
 
       toast.dismiss();
       const updatedValues = getUpdatedValues();
-      form.setFieldValue("extraConfig", updatedValues);
+      form.setValue("extraConfig", updatedValues, { shouldDirty: true });
     }
     // Save the question - create new or update existing
     if (!question.id) {
@@ -326,27 +340,28 @@ function ElementEditor({
 
   // Helper function to extract updated values based on question type
   const getUpdatedValues = () => {
+    const allExtraConfig = extraConfigForm.getValues();
     const extraConfigValues = (() => {
       switch (question.type) {
         case QuestionType.PhotoPicker:
           return {
-            "photo-source": extraConfigForm.values["photo-source"],
-            "max-file-size-kb": extraConfigForm.values["max-file-size-kb"],
-            "min-uploaded-photos": extraConfigForm.values["min-uploaded-photos"],
-            "max-uploaded-photos": extraConfigForm.values["max-uploaded-photos"],
+            "photo-source": allExtraConfig["photo-source"],
+            "max-file-size-kb": allExtraConfig["max-file-size-kb"],
+            "min-uploaded-photos": allExtraConfig["min-uploaded-photos"],
+            "max-uploaded-photos": allExtraConfig["max-uploaded-photos"],
           };
         case QuestionType.DocumentPicker:
           return {
-            "max-file-size-kb": extraConfigForm.values["max-file-size-kb"],
-            "min-uploaded-documents": extraConfigForm.values["min-uploaded-documents"],
-            "max-uploaded-documents": extraConfigForm.values["max-uploaded-documents"],
-            "allowed-mime-types": extraConfigForm.values["allowed-mime-types"],
+            "max-file-size-kb": allExtraConfig["max-file-size-kb"],
+            "min-uploaded-documents": allExtraConfig["min-uploaded-documents"],
+            "max-uploaded-documents": allExtraConfig["max-uploaded-documents"],
+            "allowed-mime-types": allExtraConfig["allowed-mime-types"],
           };
         case QuestionType.Text:
         case QuestionType.Email:
         case QuestionType.Phone:
           return {
-            "input-type": extraConfigForm.values["input-type"],
+            "input-type": allExtraConfig["input-type"],
           };
       }
     })();
@@ -394,15 +409,15 @@ function ElementEditor({
 
   const isSaving = questionCreateMutation.isPending || questionUpdateMutation.isPending;
 
-  const labelInputProps = form.getInputProps(`label.${selectedLanguage}`);
+  const rawLabelValue = values.label?.[selectedLanguage];
   // Ensure value is always a string (handle undefined, null, or non-string values)
-  const labelValue = typeof labelInputProps.value === "string" ? labelInputProps.value : "";
+  const labelValue = typeof rawLabelValue === "string" ? rawLabelValue : "";
   // TODO: defer error checking until user has entered some text
-  labelInputProps.error = validateLabel(labelValue);
+  const labelError = validateLabel(labelValue);
 
   useEffect(() => {
-    if (formInitialValues.required !== form.values.required && form.isValid()) handleSave();
-  }, [form.values.required]);
+    if (formInitialValues.required !== values.required && validateSelectedLanguage()) handleSave();
+  }, [values.required]);
 
   return (
     <div
@@ -442,35 +457,42 @@ function ElementEditor({
                   className="max-h-24 overflow-y-auto border-none bg-transparent px-0 shadow-none"
                   placeholder={translations("Enter question title here")}
                   maxValue={getFlowTextLimit(WaFlowFormElementType.textSubHeading)}
-                  {...form.getInputProps(`title.${selectedLanguage}`)}
+                  value={values.title?.[selectedLanguage] ?? ""}
+                  onChange={(event) =>
+                    setLocalised(`title.${selectedLanguage}`, event.target.value)
+                  }
                   onBlur={() => {
-                    if (!isEqual(form.values, formInitialValues) && form.isValid()) handleSave();
+                    if (!isEqual(values, formInitialValues) && validateSelectedLanguage())
+                      handleSave();
                   }}
                 />
 
                 <TextareaWithLengthTracker
                   className="max-h-48 overflow-y-auto border-none bg-transparent px-0 shadow-none"
                   placeholder={translations("Enter question description here")}
-                  {...form.getInputProps(`description.${selectedLanguage}`)}
-                  value={form.values.description[selectedLanguage]}
+                  value={values.description?.[selectedLanguage] ?? ""}
+                  onChange={(event) =>
+                    setLocalised(`description.${selectedLanguage}`, event.target.value)
+                  }
                   inputStyle={{
                     fontSize: "1.1rem",
                     fontWeight: 400, // set custom font size for this TextInput
                   }}
                   maxValue={getFlowTextLimit(WaFlowFormElementType.textBody)}
                   onBlur={() => {
-                    if (!isEqual(form.values, formInitialValues) && form.isValid()) handleSave();
+                    if (!isEqual(values, formInitialValues) && validateSelectedLanguage())
+                      handleSave();
                   }}
                 />
               </>
             )}
             <LabelTextInput
               value={labelValue}
-              onChange={(e) => form.setFieldValue(`label.${selectedLanguage}`, e.target.value)}
-              error={labelInputProps.error}
+              onChange={(e) => setLocalised(`label.${selectedLanguage}`, e.target.value)}
+              error={labelError}
               maxLength={labelMaxLength}
               onBlur={() => {
-                if (!isEqual(form.values, formInitialValues) && form.isValid()) handleSave();
+                if (!isEqual(values, formInitialValues) && validateSelectedLanguage()) handleSave();
               }}
             />
 
@@ -489,16 +511,20 @@ function ElementEditor({
           <div className="flex items-center">
             <Label className="flex items-center gap-2 font-semibold">
               <Checkbox
-                checked={!!form.values?.required}
-                onCheckedChange={(checked) => form.setFieldValue("required", !!checked)}
+                checked={!!values?.required}
+                onCheckedChange={(checked) =>
+                  form.setValue("required", !!checked, { shouldDirty: true })
+                }
               />
               {translations("Required")}
             </Label>
             {WaNPSQuestions.includes(question?.type as QuestionType) && (
               <Label className="flex items-center gap-2 font-semibold">
                 <Checkbox
-                  checked={!!form.values?.enableNpsAnalytics}
-                  onCheckedChange={(checked) => form.setFieldValue("enableNpsAnalytics", !!checked)}
+                  checked={!!values?.enableNpsAnalytics}
+                  onCheckedChange={(checked) =>
+                    form.setValue("enableNpsAnalytics", !!checked, { shouldDirty: true })
+                  }
                 />
                 {translations("NPS Analytics")}
               </Label>
@@ -576,10 +602,10 @@ function LabelTextInput(
 }
 
 interface ExtraPropsProps {
-  form: BridgedForm<any>;
+  form: UseFormReturn<any>;
   question: Question;
   nextScreens?: WaFlowScreen[];
-  extraConfigForm: BridgedForm<any>;
+  extraConfigForm: UseFormReturn<any>;
 }
 function FlowQuestionExtraProps({
   form,
@@ -611,7 +637,7 @@ function FlowQuestionExtraProps({
             <p className="font-bold text-muted-foreground">{translations("Choices")}</p>
             <Separator className="grow" />
             <LengthTracker
-              length={form.values.choices?.[selectedLanguage]?.length || 0}
+              length={form.watch().choices?.[selectedLanguage]?.length || 0}
               maxValue={maxChoiceCount}
             />
           </div>
@@ -631,8 +657,8 @@ function FlowQuestionExtraProps({
           <FieldLabel>{translations("Read more screen")}</FieldLabel>
           <Select
             items={nextScreenOptions}
-            value={form.values["optinScreenId"] ?? ""}
-            onValueChange={(value) => form.setFieldValue("optinScreenId", value)}
+            value={form.watch("optinScreenId") ?? ""}
+            onValueChange={(value) => form.setValue("optinScreenId", value, { shouldDirty: true })}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={translations("select next screen to show the details")} />
@@ -652,18 +678,20 @@ function FlowQuestionExtraProps({
         <div className="flex flex-col mt-2.5">
           <Label className="flex items-center gap-2">
             <Switch
-              checked={!!form.values?.onSelectAction}
-              onCheckedChange={(checked) => form.setFieldValue("onSelectAction", !!checked)}
+              checked={!!form.watch().onSelectAction}
+              onCheckedChange={(checked) =>
+                form.setValue("onSelectAction", !!checked, { shouldDirty: true })
+              }
             />
             {translations("Enable dynamic datepicker")}
           </Label>
-          {form.values.onSelectAction && (
+          {form.watch().onSelectAction && (
             <Field className="w-100">
               <FieldLabel>{translations("Integration App Name")}</FieldLabel>
               <Select
                 items={integrationAppOptions}
-                value={form.values["waAppName"] ?? ""}
-                onValueChange={(value) => form.setFieldValue("waAppName", value)}
+                value={form.watch("waAppName") ?? ""}
+                onValueChange={(value) => form.setValue("waAppName", value, { shouldDirty: true })}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={translations("Select Integration App Name")} />
@@ -703,8 +731,10 @@ function FlowQuestionExtraProps({
             <FieldLabel>{translations("Photo Source")}</FieldLabel>
             <Select
               items={photoSourceOptions}
-              value={extraConfigForm.values["photo-source"] ?? ""}
-              onValueChange={(value) => extraConfigForm.setFieldValue("photo-source", value)}
+              value={extraConfigForm.watch("photo-source") ?? ""}
+              onValueChange={(value) =>
+                extraConfigForm.setValue("photo-source", value, { shouldDirty: true })
+              }
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={translations("Select Photo Source")} />
@@ -728,9 +758,11 @@ function FlowQuestionExtraProps({
               min={1}
               max={25600}
               placeholder={translations("max file size in kb")}
-              value={extraConfigForm.values["max-file-size-kb"] ?? ""}
+              value={extraConfigForm.watch("max-file-size-kb") ?? ""}
               onChange={(event) =>
-                extraConfigForm.setFieldValue("max-file-size-kb", Number(event.target.value))
+                extraConfigForm.setValue("max-file-size-kb", Number(event.target.value), {
+                  shouldDirty: true,
+                })
               }
             />
             <FieldDescription>
@@ -744,9 +776,11 @@ function FlowQuestionExtraProps({
               min={0}
               max={30}
               placeholder={translations("min uploaded photos")}
-              value={extraConfigForm.values["min-uploaded-photos"] ?? ""}
+              value={extraConfigForm.watch("min-uploaded-photos") ?? ""}
               onChange={(event) =>
-                extraConfigForm.setFieldValue("min-uploaded-photos", Number(event.target.value))
+                extraConfigForm.setValue("min-uploaded-photos", Number(event.target.value), {
+                  shouldDirty: true,
+                })
               }
             />
             <FieldDescription>
@@ -760,9 +794,11 @@ function FlowQuestionExtraProps({
               min={1}
               max={30}
               placeholder={translations("max uploaded photos")}
-              value={extraConfigForm.values["max-uploaded-photos"] ?? ""}
+              value={extraConfigForm.watch("max-uploaded-photos") ?? ""}
               onChange={(event) =>
-                extraConfigForm.setFieldValue("max-uploaded-photos", Number(event.target.value))
+                extraConfigForm.setValue("max-uploaded-photos", Number(event.target.value), {
+                  shouldDirty: true,
+                })
               }
             />
             <FieldDescription>
@@ -797,9 +833,11 @@ function FlowQuestionExtraProps({
               min={1}
               max={25600}
               placeholder={translations("max file size in kb")}
-              value={extraConfigForm.values["max-file-size-kb"] ?? ""}
+              value={extraConfigForm.watch("max-file-size-kb") ?? ""}
               onChange={(event) =>
-                extraConfigForm.setFieldValue("max-file-size-kb", Number(event.target.value))
+                extraConfigForm.setValue("max-file-size-kb", Number(event.target.value), {
+                  shouldDirty: true,
+                })
               }
             />
             <FieldDescription>
@@ -813,9 +851,11 @@ function FlowQuestionExtraProps({
               min={0}
               max={30}
               placeholder={translations("min uploaded documents")}
-              value={extraConfigForm.values["min-uploaded-documents"] ?? ""}
+              value={extraConfigForm.watch("min-uploaded-documents") ?? ""}
               onChange={(event) =>
-                extraConfigForm.setFieldValue("min-uploaded-documents", Number(event.target.value))
+                extraConfigForm.setValue("min-uploaded-documents", Number(event.target.value), {
+                  shouldDirty: true,
+                })
               }
             />
             <FieldDescription>
@@ -829,9 +869,11 @@ function FlowQuestionExtraProps({
               min={1}
               max={30}
               placeholder={translations("max uploaded documents")}
-              value={extraConfigForm.values["max-uploaded-documents"] ?? ""}
+              value={extraConfigForm.watch("max-uploaded-documents") ?? ""}
               onChange={(event) =>
-                extraConfigForm.setFieldValue("max-uploaded-documents", Number(event.target.value))
+                extraConfigForm.setValue("max-uploaded-documents", Number(event.target.value), {
+                  shouldDirty: true,
+                })
               }
             />
             <FieldDescription>
@@ -842,8 +884,10 @@ function FlowQuestionExtraProps({
             <FieldLabel>{translations("allowed mime types")}</FieldLabel>
             <MultiSelect
               options={mimeTypeOptions}
-              value={extraConfigForm.values["allowed-mime-types"] ?? []}
-              onValueChange={(value) => extraConfigForm.setFieldValue("allowed-mime-types", value)}
+              value={extraConfigForm.watch("allowed-mime-types") ?? []}
+              onValueChange={(value) =>
+                extraConfigForm.setValue("allowed-mime-types", value, { shouldDirty: true })
+              }
               placeholder={translations("Select allowed mime types")}
             />
             <FieldDescription>
@@ -859,8 +903,10 @@ function FlowQuestionExtraProps({
             <FieldLabel>{translations("Input Type")}</FieldLabel>
             <Select
               items={inputTypeOptions}
-              value={extraConfigForm.values["input-type"] ?? ""}
-              onValueChange={(value) => extraConfigForm.setFieldValue("input-type", value)}
+              value={extraConfigForm.watch("input-type") ?? ""}
+              onValueChange={(value) =>
+                extraConfigForm.setValue("input-type", value, { shouldDirty: true })
+              }
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={translations("Select Type")} />

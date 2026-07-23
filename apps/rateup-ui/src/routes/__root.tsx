@@ -25,10 +25,6 @@ import Providers from "../components/providers.tsx";
 
 import appCss from "../globals.css?url";
 
-function LocaleProviders({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <Providers>{children}</Providers>;
-}
-
 export const Route = createRootRoute({
   beforeLoad: ({ location }) => {
     // Check if the current path matches any redirect rule in REDIRECT_MAP
@@ -173,9 +169,9 @@ function RootLayout() {
 
         <ThemeProvider defaultTheme="light" storageKey="theme">
           <Suspense fallback={<RateupLoader className="h-dvh" />}>
-            <LocaleProviders>
+            <Providers>
               <Outlet />
-            </LocaleProviders>
+            </Providers>
           </Suspense>
           <Toaster richColors />
         </ThemeProvider>

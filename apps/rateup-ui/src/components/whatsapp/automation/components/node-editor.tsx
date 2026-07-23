@@ -44,7 +44,6 @@ import {
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
-import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
@@ -79,6 +78,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
@@ -3005,11 +3005,16 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           Allowed Lead Access
         </Badge>
       ) : null}
-      <PhoneInputWithCountry
-        label="Default Phone number"
-        onChange={(value) => handleInputChange("phone", value)}
-        value={typedData?.phone}
-      />
+      <div className="flex flex-col gap-1">
+        <span className="text-xs text-muted-foreground">Default Phone number</span>
+        <PhoneInput
+          defaultCountry="IN"
+          international
+          countryCallingCodeEditable={false}
+          value={typedData?.phone}
+          onChange={(value) => handleInputChange("phone", value)}
+        />
+      </div>
     </div>
   );
 };

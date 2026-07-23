@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 
 import { useUserInfo } from "@/backend/user/user.query";
 import NavHeader from "@/components/nav-header.tsx";
@@ -16,6 +16,7 @@ function Page() {
   const pathname = useRouterState({
     select: (s) => s.location.pathname,
   });
+  const navigate = useNavigate();
   const { data, isPending, isError } = useUserInfo();
   if (isPending)
     return (
@@ -28,13 +29,13 @@ function Page() {
     return <div>Error occurred</div>;
   }
   if ("error" in data && data.error?.message === "unauthorised")
-    throw redirect({
+    navigate({
       to: "/login",
       replace: true,
     });
 
   if ("data" in data && data.data.orgId !== import.meta.env.VITE_ROOT_ORG)
-    throw redirect({
+    navigate({
       to: "/dashboard",
       replace: true,
     });

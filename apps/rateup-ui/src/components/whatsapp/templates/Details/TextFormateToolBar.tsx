@@ -73,28 +73,26 @@ export const TextFormateToolBar = ({
   ];
 
   return (
-    <div>
-      <div className="-mb-2.75 flex items-center gap-1 rounded-t-xl border border-border p-2">
-        <PopoverEmojiPicker onEmojiClick={insertValue} />
-        <Separator orientation="vertical" className="h-5" />
-        {formatButtons.map((btn) => (
-          <CustomTooltip
-            key={btn.label}
-            trigger={
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                className="text-muted-foreground"
-                onClick={btn.onClick}
-              >
-                {btn.icon}
-              </Button>
-            }
-            content={<span>{btn.label}</span>}
-          />
-        ))}
-      </div>
+    <div className="flex flex-wrap items-center gap-1 rounded-t-xl border border-b-0 border-border p-2">
+      <PopoverEmojiPicker onEmojiClick={insertValue} />
+      <Separator orientation="vertical" className="h-5" />
+      {formatButtons.map((btn) => (
+        <CustomTooltip
+          key={btn.label}
+          trigger={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              className="text-muted-foreground"
+              onClick={btn.onClick}
+            >
+              {btn.icon}
+            </Button>
+          }
+          content={<span>{btn.label}</span>}
+        />
+      ))}
     </div>
   );
 };
@@ -125,12 +123,7 @@ export const PopoverEmojiPicker = ({
       <PopoverContent className="w-full">
         <Suspense
           fallback={
-            <div
-              style={{
-                width: "200px",
-                height: "200px",
-              }}
-            >
+            <div className="flex size-50 items-center justify-center text-sm text-muted-foreground">
               Loading...
             </div>
           }

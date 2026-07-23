@@ -1,19 +1,17 @@
 import { IconChevronDown, IconPlus, IconTrash, IconVariable, IconX } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-import PhoneInputWithCountrySelect from "react-phone-number-input";
-import type { z } from "zod/v4";
 
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import type { BridgedForm } from "@/hooks/useBridgedForm";
+import { cn } from "@/lib/utils";
 import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
 import { toSelectOptions } from "@/utils/select-options.ts";
 
 import { LengthTracker } from "../../../input/LengthTracker.tsx";
-import { Field, FieldDescription, FieldLabel } from "../../../ui/field.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "../../../ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../../../ui/input-group.tsx";
 import { Input } from "../../../ui/input.tsx";
 import { MultiSelect } from "../../../ui/multi-select.tsx";
@@ -26,17 +24,27 @@ import {
 } from "../../../ui/select.tsx";
 import { FlowSelector } from "../../flows/FlowSelector/FlowSelector.tsx";
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector.tsx";
-import type { templateSchema } from "../Schema/templateSchema.ts";
+import { PhoneNumberField } from "./PhoneNumberField.tsx";
+import {
+  errorAt,
+  inputProps,
+  registerField,
+  removeItem,
+  setValue,
+  type TemplateForm,
+} from "./template-form.ts";
 import { useButtonState } from "./useButtonState.ts";
 
-import styles from "./ButtonInput.module.css";
+/** Shared sizing for the fields inside a button row: grow to fill the row, but never
+ *  squeeze below a readable width — the row wraps instead. */
+const FIELD = "min-w-56 flex-1";
 
 const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailerIds }) => {
   const { t: translations } = useTranslation();
   const { data: flows } = useWaFlowsFromDb(data.type === WHATSAPP_BUTTON_TYPE.FLOW);
   const buttonState = useButtonState({
-    url: form.values?.buttons?.[index]?.url,
-    example: form.values?.buttons?.[index]?.example,
+    url: form.watch()?.buttons?.[index]?.url,
+    example: form.watch()?.buttons?.[index]?.example,
   });
   if (data.type === WHATSAPP_BUTTON_TYPE.FLOW) {
     const screeenId = flows?.find((data) => data.flowId === form?.values?.buttons?.[index]?.flow_id)
@@ -47,7 +55,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
   }
 
   function handleAddMPMSections() {
-    const defaultValues = form.values.defaultValues ?? {};
+    const defaultValues = form.watch().defaultValues ?? {};
     const catalog = defaultValues?.catalog ?? {
       thumbnail_product_retailer_id: "",
     };
@@ -59,11 +67,14 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
       : {
           sections: [{ title: "", products: [] }],
         };
-    form.setFieldValue("defaultValues", {
+    setValue(form, "defaultValues", {
       ...defaultValues,
       catalog: { ...catalog, mpm },
     });
   }
+  /** Error for one of this button's fields, e.g. err("text") -> errors["buttons.0.text"]. */
+  const err = (field: string) => errorAt(form, `buttons.${index}.${field}`);
+
   let type = data.type;
   if (data?.url?.includes("COPY_CODE")) {
     type = WHATSAPP_BUTTON_TYPE.OTP;
@@ -73,30 +84,39 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
     case WHATSAPP_BUTTON_TYPE.QUICK_REPLY:
       return (
         <>
-          <Field className="flex-1">
+          <Field className={FIELD} data-invalid={!!err("text")}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Button text")}</p>
             </FieldLabel>
             <InputGroup>
-              <InputGroupInput {...form.getFieldProps(`buttons.${index}.text`)} />
+              <InputGroupInput
+                aria-invalid={!!err("text")}
+                {...registerField(form, `buttons.${index}.text`)}
+              />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.values?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length}
                   maxValue={25}
                   atStart
                 />
               </InputGroupAddon>
             </InputGroup>
+            {err("text") && <FieldError>{err("text")}</FieldError>}
           </Field>
-          <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0"
+            onClick={() => deleteButton(index)}
+          >
             <IconX />
           </Button>
         </>
       );
     case WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE:
       return (
-        <div className="grid">
-          <Field>
+        <div className="flex w-full flex-wrap items-end gap-3">
+          <Field className={FIELD}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Type of action")}</p>
             </FieldLabel>
@@ -109,20 +129,24 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               readOnly
             />
           </Field>
-          <Field>
+          <Field className={FIELD} data-invalid={!!err("text")}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Button text")}</p>
             </FieldLabel>
             <InputGroup>
-              <InputGroupInput {...form.getFieldProps(`buttons.${index}.text`)} />
+              <InputGroupInput
+                aria-invalid={!!err("text")}
+                {...registerField(form, `buttons.${index}.text`)}
+              />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.values?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length}
                   maxValue={25}
                   atStart
                 />
               </InputGroupAddon>
             </InputGroup>
+            {err("text") && <FieldError>{err("text")}</FieldError>}
           </Field>
           {buttonState.isWebSurvey ? (
             <WebsurveySelector
@@ -134,12 +158,16 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             />
           ) : (
             <>
-              <Field className="flex-1">
+              <Field className={FIELD} data-invalid={!!err("url")}>
                 <FieldLabel>
                   <p className="text-sm font-medium">{translations("Website Url")}</p>
                 </FieldLabel>
                 <InputGroup>
-                  <InputGroupInput type="url" {...form.getFieldProps(`buttons.${index}.url`)} />
+                  <InputGroupInput
+                    aria-invalid={!!err("url")}
+                    type="url"
+                    {...registerField(form, `buttons.${index}.url`)}
+                  />
                   <InputGroupAddon align="inline-end">
                     <div className="flex items-center gap-2.5">
                       {buttonState.showInsertIcon && (
@@ -150,9 +178,10 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
+                                className="shrink-0"
                                 onClick={() => {
-                                  const currentUrl = form.values?.buttons?.[index]?.url || "";
-                                  form.setFieldValue(`buttons.${index}.url`, currentUrl + "{{1}}");
+                                  const currentUrl = form.watch()?.buttons?.[index]?.url || "";
+                                  setValue(form, `buttons.${index}.url`, currentUrl + "{{1}}");
                                 }}
                               >
                                 <IconVariable size={16} />
@@ -165,82 +194,73 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
                     </div>
                   </InputGroupAddon>
                 </InputGroup>
+                {err("url") && <FieldError>{err("url")}</FieldError>}
               </Field>
               {buttonState.hasVariableInUrl && (
-                <Field className="flex-1">
+                <Field className={FIELD} data-invalid={!!err("example")}>
                   <FieldLabel>
                     <p className="text-sm font-medium">{translations("Example")}</p>
                   </FieldLabel>
                   <InputGroup>
                     <InputGroupInput
+                      aria-invalid={!!err("example")}
                       placeholder={translations("Enter example for {{1}}")}
-                      {...form.getFieldProps(`buttons.${index}.example`)}
+                      {...registerField(form, `buttons.${index}.example`)}
                     />
                     <InputGroupAddon align="inline-end">
                       <LengthTracker length={buttonState.combinedLength} maxValue={2000} atStart />
                     </InputGroupAddon>
                   </InputGroup>
+                  {err("example") && <FieldError>{err("example")}</FieldError>}
                 </Field>
               )}
             </>
           )}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              paddingBottom: "8px",
-            }}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0"
+            onClick={() => deleteButton(index)}
           >
-            <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
-              <IconX />
-            </Button>
-          </div>
+            <IconX />
+          </Button>
         </div>
       );
     case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
       return (
         <>
-          <Field>
+          <Field className={FIELD}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Type of action")}</p>
             </FieldLabel>
             <Input value={"Call phone number"} readOnly />
           </Field>
-          <Field>
+          <Field className={FIELD} data-invalid={!!err("text")}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Button text")}</p>
             </FieldLabel>
             <InputGroup>
-              <InputGroupInput {...form.getFieldProps(`buttons.${index}.text`)} />
+              <InputGroupInput
+                aria-invalid={!!err("text")}
+                {...registerField(form, `buttons.${index}.text`)}
+              />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.values?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length}
                   maxValue={25}
                   atStart
                 />
               </InputGroupAddon>
             </InputGroup>
+            {err("text") && <FieldError>{err("text")}</FieldError>}
           </Field>
-          <div>
-            <p>{translations("Phone Number")}</p>
-            <PhoneInputWithCountrySelect
-              defaultCountry="IN"
-              international
-              countryCallingCodeEditable={false}
-              placeholder={translations("Enter phone number")}
-              value={form?.values?.phone || null}
-              {...form.getInputProps(`buttons.${index}.phone_number`)}
-              className={
-                form?.errors?.[`buttons.${index}.phone_number`]
-                  ? styles.inputError
-                  : styles.inputPhone
-              }
-            />
-            <p className="text-xs text-destructive">
-              {form?.errors?.[`buttons.${index}.phone_number`]}
-            </p>
-          </div>
-          <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
+          <PhoneNumberField form={form} path={`buttons.${index}.phone_number`} />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0"
+            onClick={() => deleteButton(index)}
+          >
             <IconX />
           </Button>
         </>
@@ -248,17 +268,27 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
     case WHATSAPP_BUTTON_TYPE.OTP:
       return (
         <>
-          <Field>
+          <Field className={FIELD}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Type of action")}</p>
             </FieldLabel>
             <Input defaultValue={"otp"} readOnly />
           </Field>
-          <Field>
+          <Field className={FIELD} data-invalid={!!err("text")}>
             <FieldLabel>translations("Button text")</FieldLabel>
-            <Input placeholder="Copy code" {...form.getFieldProps(`buttons.${index}.text`)} />
+            <Input
+              aria-invalid={!!err("text")}
+              placeholder="Copy code"
+              {...registerField(form, `buttons.${index}.text`)}
+            />
+            {err("text") && <FieldError>{err("text")}</FieldError>}
           </Field>
-          <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0"
+            onClick={() => deleteButton(index)}
+          >
             <IconX />
           </Button>
         </>
@@ -267,13 +297,13 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
     case WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE:
       return (
         <>
-          <Field>
+          <Field className={FIELD}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Type of action")}</p>
             </FieldLabel>
             <Input value={"Copy offer code"} readOnly />
           </Field>
-          <Field>
+          <Field className={FIELD}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Button text")}</p>
             </FieldLabel>
@@ -284,25 +314,32 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               </InputGroupAddon>
             </InputGroup>
           </Field>
-          <Field className="flex-1">
+          <Field className={FIELD} data-invalid={!!err("example")}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Offer code")}</p>
             </FieldLabel>
             <InputGroup>
               <InputGroupInput
+                aria-invalid={!!err("example")}
                 placeholder={translations("Enter sample code")}
-                {...form.getFieldProps(`buttons.${index}.example`)}
+                {...registerField(form, `buttons.${index}.example`)}
               />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.values?.buttons?.[index]?.example?.length}
+                  length={form.watch()?.buttons?.[index]?.example?.length}
                   maxValue={15}
                   atStart
                 />
               </InputGroupAddon>
             </InputGroup>
+            {err("example") && <FieldError>{err("example")}</FieldError>}
           </Field>
-          <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0"
+            onClick={() => deleteButton(index)}
+          >
             <IconX />
           </Button>
         </>
@@ -310,68 +347,83 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
     case WHATSAPP_BUTTON_TYPE.FLOW:
       return (
         <>
-          <Field>
+          <Field className={FIELD}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Type of action")}</p>
             </FieldLabel>
             <Input value={"Open a Flow"} readOnly />
           </Field>
-          <Field>
+          <Field className={FIELD} data-invalid={!!err("text")}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Button text")}</p>
             </FieldLabel>
             <InputGroup>
-              <InputGroupInput {...form.getFieldProps(`buttons.${index}.text`)} />
+              <InputGroupInput
+                aria-invalid={!!err("text")}
+                {...registerField(form, `buttons.${index}.text`)}
+              />
               <InputGroupAddon align="inline-end">
                 <LengthTracker
-                  length={form.values?.buttons?.[index]?.text?.length}
+                  length={form.watch()?.buttons?.[index]?.text?.length}
                   maxValue={25}
                   atStart
                 />
               </InputGroupAddon>
             </InputGroup>
+            {err("text") && <FieldError>{err("text")}</FieldError>}
           </Field>
           <FlowSelector
             onlyPublished
             id={"flowId"}
-            {...form.getInputProps(`buttons.${index}.flow_id`)}
+            {...inputProps(form, `buttons.${index}.flow_id`)}
             searchable
             label={<p className="text-sm font-medium">{translations("Flow")}</p>}
           />
-          <Button variant="ghost" size="icon-sm" onClick={() => deleteButton(index)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0"
+            onClick={() => deleteButton(index)}
+          >
             <IconX />
           </Button>
         </>
       );
     case WHATSAPP_BUTTON_TYPE.ORDER_DETAILS:
       return (
-        <div className="flex flex-col">
-          <div className="flex items-center">
-            <Field>
+        <div className="flex w-full flex-col gap-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <Field className={FIELD}>
               <FieldLabel>
                 <p className="text-sm font-medium">{translations("Type of action")}</p>
               </FieldLabel>
               <Input value={"Open order details"} readOnly />
             </Field>
-            <Field>
+            <Field className={FIELD} data-invalid={!!err("text")}>
               <FieldLabel>
                 <p className="text-sm font-medium">{translations("Button text")}</p>
               </FieldLabel>
               <InputGroup>
-                <InputGroupInput disabled {...form.getFieldProps(`buttons.${index}.text`)} />
+                <InputGroupInput
+                  aria-invalid={!!err("text")}
+                  disabled
+                  {...registerField(form, `buttons.${index}.text`)}
+                />
                 <InputGroupAddon align="inline-end">
                   <LengthTracker
-                    length={form.values?.buttons?.[index]?.text?.length}
+                    length={form.watch()?.buttons?.[index]?.text?.length}
                     maxValue={25}
                     atStart
                   />
                 </InputGroupAddon>
               </InputGroup>
+              {err("text") && <FieldError>{err("text")}</FieldError>}
             </Field>
-            {form.values.category === "MARKETING" && (
+            {form.watch().category === "MARKETING" && (
               <Button
                 variant="ghost"
                 size="icon-sm"
+                className="shrink-0"
                 onClick={() => {
                   deleteButton(index);
                 }}
@@ -380,42 +432,49 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               </Button>
             )}
           </div>
-          {form.values.category === "MARKETING" && <OrderDetailsButtonForm form={form} />}
+          {form.watch().category === "MARKETING" && <OrderDetailsButtonForm form={form} />}
         </div>
       );
     case WHATSAPP_BUTTON_TYPE.CATALOG:
       return (
         <>
-          <Field>
+          <Field className={FIELD}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Type of action")}</p>
             </FieldLabel>
             <Input value={"View catalog"} readOnly />
           </Field>
-          <Field>
+          <Field className={FIELD} data-invalid={!!err("text")}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Button text")}</p>
             </FieldLabel>
-            <Input readOnly {...form.getFieldProps(`buttons.${index}.text`)} />
+            <Input
+              aria-invalid={!!err("text")}
+              readOnly
+              {...registerField(form, `buttons.${index}.text`)}
+            />
+            {err("text") && <FieldError>{err("text")}</FieldError>}
           </Field>
-          <div className="flex flex-col p-0">
+          <div className={cn(FIELD, "flex flex-col gap-1")}>
             <AccountSelector
               label={"Select catalog linked account"}
-              {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
+              {...inputProps(form, `defaultValues.whatsappSettingsPhoneId`)}
             />
             {!catalog && (
               <p className="text-destructive">No catalogs are linked to selected account</p>
             )}
           </div>
-          <Field>
+          <Field className={FIELD}>
             <FieldLabel>
               <p className="text-sm font-medium">{"Thumbnail product retailer id"}</p>
             </FieldLabel>
             <Select
               items={toSelectOptions(productRetailerIds)}
-              value={form.values["defaultValues"]["catalog"]["thumbnail_product_retailer_id"] ?? ""}
+              value={
+                form.watch()["defaultValues"]["catalog"]["thumbnail_product_retailer_id"] ?? ""
+              }
               onValueChange={(value) =>
-                form.setFieldValue("defaultValues.catalog.thumbnail_product_retailer_id", value)
+                setValue(form, "defaultValues.catalog.thumbnail_product_retailer_id", value)
               }
             >
               <SelectTrigger className="w-full">
@@ -433,8 +492,9 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
           <Button
             variant="ghost"
             size="icon-sm"
+            className="shrink-0"
             onClick={() => {
-              form.setFieldValue("defaultValues.catalog.thumbnail_product_retailer_id", "");
+              setValue(form, "defaultValues.catalog.thumbnail_product_retailer_id", "");
               deleteButton(index);
             }}
           >
@@ -444,41 +504,46 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
       );
     case WHATSAPP_BUTTON_TYPE.MPM:
       return (
-        <div className="flex flex-col">
-          <div className="flex items-center">
-            <Field>
+        <div className="flex w-full flex-col gap-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <Field className={FIELD}>
               <FieldLabel>
                 <p className="text-sm font-medium">{translations("Type of action")}</p>
               </FieldLabel>
               <Input value={"View Catalog items"} readOnly />
             </Field>
-            <Field>
+            <Field className={FIELD} data-invalid={!!err("text")}>
               <FieldLabel>
                 <p className="text-sm font-medium">{translations("Button text")}</p>
               </FieldLabel>
-              <Input readOnly {...form.getFieldProps(`buttons.${index}.text`)} />
+              <Input
+                aria-invalid={!!err("text")}
+                readOnly
+                {...registerField(form, `buttons.${index}.text`)}
+              />
+              {err("text") && <FieldError>{err("text")}</FieldError>}
             </Field>
-            <div className="flex flex-col">
+            <div className={cn(FIELD, "flex flex-col gap-1")}>
               <AccountSelector
                 label={"Select catalog linked account"}
-                {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
+                {...inputProps(form, `defaultValues.whatsappSettingsPhoneId`)}
               />
               {!catalog && (
                 <p className="text-destructive">No catalogs are linked to selected account</p>
               )}
             </div>
 
-            <Field>
+            <Field className={FIELD}>
               <FieldLabel>
                 <p className="text-sm font-medium">{"Thumbnail product retailer id"}</p>
               </FieldLabel>
               <Select
                 items={toSelectOptions(productRetailerIds)}
                 value={
-                  form.values["defaultValues"]["catalog"]["thumbnail_product_retailer_id"] ?? ""
+                  form.watch()["defaultValues"]["catalog"]["thumbnail_product_retailer_id"] ?? ""
                 }
                 onValueChange={(value) =>
-                  form.setFieldValue("defaultValues.catalog.thumbnail_product_retailer_id", value)
+                  setValue(form, "defaultValues.catalog.thumbnail_product_retailer_id", value)
                 }
               >
                 <SelectTrigger className="w-full">
@@ -496,8 +561,9 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             <Button
               variant="ghost"
               size="icon-sm"
+              className="shrink-0"
               onClick={() => {
-                form.setFieldValue("defaultValues.catalog", {
+                setValue(form, "defaultValues.catalog", {
                   thumbnail_product_retailer_id: "",
                   mpm: {
                     sections: [],
@@ -517,40 +583,41 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             Add Sections
             <IconChevronDown size={15} />
           </Button>
-          {form.values.defaultValues?.catalog?.mpm?.sections?.map((_sec, index) => (
-            <div className="flex items-center p-4" key={index} style={{ borderRadius: "10px" }}>
-              <Field>
+          {form.watch().defaultValues?.catalog?.mpm?.sections?.map((_sec, index) => (
+            <div
+              className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-background p-3"
+              key={index}
+            >
+              <Field className={FIELD}>
                 <FieldLabel>
                   <p className="text-sm font-medium">Section Title</p>
                 </FieldLabel>
                 <Input
-                  key={form.key(`defaultValues.catalog.mpm.sections.${index}.title`)}
-                  {...form.getFieldProps(`defaultValues.catalog.mpm.sections.${index}.title`)}
+                  key={`defaultValues.catalog.mpm.sections.${index}.title`}
+                  {...registerField(form, `defaultValues.catalog.mpm.sections.${index}.title`)}
                 />
               </Field>
-              <Field>
+              <Field className={FIELD}>
                 <FieldLabel>
                   <p className="text-sm font-medium">{"Product Retailer Ids"}</p>
                 </FieldLabel>
                 <MultiSelect
                   options={toSelectOptions(productRetailerIds)}
                   value={
-                    form.values["defaultValues"]["catalog"]["mpm"]["sections"][`${index}`][
+                    form.watch()["defaultValues"]["catalog"]["mpm"]["sections"][`${index}`][
                       "products"
                     ] ?? []
                   }
                   onValueChange={(value) =>
-                    form.setFieldValue(
-                      `defaultValues.catalog.mpm.sections.${index}.products`,
-                      value,
-                    )
+                    setValue(form, `defaultValues.catalog.mpm.sections.${index}.products`, value)
                   }
                 />
               </Field>
               <Button
                 variant="ghost"
                 size="icon-sm"
-                onClick={() => form.removeListItem("defaultValues.catalog.mpm.sections", index)}
+                className="shrink-0"
+                onClick={() => removeItem(form, "defaultValues.catalog.mpm.sections", index)}
               >
                 <IconTrash color="red" size={15} />
               </Button>
@@ -561,36 +628,41 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
     case WHATSAPP_BUTTON_TYPE.SPM:
       return (
         <>
-          <Field>
+          <Field className={FIELD}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Type of action")}</p>
             </FieldLabel>
             <Input value={"View Single Product"} readOnly />
           </Field>
-          <Field>
+          <Field className={FIELD} data-invalid={!!err("text")}>
             <FieldLabel>
               <p className="text-sm font-medium">{translations("Button text")}</p>
             </FieldLabel>
-            <Input readOnly {...form.getFieldProps(`buttons.${index}.text`)} />
+            <Input
+              aria-invalid={!!err("text")}
+              readOnly
+              {...registerField(form, `buttons.${index}.text`)}
+            />
+            {err("text") && <FieldError>{err("text")}</FieldError>}
           </Field>
-          <div className="flex flex-col">
+          <div className={cn(FIELD, "flex flex-col gap-1")}>
             <AccountSelector
               label={"Select catalog linked account"}
-              {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
+              {...inputProps(form, `defaultValues.whatsappSettingsPhoneId`)}
             />
             {!catalog && (
               <p className="text-destructive">No catalogs are linked to selected account</p>
             )}
           </div>
-          <Field>
+          <Field className={FIELD}>
             <FieldLabel>
               <p className="text-sm font-medium">{"Product retailer id"}</p>
             </FieldLabel>
             <Select
               items={toSelectOptions(productRetailerIds)}
-              value={form.values["defaultValues"]["catalog"]["spm"]["product_retailer_id"] ?? ""}
+              value={form.watch()["defaultValues"]["catalog"]["spm"]["product_retailer_id"] ?? ""}
               onValueChange={(value) =>
-                form.setFieldValue("defaultValues.catalog.spm.product_retailer_id", value)
+                setValue(form, "defaultValues.catalog.spm.product_retailer_id", value)
               }
             >
               <SelectTrigger className="w-full">
@@ -608,8 +680,9 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
           <Button
             variant="ghost"
             size="icon-sm"
+            className="shrink-0"
             onClick={() => {
-              form.setFieldValue("defaultValues.catalog.spm.product_retailer_id", "");
+              setValue(form, "defaultValues.catalog.spm.product_retailer_id", "");
               deleteButton(index);
             }}
           >
@@ -622,21 +695,17 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
   }
 };
 
-const OrderDetailsButtonForm = ({
-  form,
-}: {
-  form: BridgedForm<z.infer<typeof templateSchema>>;
-}) => {
+const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
   return (
-    <div className="flex flex-col">
-      <div className="flex items-center">
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field>
           <FieldLabel>"Product Type"</FieldLabel>
           <Select
             items={toSelectOptions(["physical-goods", "digital-goods"])}
-            value={form.values["defaultValues"]["orderDetails"]["productType"] ?? ""}
+            value={form.watch()["defaultValues"]["orderDetails"]["productType"] ?? ""}
             onValueChange={(value) =>
-              form.setFieldValue("defaultValues.orderDetails.productType", value)
+              setValue(form, "defaultValues.orderDetails.productType", value)
             }
           >
             <SelectTrigger className="w-full">
@@ -653,19 +722,16 @@ const OrderDetailsButtonForm = ({
         </Field>
         <Field>
           <FieldLabel>"Product Name"</FieldLabel>
-          <Input {...form.getFieldProps("defaultValues.orderDetails.item.name")} />
+          <Input {...registerField(form, "defaultValues.orderDetails.item.name")} />
         </Field>
         <Field>
           <FieldLabel>"Product Price"</FieldLabel>
           <Input
             type="number"
             min={0}
-            value={form.values["defaultValues"]["orderDetails"]["item"]["price"] ?? ""}
+            value={form.watch()["defaultValues"]["orderDetails"]["item"]["price"] ?? ""}
             onChange={(event) =>
-              form.setFieldValue(
-                "defaultValues.orderDetails.item.price",
-                Number(event.target.value),
-              )
+              setValue(form, "defaultValues.orderDetails.item.price", Number(event.target.value))
             }
           />
         </Field>
@@ -674,9 +740,10 @@ const OrderDetailsButtonForm = ({
           <Input
             type="number"
             min={0}
-            value={form.values["defaultValues"]["orderDetails"]["item"]["salePrice"] ?? ""}
+            value={form.watch()["defaultValues"]["orderDetails"]["item"]["salePrice"] ?? ""}
             onChange={(event) =>
-              form.setFieldValue(
+              setValue(
+                form,
                 "defaultValues.orderDetails.item.salePrice",
                 Number(event.target.value),
               )
@@ -689,53 +756,50 @@ const OrderDetailsButtonForm = ({
             type="number"
             min={0}
             step={1}
-            value={form.values["defaultValues"]["orderDetails"]["item"]["quantity"] ?? ""}
+            value={form.watch()["defaultValues"]["orderDetails"]["item"]["quantity"] ?? ""}
             onChange={(event) =>
-              form.setFieldValue(
-                "defaultValues.orderDetails.item.quantity",
-                Number(event.target.value),
-              )
+              setValue(form, "defaultValues.orderDetails.item.quantity", Number(event.target.value))
             }
           />
         </Field>
         <Field>
           <FieldLabel>"Country of origin"</FieldLabel>
-          <Input {...form.getFieldProps("defaultValues.orderDetails.item.origin")} />
+          <Input {...registerField(form, "defaultValues.orderDetails.item.origin")} />
         </Field>
       </div>
       <Separator />
-      <div className="flex items-center">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field>
           <FieldLabel>"Importer Name"</FieldLabel>
-          <Input {...form.getFieldProps("defaultValues.orderDetails.item.importerName")} />
+          <Input {...registerField(form, "defaultValues.orderDetails.item.importerName")} />
         </Field>
         <Field>
           <FieldLabel>"Importer Address"</FieldLabel>
-          <Input {...form.getFieldProps("defaultValues.orderDetails.item.importerAddress1")} />
+          <Input {...registerField(form, "defaultValues.orderDetails.item.importerAddress1")} />
         </Field>
         <Field>
           <FieldLabel>"City"</FieldLabel>
-          <Input {...form.getFieldProps("defaultValues.orderDetails.item.importerCity")} />
+          <Input {...registerField(form, "defaultValues.orderDetails.item.importerCity")} />
         </Field>
         <Field>
           <FieldLabel>"Postal Code"</FieldLabel>
-          <Input {...form.getFieldProps("defaultValues.orderDetails.item.importerPostalCode")} />
+          <Input {...registerField(form, "defaultValues.orderDetails.item.importerPostalCode")} />
         </Field>
         <Field>
           <FieldLabel>"Zone Code"</FieldLabel>
-          <Input {...form.getFieldProps("defaultValues.orderDetails.item.importerZoneCode")} />
+          <Input {...registerField(form, "defaultValues.orderDetails.item.importerZoneCode")} />
         </Field>
       </div>
       <Separator />
-      <div className="flex items-center">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field>
           <FieldLabel>"Shipping Amount"</FieldLabel>
           <Input
             type="number"
             min={0}
-            value={form.values["defaultValues"]["orderDetails"]["shipping"] ?? ""}
+            value={form.watch()["defaultValues"]["orderDetails"]["shipping"] ?? ""}
             onChange={(event) =>
-              form.setFieldValue("defaultValues.orderDetails.shipping", Number(event.target.value))
+              setValue(form, "defaultValues.orderDetails.shipping", Number(event.target.value))
             }
           />
         </Field>
@@ -744,15 +808,15 @@ const OrderDetailsButtonForm = ({
           <Input
             type="number"
             min={0}
-            value={form.values["defaultValues"]["orderDetails"]["tax"] ?? ""}
+            value={form.watch()["defaultValues"]["orderDetails"]["tax"] ?? ""}
             onChange={(event) =>
-              form.setFieldValue("defaultValues.orderDetails.tax", Number(event.target.value))
+              setValue(form, "defaultValues.orderDetails.tax", Number(event.target.value))
             }
           />
         </Field>
         <Field>
           <FieldLabel>"Tax Description"</FieldLabel>
-          <Input {...form.getFieldProps("defaultValues.orderDetails.taxDescription")} />
+          <Input {...registerField(form, "defaultValues.orderDetails.taxDescription")} />
         </Field>
         <Field>
           <FieldLabel>"Discount Amount"</FieldLabel>
@@ -760,33 +824,33 @@ const OrderDetailsButtonForm = ({
             type="number"
             min={0}
             step={1}
-            value={form.values["defaultValues"]["orderDetails"]["discount"] ?? ""}
+            value={form.watch()["defaultValues"]["orderDetails"]["discount"] ?? ""}
             onChange={(event) =>
-              form.setFieldValue("defaultValues.orderDetails.discount", Number(event.target.value))
+              setValue(form, "defaultValues.orderDetails.discount", Number(event.target.value))
             }
           />
         </Field>
         <Field>
           <FieldLabel>"Discount Description"</FieldLabel>
-          <Input {...form.getFieldProps("defaultValues.orderDetails.discountDescription")} />
+          <Input {...registerField(form, "defaultValues.orderDetails.discountDescription")} />
         </Field>
         <Field>
           <FieldLabel>"Expiry Date"</FieldLabel>
           <Input
             type="datetime-local"
-            {...form.getFieldProps("defaultValues.orderDetails.expiry")}
+            {...registerField(form, "defaultValues.orderDetails.expiry")}
           />
         </Field>
       </div>
       <Separator />
-      <div className="flex items-center">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field>
           <FieldLabel>"Payment gateway name"</FieldLabel>
           <Select
             items={toSelectOptions(["razorpay", "payu", "zaakpay"])}
-            value={form.values["defaultValues"]["orderDetails"]["paymentType"] ?? ""}
+            value={form.watch()["defaultValues"]["orderDetails"]["paymentType"] ?? ""}
             onValueChange={(value) =>
-              form.setFieldValue("defaultValues.orderDetails.paymentType", value)
+              setValue(form, "defaultValues.orderDetails.paymentType", value)
             }
           >
             <SelectTrigger className="w-full">
@@ -806,7 +870,7 @@ const OrderDetailsButtonForm = ({
         </Field>
         <Field>
           <FieldLabel>"Payment gateway configuration name"</FieldLabel>
-          <Input {...form.getFieldProps("defaultValues.orderDetails.paymentConfigName")} />
+          <Input {...registerField(form, "defaultValues.orderDetails.paymentConfigName")} />
           <FieldDescription>
             "Configuration name of payment gateway you have configured on your WhatsApp Business
             Account"
