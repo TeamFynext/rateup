@@ -32,6 +32,7 @@ import {
   clearConversationMentions,
   reopenConversation,
   sendNewWaMessage,
+  setContactSpam,
   setConversationFavorite,
   unblockWhatsAppUser,
   updateConversation,
@@ -276,6 +277,47 @@ export const useToggleFavorite = () => {
       qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
     },
     onError: () => toast.error("Could not update favourite"),
+  });
+};
+
+/**
+ * Mark a contact as spam, or take them back out of it.
+ *
+ * The counterpart to `useToggleFavorite`, and deliberately the opposite grain:
+ * spam belongs to the contact, so **every** row of that contact flips, not just
+ * the open ticket. Marking also closes those tickets — that is what the server
+ * does — and `belongsToCurrentFilter` then drops them from whichever tab is on
+ * screen (out of every tab when marked, out of Spam when unmarked).
+ */
+export const useSetContactSpam = () => {
+  const { filterData } = useContactStore();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: setContactSpam,
+    onSuccess: (_res, variables) => {
+      const { contactsById, updateContactById } = useContactsStore.getState();
+      const rowKeys = [...contactsById.entries()]
+        .filter(([, row]) => row.id === variables.contactId)
+        .map(([key]) => key);
+      for (const rowKey of rowKeys) {
+        updateContactById(rowKey, (c) => ({
+          ...c,
+          isSpam: variables.isSpam,
+          ...(variables.isSpam
+            ? {
+                conversationStatus: WaMessageAssignStatus.CLOSED,
+                waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+                closedAt: c.closedAt ?? new Date().toISOString(),
+                assignedUsers: [],
+              }
+            : {}),
+        }));
+      }
+      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
+      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+      toast.success(variables.isSpam ? "Contact marked as spam" : "Contact removed from spam");
+    },
+    onError: () => toast.error("Could not update spam"),
   });
 };
 

@@ -506,10 +506,21 @@ export enum WaMessageAssignStatus {
   ASSIGNED = "ASSIGNED",
   CLOSED = "CLOSED",
   UNASSIGNED = "UNASSIGNED",
+  /**
+   * No longer a ticket status — spam moved onto the contact (`isSpam`) and a spam
+   * ticket is stored as CLOSED. Kept because the thread still labels the *event*
+   * with it, and rows written before the migration still carry it.
+   */
   SPAM = "SPAM",
   RESOLVED = "RESOLVED",
   UNRESOLVED = "UNRESOLVED",
 }
+
+/**
+ * The thread event for "this contact is not spam any more". Its counterpart is
+ * `WaMessageAssignStatus.SPAM`; neither is a stored ticket status.
+ */
+export const NOT_SPAM_EVENT = "NOT_SPAM";
 
 export enum WaMessageAssignStatusTab {
   NEW = "New",

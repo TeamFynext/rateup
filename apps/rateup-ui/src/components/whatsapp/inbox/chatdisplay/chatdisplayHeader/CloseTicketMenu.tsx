@@ -1,4 +1,4 @@
-import { Ban, Check, MoreVertical, RotateCcw } from "lucide-react";
+import { Ban, Check, MoreVertical, RotateCcw, ShieldAlert, ShieldOff } from "lucide-react";
 
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import {
@@ -8,6 +8,7 @@ import {
 import {
   useBlockWhatsAppUser,
   useReopenConversation,
+  useSetContactSpam,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import useContactStore, {
@@ -26,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { WaMessageAssignStatus } from "@/types/enums.ts";
+import { NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 import { getContactClosedIcon } from "../../chatselect/chatselectCard/index.tsx";
@@ -41,11 +42,10 @@ import { isTicketClosed, resolutionResultLabel } from "./ticket.ts";
 const CLOSE_STATUSES: { status: WaMessageAssignStatus; label: string; tooltip?: string }[] = [
   { status: WaMessageAssignStatus.RESOLVED, label: "Mark as Resolved" },
   { status: WaMessageAssignStatus.CLOSED, label: "Mark as Closed" },
-  { status: WaMessageAssignStatus.SPAM, label: "Mark as Spam" },
   {
     status: WaMessageAssignStatus.UNRESOLVED,
     label: "Mark as Unresolved",
-    tooltip: "All the assignees will be removed as closed,resolved and spam",
+    tooltip: "All the assignees will be removed as closed and resolved",
   },
 ];
 
@@ -60,6 +60,11 @@ interface CloseTicketMenuProps {
  * "Block contact" sits inside the Close dropdown as it originally did; the
  * overflow menu exists only for the closed state, where there is no dropdown to
  * host it — previously the whole control unmounted and block became unreachable.
+ *
+ * Spam sits with Block, not with the close statuses: it is a *contact* action
+ * ("this person is spam"), not a way of finishing one ticket. A contact already
+ * marked spam gets a "Not spam" button in place of Close/Reopen, since reopening
+ * a ticket that no tab but Spam can show would be a dead end.
  */
 export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuProps>) {
   const editContactMutation = useEditContactMutation(null);
@@ -68,10 +73,12 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
   const { updateContactById, setSelectedContact } = useContactsStore();
   const confirm = useConfirm();
   const blockmut = useBlockWhatsAppUser();
+  const spamMutation = useSetContactSpam();
   const { filterData } = useContactStore();
   const reopenMutation = useReopenConversation(filterData);
 
   const closed = isTicketClosed(contact);
+  const isSpam = !!contact?.isSpam;
   const canBlock =
     !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) && !contact?.blockedOnWhatsApp;
 
@@ -97,20 +104,10 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
   }
 
   /**
-   * Moves the ticket between open and closed.
-   *
-   * `resolutionResult` is only persisted by the API when the status actually
-   * changes, and only through the CONTACT endpoint — so the status and the
-   * result must travel together in this one request. Never send the result on
-   * its own, and never via the conversation endpoint.
+   * Optimistically drops the system event into the thread and hands back the ids
+   * needed to undo it if the request fails. Every action here writes one.
    */
-  function applyStatus(status: WaMessageAssignStatus, resolutionResult: ResolutionResult | null) {
-    const label = resolutionResultLabel(resolutionResult);
-    const message = closed
-      ? "reopened this ticket"
-      : label
-        ? `closed this ticket as ${label}`
-        : "closed this ticket";
+  function addEventMessage(body: string, assignStatus: string) {
     const id = generateInternalMessageId();
     const newMessage = {
       id: id,
@@ -120,9 +117,9 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
         send: null,
         receive: null,
         internal: {
-          text: { body: message },
+          text: { body },
           assignedUsers: [],
-          assignStatus: status,
+          assignStatus,
           triggeredByUser: {
             id: user.userId,
             name: user.userName,
@@ -143,6 +140,70 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
     const rowKey = getRowKey(contact);
     messagesStore.addMessage(`${rowKey}_all`, newMessage as any);
     messagesStore.addMessage(`${rowKey}_internal`, newMessage as any);
+    return {
+      id,
+      rollback: () => {
+        messagesStore.removeMessage(`${rowKey}_all`, id);
+        messagesStore.removeMessage(`${rowKey}_internal`, id);
+      },
+    };
+  }
+
+  /**
+   * Mark the contact as spam, or take them back out of it.
+   *
+   * This is not a close: the server flags the contact and closes their open
+   * tickets itself, and `useSetContactSpam` flips every row of the contact so the
+   * list drops them from whichever tab is on screen.
+   */
+  async function handleSpam(next: boolean) {
+    const who = contact?.name ?? contact?.phone;
+    const confirmed = await confirm(
+      next
+        ? {
+            title: `Mark ${who} as spam`,
+            description: "Are you sure you want to mark this contact as spam?",
+            warning:
+              "Their open tickets will be closed and the contact will be hidden from every inbox tab except Spam.",
+            confirmText: "Mark as spam",
+            cancelText: "Cancel",
+          }
+        : {
+            title: `Remove ${who} from spam`,
+            description: "Are you sure this contact is not spam?",
+            confirmText: "Not spam",
+            cancelText: "Cancel",
+          },
+    );
+    if (!confirmed) return;
+
+    const { id, rollback } = addEventMessage(
+      next ? "marked this contact as spam" : "marked this contact as not spam",
+      next ? WaMessageAssignStatus.SPAM : NOT_SPAM_EVENT,
+    );
+
+    spamMutation.mutate(
+      { contactId: contact.id, isSpam: next, messageId: id },
+      { onError: rollback },
+    );
+  }
+
+  /**
+   * Moves the ticket between open and closed.
+   *
+   * `resolutionResult` is only persisted by the API when the status actually
+   * changes, and only through the CONTACT endpoint — so the status and the
+   * result must travel together in this one request. Never send the result on
+   * its own, and never via the conversation endpoint.
+   */
+  function applyStatus(status: WaMessageAssignStatus, resolutionResult: ResolutionResult | null) {
+    const label = resolutionResultLabel(resolutionResult);
+    const message = closed
+      ? "reopened this ticket"
+      : label
+        ? `closed this ticket as ${label}`
+        : "closed this ticket";
+    const { id, rollback } = addEventMessage(message, status);
 
     editContactMutation.mutate(
       {
@@ -165,10 +226,7 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             assignedUsers: [],
           }));
         },
-        onError: () => {
-          messagesStore.removeMessage(`${rowKey}_all`, id);
-          messagesStore.removeMessage(`${rowKey}_internal`, id);
-        },
+        onError: rollback,
       },
     );
   }
@@ -188,23 +246,57 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
     });
   }
 
-  const overflow = canBlock ? (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={<Button variant="ghost" size="icon" className="size-8" aria-label="More actions" />}
-      >
-        <MoreVertical className="size-4 text-muted-foreground" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={handleBlock} className="text-destructive">
-            <Ban className="size-4 text-destructive" />
-            Block contact
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  ) : null;
+  /** The contact-level actions, shared by the Close dropdown and the overflow menu. */
+  const contactActions = (
+    <DropdownMenuGroup>
+      {!isSpam && (
+        <DropdownMenuItem onClick={() => handleSpam(true)} disabled={spamMutation.isPending}>
+          <ShieldAlert className="size-4 text-muted-foreground" />
+          Mark contact as spam
+        </DropdownMenuItem>
+      )}
+      {canBlock && (
+        <DropdownMenuItem onClick={handleBlock} className="text-destructive">
+          <Ban className="size-4 text-destructive" />
+          Block contact
+        </DropdownMenuItem>
+      )}
+    </DropdownMenuGroup>
+  );
+
+  const overflow =
+    canBlock || !isSpam ? (
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button variant="ghost" size="icon" className="size-8" aria-label="More actions" />
+          }
+        >
+          <MoreVertical className="size-4 text-muted-foreground" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">{contactActions}</DropdownMenuContent>
+      </DropdownMenu>
+    ) : null;
+
+  // A spam contact has no Close/Reopen: their tickets are all closed and only the
+  // Spam tab can list them, so the one action that moves them forward is "Not spam".
+  if (isSpam) {
+    return (
+      <>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 shrink-0 gap-1.5"
+          disabled={spamMutation.isPending}
+          onClick={() => handleSpam(false)}
+        >
+          <ShieldOff className="size-3.5" />
+          <span className="text-xs font-bold">Not spam</span>
+        </Button>
+        {overflow}
+      </>
+    );
+  }
 
   if (closed) {
     // return <></>
@@ -241,8 +333,8 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           {/* The original status actions. These set the inbox status directly and
-              carry no resolution result — "Mark as Spam" and "Mark as Unresolved"
-              are only reachable here. */}
+              carry no resolution result — "Mark as Unresolved" is only reachable
+              here. Spam is NOT among them: it is a contact action, below. */}
           {/* Base UI requires menu items — and especially labels — to sit inside a
               group; a bare DropdownMenuLabel throws "MenuGroupContext is missing". */}
           <DropdownMenuGroup>
@@ -268,17 +360,8 @@ export default function CloseTicketMenu({ contact }: Readonly<CloseTicketMenuPro
             })}
           </DropdownMenuGroup>
 
-          {canBlock && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={handleBlock} className="text-destructive">
-                  <Ban className="size-4 text-destructive" />
-                  Block contact
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </>
-          )}
+          <DropdownMenuSeparator />
+          {contactActions}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

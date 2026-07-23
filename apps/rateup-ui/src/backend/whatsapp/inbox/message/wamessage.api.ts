@@ -101,6 +101,13 @@ export type ContactsWithLastMessage = ContactsData & {
 
   // ---- Inbox signals ----
   isFavorite?: boolean;
+  /**
+   * Spam is contact-grained, not ticket-grained: every row of a spam contact
+   * carries it. The Spam tab is the only list that shows these rows, and it shows
+   * one row per contact rather than one per ticket.
+   */
+  isSpam?: boolean;
+  spamMarkedAt?: string | null;
   /** Unseen @mentions for the current user on this ticket. */
   mentionCount?: number;
   /** Sibling tickets for the same contact — drives the thread's history strip. */
@@ -257,6 +264,25 @@ export async function setConversationFavorite(data: {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/favorite`, data)).data as {
     success: boolean;
     isFavorite: boolean;
+  };
+}
+
+/**
+ * Set (not toggle) the spam flag on a **contact**. Spam describes the person, not
+ * one of their tickets, so this takes a contactId — marking closes their open
+ * tickets server-side and drops the contact out of every tab but Spam.
+ *
+ * `messageId` is the id of the optimistic internal event message so the server
+ * writes the same one rather than a duplicate.
+ */
+export async function setContactSpam(data: {
+  contactId: string;
+  isSpam: boolean;
+  messageId?: string;
+}) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/spam`, data)).data as {
+    success: boolean;
+    isSpam: boolean;
   };
 }
 
