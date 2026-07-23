@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { QuestionType } from "@/types/enums.ts";
@@ -76,7 +77,21 @@ export const useSurveyResponseColumns = ({
                 return response;
               },
               id: content + "_,_" + q.type + "_,_" + q.id,
-              header: content,
+              header: () => {
+                if (content.length > 25) {
+                  return (
+                    <HoverCard>
+                      <HoverCardTrigger render={<span className="cursor-pointer" />}>
+                        {`${content.substring(0, 25)}...`}
+                      </HoverCardTrigger>
+                      <HoverCardContent className="w-fit max-w-[400px] break-words whitespace-normal font-normal">
+                        {content}
+                      </HoverCardContent>
+                    </HoverCard>
+                  );
+                }
+                return content;
+              },
               enableColumnFilter: ![
                 QuestionType.DocumentPicker,
                 QuestionType.PhotoPicker,
