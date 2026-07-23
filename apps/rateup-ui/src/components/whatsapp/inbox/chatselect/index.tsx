@@ -242,11 +242,12 @@ const WaInboxChatSelect = () => {
 
   useEffect(() => {
     const openStatus = [WaMessageAssignStatus.ASSIGNED, WaMessageAssignStatus.UNASSIGNED];
+    // SPAM is deliberately absent: it is no longer a ticket status, so a status
+    // selection persisted from before is dropped here rather than re-sent.
     const closedStatus = [
       WaMessageAssignStatus.CLOSED,
       WaMessageAssignStatus.RESOLVED,
       WaMessageAssignStatus.UNRESOLVED,
-      WaMessageAssignStatus.SPAM,
     ];
 
     if (tab === "open") {
@@ -289,9 +290,9 @@ const WaInboxChatSelect = () => {
   );
   useEffect(() => {
     if (!tab) return;
-    // `favorite`/`mentions` are sticky in the filter store; clear them for every
-    // tab that is not the favourites/mentions tab, or they leak across tabs.
-    const base = { ...filter, favorite: undefined, mentions: undefined };
+    // `favorite`/`mentions`/`spam` are sticky in the filter store; clear them for
+    // every tab that is not their own, or they leak across tabs.
+    const base = { ...filter, favorite: undefined, mentions: undefined, spam: undefined };
     if (tab === "blocked") {
       prepareFilters({
         ...base,
@@ -344,12 +345,15 @@ const WaInboxChatSelect = () => {
         blockedUsers: false,
       });
     } else if (tab === "spam") {
-      // Spam is a status, not a tab, on the API side.
+      // Spam is a flag on the *contact*, so this tab is contact-grained: the API
+      // returns one row per spam contact rather than one per ticket, and no status
+      // filter applies — a spam contact is listed whatever state its tickets are in.
       prepareFilters({
         ...base,
         messageType: "all",
-        waMessageAssignStatus: undefined,
-        status: ["SPAM"],
+        waMessageAssignStatus: null,
+        status: [],
+        spam: true,
         blockedUsers: false,
       });
     } else if (tab === "favourites" || tab === "mentions") {
@@ -481,7 +485,9 @@ const WaInboxChatSelect = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {tab !== "Assigned" && tab !== "mine" && (
+                  {/* Not on Spam: assigning or closing a spam contact's ticket is a
+                      dead end — no tab but Spam can show it either way. */}
+                  {tab !== "Assigned" && tab !== "mine" && tab !== "spam" && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger
@@ -503,7 +509,7 @@ const WaInboxChatSelect = () => {
                     </TooltipProvider>
                   )}
 
-                  {tab !== "closed" && (
+                  {tab !== "closed" && tab !== "spam" && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger

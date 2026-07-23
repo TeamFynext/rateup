@@ -13,6 +13,7 @@ import WaInboxChatDisplayBody from "./chatdisplayBody/index.tsx";
 import WaInboxChatDisplayFooter, {
   WaInboxAssignUserFooter,
   WaInboxBlockedContactFooter,
+  WaInboxSpamContactFooter,
 } from "./chatdisplayFooter/index.tsx";
 import WaInboxChatDisplayHeader from "./chatdisplayHeader/index.tsx";
 import { isTicketClosed } from "./chatdisplayHeader/ticket.ts";
@@ -86,6 +87,10 @@ export default function WaInboxChatDisplay() {
   let footerContent = null;
   if (contact?.blockedOnWhatsApp) {
     footerContent = <WaInboxBlockedContactFooter contact={contact} />;
+  } else if (contact?.isSpam) {
+    // Spam outranks the ticket state: reopening by assignment would produce a
+    // live ticket that no tab but Spam can show, so the only way on is "Not spam".
+    footerContent = <WaInboxSpamContactFooter contact={contact} />;
   } else if (isClosedTicket || !contact?.assignedUsers?.length) {
     // Closed or unassigned → the assign/closed banner (which explains a closed
     // ticket and offers reopen-by-assign), not the message editor.

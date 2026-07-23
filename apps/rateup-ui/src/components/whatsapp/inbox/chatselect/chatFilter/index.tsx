@@ -32,6 +32,11 @@ export interface ChatFilter {
    */
   favorite?: boolean;
   mentions?: boolean;
+  /**
+   * Spam tab. Contact-grained, unlike everything else here: it lists one row per
+   * spam contact and ANDs with nothing — the status filters are ticket-level.
+   */
+  spam?: boolean;
 }
 
 export default function WaInboxChatFilter() {
@@ -76,10 +81,7 @@ export default function WaInboxChatFilter() {
         id: WaMessageAssignStatus.UNRESOLVED,
         label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNRESOLVED],
       },
-      {
-        id: WaMessageAssignStatus.SPAM,
-        label: WaMessageAssignStatusTab[WaMessageAssignStatus.SPAM],
-      },
+      // No SPAM entry: spam is a contact flag with its own tab, not a ticket status.
     ];
   } else {
     // tab === "all"
@@ -104,10 +106,7 @@ export default function WaInboxChatFilter() {
         id: WaMessageAssignStatus.UNRESOLVED,
         label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNRESOLVED],
       },
-      {
-        id: WaMessageAssignStatus.SPAM,
-        label: WaMessageAssignStatusTab[WaMessageAssignStatus.SPAM],
-      },
+      // No SPAM entry: spam is a contact flag with its own tab, not a ticket status.
     ];
   }
 

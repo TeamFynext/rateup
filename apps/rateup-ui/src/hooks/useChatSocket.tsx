@@ -78,7 +78,13 @@ export const useChatSocket = () => {
                 }),
                 markUnread,
               );
-            } else {
+            } else if (
+              // Spam is contact-grained and exclusive to the Spam tab: a spam
+              // contact's message must not spawn a row in Open/All, and a
+              // non-spam contact's must not spawn one in Spam.
+              !!incomingContact.isSpam ===
+              !!useContactsStore.getState().currentFilterKey?.includes("spam:true")
+            ) {
               addContactsForFilter(
                 useContactsStore.getState().currentFilterKey,
                 [

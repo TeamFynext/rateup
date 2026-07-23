@@ -11,6 +11,7 @@ import {
   CircleAlertIcon,
   Clock,
   Lock,
+  ShieldOff,
   UserCog,
 } from "lucide-react";
 import React, { useState } from "react";
@@ -40,7 +41,7 @@ import {
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore.ts";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
+import { MessagePlatform, NOT_SPAM_EVENT, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { WaReceiveMessageBody } from "@/types/global";
 import { formatDateWithRelativeTime, formatToCustomTime } from "@/utils/dateTime.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
@@ -130,6 +131,10 @@ function getInternalStatus(assignStatus?: string): { icon: React.ReactNode; labe
 
   if (assignStatus === WaMessageAssignStatus.SPAM) {
     return { icon: <AlertCircle />, label: "Spam" };
+  }
+
+  if (assignStatus === NOT_SPAM_EVENT) {
+    return { icon: <ShieldOff />, label: "Not spam" };
   }
 
   if (assignStatus === WaMessageAssignStatus.UNASSIGNED) {
@@ -246,7 +251,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
             className="h-auto max-w-full gap-1.5 rounded-full px-3 py-1"
           >
             {status?.icon}
-            <span className="font-semibold">{status?.label}</span>
+            {/* <span className="font-semibold">{status?.label}</span> */}
             <span ref={messageContentRef} className="min-w-0 truncate empty:hidden">
               {props?.children}
             </span>

@@ -426,8 +426,16 @@ export const useContactsStore = create<ContactsStoreState>()(
                 WaMessageAssignStatus.SPAM,
               ];
             }
+            // Spam is contact-grained and exclusive: the Spam tab holds only spam
+            // contacts, and every other tab holds only non-spam ones. Marking a
+            // contact spam therefore drops all of its rows from whatever tab is on
+            // screen, and unmarking drops them from Spam.
+            const isSpamTab = !!currentFilterKey?.includes("spam:true");
             const belongsToCurrentFilter =
-              (statuses.length === 0 || statuses.includes(ticketStatus)) &&
+              isSpamTab === !!updatedContact.isSpam &&
+              // The status filters below are the ticket's; the Spam tab has none —
+              // it lists contacts whatever state their tickets are in.
+              (isSpamTab || statuses.length === 0 || statuses.includes(ticketStatus)) &&
               (!currentFilterKey?.includes("waMessageAssignStatus:mine") ||
                 (ticketStatus === WaMessageAssignStatus.ASSIGNED &&
                   updatedContact.assignedUsers?.some((u) => u.id === state.currentUser?.userId))) &&
