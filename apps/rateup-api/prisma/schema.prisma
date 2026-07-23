@@ -859,6 +859,13 @@ model Contact {
   lastReceivedMessageTimeStamp DateTime?
   whatsappUserName             String? //whatsapp or instagram username
   blockedOnWhatsApp            Boolean                   @default(false)
+  /// Spam lives on the *contact*, not on a conversation: marking someone spam is a
+  /// statement about the person, so it survives their tickets. A spam contact is
+  /// hidden from every other inbox tab and listed once — contact-grained — in Spam.
+  isSpam                       Boolean                   @default(false)
+  spamMarkedAt                 DateTime?
+  /// User id of whoever marked it; no FK relation, Contact already owns one to User.
+  spamMarkedBy                 String?                   @db.Uuid
   waCatalogOrders              WaCatalogOrder[]
   igsId                        String? //Instagram Scoped User ID
   profilePic                   String?
@@ -896,6 +903,7 @@ model Contact {
   @@index([lastReceivedMessageTimeStamp])
   @@index([orgId, waMessageAssignStatus, lastReceivedMessageTimeStamp(sort: Desc)])
   @@index([orgId, blockedOnWhatsApp, lastReceivedMessageTimeStamp(sort: Desc)])
+  @@index([orgId, isSpam])
   @@index([orgId, lifecycleId])
   @@index([name])
 }
@@ -2636,6 +2644,11 @@ model ConversationAssignedUserTeamMap {
 /// Storage vocabulary for inbox status. Mirrored between `Contact.waMessageAssignStatus`
 /// (live-inbox source of truth) and `Conversation.status`. "NEW" is a derived UI tab
 /// (unassigned + recent) and "BLOCKED" is `Contact.blockedOnWhatsApp`; neither is stored here.
+///
+/// SPAM is DEPRECATED as a stored status — spam moved onto the contact
+/// (`Contact.isSpam`) and a spam ticket is now simply CLOSED with
+/// `closeReason = SPAM`. The value is kept only so pre-migration rows and the
+/// internal-message event vocabulary still parse; never write it.
 enum InboxStatus {
   UNASSIGNED
   ASSIGNED

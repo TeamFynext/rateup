@@ -83,12 +83,16 @@ export async function getInboxCountsFromConversations(orgId: string) {
   -- carrying a close stamp: the list treats a stamped ticket as finished even if
   -- its status column was left behind, and the badges have to agree with it or a
   -- tab shows a count it cannot fill.
+  -- Spam contacts are excluded throughout: their tickets are absent from every
+  -- tab these counts label (see filterChats), so counting them would inflate
+  -- badges the lists can never fill.
   SELECT
     COUNT(*)::INT                                                               AS all_count,
-    COUNT(*) FILTER (WHERE status IN ('UNASSIGNED','ASSIGNED') AND "closedAt" IS NULL)::INT AS open_count,
-    COUNT(*) FILTER (WHERE status IN ('CLOSED','SPAM','RESOLVED','UNRESOLVED') OR "closedAt" IS NOT NULL)::INT AS closed_count
-  FROM "Conversation"
-  WHERE "orgId" = ${orgId}
+    COUNT(*) FILTER (WHERE conv.status IN ('UNASSIGNED','ASSIGNED') AND conv."closedAt" IS NULL)::INT AS open_count,
+    COUNT(*) FILTER (WHERE conv.status IN ('CLOSED','SPAM','RESOLVED','UNRESOLVED') OR conv."closedAt" IS NOT NULL)::INT AS closed_count
+  FROM "Conversation" conv
+  INNER JOIN "Contact" c ON c.id = conv."contactId"
+  WHERE conv."orgId" = ${orgId} AND NOT c."isSpam"
 `;
   return result?.[0] || { all_count: 0, open_count: 0, closed_count: 0 };
 }

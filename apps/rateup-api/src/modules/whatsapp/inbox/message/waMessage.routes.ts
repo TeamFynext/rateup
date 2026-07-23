@@ -7,6 +7,7 @@ import {
   reopenConversationHandler,
   createPrivateMessageHandler,
   setContactFavoriteHandler,
+  setContactSpamHandler,
   exportWhatsappChatsHandler,
   generateChatAnalyticsHandler,
   generateChatFilterDataHandler,
@@ -30,6 +31,7 @@ import {
   clearMentionsSchema,
   reopenConversationSchema,
   favoriteContactSchema,
+  spamContactSchema,
   generateInboxResponseBody,
   PaginateQuerySchema,
   waChatExportQuerySchema,
@@ -162,6 +164,17 @@ export async function waMessageRoutes(server: FastifyInstance) {
       },
     },
     setContactFavoriteHandler,
+  );
+
+  // Spam is contact-grained, unlike /favorite: it flags the person, not a ticket.
+  server.post(
+    "/spam",
+    {
+      schema: {
+        body: spamContactSchema,
+      },
+    },
+    setContactSpamHandler,
   );
 
   server.post(
