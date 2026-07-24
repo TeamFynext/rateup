@@ -929,11 +929,22 @@ export interface FlowLogicJump {
 }
 
 export interface orgWsMessage {
-  type: "inbox";
+  type: "inbox" | "message_deleted";
   inbox?: {
     /** Contact plus the ticket the message landed on — the inbox list is keyed by ticket. */
     contact: Contact & { conversationId?: string | null; conversationStatus?: string | null };
     message: WaMessage;
+  };
+  /** A message the customer revoked. The row still exists; only its rendering changes. */
+  message_deleted?: {
+    /** WhatsApp message id (wamid) of the revoked message. */
+    messageId: string;
+    contactId: string;
+    conversationId?: string | null;
+    sourceIdentifier?: string | null;
+    deletedAt: string;
+    /** Identifies the message inside the inbox row's last-message preview. */
+    waCreatedAt?: string | null;
   };
 }
 

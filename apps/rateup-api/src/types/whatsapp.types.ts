@@ -69,6 +69,13 @@ export interface WaReceiveMessageBody {
         caption?: string;
       };
       button?: any;
+      /**
+       * Present when the WhatsApp user deleted a message they had sent (WhatsApp
+       * Business app / coexistence only). Points at the message being revoked.
+       */
+      revoke?: {
+        original_message_id: string;
+      };
       order?: {
         catalog_id: string;
         text: string;
@@ -115,6 +122,10 @@ export interface WaReceiveMessageBody {
           type: string;
         }[];
       }[];
+      /** Business side deleted a message it had sent (coexistence). */
+      revoke?: {
+        original_message_id: string;
+      };
     },
   ];
   statuses: [
@@ -373,6 +384,7 @@ export enum WaMessageTypes {
   interactive = "interactive",
   button = "button",
   order = "order",
+  revoke = "revoke",
 }
 
 export enum WaSessionType {

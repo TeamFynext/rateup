@@ -61,6 +61,9 @@ import { isTerminalInboxStatus, NOT_SPAM_EVENT } from "../../constants.js";
 import { notificationQueue, sendMessageQueue } from "../../../../utils/redisConnection.js";
 import dayjs from "dayjs";
 
+/** What a revoked message reads as wherever its content would otherwise appear. */
+const DELETED_MESSAGE_PLACEHOLDER = "This message was deleted";
+
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
   contactId: string,
@@ -722,7 +725,8 @@ export async function filterChats(
           w."messageBody"       AS "lastMessageBody",
           w."waCreatedAt"       AS "lastMessageWaCreatedAt",
           w."sourcePlatform"    AS "lastMessagePlatform",
-          w."sourceIdentifier"  AS "lastMessageSourceIdentifier"
+          w."sourceIdentifier"  AS "lastMessageSourceIdentifier",
+          w."deletedAt"         AS "lastMessageDeletedAt"
         FROM "WaMessage" w
         WHERE w."conversationId" IN (SELECT "conversationId" FROM filtered_conversations)
         ORDER BY w."conversationId", w."waCreatedAt" DESC
@@ -766,6 +770,9 @@ export async function filterChats(
         CASE WHEN clm."lastMessageBody" IS NOT NULL THEN clm."lastMessageSourceIdentifier"
              WHEN COALESCE(ctc."otherTicketCount", 0) = 0 THEN fc."contactLastMessageSourceIdentifier"
         END AS "lastMessageSourceIdentifier",
+        -- Only the ticket-scoped branch can say this: the contact-level fallback
+        -- is a denormalized copy of the body with no row behind it to flag.
+        clm."lastMessageDeletedAt" AS "lastMessageDeletedAt",
         COALESCE(cm."mentionCount", 0) as "mentionCount",
         COALESCE(ctc."otherTicketCount", 0) as "otherTicketCount",
         l."name" as "lifecycleName"
@@ -797,6 +804,10 @@ export async function filterChats(
           w."sendBy",
           w."stats",
           w."messageId",
+          -- Seeds the thread on first paint, so it has to carry the revoked flag
+          -- too — otherwise a deleted message shows its original text until the
+          -- per-contact fetch replaces these rows.
+          w."deletedAt",
           ROW_NUMBER() OVER (PARTITION BY w."conversationId" ORDER BY w."waCreatedAt" DESC) AS rn
         FROM "WaMessage" w
         WHERE w."conversationId" = ANY(${conversationIds}::uuid[])
@@ -829,6 +840,7 @@ export async function filterChats(
             : null,
         stats: row.stats,
         messageId: row.messageId,
+        deletedAt: row.deletedAt,
       });
       messagesByConversation.set(row.conversationId, list);
     }
@@ -841,6 +853,7 @@ export async function filterChats(
             waCreatedAt: row.lastMessageWaCreatedAt,
             sourcePlatform: row.lastMessagePlatform,
             sourceIdentifier: row.lastMessageSourceIdentifier,
+            deletedAt: row.lastMessageDeletedAt,
           }
         : null,
       metadata: row.lastReceivedMetadata,
@@ -928,12 +941,27 @@ export async function exportWhatsapChats(
       wm."createdAt" AS date,
       c."phone" AS "from",
       c."name" AS "name",
-      COALESCE(
-        wm."messageBody"->'receive'->'messages'->0->'text'->>'body',
-        wm."messageBody"->'receive'->'messages'->0->'button'->>'text'
-        ) AS receivebody,
-      wm."messageBody"->'send'->'text'->>'body' AS sendbody,
-      wm."messageBody"->'send'->'template'->>'name' AS templatename
+      -- A revoked message keeps its row here as it does in the thread, but its
+      -- content is withheld: the customer deleted it, so an export must not hand
+      -- it back out. The stored body is untouched.
+      CASE
+        WHEN wm."deletedAt" IS NOT NULL THEN
+          CASE WHEN wm."messageBody"->>'exchangeProcess' = 'receive'
+            THEN '${DELETED_MESSAGE_PLACEHOLDER}' END
+        ELSE COALESCE(
+          wm."messageBody"->'receive'->'messages'->0->'text'->>'body',
+          wm."messageBody"->'receive'->'messages'->0->'button'->>'text'
+        )
+      END AS receivebody,
+      CASE
+        WHEN wm."deletedAt" IS NOT NULL THEN
+          CASE WHEN wm."messageBody"->>'exchangeProcess' = 'send'
+            THEN '${DELETED_MESSAGE_PLACEHOLDER}' END
+        ELSE wm."messageBody"->'send'->'text'->>'body'
+      END AS sendbody,
+      CASE WHEN wm."deletedAt" IS NOT NULL THEN NULL
+        ELSE wm."messageBody"->'send'->'template'->>'name'
+      END AS templatename
     FROM 
       "WaMessage" wm 
     JOIN 
@@ -1692,6 +1720,36 @@ export async function getWaMessageByMessageId(messageId: string): Promise<WaMess
     where: {
       messageId,
     },
+  });
+}
+
+/**
+ * Flag a message the customer revoked (deleted) on WhatsApp. The row and its
+ * body are kept on purpose — the thread shows "this message was deleted" while
+ * the history of what was actually said stays auditable. Scoped by org so a
+ * wamid from another account can never touch this org's messages, and idempotent
+ * so a redelivered webhook keeps the first deletion time.
+ */
+export async function markWaMessageAsDeleted(waMessageId: string, orgId: string) {
+  if (!waMessageId) return null;
+
+  const message = await prisma.waMessage.findFirst({
+    where: {
+      messageId: waMessageId,
+      contact: { orgId },
+    },
+  });
+
+  if (!message) {
+    log.warn("Revoke received for unknown message id: %s (org %s)", waMessageId, orgId);
+    return null;
+  }
+
+  if (message.deletedAt) return message;
+
+  return await prisma.waMessage.update({
+    where: { id: message.id },
+    data: { deletedAt: new Date() },
   });
 }
 
