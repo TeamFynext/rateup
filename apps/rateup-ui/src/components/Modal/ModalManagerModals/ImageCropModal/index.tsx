@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useId, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -11,6 +11,7 @@ import { mimeTypesForImage } from "@/utils/constants.ts";
 import styles from "./ImageCropModal.module.css";
 
 function ImageCropModal({ context, id: thisModalId, innerProps }) {
+  const uid = useId();
   const { imageUrl, imageName, onSaveClick, onCancelClick, aspectRatio } = innerProps;
 
   const [scale, setScale] = useState(0.4);
@@ -117,8 +118,9 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
   return (
     <>
       <Field>
-        <FieldLabel>{translations("Zoom the Image")}</FieldLabel>
+        <FieldLabel htmlFor={`${uid}-field`}>{translations("Zoom the Image")}</FieldLabel>
         <Input
+          id={`${uid}-field`}
           type="number"
           step={0.1}
           min={0.1}

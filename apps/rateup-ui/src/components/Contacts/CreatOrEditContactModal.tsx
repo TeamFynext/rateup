@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog.tsx";
-import { Label } from "../ui/label.tsx";
+import { Field, FieldError, FieldLabel } from "../ui/field.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { getInitials } from "../ui/utils.ts";
 import {
@@ -34,6 +34,20 @@ import {
 } from "./contact-form-schema.ts";
 import ContactForm from "./ContactForm.tsx";
 import { getSourceBadge } from "./utils/utils.tsx";
+
+/**
+ * react-hook-form nests errors (custom fields arrive as an array), so pull every message out of
+ * the tree for the submit-time summary. `ref` holds a DOM node, so it must not be walked.
+ */
+const collectErrorMessages = (node: unknown, messages: string[] = []): string[] => {
+  if (!node || typeof node !== "object") return messages;
+  const { message } = node as { message?: unknown };
+  if (typeof message === "string" && message) messages.push(message);
+  for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+    if (key !== "ref" && value && typeof value === "object") collectErrorMessages(value, messages);
+  }
+  return messages;
+};
 
 const CreateOrEditContactModal = ({
   opened,
@@ -116,10 +130,15 @@ const CreateOrEditContactModal = ({
   }, [customFields, form]);
 
   const contactType = form.watch("contactType");
+  const { errors, isSubmitted } = form.formState;
+  const errorMessages = useMemo(() => [...new Set(collectErrorMessages(errors))], [errors]);
+  const showErrorSummary = isSubmitted && errorMessages.length > 0;
 
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
-      <DialogContent className="min-w-[500px]">
+      {/* Below `sm` the dialog keeps DialogContent's responsive max-width; a hard min-width here
+          would overflow a 320px viewport. */}
+      <DialogContent className="sm:min-w-125">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {!initialValues && (
@@ -151,11 +170,15 @@ const CreateOrEditContactModal = ({
             </div>
           </div>
         )}
-        <div className="space-y-4 max-h-[400px] overflow-y-auto p-1">
+        <Field className="max-h-[400px] overflow-y-auto p-1">
           {customFields?.length > 0 && (
-            <div className="border flex self-end gap-1 p-1 w-fit">
+            <Field className="border self-end p-1 w-fit">
               {customFields.map((field) => (
-                <div className="flex items-center gap-1 rounded-lg p-1 w-fit px-2" key={field.id}>
+                <Field
+                  key={field.id}
+                  orientation="horizontal"
+                  className="rounded-lg p-1 w-fit px-2"
+                >
                   <Checkbox
                     checked={contactType?.includes(field?.slug)}
                     id={field.slug}
@@ -170,15 +193,25 @@ const CreateOrEditContactModal = ({
                       );
                     }}
                   />
-                  <Label htmlFor={field.slug} className="text-sm font-normal">
+                  <FieldLabel htmlFor={field.slug} className="text-sm font-normal">
                     {field.name}
-                  </Label>
-                </div>
+                  </FieldLabel>
+                </Field>
               ))}
-            </div>
+            </Field>
+          )}
+          {showErrorSummary && (
+            <FieldError className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
+              <p className="font-medium">{t("Fix the following before saving:")}</p>
+              <ul className="ml-4 mt-1 flex list-disc flex-col gap-1">
+                {errorMessages.map((message) => (
+                  <li key={message}>{message}</li>
+                ))}
+              </ul>
+            </FieldError>
           )}
           <ContactForm form={form} customFields={customFields} type={type} />
-        </div>
+        </Field>
         <DialogFooter>
           <DialogClose render={<Button variant="secondary" onClick={() => form.reset()} />}>
             <span className="text-sm font-normal">{t("Cancel")}</span>

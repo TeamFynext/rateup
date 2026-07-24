@@ -152,7 +152,7 @@ const StatePagination = ({
         }
         items={pageSizeOptions.map((size) => ({ value: String(size), label: size }))}
       >
-        <SelectTrigger className="h-8 w-17.5 text-sm ml-1">
+        <SelectTrigger aria-label="Rows per page" className="h-8 w-17.5 text-sm ml-1">
           <SelectValue />
         </SelectTrigger>
         <SelectContent popover="auto">

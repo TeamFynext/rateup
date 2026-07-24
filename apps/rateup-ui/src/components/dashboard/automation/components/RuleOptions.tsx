@@ -3,7 +3,13 @@ import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 import { useGetAllBusinessHours } from "@/backend/org/business-hours/business-hours.query";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -90,9 +96,9 @@ const RuleOptions: React.FC = () => {
                   name="options.businessHours.businessHoursId"
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel className="text-xs font-semibold mb-2">
+                      <FieldTitle className="text-xs font-semibold mb-2">
                         Select Business Hours
-                      </FieldLabel>
+                      </FieldTitle>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value || ""}

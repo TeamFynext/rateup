@@ -13,8 +13,8 @@ import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useUpdateFlowMetaDataMutation } from "@/backend/whatsapp/flow/flow.query";
 import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
@@ -100,31 +100,31 @@ export default function FlowSettings({
           {/* General Settings */}
           <SettingsCard title="General Settings" icon={<IconSettings size={20} />}>
             <div className="flex flex-col gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="flow-name">
+              <Field>
+                <FieldLabel htmlFor="flow-name">
                   Flow Name <span className="text-red-500">*</span>
-                </Label>
+                </FieldLabel>
                 <Input
                   id="flow-name"
                   placeholder="Enter flow name"
                   value={flowNameInput}
                   onChange={(e) => setFlowNameInput(e.target.value)}
                 />
-              </div>
+              </Field>
 
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
+              <Field>
+                <Field orientation="horizontal">
                   <Switch
                     id="anonymous"
                     checked={anonymousChecked}
                     onCheckedChange={setAnonymousChecked}
                   />
-                  <Label htmlFor="anonymous" className="font-medium cursor-pointer">
+                  <FieldLabel htmlFor="anonymous" className="font-medium cursor-pointer">
                     Anonymous
-                  </Label>
-                </div>
+                  </FieldLabel>
+                </Field>
                 <p className="text-xs text-muted-foreground ml-10">Anonymous Flow is disabled</p>
-              </div>
+              </Field>
 
               <div>
                 <Button
@@ -141,8 +141,8 @@ export default function FlowSettings({
           {/* Team & Notifications */}
           <SettingsCard title="Team & Notifications" icon={<IconUsers size={20} />}>
             <div className="flex flex-col gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="team-select">Select Teams</Label>
+              <Field>
+                <FieldLabel htmlFor="team-select">Select Teams</FieldLabel>
                 <MultiSelect
                   options={teamOptions}
                   value={selectedTeams}
@@ -150,18 +150,18 @@ export default function FlowSettings({
                   placeholder="Select teams"
                   emptyIndicator="No teams found."
                 />
-              </div>
+              </Field>
 
-              <div className="flex justify-between items-center">
-                <Label htmlFor="weekly-report" className="font-medium cursor-pointer">
+              <Field orientation="horizontal" className="justify-between">
+                <FieldLabel htmlFor="weekly-report" className="font-medium cursor-pointer">
                   Send weekly report to email
-                </Label>
+                </FieldLabel>
                 <Switch
                   id="weekly-report"
                   checked={sendWeeklyReport}
                   onCheckedChange={setSendWeeklyReport}
                 />
-              </div>
+              </Field>
 
               <div>
                 <Button size="default" onClick={handleSaveTeams} disabled={editSurvey.isPending}>
@@ -177,33 +177,33 @@ export default function FlowSettings({
           {/* Ticketing & Automation */}
           <SettingsCard title="Ticketing & Automation" icon={<IconTicket size={20} />}>
             <div className="flex flex-col gap-6">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="enable-ticketing" className="font-medium cursor-pointer">
+              <Field orientation="horizontal" className="justify-between">
+                <FieldLabel htmlFor="enable-ticketing" className="font-medium cursor-pointer">
                   Enable Ticketing
-                </Label>
+                </FieldLabel>
                 <Switch
                   id="enable-ticketing"
                   checked={enableTicketing}
                   onCheckedChange={handleToggleTicketing}
                 />
-              </div>
+              </Field>
 
-              <div className="flex justify-between items-center">
-                <Label htmlFor="auto-generate" className="font-medium cursor-pointer">
+              <Field orientation="horizontal" className="justify-between">
+                <FieldLabel htmlFor="auto-generate" className="font-medium cursor-pointer">
                   Enable Auto-Generate Ticket
-                </Label>
+                </FieldLabel>
                 <Switch
                   id="auto-generate"
                   checked={enableAutoGenerateTicket}
                   onCheckedChange={handleToggleAutoGenerate}
                 />
-              </div>
+              </Field>
 
               <div className="flex justify-between items-center opacity-50">
                 <div className="flex items-center gap-2">
-                  <Label className="text-muted-foreground cursor-not-allowed">
+                  <FieldTitle className="text-muted-foreground cursor-not-allowed">
                     Enable Email Notification
-                  </Label>
+                  </FieldTitle>
                   <IconLock size={16} className="text-muted-foreground" />
                 </div>
                 <Switch checked={false} disabled />
@@ -216,7 +216,9 @@ export default function FlowSettings({
             <div className="flex flex-col gap-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-1">
-                  <Label htmlFor="webhook-url">Enter webhook url endpoint for response</Label>
+                  <FieldLabel htmlFor="webhook-url">
+                    Enter webhook url endpoint for response
+                  </FieldLabel>
                   <span className="text-xs text-muted-foreground">ⓘ</span>
                 </div>
                 <Input

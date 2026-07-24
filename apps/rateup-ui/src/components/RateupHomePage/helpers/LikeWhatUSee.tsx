@@ -4,7 +4,7 @@ import { Calendar, X } from "lucide-react";
 import { imagesPath } from "@/components/HomePage/constants";
 import { RateupStar } from "@/components/integrations/logos";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 interface LikeWhatUSeeProps {
   open: boolean;
@@ -39,15 +39,15 @@ export default function LikeWhatUSee({
           </div>
 
           {/* TITLE */}
-          <h2 className="text-center text-2xl font-black leading-none tracking-[-0.03em] text-[#0D2550]">
+          <DialogTitle className="text-center text-2xl font-black leading-none tracking-[-0.03em] text-[#0D2550]">
             Like what you see?
-          </h2>
+          </DialogTitle>
 
           {/* SUBTITLE */}
-          <p className=" mx-auto max-w-[320px] text-center text-sm mt-2 text-slate-400">
+          <DialogDescription className="mx-auto max-w-[320px] text-center text-sm mt-2 text-slate-400">
             Turn one-time buyers into repeat customers on WhatsApp. Let&apos;s find the fastest way
             to get you started.
-          </p>
+          </DialogDescription>
 
           {/* ACTIONS */}
           <div className="mt-6 flex flex-col gap-3">
@@ -55,7 +55,7 @@ export default function LikeWhatUSee({
               onClick={() => onBookDemo?.()}
               className="h-12 w-full rounded-xl bg-gradient-to-r from-[#2c6fd6] to-[#1e5bb8] font-bold text-white shadow-[0_4px_12px_rgba(44,111,214,0.25)] transition-all duration-200 hover:from-[#1e5bb8] hover:to-[#174895] hover:shadow-[0_6px_16px_rgba(44,111,214,0.35)] hover:-translate-y-[0.5px] active:translate-y-0"
             >
-              <Calendar className="mr-2 h-5 w-5" /> Book a Demo
+              <Calendar data-icon="inline-start" className="h-5 w-5" /> Book a Demo
             </Button>
 
             <Button
@@ -67,7 +67,8 @@ export default function LikeWhatUSee({
               }}
               className="h-12 w-full rounded-xl bg-gradient-to-r from-[#22c55e] to-[#16a34a] font-bold text-white shadow-[0_4px_12px_rgba(22,163,74,0.25)] transition-all duration-200 hover:from-[#16a34a] hover:to-[#15803d] hover:shadow-[0_6px_16px_rgba(22,163,74,0.35)] hover:-translate-y-[0.5px] active:translate-y-0"
             >
-              <IconBrandWhatsapp className="mr-2 h-5 w-5" /> Chat with us on WhatsApp
+              <IconBrandWhatsapp data-icon="inline-start" className="h-5 w-5" /> Chat with us on
+              WhatsApp
             </Button>
           </div>
 

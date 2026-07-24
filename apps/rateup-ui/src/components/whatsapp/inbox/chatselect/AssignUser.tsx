@@ -8,7 +8,7 @@ import { useBulkAssignInboxToUser } from "@/backend/whatsapp/inbox/message/wames
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -118,8 +118,8 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
   return (
     <div className="space-y-5 w-full">
       {/* TEAM SELECT */}
-      <div className="space-y-2">
-        <Label>{t("Select Team")}</Label>
+      <Field>
+        <FieldTitle>{t("Select Team")}</FieldTitle>
 
         {teamsLoading ? (
           <Skeleton className="h-10 w-full rounded-md" />
@@ -145,10 +145,10 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
             </SelectContent>
           </Select>
         )}
-      </div>
+      </Field>
       {/* MEMBER SELECT */}
       <div className="space-y-2">
-        <Label> {t("Select Member")} </Label>
+        <FieldTitle> {t("Select Member")} </FieldTitle>
 
         {membersLoading ? (
           <Skeleton className="h-10 w-full rounded-md" />

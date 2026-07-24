@@ -5,12 +5,12 @@ import {
   useClearMention,
   useToggleFavorite,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
 import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
+import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { cn } from "@/lib/utils.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import { getContactPlatform, isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
@@ -32,20 +32,26 @@ const CHANNEL_LABELS: Record<string, string> = {
 interface WaInboxChatDisplayHeaderProps {
   contact: ContactWithUpdatedAt;
   /**
-   * Toggles the right-hand context panel. The panel's open state lives in
-   * `chatdisplay/index.tsx`; the toggle renders only when that owner wires it
-   * through, so we never show a dead button.
+   * Toggles the right-hand context panel where it sits inline (xl and up). The
+   * panel's open state lives in `chatdisplay/index.tsx`; the toggle renders only
+   * when that owner wires it through, so we never show a dead button.
    */
   onToggleContextPanel?: () => void;
+  /**
+   * Opens the same panel as an overlay below xl, where there is no room for a
+   * third column. Separate from the inline toggle so neither needs to ask the
+   * viewport what it is doing — each button is shown by CSS at its own width.
+   */
+  onToggleDetailsOverlay?: () => void;
 }
 export default function WaInboxChatDisplayHeader({
   contact,
   onToggleContextPanel,
+  onToggleDetailsOverlay,
 }: Readonly<WaInboxChatDisplayHeaderProps>) {
-  const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
+  const setSelectedContact = useContactsStore((s) => s.setSelectedContact);
   const toggleFavorite = useToggleFavorite();
   const clearMention = useClearMention();
-  const isMobile = useMediaQuery("(max-width: 1200px)");
 
   const platform = getContactPlatform(contact);
 
@@ -69,18 +75,23 @@ export default function WaInboxChatDisplayHeader({
 
   if (!contact) return null;
   return (
-    <div className="shrink-0 border-b border-border bg-background">
-      <div className="flex items-center justify-between gap-2.5 px-5 py-2">
-        <div className="flex items-center gap-2.5 min-w-0 shrink">
-          {isMobile && (
-            <button
-              onClick={() => setIsChatDisplayOpen(false)}
-              className="shrink-0 p-1.5 rounded-md hover:bg-accent transition-colors"
-              aria-label="Back to chat list"
-            >
-              <ArrowLeft className="size-5" />
-            </button>
-          )}
+    <div className="shrink-0 bg-background">
+      {/* h-14 is the shared panel-header height (sidebar, chat list, ticket panel,
+          phone preview). The divider has to live on the h-14 row itself, not on
+          this wrapper: borders are inside the box, so a wrapper border would sit
+          1px below every other header's line. Each row below owns its own
+          border-b for the same reason. */}
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2.5 border-b border-border px-3 lg:px-5">
+        <div className="flex min-w-0 flex-1 shrink items-center gap-2.5">
+          {/* Stacked layout only: dropping the selection is what brings the list
+              back, which is also why this is hidden once both panes fit. */}
+          <button
+            onClick={() => setSelectedContact(null)}
+            className="shrink-0 rounded-md p-1.5 transition-colors hover:bg-accent lg:hidden"
+            aria-label="Back to chat list"
+          >
+            <ArrowLeft className="size-5" />
+          </button>
           <div className="relative shrink-0">
             <CreativeAvatar
               name={displayName}
@@ -129,37 +140,44 @@ export default function WaInboxChatDisplayHeader({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            title={contact?.isFavorite ? "Remove from favourites" : "Add to favourites"}
-            aria-pressed={!!contact?.isFavorite}
-            disabled={toggleFavorite.isPending}
-            onClick={() =>
-              toggleFavorite.mutate({
-                conversationId: getRowKey(contact),
-                isFavorite: !contact?.isFavorite,
-              })
+          <CustomTooltip
+            side="bottom"
+            content={<p>{contact?.isFavorite ? "Remove from favourites" : "Add to favourites"}</p>}
+            trigger={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={contact?.isFavorite ? "Remove from favourites" : "Add to favourites"}
+                aria-pressed={!!contact?.isFavorite}
+                disabled={toggleFavorite.isPending}
+                onClick={() =>
+                  toggleFavorite.mutate({
+                    conversationId: getRowKey(contact),
+                    isFavorite: !contact?.isFavorite,
+                  })
+                }
+                className={cn(contact?.isFavorite && "bg-amber-50 dark:bg-amber-950/40")}
+              >
+                <Star
+                  className={cn(
+                    "size-4",
+                    contact?.isFavorite ? "text-amber-500" : "text-muted-foreground",
+                  )}
+                  fill={contact?.isFavorite ? "currentColor" : "none"}
+                />
+              </Button>
             }
-            className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-lg",
-              contact?.isFavorite && "bg-amber-50 dark:bg-amber-950/40",
-            )}
-          >
-            <Star
-              className={cn(
-                "size-4",
-                contact?.isFavorite ? "text-amber-500" : "text-muted-foreground",
-              )}
-              fill={contact?.isFavorite ? "currentColor" : "none"}
-            />
-          </button>
+          />
           {(contact?.mentionCount ?? 0) > 0 && (
             <CustomTooltip
               side="bottom"
               content={<p>Clear mention</p>}
               trigger={
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-sm"
                   aria-label="Clear mention"
                   disabled={clearMention.isPending}
                   onClick={() =>
@@ -168,30 +186,61 @@ export default function WaInboxChatDisplayHeader({
                       conversationId: contact.conversationId ?? undefined,
                     })
                   }
-                  className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10"
+                  className="bg-primary/10"
                 >
                   <AtSign className="size-4 text-primary" />
-                </button>
+                </Button>
               }
             />
           )}
-          <WaInboxCountdownTimer timeStamp={contact?.lastReceivedMessageTimeStamp} />
+          {/* Session timer and status pill are the widest, least urgent items in
+              this row — the status is repeated on the list row and in the details
+              panel, so narrow widths drop them rather than squeeze the name. */}
+          <span className="hidden md:contents">
+            <WaInboxCountdownTimer timeStamp={contact?.lastReceivedMessageTimeStamp} />
+          </span>
 
-          <span className={cn(STATUS_PILL_BASE, "px-2.5 py-1.25 text-xs", status.className)}>
+          <span
+            className={cn(
+              STATUS_PILL_BASE,
+              "hidden px-2.5 py-1.25 text-xs md:inline-flex",
+              status.className,
+            )}
+          >
             <span className="size-1.5 rounded-full bg-current" />
             {status.label}
           </span>
 
           <CloseTicketMenu contact={contact} />
           {onToggleContextPanel && (
-            <button
+            <CustomTooltip
+              side="bottom"
+              content={<p>Toggle details panel</p>}
+              trigger={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={onToggleContextPanel}
+                  aria-label="Toggle details panel"
+                  className="hidden xl:inline-flex"
+                >
+                  <PanelRight className="size-4 text-muted-foreground" />
+                </Button>
+              }
+            />
+          )}
+          {onToggleDetailsOverlay && (
+            <Button
               type="button"
-              onClick={onToggleContextPanel}
-              aria-label="Toggle details panel"
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg"
+              variant="ghost"
+              size="icon-sm"
+              onClick={onToggleDetailsOverlay}
+              aria-label="Show ticket details"
+              className="xl:hidden"
             >
               <PanelRight className="size-4 text-muted-foreground" />
-            </button>
+            </Button>
           )}
           {/* TODO: CHATBOT */}
           {/* {hasAIFeature && chatbot?.enableWaChat && chatbot?.enableAllWaChat && (
@@ -205,16 +254,16 @@ export default function WaInboxChatDisplayHeader({
                 <p className="text-sm text-muted-foreground mb-2">
                   Enable/Disable AI response for this contact
                 </p>
-                <div className="flex items-center space-x-2">
+                <Field orientation="horizontal" className="gap-2">
                   <Switch
                     checked={contact.aiWaChat}
                     onCheckedChange={handleAiWaChat}
                     id="ai-chat-switch"
                   />
-                  <Label htmlFor="ai-chat-switchh" className="text-sm">
+                  <FieldLabel htmlFor="ai-chat-switchh" className="text-sm">
                     AI Chat
-                  </Label>
-                </div>
+                  </FieldLabel>
+                </Field>
               </PopoverContent>
             </Popover>
           )} */}

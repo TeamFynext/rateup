@@ -29,7 +29,7 @@ const ReviewAiHeader = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav aria-label="Main" className="hidden md:flex items-center gap-6">
             <DropDownNavItems />
             {links.map((link, index) => (
               <Link
@@ -56,7 +56,7 @@ const ReviewAiHeader = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="md:hidden mt-4 py-4 border-t border-[#f3f4f6]">
+          <nav aria-label="Mobile" className="md:hidden mt-4 py-4 border-t border-[#f3f4f6]">
             <div className="flex flex-col gap-4">
               <DropDownMobileNavItems />
               {links.map((link, index) => (

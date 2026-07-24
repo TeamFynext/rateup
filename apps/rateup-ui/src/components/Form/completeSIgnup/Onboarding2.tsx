@@ -1,7 +1,9 @@
 import { ArrowLeft, ArrowRight, Building, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
+import { useId } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -23,6 +25,7 @@ export default function OnboardingStep2({
   handleNext: any;
   handleBack: any;
 }) {
+  const uid = useId();
   const canProceed = () => {
     return data.industry !== "";
   };
@@ -60,14 +63,19 @@ export default function OnboardingStep2({
       </div>
 
       <div className="space-y-3 w-full">
-        <div className="space-y-1.5 w-full">
-          <label className="text-gray-700">Select Your Industry</label>
+        <Field className="w-full">
+          <FieldLabel htmlFor={`${uid}-select-your-industry`} className="text-gray-700">
+            Select Your Industry
+          </FieldLabel>
           <Select
             onValueChange={(value) => handleInputChange("industry", value)}
             value={data.industry}
             items={industries.map((industry) => ({ value: industry, label: industry }))}
           >
-            <SelectTrigger className="h-11 border-2 border-gray-300 focus:border-orange-400 bg-white text-gray-900 shadow-sm w-full">
+            <SelectTrigger
+              id={`${uid}-select-your-industry`}
+              className="h-11 border-2 border-gray-300 focus:border-orange-400 bg-white text-gray-900 shadow-sm w-full"
+            >
               <SelectValue placeholder="Choose your industry..." />
             </SelectTrigger>
             <SelectContent className="bg-white border-gray-200 w-full">
@@ -82,7 +90,7 @@ export default function OnboardingStep2({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
 
         {/* Industry Selection feedback */}
         {data.industry && (

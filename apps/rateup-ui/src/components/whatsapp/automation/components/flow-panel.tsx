@@ -57,13 +57,17 @@ export function FlowPanel({
     return (
       <div
         className={cn(
-          "flex w-11 shrink-0 flex-col items-center gap-3 border-border bg-ink-25 py-2.5 dark:bg-card",
+          "flex w-11 shrink-0 flex-col items-center gap-3 border-border bg-ink-25 dark:bg-card",
           borderSide,
         )}
       >
-        <PanelIconButton label="Expand panel" onClick={() => setCollapsed(false)}>
-          <ToggleIcon size={18} />
-        </PanelIconButton>
+        {/* Same h-14 band as the expanded header, so the toggle stays put when
+            the panel collapses instead of jumping up. */}
+        <div className="flex h-14 shrink-0 items-center">
+          <PanelIconButton label="Expand panel" onClick={() => setCollapsed(false)}>
+            <ToggleIcon size={18} />
+          </PanelIconButton>
+        </div>
         {icon && <span className="text-muted-foreground">{icon}</span>}
       </div>
     );
@@ -73,7 +77,10 @@ export function FlowPanel({
     <div
       className={cn("flex w-72 shrink-0 flex-col border-border bg-ink-25 dark:bg-card", borderSide)}
     >
-      <header className="flex items-center gap-2 border-b border-border px-3 py-2.5">
+      {/* h-14 is the shared panel-header height (sidebar, phone preview, inbox
+          panels), and the divider lives on the h-14 box itself so its line lands
+          on the same y as theirs — the phone preview panel sits right next to it. */}
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
         {icon}
         <span className="min-w-0 flex-1 truncate text-sm font-semibold">{title}</span>
         {collapsible && (

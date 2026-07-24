@@ -1,12 +1,12 @@
 import { IconDeviceSdCard } from "@tabler/icons-react";
-import { useContext, useEffect, useState } from "react";
+import { useId, useContext, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { TextareaWithLengthTracker } from "@/components/input/TextareaWithLengthTracker.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
@@ -30,6 +30,7 @@ import {
 import { EditFlowContext } from "./EditFlowContext.ts";
 
 export function FlowTextDetailedView() {
+  const uid = useId();
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
     useContext(EditFlowContext);
   const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
@@ -144,10 +145,14 @@ export function FlowTextDetailedView() {
                       },
                       { value: WhatsappFlowFontWeight.normal, label: translations("Normal") },
                     ].map((opt) => (
-                      <Label key={opt.value} className="flex items-center gap-1.5 text-xs">
+                      <FieldLabel
+                        htmlFor={`${uid}-field`}
+                        key={opt.value}
+                        className="flex items-center gap-1.5 text-xs"
+                      >
                         <RadioGroupItem value={opt.value} />
                         {opt.label}
-                      </Label>
+                      </FieldLabel>
                     ))}
                   </RadioGroup>
                 )}
@@ -156,10 +161,15 @@ export function FlowTextDetailedView() {
                 name="strikethrough"
                 control={form.control}
                 render={({ field }) => (
-                  <Label className="mt-1 flex items-center gap-1.5 text-xs">
-                    <Switch checked={!!field.value} onCheckedChange={field.onChange} size="sm" />
+                  <FieldTitle className="mt-1 flex items-center gap-1.5 text-xs">
+                    <Switch
+                      id={`${uid}-field`}
+                      checked={!!field.value}
+                      onCheckedChange={field.onChange}
+                      size="sm"
+                    />
                     {translations("Strike Through")}
-                  </Label>
+                  </FieldTitle>
                 )}
               />
             </div>

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
@@ -32,6 +32,7 @@ const RateupSwitch = ({
   disabled,
   className,
 }: RateupSwitchProps) => {
+  const uid = useId();
   const [isOn, setIsOn] = useState(checked ?? false);
 
   useEffect(() => {
@@ -46,10 +47,19 @@ const RateupSwitch = ({
   const message = isOn ? onMessage : offMessage;
 
   const control = (
-    <div className={className}>
-      {label && <Label className="mb-1 block">{label}</Label>}
-      <Switch checked={isOn} onCheckedChange={handleToggle} disabled={disabled} />
-    </div>
+    <Field className={className}>
+      {label && (
+        <FieldLabel htmlFor={`${uid}-field`} className="mb-1 block">
+          {label}
+        </FieldLabel>
+      )}
+      <Switch
+        id={`${uid}-field`}
+        checked={isOn}
+        onCheckedChange={handleToggle}
+        disabled={disabled}
+      />
+    </Field>
   );
 
   if (!message) return control;

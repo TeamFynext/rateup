@@ -171,7 +171,11 @@ export const useGetGoogleSheetAuthorizationUrl = () => {
 export const useCreateAuthToken = () => {
   return useMutation({
     mutationFn: createGoogleSheetAuthToken,
-    onSuccess: (_data) => {},
+    onError: (error) => {
+      toast.error(error?.message || "Error authorizing Google Sheets", {
+        id: "googlesheet-auth-token",
+      });
+    },
   });
 };
 

@@ -1,5 +1,5 @@
 import { IconEdit, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useId, useContext, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -68,6 +68,7 @@ export function ChoicesCreator({
   image = false,
   surveyType,
 }: Readonly<ChoicesCreatorProps>) {
+  const uid = useId();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const [choiceWeightage, setChoiceWeightage] = useState<NPSWeightage>(NPSWeightage.PROMOTER);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>();
@@ -457,8 +458,9 @@ export function ChoicesCreator({
         surveyType === SurveyType.Web && (
           <div className="mt-2 rounded-lg border bg-background">
             <Field orientation="horizontal" className="p-3">
-              <FieldLabel>{translations("Enable Other")}</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field`}>{translations("Enable Other")}</FieldLabel>
               <Switch
+                id={`${uid}-field`}
                 checked={features?.other?.isEnabled}
                 onCheckedChange={(checked) => {
                   form.setFieldValue("features", {
@@ -475,8 +477,11 @@ export function ChoicesCreator({
             {features?.other?.isEnabled && (
               <FieldGroup className="border-t p-3">
                 <Field>
-                  <FieldLabel>{translations("Title for 'Other'")}</FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-field-2`}>
+                    {translations("Title for 'Other'")}
+                  </FieldLabel>
                   <Textarea
+                    id={`${uid}-field-2`}
                     className="bg-background"
                     value={features?.other?.title}
                     onChange={(e) => {
@@ -491,8 +496,11 @@ export function ChoicesCreator({
                   />
                 </Field>
                 <Field>
-                  <FieldLabel>{translations("Placeholder text for other input")}</FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-field-3`}>
+                    {translations("Placeholder text for other input")}
+                  </FieldLabel>
                   <Textarea
+                    id={`${uid}-field-3`}
                     className="bg-background"
                     value={features?.other?.placeholder}
                     onChange={(e) => {
@@ -909,7 +917,7 @@ function Choice({
                 </Field>
 
                 <Field data-invalid={!!errors.image}>
-                  <FieldLabel>{translations("Image")}</FieldLabel>
+                  <FieldTitle>{translations("Image")}</FieldTitle>
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
@@ -948,7 +956,7 @@ function Choice({
 
             {image && (
               <Field data-invalid={!!fileError}>
-                <FieldLabel>{translations("Choice Image")}</FieldLabel>
+                <FieldTitle>{translations("Choice Image")}</FieldTitle>
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"

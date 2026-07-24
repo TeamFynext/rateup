@@ -49,6 +49,7 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldTitle,
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
@@ -549,7 +550,7 @@ export function AutomatedReplyForm({
               {/* FIX: Shortened label with tooltip for explanation */}
               {!isInstagram && (
                 <Field>
-                  <FieldLabel className="items-center gap-1.5">
+                  <FieldTitle className="items-center gap-1.5">
                     {t("WhatsApp Account")}
                     <Tooltip>
                       <TooltipTrigger
@@ -566,7 +567,7 @@ export function AutomatedReplyForm({
                       </TooltipContent>
                     </Tooltip>
                     <span className="text-xs text-muted-foreground">({t("Optional")})</span>
-                  </FieldLabel>
+                  </FieldTitle>
                   <FieldContent>
                     <Controller
                       name="whatsappSettingsPhoneId"

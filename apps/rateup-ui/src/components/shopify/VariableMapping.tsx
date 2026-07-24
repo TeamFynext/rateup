@@ -1,10 +1,10 @@
 import { Loader2 } from "lucide-react";
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 
 import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
 
-import { Label } from "../ui/label.tsx";
+import { Field, FieldLabel } from "../ui/field.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { contactVariablePresets, shopifyVariablePresets } from "./shopifyVariables.ts";
 
@@ -16,6 +16,7 @@ interface VariableMappingProps {
 }
 
 const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: VariableMappingProps) => {
+  const uid = useId();
   const { data: template, isLoading } = useWaTemplateById(waTemplateId);
   const isShopify = triggerEvent === "SHOPIFY_EVENT";
   const { data: customFields } = useCustomFields();
@@ -74,22 +75,22 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
             : "Map your WhatsApp template variables to contact fields."}
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <Field className="grid sm:grid-cols-2">
         {variables.map((example, i) => {
           const currentMapping = value.find((m) => m.templateParamIndex === i);
           return (
-            <div key={i} className="space-y-2">
-              <Label className="text-xs">
+            <Field key={i}>
+              <FieldLabel htmlFor={`${uid}-variable-e-g-${i}`} className="text-xs">
                 Variable {"{{"}
                 {i + 1}
                 {"}}"} (e.g. {example})
-              </Label>
+              </FieldLabel>
               <Select
                 value={currentMapping?.shopifyPath || ""}
                 onValueChange={(val) => handleMappingChange(i, val)}
                 items={variableOptions}
               >
-                <SelectTrigger className="h-9">
+                <SelectTrigger id={`${uid}-variable-e-g-${i}`} className="h-9">
                   <SelectValue
                     placeholder={isShopify ? "Select Shopify Field" : "Select Contact Field"}
                   />
@@ -102,10 +103,10 @@ const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: Variab
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
           );
         })}
-      </div>
+      </Field>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { IconCalendar, IconCamera, IconChevronRight, IconFileText } from "@tabler/icons-react";
+import { useId } from "react";
 
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -10,8 +11,8 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { FlowSheetShell } from "@/components/whatsapp/whatsapp-preview-shell.tsx";
@@ -68,16 +69,19 @@ function FlowTextAreaPreview({ label = "Label" }: { label?: string }) {
 }
 
 function FlowDateInputPreview({ label = "Label" }: { label?: string }) {
+  const uid = useId();
   return (
-    <div className="flex flex-col gap-1">
-      <Label className={`${styles.inputLabel} ${styles.font}`}>{label}</Label>
+    <Field>
+      <FieldLabel htmlFor={`${uid}-field`} className={`${styles.inputLabel} ${styles.font}`}>
+        {label}
+      </FieldLabel>
       <InputGroup className={`${styles.textInput} ${styles.font} border-0 shadow-none`}>
-        <InputGroupInput placeholder="dd/mm/yyyy" readOnly />
+        <InputGroupInput id={`${uid}-field`} placeholder="dd/mm/yyyy" readOnly />
         <InputGroupAddon align="inline-end">
           <IconCalendar />
         </InputGroupAddon>
       </InputGroup>
-    </div>
+    </Field>
   );
 }
 
@@ -102,33 +106,34 @@ function FlowFileInputPreview({
 
 function FlowRadioPreview({ label = "Label", options }: { label?: string; options: string[] }) {
   return (
-    <div>
+    <Field>
       <p className={`${styles.inputLabel} ${styles.font}`}>{label}</p>
       <RadioGroup className="mt-2 flex flex-col gap-2">
         {options?.map((option) => (
-          <Label key={option} className="flex w-full items-center justify-between">
+          <FieldLabel key={option} className="flex w-full items-center justify-between">
             {option}
             <RadioGroupItem value={option} />
-          </Label>
+          </FieldLabel>
         ))}
       </RadioGroup>
-    </div>
+    </Field>
   );
 }
 
 function FlowCheckBoxPreview({ label = "Label", options }: { label?: string; options: string[] }) {
+  const uid = useId();
   return (
-    <div>
+    <Field>
       <p className={`${styles.inputLabel} ${styles.font}`}>{label}</p>
-      <div className="mt-2 flex flex-col gap-2">
-        {options?.map((option) => (
-          <Label key={option} className="flex w-full items-center justify-between">
+      <Field className="mt-2">
+        {options?.map((option, idx) => (
+          <FieldTitle key={option} className="flex w-full items-center justify-between">
             {option}
-            <Checkbox value={option} />
-          </Label>
+            <Checkbox id={`${uid}-field-2-${idx}`} value={option} />
+          </FieldTitle>
         ))}
-      </div>
-    </div>
+      </Field>
+    </Field>
   );
 }
 
@@ -171,10 +176,10 @@ function DropDownPreview({ label = "Label" }: Readonly<{ label?: string }>) {
 
 function FlowOptInPreview({ label = "Label" }: Readonly<{ label?: string }>) {
   return (
-    <Label className={`${styles.inputLabel} ${styles.font} flex items-center gap-2`}>
+    <FieldTitle className={`${styles.inputLabel} ${styles.font} flex items-center gap-2`}>
       <Checkbox />
       {label}
-    </Label>
+    </FieldTitle>
   );
 }
 

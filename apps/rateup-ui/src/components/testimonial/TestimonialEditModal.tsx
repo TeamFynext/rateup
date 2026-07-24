@@ -1,5 +1,5 @@
 import { useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useImmer } from "use-immer";
 
@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
@@ -45,6 +46,7 @@ enum BlockTabEnum {
 }
 
 const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEditModalProps>) => {
+  const uid = useId();
   const [currentStyle, setCurrentstyle] = useImmer<TestimonialStyleType>(
     theme || ({} as TestimonialStyleType),
   );
@@ -286,17 +288,21 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                       {BlockTabEnum.RatingBlock}
                     </TabsTrigger>
                   </TabsList>
-                  {blocks.map((block) => (
+                  {blocks.map((block, idx) => (
                     <TabsContent key={block.name} value={block.name} className="mt-3">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">
+                      <Field>
+                        <FieldLabel
+                          htmlFor={`${uid}-field-${idx}`}
+                          className="text-sm font-medium mb-1.5 block"
+                        >
                           {translations("Background Color")}
-                        </label>
+                        </FieldLabel>
                         <CustomColorPicker
+                          id={`${uid}-field-${idx}`}
                           value={block.bg}
                           onChange={(color) => handleBgColor(block.name, color)}
                         />
-                      </div>
+                      </Field>
                     </TabsContent>
                   ))}
                 </Tabs>
@@ -317,28 +323,35 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                       </TabsTrigger>
                     ))}
                   </TabsList>
-                  {fonts.map((font) => (
+                  {fonts.map((font, idx) => (
                     <TabsContent key={font.name} value={font.name} className="mt-3">
                       <div className="grid grid-cols-3 gap-3">
-                        <div>
-                          <label className="text-sm font-medium mb-1.5 block">
+                        <Field>
+                          <FieldLabel
+                            htmlFor={`${uid}-field-2-${idx}`}
+                            className="text-sm font-medium mb-1.5 block"
+                          >
                             {translations("Color")}
-                          </label>
+                          </FieldLabel>
                           <CustomColorPicker
+                            id={`${uid}-field-2-${idx}`}
                             value={font.color}
                             onChange={(color) => handleFontColorChange(color, font.name)}
                           />
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium mb-1.5 block">
+                        </Field>
+                        <Field>
+                          <FieldLabel
+                            htmlFor={`${uid}-field-3-${idx}`}
+                            className="text-sm font-medium mb-1.5 block"
+                          >
                             {translations("Font Weight")}
-                          </label>
+                          </FieldLabel>
                           <Select
                             value={font.fontWeight}
                             onValueChange={(value) => handleFontWeightChange(value, font.name)}
                             items={FontWeights}
                           >
-                            <SelectTrigger className="h-9">
+                            <SelectTrigger id={`${uid}-field-3-${idx}`} className="h-9">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -349,19 +362,23 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                               ))}
                             </SelectContent>
                           </Select>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium mb-1.5 block">
+                        </Field>
+                        <Field>
+                          <FieldLabel
+                            htmlFor={`${uid}-field-4-${idx}`}
+                            className="text-sm font-medium mb-1.5 block"
+                          >
                             {translations("Font Size")}
-                          </label>
+                          </FieldLabel>
                           <Input
+                            id={`${uid}-field-4-${idx}`}
                             type="number"
                             value={font.fontSize || ""}
                             onChange={(e) => handleFontSizeChange(e.target.value, font.name)}
                             placeholder="px"
                             className="h-9"
                           />
-                        </div>
+                        </Field>
                       </div>
                     </TabsContent>
                   ))}
@@ -376,10 +393,13 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                   {translations("Layout")}
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">
+                  <Field>
+                    <FieldLabel
+                      htmlFor={`${uid}-field-5`}
+                      className="text-sm font-medium mb-1.5 block"
+                    >
                       {translations("Layout")}
-                    </label>
+                    </FieldLabel>
                     <Select
                       value={currentStyle?.layout}
                       onValueChange={handleLayout}
@@ -388,7 +408,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                         { value: "layout2", label: "Layout 2" },
                       ]}
                     >
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger id={`${uid}-field-5`} className="h-9">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -396,11 +416,14 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                         <SelectItem value="layout2">Layout 2</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">
+                  </Field>
+                  <Field>
+                    <FieldLabel
+                      htmlFor={`${uid}-field-6`}
+                      className="text-sm font-medium mb-1.5 block"
+                    >
                       {translations("Rating Style")}
-                    </label>
+                    </FieldLabel>
                     <Select
                       value={currentStyle?.ratingBlock?.ratingType}
                       onValueChange={(value) =>
@@ -413,7 +436,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                         { value: "number", label: "Number" },
                       ]}
                     >
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger id={`${uid}-field-6`} className="h-9">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -421,7 +444,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                         <SelectItem value="number">Number</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </Field>
                 </div>
               </section>
             </div>
@@ -443,7 +466,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
                       {translations("Visibility")}
                     </p>
-                    <div className="flex items-center space-x-2">
+                    <Field orientation="horizontal" className="gap-2">
                       <Checkbox
                         id="remove-rating"
                         checked={currentStyle?.ratingBlock?.isRemoved || false}
@@ -453,11 +476,11 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                           });
                         }}
                       />
-                      <label htmlFor="remove-rating" className="text-sm cursor-pointer">
+                      <FieldLabel htmlFor="remove-rating" className="text-sm cursor-pointer">
                         {translations("Remove Rating")}
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
+                      </FieldLabel>
+                    </Field>
+                    <Field orientation="horizontal" className="gap-2">
                       <Checkbox
                         id="remove-date"
                         checked={currentStyle?.date?.isRemoved || false}
@@ -467,11 +490,11 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                           });
                         }}
                       />
-                      <label htmlFor="remove-date" className="text-sm cursor-pointer">
+                      <FieldLabel htmlFor="remove-date" className="text-sm cursor-pointer">
                         {translations("Remove Date")}
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
+                      </FieldLabel>
+                    </Field>
+                    <Field orientation="horizontal" className="gap-2">
                       <Checkbox
                         id="remove-pic"
                         checked={currentStyle?.profileBlock?.profilePic?.isRemoved || false}
@@ -482,10 +505,10 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
                           });
                         }}
                       />
-                      <label htmlFor="remove-pic" className="text-sm cursor-pointer">
+                      <FieldLabel htmlFor="remove-pic" className="text-sm cursor-pointer">
                         {translations("Remove Profile Picture")}
-                      </label>
-                    </div>
+                      </FieldLabel>
+                    </Field>
                   </div>
                 )}
               </div>

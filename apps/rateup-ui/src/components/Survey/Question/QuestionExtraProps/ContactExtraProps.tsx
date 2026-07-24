@@ -1,5 +1,5 @@
 import { IconCircleCheckFilled } from "@tabler/icons-react";
-import { useContext, useEffect, useState } from "react";
+import { useId, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { getCountries, getCountryCallingCode } from "react-phone-number-input";
@@ -76,6 +76,7 @@ type HeadTextValues = {
 };
 
 const ContactExtraProps = ({ form }: { form: any }) => {
+  const uid = useId();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const qtype = form.values.type;
   const defaultEnabled = getDefaultContactFeatureEnabled(qtype);
@@ -208,9 +209,12 @@ const ContactExtraProps = ({ form }: { form: any }) => {
 
             const textarea = (
               <Field key={key}>
-                <FieldLabel className="sr-only">{key} title</FieldLabel>
+                <FieldLabel htmlFor={`${uid}-title-${key}`} className="sr-only">
+                  {key} title
+                </FieldLabel>
                 <div className="relative">
                   <Textarea
+                    id={`${uid}-title-${key}`}
                     placeholder={`${translations("Enter")} ${key} ${translations("title here")}`}
                     className="rounded-none border-0 border-b pr-8 focus-visible:border-primary focus-visible:ring-0"
                     disabled={isDisabled}

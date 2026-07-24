@@ -14,8 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
@@ -182,7 +182,7 @@ export const ResendCampaignModal = ({
         <div className="space-y-6 py-4">
           {/* SEND MODE */}
           <div className="space-y-3">
-            <Label className="font-semibold">{t("When to send")}</Label>
+            <FieldTitle className="font-semibold">{t("When to send")}</FieldTitle>
             <Tabs
               value={sendMode}
               onValueChange={(value) => setSendMode(value as "NOW" | "SCHEDULED")}
@@ -233,8 +233,12 @@ export const ResendCampaignModal = ({
 
                   {/* TIME PICKER */}
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background">
+                    <FieldLabel htmlFor="resend-schedule-time" className="sr-only">
+                      {t("Send time")}
+                    </FieldLabel>
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <Input
+                      id="resend-schedule-time"
                       type="time"
                       value={scheduleTime}
                       onChange={(e) => setScheduleTime(e.target.value)}
@@ -250,9 +254,9 @@ export const ResendCampaignModal = ({
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-4">
               <div className="space-y-0.5">
-                <Label htmlFor="dailySendLimit" className="font-semibold">
+                <FieldLabel htmlFor="dailySendLimit" className="font-semibold">
                   {t("Limit messages per day")}
-                </Label>
+                </FieldLabel>
                 <p className="text-xs text-muted-foreground">
                   {t(
                     "Spread this campaign across consecutive days instead of sending at once. Saved to the campaign.",
@@ -269,19 +273,29 @@ export const ResendCampaignModal = ({
             {isDailyLimitEnabled && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
+                  <FieldLabel htmlFor="dailySendLimitValue" className="sr-only">
+                    {t("Messages per day")}
+                  </FieldLabel>
                   <Input
+                    id="dailySendLimitValue"
                     type="number"
                     min={1}
                     step={1}
                     value={dailySendLimit}
                     onChange={(e) => setDailySendLimit(e.target.value)}
+                    aria-invalid={!isDailyLimitValid}
+                    aria-describedby={!isDailyLimitValid ? "dailySendLimitValue-error" : undefined}
                     className="w-32"
                   />
                   <span className="text-sm text-muted-foreground">{t("messages per day")}</span>
                 </div>
 
                 {!isDailyLimitValid ? (
-                  <p className="text-xs text-destructive flex items-center gap-1.5">
+                  <p
+                    id="dailySendLimitValue-error"
+                    role="alert"
+                    className="text-xs text-destructive flex items-center gap-1.5"
+                  >
                     <AlertCircle className="w-3 h-3" />
                     {t("Enter a daily send limit of at least 1")}
                   </p>
@@ -302,7 +316,7 @@ export const ResendCampaignModal = ({
           {/* STATUS SELECTION - Only for resends */}
           {!isFirstSend && (
             <div className="space-y-2">
-              <Label className="font-semibold">{t("Participant Status")}</Label>
+              <FieldTitle className="font-semibold">{t("Participant Status")}</FieldTitle>
 
               <div className="flex flex-wrap gap-2">
                 {STATUS_OPTIONS.map((opt) => {

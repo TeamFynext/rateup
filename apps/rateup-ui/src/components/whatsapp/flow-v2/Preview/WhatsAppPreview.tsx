@@ -5,8 +5,8 @@ import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Calendar } from "@/components/ui/calendar.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import {
   Select,
@@ -84,15 +84,15 @@ export function FlowScreenSheet() {
       case QuestionType2.CheckboxGroup:
       case "CheckboxGroup":
         return (
-          <div className="space-y-4">
+          <Field>
             {(element["data-source"] || []).map((option: any) => (
-              <div key={option.id} className="flex items-center space-x-2 justify-between">
-                <Label
+              <Field key={option.id} orientation="horizontal" className="gap-2 justify-between">
+                <FieldLabel
                   htmlFor={`${element.id}-${option.id}`}
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   {option.title}
-                </Label>
+                </FieldLabel>
                 <Checkbox
                   id={`${element.id}-${option.id}`}
                   checked={formData[element.id]?.includes(option.id) || false}
@@ -111,9 +111,9 @@ export function FlowScreenSheet() {
                     }
                   }}
                 />
-              </div>
+              </Field>
             ))}
-          </div>
+          </Field>
         );
 
       case QuestionType2.RadioButtonsGroup:
@@ -125,19 +125,14 @@ export function FlowScreenSheet() {
             value={formData[element.id] || ""}
             onValueChange={(value) => setFormData({ ...formData, [element.id]: value })}
           >
-            <div className="space-y-4">
+            <Field>
               {(element["data-source"] || []).map((option: any) => (
-                <div key={option.id} className="flex items-center space-x-2 justify-between">
-                  <Label
-                    htmlFor={`${element.id}-${option.id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {option.title}
-                  </Label>
+                <Field key={option.id} orientation="horizontal" className="gap-2 justify-between">
+                  <FieldLabel htmlFor={`${element.id}-${option.id}`}>{option.title}</FieldLabel>
                   <RadioGroupItem value={option.id} id={`${element.id}-${option.id}`} />
-                </div>
+                </Field>
               ))}
-            </div>
+            </Field>
           </RadioGroup>
         );
 
@@ -263,7 +258,7 @@ export function FlowScreenSheet() {
           </p>
         )}
         {element?.label && (
-          <Label className="text-[13px] text-foreground mb-3">{element?.label}</Label>
+          <FieldTitle className="text-[13px] text-foreground mb-3">{element?.label}</FieldTitle>
         )}
         {element.description && (
           <p className="text-[11px] text-muted-foreground mb-2 leading-tight">

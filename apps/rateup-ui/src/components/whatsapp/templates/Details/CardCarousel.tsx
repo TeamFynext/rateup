@@ -12,7 +12,7 @@ import {
   IconWorld,
   IconX,
 } from "@tabler/icons-react";
-import { useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -63,6 +63,7 @@ const CardCarousel = ({
   catalog: any;
   productRetailerIds: string[];
 }) => {
+  const uid = useId();
   function handleMediaCarousel() {
     if (form.watch().mediaCarousel.length === 10) {
       toast.error("Only 10 cards are allowed");
@@ -333,7 +334,7 @@ const CardCarousel = ({
                 )}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field>
-                    <FieldLabel>Header Format</FieldLabel>
+                    <FieldLabel htmlFor={`${uid}-header-format-${index}`}>Header Format</FieldLabel>
                     <Select
                       items={headerFormatOptions}
                       value={form.watch().mediaCarousel?.[index]?.format ?? ""}
@@ -341,7 +342,7 @@ const CardCarousel = ({
                         setValue(form, `mediaCarousel.${index}.format`, value)
                       }
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger id={`${uid}-header-format-${index}`} className="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -354,12 +355,13 @@ const CardCarousel = ({
                     </Select>
                   </Field>
                   <Field>
-                    <FieldLabel>
+                    <FieldLabel htmlFor={`${uid}-choose-${index}`}>
                       {card?.header
                         ? `Update ${card.format.toLowerCase()}`
                         : `Choose ${card.format.toLowerCase()}`}
                     </FieldLabel>
                     <Input
+                      id={`${uid}-choose-${index}`}
                       type="file"
                       onChange={(event) =>
                         setValue(
@@ -381,8 +383,9 @@ const CardCarousel = ({
                     key={`${btn.type}_${btnIndex}`}
                   >
                     <Field className="min-w-56 flex-1">
-                      <FieldLabel>Button Type</FieldLabel>
+                      <FieldLabel htmlFor={`${uid}-button-type-${index}`}>Button Type</FieldLabel>
                       <Input
+                        id={`${uid}-button-type-${index}`}
                         value={getButtonAction(
                           btn.example ? WHATSAPP_BUTTON_TYPE.WEBSURVEY : btn.type,
                         )}
@@ -390,8 +393,9 @@ const CardCarousel = ({
                       />
                     </Field>
                     <Field className="min-w-56 flex-1">
-                      <FieldLabel>Button Text</FieldLabel>
+                      <FieldLabel htmlFor={`${uid}-button-text-${index}`}>Button Text</FieldLabel>
                       <Input
+                        id={`${uid}-button-text-${index}`}
                         {...registerField(form, `mediaCarousel.${index}.buttons.${btnIndex}.text`)}
                       />
                     </Field>
@@ -411,8 +415,9 @@ const CardCarousel = ({
                       />
                     ) : btn.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE ? (
                       <Field className="min-w-56 flex-1">
-                        <FieldLabel>Url</FieldLabel>
+                        <FieldLabel htmlFor={`${uid}-url-${index}`}>Url</FieldLabel>
                         <Input
+                          id={`${uid}-url-${index}`}
                           {...registerField(form, `mediaCarousel.${index}.buttons.${btnIndex}.url`)}
                         />
                       </Field>
@@ -457,7 +462,7 @@ const CardCarousel = ({
               </div>
               <div className="grid grid-cols-1 gap-4 p-3 sm:grid-cols-2 lg:grid-cols-3">
                 <Field>
-                  <FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-field-${index}`}>
                     <p className="text-sm font-medium">{translations("Type of action")}</p>
                   </FieldLabel>
                   <Select
@@ -481,7 +486,7 @@ const CardCarousel = ({
                       });
                     }}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id={`${uid}-field-${index}`} className="w-full">
                       <SelectValue placeholder="Select a action" />
                     </SelectTrigger>
                     <SelectContent>
@@ -494,10 +499,11 @@ const CardCarousel = ({
                   </Select>
                 </Field>
                 <Field>
-                  <FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-field-2-${index}`}>
                     <p className="text-sm font-medium">{translations("Button text")}</p>
                   </FieldLabel>
                   <Input
+                    id={`${uid}-field-2-${index}`}
                     {...registerField(form, `productCarousel.${index}.button.text`)}
                     readOnly={card.button.type === WHATSAPP_BUTTON_TYPE.SPM}
                   />
@@ -508,10 +514,13 @@ const CardCarousel = ({
                       card.button.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE ? "" : "hidden"
                     }
                   >
-                    <FieldLabel>
+                    <FieldLabel htmlFor={`${uid}-field-3-${index}`}>
                       <p className="text-sm font-medium">{translations("Website Url")}</p>
                     </FieldLabel>
-                    <Input {...registerField(form, `productCarousel.${index}.button.url`)} />
+                    <Input
+                      id={`${uid}-field-3-${index}`}
+                      {...registerField(form, `productCarousel.${index}.button.url`)}
+                    />
                   </Field>
                 )}
 
@@ -526,7 +535,7 @@ const CardCarousel = ({
                   />
                 )}
                 <Field>
-                  <FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-product-item-${index}`}>
                     <p className="text-sm font-medium">Product Item</p>
                   </FieldLabel>
                   <Select
@@ -536,7 +545,7 @@ const CardCarousel = ({
                       setValue(form, `productCarousel.${index}.product_retailer_id`, value)
                     }
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id={`${uid}-product-item-${index}`} className="w-full">
                       <SelectValue placeholder="Select a product" />
                     </SelectTrigger>
                     <SelectContent>

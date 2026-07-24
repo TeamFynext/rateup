@@ -6,8 +6,8 @@ import { useTranslation } from "react-i18next";
 import { useGetQrWithShortUrlId, useUpdateQrMutation } from "@/backend/generateQr/generateQr.query";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 
 function GeneratedQrPage() {
@@ -103,13 +103,13 @@ function GeneratedQrPage() {
           <div className="flex flex-col gap-4 w-full py-4">
             {/* Destination URL */}
             <div className="group">
-              <Label
+              <FieldLabel
                 htmlFor="destination-url"
                 className="text-xs font-semibold flex items-center gap-1"
               >
                 <ExternalLink className="w-4 h-4 text-primary" />
                 {translations("Destination URL")}
-              </Label>
+              </FieldLabel>
               <div className="flex gap-1.5">
                 <div className="relative flex-1">
                   <Input
@@ -132,13 +132,13 @@ function GeneratedQrPage() {
 
             {/* QR URL */}
             <div className="group">
-              <Label
+              <FieldLabel
                 htmlFor="qr-url"
                 className="text-xs font-semibold mb-1 flex items-center gap-1"
               >
                 <Copy className="w-4 h-4 text-primary" />
                 {translations("QR URL")}
-              </Label>
+              </FieldLabel>
               <div className="flex gap-1.5">
                 <div className="relative flex-1">
                   <Input id="qr-url" value={qrUrl} readOnly className="flex-1 h-8 text-xs" />

@@ -19,30 +19,44 @@ const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
   const isLast = pagination.pageIndex >= totalPages - 1;
 
   return (
-    <div className="mt-2 flex items-center gap-2">
-      <Button variant="outline" size="icon" disabled={isFirst} onClick={() => goTo(0)}>
+    <nav className="mt-2 flex items-center gap-2" aria-label="Contact pagination">
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label="First page"
+        disabled={isFirst}
+        onClick={() => goTo(0)}
+      >
         <ChevronsLeft />
       </Button>
       <Button
         variant="outline"
         size="icon"
+        aria-label="Previous page"
         disabled={isFirst}
         onClick={() => goTo(pagination.pageIndex - 1)}
       >
         <ChevronLeft />
       </Button>
-      <span className="text-sm text-muted-foreground">
+      <span className="text-sm text-muted-foreground" aria-current="page">
         {pagination.pageIndex + 1} / {totalPages}
       </span>
       <Button
         variant="outline"
         size="icon"
+        aria-label="Next page"
         disabled={isLast}
         onClick={() => goTo(pagination.pageIndex + 1)}
       >
         <ChevronRight />
       </Button>
-      <Button variant="outline" size="icon" disabled={isLast} onClick={() => goTo(totalPages - 1)}>
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label="Last page"
+        disabled={isLast}
+        onClick={() => goTo(totalPages - 1)}
+      >
         <ChevronsRight />
       </Button>
       <Select
@@ -55,7 +69,7 @@ const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
           }));
         }}
       >
-        <SelectTrigger size="sm" className="w-20">
+        <SelectTrigger size="sm" aria-label="Contacts per page" className="w-20">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -66,7 +80,7 @@ const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </nav>
   );
 };
 

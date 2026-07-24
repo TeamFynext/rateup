@@ -1,4 +1,5 @@
 import { ChevronDownIcon } from "lucide-react";
+import { useId } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -9,7 +10,7 @@ import { ContactGroupType } from "@/types/enums.ts";
 
 import { Button } from "../ui/button.tsx";
 import { Calendar } from "../ui/calendar.tsx";
-import { Field, FieldError, FieldLabel } from "../ui/field.tsx";
+import { Field, FieldError, FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover.tsx";
@@ -27,6 +28,7 @@ type ContactFormProps = Readonly<{
 }>;
 
 const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const { data: labels = [], isPending } = useContactLabels();
   const contactType = form.watch("contactType");
@@ -75,7 +77,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
       case "multivalue":
         return (
           <Field className="flex flex-col gap-1" data-invalid={!!fieldError}>
-            <FieldLabel>{commonProps.label}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-${fieldId}`}>{commonProps.label}</FieldLabel>
             <Select
               required={commonProps.required}
               value={fieldValue}
@@ -83,8 +85,10 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               items={options}
             >
               <SelectTrigger
+                id={`${uid}-${fieldId}`}
                 className="bg-accent border-none placeholder:text-sm"
                 aria-invalid={!!fieldError}
+                aria-describedby={fieldError ? `${uid}-${fieldId}-error` : undefined}
               >
                 <SelectValue placeholder={commonProps.placeholder} />
               </SelectTrigger>
@@ -96,7 +100,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
                 ))}
               </SelectContent>
             </Select>
-            {fieldError && <FieldError>{fieldError}</FieldError>}
+            {fieldError && <FieldError id={`${uid}-${fieldId}-error`}>{fieldError}</FieldError>}
           </Field>
         );
 
@@ -106,18 +110,20 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
       default:
         return (
           <Field className="flex flex-col gap-1" data-invalid={!!fieldError}>
-            <FieldLabel>{commonProps.label}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-${fieldId}`}>{commonProps.label}</FieldLabel>
             <Input
+              id={`${uid}-${fieldId}`}
               {...commonProps}
               type={customField.type === "email" ? "email" : customField.type}
               defaultValue={fieldValue}
               aria-invalid={!!fieldError}
+              aria-describedby={fieldError ? `${uid}-${fieldId}-error` : undefined}
               onChange={(event) =>
                 updateCustomField(fieldId, event.currentTarget.value, customField)
               }
               className="bg-accent border-none placeholder:text-sm"
             />
-            {fieldError && <FieldError>{fieldError}</FieldError>}
+            {fieldError && <FieldError id={`${uid}-${fieldId}-error`}>{fieldError}</FieldError>}
           </Field>
         );
     }
@@ -138,10 +144,14 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               id={field.name}
               placeholder={translations("Enter full name")}
               required
+              autoComplete="name"
               aria-invalid={fieldState.invalid}
+              aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
               className="bg-accent border-none placeholder:text-sm"
             />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+            )}
           </Field>
         )}
       />
@@ -161,9 +171,12 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               onChange={field.onChange}
               onBlur={field.onBlur}
               aria-invalid={fieldState.invalid}
+              aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
               className="w-full"
             />
-            {fieldState.invalid && <FieldError>*{fieldState.error?.message}</FieldError>}
+            {fieldState.invalid && (
+              <FieldError id={`${field.name}-error`}>*{fieldState.error?.message}</FieldError>
+            )}
           </Field>
         )}
       />
@@ -178,10 +191,14 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               id={field.name}
               placeholder={translations("email@example.com")}
               type="email"
+              autoComplete="email"
               aria-invalid={fieldState.invalid}
+              aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
               className="bg-accent border-none placeholder:text-sm"
             />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+            )}
           </Field>
         )}
       />
@@ -192,8 +209,9 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
             control={form.control}
             render={({ field }) => (
               <Field className="flex flex-col gap-1">
-                <FieldLabel>{translations("Labels")}</FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Labels")}</FieldLabel>
                 <MultiSelect
+                  id={`${uid}-field-3`}
                   options={labels?.map((label) => ({ value: label.id, label: label.name })) ?? []}
                   value={field.value ?? []}
                   onValueChange={field.onChange}
@@ -209,11 +227,11 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
             control={form.control}
             render={({ field }) => (
               <Field className="flex flex-col gap-1">
-                <FieldLabel>{translations("Lifecycle Stage")}</FieldLabel>
+                <FieldTitle>{translations("Lifecycle Stage")}</FieldTitle>
                 <LifecycleSelector
                   value={field.value}
                   onChange={field.onChange}
-                  className="bg-accent border-none"
+                  className="w-full"
                 />
               </Field>
             )}
@@ -223,7 +241,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
             control={form.control}
             render={({ field }) => (
               <Field className="flex flex-col gap-1">
-                <FieldLabel>{translations("Assignee")}</FieldLabel>
+                <FieldTitle>{translations("Assignee")}</FieldTitle>
                 <UserSelector
                   value={field.value}
                   onChange={field.onChange}
@@ -238,7 +256,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
             control={form.control}
             render={({ field }) => (
               <Field className="flex flex-col gap-1">
-                <FieldLabel>{translations("Group")}</FieldLabel>
+                <FieldTitle>{translations("Group")}</FieldTitle>
                 <ContactGroupSelector
                   value={field.value}
                   onChange={field.onChange}
@@ -257,7 +275,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
             control={form.control}
             render={({ field }) => (
               <Field className="flex flex-col gap-1">
-                <FieldLabel>{translations("Date of Birth")}</FieldLabel>
+                <FieldTitle>{translations("Date of Birth")}</FieldTitle>
                 <Popover>
                   <PopoverTrigger
                     render={

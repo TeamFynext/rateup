@@ -1,4 +1,5 @@
 import { IconExternalLink } from "@tabler/icons-react";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
 type RedirectError = { url: string; time: string };
@@ -28,6 +29,7 @@ function RedirectSettings({
   setRedirectError,
   debounced,
 }) {
+  const uid = useId();
   const { t: translations } = useTranslation();
 
   function validateUrl(url: string) {
@@ -81,10 +83,11 @@ function RedirectSettings({
           <FieldGroup>
             <div className="grid grid-cols-2 gap-3">
               <Field data-invalid={!!redirectError?.url}>
-                <FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field`}>
                   {translations("Redirect Url")} <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Input
+                  id={`${uid}-field`}
                   disabled={!areInputsEnabled}
                   placeholder={translations("Target URL for redirection")}
                   defaultValue={redirect?.url}
@@ -117,11 +120,12 @@ function RedirectSettings({
               </Field>
 
               <Field data-invalid={!!redirectError?.time}>
-                <FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field-2`}>
                   {translations("Redirect After (in seconds)")}{" "}
                   <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Input
+                  id={`${uid}-field-2`}
                   type="number"
                   disabled={!areInputsEnabled}
                   placeholder={translations("time in seconds")}

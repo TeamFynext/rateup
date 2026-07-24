@@ -3,11 +3,14 @@ import { cn } from "@/lib/utils";
 import { swatches } from "../../SurveyTheme.constants";
 
 interface CustomColorPickerProps {
+  /** Id applied to the colour input, so a `FieldLabel htmlFor` can target it. */
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   enableSwatches?: boolean;
 }
 export default function CustomColorPicker({
+  id,
   onChange,
   value,
   enableSwatches = true,
@@ -16,6 +19,7 @@ export default function CustomColorPicker({
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center gap-2.5">
         <input
+          id={id}
           type="color"
           value={value || "#000000"}
           onChange={(e) => onChange(e.target.value)}

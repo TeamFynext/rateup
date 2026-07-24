@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
-import { Label } from "@/components/ui/label";
+import { Field, FieldTitle } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { useDisclosure } from "@/hooks/useDisclosure";
 
@@ -39,12 +39,12 @@ function SharePage() {
   const { t: translations } = useTranslation();
   return (
     <div className={styles["share-linktree-root-div"]}>
-      <div className="w-full overflow-auto rounded-lg bg-card p-4 shadow-md">
-        <Label className="flex items-center gap-2">
+      <Field className="w-full overflow-auto rounded-lg bg-card p-4 shadow-md">
+        <FieldTitle className="flex items-center gap-2">
           <Switch onClick={handlePublishSwitchClick} checked={isPublished} />
           {translations("Published")}
-        </Label>
-      </div>
+        </FieldTitle>
+      </Field>
       <div
         className={`w-full overflow-auto rounded-lg bg-card p-4 shadow-md ${styles["share-options-container"]}`}
       >

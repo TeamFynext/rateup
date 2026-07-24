@@ -50,11 +50,7 @@ const WaInboxTemplateHeader = (props: Props) => {
   }
   switch (props?.templateComponent?.format) {
     case "TEXT":
-      return (
-        <span className="text-md font-semibold text-foreground">
-          {props?.templateComponent?.text}
-        </span>
-      );
+      return <span className="text-md font-semibold">{props?.templateComponent?.text}</span>;
     case "IMAGE":
       return (
         <img
@@ -76,7 +72,7 @@ const WaInboxTemplateHeader = (props: Props) => {
 
 const WaInboxTemplateBody = (props: Props) => {
   return (
-    <p className="text-sm font-normal text-foreground leading-relaxed">
+    <p className="text-sm font-normal leading-relaxed">
       {TextWithFormatting(
         props?.templateComponent?.text,
         (props?.parameterData?.parameters?.map((data) => data?.text) ||
@@ -88,7 +84,9 @@ const WaInboxTemplateBody = (props: Props) => {
 };
 
 const WaInboxTemplateFooter = (props: WaTemplateFetchBodyComponent) => {
-  return <p className="text-xs font-light text-muted-foreground">{props?.text}</p>;
+  // Colour is inherited from the bubble (white on the outgoing fill); the footer
+  // is dimmed with opacity instead of a fixed muted token so it stays legible.
+  return <p className="text-xs font-light opacity-70">{props?.text}</p>;
 };
 
 const WaInboxTemplateButtons = (props: WaTemplateFetchBodyComponent) => {
@@ -96,15 +94,18 @@ const WaInboxTemplateButtons = (props: WaTemplateFetchBodyComponent) => {
     <div className="flex flex-col gap-0">
       {props?.buttons?.map((button, i) => (
         <React.Fragment key={i}>
-          {i === 0 && <div className="border-t border-border" />}
+          {i === 0 && <div className="border-t border-current/25" />}
           <Button
             variant="ghost"
-            className="w-full justify-center text-xs h-9 text-indigo-600 gap-1.5 hover:bg-muted/40 rounded-none"
+            // Template buttons render inside the outgoing (primary-filled) bubble,
+            // so they track the bubble's own foreground colour rather than naming
+            // one — a fixed indigo/foreground disappears against the fill.
+            className="w-full justify-center text-xs h-9 gap-1.5 rounded-none text-current hover:bg-current/15 hover:text-current dark:hover:bg-current/15"
           >
             <IconMessageReply size={16} />
             <span>{button?.text}</span>
           </Button>
-          {i !== props?.buttons?.length - 1 && <div className="border-t border-border" />}
+          {i !== props?.buttons?.length - 1 && <div className="border-t border-current/25" />}
         </React.Fragment>
       ))}
     </div>

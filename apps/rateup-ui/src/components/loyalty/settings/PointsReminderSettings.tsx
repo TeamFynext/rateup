@@ -6,8 +6,8 @@ import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { TemplateType } from "@/types/enums.ts";
 
@@ -70,15 +70,15 @@ export function PointsReminderSettings({
 
         {form.watch(`${LoyaltyEventType.INACTIVITY_REMINDER}.enabled`) && (
           <>
-            <div className="space-y-2">
+            <Field>
               <Controller
                 control={form.control}
                 name={`${LoyaltyEventType.INACTIVITY_REMINDER}.triggerDays`}
                 render={({ field }) => (
                   <>
-                    <Label htmlFor="reminder-days" className="text-sm">
+                    <FieldLabel htmlFor="reminder-days" className="text-sm">
                       {t("Days of Inactivity")}
-                    </Label>
+                    </FieldLabel>
                     <Input
                       id="reminder-days"
                       type="number"
@@ -102,7 +102,7 @@ export function PointsReminderSettings({
                   </>
                 )}
               />
-            </div>
+            </Field>
 
             <div className="space-y-2">
               <Controller

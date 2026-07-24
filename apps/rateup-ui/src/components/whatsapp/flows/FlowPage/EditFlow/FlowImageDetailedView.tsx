@@ -1,13 +1,13 @@
 import { IconDeviceSdCard } from "@tabler/icons-react";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useId, useContext, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { getWaFlowFormElementTypeLabel } from "@/utils/enums/index.ts";
@@ -95,6 +95,7 @@ export function FlowImageDetailedView() {
 
 // currently not allowing user to edit width
 function FlowImageElementEditor({ onChange, src, height, width }) {
+  const uid = useId();
   const [file, setFile] = useState<File | null>(null);
   const [base64, setBase64] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -137,26 +138,28 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
             style={{ height, width: width - 100, maxHeight: height }}
             alt="flow Image"
           />
-          <div className="flex flex-col gap-1">
-            <Label>{translations("Width")}</Label>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field`}>{translations("Width")}</FieldLabel>
             <Input
+              id={`${uid}-field`}
               type="number"
               min={100}
               max={400}
               value={width}
               onChange={(e) => onChange({ width: Number(e.target.value) })}
             />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label>{translations("Height")}</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-2`}>{translations("Height")}</FieldLabel>
             <Input
+              id={`${uid}-field-2`}
               type="number"
               min={100}
               max={600}
               value={height}
               onChange={(e) => onChange({ height: Number(e.target.value) })}
             />
-          </div>
+          </Field>
         </>
       )}
     </div>

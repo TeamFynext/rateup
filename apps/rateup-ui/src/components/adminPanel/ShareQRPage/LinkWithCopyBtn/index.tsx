@@ -1,10 +1,10 @@
 import { Check, Copy } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 
 interface LinkWithCopyBtnProps {
   link: string;
@@ -12,6 +12,7 @@ interface LinkWithCopyBtnProps {
 }
 
 function LinkWithCopyBtn({ link, label }: Readonly<LinkWithCopyBtnProps>) {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const [copied, setCopied] = useState(false);
 
@@ -23,9 +24,16 @@ function LinkWithCopyBtn({ link, label }: Readonly<LinkWithCopyBtnProps>) {
 
   return (
     <div className="flex flex-col">
-      {label && <Label className="text-sm font-medium text-muted-foreground mb-1">{label}</Label>}
+      {label && (
+        <FieldLabel
+          htmlFor={`${uid}-field`}
+          className="text-sm font-medium text-muted-foreground mb-1"
+        >
+          {label}
+        </FieldLabel>
+      )}
       <div className="flex gap-2">
-        <Input value={link} readOnly className="flex-1" />
+        <Input id={`${uid}-field`} value={link} readOnly className="flex-1" />
         <Button
           type="button"
           variant={copied ? "outline" : "default"}

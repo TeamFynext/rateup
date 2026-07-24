@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useId, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 
 import { FileConverter } from "./DataSource.tsx";
 
@@ -17,6 +17,7 @@ interface CarouselImage {
 }
 
 const ImageCarouselInput = (props) => {
+  const uid = useId();
   const MAX_IMAGES = props.maxImages || 3;
   const resetRefs = useRef<Array<React.MutableRefObject<(() => void) | null>>>([]);
   const [images, setImages] = useState<CarouselImage[]>([{ src: "", "alt-text": "" }]);
@@ -76,8 +77,8 @@ const ImageCarouselInput = (props) => {
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+    <Field>
+      <Field className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         {images.map((img, idx) => (
           <Card key={idx} className="gap-2 rounded-md p-4">
             <FileUploadButton
@@ -90,9 +91,10 @@ const ImageCarouselInput = (props) => {
               accept="image/png,image/jpeg"
               className="w-full"
             />
-            <div className="flex flex-col gap-1">
-              <Label>Alt Text *</Label>
+            <Field>
+              <FieldLabel htmlFor={`${uid}-alt-text-${idx}`}>Alt Text *</FieldLabel>
               <Input
+                id={`${uid}-alt-text-${idx}`}
                 placeholder="Describe this image"
                 value={img["alt-text"]}
                 onChange={(e) => handleAltTextChange(e.target.value, idx)}
@@ -103,7 +105,7 @@ const ImageCarouselInput = (props) => {
                   {props.errors[`images.${idx}.alt-text`] as string}
                 </p>
               )}
-            </div>
+            </Field>
             {images.length > MIN_IMAGES && (
               <Button
                 variant="destructive"
@@ -117,14 +119,14 @@ const ImageCarouselInput = (props) => {
             )}
           </Card>
         ))}
-      </div>
+      </Field>
 
       {images.length < MAX_IMAGES && (
         <Button variant="secondary" onClick={addImage} className="mt-2.5 self-start">
           + Add Image ({images.length}/{MAX_IMAGES})
         </Button>
       )}
-    </div>
+    </Field>
   );
 };
 

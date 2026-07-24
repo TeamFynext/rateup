@@ -18,7 +18,7 @@ import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { TeamSelector } from "../input/TeamSelector.tsx";
 import { Avatar, AvatarImage } from "../ui/avatar.tsx";
-import { Button } from "../ui/button.tsx";
+import { Button, buttonVariants } from "../ui/button.tsx";
 import {
   Dialog,
   DialogClose,
@@ -28,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog.tsx";
-import { Field, FieldError, FieldLabel } from "../ui/field.tsx";
+import { Field, FieldError, FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
 import { Label } from "../ui/label.tsx";
 import { Spinner } from "../ui/spinner.tsx";
@@ -176,11 +176,14 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
                       {...field}
                       id={field.name}
                       aria-invalid={fieldState.invalid}
+                      aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
                       required
                       placeholder={translations("Enter group name")}
                       onClick={(e) => e.stopPropagation()}
                     />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    {fieldState.invalid && (
+                      <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+                    )}
                   </Field>
                 )}
               />
@@ -189,7 +192,7 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>{translations("Select Team")}</FieldLabel>
+                    <FieldTitle>{translations("Select Team")}</FieldTitle>
                     <TeamSelector
                       value={field.value}
                       onChange={field.onChange}
@@ -216,9 +219,9 @@ const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: Gro
                   onChange={(e) => setFile(e.target.files?.[0])}
                 />
 
-                <Button render={<Label htmlFor="file-upload" />}>
+                <Label htmlFor="file-upload" className={buttonVariants()}>
                   {file ? `Selected: ${file.name}` : translations("Upload Icon")}
-                </Button>
+                </Label>
               </div>
             </div>
           </div>

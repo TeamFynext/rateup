@@ -1,6 +1,6 @@
 import { IconCircleCheck, IconRefresh } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useId, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -351,14 +351,15 @@ interface TextInputWithLengthTrackerProps
 }
 
 function TextInputWithLengthTracker(props: TextInputWithLengthTrackerProps) {
+  const uid = useId();
   const { maxValue, label, value, ...restOfProps } = props;
   const length = value?.length || 0;
 
   return (
     <Field>
-      {label && <FieldLabel>{label}</FieldLabel>}
+      {label && <FieldLabel htmlFor={`${uid}-field`}>{label}</FieldLabel>}
       <div className="relative">
-        <Input className="pr-20" value={value} {...restOfProps} />
+        <Input id={`${uid}-field`} className="pr-20" value={value} {...restOfProps} />
         <div className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2">
           <LengthTracker length={length} maxValue={maxValue} />
         </div>
@@ -381,14 +382,16 @@ interface TextareaWithLengthTrackerProps
 }
 
 export function TextareaWithLengthTracker(props: TextareaWithLengthTrackerProps) {
+  const uid = useId();
   const { maxValue, label, value, error, className, style, inputStyle, ...restOfProps } = props;
   const length = value?.length || 0;
 
   return (
     <Field data-invalid={!!error} style={style}>
-      {label && <FieldLabel>{label}</FieldLabel>}
+      {label && <FieldLabel htmlFor={`${uid}-field-2`}>{label}</FieldLabel>}
       <div className="relative">
         <Textarea
+          id={`${uid}-field-2`}
           className={cn("rounded-xl pr-20", className)}
           style={inputStyle}
           value={value}

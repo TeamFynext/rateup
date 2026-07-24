@@ -20,7 +20,9 @@ export default function TicketSubBar({ contact }: Readonly<TicketSubBarProps>) {
   const resultLabel = resolutionResultLabel(contact?.resolutionResult);
 
   return (
-    <div className="flex items-center gap-2.5 border-t border-border bg-muted px-5 py-2 ">
+    // h-9 with the divider on the bottom edge — matching the chat list's second
+    // header row exactly, so this bar's line lands on the same y as that one.
+    <div className="flex h-9 shrink-0 items-center gap-2.5 border-b border-border bg-muted px-5">
       <Ticket className="size-3.5 shrink-0 text-muted-foreground" />
       <span className="shrink-0 font-mono text-[11px] text-muted-foreground mt-auto">
         #{ticketNumber}

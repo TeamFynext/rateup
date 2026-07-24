@@ -1,7 +1,17 @@
 import { IconFileFilled, IconRobot, IconTrash, IconWaveSine, IconX } from "@tabler/icons-react";
 import { Plugin } from "@tiptap/pm/state";
 import { EditorContent, useEditor } from "@tiptap/react";
-import { LayoutTemplate, Paperclip, RemoveFormatting, TypeOutline, X, Zap } from "lucide-react";
+import {
+  LayoutTemplate,
+  MoreHorizontal,
+  Paperclip,
+  Redo2,
+  RemoveFormatting,
+  TypeOutline,
+  Undo2,
+  X,
+  Zap,
+} from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
@@ -16,7 +26,14 @@ import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
 import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
 import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
 import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
-import { Dialog, DialogContent } from "@/components/ui/dialog.tsx";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { cn } from "@/lib/utils";
@@ -257,7 +274,9 @@ function WaTextEditor({
           updatePhoneId(phoneId);
         }}
         value={whatsappSettingsPhoneId}
-        className="w-[150px] bg-primary/10 text-primary rounded-[5px] font-normal"
+        // Shrinks with the row on a phone (the value is line-clamped, so it
+        // truncates), fixed width once the toolbar is not fighting for space.
+        className="min-w-16 flex-1 rounded-[5px] bg-primary/10 font-normal text-primary sm:w-37.5 sm:flex-none"
         platform={platform}
         disabled={platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK}
         hideLabel={true}
@@ -300,7 +319,9 @@ function WaTextEditor({
 
   return (
     <div className={`${border ? "border-t" : ""} bg-background shrink-0 relative`}>
-      <div className="flex gap-1 ">
+      {/* Attachments wrap instead of pushing the composer sideways — ten pending
+          files on a phone is a second row, not a horizontal scroll. */}
+      <div className="flex flex-wrap gap-1 px-2 pt-2 empty:hidden">
         {media.length > 0 &&
           media.map((me) => {
             return (
@@ -380,8 +401,8 @@ function WaTextEditor({
           {label} {required && <span className="text-red-500">*</span>}
         </div>
       )}
-      <div className={`flex items-start ${border ? "p-4" : ""} pb-0 space-x-2`}>
-        <div className="flex-1">
+      <div className={`flex items-start gap-2 ${border ? "p-2 sm:p-4" : ""} pb-0`}>
+        <div className="min-w-0 flex-1">
           <ToolbarProvider editor={editor}>
             <TooltipProvider>
               {inbox && !quickRepliesControlled && (
@@ -402,15 +423,21 @@ function WaTextEditor({
                 </div>
               )}
               <div className="relative">
+                {/* The caller's heights are handed over as custom properties so
+                    they can apply from sm up and a phone can start at one line
+                    and grow — a hard `minHeight` spends that space whether the
+                    message needs it or not. */}
                 <EditorContent
                   editor={editor}
-                  style={{
-                    backgroundColor: "var(--accent)",
-                    borderRadius: "5px",
-                    maxHeight: `${mah}px`,
-                    minHeight: `${mih}px`,
-                  }}
-                  className={`overflow-y-auto rounded-xl ${
+                  style={
+                    {
+                      backgroundColor: "var(--accent)",
+                      borderRadius: "5px",
+                      "--wa-editor-min-h": `${mih}px`,
+                      "--wa-editor-max-h": `${mah}px`,
+                    } as React.CSSProperties
+                  }
+                  className={`max-h-40 min-h-9 overflow-y-auto rounded-xl sm:max-h-(--wa-editor-max-h) sm:min-h-(--wa-editor-min-h) ${
                     editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""
                   }`}
                 />
@@ -420,8 +447,16 @@ function WaTextEditor({
               >
                 {!hideCharacterCount && <WaTextCharacterCount editor={editor} max={max} />}
               </div>
-              <div className="flex justify-between items-center">
-                <div className="flex flex-wrap p-2">
+              {/* One row, tools and channel picker. The picker keeps its width;
+                  the tool group is the part that gives, scrolling sideways in the
+                  rare case (a channel with every control shown, a very narrow
+                  pane) that five buttons still do not fit. */}
+              <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                {/* Tools keep their size — they are icon buttons with nothing to
+                    give — so the account picker is the element that absorbs a
+                    narrow row, truncating its label rather than letting the row
+                    scroll. */}
+                <div className="flex shrink-0 items-center py-1 sm:flex-wrap sm:p-2">
                   <div className="mt-1 flex items-center">
                     <InsertEmoji editor={editor} />
                   </div>
@@ -467,7 +502,7 @@ function WaTextEditor({
                   </Popover>
                   <CustomTooltip
                     trigger={
-                      <Button variant="ghost">
+                      <Button variant="ghost" className="hidden sm:inline-flex">
                         <div className="flex items-center">
                           <UndoToolbar />
                           <RedoToolbar />
@@ -513,7 +548,7 @@ function WaTextEditor({
                     </Popover>
                   )}
                   {inbox && platform === MessagePlatform.WHATSAPP && (
-                    <div className="flex">
+                    <div className="hidden sm:flex">
                       <CustomTooltip
                         trigger={
                           <Button variant="ghost" onClick={() => openModal()} size="sm">
@@ -541,19 +576,84 @@ function WaTextEditor({
                     </div>
                   )}
                   {inbox && platform !== MessagePlatform.WEBCHAT && <VoiceRecorder />}
+                  {/* Everything above that is a named action rather than a typing
+                      aid collapses into one button on a phone. Kept as a separate
+                      trigger rather than a JS breakpoint so no toolbar control
+                      unmounts and remounts as the pane is resized. */}
+                  {inbox && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="size-8 p-0 sm:hidden"
+                            aria-label="More composer actions"
+                          />
+                        }
+                      >
+                        <MoreHorizontal className="size-5" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        {platform === MessagePlatform.WHATSAPP && (
+                          <>
+                            <DropdownMenuItem className="gap-2 text-xs" onClick={() => openModal()}>
+                              <LayoutTemplate className="size-4" />
+                              Template
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="gap-2 text-xs"
+                              onClick={() => openFlowModal()}
+                            >
+                              <IconWaveSine size={16} />
+                              Flow
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="gap-2 text-xs"
+                              onClick={() => openAutomationModal()}
+                            >
+                              <IconRobot size={16} />
+                              Automation
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
+                        <DropdownMenuItem
+                          className="gap-2 text-xs"
+                          onClick={() => editor?.chain().focus().undo().run()}
+                        >
+                          <Undo2 className="size-4" />
+                          Undo
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="gap-2 text-xs"
+                          onClick={() => editor?.chain().focus().redo().run()}
+                        >
+                          <Redo2 className="size-4" />
+                          Redo
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
 
-                {inbox && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-muted-foreground">Channel - to:</span>
-                    <AccountSelectComponent />
+                <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:flex-none sm:gap-2">
+                  {inbox && <AccountSelectComponent />}
+                  {/* On a phone the send button rides at the end of this row. As
+                      its own column it reserved its width down the whole height
+                      of the composer — width the message box never got back,
+                      for a button that only needs one line. */}
+                  <div className="shrink-0 sm:hidden">
+                    {(inbox || privateMessage) && sendMessageButton}
                   </div>
-                )}
+                </div>
               </div>
             </TooltipProvider>
           </ToolbarProvider>
         </div>
-        <div className="mt-5">{(inbox || privateMessage) && sendMessageButton}</div>
+        <div className="mt-5 hidden shrink-0 sm:block">
+          {(inbox || privateMessage) && sendMessageButton}
+        </div>
       </div>
       <WaInboxTemplateDisplayModal
         sessionExpired={isSessionExpired}
@@ -590,9 +690,11 @@ const ShowMedia = ({ opened, close }) => {
       }}
     >
       <DialogContent>
+        <DialogTitle className="sr-only">{media.name}</DialogTitle>
         <div className="flex flex-col gap-4">
           <Button
             size="icon"
+            aria-label="Remove media"
             className="bg-red-600 text-white hover:bg-red-700"
             onClick={async () => {
               await removeMedia(media.key);

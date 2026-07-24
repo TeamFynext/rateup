@@ -8,7 +8,6 @@ import Error from "@/components/not-found.tsx";
 import { ThemeProvider } from "@/components/theme/theme-provider.tsx";
 
 import "keen-slider/keen-slider.min.css";
-import "react-phone-number-input/style.css";
 
 import { Toaster } from "@/components/ui/sonner.tsx";
 import { cn } from "@/lib/utils.ts";

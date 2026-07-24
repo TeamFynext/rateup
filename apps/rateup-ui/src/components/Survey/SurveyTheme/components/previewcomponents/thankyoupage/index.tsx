@@ -113,15 +113,13 @@ export default function ThankyouPageThemeView({ survey }) {
         >
           {confettiEnabled && <Confetti width={width} height={height} />}
 
-          <form className="h-full w-full">
-            <div className="flex h-full flex-col items-center justify-center">
-              <ThemeTitle
-                value={newTitle}
-                onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
-                styles={{ color: titleStyles?.color }}
-              />
-            </div>
-          </form>
+          <div className="flex h-full w-full flex-col items-center justify-center">
+            <ThemeTitle
+              value={newTitle}
+              onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
+              styles={{ color: titleStyles?.color }}
+            />
+          </div>
         </div>
       </CreditsCard>
     </div>

@@ -28,17 +28,21 @@ function Page() {
   if (isError) {
     return <div>Error occurred</div>;
   }
-  if ("error" in data && data.error?.message === "unauthorised")
+  if ("error" in data && data.error?.message === "unauthorised") {
     navigate({
       to: "/login",
       replace: true,
     });
+    return <></>;
+  }
 
-  if ("data" in data && data.data.orgId !== import.meta.env.VITE_ROOT_ORG)
+  if ("data" in data && data.data.orgId !== import.meta.env.VITE_ROOT_ORG) {
     navigate({
-      to: "/dashboard",
+      to: "/",
       replace: true,
     });
+    return <></>;
+  }
 
   return (
     <ConfirmProvider>

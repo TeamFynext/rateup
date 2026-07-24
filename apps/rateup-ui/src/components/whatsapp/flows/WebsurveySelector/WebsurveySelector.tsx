@@ -1,5 +1,7 @@
+import { useId } from "react";
+
 import { useSurveys } from "@/backend/surveys/surveys.query";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -36,6 +38,7 @@ export function WebsurveySelector({
   disabled,
   className,
 }: Readonly<WebsurveySelectorProps>) {
+  const uid = useId();
   const { isPending, data } = useSurveys();
 
   if (isPending || !data) {
@@ -79,15 +82,19 @@ export function WebsurveySelector({
   }
 
   return (
-    <div className={className}>
-      {label && <Label className="mb-1">{label}</Label>}
+    <Field className={className}>
+      {label && (
+        <FieldLabel htmlFor={`${uid}-field`} className="mb-1">
+          {label}
+        </FieldLabel>
+      )}
       <Select
         value={value ?? ""}
         onValueChange={handleChange}
         items={selectOptions}
         disabled={disabled}
       >
-        <SelectTrigger className="w-full" aria-invalid={!!error}>
+        <SelectTrigger id={`${uid}-field`} className="w-full" aria-invalid={!!error}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -99,6 +106,6 @@ export function WebsurveySelector({
         </SelectContent>
       </Select>
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
-    </div>
+    </Field>
   );
 }

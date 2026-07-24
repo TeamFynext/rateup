@@ -9,8 +9,8 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -72,10 +72,10 @@ function SurveyTypeDropdowns({
 
   return (
     <>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="survey-title-autocomplete">
+      <Field>
+        <FieldLabel htmlFor="survey-title-autocomplete">
           {`Select ${getLinkTypeLabel(selectedLinkType)}`}
-        </Label>
+        </FieldLabel>
         <Combobox
           items={selectedSurveyTitleOptions}
           value={selectedSurveyTitle}
@@ -111,10 +111,10 @@ function SurveyTypeDropdowns({
         {errors?.selectedSurveyTitleErr && (
           <p className="text-xs text-destructive">{errors.selectedSurveyTitleErr}</p>
         )}
-      </div>
+      </Field>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="select-team">Select Team</Label>
+      <Field>
+        <FieldLabel htmlFor="select-team">Select Team</FieldLabel>
         <Select
           value={selectedTeam ?? ""}
           onValueChange={onSelectedTeamDDChange}
@@ -138,10 +138,10 @@ function SurveyTypeDropdowns({
         {errors?.selectedTeamErr && (
           <p className="text-xs text-destructive">{errors.selectedTeamErr}</p>
         )}
-      </div>
+      </Field>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="ws-link-display-name">Link Display name</Label>
+      <Field>
+        <FieldLabel htmlFor="ws-link-display-name">Link Display name</FieldLabel>
         <Input
           id="ws-link-display-name"
           placeholder="Enter Link Display Name"
@@ -152,7 +152,7 @@ function SurveyTypeDropdowns({
         {errors?.wsOrWasLinkDisplayNameErr && (
           <p className="text-xs text-destructive">{errors.wsOrWasLinkDisplayNameErr}</p>
         )}
-      </div>
+      </Field>
     </>
   );
 }

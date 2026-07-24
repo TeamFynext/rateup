@@ -26,6 +26,7 @@ import { useComposerTabStore } from "../chatdisplayFooter/composerTabStore.ts";
 import { useTemperoryMessageStore } from "../chatdisplayFooter/index.tsx";
 import {
   DateComponent,
+  DeletedMessage,
   EndofConversationComponent,
   getReactionMessage,
   SingleMessage,
@@ -154,7 +155,7 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
     <MessageScrollerProvider autoScroll defaultScrollPosition="end">
       <MessageScroller className="min-h-0 flex-1">
         <MessageScrollerViewport preserveScrollOnPrepend>
-          <MessageScrollerContent className="mx-auto w-full max-w-4xl gap-6 px-7 py-6">
+          <MessageScrollerContent className="mx-auto w-full max-w-4xl gap-6 px-3 py-4 lg:px-7 lg:py-6">
             <MessageScrollerItem messageId={TOP_SENTINEL_ID}>
               {isPending || isFetchingNextPage || hasNextPage ? (
                 <div className="flex items-center justify-center">
@@ -255,7 +256,9 @@ const MessageItem = ({ message, selectedContact, previousMessage }) => {
         messageObject={message}
         reaction={reaction}
       >
-        <SingleMessage message={message} />
+        {/* Revoked on WhatsApp: the row and its body are kept, only the content
+            is withheld — the placeholder still sits in the timeline. */}
+        {message?.deletedAt ? <DeletedMessage /> : <SingleMessage message={message} />}
       </WaInboxSingleMessageLayout>
     </React.Fragment>
   );

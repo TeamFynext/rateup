@@ -6,7 +6,7 @@ import {
   IconUsers,
   IconX,
 } from "@tabler/icons-react";
-import { useEffect, useMemo, useState } from "react";
+import { useId, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -26,8 +26,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
   Select,
@@ -54,6 +54,7 @@ interface AddParticipantModalProps {
 }
 
 const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantModalProps) => {
+  const uid = useId();
   const { t } = useTranslation("campaign.addParticipants");
   const [selectedTab, setSelectedTab] = useState<CampaignParticipantSource>(
     CampaignParticipantSource.INDIVIDUAL,
@@ -226,8 +227,13 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
           {/* Search and Tab Selection */}
           <div className="grid grid-cols-[1fr_auto] gap-4 items-center">
             <div className="relative">
+              <FieldLabel htmlFor="add-participant-search" className="sr-only">
+                {t("Search {type}...", { type: selectedTab?.toLowerCase() })}
+              </FieldLabel>
               <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
+                id="add-participant-search"
+                type="search"
                 placeholder={t("Search {type}...", {
                   type: selectedTab?.toLowerCase(),
                 })}
@@ -237,8 +243,10 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
               />
               {searchText && (
                 <button
+                  type="button"
+                  aria-label={t("Clear search")}
                   onClick={() => setSearchText("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-sm text-slate-400 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                   <IconX className="h-4 w-4" />
                 </button>
@@ -274,11 +282,11 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
             {/* Left Panel - Available Items */}
             <Card className="bg-slate-50 dark:bg-transparent flex flex-col overflow-hidden py-1">
               <CardContent className="p-3 flex-1 overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4 gap-2">
                   <h3 className="text-sm font-medium">
                     {t("Select {type}", { type: selectedTab?.toLowerCase() })}
                   </h3>
-                  <div className="flex items-center gap-2">
+                  <Field orientation="horizontal">
                     <Checkbox
                       id="select-all"
                       checked={isSelectedAll}
@@ -286,10 +294,10 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                       onCheckedChange={handleSelectAll}
                     />
 
-                    <Label htmlFor="select-all" className="text-sm font-normal cursor-pointer">
+                    <FieldLabel htmlFor="select-all" className="text-sm font-normal cursor-pointer">
                       {t("Select All")}
-                    </Label>
-                  </div>
+                    </FieldLabel>
+                  </Field>
                 </div>
 
                 <Separator className="mb-4" />
@@ -301,10 +309,10 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                 ) : (
                   <>
                     {selectedTab === CampaignParticipantSource.CAMPAIGN && (
-                      <div className="mb-4">
-                        <Label className="text-xs mb-2">
+                      <Field className="mb-4">
+                        <FieldLabel htmlFor={`${uid}-field`} className="text-xs mb-2">
                           {t("Message Status")} <span className="text-red-500">*</span>
-                        </Label>
+                        </FieldLabel>
 
                         <Select
                           value={selectedStatus[0] || ""}
@@ -314,7 +322,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                             label: status,
                           }))}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger id={`${uid}-field`}>
                             <SelectValue placeholder={t("Pick status")} />
                           </SelectTrigger>
                           <SelectContent>
@@ -325,7 +333,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
                             ))}
                           </SelectContent>
                         </Select>
-                      </div>
+                      </Field>
                     )}
 
                     <ScrollArea className="flex-1 overflow-hidden">

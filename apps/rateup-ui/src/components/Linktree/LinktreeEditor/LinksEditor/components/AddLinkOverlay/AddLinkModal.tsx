@@ -9,7 +9,7 @@ import { z } from "zod";
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -193,8 +193,8 @@ function AddLinkModal({ title, opened, onClose, links }) {
         </DialogHeader>
 
         <div className={styles["body"]}>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="link-type">Select Link type</Label>
+          <Field>
+            <FieldLabel htmlFor="link-type">Select Link type</FieldLabel>
             <Select
               value={selectedLinkType}
               onValueChange={handleSelectedLinkTypeDropdownChange}
@@ -211,7 +211,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
           {selectedLinkType !== "custom-link" ? (
             <SurveyTypeDropdowns

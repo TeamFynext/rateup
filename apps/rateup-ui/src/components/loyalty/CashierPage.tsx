@@ -12,8 +12,8 @@ import type { CustomerPanelCustomer } from "@/components/loyalty/CustomerDetailP
 import { CustomerDetailPanel } from "@/components/loyalty/CustomerDetailPanel.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
 export function CashierPage() {
@@ -137,7 +137,7 @@ export function CashierPage() {
       <Card>
         <CardContent>
           <div className="space-y-2">
-            <Label htmlFor="cashier-search">Search Customer by Name or Phone</Label>
+            <FieldLabel htmlFor="cashier-search">Search Customer by Name or Phone</FieldLabel>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10 pointer-events-none" />
               <Input

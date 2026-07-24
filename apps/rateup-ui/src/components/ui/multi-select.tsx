@@ -18,6 +18,8 @@ export interface MultiSelectOption {
 }
 
 export interface MultiSelectProps {
+  /** Id applied to the text input, so a `FieldLabel htmlFor` can target it. */
+  id?: string;
   /** Options rendered in the popup and used to resolve chip labels. */
   options: MultiSelectOption[];
   /** Selected values (controlled). */
@@ -34,6 +36,7 @@ export interface MultiSelectProps {
 }
 
 export function MultiSelect({
+  id,
   options,
   value = [],
   onValueChange,
@@ -56,7 +59,7 @@ export function MultiSelect({
             <ComboboxChip key={v}>{options.find((o) => o.value === v)?.label ?? v}</ComboboxChip>
           ))}
         </ComboboxValue>
-        <ComboboxChipsInput placeholder={placeholder} />
+        <ComboboxChipsInput id={id} placeholder={placeholder} />
       </ComboboxChips>
       <ComboboxContent>
         <ComboboxEmpty>{emptyIndicator}</ComboboxEmpty>

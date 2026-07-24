@@ -22,7 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -36,8 +36,8 @@ import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCa
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
+import { Field, FieldError, FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
-import { Label } from "../ui/label.tsx";
 import { Loader } from "../ui/loader.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import AppleSignInButton from "./AppleSigninButton.tsx";
@@ -51,51 +51,52 @@ const signUpType = {
   SIGNUP_WITH_PHONE: "phone",
 };
 
+// Single source of truth for which step owns which field. The submit guard and each
+// step's gate read from these, so a field can never be required by one and unchecked
+// by the other.
+const STEP_ONE_FIELDS = ["name", "email", "password"] as const;
+const STEP_TWO_FIELDS = ["orgName", "website", "phoneNumber", "industry", "teamSize"] as const;
+
+const isPasswordValid = (pass: string) =>
+  /.{8,}/.test(pass) &&
+  /[A-Z]/.test(pass) &&
+  /[a-z]/.test(pass) &&
+  /[0-9]/.test(pass) &&
+  /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+
 export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [signUpTypeValue] = useState("");
   const { t: translations } = useTranslation();
 
-  const signUpSchema =
-    signUpTypeValue === signUpType.SIGNUP_WITH_PHONE
-      ? z.object({
-          phoneNumber: z
-            .string()
-            .min(1, translations("Phone number is required"))
-            .refine(
-              (val) => signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE || isValidPhoneNumber(val),
-              { message: translations("Enter a valid phone number") },
-            ),
-          orgName: z.string().min(1, translations("Business name is required")),
-          website: z.string().optional(),
-          industry: z.string().min(1, translations("Industry is required")),
-          location: z.string().min(1, translations("Location is required")),
-          goals: z.array(z.string()).optional(),
-          integrationsSelected: z.array(z.string()).optional(),
-          teamSize: z.string().optional(),
-        })
-      : z.object({
-          email: z
-            .string()
-            .email(translations("Enter a valid email"))
-            .min(1, translations("Email is required")),
-          password: z
-            .string()
-            .min(5, translations("Password should be at least 5 characters long"))
-            .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
-              message: translations("Password should contain at least one letter and one number"),
-            }),
-          confirmPassword: z.string().min(1, translations("Confirm password is required")),
-          name: z.string().min(1, translations("Name is required")),
-          orgName: z.string().min(1, translations("Business name is required")),
-          website: z.string().optional(),
-          industry: z.string().min(1, translations("Industry is required")),
-          location: z.string().min(1, translations("Location is required")),
-          goals: z.array(z.string()).optional(),
-          integrationsSelected: z.array(z.string()).optional(),
-          teamSize: z.string().optional(),
-        });
+  // Only fields that are actually rendered may be required — a required field with no
+  // input (as `location` used to be) makes the form permanently invalid.
+  const signUpSchema = z.object({
+    email: z
+      .string()
+      .min(1, translations("Email is required"))
+      .pipe(z.email(translations("Enter a valid email"))),
+    password: z
+      .string()
+      .min(1, translations("Password is required"))
+      .refine(isPasswordValid, {
+        message: translations("Your password must meet all security requirements"),
+      }),
+    name: z.string().min(1, translations("Name is required")),
+    orgName: z.string().min(1, translations("Business name is required")),
+    website: z.string().optional(),
+    phoneNumber: z
+      .string()
+      .min(1, translations("Phone number is required"))
+      .refine((val) => isValidPhoneNumber(val), {
+        message: translations("Enter a valid phone number"),
+      }),
+    industry: z.string().min(1, translations("Industry is required")),
+    location: z.string().min(1, translations("Location is required")),
+    goals: z.array(z.string()).optional(),
+    integrationsSelected: z.array(z.string()).optional(),
+    teamSize: z.string().min(1, translations("Team size is required")),
+  });
 
   const signupForm = useForm({
     resolver: zodResolver(signUpSchema),
@@ -103,7 +104,6 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
       email: "",
       name: "",
       password: "",
-      confirmPassword: "",
       orgName: "",
       website: "",
       phoneNumber: "",
@@ -145,7 +145,19 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
 
   const { cart } = useRouteAndCartStore();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Final guard for values prefilled from localStorage and never touched.
+    // Validate one step at a time: a bare `trigger()` checks every key in the schema,
+    // including ones no step renders, so it can fail with nothing on screen to fix.
+    if (!(await signupForm.trigger(STEP_ONE_FIELDS))) {
+      setCurrentStep(1);
+      return;
+    }
+    if (!(await signupForm.trigger(STEP_TWO_FIELDS))) {
+      setCurrentStep(2);
+      return;
+    }
+
     const selectedPlan = JSON.parse(localStorage.getItem("selected_plan"));
     if (cart?.planId.length) {
       sendMail.mutate({
@@ -332,6 +344,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
 
 export function Step1({ formData, handleNext, authType }) {
   const values = formData.watch();
+  const { errors } = formData.formState;
   const { t: translations } = useTranslation();
   const checkEmailMutaion = useCheckEmailExistMutation();
   const [showPassword, setShowPassword] = useState(false);
@@ -341,6 +354,7 @@ export function Step1({ formData, handleNext, authType }) {
   const [loading, setLoading] = useState(false);
   const password = values.password;
   const [emailError, setEmailError] = useState(false);
+  const [termsError, setTermsError] = useState(false);
 
   const rules = [
     {
@@ -362,45 +376,45 @@ export function Step1({ formData, handleNext, authType }) {
     },
   ];
 
-  const isPasswordValid = (pass: string) =>
-    /.{8,}/.test(pass) &&
-    /[A-Z]/.test(pass) &&
-    /[a-z]/.test(pass) &&
-    /[0-9]/.test(pass) &&
-    /[!@#$%^&*(),.?":{}|<>]/.test(pass);
-
   const google = authType === signUpType.SIGNUP_WITH_GOOGLE;
   const apple = authType === signUpType.SIGNUP_WITH_APPLE;
 
   const isSocial = google || apple;
 
-  const isFormComplete =
-    values.name.trim() !== "" &&
-    (isSocial
-      ? true
-      : values.email.trim() !== "" &&
-        values.password.trim() !== "" &&
-        isPasswordValid(values.password)) &&
-    agreesToTerms;
-
   const handleClick = async () => {
-    if (!isSocial) {
-      if (values?.email) {
-        setLoading(true);
-        const response = await checkEmailMutaion.mutateAsync({
-          email: values.email.trim(),
-        });
+    setEmailError(false);
+    setTermsError(false);
 
-        if (response.success) {
-          setEmailError(true);
-          setLoading(false);
-          return;
-        }
-        setLoading(false);
-        handleNext();
-      }
-    } else {
+    // Nothing else runs the resolver on this step, so validate explicitly.
+    const isStepValid = await formData.trigger(isSocial ? ["name"] : STEP_ONE_FIELDS, {
+      shouldFocus: true,
+    });
+    if (!isStepValid) {
+      return;
+    }
+    if (!agreesToTerms) {
+      setTermsError(true);
+      return;
+    }
+
+    if (isSocial) {
       handleNext();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await checkEmailMutaion.mutateAsync({
+        email: values.email.trim(),
+      });
+
+      if (response.success) {
+        setEmailError(true);
+        return;
+      }
+      handleNext();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -448,11 +462,11 @@ export function Step1({ formData, handleNext, authType }) {
           </>
         )}
         <div className="space-y-2 sm:space-y-3">
-          <div className="space-y-1">
-            <Label htmlFor="email" className="text-xs font-medium">
+          <Field className="gap-1">
+            <FieldLabel id="name-label" htmlFor="name" className="text-xs font-medium">
               Full Name
               <span className="text-red-500">*</span>
-            </Label>
+            </FieldLabel>
             <div className="relative">
               <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Controller
@@ -463,23 +477,27 @@ export function Step1({ formData, handleNext, authType }) {
                     {...field}
                     id="name"
                     type="text"
+                    autoComplete="name"
+                    aria-labelledby="name-label"
+                    aria-invalid={!!errors.name}
                     placeholder={translations("Name")}
                     className="pl-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
                   />
                 )}
               />
             </div>
-          </div>
+            <FieldError className="text-xs" errors={[errors.name]} />
+          </Field>
           {/* Email + Passwords (only if not Google signup) */}
 
           {!isSocial && (
             <>
               <div className="space-y-0.5 sm:space-y-1">
-                <div className="space-y-1">
-                  <Label htmlFor="email" className="text-xs font-medium">
+                <Field className="gap-1">
+                  <FieldLabel id="email-label" htmlFor="email" className="text-xs font-medium">
                     Email Address
                     <span className="text-red-500">*</span>
-                  </Label>
+                  </FieldLabel>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Controller
@@ -490,18 +508,25 @@ export function Step1({ formData, handleNext, authType }) {
                           {...field}
                           id="email"
                           type="email"
+                          autoComplete="email"
+                          aria-labelledby="email-label"
+                          aria-invalid={!!emailError || !!errors.email}
+                          aria-describedby={emailError ? "email-error" : undefined}
                           placeholder="you@company.com"
                           className="pl-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
                         />
                       )}
                     />
                   </div>
-                </div>
+                  <FieldError className="text-xs" errors={[errors.email]} />
+                </Field>
 
                 {/* Animated Error Message */}
                 <AnimatePresence>
                   {emailError && (
                     <motion.div
+                      id="email-error"
+                      role="alert"
                       initial={{ opacity: 0, y: -5 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -5 }}
@@ -530,11 +555,11 @@ export function Step1({ formData, handleNext, authType }) {
               </div>
 
               {/* Password */}
-              <div className="space-y-1">
-                <Label htmlFor="password" className="text-xs font-medium">
+              <Field className="gap-1">
+                <FieldLabel id="password-label" htmlFor="password" className="text-xs font-medium">
                   Password
                   <span className="text-red-500">*</span>
-                </Label>
+                </FieldLabel>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Controller
@@ -545,6 +570,9 @@ export function Step1({ formData, handleNext, authType }) {
                         {...field}
                         id="password"
                         type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        aria-labelledby="password-label"
+                        aria-invalid={!!errors.password}
                         placeholder="Create a strong password"
                         onFocus={() => setIsPasswordFocused(true)}
                         onBlur={(_e) => {
@@ -558,17 +586,21 @@ export function Step1({ formData, handleNext, authType }) {
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                    aria-controls="password"
                     className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-              </div>
+              </Field>
               {/* Password Validation Errors */}
               <AnimatePresence>
-                {values.password && !isPasswordValid(values.password) && (
+                {errors.password && (
                   <motion.div
                     key="password-invalid"
+                    role="alert"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -5 }}
@@ -589,7 +621,7 @@ export function Step1({ formData, handleNext, authType }) {
                         d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    {translations("Your password must meet all security requirements")}
+                    {errors.password.message}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -636,14 +668,21 @@ export function Step1({ formData, handleNext, authType }) {
       </div>
       {/* Terms checkbox */}
       <div className="flex flex-col gap-1">
-        <div className="flex items-start space-x-3 pt-2">
+        <Field orientation="horizontal" className="gap-3 items-start pt-2">
           <Checkbox
             id="terms"
             checked={agreesToTerms}
-            onCheckedChange={(checked) => setAgreesToTerms(checked as boolean)}
+            aria-invalid={termsError}
+            aria-describedby={termsError ? "terms-error" : undefined}
+            onCheckedChange={(checked) => {
+              setAgreesToTerms(checked as boolean);
+              if (checked) {
+                setTermsError(false);
+              }
+            }}
             className="border-2 border-gray-300 h-4 w-4 shrink mt-0.5"
           />
-          <Label htmlFor="terms" className="text-xs leading-relaxed cursor-pointer">
+          <FieldLabel htmlFor="terms" className="text-xs leading-relaxed cursor-pointer">
             I agree to the{" "}
             <button
               onClick={() =>
@@ -666,8 +705,13 @@ export function Step1({ formData, handleNext, authType }) {
             >
               Privacy Policy
             </button>
-          </Label>
-        </div>
+          </FieldLabel>
+        </Field>
+        {termsError && (
+          <FieldError id="terms-error" className="text-xs">
+            {translations("Please accept the Terms of Service and Privacy Policy to continue")}
+          </FieldError>
+        )}
 
         {/* Footer actions */}
 
@@ -683,7 +727,6 @@ export function Step1({ formData, handleNext, authType }) {
 
           <Button
             onClick={handleClick}
-            disabled={!isFormComplete}
             className="flex items-center px-4 h-8 bg-primary hover:bg-primary/90 text-white font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <Loader /> : translations("Continue")}
@@ -696,6 +739,7 @@ export function Step1({ formData, handleNext, authType }) {
 }
 
 export function Step2({ formData, handleBack, handleNext }) {
+  const uid = useId();
   const industries = [
     "E-commerce",
     "Healthcare",
@@ -710,23 +754,25 @@ export function Step2({ formData, handleBack, handleNext }) {
   ];
   const teamSizes = ["1–5", "6–25", "26–100", "100+"];
 
-  const values = formData.watch();
+  const { errors } = formData.formState;
 
-  const isFormComplete =
-    values.orgName?.trim() !== "" &&
-    values.phoneNumber?.trim() !== "" &&
-    values?.teamSize?.trim() !== "" &&
-    values.industry?.trim() !== "";
+  const handleContinue = async () => {
+    // Nothing else runs the resolver on this step, so validate explicitly.
+    const isStepValid = await formData.trigger(STEP_TWO_FIELDS, { shouldFocus: true });
+    if (isStepValid) {
+      handleNext();
+    }
+  };
 
   return (
     <div className="w-full h-101 flex flex-col">
       <div className="flex-1 space-y-4 overflow-y-auto pr-1">
         {/* Business Name */}
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">
+        <Field className="gap-1">
+          <FieldLabel id="orgName-label" htmlFor="orgName" className="text-xs font-medium">
             Business Name
             <span className="text-red-500">*</span>
-          </Label>
+          </FieldLabel>
           <div className="relative">
             <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Controller
@@ -735,17 +781,24 @@ export function Step2({ formData, handleBack, handleNext }) {
               render={({ field }) => (
                 <Input
                   {...field}
+                  id="orgName"
+                  autoComplete="organization"
+                  aria-labelledby="orgName-label"
+                  aria-invalid={!!errors.orgName}
                   placeholder="Your Company Name"
                   className="h-8 pl-9 text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
                 />
               )}
             />
           </div>
-        </div>
+          <FieldError className="text-xs" errors={[errors.orgName]} />
+        </Field>
 
         {/* Website */}
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">Website URL</Label>
+        <Field className="gap-1">
+          <FieldLabel id="website-label" htmlFor="website" className="text-xs font-medium">
+            Website URL
+          </FieldLabel>
           <div className="relative">
             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Controller
@@ -754,43 +807,54 @@ export function Step2({ formData, handleBack, handleNext }) {
               render={({ field }) => (
                 <Input
                   {...field}
+                  id="website"
+                  type="url"
+                  autoComplete="url"
+                  aria-labelledby="website-label"
+                  aria-describedby="website-hint"
+                  aria-invalid={!!errors.website}
                   placeholder="https://yourcompany.com"
                   className="h-8 pl-9 text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
                 />
               )}
             />
           </div>
-          <span className="text-gray-500 text-[11px]">
+          <FieldError className="text-xs" errors={[errors.website]} />
+          <span id="website-hint" className="text-gray-500 text-[11px]">
             Optional — helps us prefill your loyalty program landing page.
           </span>
-        </div>
+        </Field>
 
         {/* Phone */}
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">
+        <Field>
+          <FieldLabel htmlFor={`${uid}-contact-number`} className="text-xs font-medium">
             Contact Number
             <span className="text-red-500">*</span>
-          </Label>
+          </FieldLabel>
           <Controller
             name="phoneNumber"
             control={formData.control}
             render={({ field }) => (
               <PhoneInput
+                id={`${uid}-contact-number`}
                 international
                 defaultCountry="IN"
                 value={field.value}
                 onChange={field.onChange}
+                onBlur={field.onBlur}
+                aria-invalid={!!errors.phoneNumber}
                 className="w-full"
               />
             )}
           />
-        </div>
+          <FieldError className="text-xs" errors={[errors.phoneNumber]} />
+        </Field>
 
         {/* Industry */}
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">
+        <Field>
+          <FieldLabel htmlFor={`${uid}-industry`} className="text-xs font-medium">
             Industry <span className="text-red-500">*</span>
-          </Label>
+          </FieldLabel>
           <Controller
             name="industry"
             control={formData.control}
@@ -800,7 +864,11 @@ export function Step2({ formData, handleBack, handleNext }) {
                 onValueChange={field.onChange}
                 items={industries.map((industry) => ({ value: industry, label: industry }))}
               >
-                <SelectTrigger className="h-8 w-full text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white">
+                <SelectTrigger
+                  id={`${uid}-industry`}
+                  aria-invalid={!!errors.industry}
+                  className="h-8 w-full text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
+                >
                   <SelectValue placeholder="Select Industry" />
                 </SelectTrigger>
                 <SelectContent>
@@ -813,22 +881,24 @@ export function Step2({ formData, handleBack, handleNext }) {
               </Select>
             )}
           />
-        </div>
+          <FieldError className="text-xs" errors={[errors.industry]} />
+        </Field>
 
         <div className="space-y-1">
-          <Label className="text-xs font-medium">
+          <FieldTitle id="teamSize-label" className="text-xs font-medium">
             Team Size <span className="text-red-500">*</span>
-          </Label>
+          </FieldTitle>
 
           <Controller
             name="teamSize"
             control={formData.control}
             render={({ field }) => (
-              <div className="flex gap-2">
+              <div className="flex gap-2" role="group" aria-labelledby="teamSize-label">
                 {teamSizes.map((size) => (
                   <button
                     key={size}
                     type="button"
+                    aria-pressed={field.value === size}
                     onClick={() => field.onChange(size)}
                     className={`px-3 py-1.5 text-xs rounded-md border ${
                       field.value === size
@@ -842,6 +912,7 @@ export function Step2({ formData, handleBack, handleNext }) {
               </div>
             )}
           />
+          <FieldError className="text-xs" errors={[errors.teamSize]} />
         </div>
       </div>
 
@@ -857,8 +928,7 @@ export function Step2({ formData, handleBack, handleNext }) {
         </Button>
 
         <Button
-          onClick={handleNext}
-          disabled={!isFormComplete}
+          onClick={handleContinue}
           className="h-8 px-4 text-xs bg-primary text-white disabled:opacity-50"
         >
           Continue
@@ -934,10 +1004,12 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
           const isActive = values.goals?.includes(goal.id);
 
           return (
-            <div
+            <button
               key={goal.id}
+              type="button"
+              aria-pressed={isActive}
               onClick={() => handleGoalToggle(goal.id)}
-              className={`relative p-3 rounded-xl border cursor-pointer transition-all
+              className={`relative w-full p-3 text-left rounded-xl border cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
           ${isActive ? "border-primary bg-blue-50" : "border-gray-300 hover:border-gray-400"}`}
             >
               {/* Top Right Circle */}
@@ -963,7 +1035,7 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
 
               {/* Description */}
               <p className="text-[11px] text-gray-500 mt-1 leading-snug">{goal.description}</p>
-            </div>
+            </button>
           );
         })}
       </div>

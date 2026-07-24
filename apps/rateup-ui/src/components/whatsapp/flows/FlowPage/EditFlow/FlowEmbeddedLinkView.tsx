@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconDeviceSdCard } from "@tabler/icons-react";
-import { useContext, useState } from "react";
+import { useId, useContext, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -9,7 +9,7 @@ import z from "zod";
 import { TextareaWithLengthTracker } from "@/components/input/TextareaWithLengthTracker.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
   Select,
@@ -32,6 +32,7 @@ import {
 import { EditFlowContext } from "./EditFlowContext.ts";
 
 export function FlowEmbeddedLinkDetailedView() {
+  const uid = useId();
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
     useContext(EditFlowContext);
   const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
@@ -127,8 +128,8 @@ export function FlowEmbeddedLinkDetailedView() {
               name="embeddedLinkScreenId"
               control={form.control}
               render={({ field }) => (
-                <div className="flex w-75 flex-col gap-1">
-                  <Label>Next screen</Label>
+                <Field className="w-75">
+                  <FieldLabel htmlFor={`${uid}-next-screen`}>Next screen</FieldLabel>
                   <Select
                     value={field.value}
                     onValueChange={field.onChange}
@@ -137,7 +138,7 @@ export function FlowEmbeddedLinkDetailedView() {
                       value: data?.id,
                     }))}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id={`${uid}-next-screen`} className="w-full">
                       <SelectValue placeholder={translations("select next screen")} />
                     </SelectTrigger>
                     <SelectContent>
@@ -148,7 +149,7 @@ export function FlowEmbeddedLinkDetailedView() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                </Field>
               )}
             />
           </div>

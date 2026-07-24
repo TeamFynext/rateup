@@ -1,7 +1,7 @@
 import { IconPhoto, IconRefresh } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ import {
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import {
@@ -188,6 +189,7 @@ function WaLocationInputComponent({
   ) => void;
   defaultValue?: any;
 }) {
+  const uid = useId();
   const [latitude, setLatitude] = useState(defaultValue?.latitude || "");
   const [longitude, setLongitude] = useState(defaultValue?.longitude || "");
   const [name, setName] = useState(defaultValue?.name || "");
@@ -195,11 +197,15 @@ function WaLocationInputComponent({
   const { t: translations } = useTranslation();
   return (
     <>
-      <div className="flex flex-col gap-1 w-full">
-        <label className="text-xs font-semibold text-muted-foreground">
+      <Field className="w-full">
+        <FieldLabel
+          htmlFor={`${uid}-field`}
+          className="text-xs font-semibold text-muted-foreground"
+        >
           {translations("Latitude")}
-        </label>
+        </FieldLabel>
         <Input
+          id={`${uid}-field`}
           type="text"
           value={latitude}
           onChange={(e) => {
@@ -212,12 +218,16 @@ function WaLocationInputComponent({
             });
           }}
         />
-      </div>
-      <div className="flex flex-col gap-1 w-full">
-        <label className="text-xs font-semibold text-muted-foreground">
+      </Field>
+      <Field className="w-full">
+        <FieldLabel
+          htmlFor={`${uid}-field-2`}
+          className="text-xs font-semibold text-muted-foreground"
+        >
           {translations("Longitude")}
-        </label>
+        </FieldLabel>
         <Input
+          id={`${uid}-field-2`}
           type="text"
           value={longitude}
           onChange={(e) => {
@@ -230,12 +240,16 @@ function WaLocationInputComponent({
             });
           }}
         />
-      </div>
-      <div className="flex flex-col gap-1 w-full">
-        <label className="text-xs font-semibold text-muted-foreground">
+      </Field>
+      <Field className="w-full">
+        <FieldLabel
+          htmlFor={`${uid}-field-3`}
+          className="text-xs font-semibold text-muted-foreground"
+        >
           {translations("Name")}
-        </label>
+        </FieldLabel>
         <Input
+          id={`${uid}-field-3`}
           type="text"
           value={name}
           onChange={(e) => {
@@ -248,12 +262,16 @@ function WaLocationInputComponent({
             });
           }}
         />
-      </div>
-      <div className="flex flex-col gap-1 w-full">
-        <label className="text-xs font-semibold text-muted-foreground">
+      </Field>
+      <Field className="w-full">
+        <FieldLabel
+          htmlFor={`${uid}-field-4`}
+          className="text-xs font-semibold text-muted-foreground"
+        >
           {translations("Address")}
-        </label>
+        </FieldLabel>
         <Input
+          id={`${uid}-field-4`}
           type="text"
           value={address}
           onChange={(e) => {
@@ -266,7 +284,7 @@ function WaLocationInputComponent({
             });
           }}
         />
-      </div>
+      </Field>
     </>
   );
 }
@@ -287,6 +305,7 @@ function WaBodyVariableInputComponent({
     formQuestions: MetaAssets["leadgenForms"][number]["questions"];
   };
 }) {
+  const uid = useId();
   const [paramChoice, setParamChoice] = useState<string[]>([]);
   const [dynamicTags, setDynamicTags] = useState<any[]>(exampleParams || []);
 
@@ -337,35 +356,39 @@ function WaBodyVariableInputComponent({
                 }}
                 className="flex flex-row gap-4 items-center"
               >
-                <div className="flex items-center gap-1.5">
+                <Field orientation="horizontal">
                   <RadioGroupItem value="default" id={`radio-default-${i}`} />
-                  <label
+                  <FieldLabel
                     htmlFor={`radio-default-${i}`}
                     className="text-xs text-muted-foreground cursor-pointer select-none"
                   >
                     Manual
-                  </label>
-                </div>
-                <div className="flex items-center gap-1.5">
+                  </FieldLabel>
+                </Field>
+                <Field orientation="horizontal">
                   <RadioGroupItem value="leadgenform-question-key" id={`radio-leadgen-${i}`} />
-                  <label
+                  <FieldLabel
                     htmlFor={`radio-leadgen-${i}`}
                     className="text-xs text-muted-foreground cursor-pointer select-none"
                   >
                     Select from lead form
-                  </label>
-                </div>
+                  </FieldLabel>
+                </Field>
               </RadioGroup>
               {paramChoice[i] === "default" && (
-                <div className="flex flex-col gap-1 w-full">
-                  <label className="text-xs font-semibold text-muted-foreground">{`{{${i + 1}}}`}</label>
+                <Field className="w-full">
+                  <FieldLabel
+                    htmlFor={`${uid}-field-5-${i}`}
+                    className="text-xs font-semibold text-muted-foreground"
+                  >{`{{${i + 1}}}`}</FieldLabel>
                   <Input
+                    id={`${uid}-field-5-${i}`}
                     type="text"
                     placeholder={translations("select a dynamic tag value")}
                     value={dynamicTags[i] || ""}
                     onChange={(e) => updateDynamicTag(i, e.target.value)}
                   />
-                </div>
+                </Field>
               )}
               {paramChoice[i] === "leadgenform-question-key" && (
                 <LeadFormQuestionsInputComponent
@@ -383,15 +406,19 @@ function WaBodyVariableInputComponent({
             </div>
           );
         return (
-          <div className="flex flex-col gap-1 w-full" key={i}>
-            <label className="text-xs font-semibold text-muted-foreground">{`{{${i + 1}}}`}</label>
+          <Field className="w-full" key={i}>
+            <FieldLabel
+              htmlFor={`${uid}-field-6-${i}`}
+              className="text-xs font-semibold text-muted-foreground"
+            >{`{{${i + 1}}}`}</FieldLabel>
             <Input
+              id={`${uid}-field-6-${i}`}
               type="text"
               placeholder={translations("select a dynamic tag value")}
               value={dynamicTags[i] || ""}
               onChange={(e) => updateDynamicTag(i, e.target.value)}
             />
-          </div>
+          </Field>
         );
       })}
     </>
@@ -409,6 +436,7 @@ interface LeadFormQuestionsInputComponentProps {
 }
 
 function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentProps) {
+  const uid = useId();
   const params = useParams({
     strict: false,
   });
@@ -429,13 +457,16 @@ function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentP
   if (isPending || isSettingsLoading) return <RateupLoader />;
 
   return (
-    <div className="flex items-end gap-1.5 w-full">
-      <div className="flex flex-col gap-1 flex-1">
-        <label className="text-xs font-semibold text-muted-foreground">
+    <Field className="items-end w-full">
+      <Field className="flex-1">
+        <FieldLabel
+          htmlFor={`${uid}-field-7`}
+          className="text-xs font-semibold text-muted-foreground"
+        >
           {"Form question key for " + props.label}
-        </label>
+        </FieldLabel>
         <Select value={props.value} onValueChange={props.onChange}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger id={`${uid}-field-7`} className="w-full">
             <SelectValue placeholder="Click to select" />
           </SelectTrigger>
           <SelectContent>
@@ -446,7 +477,7 @@ function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentP
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </Field>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger
@@ -476,6 +507,6 @@ function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentP
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-    </div>
+    </Field>
   );
 }

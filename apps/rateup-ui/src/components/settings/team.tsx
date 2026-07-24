@@ -45,7 +45,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
@@ -179,7 +179,7 @@ export function EditTeam({ selectedTeam }) {
 
         {/* Team Color */}
         <Field>
-          <FieldLabel>{translations("Team Color")}</FieldLabel>
+          <FieldTitle>{translations("Team Color")}</FieldTitle>
           <div className="flex gap-3 flex-wrap">
             {colorArray.map((color, index) => {
               const isSelected = editedColor === color.from;

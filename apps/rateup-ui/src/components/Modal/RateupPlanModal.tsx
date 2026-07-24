@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ const currencyOptions = [
 ];
 
 const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
+  const uid = useId();
   const [checked, setChecked] = useState(false);
   const { t: translations } = useTranslation();
   const isEdit = Boolean(plan?.id);
@@ -192,27 +193,37 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
         >
           <div className="grid grid-cols-2 gap-4">
             <Field>
-              <FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field`}>
                 {translations("Name")}
                 <span className="text-destructive"> *</span>
               </FieldLabel>
-              <Input placeholder={translations("Name")} {...form.register("name")} />
+              <Input
+                id={`${uid}-field`}
+                placeholder={translations("Name")}
+                {...form.register("name")}
+              />
               {form.formState.errors.name && (
                 <FieldError>{form.formState.errors.name.message}</FieldError>
               )}
             </Field>
             <Field>
-              <FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field-2`}>
                 {translations("Dispaly Name")}
                 <span className="text-destructive"> *</span>
               </FieldLabel>
-              <Input placeholder={translations("Display Name")} {...form.register("displayName")} />
+              <Input
+                id={`${uid}-field-2`}
+                placeholder={translations("Display Name")}
+                {...form.register("displayName")}
+              />
               {form.formState.errors.displayName && (
                 <FieldError>{form.formState.errors.displayName.message}</FieldError>
               )}
             </Field>
             <Field>
-              <FieldLabel>{translations("Display Widget Id")}</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field-3`}>
+                {translations("Display Widget Id")}
+              </FieldLabel>
               <Select
                 items={widgetIdOptions}
                 value={values.displayWidgetId ?? ""}
@@ -220,7 +231,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                   form.setValue("displayWidgetId", value, { shouldDirty: true })
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id={`${uid}-field-3`} className="w-full">
                   <SelectValue placeholder={translations("Widget Id")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -233,7 +244,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               </Select>
             </Field>
             <Field>
-              <FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field-4`}>
                 {translations("Plan Type")}
                 <span className="text-destructive"> *</span>
               </FieldLabel>
@@ -242,7 +253,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 value={values.planType ?? ""}
                 onValueChange={(value) => form.setValue("planType", value, { shouldDirty: true })}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id={`${uid}-field-4`} className="w-full">
                   <SelectValue placeholder={translations("Plan Type")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -255,11 +266,12 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               </Select>
             </Field>
             <Field>
-              <FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field-5`}>
                 {translations("Description")}
                 <span className="text-destructive"> *</span>
               </FieldLabel>
               <TagsInput
+                id={`${uid}-field-5`}
                 value={values.description ?? []}
                 onValueChange={(value) =>
                   form.setValue("description", value, { shouldDirty: true })
@@ -272,8 +284,9 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               <FieldDescription>Use || for split</FieldDescription>
             </Field>
             <Field>
-              <FieldLabel>Trial Days</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-trial-days`}>Trial Days</FieldLabel>
               <Input
+                id={`${uid}-trial-days`}
                 type="number"
                 min={0}
                 step={1}
@@ -284,13 +297,13 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               />
             </Field>
             <Field>
-              <FieldLabel>{translations("Currency")}</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field-6`}>{translations("Currency")}</FieldLabel>
               <Select
                 items={currencyOptions}
                 value={values.currency ?? ""}
                 onValueChange={(value) => form.setValue("currency", value, { shouldDirty: true })}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id={`${uid}-field-6`} className="w-full">
                   <SelectValue placeholder={translations("Currency")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -303,11 +316,17 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               </Select>
             </Field>
             <Field>
-              <FieldLabel>{translations("Badge")}</FieldLabel>
-              <Input placeholder={translations("e.g. Most Popular")} {...form.register("badge")} />
+              <FieldLabel htmlFor={`${uid}-field-7`}>{translations("Badge")}</FieldLabel>
+              <Input
+                id={`${uid}-field-7`}
+                placeholder={translations("e.g. Most Popular")}
+                {...form.register("badge")}
+              />
             </Field>
             <Field>
-              <FieldLabel>{translations("Monthly Razorpay Plan")}</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field-8`}>
+                {translations("Monthly Razorpay Plan")}
+              </FieldLabel>
               <Select
                 items={razorpayOptions}
                 value={values.monthlyPaymentPlanId ?? ""}
@@ -316,7 +335,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 }
                 disabled={!razorpayOptions.length}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id={`${uid}-field-8`} className="w-full">
                   <SelectValue placeholder={translations("Gateway plan charged monthly")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -329,7 +348,9 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               </Select>
             </Field>
             <Field>
-              <FieldLabel>{translations("Annual Razorpay Plan")}</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field-9`}>
+                {translations("Annual Razorpay Plan")}
+              </FieldLabel>
               <Select
                 items={razorpayOptions}
                 value={values.yearlyPaymentPlanId ?? ""}
@@ -338,7 +359,7 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
                 }
                 disabled={!razorpayOptions.length}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id={`${uid}-field-9`} className="w-full">
                   <SelectValue placeholder={translations("Gateway plan charged yearly")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -351,8 +372,9 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               </Select>
             </Field>
             <Field>
-              <FieldLabel>{translations("Monthly Price")}</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field-10`}>{translations("Monthly Price")}</FieldLabel>
               <Input
+                id={`${uid}-field-10`}
                 type="number"
                 min={0}
                 placeholder={translations("Shown on the card in Monthly")}
@@ -363,8 +385,11 @@ const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
               />
             </Field>
             <Field>
-              <FieldLabel>{translations("Yearly Price (per month)")}</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field-11`}>
+                {translations("Yearly Price (per month)")}
+              </FieldLabel>
               <Input
+                id={`${uid}-field-11`}
                 type="number"
                 min={0}
                 placeholder={translations("Shown on the card in Annual")}

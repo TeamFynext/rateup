@@ -1,5 +1,5 @@
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useId, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -39,6 +39,7 @@ interface LogicJumpModalProps {
 }
 
 export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalProps) {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const { getCurrentScreen, getScreens, getLogicJumps, updateLogicJumps } = useFlowStoreV3();
 
@@ -309,10 +310,13 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                               }}
                             >
                               {/* Question */}
-                              <div className="min-w-0">
-                                <Label className="text-xs mb-1 block">
+                              <Field className="min-w-0">
+                                <FieldLabel
+                                  htmlFor={`${uid}-field-${jumpIndex}`}
+                                  className="text-xs mb-1 block"
+                                >
                                   {translations("Question")}
-                                </Label>
+                                </FieldLabel>
                                 <Select
                                   value={condition.questionId}
                                   items={questions}
@@ -320,7 +324,10 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                     handleUpdateCondition(jumpIndex, condIndex, "questionId", value)
                                   }
                                 >
-                                  <SelectTrigger className="w-full truncate">
+                                  <SelectTrigger
+                                    id={`${uid}-field-${jumpIndex}`}
+                                    className="w-full truncate"
+                                  >
                                     <SelectValue placeholder={translations("Select question")} />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -331,13 +338,16 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                     ))}
                                   </SelectContent>
                                 </Select>
-                              </div>
+                              </Field>
 
                               {/* Condition */}
-                              <div className="min-w-0">
-                                <Label className="text-xs mb-1 block">
+                              <Field className="min-w-0">
+                                <FieldLabel
+                                  htmlFor={`${uid}-field-2-${jumpIndex}`}
+                                  className="text-xs mb-1 block"
+                                >
                                   {translations("Condition")}
-                                </Label>
+                                </FieldLabel>
                                 <Select
                                   value={condition.condition}
                                   items={getConditions(condition.questionId)}
@@ -345,7 +355,10 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                     handleUpdateCondition(jumpIndex, condIndex, "condition", value)
                                   }
                                 >
-                                  <SelectTrigger className="w-full truncate">
+                                  <SelectTrigger
+                                    id={`${uid}-field-2-${jumpIndex}`}
+                                    className="w-full truncate"
+                                  >
                                     <SelectValue placeholder={translations("Select condition")} />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -356,14 +369,17 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                     ))}
                                   </SelectContent>
                                 </Select>
-                              </div>
+                              </Field>
 
                               {/* Response (only when not Submitted) */}
                               {condition.condition !== LogicCondition.Submitted && (
-                                <div className="min-w-0">
-                                  <Label className="text-xs mb-1 block">
+                                <Field className="min-w-0">
+                                  <FieldLabel
+                                    htmlFor={`${uid}-field-3-${jumpIndex}`}
+                                    className="text-xs mb-1 block"
+                                  >
                                     {translations("Response")}
-                                  </Label>
+                                  </FieldLabel>
                                   <Select
                                     value={condition.response}
                                     items={getResponseOptions(condition.questionId)}
@@ -371,7 +387,10 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                       handleUpdateCondition(jumpIndex, condIndex, "response", value)
                                     }
                                   >
-                                    <SelectTrigger className="w-full truncate">
+                                    <SelectTrigger
+                                      id={`${uid}-field-3-${jumpIndex}`}
+                                      className="w-full truncate"
+                                    >
                                       <SelectValue placeholder={translations("Select response")} />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -382,7 +401,7 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                                       ))}
                                     </SelectContent>
                                   </Select>
-                                </div>
+                                </Field>
                               )}
 
                               {/* Remove condition */}
@@ -407,18 +426,24 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                       <Separator />
 
                       {/* ── Action ── */}
-                      <div>
+                      <Field>
                         <p className="font-semibold text-sm mb-2">{translations("Action")}</p>
-                        <div className="max-w-xs">
-                          <Label className="text-xs mb-1 block">
+                        <Field className="max-w-xs">
+                          <FieldLabel
+                            htmlFor={`${uid}-field-4-${jumpIndex}`}
+                            className="text-xs mb-1 block"
+                          >
                             {translations("Navigate to Screen")}
-                          </Label>
+                          </FieldLabel>
                           <Select
                             value={typeof jump.action === "string" ? jump.action : ""}
                             items={screenOptions}
                             onValueChange={(value) => handleUpdateAction(jumpIndex, value)}
                           >
-                            <SelectTrigger className="w-full truncate">
+                            <SelectTrigger
+                              id={`${uid}-field-4-${jumpIndex}`}
+                              className="w-full truncate"
+                            >
                               <SelectValue placeholder={translations("Select target screen")} />
                             </SelectTrigger>
                             <SelectContent>
@@ -429,8 +454,8 @@ export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalPro
                               ))}
                             </SelectContent>
                           </Select>
-                        </div>
-                      </div>
+                        </Field>
+                      </Field>
 
                       {/* ── Remove Jump ── */}
                       <div className="flex justify-end pt-1">

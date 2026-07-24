@@ -16,7 +16,7 @@ import {
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertCircle } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useId, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useAllInstagramAutomations } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
@@ -44,7 +44,7 @@ import {
 } from "@/components/dashboard/instagram/instagram-preview.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Button, buttonVariants } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -61,8 +61,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { PhonePreviewButton } from "@/components/ui/phone-preview.tsx";
 import {
   Select,
@@ -77,6 +77,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { WaAutomationCards } from "@/components/whatsapp/automation/AutomationCards.tsx";
+import { cn } from "@/lib/utils.ts";
 import type { WaAutomatedReply } from "@/types/global";
 import { AutomationPlatform } from "@/types/platform.ts";
 
@@ -139,7 +140,9 @@ function InstagramDashboard() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button render={<Link to="/dashboard/settings" />}>{t("Go to Settings")}</Button>
+          <Link to="/dashboard/settings" className={buttonVariants()}>
+            {t("Go to Settings")}
+          </Link>
         </EmptyContent>
       </Empty>
     );
@@ -265,6 +268,7 @@ function IceBreakersTab({
   waSettingId,
   businessName,
 }: Readonly<{ waSettingId: string; businessName: string }>) {
+  const uid = useId();
   const { data } = useInstagramProfile(waSettingId);
   const setMutation = useSetInstagramIceBreakersMutation(waSettingId);
   const syncMutation = useSyncInstagramIceBreakersMutation(waSettingId);
@@ -345,9 +349,15 @@ function IceBreakersTab({
                 <TooltipContent>{t("Remove question")}</TooltipContent>
               </Tooltip>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">{t("Question text")}</Label>
+            <Field>
+              <FieldLabel
+                htmlFor={`${uid}-field-${index}`}
+                className="text-xs text-muted-foreground"
+              >
+                {t("Question text")}
+              </FieldLabel>
               <Input
+                id={`${uid}-field-${index}`}
                 value={item.question}
                 placeholder={t("e.g. What are your business hours?")}
                 onChange={(e) => {
@@ -356,10 +366,16 @@ function IceBreakersTab({
                   setItems(next);
                 }}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">{t("Payload")}</Label>
+            </Field>
+            <Field>
+              <FieldLabel
+                htmlFor={`${uid}-field-2-${index}`}
+                className="text-xs text-muted-foreground"
+              >
+                {t("Payload")}
+              </FieldLabel>
               <Textarea
+                id={`${uid}-field-2-${index}`}
                 value={item.payload}
                 placeholder={t("Payload sent when this question is tapped")}
                 rows={2}
@@ -369,7 +385,7 @@ function IceBreakersTab({
                   setItems(next);
                 }}
               />
-            </div>
+            </Field>
           </div>
         ))}
 
@@ -428,6 +444,7 @@ function IgMeLinksTab({
   username,
   displayName,
 }: Readonly<{ username?: string | null; displayName?: string | null }>) {
+  const uid = useId();
   const [refParam, setRefParam] = useState("campaign_2026");
   const [copied, setCopied] = useState(false);
   const { t } = useTranslation();
@@ -468,22 +485,28 @@ function IgMeLinksTab({
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{t("Account")}</Label>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-3`} className="text-xs text-muted-foreground">
+              {t("Account")}
+            </FieldLabel>
             <Input
+              id={`${uid}-field-3`}
               value={displayName || username || ""}
               readOnly
               placeholder={t("Instagram account")}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{t("Referral parameter")}</Label>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-4`} className="text-xs text-muted-foreground">
+              {t("Referral parameter")}
+            </FieldLabel>
             <Input
+              id={`${uid}-field-4`}
               value={refParam}
               onChange={(e) => setRefParam(e.target.value)}
               placeholder={t("e.g. summer_sale")}
             />
-          </div>
+          </Field>
         </div>
 
         <div className="rounded-xl border bg-muted/30 p-4">
@@ -508,15 +531,22 @@ function IgMeLinksTab({
             )}
             {copied ? t("Copied!") : t("Copy link")}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!link}
-            render={<a href={link} target="_blank" rel="noreferrer" />}
+          <a
+            href={link || undefined}
+            target="_blank"
+            rel="noreferrer"
+            aria-disabled={!link}
+            tabIndex={link ? undefined : -1}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              // `disabled:` variants only match real form controls, so an anchor needs
+              // the disabled look and click-blocking spelled out.
+              !link && "pointer-events-none opacity-50",
+            )}
           >
             <IconExternalLink className="mr-1.5 size-4" />
             {t("Open in browser")}
-          </Button>
+          </a>
         </div>
       </CardContent>
     </Card>
@@ -535,6 +565,7 @@ function PersistentMenuTab({
   waSettingId,
   businessName,
 }: Readonly<{ waSettingId: string; businessName: string }>) {
+  const uid = useId();
   const { data } = useInstagramProfile(waSettingId);
   const setMutation = useSetInstagramPersistentMenuMutation(waSettingId);
   const syncMutation = useSyncInstagramPersistentMenuMutation(waSettingId);
@@ -636,8 +667,13 @@ function PersistentMenuTab({
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">{t("Type")}</Label>
+              <Field>
+                <FieldLabel
+                  htmlFor={`${uid}-field-5-${index}`}
+                  className="text-xs text-muted-foreground"
+                >
+                  {t("Type")}
+                </FieldLabel>
                 <Select
                   value={item.type}
                   onValueChange={(v: "postback" | "web_url") => updateItem(index, { type: v })}
@@ -646,7 +682,7 @@ function PersistentMenuTab({
                     { value: "web_url", label: t("Web URL") },
                   ]}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id={`${uid}-field-5-${index}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -654,37 +690,55 @@ function PersistentMenuTab({
                     <SelectItem value="web_url">{t("Web URL")}</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">{t("Title")}</Label>
+              </Field>
+              <Field>
+                <FieldLabel
+                  htmlFor={`${uid}-field-6-${index}`}
+                  className="text-xs text-muted-foreground"
+                >
+                  {t("Title")}
+                </FieldLabel>
                 <Input
+                  id={`${uid}-field-6-${index}`}
                   value={item.title}
                   placeholder={t("e.g. Talk to an agent")}
                   onChange={(e) => updateItem(index, { title: e.target.value })}
                 />
-              </div>
+              </Field>
             </div>
 
             {item.type === "postback" ? (
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">{t("Payload")}</Label>
+              <Field>
+                <FieldLabel
+                  htmlFor={`${uid}-field-7-${index}`}
+                  className="text-xs text-muted-foreground"
+                >
+                  {t("Payload")}
+                </FieldLabel>
                 <Textarea
+                  id={`${uid}-field-7-${index}`}
                   value={item.payload}
                   placeholder={t("e.g. CARE_HELP")}
                   rows={2}
                   onChange={(e) => updateItem(index, { payload: e.target.value })}
                 />
-              </div>
+              </Field>
             ) : (
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">{t("URL")}</Label>
+              <Field>
+                <FieldLabel
+                  htmlFor={`${uid}-field-8-${index}`}
+                  className="text-xs text-muted-foreground"
+                >
+                  {t("URL")}
+                </FieldLabel>
                 <Input
+                  id={`${uid}-field-8-${index}`}
                   value={item.url}
                   placeholder="https://example.com"
                   type="url"
                   onChange={(e) => updateItem(index, { url: e.target.value })}
                 />
-              </div>
+              </Field>
             )}
           </div>
         ))}

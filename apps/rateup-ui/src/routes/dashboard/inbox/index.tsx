@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { Activity, useEffect } from "react";
 
 import { useContactById } from "@/backend/campaign/contacts/contacts.query";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
@@ -13,12 +13,7 @@ import WaInboxChatDisplay from "@/components/whatsapp/inbox/chatdisplay/index.ts
 import WaInboxChatSelect from "@/components/whatsapp/inbox/chatselect/index.tsx";
 import InboxSettings from "@/components/whatsapp/inbox/InboxSettings/index.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
-
-import ChatDisplayContext, {
-  useIsChatDisplayOpen,
-} from "../../../components/dashboard/inbox/ChatDisplayContext.tsx";
-
-import styles from "../../../components/dashboard/inbox/WhatsappInbox.module.css";
+import { cn } from "@/lib/utils.ts";
 
 export const Route = createFileRoute("/dashboard/inbox/")({
   component: WhatsAppInbox,
@@ -91,41 +86,68 @@ function WhatsAppInbox() {
   }, [tab]);
 
   return (
-    <ChatDisplayContext>
-      <div className={styles["whatsapp-inbox-root-div"]}>
-        {tab === "analytics" ? (
-          <Analytics />
-        ) : tab === "settings" ? (
-          <InboxSettings />
-        ) : (
-          <ResizeableChat />
-        )}
-      </div>
-    </ChatDisplayContext>
+    <div className="h-full min-h-0">
+      {tab === "analytics" ? (
+        <Analytics />
+      ) : tab === "settings" ? (
+        <InboxSettings />
+      ) : (
+        <ResizeableChat />
+      )}
+    </div>
   );
 }
 
+/**
+ * List and thread, side by side from `lg` up and stacked below it.
+ *
+ * The two panes are one tree at every width — no viewport branch in JS, so there
+ * is no first-paint flash of the wrong layout and neither pane remounts (losing
+ * its scroll position and in-flight queries) when the window crosses the
+ * breakpoint. Which pane is on screen when stacked follows the selection itself
+ * rather than a separate "is the thread open" flag: a second source of truth for
+ * the same thing is exactly what used to drift out of step with the selection.
+ */
 function ResizeableChat() {
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const isChatDisplayOpen = useIsChatDisplayOpen();
-
-  // Mobile: show either chat list or chat display (full width, no resize)
-  if (isMobile) {
-    return (
-      <div className="h-full w-full">
-        {isChatDisplayOpen ? <WaInboxChatDisplay /> : <WaInboxChatSelect />}
-      </div>
-    );
-  }
-
-  // Desktop: resizable two-panel layout
+  const hasSelection = useContactsStore((s) => Boolean(s.selectedContact));
+  // Matches the `lg` breakpoint the CSS above uses to stack the panes.
+  const isStacked = useMediaQuery("(max-width: 1023.98px)");
+  const shouldHideListPanel = isStacked && hasSelection;
+  const shouldHideThreadPanel = isStacked && !hasSelection;
   return (
-    <ResizablePanelGroup orientation="horizontal" className="h-full">
-      <ResizablePanel defaultSize={"28%"} minSize={"22%"} maxSize={"40%"}>
-        <WaInboxChatSelect />
+    <ResizablePanelGroup
+      orientation="horizontal"
+      // A panel's `className` goes on an inner div by design ("to avoid styles
+      // that interfere with Flex layout"), so the stacked layout cannot be
+      // written on the panels themselves — sizing lives on the outer
+      // `<div data-panel id=…>` the library documents, and that is what these
+      // target. `!` because those wrappers carry `display` and `flex` inline,
+      // which no selector outranks on its own.
+      className={cn(
+        "h-full",
+        "max-lg:*:data-panel:flex-[1_1_100%]!",
+        shouldHideListPanel && "max-lg:[&>#inbox-list-panel]:hidden!",
+        shouldHideThreadPanel && "max-lg:[&>#inbox-thread-panel]:hidden!",
+      )}
+    >
+      <ResizablePanel id="inbox-list-panel" defaultSize={"28%"} minSize={"22%"} maxSize={"40%"}>
+        {/* While the thread covers the list, the list stops rendering entirely —
+            every store change (each arriving message, each status receipt) was
+            re-rendering a virtualized list nobody could see. `Activity` keeps its
+            state and DOM, so coming back is a single render rather than a rebuild.
+            The media query only gates that render skipping, never the layout: if
+            it is momentarily wrong (before hydration) the pane merely renders when
+            it did not have to, and CSS still decides what is on screen. */}
+        <Activity mode={isStacked && hasSelection ? "hidden" : "visible"}>
+          <WaInboxChatSelect />
+        </Activity>
       </ResizablePanel>
-      <ResizableHandle />
-      <ResizablePanel defaultSize={"72%"} minSize={"60%"} maxSize={"78%"}>
+      {/* Dragging only means something when both panes are on screen, so the
+          handle exists from lg up. Stated as hidden-by-default rather than
+          hidden-below-lg: that beats the handle's own `flex` outright instead of
+          relying on the media-query rule being emitted later. */}
+      <ResizableHandle className="hidden lg:flex cursor-col-resize" />
+      <ResizablePanel id="inbox-thread-panel" defaultSize={"72%"} minSize={"60%"} maxSize={"78%"}>
         <WaInboxChatDisplay />
       </ResizablePanel>
     </ResizablePanelGroup>

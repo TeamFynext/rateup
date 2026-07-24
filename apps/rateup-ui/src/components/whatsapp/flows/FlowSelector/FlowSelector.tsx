@@ -1,5 +1,7 @@
+import { useId } from "react";
+
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -36,6 +38,7 @@ export function FlowSelector({
   disabled,
   className,
 }: Readonly<FlowSelectorProps>) {
+  const uid = useId();
   const { data: flows, isLoading } = useWaFlowsFromDb();
 
   if (isLoading || !flows) {
@@ -52,8 +55,12 @@ export function FlowSelector({
   }));
 
   return (
-    <div className={className}>
-      {label && <Label className="mb-1">{label}</Label>}
+    <Field className={className}>
+      {label && (
+        <FieldLabel htmlFor={`${uid}-field`} className="mb-1">
+          {label}
+        </FieldLabel>
+      )}
       <Select
         // TODO: check why flowId is saved as number in db
         value={value?.toString() ?? ""}
@@ -61,7 +68,7 @@ export function FlowSelector({
         items={selectOptions}
         disabled={disabled}
       >
-        <SelectTrigger className="w-full" aria-invalid={!!error}>
+        <SelectTrigger id={`${uid}-field`} className="w-full" aria-invalid={!!error}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -73,6 +80,6 @@ export function FlowSelector({
         </SelectContent>
       </Select>
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
-    </div>
+    </Field>
   );
 }

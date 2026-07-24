@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ChevronRight, Plus, RefreshCcw, User, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -21,9 +21,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { SubscriptionFeaturePathName as sfpn, TeamFeature } from "@/types/enums.ts";
@@ -101,6 +100,7 @@ const FEATURES_WITH_SUBSCRIPTION: {
 ];
 
 function Team() {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false });
@@ -384,7 +384,7 @@ function Team() {
                 />
 
                 <div className="flex flex-col gap-2">
-                  <Label>{translations("Team Color")}</Label>
+                  <FieldTitle>{translations("Team Color")}</FieldTitle>
                   <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                     {colorArray.map((color, index) => {
                       const isSelected = colorValue === color.from;
@@ -408,7 +408,7 @@ function Team() {
                 {/* Feature Access */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <Label>{translations("Feature Access")}</Label>
+                    <FieldTitle>{translations("Feature Access")}</FieldTitle>
                     <button
                       type="button"
                       onClick={toggleAll}
@@ -419,16 +419,23 @@ function Team() {
                   </div>
                   <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
                     {availableFeatures.map(({ feature, label }) => (
-                      <div
+                      <Field
                         key={feature}
-                        className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm"
+                        orientation="horizontal"
+                        className="justify-between rounded-md border px-3 py-1.5"
                       >
-                        <span className="text-muted-foreground">{label}</span>
+                        <FieldLabel
+                          htmlFor={`${uid}-feature-${feature}`}
+                          className="text-sm font-normal text-muted-foreground"
+                        >
+                          {label}
+                        </FieldLabel>
                         <Switch
+                          id={`${uid}-feature-${feature}`}
                           checked={selectedFeatures.has(feature)}
                           onCheckedChange={() => toggleFeature(feature)}
                         />
-                      </div>
+                      </Field>
                     ))}
                   </div>
                 </div>

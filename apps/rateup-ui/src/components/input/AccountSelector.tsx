@@ -1,12 +1,12 @@
 import { X } from "lucide-react";
-import { useEffect } from "react";
+import { useId, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { MessagePlatform } from "@/types/enums.ts";
 
 import { Button } from "../ui/button.tsx";
-import { Label } from "../ui/label.tsx";
+import { Field, FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
@@ -28,6 +28,7 @@ interface AccountSelectorProps {
 }
 
 export function AccountSelector(props: Readonly<AccountSelectorProps>) {
+  const uid = useId();
   const {
     value,
     onChange,
@@ -109,13 +110,14 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   }
   if (multiple) {
     return (
-      <div className={className}>
+      <Field className={className}>
         {!hideLabel && (
-          <Label className="text-xs text-muted-foreground">
+          <FieldLabel htmlFor={`${uid}-field`} className="text-xs text-muted-foreground">
             {label || translations("Account")}
-          </Label>
+          </FieldLabel>
         )}
         <MultiSelect
+          id={`${uid}-field`}
           options={accountOptions}
           value={value ?? []}
           onValueChange={onChange}
@@ -123,16 +125,16 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
           emptyIndicator={translations("No account found!")}
           disabled={disabled}
         />
-      </div>
+      </Field>
     );
   }
   return (
     <div>
       <div className="flex items-center justify-between">
         {!hideLabel && (
-          <Label className="text-xs text-muted-foreground">
+          <FieldTitle className="text-xs text-muted-foreground">
             {label ?? translations("Account")}
-          </Label>
+          </FieldTitle>
         )}
         {optional && value && showClearButton && (
           <Button

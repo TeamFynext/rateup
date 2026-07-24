@@ -1,5 +1,5 @@
 import { IconInfoCircle, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
-import { useContext, useRef, useState } from "react";
+import { useId, useContext, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -41,6 +41,7 @@ enum EmailAddMethod {
 }
 
 const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
+  const uid = useId();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = form.values?.features?.[selectedLanguage] || {
     allowedEmails: [],
@@ -179,12 +180,12 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
 
           <FieldGroup>
             <Field>
-              <FieldLabel>{translations("Method")}</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field`}>{translations("Method")}</FieldLabel>
               <Select
                 value={emailMethod}
                 onValueChange={(v) => setEmailMethod(v as EmailAddMethod)}
               >
-                <SelectTrigger className="w-[220px]">
+                <SelectTrigger id={`${uid}-field`} className="w-[220px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -203,9 +204,10 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
           ) : (
             <FieldGroup>
               <Field data-invalid={!!inputError}>
-                <FieldLabel>{translations("Email Address")}</FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field-2`}>{translations("Email Address")}</FieldLabel>
                 <div className="flex items-center gap-2">
                   <Input
+                    id={`${uid}-field-2`}
                     value={newEmail}
                     placeholder={translations("Enter email here")}
                     aria-invalid={!!inputError}

@@ -1,7 +1,7 @@
 import { IconRefresh } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -21,8 +21,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 export const Route = createFileRoute("/dashboard/whatsapp/conversational-components/")({
@@ -69,6 +69,7 @@ function DisplayConversationalSettings({
 }: Readonly<{
   selectedPhoneId: string;
 }>) {
+  const uid = useId();
   const { t } = useTranslation();
   const [prompts, setPrompts] = useState<string[]>([]);
   const [commands, setCommands] = useState<ConversationalAutomationCommand[]>([]);
@@ -208,9 +209,12 @@ function DisplayConversationalSettings({
           {commands.map((command, index) => (
             <div key={index} className="flex items-start gap-2">
               <div className="flex flex-1 flex-col gap-2 sm:flex-row">
-                <div className="flex-1 space-y-1">
-                  <Label className="text-xs">Command</Label>
+                <Field className="flex-1">
+                  <FieldLabel htmlFor={`${uid}-command-${index}`} className="text-xs">
+                    Command
+                  </FieldLabel>
                   <Input
+                    id={`${uid}-command-${index}`}
                     value={command.command_name}
                     onChange={(e) => handleCommandChange(index, "command_name", e.target.value)}
                     placeholder="e.g. help"
@@ -219,10 +223,13 @@ function DisplayConversationalSettings({
                   <span className="text-xs text-muted-foreground">
                     {command.command_name.length}/32
                   </span>
-                </div>
-                <div className="flex-2 space-y-1">
-                  <Label className="text-xs">Description</Label>
+                </Field>
+                <Field className="flex-2">
+                  <FieldLabel htmlFor={`${uid}-description-${index}`} className="text-xs">
+                    Description
+                  </FieldLabel>
                   <Input
+                    id={`${uid}-description-${index}`}
                     value={command.command_description}
                     onChange={(e) =>
                       handleCommandChange(index, "command_description", e.target.value)
@@ -233,7 +240,7 @@ function DisplayConversationalSettings({
                   <span className="text-xs text-muted-foreground">
                     {command.command_description.length}/256
                   </span>
-                </div>
+                </Field>
               </div>
               <Button
                 variant="ghost"

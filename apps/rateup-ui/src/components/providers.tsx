@@ -16,6 +16,8 @@ import axios from "axios";
 import { Suspense } from "react";
 import Session from "supertokens-auth-react/recipe/session";
 
+import { AppErrorBoundary } from "@/components/AppErrorBoundary.tsx";
+import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { UserProvider } from "@/context/UserContext.tsx";
@@ -80,35 +82,36 @@ export default function Providers({ children }) {
   const queryClient = getQueryClient();
 
   return (
-    <SuperTokensProvider>
-      <QueryClientProvider client={queryClient}>
-        {/* Modal components are lazy-loaded; fallback is null since they only
-            suspend when a modal is actually opened (near-instant, small chunk),
-            not during normal page rendering. */}
-        <Suspense fallback={null}>
-          <UserProvider>
-            <RouteChangeHandler />
-            <HydrationBoundary state={dehydrate(queryClient)}>
-              <TooltipProvider>{children}</TooltipProvider>
-            </HydrationBoundary>
-          </UserProvider>
-        </Suspense>
-        <TanStackDevtools
-          config={{
-            position: "bottom-right",
-          }}
-          plugins={[
-            {
-              name: "Tanstack Query",
-              render: <ReactQueryDevtoolsPanel />,
-            },
-            {
-              name: "Tanstack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
-      </QueryClientProvider>
-    </SuperTokensProvider>
+    <AppErrorBoundary>
+      <SuperTokensProvider>
+        <QueryClientProvider client={queryClient}>
+          {/* This boundary wraps the whole app tree, so anything that suspends here (lazy modal
+            chunks, UserProvider) would otherwise blank the screen with no feedback. */}
+          <Suspense fallback={<RateupLoader className="h-dvh" />}>
+            <UserProvider>
+              <RouteChangeHandler />
+              <HydrationBoundary state={dehydrate(queryClient)}>
+                <TooltipProvider>{children}</TooltipProvider>
+              </HydrationBoundary>
+            </UserProvider>
+          </Suspense>
+          <TanStackDevtools
+            config={{
+              position: "bottom-right",
+            }}
+            plugins={[
+              {
+                name: "Tanstack Query",
+                render: <ReactQueryDevtoolsPanel />,
+              },
+              {
+                name: "Tanstack Router",
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+            ]}
+          />
+        </QueryClientProvider>
+      </SuperTokensProvider>
+    </AppErrorBoundary>
   );
 }

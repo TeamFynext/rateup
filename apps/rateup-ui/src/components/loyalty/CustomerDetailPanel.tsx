@@ -43,8 +43,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
@@ -622,8 +622,8 @@ export function CustomerDetailPanel({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="points-amount">{t("Purchase Amount")}</Label>
+            <Field>
+              <FieldLabel htmlFor="points-amount">{t("Purchase Amount")}</FieldLabel>
               <Input
                 id="points-amount"
                 type="number"
@@ -634,16 +634,16 @@ export function CustomerDetailPanel({
               <p className="text-xs text-muted-foreground">
                 {t("Points will be calculated based on earning rules")}
               </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="points-notes">{t("Notes (optional)")}</Label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="points-notes">{t("Notes (optional)")}</FieldLabel>
               <Textarea
                 id="points-notes"
                 placeholder={t("Add any notes...")}
                 value={pointsNotes}
                 onChange={(e) => setPointsNotes(e.target.value)}
               />
-            </div>
+            </Field>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIssuePointsOpen(false)}>
@@ -673,7 +673,7 @@ export function CustomerDetailPanel({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>{t("Select Reward")}</Label>
+              <FieldTitle>{t("Select Reward")}</FieldTitle>
               <div className="space-y-2 max-h-75 overflow-y-auto">
                 {availableRewards
                   .filter(
@@ -732,7 +732,7 @@ export function CustomerDetailPanel({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>{t("Select Reward")}</Label>
+              <FieldTitle>{t("Select Reward")}</FieldTitle>
               <div className="space-y-2 max-h-75 overflow-y-auto">
                 {issuableRewards.map((reward) => (
                   <button
@@ -755,15 +755,15 @@ export function CustomerDetailPanel({
                 ))}
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="assign-notes">{t("Notes (optional)")}</Label>
+            <Field>
+              <FieldLabel htmlFor="assign-notes">{t("Notes (optional)")}</FieldLabel>
               <Textarea
                 id="assign-notes"
                 placeholder={t("Add any notes...")}
                 value={assignRewardNotes}
                 onChange={(e) => setAssignRewardNotes(e.target.value)}
               />
-            </div>
+            </Field>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignRewardOpen(false)}>
@@ -794,7 +794,7 @@ export function CustomerDetailPanel({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>{t("Select Reward")}</Label>
+              <FieldTitle>{t("Select Reward")}</FieldTitle>
               <div className="space-y-2 max-h-75 overflow-y-auto">
                 {availableRewards
                   .filter((coupon) => coupon.rewardType === "coupon" && coupon.status === "ACTIVE")
@@ -857,9 +857,9 @@ export function CustomerDetailPanel({
             <DialogTitle>{t("Use coupon")}</DialogTitle>
             <DialogDescription>Enter a coupon code for {customer.name}.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="coupon-code">{t("Coupon Code")}</Label>
+          <Field className="py-4">
+            <Field>
+              <FieldLabel htmlFor="coupon-code">{t("Coupon Code")}</FieldLabel>
               <Input
                 id="coupon-code"
                 placeholder={t("Enter coupon code")}
@@ -870,8 +870,8 @@ export function CustomerDetailPanel({
               <p className="text-xs text-muted-foreground">
                 {t("Enter the coupon code provided by the customer")}
               </p>
-            </div>
-          </div>
+            </Field>
+          </Field>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRedeemCouponOpen(false)}>
               {t("Cancel")}
@@ -891,7 +891,7 @@ export function CustomerDetailPanel({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>{t("Select Redemption")}</Label>
+              <FieldTitle>{t("Select Redemption")}</FieldTitle>
               <div className="space-y-2 max-h-75 overflow-y-auto">
                 {unusedRedemptions.map((redemption) => (
                   <button

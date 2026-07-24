@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useId, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
@@ -41,6 +41,7 @@ const WaTemplateSelector = ({
   withAsterisk,
   onBlur,
 }: WaTemplateSelector) => {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const { data: allTemplates, isLoading } = useWaTemplates(templateType);
   const templates = teamId ? useTemplatesAvailableForTeam(teamId) : allTemplates;
@@ -64,7 +65,7 @@ const WaTemplateSelector = ({
 
   return (
     <Field className={className}>
-      <FieldLabel>
+      <FieldLabel htmlFor={`${uid}-field`}>
         {label || translations("whatsApp Template")}
         {withAsterisk && <span className="text-destructive"> *</span>}
       </FieldLabel>
@@ -77,7 +78,7 @@ const WaTemplateSelector = ({
         }}
         disabled={disabled}
       >
-        <SelectTrigger className="w-full" aria-invalid={!!error}>
+        <SelectTrigger id={`${uid}-field`} className="w-full" aria-invalid={!!error}>
           <SelectValue placeholder={placeholder || translations("Select a template")} />
         </SelectTrigger>
         <SelectContent>

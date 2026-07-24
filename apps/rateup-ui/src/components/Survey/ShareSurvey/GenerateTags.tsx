@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
   Tooltip,
@@ -36,7 +36,7 @@ const GenerateTags = ({ tagSelectData, setTagSelectData, disabled }) => {
   return (
     <TooltipProvider>
       <Field>
-        <FieldLabel>{translations("tags")}</FieldLabel>
+        <FieldTitle>{translations("tags")}</FieldTitle>
         {tagSelectData?.length > 0 && (
           <div className="mb-1 flex flex-wrap gap-1">
             {tagSelectData.map((tag: string, index: number) => (

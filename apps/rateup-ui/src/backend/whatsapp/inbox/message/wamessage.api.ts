@@ -34,6 +34,9 @@ export interface WaGetMessagesBody {
   // The ticket a message belongs to. Nullable for legacy messages that predate
   // the conversation backfill.
   conversationId?: string | null;
+  // Set when the sender deleted the message on WhatsApp. The body is still here,
+  // but the thread shows it as deleted instead of rendering it.
+  deletedAt?: string | null;
 }
 
 interface WaMessagePage {
@@ -74,6 +77,9 @@ export type ContactsWithLastMessage = ContactsData & {
     messageBody: WaInboxMessage;
     sourcePlatform: MessagePlatform;
     sourceIdentifier: string;
+    // Set when the preview's message was revoked — the snippet says so instead
+    // of quoting text the customer deleted.
+    deletedAt?: string | null;
   };
   metadata?: {
     display_phone_number?: string;

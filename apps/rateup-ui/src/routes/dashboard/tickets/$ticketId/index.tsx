@@ -49,6 +49,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -776,7 +777,7 @@ function RightSidebar({
               })}
 
               {((ticket.attachments as string[]) || []).length < 4 && (
-                <label className="w-14 h-14 rounded-[9px] border-[1.5px] border-dashed border-border flex items-center justify-center text-muted-foreground cursor-pointer hover:border-primary hover:text-primary transition-colors bg-background">
+                <FieldTitle className="w-14 h-14 rounded-[9px] border-[1.5px] border-dashed border-border flex items-center justify-center text-muted-foreground cursor-pointer hover:border-primary hover:text-primary transition-colors bg-background">
                   {isUploadingFile ? (
                     <Loader2 size={15} className="animate-spin text-primary" />
                   ) : (
@@ -790,7 +791,7 @@ function RightSidebar({
                     onChange={handleSelectFiles}
                     disabled={isUploadingFile}
                   />
-                </label>
+                </FieldTitle>
               )}
             </div>
           </div>

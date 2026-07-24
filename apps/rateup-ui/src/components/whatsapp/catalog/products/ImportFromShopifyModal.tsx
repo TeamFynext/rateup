@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 
 interface ImportFromShopifyModalProps {
@@ -102,8 +103,8 @@ export function ImportFromShopifyModal({
         ) : (
           <div className="flex flex-col gap-3">
             {/* Select all row */}
-            <div className="flex items-center justify-between">
-              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+            <Field orientation="horizontal" className="justify-between">
+              <FieldTitle className="flex cursor-pointer items-center gap-2 text-sm font-medium">
                 <Checkbox
                   checked={allSelected}
                   data-state={
@@ -112,9 +113,9 @@ export function ImportFromShopifyModal({
                   onCheckedChange={toggleAll}
                 />
                 Select all ({allIds.length})
-              </label>
+              </FieldTitle>
               <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>
-            </div>
+            </Field>
 
             {/* Product list */}
             <ScrollArea className="h-[400px] pr-3">

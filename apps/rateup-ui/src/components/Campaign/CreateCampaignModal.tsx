@@ -9,7 +9,7 @@ import {
   IconWand,
 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useId, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -34,7 +34,6 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -97,6 +96,7 @@ const CreateCampaignModal = ({
   campaign,
   campaignType = CampaignType.WHATSAPP,
 }: CreateCampaignProps) => {
+  const uid = useId();
   const [activeTab, setActiveTab] = useState<"basic" | "templates">("basic");
   const { t } = useTranslation("campaign.create");
   const { customFields } = useCustomFieldsContext();
@@ -467,9 +467,12 @@ const CreateCampaignModal = ({
                           id={field.name}
                           placeholder={t("e.g., Summer Sale 2025")}
                           aria-invalid={fieldState.invalid}
+                          aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
                           {...field}
                         />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        {fieldState.invalid && (
+                          <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
@@ -525,6 +528,7 @@ const CreateCampaignModal = ({
                           step={1}
                           placeholder={t("No limit")}
                           aria-invalid={fieldState.invalid}
+                          aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
                           {...field}
                         />
                         <FieldDescription className="text-xs">
@@ -536,7 +540,9 @@ const CreateCampaignModal = ({
                                 "Max messages sent per day. Leave empty to send to everyone at once.",
                               )}
                         </FieldDescription>
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        {fieldState.invalid && (
+                          <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
@@ -590,6 +596,9 @@ const CreateCampaignModal = ({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
+                                aria-label={t("Remove stage {number}", {
+                                  number: (idx + 1).toString(),
+                                })}
                                 className="h-7 w-7"
                                 onClick={() => removeDripStage(idx)}
                                 disabled={dripStages.length === 1}
@@ -606,7 +615,12 @@ const CreateCampaignModal = ({
                               }`}
                             >
                               <div className="space-y-2 col-span-full">
-                                <Label className="text-xs">{t("Choose Template *")}</Label>
+                                <FieldLabel
+                                  htmlFor={`${uid}-stage-${idx}-template`}
+                                  className="text-xs"
+                                >
+                                  {t("Choose Template *")}
+                                </FieldLabel>
                                 <div className="flex items-center gap-2">
                                   <Select
                                     value={stage.templateId}
@@ -615,6 +629,13 @@ const CreateCampaignModal = ({
                                     items={templatesData}
                                   >
                                     <SelectTrigger
+                                      id={`${uid}-stage-${idx}-template`}
+                                      aria-invalid={!stage.templateId}
+                                      aria-describedby={
+                                        !stage.templateId
+                                          ? `${uid}-stage-${idx}-template-error`
+                                          : undefined
+                                      }
                                       className={`h-9 ${!stage.templateId ? "border-destructive" : ""}`}
                                     >
                                       <SelectValue
@@ -635,30 +656,41 @@ const CreateCampaignModal = ({
                                     </SelectContent>
                                   </Select>
                                   <div className="flex items-center gap-2">
-                                    Or
+                                    {t("Or")}
                                     <Button
+                                      type="button"
                                       onClick={() =>
                                         navigate({
                                           to: "/dashboard/whatsapp/templates/create",
                                         })
                                       }
                                     >
-                                      Create Template
+                                      {t("Create Template")}
                                     </Button>
                                   </div>
                                 </div>
                                 {!stage.templateId && (
-                                  <p className="text-xs text-destructive">
+                                  <p
+                                    id={`${uid}-stage-${idx}-template-error`}
+                                    role="alert"
+                                    className="text-xs text-destructive"
+                                  >
                                     {t("Template is required")}
                                   </p>
                                 )}
                               </div>
 
                               <div className="space-y-2">
-                                <Label className="text-xs">{t("Delay")}</Label>
+                                <FieldLabel
+                                  htmlFor={`${uid}-stage-${idx}-delay`}
+                                  className="text-xs"
+                                >
+                                  {t("Delay")}
+                                </FieldLabel>
                                 <div className="relative">
                                   <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                                   <Input
+                                    id={`${uid}-stage-${idx}-delay`}
                                     type="number"
                                     min={1}
                                     step={1}
@@ -672,7 +704,12 @@ const CreateCampaignModal = ({
                               </div>
 
                               <div className="space-y-2">
-                                <Label className="text-xs">{t("Unit")}</Label>
+                                <FieldLabel
+                                  htmlFor={`${uid}-stage-${idx}-delay-unit`}
+                                  className="text-xs"
+                                >
+                                  {t("Unit")}
+                                </FieldLabel>
                                 <Select
                                   value={stage.delayUnit}
                                   onValueChange={(val) => updateDripStage(idx, "delayUnit", val)}
@@ -684,7 +721,10 @@ const CreateCampaignModal = ({
                                     { value: "months", label: t("Months") },
                                   ]}
                                 >
-                                  <SelectTrigger className="h-9">
+                                  <SelectTrigger
+                                    id={`${uid}-stage-${idx}-delay-unit`}
+                                    className="h-9"
+                                  >
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -701,10 +741,16 @@ const CreateCampaignModal = ({
                                 stage.delayUnit === "weeks" ||
                                 stage.delayUnit === "months") && (
                                 <div className="space-y-2">
-                                  <Label className="text-xs">{t("Send at time")}</Label>
+                                  <FieldLabel
+                                    htmlFor={`${uid}-stage-${idx}-send-at`}
+                                    className="text-xs"
+                                  >
+                                    {t("Send at time")}
+                                  </FieldLabel>
                                   <div className="relative">
                                     <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                                     <Input
+                                      id={`${uid}-stage-${idx}-send-at`}
                                       type="time"
                                       value={stage.sendAtTime}
                                       onChange={(e) =>
@@ -730,6 +776,7 @@ const CreateCampaignModal = ({
                       name="waTemplateId"
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name}>{t("Choose Template *")}</FieldLabel>
                           <div className="flex items-center gap-2">
                             <Select
                               onValueChange={field.onChange}
@@ -737,7 +784,13 @@ const CreateCampaignModal = ({
                               disabled={templatesData.length === 0}
                               items={templatesData}
                             >
-                              <SelectTrigger aria-invalid={fieldState.invalid}>
+                              <SelectTrigger
+                                id={field.name}
+                                aria-invalid={fieldState.invalid}
+                                aria-describedby={
+                                  fieldState.invalid ? `${field.name}-error` : undefined
+                                }
+                              >
                                 <SelectValue
                                   placeholder={
                                     templatesData.length === 0
@@ -757,6 +810,7 @@ const CreateCampaignModal = ({
                             <div className="flex items-center gap-2">
                               Or
                               <Button
+                                type="button"
                                 onClick={() =>
                                   navigate({
                                     to: "/dashboard/whatsapp/templates/create",
@@ -767,7 +821,9 @@ const CreateCampaignModal = ({
                               </Button>
                             </div>
                           </div>
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          {fieldState.invalid && (
+                            <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+                          )}
                         </Field>
                       )}
                     />
@@ -808,8 +864,12 @@ const CreateCampaignModal = ({
                                     ]}
                                   >
                                     <SelectTrigger
+                                      id={field.name}
                                       className="h-9"
                                       aria-invalid={fieldState.invalid}
+                                      aria-describedby={
+                                        fieldState.invalid ? `${field.name}-error` : undefined
+                                      }
                                     >
                                       <SelectValue placeholder={t("Select dynamic tag")} />
                                     </SelectTrigger>
@@ -822,7 +882,12 @@ const CreateCampaignModal = ({
                                       ))}
                                     </SelectContent>
                                   </Select>
-                                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                                  {fieldState.invalid && (
+                                    <FieldError
+                                      id={`${field.name}-error`}
+                                      errors={[fieldState.error]}
+                                    />
+                                  )}
                                 </Field>
                               )}
                             />

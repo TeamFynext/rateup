@@ -116,13 +116,13 @@ function LanguageSelectionPage({
           <div
             className={`flex justify-center ${surveyThemeStylesCx("buttonBox")} ${cx("start-btn-text-input-wrapper")}`}
           >
-            <div
-              className={`flex ${cx("start-btn-text-input-container")}`}
-              onClick={(e) => e.stopPropagation()}
-              style={{ padding: 0 }}
-            >
+            <div className={`flex ${cx("start-btn-text-input-container")}`} style={{ padding: 0 }}>
               <Button
-                onClick={() => setSelectedLanguage(lang)}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedLanguage(lang);
+                }}
                 className="h-auto rounded-[0.625rem] py-3 pr-4 pl-6.25 text-lg"
                 style={{
                   backgroundColor: buttonStyles?.backgroundColor,

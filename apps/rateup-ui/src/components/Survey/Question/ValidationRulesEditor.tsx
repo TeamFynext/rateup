@@ -1,6 +1,7 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { isEmptyObject } from "@tiptap/react";
+import { useId } from "react";
 import React, { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -61,6 +62,7 @@ interface FormValues {
 const TEXT_TYPE_OPTIONS = ["Letters", "Letters_&_Numbers", "Numbers"];
 
 const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTab }: IProps) => {
+  const uid = useId();
   const params = useParams({
     strict: false,
   });
@@ -396,30 +398,54 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                     <IconTrash className="text-destructive" />
                   </Button>
                 </div>
-                {rules?.map((r: Rule) => (
+                {rules?.map((r: Rule, ruleIndex: number) => (
                   <div key={r?.ruleType} className="flex flex-wrap items-center gap-2 py-2.5">
                     <span className="w-20">{r?.ruleType}:</span>
                     {r?.ruleType === "length" && (
                       <>
                         <Field className="w-[100px]">
-                          <FieldLabel>{translations("Min")}</FieldLabel>
-                          <Input value={r?.min} readOnly />
+                          <FieldLabel htmlFor={`${uid}-field-${index}-${ruleIndex}`}>
+                            {translations("Min")}
+                          </FieldLabel>
+                          <Input
+                            id={`${uid}-field-${index}-${ruleIndex}`}
+                            value={r?.min}
+                            readOnly
+                          />
                         </Field>
                         <Field className="w-[100px]">
-                          <FieldLabel>{translations("Max")}</FieldLabel>
-                          <Input value={r?.max} readOnly />
+                          <FieldLabel htmlFor={`${uid}-field-2-${index}-${ruleIndex}`}>
+                            {translations("Max")}
+                          </FieldLabel>
+                          <Input
+                            id={`${uid}-field-2-${index}-${ruleIndex}`}
+                            value={r?.max}
+                            readOnly
+                          />
                         </Field>
                       </>
                     )}
                     {r?.ruleType === "textType" && (
                       <Field>
-                        <FieldLabel>{translations("Type")}</FieldLabel>
-                        <Input value={r?.type} readOnly />
+                        <FieldLabel htmlFor={`${uid}-field-3-${index}-${ruleIndex}`}>
+                          {translations("Type")}
+                        </FieldLabel>
+                        <Input
+                          id={`${uid}-field-3-${index}-${ruleIndex}`}
+                          value={r?.type}
+                          readOnly
+                        />
                       </Field>
                     )}
                     <Field>
-                      <FieldLabel>{translations("Error Message")}</FieldLabel>
-                      <Input value={r?.errorMessage} readOnly />
+                      <FieldLabel htmlFor={`${uid}-field-4-${index}-${ruleIndex}`}>
+                        {translations("Error Message")}
+                      </FieldLabel>
+                      <Input
+                        id={`${uid}-field-4-${index}-${ruleIndex}`}
+                        value={r?.errorMessage}
+                        readOnly
+                      />
                       <p className="text-sm text-muted-foreground">
                         {translations("please change according to display text of the field")}
                       </p>
@@ -474,8 +500,9 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                 {selectedRule?.ruleType === "length" && (
                   <>
                     <Field data-invalid={!!ruleErrors.min}>
-                      <FieldLabel>{translations("Min")}</FieldLabel>
+                      <FieldLabel htmlFor={`${uid}-field-5`}>{translations("Min")}</FieldLabel>
                       <Input
+                        id={`${uid}-field-5`}
                         type="number"
                         value={ruleValues?.min ?? ""}
                         onChange={(e) => setRuleField("min", e.target.value)}
@@ -484,8 +511,9 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                       {ruleErrors.min && <FieldError>{ruleErrors.min}</FieldError>}
                     </Field>
                     <Field data-invalid={!!ruleErrors.max}>
-                      <FieldLabel>{translations("Max")}</FieldLabel>
+                      <FieldLabel htmlFor={`${uid}-field-6`}>{translations("Max")}</FieldLabel>
                       <Input
+                        id={`${uid}-field-6`}
                         type="number"
                         value={ruleValues?.max ?? ""}
                         onChange={(e) => setRuleField("max", e.target.value)}
@@ -497,13 +525,13 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                 )}
                 {selectedRule?.ruleType === "textType" && (
                   <Field data-invalid={!!ruleErrors.type}>
-                    <FieldLabel>{translations("Type")}</FieldLabel>
+                    <FieldLabel htmlFor={`${uid}-field-7`}>{translations("Type")}</FieldLabel>
                     <Select
                       value={ruleValues?.type}
                       onValueChange={(value) => setRuleField("type", value)}
                       items={TEXT_TYPE_OPTIONS.map((t) => ({ value: t, label: t }))}
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger id={`${uid}-field-7`} className="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -518,8 +546,11 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                   </Field>
                 )}
                 <Field data-invalid={!!ruleErrors.errorMessage}>
-                  <FieldLabel>{translations("Error Message")}</FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-field-8`}>
+                    {translations("Error Message")}
+                  </FieldLabel>
                   <Input
+                    id={`${uid}-field-8`}
                     value={ruleValues?.errorMessage ?? ""}
                     onChange={(e) => setRuleField("errorMessage", e.target.value)}
                     aria-invalid={!!ruleErrors.errorMessage}
@@ -571,8 +602,11 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                         {"min" in ruleData && "max" in ruleData ? (
                           <div className="flex items-center gap-3">
                             <Field data-invalid={!!errors[`${ruleType}.min`]}>
-                              <FieldLabel>{translations("Min")}</FieldLabel>
+                              <FieldLabel htmlFor={`${uid}-field-9`}>
+                                {translations("Min")}
+                              </FieldLabel>
                               <Input
+                                id={`${uid}-field-9`}
                                 className="max-w-[100px]"
                                 value={ruleData.min}
                                 onChange={(event) => {
@@ -589,8 +623,11 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                               )}
                             </Field>
                             <Field data-invalid={!!errors[`${ruleType}.max`]}>
-                              <FieldLabel>{translations("Max")}</FieldLabel>
+                              <FieldLabel htmlFor={`${uid}-field-10`}>
+                                {translations("Max")}
+                              </FieldLabel>
                               <Input
+                                id={`${uid}-field-10`}
                                 className="max-w-[100px]"
                                 value={ruleData.max}
                                 onChange={(event) => {
@@ -609,7 +646,9 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                           </div>
                         ) : (
                           <Field data-invalid={!!errors[`${ruleType}.type`]}>
-                            <FieldLabel>{translations("Input type:")}</FieldLabel>
+                            <FieldLabel htmlFor={`${uid}-field-11`}>
+                              {translations("Input type:")}
+                            </FieldLabel>
                             <Select
                               defaultValue="Letters_&_Numbers"
                               onValueChange={(event) => {
@@ -625,7 +664,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                                 label: t,
                               }))}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger id={`${uid}-field-11`}>
                                 <SelectValue placeholder={translations("Select rule type")} />
                               </SelectTrigger>
                               <SelectContent>
@@ -639,8 +678,11 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
                           </Field>
                         )}
                         <Field data-invalid={!!errors[`${ruleType}.errorMessage`]}>
-                          <FieldLabel>{translations("Error Message")}</FieldLabel>
+                          <FieldLabel htmlFor={`${uid}-field-12`}>
+                            {translations("Error Message")}
+                          </FieldLabel>
                           <Input
+                            id={`${uid}-field-12`}
                             className="max-w-[300px]"
                             value={ruleData.errorMessage}
                             onChange={(event) => {

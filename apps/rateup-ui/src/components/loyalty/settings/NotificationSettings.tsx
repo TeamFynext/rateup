@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
@@ -19,6 +20,7 @@ export function NotificationSettings({
   onSave,
   disabled = false,
 }: Readonly<NotificationSettingsProps>) {
+  const uid = useId();
   const { t } = useTranslation();
 
   return (
@@ -34,12 +36,15 @@ export function NotificationSettings({
             render={({ field }) => (
               <Field orientation="horizontal" className="p-2.5 border rounded-lg">
                 <FieldContent>
-                  <FieldLabel className="text-sm font-medium">{t("Program Active")}</FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-field`} className="text-sm font-medium">
+                    {t("Program Active")}
+                  </FieldLabel>
                   <FieldDescription className="text-xs text-muted-foreground">
                     {t("Enable/disable program")}
                   </FieldDescription>
                 </FieldContent>
                 <Switch
+                  id={`${uid}-field`}
                   checked={field.value}
                   onCheckedChange={(val) => {
                     if (!disabled) {
@@ -67,7 +72,7 @@ export function NotificationSettings({
             render={({ field }) => (
               <Field orientation="horizontal" className="p-2.5 border rounded-lg">
                 <FieldContent>
-                  <FieldLabel className="text-sm font-medium">
+                  <FieldLabel htmlFor={`${uid}-field-2`} className="text-sm font-medium">
                     {t("Customer Notifications")}
                   </FieldLabel>
                   <FieldDescription className="text-xs text-muted-foreground">
@@ -75,6 +80,7 @@ export function NotificationSettings({
                   </FieldDescription>
                 </FieldContent>
                 <Switch
+                  id={`${uid}-field-2`}
                   checked={field.value}
                   onCheckedChange={(val) => {
                     if (!disabled) {
@@ -96,7 +102,7 @@ export function NotificationSettings({
             render={({ field }) => (
               <Field orientation="horizontal" className="p-2.5 border rounded-lg">
                 <FieldContent>
-                  <FieldLabel className="text-sm font-medium">
+                  <FieldLabel htmlFor={`${uid}-field-3`} className="text-sm font-medium">
                     {t("Auto-approve Adjustments")}
                   </FieldLabel>
                   <FieldDescription className="text-xs text-muted-foreground">
@@ -104,6 +110,7 @@ export function NotificationSettings({
                   </FieldDescription>
                 </FieldContent>
                 <Switch
+                  id={`${uid}-field-3`}
                   checked={field.value}
                   onCheckedChange={(val) => {
                     if (!disabled) {
@@ -125,7 +132,7 @@ export function NotificationSettings({
             render={({ field }) => (
               <Field orientation="horizontal" className="p-2.5 border rounded-lg">
                 <FieldContent>
-                  <FieldLabel className="text-sm font-medium">
+                  <FieldLabel htmlFor={`${uid}-field-4`} className="text-sm font-medium">
                     {t("Email Notifications")}
                   </FieldLabel>
                   <FieldDescription className="text-xs text-muted-foreground">
@@ -133,6 +140,7 @@ export function NotificationSettings({
                   </FieldDescription>
                 </FieldContent>
                 <Switch
+                  id={`${uid}-field-4`}
                   checked={field.value}
                   onCheckedChange={(val) => {
                     if (!disabled) {
@@ -154,7 +162,7 @@ export function NotificationSettings({
             render={({ field }) => (
               <Field orientation="horizontal" className="p-2.5 border rounded-lg">
                 <FieldContent>
-                  <FieldLabel className="text-sm font-medium">
+                  <FieldLabel htmlFor={`${uid}-field-5`} className="text-sm font-medium">
                     {t("WhatsApp Notifications")}
                   </FieldLabel>
                   <FieldDescription className="text-xs text-muted-foreground">
@@ -162,6 +170,7 @@ export function NotificationSettings({
                   </FieldDescription>
                 </FieldContent>
                 <Switch
+                  id={`${uid}-field-5`}
                   checked={field.value}
                   onCheckedChange={(val) => {
                     if (!disabled) {
@@ -183,7 +192,7 @@ export function NotificationSettings({
             render={({ field }) => (
               <Field orientation="horizontal" className="p-2.5 border rounded-lg">
                 <FieldContent>
-                  <FieldLabel className="text-sm font-medium">
+                  <FieldLabel htmlFor={`${uid}-field-6`} className="text-sm font-medium">
                     {t("Shopify Product Order Points")}
                   </FieldLabel>
                   <FieldDescription className="text-xs text-muted-foreground">
@@ -191,6 +200,7 @@ export function NotificationSettings({
                   </FieldDescription>
                 </FieldContent>
                 <Switch
+                  id={`${uid}-field-6`}
                   checked={field.value}
                   onCheckedChange={(val) => {
                     if (!disabled) {

@@ -30,7 +30,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import {
@@ -224,48 +224,49 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
+          <Field orientation="horizontal">
             <Switch
               id="webhook-master"
               disabled={registerWebhooksmutate.isPending || deleteAllWebhooksmt.isPending}
               checked={isWebhookEnabled}
               onCheckedChange={(checked) => handleWebhookRegistration(checked)}
             />
-            <Label htmlFor="webhook-master" className="font-normal">
+            <FieldLabel htmlFor="webhook-master" className="font-normal">
               {isWebhookEnabled
                 ? translations("Webhooks enabled")
                 : translations("Webhooks disabled")}
-            </Label>
-          </div>
+            </FieldLabel>
+          </Field>
 
           {showEvents && (
             <>
               <Separator />
-              <div className="flex flex-col gap-3">
+              <Field>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   {translations("Event subscriptions")}
                 </p>
                 {shopifyEventData.map((event) =>
                   event.value === ShopifyEvents.ABANDONED_CHECKOUTS ? null : (
-                    <div
+                    <Field
                       key={event.value}
-                      className="flex items-center justify-between rounded-md border px-3 py-2"
+                      orientation="horizontal"
+                      className="justify-between rounded-md border px-3 py-2"
                     >
-                      <Label
+                      <FieldLabel
                         htmlFor={`webhook-${event.value}`}
                         className="cursor-pointer font-normal"
                       >
                         {event.label}
-                      </Label>
+                      </FieldLabel>
                       <Switch
                         id={`webhook-${event.value}`}
                         checked={webhooks?.includes(event.value)}
                         onCheckedChange={(checked) => handleChangeWebhookByTopic(event, checked)}
                       />
-                    </div>
+                    </Field>
                   ),
                 )}
-              </div>
+              </Field>
             </>
           )}
         </CardContent>

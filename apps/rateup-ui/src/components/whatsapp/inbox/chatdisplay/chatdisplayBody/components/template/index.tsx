@@ -8,7 +8,9 @@ interface Props {
 }
 export default function WaInboxTemplate(props: Props) {
   return (
-    <div className="w-[298px] flex flex-col gap-2">
+    // 298px is the card's intended width, not a floor: the bubble it sits in is
+    // capped at a share of the thread, so on a phone a fixed width overflows it.
+    <div className="flex w-full max-w-74.5 flex-col gap-2">
       {props?.templateBody?.components?.map((component, i) => (
         <WaInboxTemplateComponents
           key={i}

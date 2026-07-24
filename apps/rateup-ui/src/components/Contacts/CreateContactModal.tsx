@@ -20,8 +20,8 @@ import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
-import { Label } from "../ui/label.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
@@ -51,6 +51,7 @@ const CreateContactModal = ({
   createNewContactMutation?: any;
 }) => {
   const [csvfile, setCsvfile] = useState<File | null>(null);
+  const [csvFileError, setCsvFileError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const createContactMutation = useCreateContactMutation();
   const editContactMutation = useEditContactMutation(null);
@@ -71,9 +72,11 @@ const CreateContactModal = ({
     setIsCreating(true);
     if (values.source == importMethod.CSV && !initialValues) {
       if (!csvfile) {
+        setCsvFileError(translations("Choose a CSV, XLSX or ODS file to import."));
         setIsCreating(false);
         return;
       }
+      setCsvFileError("");
       const formData = new FormData();
       formData.append("update", values.updateExisting?.toString());
       formData.append("hasHeaderRow", values.hasHeaderRow?.toString() ?? "true");
@@ -154,6 +157,16 @@ const CreateContactModal = ({
   const sourceValue = form.watch("source");
   const contactTypeValue = form.watch("contactType") ?? [];
 
+  // ContactForm renders its own per-field errors, but it is unmounted on the CSV branch. Surface
+  // anything it cannot show so a rejected submit always explains itself.
+  const isContactFormVisible =
+    sourceValue == importMethod.MANUAL || sourceValue != importMethod.CSV || !!initialValues;
+  const unrenderedErrors = isContactFormVisible
+    ? []
+    : Object.values(form.formState.errors)
+        .flatMap((error) => (Array.isArray(error) ? error : [error]))
+        .filter((error): error is { message: string } => typeof error?.message === "string");
+
   return (
     <div>
       <form
@@ -167,27 +180,27 @@ const CreateContactModal = ({
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             {initialValues ? null : (
-              <div className="flex flex-col gap-2">
-                <Label>{translations("Import Contacts")}</Label>
+              <FieldSet>
+                <FieldLegend variant="label">{translations("Import Contacts")}</FieldLegend>
                 <RadioGroup
                   value={sourceValue}
                   onValueChange={(value) => form.setValue("source", value, { shouldDirty: true })}
                   className="flex flex-row items-center gap-4"
                 >
-                  <div className="flex items-center gap-2">
+                  <Field orientation="horizontal" className="w-auto gap-2">
                     <RadioGroupItem value={importMethod.MANUAL} id="import-manual" />
-                    <Label htmlFor="import-manual" className="font-normal">
+                    <FieldLabel htmlFor="import-manual" className="font-normal">
                       {translations("Manual")}
-                    </Label>
-                  </div>
-                  <div className="flex items-center gap-2">
+                    </FieldLabel>
+                  </Field>
+                  <Field orientation="horizontal" className="w-auto gap-2">
                     <RadioGroupItem value={importMethod.CSV} id="import-csv" />
-                    <Label htmlFor="import-csv" className="font-normal">
+                    <FieldLabel htmlFor="import-csv" className="font-normal">
                       {translations("Import CSV/XLSX")}
-                    </Label>
-                  </div>
+                    </FieldLabel>
+                  </Field>
                 </RadioGroup>
-              </div>
+              </FieldSet>
             )}
 
             {customFields?.length > 0 && (
@@ -195,7 +208,7 @@ const CreateContactModal = ({
                 {customFields?.map((data) => {
                   const checked = contactTypeValue.includes(data?.slug);
                   return (
-                    <div className="flex items-center gap-2" key={data?.id}>
+                    <Field orientation="horizontal" className="w-auto gap-2" key={data?.id}>
                       <Checkbox
                         id={`contact-type-${data?.slug}`}
                         checked={checked}
@@ -209,13 +222,13 @@ const CreateContactModal = ({
                           );
                         }}
                       />
-                      <Label
+                      <FieldLabel
                         htmlFor={`contact-type-${data?.slug}`}
                         className="font-normal capitalize"
                       >
                         {data?.name}
-                      </Label>
-                    </div>
+                      </FieldLabel>
+                    </Field>
                   );
                 })}
               </Card>
@@ -246,49 +259,63 @@ const CreateContactModal = ({
                   </a>
                 </div>
               </blockquote>
-              <div className="mx-6 flex items-center gap-2">
-                <Controller
-                  name="updateExisting"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Switch
-                      id="update-existing"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+              <FieldGroup className="mx-6 gap-4">
+                <Field orientation="horizontal" className="gap-2">
+                  <Controller
+                    name="updateExisting"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Switch
+                        id="update-existing"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    )}
+                  />
+                  <FieldLabel htmlFor="update-existing" className="font-normal">
+                    {translations("Update the existing data while importing")}
+                  </FieldLabel>
+                </Field>
+                <Field orientation="horizontal" className="gap-2">
+                  <Controller
+                    name="hasHeaderRow"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Switch
+                        id="has-header-row"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    )}
+                  />
+                  <FieldLabel htmlFor="has-header-row" className="font-normal">
+                    {translations("First row contains column headers (name, phone, ...)")}
+                  </FieldLabel>
+                </Field>
+              </FieldGroup>
+              <Field className="mx-5" data-invalid={!!csvFileError}>
+                <Input
+                  type="file"
+                  accept=".csv,.xlsx,.ods"
+                  aria-label={translations(
+                    "Upload a csv file (.csv), excel file (.xlsx) or opendocument file (.ods)",
                   )}
+                  aria-invalid={!!csvFileError}
+                  aria-describedby={csvFileError ? "csv-file-error" : undefined}
+                  onChange={(event) => {
+                    setCsvfile(event.target.files?.[0] ?? null);
+                    setCsvFileError("");
+                  }}
+                  className="h-15 border-2 border-dashed border-gray-300 text-center"
                 />
-                <Label htmlFor="update-existing" className="font-normal">
-                  {translations("Update the existing data while importing")}
-                </Label>
-              </div>
-              <div className="mx-6 flex items-center gap-2">
-                <Controller
-                  name="hasHeaderRow"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Switch
-                      id="has-header-row"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  )}
-                />
-                <Label htmlFor="has-header-row" className="font-normal">
-                  {translations("First row contains column headers (name, phone, ...)")}
-                </Label>
-              </div>
-              <Input
-                type="file"
-                accept=".csv,.xlsx,.ods"
-                aria-label={translations(
-                  "Upload a csv file (.csv), excel file (.xlsx) or opendocument file (.ods)",
-                )}
-                onChange={(event) => setCsvfile(event.target.files?.[0] ?? null)}
-                className="mx-5 h-15 border-2 border-dashed border-gray-300 text-center"
-              />
+                {csvFileError && <FieldError id="csv-file-error">{csvFileError}</FieldError>}
+              </Field>
             </div>
           )}
+
+          {/* Errors from fields that the currently-visible branch does not render, so a failed
+              submit is never silent. */}
+          {unrenderedErrors.length > 0 && <FieldError className="px-5" errors={unrenderedErrors} />}
 
           <div className="flex items-center justify-end gap-2">
             <Button variant="secondary" type="button" onClick={contactClose}>

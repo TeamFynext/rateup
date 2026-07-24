@@ -34,6 +34,7 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
+  FieldTitle,
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
@@ -90,14 +91,14 @@ function EventsField({
 
   return (
     <Field data-invalid={invalid}>
-      <FieldLabel className={disabled ? "text-muted-foreground" : ""}>
+      <FieldTitle className={disabled ? "text-muted-foreground" : ""}>
         {t("Events")}
         {disabled ? (
           <span className="ml-2 text-xs font-normal text-muted-foreground">
             {t("(save webhook first to configure events)")}
           </span>
         ) : null}
-      </FieldLabel>
+      </FieldTitle>
       {EVENT_OPTIONS.map((opt) => (
         <Field key={opt.value} orientation="horizontal" data-invalid={invalid}>
           <FieldContent>

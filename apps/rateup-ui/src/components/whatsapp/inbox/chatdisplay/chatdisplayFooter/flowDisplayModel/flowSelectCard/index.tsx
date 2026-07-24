@@ -1,10 +1,11 @@
 import { Badge } from "@/components/ui/badge.tsx";
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils.ts";
 
 export default function WaInboxFlowSelectCard(props: DbFlow & { selected?: boolean }) {
   return (
-    <label
+    <FieldLabel
       htmlFor={props.dbFlowId}
       className={cn(
         "flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all hover:bg-muted/50 mb-2",
@@ -20,6 +21,6 @@ export default function WaInboxFlowSelectCard(props: DbFlow & { selected?: boole
           {props?.status}
         </Badge>
       </div>
-    </label>
+    </FieldLabel>
   );
 }

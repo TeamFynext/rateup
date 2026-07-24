@@ -166,6 +166,10 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
 
   const [copied, setCopied] = useState(false);
 
+  // A revoked message shows a placeholder, not its content: there is nothing
+  // worth copying, and WhatsApp rejects a reaction to a message that is gone.
+  const isDeleted = Boolean(messageObject?.deletedAt);
+
   const handleCopy = () => {
     if (!messageContentRef?.current?.innerText) return;
     navigator.clipboard.writeText(messageContentRef.current.innerText);
@@ -221,7 +225,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
     />
   );
 
-  const copyAction = (
+  const copyAction = isDeleted ? null : (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger
@@ -376,7 +380,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
         </Bubble>
         <MessageFooter>
           {timestampNode}
-          <PopoverEmojiPicker onEmojiClick={sendReaction} />
+          {!isDeleted && <PopoverEmojiPicker onEmojiClick={sendReaction} />}
           {copyAction}
         </MessageFooter>
       </MessageContent>

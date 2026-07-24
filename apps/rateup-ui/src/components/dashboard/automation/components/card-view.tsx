@@ -1,4 +1,3 @@
-import { IconFolderCode } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Trash2 } from "lucide-react";
@@ -9,14 +8,6 @@ import { CardGrid } from "@/components/common/generic-card.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { Rule } from "@/types/rule.ts";
@@ -142,36 +133,7 @@ export function CardView({ data, viewMode, onToggleActive, onDelete }: Readonly<
 
   return (
     <>
-      {data.length === 0 ? (
-        <div className="col-span-full">
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <IconFolderCode />
-              </EmptyMedia>
-              <EmptyTitle>No Automation Yet</EmptyTitle>
-              <EmptyDescription>
-                You haven&apos;t created any automation yet. Get started by creating your first
-                automation.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button render={<Link to="/dashboard/automation/new" />}>Create Automation</Button>
-            </EmptyContent>
-            {/* <Button
-              variant="link"
-              asChild
-              className="text-muted-foreground"
-              size="sm"
-
-            >
-              <Link to="https://docs.rateup.app/automation/overview" target="_blank">
-                Learn More <ArrowUpRightIcon />
-              </Link>
-            </Button> */}
-          </Empty>
-        </div>
-      ) : viewMode === "grid" ? (
+      {viewMode === "grid" ? (
         <CardGrid
           items={data}
           getKey={(item) => item.id}

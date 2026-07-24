@@ -1,7 +1,7 @@
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 // Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
-import { useContext, useEffect, useState } from "react";
+import { useId, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -11,7 +11,7 @@ import {
 } from "@/backend/surveys/questions/questions.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
@@ -132,6 +132,7 @@ function ConditionBlock({
   setCurrentLogicJump,
   handleDelete,
 }: ConditionBlockProps) {
+  const uid = useId();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
 
   const currentIndex = questions.findIndex((q) => q.id === selectedQ.id);
@@ -181,8 +182,8 @@ function ConditionBlock({
       <CardContent className="flex flex-wrap items-end gap-3 ">
         <p>If answer</p>
 
-        <div className="flex flex-col gap-1">
-          <Label>{translations("Condition")}</Label>
+        <Field>
+          <FieldLabel htmlFor={`${uid}-field`}>{translations("Condition")}</FieldLabel>
           <Select
             value={selectedCondition}
             onValueChange={(value) => {
@@ -195,7 +196,7 @@ function ConditionBlock({
             }}
             items={conditionItems}
           >
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger id={`${uid}-field`} className="w-[150px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -206,13 +207,14 @@ function ConditionBlock({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
 
         {selectedCondition !== LogicCondition.Submitted &&
           (isArrayCondition ? (
-            <div className="flex flex-col gap-1">
-              <Label>{translations("Match Data")}</Label>
+            <Field>
+              <FieldLabel htmlFor={`${uid}-field-2`}>{translations("Match Data")}</FieldLabel>
               <MultiSelect
+                id={`${uid}-field-2`}
                 options={normalizeOptions(getResponses(selectedQ, selectedLanguage))}
                 value={Array.isArray(matchData) ? matchData : []}
                 onValueChange={(value) => {
@@ -226,10 +228,10 @@ function ConditionBlock({
                 placeholder={translations("Select Responses")}
                 className="w-[155px]"
               />
-            </div>
+            </Field>
           ) : (
-            <div className="flex flex-col gap-1">
-              <Label>{translations("Match Data")}</Label>
+            <Field>
+              <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Match Data")}</FieldLabel>
               <Select
                 value={Array.isArray(matchData) ? "" : matchData}
                 onValueChange={(value) => {
@@ -242,7 +244,7 @@ function ConditionBlock({
                 }}
                 items={normalizeOptions(getResponses(selectedQ, selectedLanguage))}
               >
-                <SelectTrigger className="w-[165px]">
+                <SelectTrigger id={`${uid}-field-3`} className="w-[165px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -253,13 +255,13 @@ function ConditionBlock({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
           ))}
 
         <p>then</p>
 
-        <div className="flex flex-1 flex-col gap-1">
-          <Label>{translations("Action")}</Label>
+        <Field className="flex-1">
+          <FieldLabel htmlFor={`${uid}-field-4`}>{translations("Action")}</FieldLabel>
           <Select
             value={selectedAction}
             onValueChange={(value) => {
@@ -272,7 +274,7 @@ function ConditionBlock({
             }}
             items={possibleActions}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger id={`${uid}-field-4`} className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -283,7 +285,7 @@ function ConditionBlock({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
 
         <Button
           size="icon-xs"

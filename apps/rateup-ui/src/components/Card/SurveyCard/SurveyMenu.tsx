@@ -10,7 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -32,7 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
@@ -48,6 +48,7 @@ interface SurveyMenuProps {
 }
 
 export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }: SurveyMenuProps) {
+  const uid = useId();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const pathname = useRouterState({
@@ -182,36 +183,41 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
             onSubmit={submitClone}
             onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submitClone]])}
           >
-            <div className="flex flex-col gap-4">
+            <Field>
               <p className="text-sm text-muted-foreground">
                 {translations("Select the team/teams in which the survey copy to be created.")}
               </p>
               <div className="flex flex-col gap-2">
-                <Field>
-                  <FieldLabel>
+                <FieldSet>
+                  <FieldLegend id={`${uid}-teams-legend`}>
                     {translations("Select teams")}
                     <span className="text-destructive">*</span>
-                  </FieldLabel>
+                  </FieldLegend>
                   <RadioGroup
                     value={teamChoice}
                     onValueChange={(value) => setTeamChoice(value as string)}
                     name="selectTeams"
+                    aria-labelledby={`${uid}-teams-legend`}
                     className="mt-2 flex flex-row items-center gap-4"
                   >
-                    <FieldLabel className="items-center font-normal">
-                      <RadioGroupItem value="all" />
+                    <FieldLabel htmlFor={`${uid}-teams-all`} className="items-center font-normal">
+                      <RadioGroupItem id={`${uid}-teams-all`} value="all" />
                       {translations("All teams")}
                     </FieldLabel>
-                    <FieldLabel className="items-center font-normal">
-                      <RadioGroupItem value="manual" />
+                    <FieldLabel
+                      htmlFor={`${uid}-teams-manual`}
+                      className="items-center font-normal"
+                    >
+                      <RadioGroupItem id={`${uid}-teams-manual`} value="manual" />
                       {translations("Select Manually")}
                     </FieldLabel>
                   </RadioGroup>
-                </Field>
+                </FieldSet>
 
                 {teamChoice === "manual" && (
                   <Field>
                     <MultiSelect
+                      id={`${uid}-field-3`}
                       value={selectedTeams}
                       onValueChange={setSelectedTeams}
                       placeholder={translations("Select teams (type in to search)")}
@@ -224,7 +230,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
                   </Field>
                 )}
               </div>
-            </div>
+            </Field>
             <DialogFooter className="mt-4">
               <Button type="reset" variant="ghost" onClick={closeCloneModal}>
                 {translations("Cancel")}
