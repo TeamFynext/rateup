@@ -3,6 +3,12 @@ export type ContactsWithLastMessageResponse = {
   nextOffset: number | null;
 };
 
+export type ContactLabel = {
+  id: string;
+  name: string;
+  color?: string;
+};
+
 export type ContactsWithLastMessage = {
   id: string;
   name: string;
@@ -18,6 +24,14 @@ export type ContactsWithLastMessage = {
   igsId?: string,
   platform?: string;
   lifecycleId?: string;
+  /** The ticket this row belongs to. Favouriting is keyed on it, not the contact. */
+  conversationId?: string;
+  /** Ticket identity — `Conversation.number`, rendered as `#RT-<n>`. */
+  ticketNumber?: number;
+  ticketSubject?: string | null;
+  /** Per-ticket star flag (`Conversation.isFavorite`). */
+  isFavorite?: boolean;
+  contactLabels?: ContactLabel[];
 };
 
 export enum WaMessageAssignStatus {

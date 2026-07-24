@@ -1,23 +1,26 @@
 import { useColorScheme } from "nativewind";
 import { useMemo } from "react";
-import { View,
-  Text } from "react-native";
+import { View, Text } from "react-native";
 import NotAssigned from "./chatFooter/NotAssigned";
 import MessageSendPanel from "./chatFooter/MessageSendPanel";
 import { useAuth } from "@/context/AuthContext";
-import { useChatAssignStatusStore, useSelectedContactStore } from "@/utils/store";
-import { Info } from "lucide-react-native";
+import {
+  useChatAssignStatusStore,
+  useSelectedContactStore,
+} from "@/utils/store";
+import { Info, UserPlus } from "lucide-react-native";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
 import { MessagePlatform } from "@/constants/enums";
 import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
 import { WaMessageClosedStatus } from "@/constants/constants";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { useGetAssignedUserForContact } from "@/api/inbox/messages/message.query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Colors } from "@/constants/colors";
 
 const ChatFooter = ({ id }: { id: string }) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const t = getInboxRowTheme(isDark);
   const insets = useSafeAreaInsets();
   const waAssignStatus = useChatAssignStatusStore(
     (state) => state.waAssignStatus,
@@ -30,7 +33,8 @@ const ChatFooter = ({ id }: { id: string }) => {
   const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
 
   const selectedContact = useSelectedContactStore((s) => s.selectedContact);
-  const platform = selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const platform =
+    selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const { data: waSettings } = useWaSettings();
 
   const whatsappSettingsPhoneId = useMemo(() => {
@@ -44,7 +48,7 @@ const ChatFooter = ({ id }: { id: string }) => {
     // WhatsApp default
     return (
       waSettings?.find(
-        (s: any) => s?.phone === selectedContact?.lastMessage?.sourceIdentifier
+        (s: any) => s?.phone === selectedContact?.lastMessage?.sourceIdentifier,
       )?.phoneId || ""
     );
   }, [waSettings, platform, selectedContact]);
@@ -57,28 +61,30 @@ const ChatFooter = ({ id }: { id: string }) => {
   ) {
     return (
       <View style={{ paddingBottom: insets.bottom }}>
+        {/* Design's unassigned banner: `--bg-warm-soft` with a `--warm-700`
+            label and the icon leading. */}
         <View
           style={{
             flexDirection: "row",
             paddingVertical: 10,
             paddingHorizontal: 16,
             alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-            backgroundColor: isDark ? Colors.dark.surface : Colors.light.surface,
+            gap: 10,
+            backgroundColor: t.warmSoft,
             borderBottomWidth: 1,
-            borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
+            borderBottomColor: t.border1,
           }}
         >
-          <Info color={isDark ? Colors.accent.cyan : Colors.brand.blue} size={16} />
+          <UserPlus color={t.warmStrong} size={15} />
           <Text
             style={{
+              flex: 1,
               fontFamily: "Nunito_600SemiBold",
-              color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
-              fontSize: 13,
+              color: t.warmStrong,
+              fontSize: 12,
             }}
           >
-            Please assign to start the chat
+            Unassigned conversation
           </Text>
         </View>
         <NotAssigned contactId={id} />
@@ -95,20 +101,20 @@ const ChatFooter = ({ id }: { id: string }) => {
             paddingVertical: 10,
             paddingHorizontal: 16,
             alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
+            gap: 10,
             flexWrap: "wrap",
-            backgroundColor: isDark ? Colors.dark.surface : Colors.light.surface,
+            backgroundColor: t.surface2,
             borderBottomWidth: 1,
-            borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
+            borderBottomColor: t.border1,
           }}
         >
-          <Info color={isDark ? Colors.accent.cyan : Colors.brand.blue} size={16} />
+          <Info color={t.fg4} size={15} />
           <Text
             style={{
+              flex: 1,
               fontFamily: "Nunito_600SemiBold",
-              color: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
-              fontSize: 13,
+              color: t.fg3,
+              fontSize: 12,
             }}
           >
             This chat is not assigned to you.
@@ -123,7 +129,6 @@ const ChatFooter = ({ id }: { id: string }) => {
           teamId={currentUserAssignment?.teamId || null}
         />
       )}
-
     </View>
   );
 };

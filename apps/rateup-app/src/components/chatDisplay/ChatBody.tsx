@@ -32,6 +32,8 @@ const viewabilityConfig = {
 const ChatBody = ({ id }: { id: string }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  // The design's thread sits on `--bg-page`, same as the list.
+  const threadBg = isDark ? Colors.dark.bg : Colors.light.bg;
   const {
     data,
     fetchNextPage,
@@ -41,7 +43,6 @@ const ChatBody = ({ id }: { id: string }) => {
     isError,
     error,
   } = useGetMessagesByContactId(id);
-  const queryClient = useQueryClient();
   const { userId } = useAuth();
   const { mutate: markRead } = useMarkMessageAsRead();
   const listRef = useRef<any>(null);
@@ -137,7 +138,7 @@ const ChatBody = ({ id }: { id: string }) => {
       return (
         <View
           style={{
-            backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+            backgroundColor: threadBg,
             paddingHorizontal: 8,
           }}
         >
@@ -173,7 +174,7 @@ const ChatBody = ({ id }: { id: string }) => {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+          backgroundColor: threadBg,
         }}
       >
         <ActivityIndicator size="large" color={Colors.brand.blue} />
@@ -188,7 +189,7 @@ const ChatBody = ({ id }: { id: string }) => {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+          backgroundColor: threadBg,
         }}
       >
         <Text className="text-red-500">
@@ -242,7 +243,11 @@ const ChatBody = ({ id }: { id: string }) => {
           ) : null
         }
         contentContainerStyle={{
-          paddingBottom: dynamicPaddingBottom,
+          // Design: `padding: 18px 16px` around the message column. The list is
+          // inverted, so `paddingTop` is the visual bottom.
+          paddingTop: dynamicPaddingBottom,
+          paddingBottom: 18,
+          paddingHorizontal: 8,
         }}
         updateCellsBatchingPeriod={100}
       />

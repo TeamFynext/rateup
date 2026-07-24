@@ -37,6 +37,7 @@ import {
   PendingRedemptionsCard,
 } from "./cashierPortal/components";
 import { Colors } from "@/constants/colors";
+import ScreenHeader from "@/components/common/ScreenHeader";
 interface ActionCardProps {
   title: string;
   subtitle: string;
@@ -278,19 +279,11 @@ const CashierPortal = () => {
   };
 
   return (
-    <View className="flex-1 w-full bg-white dark:bg-gray-900">
-      {/* Header */}
-      <View className="flex-row px-5 py-6 items-start" style={{ backgroundColor: Colors.brand.blue }}>
-        <View className="flex-row items-start gap-3 flex-1">
-          <Gift color="white" strokeWidth={2} size={26} />
-          <View className="flex-1">
-            <Text className="text-white text-xl font-bold">Cashier Portal</Text>
-            <Text className="text-white/80 text-sm mt-1">
-              Quick customer lookup and transaction processing
-            </Text>
-          </View>
-        </View>
-      </View>
+    <View
+      className="flex-1 w-full"
+      style={{ backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg }}
+    >
+      <ScreenHeader title="Loyalty" />
 
       {/* Body */}
       <ScrollView

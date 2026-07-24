@@ -1,10 +1,13 @@
 import { useColorScheme } from "nativewind";
-import { View,
+import {
+  View,
   Text,
   TouchableOpacity,
   Pressable,
   Modal,
-  Dimensions } from "react-native";
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import {
@@ -13,21 +16,40 @@ import {
 } from "../../utils/chatbox_utils";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useChatAssignStatusStore, useSelectedContactStore } from "@/utils/store";
-import AssignToUser from "./chatFooter/AssignToUser";
-import LinearGradient from "react-native-linear-gradient";
 import {
+  useChatAssignStatusStore,
+  useSelectedContactStore,
+} from "@/utils/store";
+import AssignToUser from "./chatFooter/AssignToUser";
+import { useContactsStore } from "@/store/inboxStore";
+import {
+  getInboxHeaderBg,
+  getInboxRowTheme,
+  inboxAvatarColors,
+  inboxChannelColors,
+  paletteIndex,
+} from "@/constants/inboxDesign";
+import {
+  AlertCircle,
+  Archive,
   ArrowLeft,
+  CheckCircle2,
+  ChevronRight,
+  Circle,
   CircleCheckBig,
   MoreVertical,
   Pencil,
   Clock,
+  Star,
 } from "lucide-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "@/constants/colors";
-import { getClosedIcon } from "@/util";
 import { MessagePlatform } from "@/constants/enums";
 import { FontAwesome } from "@expo/vector-icons";
-import { useEditContactMutation } from "@/api/inbox/contacts/contacts.query";
+import {
+  useEditContactMutation,
+  useToggleFavorite,
+} from "@/api/inbox/contacts/contacts.query";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -48,7 +70,7 @@ const MoreOptions = ({
   const router = useRouter();
   const modalWidth = screenWidth * 0.4;
   const waAssignStatus = useChatAssignStatusStore(
-    (state) => state.waAssignStatus
+    (state) => state.waAssignStatus,
   );
   return (
     <Modal
@@ -87,8 +109,15 @@ const MoreOptions = ({
               });
             }}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <Pencil color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary} size={18} />
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
+              <Pencil
+                color={
+                  isDark ? Colors.dark.textPrimary : Colors.light.textPrimary
+                }
+                size={18}
+              />
               <Text
                 style={{
                   fontFamily: "Nunito_600SemiBold",
@@ -101,7 +130,12 @@ const MoreOptions = ({
             </View>
           </TouchableOpacity>
 
-          <AssignToUser contactId={contactId} iconSize={18} fontSize={15} />
+          <AssignToUser
+            contactId={contactId}
+            iconSize={18}
+            fontSize={15}
+            plain
+          />
 
           {waAssignStatus !== "CLOSED" ? (
             <TouchableOpacity
@@ -111,8 +145,15 @@ const MoreOptions = ({
                 onCloseChatPress();
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <CircleCheckBig color={isDark ? Colors.dark.textPrimary : Colors.light.textPrimary} size={18} />
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <CircleCheckBig
+                  color={
+                    isDark ? Colors.dark.textPrimary : Colors.light.textPrimary
+                  }
+                  size={18}
+                />
                 <Text
                   style={{
                     fontFamily: "Nunito_600SemiBold",
@@ -131,6 +172,38 @@ const MoreOptions = ({
   );
 };
 
+/**
+ * The design's `RESULTS` sheet rows, mapped onto this inbox's real close
+ * statuses. Icons are the app's existing status glyphs; the colours are the
+ * design's status palette.
+ */
+const CLOSE_RESULTS = [
+  {
+    status: WaMessageAssignStatus.RESOLVED,
+    label: "Resolved",
+    Icon: CheckCircle2,
+    color: "#16A34A",
+  },
+  {
+    status: WaMessageAssignStatus.CLOSED,
+    label: "Closed",
+    Icon: Archive,
+    color: Colors.brand.blue,
+  },
+  {
+    status: WaMessageAssignStatus.UNRESOLVED,
+    label: "Unresolved",
+    Icon: Circle,
+    color: "#F8951D",
+  },
+  {
+    status: WaMessageAssignStatus.SPAM,
+    label: "Spam",
+    Icon: AlertCircle,
+    color: "#DC2626",
+  },
+] as const;
+
 const ConfirmationModal = ({
   visible,
   onCancel,
@@ -142,11 +215,25 @@ const ConfirmationModal = ({
 }) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const editContactMutation = useEditContactMutation();
+  const setWaAssignStatus = useChatAssignStatusStore(
+    (state) => state.setWaAssignStatus,
+  );
+  const selectedContact = useSelectedContactStore(
+    (state) => state.selectedContact,
+  );
+  const setSelectedContact = useSelectedContactStore(
+    (state) => state.setSelectedContact,
+  );
+
+  /** Which outcome is in flight, so only that row shows a spinner. */
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
   const handleCloseChat = (status: string) => {
     const id = generateInternalMessageId();
+    setPendingStatus(status);
 
     editContactMutation.mutate(
       {
@@ -155,111 +242,173 @@ const ConfirmationModal = ({
       },
       {
         onSuccess: () => {
+          // The inbox list reads from the contacts store (and its SQLite
+          // mirror), not from react-query, so invalidating alone leaves the row
+          // sitting in Open with its old status. Pushing the change through the
+          // store rewrites the cached filter lists, moves the row to Closed and
+          // persists both the contact and the lists.
+          useContactsStore
+            .getState()
+            .updateContactById(contactId, (c: any) => ({
+              ...c,
+              waMessageAssignStatus: status,
+            }));
+          // Keep the thread's own chrome in step — the footer and this menu both
+          // branch on it.
+          setWaAssignStatus(status);
+          setSelectedContact(
+            selectedContact && selectedContact.id === contactId
+              ? { ...selectedContact, waMessageAssignStatus: status }
+              : selectedContact,
+          );
+
           queryClient.invalidateQueries({
             queryKey: ["assigned-contact", contactId],
           });
           queryClient.invalidateQueries({
-            queryKey: ["wa-messages", contactId]
+            queryKey: ["wa-messages", contactId],
           });
           queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
           queryClient.invalidateQueries({
             queryKey: ["assignedInboxUser", contactId],
           });
+          // Cold store (deep link, or a tab never opened this session): nothing
+          // to patch locally, so refetch the list instead.
+          queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
           onCancel();
         },
-      }
+        onSettled: () => setPendingStatus(null),
+      },
     );
   };
+
+  const t = getInboxRowTheme(isDark);
 
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType="slide"
       onRequestClose={onCancel}
     >
-      {/* Center Container */}
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40, backgroundColor: "rgba(0,0,0,0.4)" }}>
+      {/* Design's bottom-sheet host: `rgba(8,28,63,0.5)` scrim over a panel
+          rounded 22px at the top. */}
+      <View style={{ flex: 1, justifyContent: "flex-end" }}>
+        <Pressable style={{ flex: 1 }} onPress={onCancel}>
+          <View style={{ flex: 1, backgroundColor: "rgba(8,28,63,0.5)" }} />
+        </Pressable>
+
         <View
           style={{
-            width: "100%",
-            maxWidth: 320,
-            borderRadius: 16,
-            backgroundColor: isDark ? Colors.dark.surface : "#fff",
-            padding: 20,
-            borderWidth: 1,
-            borderColor: isDark ? Colors.dark.borderLight : Colors.light.border,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: isDark ? 0.4 : 0.15,
-            shadowRadius: 12,
-            elevation: 8,
+            backgroundColor: getInboxHeaderBg(isDark),
+            borderTopLeftRadius: 22,
+            borderTopRightRadius: 22,
+            paddingBottom: insets.bottom,
+            shadowColor: "#0B1F48",
+            shadowOffset: { width: 0, height: -12 },
+            shadowOpacity: 0.22,
+            shadowRadius: 40,
+            elevation: 16,
           }}
         >
+          {/* Grabber */}
+          <View
+            style={{
+              alignItems: "center",
+              paddingTop: 10,
+              paddingBottom: 4,
+            }}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 4,
+                borderRadius: 9999,
+                backgroundColor: isDark ? "rgba(255,255,255,0.24)" : "#D9DAD7",
+              }}
+            />
+          </View>
+
           <Text
             style={{
-              fontFamily: "Nunito_700Bold",
-              fontSize: 18,
-              color: isDark ? "#fff" : Colors.light.textPrimary,
-              textAlign: "center",
-              marginBottom: 16,
+              paddingTop: 8,
+              paddingHorizontal: 20,
+              paddingBottom: 4,
+              fontFamily: "Nunito_800ExtraBold",
+              fontSize: 17,
+              color: t.fg1,
             }}
           >
-            Close Chat
+            Close with result
           </Text>
-          <View style={{ alignItems: "center", justifyContent: "center" }}>
-            <TouchableOpacity
-              onPress={() => handleCloseChat(WaMessageAssignStatus.RESOLVED)}
-              style={{ paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}
-            >
-              {getClosedIcon(WaMessageAssignStatus.RESOLVED)}
-              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#22c55e" }}>
-                Mark as Resolved
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleCloseChat(WaMessageAssignStatus.CLOSED)}
-              style={{ paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}
-            >
-              {getClosedIcon(WaMessageAssignStatus.CLOSED)}
-              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: Colors.brand.blue }}>
-                Mark as Closed
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleCloseChat(WaMessageAssignStatus.SPAM)}
-              style={{ paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}
-            >
-              {getClosedIcon(WaMessageAssignStatus.SPAM)}
-              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#ef4444" }}>
-                Mark as Spam
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleCloseChat(WaMessageAssignStatus.UNRESOLVED)}
-              style={{ paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, width: "100%" }}
-            >
-              {getClosedIcon(WaMessageAssignStatus.UNRESOLVED)}
-              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 16, color: "#f97316" }}>
-                Mark as Unresolved
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {/* Cancel */}
-          <TouchableOpacity
-            onPress={onCancel}
+          <Text
             style={{
-              marginTop: 16,
-              paddingVertical: 12,
-              borderRadius: 12,
-              backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "#f3f4f6",
-              width: "100%",
+              paddingHorizontal: 20,
+              paddingBottom: 8,
+              fontSize: 12,
+              fontFamily: "Nunito_400Regular",
+              color: t.fg3,
             }}
           >
-            <Text style={{ textAlign: "center", fontFamily: "Nunito_700Bold", color: isDark ? "#fff" : "#4b5563" }}>
-              Cancel
-            </Text>
-          </TouchableOpacity>
+            Pick an outcome — it&apos;s saved to the ticket.
+          </Text>
+
+          <View
+            style={{ paddingTop: 8, paddingHorizontal: 12, paddingBottom: 22 }}
+          >
+            {CLOSE_RESULTS.map((r) => (
+              <TouchableOpacity
+                key={r.status}
+                onPress={() => handleCloseChat(r.status)}
+                disabled={editContactMutation.isPending}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                  paddingVertical: 13,
+                  paddingHorizontal: 12,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: t.border1,
+                  marginBottom: 8,
+                  // Dim the outcomes that aren't being submitted; the one that
+                  // is keeps full opacity and shows its spinner.
+                  opacity:
+                    editContactMutation.isPending && pendingStatus !== r.status
+                      ? 0.4
+                      : 1,
+                }}
+              >
+                <View
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 9,
+                    backgroundColor: t.surface2,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <r.Icon size={17} color={r.color} />
+                </View>
+                <Text
+                  style={{
+                    flex: 1,
+                    fontSize: 14,
+                    fontFamily: "Nunito_700Bold",
+                    color: t.fg1,
+                  }}
+                >
+                  {r.label}
+                </Text>
+                {pendingStatus === r.status ? (
+                  <ActivityIndicator size="small" color={r.color} />
+                ) : (
+                  <ChevronRight size={17} color={t.fg4} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </View>
     </Modal>
@@ -285,18 +434,31 @@ const ChatHeader = ({
   const now = dayjs();
   const diffInMinutes = sessionExpiry.diff(now, "minute");
   const isSessionActive = diffInMinutes > 0;
-  const selectedContact = useSelectedContactStore((state) => state.selectedContact);
-  const platform = selectedContact?.sourcePlatform || selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const selectedContact = useSelectedContactStore(
+    (state) => state.selectedContact,
+  );
+  // The star lives on the ticket, so read both from the row we opened. Prefer
+  // the contacts store, which is what the toggle patches.
+  const storedContact = useContactsStore((state) => state.contactsById.get(id));
+  const conversationId =
+    storedContact?.conversationId ?? selectedContact?.conversationId;
+  const isFavorite = storedContact?.isFavorite ?? selectedContact?.isFavorite;
+  const toggleFavorite = useToggleFavorite();
+  const platform =
+    selectedContact?.sourcePlatform ||
+    selectedContact?.lastMessage?.sourcePlatform ||
+    MessagePlatform.WHATSAPP;
 
+  // Design: 8px white glyph inside the 15px channel dot.
   const renderPlatformIcon = () => {
     switch (platform) {
       case MessagePlatform.INSTAGRAM:
-        return <FontAwesome name="instagram" size={14} color="#E1306C" />;
+        return <FontAwesome name="instagram" size={9} color="#fff" />;
       case MessagePlatform.FACEBOOK:
-        return <FontAwesome name="facebook-square" size={14} color="#1877F2" />;
+        return <FontAwesome name="facebook" size={8} color="#fff" />;
       case MessagePlatform.WHATSAPP:
       default:
-        return <FontAwesome name="whatsapp" size={14} color="#25D366" />;
+        return <FontAwesome name="whatsapp" size={9} color="#fff" />;
     }
   };
   const { colorScheme } = useColorScheme();
@@ -304,129 +466,198 @@ const ChatHeader = ({
   const hoursLeft = Math.floor(diffInMinutes / 60);
   const minutesLeft = diffInMinutes % 60;
 
+  const t = getInboxRowTheme(isDark);
+  const avatarColor =
+    inboxAvatarColors[paletteIndex(id, inboxAvatarColors.length)];
+  const channelColor = inboxChannelColors[platform] ?? Colors.brand.blue;
+  const sessionColor = isSessionActive ? t.warmStrong : t.danger;
+
   return (
     <View
       style={{
-        backgroundColor: isDark
-          ? Colors.brand.navyDeep
-          : Colors.brand.blue,
-        paddingHorizontal: 16,
-        paddingTop: 12,
-        paddingBottom: 14,
-        borderBottomWidth: isDark ? 1 : 0,
-        borderBottomColor: Colors.dark.borderLight,
+        backgroundColor: getInboxHeaderBg(isDark),
+        borderBottomWidth: 1,
+        borderBottomColor: t.border1,
       }}
     >
+      {/* Design: `align-items:center; gap:10px; padding:8px 12px` */}
       <View
-        style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+        }}
       >
-        <TouchableOpacity onPress={() => router.back()} style={{ padding: 4 }}>
-          <ArrowLeft size={20} color="#fff" />
-        </TouchableOpacity>
-
-        <LinearGradient
-          colors={[Colors.brand.blueLight, Colors.brand.blue] as any}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <TouchableOpacity
+          onPress={() => router.back()}
           style={{
-            width: 42,
-            height: 42,
-            borderRadius: 21,
+            width: 34,
+            height: 34,
             alignItems: "center",
-            justifyContent: "center"
+            justifyContent: "center",
           }}
         >
-          <Text
+          <ArrowLeft size={21} color={t.fg1} />
+        </TouchableOpacity>
+
+        {/* 36px avatar with the 15px channel dot */}
+        <View style={{ position: "relative", alignSelf: "center" }}>
+          <View
             style={{
-              fontFamily: "Nunito_900Black",
-              fontSize: 15,
-              color: "#fff",
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: avatarColor,
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {namePreview(name)}
-          </Text>
-        </LinearGradient>
-
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <Text
-              numberOfLines={1}
               style={{
-                fontSize: 15,
-                fontFamily: "Nunito_700Bold",
+                fontFamily: "Nunito_800ExtraBold",
+                fontSize: 14,
                 color: "#fff",
-                letterSpacing: -0.1,
-                flexShrink: 1,
               }}
             >
-              {formatName(name) || phone}
+              {namePreview(name)}
             </Text>
-            {renderPlatformIcon()}
           </View>
           <View
             style={{
-              flexDirection: "row",
+              position: "absolute",
+              bottom: -2,
+              right: -2,
+              width: 15,
+              height: 15,
+              borderRadius: 7.5,
+              backgroundColor: channelColor,
+              borderWidth: 2,
+              borderColor: getInboxHeaderBg(isDark),
               alignItems: "center",
-              gap: 4,
-              marginTop: 2,
+              justifyContent: "center",
             }}
           >
-            <Clock
-              size={11}
-              color={
-                isSessionActive
-                  ? isDark
-                    ? Colors.accent.orange
-                    : "rgba(255,216,140,0.95)"
-                  : "#ef4444"
-              }
-            />
-            <Text
-              style={{
-                fontSize: 11,
-                color: isSessionActive
-                  ? isDark
-                    ? Colors.accent.orange
-                    : "rgba(255,216,140,0.95)"
-                  : "#ef4444",
-                fontFamily: "Nunito_600SemiBold",
-              }}
-            >
-              {isSessionActive
-                ? `Session expires in ${hoursLeft}h ${minutesLeft}m`
-                : "Session expired"}
-            </Text>
+            {renderPlatformIcon()}
           </View>
+        </View>
+
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontSize: 15,
+              fontFamily: "Nunito_800ExtraBold",
+              color: t.fg1,
+            }}
+          >
+            {formatName(name) || phone}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontSize: 11,
+              fontFamily: "Nunito_400Regular",
+              color: t.fg4,
+              marginTop: 1,
+            }}
+          >
+            {platformLabel(platform)} · {phone}
+          </Text>
         </View>
 
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            gap: 14,
           }}
         >
+          {/* Design: 34x34 target, 19px star, `--warm-500` when starred and
+              `--fg-4` when not. Hidden on rows that arrived without a ticket —
+              the flag lives on the conversation, so there is nothing to set. */}
+          {conversationId ? (
+            <TouchableOpacity
+              onPress={() =>
+                toggleFavorite.mutate({
+                  contactId: id,
+                  conversationId,
+                  isFavorite: !isFavorite,
+                })
+              }
+              disabled={toggleFavorite.isPending}
+              accessibilityRole="button"
+              accessibilityState={{ selected: !!isFavorite }}
+              accessibilityLabel={
+                isFavorite ? "Remove from favourites" : "Add to favourites"
+              }
+              style={{
+                width: 34,
+                height: 34,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {toggleFavorite.isPending ? (
+                <ActivityIndicator size="small" color={t.warm} />
+              ) : (
+                <Star
+                  size={19}
+                  color={isFavorite ? t.warm : t.fg4}
+                  fill={isFavorite ? t.warm : "transparent"}
+                />
+              )}
+            </TouchableOpacity>
+          ) : null}
           <AssignToUser
             contactId={id}
             iconOnly
-            iconSize={18}
-            iconColor={
-              isDark
-                ? "rgba(255,255,255,0.5)"
-                : "rgba(255,255,255,0.65)"
-            }
+            iconSize={19}
+            iconColor={t.fg3}
           />
-          <TouchableOpacity onPress={() => setOptionsVisible(true)} style={{ padding: 4 }}>
-            <MoreVertical
-              size={18}
-              color={
-                isDark
-                  ? "rgba(255,255,255,0.5)"
-                  : "rgba(255,255,255,0.65)"
-              }
-            />
+          <TouchableOpacity
+            onPress={() => setOptionsVisible(true)}
+            style={{
+              width: 34,
+              height: 34,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <MoreVertical size={19} color={t.fg3} />
           </TouchableOpacity>
         </View>
+      </View>
+
+      {/* Ticket bar. The design carries the ticket code and subject here; this
+          inbox surfaces the 24h session window, which is the equivalent
+          at-a-glance state for the thread. */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          paddingVertical: 8,
+          paddingHorizontal: 16,
+          backgroundColor: t.surface2,
+          borderTopWidth: 1,
+          borderTopColor: t.border1,
+        }}
+      >
+        <Clock size={14} color={sessionColor} />
+        <Text
+          numberOfLines={1}
+          style={{
+            flex: 1,
+            fontSize: 12.5,
+            fontFamily: "Nunito_700Bold",
+            color: sessionColor,
+          }}
+        >
+          {isSessionActive
+            ? `Session expires in ${hoursLeft}h ${minutesLeft}m`
+            : "Session expired"}
+        </Text>
       </View>
 
       <MoreOptions
@@ -451,3 +682,16 @@ function formatName(name: string) {
   return name.length > 20 ? name.slice(0, 20) + "..." : name;
 }
 
+/** The design's `channelLabel`, shown beside the phone number. */
+function platformLabel(platform: string) {
+  switch (platform) {
+    case MessagePlatform.INSTAGRAM:
+      return "Instagram";
+    case MessagePlatform.FACEBOOK:
+      return "Facebook";
+    case MessagePlatform.WEBCHAT:
+      return "Web chat";
+    default:
+      return "WhatsApp";
+  }
+}

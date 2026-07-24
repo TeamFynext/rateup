@@ -14,9 +14,8 @@ export default function RefreshButton() {
   const refreshRotation = useSharedValue(0);
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const iconColor = isDark
-    ? "rgba(255,255,255,0.85)"
-    : "rgba(255,255,255,0.88)";
+  // The design's header action: 38x38 / radius 11, 20px glyph in `--fg-2`.
+  const iconColor = isDark ? "rgba(255,255,255,0.72)" : "#2E302E";
   const queryClient = useQueryClient();
 
   const handleRefresh = () => {
@@ -48,12 +47,19 @@ export default function RefreshButton() {
   });
 
   return (
-    <Pressable onPress={handleRefresh}>
-      <View>
-        <Animated.View style={refreshAnimatedStyle}>
-          <RefreshCcw color={iconColor} size={20} />
-        </Animated.View>
-      </View>
+    <Pressable
+      onPress={handleRefresh}
+      style={{
+        width: 38,
+        height: 38,
+        borderRadius: 11,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Animated.View style={refreshAnimatedStyle}>
+        <RefreshCcw color={iconColor} size={20} />
+      </Animated.View>
     </Pressable>
   );
 }

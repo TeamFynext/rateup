@@ -8,129 +8,133 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
-import {
-  Sparkles,
-  CircleCheckBig,
-  InboxIcon,
-} from "lucide-react-native";
 import { useContactCounts } from "@/api/inbox/contacts/contacts.query";
 import InboxButtons from "@/components/inbox/InboxButtons";
 import { useChatFilterStore, useSelectedTabStore } from "@/utils/store";
 import Inbox from "@/components/inbox/inbox";
-import SearchBar from "@/components/inbox/inboxSearchBar";
 import RefreshButton from "@/components/inbox/RefreshButton";
+import InboxSearchView from "@/components/inbox/InboxSearchView";
+import ScreenHeader, {
+  HeaderIconButton,
+} from "@/components/common/ScreenHeader";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
+import { Search } from "lucide-react-native";
 import { useInboxCountStore } from "@/store/inboxCountStore";
 import { Colors } from "@/constants/colors";
 import { useAuth } from "@/context/AuthContext";
 
-type IconType = React.ComponentType<any>;
-
-function TabIcon({
-  Icon,
-  focused,
-  count,
+/**
+ * The design's inbox segment (`RateUp Mobile Inbox.dc.html`, the `segments`
+ * strip): a 32px pill, 13px/600 label, and a rounded count badge. Geometry and
+ * the active treatment are the design's verbatim; the inactive/dark colours use
+ * this app's existing palette so the strip doesn't clash with the navy chrome.
+ */
+function SegmentPill({
   label,
+  count,
+  focused,
+  onPress,
 }: Readonly<{
-  Icon: IconType;
-  focused: boolean;
-  count?: number;
   label: string;
+  count?: number;
+  focused: boolean;
+  onPress: () => void;
 }>) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const backgroundColor = focused
-    ? isDark
-      ? "#fff"
-      : Colors.brand.blue
+  const background = focused
+    ? Colors.brand.blue
     : isDark
       ? "transparent"
-      : "#fff";
-
-  const textColor = focused
-    ? isDark
-      ? Colors.brand.blue
-      : "#fff"
+      : Colors.light.card;
+  const borderColor = focused
+    ? Colors.brand.blue
+    : isDark
+      ? Colors.dark.pillBorder
+      : Colors.light.border;
+  const labelColor = focused
+    ? "#fff"
     : isDark
       ? Colors.dark.pillText
       : Colors.light.pillText;
-
-  const borderWidth = focused ? 0 : 1;
-  const borderColor = isDark
-    ? Colors.dark.pillBorder
-    : Colors.light.border;
+  const countBg = focused
+    ? "rgba(255,255,255,0.22)"
+    : isDark
+      ? Colors.dark.statusBg
+      : Colors.light.surface;
+  const countFg = focused
+    ? "#fff"
+    : isDark
+      ? Colors.dark.textMuted
+      : Colors.light.textMuted;
 
   return (
-    <View
+    <Pressable
+      onPress={onPress}
       style={{
-        backgroundColor,
-        borderRadius: 999,
-        paddingVertical: 6,
-        paddingHorizontal: 10,
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
-        gap: 4,
-        borderWidth,
+        gap: 6,
+        height: 32,
+        paddingHorizontal: 13,
+        borderRadius: 9999,
+        borderWidth: 1,
         borderColor,
-        alignSelf: "stretch",
+        backgroundColor: background,
       }}
     >
-      <Icon color={textColor} size={15} />
       <Text
         style={{
           fontSize: 13,
-          fontFamily: focused ? "Nunito_700Bold" : "Nunito_400Regular",
-          color: textColor,
+          fontFamily: "Nunito_600SemiBold",
+          color: labelColor,
         }}
       >
         {label}
       </Text>
       {count !== undefined && (
-        <Text
-          style={
-            focused
-              ? {
-                backgroundColor: isDark
-                  ? Colors.brand.blue
-                  : "rgba(255,255,255,0.22)",
-                color: isDark ? "#fff" : "#fff",
-                borderRadius: 999,
-                paddingHorizontal: 7,
-                paddingVertical: 1,
-                fontSize: 10,
-                fontFamily: "Nunito_700Bold",
-                lineHeight: 16,
-                overflow: "hidden",
-              }
-              : {
-                paddingHorizontal: 7,
-                paddingVertical: 1,
-                fontSize: 12,
-                fontFamily: "Nunito_400Regular",
-                color: isDark
-                  ? Colors.dark.textMuted
-                  : Colors.light.textMuted,
-              }
-          }
+        <View
+          style={{
+            minWidth: 18,
+            paddingHorizontal: 5,
+            paddingVertical: 1,
+            borderRadius: 9999,
+            backgroundColor: countBg,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          {count}
-        </Text>
+          <Text
+            style={{
+              fontSize: 11,
+              fontFamily: "Nunito_700Bold",
+              color: countFg,
+            }}
+          >
+            {count}
+          </Text>
+        </View>
       )}
-    </View>
+    </Pressable>
   );
 }
 
 export default function InboxLayout() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const { selectedTab, setSelectedTab } = useSelectedTabStore();
-  const activeTab = selectedTab as "Open" | "Closed" | "All";
-  const setActiveTab = (tab: "Open" | "Closed" | "All") => setSelectedTab(tab);
+  const activeTab = selectedTab as "Open" | "Closed" | "All" | "Mine" | "New" | "Favourites";
+  const setActiveTab = (tab: "Open" | "Closed" | "All" | "Mine" | "New" | "Favourites") => setSelectedTab(tab);
 
   const { userId } = useAuth();
   const setFilter = useChatFilterStore((state) => state.setFilter);
   const filterFromStore = useChatFilterStore((state) => state.filter);
-  const isMine = !!(userId && filterFromStore.assignedUserIds && filterFromStore.assignedUserIds.includes(userId));
+  const isMine = !!(
+    userId &&
+    filterFromStore.assignedUserIds &&
+    filterFromStore.assignedUserIds.includes(userId)
+  );
 
   const renderInboxContent = () => {
     switch (activeTab) {
@@ -140,7 +144,11 @@ export default function InboxLayout() {
             messageType="usermessages"
             waMessageAssignStatus={undefined}
             searchTerm={searchTerm}
-            statusOverride={filterFromStore.status && filterFromStore.status.length > 0 ? filterFromStore.status : ["ASSIGNED", "UNASSIGNED"]}
+            statusOverride={
+              filterFromStore.status && filterFromStore.status.length > 0
+                ? filterFromStore.status
+                : ["ASSIGNED", "UNASSIGNED"]
+            }
           />
         );
 
@@ -162,19 +170,50 @@ export default function InboxLayout() {
           />
         );
 
+      case "Mine":
+        return (
+          <Inbox
+            messageType="usermessages"
+            waMessageAssignStatus="mine"
+            searchTerm={searchTerm}
+          />
+        );
+
+      case "New":
+        return (
+          <Inbox
+            messageType="usermessages"
+            waMessageAssignStatus="New"
+            searchTerm={searchTerm}
+          />
+        );
+
+      case "Favourites":
+        return (
+          <Inbox
+            messageType="all"
+            waMessageAssignStatus={null}
+            searchTerm={searchTerm}
+            favorite={true}
+          />
+        );
+
       default:
         return null;
     }
   };
 
-  const { data: contactCountsData, isLoading: isContactCountsLoading } = useContactCounts();
+  const { data: contactCountsData, isLoading: isContactCountsLoading } =
+    useContactCounts();
   const setCounts = useInboxCountStore((state) => state.setCounts);
   const contactCounts = useInboxCountStore((state) => state.counts);
 
   useEffect(() => {
     if (contactCountsData) {
       setCounts({
-        openCount: (contactCountsData.assigned || 0) + (contactCountsData.unassigned || 0),
+        openCount:
+          (contactCountsData.assigned || 0) +
+          (contactCountsData.unassigned || 0),
         closedCount: contactCountsData.closed || 0,
         allCount: contactCountsData.total || contactCountsData.all || 0,
         newCount: contactCountsData.new || 0,
@@ -183,16 +222,22 @@ export default function InboxLayout() {
   }, [contactCountsData, setCounts]);
 
   const activeFilterCount =
-    ((filterFromStore.status && filterFromStore.status.length > 0) ? 1 : 0) +
-    ((filterFromStore.assignedTeams && filterFromStore.assignedTeams.length > 0) ? 1 : 0) +
-    ((filterFromStore.assignedUserIds && filterFromStore.assignedUserIds.length > 0) ? 1 : 0) +
-    ((filterFromStore.labels && filterFromStore.labels.length > 0) ? 1 : 0) +
+    (filterFromStore.status && filterFromStore.status.length > 0 ? 1 : 0) +
+    (filterFromStore.assignedTeams && filterFromStore.assignedTeams.length > 0
+      ? 1
+      : 0) +
+    (filterFromStore.assignedUserIds &&
+    filterFromStore.assignedUserIds.length > 0
+      ? 1
+      : 0) +
+    (filterFromStore.labels && filterFromStore.labels.length > 0 ? 1 : 0) +
     (filterFromStore.lifecycle ? 1 : 0) +
-    ((filterFromStore.phone && filterFromStore.phone !== "all") ? 1 : 0);
+    (filterFromStore.phone && filterFromStore.phone !== "all" ? 1 : 0);
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const listBgColor = isDark ? Colors.dark.bg : Colors.light.bg;
+  const t = getInboxRowTheme(isDark);
 
   return (
     <View
@@ -205,165 +250,189 @@ export default function InboxLayout() {
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {/* Header */}
-        <View
-          style={{
-            backgroundColor: Colors.brand.blue,
-            paddingHorizontal: 20,
-            paddingTop: 14,
-            paddingBottom: 16,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <View>
-            <Text
-              style={{
-                fontFamily: "Nunito_800ExtraBold",
-                fontSize: 23,
-                color: "#fff",
-                lineHeight: 25,
-                letterSpacing: -0.5,
-              }}
-            >
-              Inbox
-            </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                color: isDark
-                  ? "rgba(255,255,255,0.68)"
-                  : "rgba(255,255,255,0.72)",
-                marginTop: 2,
-              }}
-            >
-              {contactCounts.newCount} {contactCounts.newCount === 1 ? "conversation needs" : "conversations need"} attention
-            </Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
-            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-            <RefreshButton />
-            <InboxButtons activeFilterCount={activeFilterCount} />
-          </View>
-        </View>
-
-        {/* Tab Filters */}
-        <View
-          style={{
-            backgroundColor: isDark ? Colors.dark.surface : Colors.light.surface,
-            paddingVertical: 10,
-            borderBottomWidth: 1,
-            borderBottomColor: isDark ? Colors.dark.border : Colors.light.border,
-          }}
-        >
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 16,
-              gap: 8,
+        {/* The design's search view replaces the list screen rather than
+            layering over it, so only one <Inbox> is ever mounted against the
+            contacts store. */}
+        {searchOpen ? (
+          <InboxSearchView
+            query={searchTerm}
+            onQueryChange={setSearchTerm}
+            onClose={() => {
+              setSearchTerm("");
+              setSearchOpen(false);
             }}
           >
-            <Pressable onPress={() => setActiveTab("Open")} style={{ flex: 1 }}>
-              <TabIcon
-                Icon={Sparkles}
-                focused={activeTab === "Open"}
-                label="Open"
-                count={contactCounts.openCount}
-              />
-            </Pressable>
-
-            {activeTab === "Open" && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  backgroundColor: isDark ? "#27272a" : "#f3f4f6",
-                  padding: 2,
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  borderColor: isDark ? "#3f3f46" : "#e5e7eb",
-                }}
-              >
-                <Pressable
-                  onPress={() => setFilter({ ...filterFromStore, assignedUserIds: [] })}
-                  style={{
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: 999,
-                    backgroundColor: !isMine ? (isDark ? "#3f3f46" : "#fff") : "transparent",
+            {renderInboxContent()}
+          </InboxSearchView>
+        ) : (
+          <>
+            {/* Header + segments — one `--bg-surface` bar, as the design has
+                them: title row, then the strip 12px below. */}
+            <ScreenHeader
+              title="Inbox"
+              actions={
+                <>
+                  <HeaderIconButton onPress={() => setSearchOpen(true)}>
+                    <Search size={20} color={t.fg2} />
+                  </HeaderIconButton>
+                  <RefreshButton />
+                  <InboxButtons activeFilterCount={activeFilterCount} />
+                </>
+              }
+              below={
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginTop: 12 }}
+                  contentContainerStyle={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 16,
+                    gap: 8,
                   }}
                 >
-                  <Text
-                    style={{
-                      fontSize: 11,
-                      fontFamily: "Nunito_700Bold",
-                      color: !isMine
-                        ? (isDark ? "#fff" : "#111827")
-                        : (isDark ? "#a1a1aa" : "#6b7280"),
-                    }}
-                  >
-                    Everyone
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    if (userId) {
-                      setFilter({ ...filterFromStore, assignedUserIds: [userId] });
-                    }
-                  }}
-                  style={{
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: 999,
-                    backgroundColor: isMine ? (isDark ? "#3f3f46" : "#fff") : "transparent",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 11,
-                      fontFamily: "Nunito_700Bold",
-                      color: isMine
-                        ? (isDark ? "#fff" : "#111827")
-                        : (isDark ? "#a1a1aa" : "#6b7280"),
-                    }}
-                  >
-                    Mine
-                  </Text>
-                </Pressable>
-              </View>
-            )}
+                  <SegmentPill
+                    label="Open"
+                    focused={activeTab === "Open"}
+                    count={contactCounts.openCount}
+                    onPress={() => setActiveTab("Open")}
+                  />
 
-            <Pressable onPress={() => setActiveTab("Closed")} style={{ flex: 1 }}>
-              <TabIcon
-                Icon={CircleCheckBig}
-                focused={activeTab === "Closed"}
-                label="Closed"
-                count={contactCounts.closedCount}
+                  {activeTab === "Open" && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        height: 32,
+                        backgroundColor: isDark
+                          ? Colors.dark.statusBg
+                          : Colors.light.surface,
+                        padding: 2,
+                        borderRadius: 9999,
+                        borderWidth: 1,
+                        borderColor: isDark
+                          ? Colors.dark.pillBorder
+                          : Colors.light.border,
+                      }}
+                    >
+                      <Pressable
+                        onPress={() =>
+                          setFilter({ ...filterFromStore, assignedUserIds: [] })
+                        }
+                        style={{
+                          height: 26,
+                          justifyContent: "center",
+                          paddingHorizontal: 10,
+                          borderRadius: 9999,
+                          backgroundColor: !isMine
+                            ? isDark
+                              ? Colors.dark.pillBorder
+                              : Colors.light.card
+                            : "transparent",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontFamily: "Nunito_700Bold",
+                            color: !isMine
+                              ? isDark
+                                ? Colors.dark.textPrimary
+                                : Colors.light.textPrimary
+                              : isDark
+                                ? Colors.dark.pillText
+                                : Colors.light.pillText,
+                          }}
+                        >
+                          Everyone
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => {
+                          if (userId) {
+                            setFilter({
+                              ...filterFromStore,
+                              assignedUserIds: [userId],
+                            });
+                          }
+                        }}
+                        style={{
+                          height: 26,
+                          justifyContent: "center",
+                          paddingHorizontal: 10,
+                          borderRadius: 9999,
+                          backgroundColor: isMine
+                            ? isDark
+                              ? Colors.dark.pillBorder
+                              : Colors.light.card
+                            : "transparent",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontFamily: "Nunito_700Bold",
+                            color: isMine
+                              ? isDark
+                                ? Colors.dark.textPrimary
+                                : Colors.light.textPrimary
+                              : isDark
+                                ? Colors.dark.pillText
+                                : Colors.light.pillText,
+                          }}
+                        >
+                          Mine
+                        </Text>
+                      </Pressable>
+                    </View>
+                  )}
+
+                  <SegmentPill
+                    label="Closed"
+                    focused={activeTab === "Closed"}
+                    count={contactCounts.closedCount}
+                    onPress={() => setActiveTab("Closed")}
+                  />
+
+                  <SegmentPill
+                    label="All"
+                    focused={activeTab === "All"}
+                    count={contactCounts.allCount}
+                    onPress={() => setActiveTab("All")}
+                  />
+
+                  <SegmentPill
+                    label="Mine"
+                    focused={activeTab === "Mine"}
+                    onPress={() => setActiveTab("Mine")}
+                  />
+
+                  <SegmentPill
+                    label="New"
+                    focused={activeTab === "New"}
+                    count={contactCounts.newCount}
+                    onPress={() => setActiveTab("New")}
+                  />
+
+                  <SegmentPill
+                    label="Favourites"
+                    focused={activeTab === "Favourites"}
+                    onPress={() => setActiveTab("Favourites")}
+                  />
+                </ScrollView>
+              }
+            />
+
+            <View className="flex-1" style={{ backgroundColor: listBgColor }}>
+              <InboxContentWrapper
+                activeTab={activeTab}
+                searchTerm={searchTerm}
+                renderInboxContent={renderInboxContent}
+                isDark={isDark}
               />
-            </Pressable>
-
-            <Pressable onPress={() => setActiveTab("All")} style={{ flex: 1 }}>
-              <TabIcon
-                Icon={InboxIcon}
-                focused={activeTab === "All"}
-                label="All"
-                count={contactCounts.allCount}
-              />
-            </Pressable>
-          </ScrollView>
-        </View>
-
-        <View className="flex-1" style={{ backgroundColor: listBgColor }}>
-          <InboxContentWrapper
-            activeTab={activeTab}
-            searchTerm={searchTerm}
-            renderInboxContent={renderInboxContent}
-            isDark={isDark}
-          />
-        </View>
+            </View>
+          </>
+        )}
       </KeyboardAvoidingView>
     </View>
   );
@@ -380,7 +449,12 @@ const InboxContentWrapper = React.memo(function InboxContentWrapper({
   isDark: boolean;
 }) {
   return (
-    <View style={{ flex: 1, backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? Colors.dark.bg : Colors.light.bg,
+      }}
+    >
       {renderInboxContent()}
     </View>
   );

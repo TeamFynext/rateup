@@ -1,4 +1,6 @@
 import { View, Text, ActivityIndicator } from "react-native";
+import { useColorScheme } from "nativewind";
+import { Colors } from "@/constants/colors";
 import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/api/inbox/types";
 import { useFilteredContacts } from "@/api/inbox/contacts/contacts.query";
 import { useRouter } from "expo-router";
@@ -16,11 +18,15 @@ import { WaMessageClosedStatus } from "@/constants/constants";
 import ChatBox from "../chatBox/ChatBox";
 import { useContactsStore, makeFilterKey, useMessagesStore } from "@/store/inboxStore";
 
+/** Gutter around the whole conversation list, on top of each row's own 16px. */
+const LIST_PADDING_X = 0;
+
 type InboxProps = {
   messageType: string;
   searchTerm?: string;
   waMessageAssignStatus?: string | null;
   statusOverride?: string[];
+  favorite?: boolean;
 };
 
 export default function Inbox({
@@ -28,6 +34,7 @@ export default function Inbox({
   searchTerm,
   waMessageAssignStatus,
   statusOverride,
+  favorite,
 }: Readonly<InboxProps>) {
   const filter = useChatFilterStore((state) => state.filter);
   const setSelectedContact = useSelectedContactStore((state) => state.setSelectedContact);
@@ -40,6 +47,7 @@ export default function Inbox({
     searchTerm,
     waMessageAssignStatus,
     status: statusOverride !== undefined ? statusOverride : filter.status,
+    favorite,
   };
   const { wsData } = useWsData();
 
@@ -58,6 +66,9 @@ export default function Inbox({
   const contactsById = useContactsStore(state => state.contactsById);
   const addContactsForFilter = useContactsStore(state => state.addContactsForFilter);
   const updateContactById = useContactsStore(state => state.updateContactById);
+  const currentUser = useContactsStore(state => state.currentUser);
+  const { colorScheme } = useColorScheme();
+  const screenBg = colorScheme === "dark" ? Colors.dark.bg : Colors.light.bg;
   const setFilter = useContactsStore(state => state.setFilter);
   const loadContactsFromDB = useContactsStore(state => state.loadContactsFromDB);
 
@@ -191,6 +202,11 @@ export default function Inbox({
         waMessageAssignStatus={item.waMessageAssignStatus}
         assignedUsers={item.assignedUsers}
         lifecycleId={item.lifecycleId}
+        ticketNumber={item.ticketNumber}
+        ticketSubject={item.ticketSubject}
+        isFavorite={item.isFavorite}
+        contactLabels={item.contactLabels}
+        currentUserId={currentUser?.userId}
         onPress={() => {
           setSelectedContact({
             ...item,
@@ -211,7 +227,10 @@ export default function Inbox({
 
   if (isLoading && !finalContacts.length) {
     return (
-      <View className="flex-1 justify-center items-center bg-white dark:bg-slate-950">
+      <View
+        className="flex-1 justify-center items-center"
+        style={{ backgroundColor: screenBg }}
+      >
         <ActivityIndicator size="large" />
       </View>
     );
@@ -219,7 +238,10 @@ export default function Inbox({
 
   if (isError && !finalContacts.length) {
     return (
-      <View className="flex-1 justify-center items-center bg-white dark:bg-slate-950">
+      <View
+        className="flex-1 justify-center items-center"
+        style={{ backgroundColor: screenBg }}
+      >
         <Text className="text-red-500 text-center">Failed to load contacts.</Text>
       </View>
     );
@@ -230,6 +252,7 @@ export default function Inbox({
       data={finalContacts as any[]}
       keyExtractor={(item) => item.id}
       renderItem={renderItem as any}
+      contentContainerStyle={{ paddingHorizontal: LIST_PADDING_X }}
       ListEmptyComponent={
         <View className="h-full flex items-center justify-center">
           <Text className="text-gray-500">No contacts found.</Text>
@@ -245,7 +268,7 @@ export default function Inbox({
         isFetchingNextPage ? (
           <ActivityIndicator size="small" className="py-4" />
         ) : (
-          <View className="items-center py-4 bg-white dark:bg-slate-950"></View>
+          <View className="items-center py-4" style={{ backgroundColor: screenBg }} />
         )
       }
     />

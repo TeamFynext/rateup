@@ -7,23 +7,19 @@ import {
 } from "expo-router/react-navigation";
 import { useColorScheme } from "nativewind";
 import { Colors } from "@/constants/colors";
-import { useSubscription } from "@/api/sunscription/subscription.query";
-import { hasFeature } from "@/utils/subscription";
-import { SubscriptionFeaturePathName } from "../../../../enums";
+import { getInboxHeaderBg } from "@/constants/inboxDesign";
 
 function ProtectedLayout() {
   const { colorScheme } = useColorScheme();
-  const { data: sub, isPending } = useSubscription();
-
-  const hasLoyalty = hasFeature(sub, SubscriptionFeaturePathName.Loyalty);
+  const isDark = colorScheme === "dark";
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <NativeTabs
-        tintColor={colorScheme === "dark" ? Colors.brand.blueLight : Colors.brand.blue}
-        backgroundColor={
-          colorScheme === "dark" ? Colors.dark.surface : Colors.light.surface
-        }
+        tintColor={isDark ? Colors.brand.blueLight : Colors.brand.blue}
+        // Same `--bg-surface` the inbox header sits on, so the top and bottom
+        // chrome read as one surface.
+        backgroundColor={getInboxHeaderBg(isDark)}
         indicatorColor={"transparent"}
       >
         <NativeTabs.Trigger name="inbox">
@@ -41,12 +37,12 @@ function ProtectedLayout() {
           <NativeTabs.Trigger.Label>Web Forms</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
-        {!isPending && hasLoyalty && (
-          <NativeTabs.Trigger name="loyalty">
-            <NativeTabs.Trigger.Icon sf="gift.fill" md="redeem" />
-            <NativeTabs.Trigger.Label>Loyalty</NativeTabs.Trigger.Label>
-          </NativeTabs.Trigger>
-        )}
+
+        <NativeTabs.Trigger name="loyalty">
+          <NativeTabs.Trigger.Icon sf="gift.fill" md="redeem" />
+          <NativeTabs.Trigger.Label>Loyalty</NativeTabs.Trigger.Label>
+        </NativeTabs.Trigger>
+
 
         <NativeTabs.Trigger name="account">
           <NativeTabs.Trigger.Icon sf="person.crop.circle" md="person" />

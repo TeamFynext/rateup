@@ -39,6 +39,21 @@ export async function assignInboxToUser(data: {
   await axios.post("/api/wa/inbox/message/assign", data);
 }
 
+/**
+ * Sets (does not toggle) the star flag. The flag lives on the conversation, so
+ * each of a contact's tickets stars independently — same endpoint the web
+ * inbox uses.
+ */
+export async function setConversationFavorite(data: {
+  conversationId: string;
+  isFavorite: boolean;
+}) {
+  return (await axios.post(`/api/wa/inbox/message/favorite`, data)).data as {
+    success: boolean;
+    isFavorite: boolean;
+  };
+}
+
 export const filteredContactsCount = async () => {
   const res = await axios.get(`/api/wa/inbox/message/count`);
   return res.data;
@@ -53,13 +68,13 @@ export const getFilteredContacts = async (filterData: string, page: number) => {
           filterData,
           page,
         },
-      }
+      },
     );
     return response.data;
   } catch (error: any) {
     console.error(
       "Failed to fetch filtered contacts:",
-      error?.response?.data || error.message
+      error?.response?.data || error.message,
     );
     throw new Error("Failed to load contacts.");
   }
@@ -69,7 +84,13 @@ export async function getChatFilterData() {
   return (await axios.get(`/api/wa/inbox/message/filterdata`)).data;
 }
 
-export const editContact = async ({ data, contactId }:{data:any,contactId:string}) => {
+export const editContact = async ({
+  data,
+  contactId,
+}: {
+  data: any;
+  contactId: string;
+}) => {
   let res = await axios.put(`/api/contact/${contactId}`, data);
   return res;
 };

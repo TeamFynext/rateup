@@ -38,6 +38,8 @@ import {
   Send,
 } from "lucide-react-native"; // Import Lucide icons
 import TemplateSending from "./TemplateSending";
+import MentionList from "./mention/MentionList";
+import { useMention } from "./mention/useMention";
 import { generateInternalMessageId } from "@/utils/chatbox_utils";
 import { create } from "zustand";
 import Animated, {
@@ -139,6 +141,13 @@ const MessageSendPanel = ({
   const [isPrivate, setIsPrivate] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  // @-mentions of teammates, private note only.
+  const mention = useMention({
+    enabled: isPrivate,
+    text: textBody ?? "",
+    setText: (value) => setValue("text.body", value, { shouldDirty: true }),
+  });
+
   //@ts-ignore
   const isUploading = media.some((m) => m.uploading);
 
@@ -211,6 +220,9 @@ const MessageSendPanel = ({
   const handleSendPrivateMessage = handleSubmit((values) => {
     if (!values.text.body && !values.media.length) return;
     const id = generateInternalMessageId();
+    // Mentions go up as ids: the server matches those first and only falls back
+    // to scanning `@name` out of the text, which misses names with spaces.
+    const mentionedUserIds = mention.getMentionedUserIds(values.text.body ?? "");
 
     // Optimistic UI update
     if (selectedContactId) {
@@ -232,14 +244,15 @@ const MessageSendPanel = ({
       useMessagesStore.getState().addMessage(`${contactId}_${whatsappSettingsPhoneId}`, mockedMessage);
       useMessagesStore.getState().addMessage(`${contactId}_all`, mockedMessage);
 
-      createPrivateMessage.mutate({ ...values, messageId: id });
+      createPrivateMessage.mutate({ ...values, messageId: id, mentionedUserIds });
     } else {
-      createPrivateMessage.mutate({ ...values, messageId: id });
+      createPrivateMessage.mutate({ ...values, messageId: id, mentionedUserIds });
     }
 
     reset(initialMessgabody);
     resetMedia();
     setAudioUrl(null);
+    mention.reset();
   });
 
   const handleSend = handleSubmit((values) => {
@@ -505,6 +518,16 @@ const MessageSendPanel = ({
           )}
 
           <View>
+            {/* Teammate picker for `@` — above the composer, so it never covers
+                what is being typed. */}
+            {mention.isOpen && (
+              <MentionList
+                users={mention.suggestions}
+                onSelect={mention.pick}
+                isDark={isDark}
+              />
+            )}
+
             {/* Segmented control for Message / Note toggle */}
             <View style={{ paddingTop: 10, paddingHorizontal: 16, paddingBottom: 6 }}>
               <View
@@ -707,9 +730,9 @@ const MessageSendPanel = ({
                   }
                   multiline
                   value={textBody}
-                  onChangeText={(val) =>
-                    setValue("text.body", val, { shouldDirty: true })
-                  }
+                  onChangeText={mention.handleChangeText}
+                  onSelectionChange={mention.handleSelectionChange}
+                  selection={mention.forcedSelection}
                 />
                 {!isPrivate && (
                   <Pressable

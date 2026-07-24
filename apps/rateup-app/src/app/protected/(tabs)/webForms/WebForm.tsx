@@ -1,18 +1,27 @@
-import { View, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from "react-native";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  TouchableOpacity,
+  RefreshControl,
+} from "react-native";
 import React, { useMemo, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import isToday from "dayjs/plugin/isToday";
 import { FlashList } from "@shopify/flash-list";
-import {
-  useSearchWebFormStore,
-  useWebFormFilterStore,
-} from "@/utils/store";
+import { useSearchWebFormStore, useWebFormFilterStore } from "@/utils/store";
 import WebFormSearchBar from "@/components/webform/WebSearchbar";
 import { useSurveys } from "@/api/survey/survey.query";
 import { useRouter } from "expo-router";
-import { MoveRight } from "lucide-react-native";
+import { MoveRight, SlidersHorizontal } from "lucide-react-native";
 import { colors } from "@/constants/constants";
+import ScreenHeader, {
+  HeaderIconButton,
+} from "@/components/common/ScreenHeader";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
+import { useColorScheme } from "nativewind";
+import { Colors } from "@/constants/colors";
 
 dayjs.extend(relativeTime);
 dayjs.extend(isToday);
@@ -30,6 +39,17 @@ const WebForm = () => {
   const { teamId, status, sortByDate, alphabetical } = useWebFormFilterStore();
   const { search } = useSearchWebFormStore();
   const router = useRouter();
+
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const t = getInboxRowTheme(isDark);
+  const pageBg = isDark ? Colors.dark.bg : Colors.light.bg;
+  const activeFilterCount =
+    (teamId !== "all" ? 1 : 0) +
+    (status !== "all" ? 1 : 0) +
+    (sortByDate !== "latest" ? 1 : 0) +
+    (alphabetical !== null ? 1 : 0);
+
   const filteredForms = useMemo(() => {
     if (!webform || !Array.isArray(webform)) return [];
 
@@ -37,31 +57,31 @@ const WebForm = () => {
 
     if (status !== "all") {
       filtered = filtered.filter((form) =>
-        status === "ACTIVE" ? form.active : !form.active
+        status === "ACTIVE" ? form.active : !form.active,
       );
     }
 
     if (teamId !== "all") {
       filtered = filtered.filter((form) =>
-        form.teams?.some((team: any) => team.id === teamId)
+        form.teams?.some((team: any) => team.id === teamId),
       );
     }
 
     if (search.trim()) {
       filtered = filtered.filter((form) =>
-        form.title.toLowerCase().includes(search.toLowerCase())
+        form.title.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
     if (sortByDate === "latest") {
       filtered.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     } else {
       filtered.sort(
         (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       );
     }
 
@@ -76,7 +96,10 @@ const WebForm = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white dark:bg-slate-950 px-4 pt-4 w-screen justify-center items-center">
+      <View
+        className="flex-1 px-4 pt-4 w-screen justify-center items-center"
+        style={{ backgroundColor: pageBg }}
+      >
         <ActivityIndicator size="large" />
         <Text className="text-primaryBlue font-semibold mt-2">
           Loading web forms...
@@ -112,14 +135,16 @@ const WebForm = () => {
 
         <View className="flex-row justify-between items-center mt-1">
           <View
-            className={`px-2 py-[2px] rounded-full flex-row items-center ${item.active
-              ? "bg-green-100 text-green-700"
-              : "bg-orange-100 text-orange-700"
-              }`}
+            className={`px-2 py-[2px] rounded-full flex-row items-center ${
+              item.active
+                ? "bg-green-100 text-green-700"
+                : "bg-orange-100 text-orange-700"
+            }`}
           >
             <View
-              className={`w-2 h-2 rounded-full mr-1 ${item.active ? "bg-green-500" : "bg-orange-500"
-                }`}
+              className={`w-2 h-2 rounded-full mr-1 ${
+                item.active ? "bg-green-500" : "bg-orange-500"
+              }`}
             />
             <Text className="text-xs font-medium">
               {item.active ? "Active" : "Paused"}
@@ -144,10 +169,19 @@ const WebForm = () => {
   };
 
   return (
-    <View className="flex-1 bg-white dark:bg-slate-950 w-screen">
-      <View>
-        <WebFormSearchBar />
-      </View>
+    <View style={{ flex: 1, backgroundColor: pageBg }} className="w-screen">
+      <ScreenHeader
+        title="Web Forms"
+        actions={
+          <HeaderIconButton
+            onPress={() => router.push("/protected/webform/WebFormFilter")}
+            badge={activeFilterCount}
+          >
+            <SlidersHorizontal size={20} color={t.fg2} />
+          </HeaderIconButton>
+        }
+        below={<WebFormSearchBar />}
+      />
       <View className="flex-1 px-4 pt-2">
         <FlashList
           data={filteredForms}
@@ -165,7 +199,9 @@ const WebForm = () => {
           ListEmptyComponent={
             <View className="items-center mt-20">
               {isError ? (
-                <Text className="text-gray-700 dark:text-gray-300 font-medium">Check your internet connection</Text>
+                <Text className="text-gray-700 dark:text-gray-300 font-medium">
+                  Check your internet connection
+                </Text>
               ) : (
                 <Text className="text-gray-500">No web forms found.</Text>
               )}

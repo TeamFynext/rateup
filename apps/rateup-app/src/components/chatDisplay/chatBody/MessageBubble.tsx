@@ -15,12 +15,13 @@ import {
   CheckCheck,
   Check,
   Clock,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react-native";
 import { WaMessageAssignStatus } from "@/api/inbox/types";
 import { getClosedIcon } from "@/util";
 import LinearGradient from "react-native-linear-gradient";
 import { Colors } from "@/constants/colors";
+import { getInboxRowTheme } from "@/constants/inboxDesign";
 
 type MessageBubbleProps = {
   messageContent: any;
@@ -94,51 +95,71 @@ const MessageBubble = ({
       default:
         return "rounded-bl-md rounded-3xl";
     }
-  }
+  };
 
-  const renderContent = useCallback((textColor?: string) => {
-    switch (messageType) {
-      case "text":
-        return <WaInboxText messageContent={messageContent} textColor={textColor} />;
-      case "image":
-        return <WaInboxImage messageContent={messageContent} />;
-      case "audio":
-        return (
-          <WaInboxAudio messageContent={messageContent} timestamp={timestamp} />
-        );
-      case "document":
-        return <WaInboxDocument messageContent={messageContent} />;
-      case "video":
-        return <WaInboxVideo messageContent={messageContent} />;
-      case "reaction":
-        return <Text style={{ fontSize: 20, color: textColor }}>{messageContent}</Text>;
-      case "button":
-        return <Text style={{ color: textColor }}>buttons</Text>;
-      case "template":
-        return (
-          <WaInboxTemplate
-            templateBody={template}
-            parameters={templateComponentParams}
-          />
-        );
-      case "interactive":
-        return (
-          <WaInboxInteractive
-            interactiveBody={interactive}
-            messageContent={messageContent}
-          />
-        );
-      default:
-        let displayContent = messageContent;
-        if (typeof messageContent === "object" && messageContent !== null) {
-          displayContent = JSON.stringify(messageContent);
-        }
-        return <Text style={{ color: textColor, fontSize: 14 }}>{displayContent}</Text>;
-    }
-  }, [messageContent, messageType, timestamp]);
+  const renderContent = useCallback(
+    (textColor?: string) => {
+      switch (messageType) {
+        case "text":
+          return (
+            <WaInboxText
+              messageContent={messageContent}
+              textColor={textColor}
+            />
+          );
+        case "image":
+          return <WaInboxImage messageContent={messageContent} />;
+        case "audio":
+          return (
+            <WaInboxAudio
+              messageContent={messageContent}
+              timestamp={timestamp}
+            />
+          );
+        case "document":
+          return <WaInboxDocument messageContent={messageContent} />;
+        case "video":
+          return <WaInboxVideo messageContent={messageContent} />;
+        case "reaction":
+          return (
+            <Text style={{ fontSize: 20, color: textColor }}>
+              {messageContent}
+            </Text>
+          );
+        case "button":
+          return <Text style={{ color: textColor }}>buttons</Text>;
+        case "template":
+          return (
+            <WaInboxTemplate
+              templateBody={template}
+              parameters={templateComponentParams}
+            />
+          );
+        case "interactive":
+          return (
+            <WaInboxInteractive
+              interactiveBody={interactive}
+              messageContent={messageContent}
+            />
+          );
+        default:
+          let displayContent = messageContent;
+          if (typeof messageContent === "object" && messageContent !== null) {
+            displayContent = JSON.stringify(messageContent);
+          }
+          return (
+            <Text style={{ color: textColor, fontSize: 14 }}>
+              {displayContent}
+            </Text>
+          );
+      }
+    },
+    [messageContent, messageType, timestamp],
+  );
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const t = getInboxRowTheme(isDark);
 
   const getInternalStyles = () => {
     switch (assignStatus) {
@@ -221,7 +242,9 @@ const MessageBubble = ({
               {assignStatus}
             </Text>
           </View>
-          {renderContent(isDark ? Colors.dark.textPrimary : Colors.light.textPrimary)}
+          {renderContent(
+            isDark ? Colors.dark.textPrimary : Colors.light.textPrimary,
+          )}
           {timestamp ? (
             <Text
               style={{
@@ -242,7 +265,15 @@ const MessageBubble = ({
   // SPECIAL CASE: Received audio message — no bubble
   if (messageType === "audio" && exchangeProcess !== "send") {
     return (
-      <View style={{ flexDirection: "row", width: "100%", paddingHorizontal: 8, marginBottom: 10, justifyContent: "flex-start" }}>
+      <View
+        style={{
+          flexDirection: "row",
+          width: "100%",
+          paddingHorizontal: 8,
+          marginBottom: 10,
+          justifyContent: "flex-start",
+        }}
+      >
         {renderContent()}
       </View>
     );
@@ -250,53 +281,76 @@ const MessageBubble = ({
 
   const isSender = exchangeProcess === "send";
   const isPrivateNote = exchangeProcess === "privateNote";
-  const showAvatar = isSender || isPrivateNote;
+  const showAvatar = isSender;
 
-  const bubbleBgColor = isSender
-    ? Colors.brand.blue
-    : isPrivateNote
-      ? isDark
-        ? Colors.dark.surface
-        : "rgba(248,149,29,0.12)"
-      : isDark
-        ? Colors.dark.surface
-        : "#fff";
+  // The design's internal note: a full-width cream card rather than a bubble.
+  if (isPrivateNote) {
+    return (
+      <View style={{ width: "100%", paddingHorizontal: 8, marginBottom: 10 }}>
+        <View
+          style={{
+            backgroundColor: t.note.bg,
+            borderWidth: 1,
+            borderColor: t.note.border,
+            borderRadius: 12,
+            paddingVertical: 10,
+            paddingHorizontal: 13,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 4,
+            }}
+          >
+            <Lock color={t.note.label} size={11} />
+            <Text
+              style={{
+                fontSize: 9,
+                fontFamily: "Nunito_800ExtraBold",
+                letterSpacing: 0.54,
+                textTransform: "uppercase",
+                color: t.note.label,
+              }}
+            >
+              {senderName
+                ? `Internal note · ${senderName}${timestamp ? ` · ${timestamp}` : ""}`
+                : "Internal note"}
+            </Text>
+          </View>
+          {renderContent(t.note.text)}
+        </View>
+      </View>
+    );
+  }
 
-  const bubbleTextColor = isSender
-    ? "#fff"
-    : isPrivateNote
-      ? isDark
-        ? Colors.dark.textPrimary
-        : "#78350f" // dark amber for private notes
-      : isDark
-        ? Colors.dark.textPrimary
-        : Colors.light.textPrimary;
+  const bubbleBgColor = isSender ? Colors.brand.blue : t.surface;
 
-  const timestampColor = isSender
-    ? "rgba(255,255,255,0.6)"
-    : isDark
-      ? Colors.dark.textMuted
-      : Colors.light.textMuted;
+  const bubbleTextColor = isSender ? "#fff" : t.fg1;
 
-  const borderStyle = isSender || isPrivateNote
+  const timestampColor = t.fg4;
+
+  const borderStyle = isSender
     ? {
-      borderTopLeftRadius: 18,
-      borderTopRightRadius: 18,
-      borderBottomLeftRadius: 18,
-      borderBottomRightRadius: 4,
-    }
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        borderBottomLeftRadius: 16,
+        borderBottomRightRadius: 4,
+      }
     : {
-      borderTopLeftRadius: 18,
-      borderTopRightRadius: 18,
-      borderBottomRightRadius: 18,
-      borderBottomLeftRadius: 4,
-    };
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        borderBottomRightRadius: 16,
+        borderBottomLeftRadius: 4,
+      };
 
   return (
     <View
       style={{
         flexDirection: "row",
-        justifyContent: isSender || isPrivateNote ? "flex-end" : "flex-start",
+        justifyContent: isSender ? "flex-end" : "flex-start",
         alignItems: "flex-end",
         gap: showAvatar ? 8 : 0,
         width: "100%",
@@ -304,51 +358,47 @@ const MessageBubble = ({
         paddingHorizontal: 8,
       }}
     >
-      {!isSender && !isPrivateNote && (
-        <View style={{ maxWidth: "78%" }}>
+      {!isSender && (
+        // Design: max-width 80%, `--bg-surface` with a `--border-1` hairline,
+        // 9px/13px padding, time underneath at 10px.
+        <View style={{ maxWidth: "80%" }}>
           <View
             style={{
               backgroundColor: bubbleBgColor,
+              borderWidth: 1,
+              borderColor: t.border1,
               ...borderStyle,
-              paddingVertical: 10,
-              paddingHorizontal: 14,
-              ...(isDark
-                ? {}
-                : {
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 3,
-                  elevation: 2,
-                }),
+              paddingVertical: 9,
+              paddingHorizontal: 13,
             }}
           >
             {renderContent(bubbleTextColor)}
+            {timestamp ? (
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontFamily: "Nunito_400Regular",
+                  color: timestampColor,
+                  marginTop: 3,
+                }}
+              >
+                {timestamp}
+              </Text>
+            ) : null}
           </View>
-          <Text
-            style={{
-              fontSize: 11,
-              fontFamily: "Nunito_400Regular",
-              color: timestampColor,
-              marginTop: 3,
-              marginLeft: 4,
-            }}
-          >
-            {timestamp}
-          </Text>
         </View>
       )}
 
-      {(isSender || isPrivateNote) && (
-        <View style={{ maxWidth: "74%" }}>
+      {isSender && (
+        // Design: author label above at 9px/800, blue bubble, time below.
+        <View style={{ maxWidth: "80%", alignItems: "flex-end", gap: 3 }}>
           {senderName ? (
             <Text
               style={{
-                fontSize: 11,
-                fontFamily: "Nunito_600SemiBold",
-                color: isDark ? Colors.dark.textMuted : Colors.light.textMuted,
+                fontSize: 9,
+                fontFamily: "Nunito_800ExtraBold",
+                color: t.fg4,
                 textAlign: "right",
-                marginBottom: 3,
               }}
             >
               {senderName}
@@ -359,34 +409,17 @@ const MessageBubble = ({
             style={{
               backgroundColor: bubbleBgColor,
               ...borderStyle,
-              paddingVertical: 10,
-              paddingHorizontal: 14,
-              ...(isDark
-                ? {}
-                : {
-                  shadowColor: Colors.brand.blue,
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 3,
-                  elevation: 2,
-                }),
+              paddingVertical: 9,
+              paddingHorizontal: 13,
             }}
           >
-            {isPrivateNote && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 4 }}>
-                <Lock color="#f59e0b" size={10} />
-                <Text style={{ fontSize: 11, fontFamily: "Nunito_600SemiBold", color: "#f59e0b" }}>
-                  Private Note
-                </Text>
-              </View>
-            )}
             {renderContent(bubbleTextColor)}
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginTop: 3, marginRight: 4, gap: 4 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Text
               style={{
-                fontSize: 11,
+                fontSize: 10,
                 fontFamily: "Nunito_400Regular",
                 color: timestampColor,
                 textAlign: "right",
@@ -394,17 +427,19 @@ const MessageBubble = ({
             >
               {timestamp}
             </Text>
-            {isSender && (
-              <View>
-                {(() => {
-                  if (stats?.read) return <CheckCheck size={13} color={Colors.accent.cyan} />;
-                  if (stats?.delivered) return <CheckCheck size={13} color={timestampColor} />;
-                  if (stats?.failed || stats?.error) return <AlertCircle size={13} color="#ef4444" />;
-                  if (stats?.sent) return <Check size={13} color={timestampColor} />;
-                  return <Clock size={12} color={timestampColor} />;
-                })()}
-              </View>
-            )}
+            <View>
+              {(() => {
+                if (stats?.read)
+                  return <CheckCheck size={12} color={t.brand} />;
+                if (stats?.delivered)
+                  return <CheckCheck size={12} color={timestampColor} />;
+                if (stats?.failed || stats?.error)
+                  return <AlertCircle size={12} color={t.danger} />;
+                if (stats?.sent)
+                  return <Check size={12} color={timestampColor} />;
+                return <Clock size={11} color={timestampColor} />;
+              })()}
+            </View>
           </View>
         </View>
       )}
@@ -433,32 +468,6 @@ const MessageBubble = ({
             {namePreview(senderName)}
           </Text>
         </LinearGradient>
-      )}
-
-      {isPrivateNote && (
-        <View
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 14,
-            backgroundColor: isDark ? Colors.dark.surface : "rgba(248,149,29,0.15)",
-            borderWidth: 1,
-            borderColor: "#f59e0b",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 18,
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "Nunito_900Black",
-              fontSize: 10,
-              color: "#f59e0b",
-            }}
-          >
-            {namePreview(senderName)}
-          </Text>
-        </View>
       )}
     </View>
   );
