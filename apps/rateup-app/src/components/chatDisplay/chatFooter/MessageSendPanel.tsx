@@ -712,6 +712,7 @@ const MessageSendPanel = ({
                 }}
               >
                 <TextInput
+                  ref={mention.inputRef}
                   style={{
                     flex: 1,
                     fontSize: 14,
@@ -732,7 +733,6 @@ const MessageSendPanel = ({
                   value={textBody}
                   onChangeText={mention.handleChangeText}
                   onSelectionChange={mention.handleSelectionChange}
-                  selection={mention.forcedSelection}
                 />
                 {!isPrivate && (
                   <Pressable
