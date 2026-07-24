@@ -116,6 +116,7 @@ import {
   assignWaMessageToUser,
   getAssignedUsersCountForContactByTeam,
   getWaMessageByMessageId,
+  markWaMessageAsDeleted,
 } from "../inbox/message/wamessage.service.js";
 import { getUserIdsByTeamId } from "../../user/user.service.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
@@ -124,6 +125,7 @@ import { createCustomerAccount } from "../../loyalty/accounts/account.service.js
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
 import { notificationQueue, pausedAutomationQueue } from "../../../utils/redisConnection.js";
 import { enqueueWebhookDispatch } from "../../webhook/webhook.service.js";
+import { sendViaWstoOrgHandler } from "../../org/ws/org.ws.controller.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -280,6 +282,12 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
       if (value.message_echoes) {
         for (const message of value.message_echoes) {
           try {
+            // An echoed revoke is the business side deleting its own message —
+            // same treatment as a customer revoke: flag the original, store nothing.
+            if (message.type === WaMessageTypes.revoke) {
+              await handleRevokedMessage(waSettings, message);
+              continue;
+            }
             await handleWaMessages(
               "send",
               message,
@@ -433,6 +441,46 @@ async function templateCategoryChangeHandler(changeValue: TemplateCategoryChange
   }
 }
 
+/**
+ * A revoke webhook (WhatsApp Business app / coexistence only) says the customer
+ * deleted a message they had sent. Nothing is removed here: the original row is
+ * flagged so the thread renders it as deleted while keeping what was said. The
+ * revoke event itself is not stored as a message and runs no automations — it is
+ * an edit to history, not a new turn in the conversation.
+ */
+async function handleRevokedMessage(
+  waSettings: Omit<WhatsappSettings, "accessToken_iv">,
+  message: { revoke?: { original_message_id: string } },
+) {
+  const originalMessageId = message?.revoke?.original_message_id;
+  if (!originalMessageId) {
+    log.warn("Revoke event without original_message_id: %o", message);
+    return;
+  }
+
+  const { orgId } = waSettings;
+  const deletedMessage = await markWaMessageAsDeleted(originalMessageId, orgId);
+  if (!deletedMessage) return;
+
+  await sendViaWstoOrgHandler(
+    orgId,
+    {
+      type: "message_deleted",
+      message_deleted: {
+        messageId: originalMessageId,
+        contactId: deletedMessage.contactId,
+        conversationId: deletedMessage.conversationId,
+        sourceIdentifier: deletedMessage.sourceIdentifier,
+        deletedAt: deletedMessage.deletedAt.toISOString(),
+        // Lets the client tell whether this message is the one its inbox row is
+        // quoting as the preview — that snippet carries no message id.
+        waCreatedAt: deletedMessage.waCreatedAt?.toISOString() ?? null,
+      },
+    },
+    deletedMessage.sourcePlatform === PlatformType.WEBCHAT ? "fab" : "main",
+  );
+}
+
 async function whatsappMessageHandler(
   waSettings: Omit<WhatsappSettings, "accessToken_iv">,
   waMessage: WaMessageBody,
@@ -440,6 +488,13 @@ async function whatsappMessageHandler(
   // check for '/start' command
   // let phone_number_id =
   //   waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
+  const incomingMessage = (waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody)
+    ?.messages?.[0];
+  if (incomingMessage?.type === WaMessageTypes.revoke) {
+    await handleRevokedMessage(waSettings, incomingMessage);
+    return;
+  }
+
   const parsedMessage = parseMessage(waMessage);
   const { orgId } = waSettings;
   const { message: tempMessage, from, type, completeMessageObject, userName } = parsedMessage;
