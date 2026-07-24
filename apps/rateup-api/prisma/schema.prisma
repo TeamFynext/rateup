@@ -1702,6 +1702,10 @@ model WaMessage {
   logs                            Json?
   /// Source of the message (e.g., api, inbox, campaign, automation)
   sourceMessage                   String?
+  /// Set when the sender revoked (deleted) the message on WhatsApp. The body is
+  /// deliberately kept — the thread renders the message as deleted rather than
+  /// losing what was said.
+  deletedAt                       DateTime?
 
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
