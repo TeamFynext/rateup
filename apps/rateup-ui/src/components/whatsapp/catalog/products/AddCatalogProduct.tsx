@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -27,6 +27,7 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
+  FieldTitle,
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
@@ -165,6 +166,7 @@ function TagController({
 }
 
 const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
+  const uid = useId();
   const form = useForm<any>({
     resolver: zodResolver(catalogProductSchema),
     defaultValues: getInitialValues(),
@@ -469,7 +471,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               <FieldLegend>Media</FieldLegend>
               <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field>
-                  <FieldLabel>Image</FieldLabel>
+                  <FieldTitle>Image</FieldTitle>
                   <SourceToggle value={imageUpload} onChange={setImageUpload} />
                   {imageUpload === "upload" ? (
                     <Input
@@ -485,14 +487,14 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
 
                 {!addToShopify && (
                   <Field>
-                    <FieldLabel>Image tags</FieldLabel>
+                    <FieldTitle>Image tags</FieldTitle>
                     <TagController control={form.control} name="image.0.tag" />
                   </Field>
                 )}
 
                 {!addToShopify && (
                   <Field>
-                    <FieldLabel>Video</FieldLabel>
+                    <FieldTitle>Video</FieldTitle>
                     <SourceToggle value={videoUpload} onChange={setVideoUpload} />
                     {videoUpload === "upload" ? (
                       <Input
@@ -508,7 +510,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
 
                 {!addToShopify && (
                   <Field>
-                    <FieldLabel>Video tags</FieldLabel>
+                    <FieldTitle>Video tags</FieldTitle>
                     <TagController control={form.control} name="video.0.tag" />
                   </Field>
                 )}
@@ -521,7 +523,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                 <FieldLegend>Organization</FieldLegend>
                 <FieldGroup>
                   <Field>
-                    <FieldLabel>Internal labels</FieldLabel>
+                    <FieldTitle>Internal labels</FieldTitle>
                     <TagController control={form.control} name="internal_label" maxTags={5} />
                     <FieldDescription>Up to 5 labels, for your own filtering.</FieldDescription>
                   </Field>
@@ -557,12 +559,12 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                   <FieldError>{errors.description?.message as string}</FieldError>
                 </Field>
                 <Field>
-                  <FieldLabel>Address</FieldLabel>
-                  <Input {...form.register("address.address")} />
+                  <FieldLabel htmlFor={`${uid}-address`}>Address</FieldLabel>
+                  <Input id={`${uid}-address`} {...form.register("address.address")} />
                 </Field>
                 <Field>
-                  <FieldLabel>City</FieldLabel>
-                  <Input {...form.register("address.city")} />
+                  <FieldLabel htmlFor={`${uid}-city`}>City</FieldLabel>
+                  <Input id={`${uid}-city`} {...form.register("address.city")} />
                 </Field>
               </FieldGroup>
             </FieldSet>
@@ -608,19 +610,19 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               <FieldLegend>Media & tags</FieldLegend>
               <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field>
-                  <FieldLabel>Image link</FieldLabel>
-                  <Input {...form.register("image.0.url")} />
+                  <FieldLabel htmlFor={`${uid}-image-link`}>Image link</FieldLabel>
+                  <Input id={`${uid}-image-link`} {...form.register("image.0.url")} />
                 </Field>
                 <Field>
-                  <FieldLabel>Image tags</FieldLabel>
+                  <FieldTitle>Image tags</FieldTitle>
                   <TagController control={form.control} name="image.0.tag" />
                 </Field>
                 <Field>
-                  <FieldLabel>Tags</FieldLabel>
+                  <FieldTitle>Tags</FieldTitle>
                   <TagController control={form.control} name="tags" maxTags={5} />
                 </Field>
                 <Field>
-                  <FieldLabel>Number tags</FieldLabel>
+                  <FieldTitle>Number tags</FieldTitle>
                   <TagController control={form.control} name="numbertags" maxTags={5} />
                   <FieldDescription>
                     Decimals only — commas not allowed (e.g. 2024)
@@ -704,11 +706,11 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               <FieldLegend>Media</FieldLegend>
               <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field>
-                  <FieldLabel>Image link</FieldLabel>
-                  <Input {...form.register("image.0.url")} />
+                  <FieldLabel htmlFor={`${uid}-image-link-2`}>Image link</FieldLabel>
+                  <Input id={`${uid}-image-link-2`} {...form.register("image.0.url")} />
                 </Field>
                 <Field>
-                  <FieldLabel>Image tags</FieldLabel>
+                  <FieldTitle>Image tags</FieldTitle>
                   <TagController control={form.control} name="image.0.tag" />
                 </Field>
               </FieldGroup>

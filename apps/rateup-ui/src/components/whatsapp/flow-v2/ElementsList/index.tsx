@@ -11,8 +11,8 @@ import { useTranslation } from "react-i18next";
 
 import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { cn } from "@/lib/utils.ts";
 import { QuestionType2 } from "@/types/enums.ts";
@@ -84,9 +84,9 @@ function ElementsList() {
       {/* Screen Title Editor - Styled like the attached image */}
       <div className="px-4 py-2 pb-2.5 bg-card border-b border-border sticky top-0 z-10">
         <div>
-          <Label htmlFor="screen-title" className="text-sm font-medium">
+          <FieldLabel htmlFor="screen-title" className="text-sm font-medium">
             {translations("Screen Title")}
-          </Label>
+          </FieldLabel>
           <div className="flex gap-2">
             <Input
               id="screen-title"

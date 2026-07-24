@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback } from "react";
+import { useId, useCallback } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
@@ -31,6 +31,7 @@ interface CreateFlowFormValues {
 }
 
 function CreateFlowModal({ opened, onClose }) {
+  const uid = useId();
   const { t: translations } = useTranslation();
 
   const schema = z.object({
@@ -116,8 +117,9 @@ function CreateFlowModal({ opened, onClose }) {
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>{translations("Categories")}</FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field`}>{translations("Categories")}</FieldLabel>
                 <MultiSelect
+                  id={`${uid}-field`}
                   options={flowsCategories}
                   value={field.value}
                   onValueChange={field.onChange}
@@ -133,8 +135,9 @@ function CreateFlowModal({ opened, onClose }) {
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>{translations("Select Teams")}</FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field-2`}>{translations("Select Teams")}</FieldLabel>
                 <MultiSelect
+                  id={`${uid}-field-2`}
                   options={teamOptions}
                   value={field.value}
                   onValueChange={field.onChange}

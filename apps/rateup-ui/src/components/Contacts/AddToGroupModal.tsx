@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { toast } from "sonner";
 
 import { useAddExistingContactMutation } from "@/backend/campaign/contactGroup/contactGroup.query";
@@ -13,8 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog.tsx";
+import { FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
-import { Label } from "../ui/label.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import ContactGroupSelector from "./ContactGroupSelector.tsx";
 
@@ -25,6 +25,7 @@ const AddToGroupModal = ({
   contact = null,
   onSuccess = null,
 }) => {
+  const uid = useId();
   const [contactGroupId, setContactGroupId] = useState("");
   const addExistingContactsMutation = useAddExistingContactMutation(contactGroupId);
   const handleAddExistingContacts = async () => {
@@ -61,17 +62,17 @@ const AddToGroupModal = ({
         </DialogHeader>
         {selectedContactIds?.length === 1 && contact ? (
           <div className="flex flex-col gap-2">
-            <Label>Name</Label>
-            <Input readOnly defaultValue={contact.name} />
-            <Label>Phone</Label>
-            <Input readOnly defaultValue={contact.phone} />
+            <FieldLabel htmlFor={`${uid}-name`}>Name</FieldLabel>
+            <Input id={`${uid}-name`} readOnly defaultValue={contact.name} />
+            <FieldLabel htmlFor={`${uid}-phone`}>Phone</FieldLabel>
+            <Input id={`${uid}-phone`} readOnly defaultValue={contact.phone} />
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
             {selectedContactIds.length} Contacts selected
           </p>
         )}
-        <Label>Group</Label>
+        <FieldTitle>Group</FieldTitle>
         <ContactGroupSelector
           value={contactGroupId}
           onChange={setContactGroupId}

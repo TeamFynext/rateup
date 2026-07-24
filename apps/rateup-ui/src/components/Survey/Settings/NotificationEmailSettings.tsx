@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
@@ -16,6 +16,7 @@ import {
 import { updateEmailSurvey } from "./updateSettings.ts";
 
 const NotificationEmailSettings = ({ survey, surveyId }) => {
+  const uid = useId();
   const [enableNotificationEmail, setEnabledNotificationEmail] = useState(
     survey?.enableNotificationEmail,
   );
@@ -52,10 +53,11 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
         <div className="flex flex-col gap-4">
           <FieldGroup>
             <Field data-invalid={!!error}>
-              <FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field`}>
                 {translations("Notification Email")} <span className="text-destructive">*</span>
               </FieldLabel>
               <Input
+                id={`${uid}-field`}
                 type="email"
                 disabled={!enableNotificationEmail}
                 value={notificationEmail ?? ""}

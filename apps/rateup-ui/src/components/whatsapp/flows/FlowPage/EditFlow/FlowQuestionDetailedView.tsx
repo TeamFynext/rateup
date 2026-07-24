@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { isEqual } from "lodash";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useId, useContext, useEffect, useRef, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -22,10 +22,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldDescription, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
@@ -509,7 +508,7 @@ function ElementEditor({
         <Separator />
         <div className="flex items-center justify-between p-2.5 px-3">
           <div className="flex items-center">
-            <Label className="flex items-center gap-2 font-semibold">
+            <FieldTitle className="flex items-center gap-2 font-semibold">
               <Checkbox
                 checked={!!values?.required}
                 onCheckedChange={(checked) =>
@@ -517,9 +516,9 @@ function ElementEditor({
                 }
               />
               {translations("Required")}
-            </Label>
+            </FieldTitle>
             {WaNPSQuestions.includes(question?.type as QuestionType) && (
-              <Label className="flex items-center gap-2 font-semibold">
+              <FieldTitle className="flex items-center gap-2 font-semibold">
                 <Checkbox
                   checked={!!values?.enableNpsAnalytics}
                   onCheckedChange={(checked) =>
@@ -527,7 +526,7 @@ function ElementEditor({
                   }
                 />
                 {translations("NPS Analytics")}
-              </Label>
+              </FieldTitle>
             )}
           </div>
           <div className="flex items-center">
@@ -613,6 +612,7 @@ function FlowQuestionExtraProps({
   nextScreens,
   extraConfigForm,
 }: Readonly<ExtraPropsProps>) {
+  const uid = useId();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { t: translations } = useTranslation();
   const nextScreenOptions = toSelectOptions(
@@ -654,13 +654,13 @@ function FlowQuestionExtraProps({
     case QuestionType.Optin:
       return (
         <Field className="w-75">
-          <FieldLabel>{translations("Read more screen")}</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-field`}>{translations("Read more screen")}</FieldLabel>
           <Select
             items={nextScreenOptions}
             value={form.watch("optinScreenId") ?? ""}
             onValueChange={(value) => form.setValue("optinScreenId", value, { shouldDirty: true })}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger id={`${uid}-field`} className="w-full">
               <SelectValue placeholder={translations("select next screen to show the details")} />
             </SelectTrigger>
             <SelectContent>
@@ -676,7 +676,7 @@ function FlowQuestionExtraProps({
     case QuestionType.Date:
       return (
         <div className="flex flex-col mt-2.5">
-          <Label className="flex items-center gap-2">
+          <FieldLabel htmlFor={`${uid}-label`} className="flex items-center gap-2">
             <Switch
               checked={!!form.watch().onSelectAction}
               onCheckedChange={(checked) =>
@@ -684,16 +684,18 @@ function FlowQuestionExtraProps({
               }
             />
             {translations("Enable dynamic datepicker")}
-          </Label>
+          </FieldLabel>
           {form.watch().onSelectAction && (
             <Field className="w-100">
-              <FieldLabel>{translations("Integration App Name")}</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-label`}>
+                {translations("Integration App Name")}
+              </FieldLabel>
               <Select
                 items={integrationAppOptions}
                 value={form.watch("waAppName") ?? ""}
                 onValueChange={(value) => form.setValue("waAppName", value, { shouldDirty: true })}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id={`${uid}-label`} className="w-full">
                   <SelectValue placeholder={translations("Select Integration App Name")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -728,7 +730,7 @@ function FlowQuestionExtraProps({
             </AlertDescription>
           </Alert>
           <Field>
-            <FieldLabel>{translations("Photo Source")}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Photo Source")}</FieldLabel>
             <Select
               items={photoSourceOptions}
               value={extraConfigForm.watch("photo-source") ?? ""}
@@ -736,7 +738,7 @@ function FlowQuestionExtraProps({
                 extraConfigForm.setValue("photo-source", value, { shouldDirty: true })
               }
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger id={`${uid}-field-3`} className="w-full">
                 <SelectValue placeholder={translations("Select Photo Source")} />
               </SelectTrigger>
               <SelectContent>
@@ -752,8 +754,11 @@ function FlowQuestionExtraProps({
             </FieldDescription>
           </Field>
           <Field>
-            <FieldLabel>{translations("max file size in kb")}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field-4`}>
+              {translations("max file size in kb")}
+            </FieldLabel>
             <Input
+              id={`${uid}-field-4`}
               type="number"
               min={1}
               max={25600}
@@ -770,8 +775,11 @@ function FlowQuestionExtraProps({
             </FieldDescription>
           </Field>
           <Field>
-            <FieldLabel>{translations("min uploaded photos")}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field-5`}>
+              {translations("min uploaded photos")}
+            </FieldLabel>
             <Input
+              id={`${uid}-field-5`}
               type="number"
               min={0}
               max={30}
@@ -788,8 +796,11 @@ function FlowQuestionExtraProps({
             </FieldDescription>
           </Field>
           <Field>
-            <FieldLabel>{translations("max uploaded photos")}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field-6`}>
+              {translations("max uploaded photos")}
+            </FieldLabel>
             <Input
+              id={`${uid}-field-6`}
               type="number"
               min={1}
               max={30}
@@ -827,8 +838,11 @@ function FlowQuestionExtraProps({
             </AlertDescription>
           </Alert>
           <Field>
-            <FieldLabel>{translations("max file size in kb")}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field-7`}>
+              {translations("max file size in kb")}
+            </FieldLabel>
             <Input
+              id={`${uid}-field-7`}
               type="number"
               min={1}
               max={25600}
@@ -845,8 +859,11 @@ function FlowQuestionExtraProps({
             </FieldDescription>
           </Field>
           <Field>
-            <FieldLabel>{translations("min uploaded documents")}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field-8`}>
+              {translations("min uploaded documents")}
+            </FieldLabel>
             <Input
+              id={`${uid}-field-8`}
               type="number"
               min={0}
               max={30}
@@ -863,8 +880,11 @@ function FlowQuestionExtraProps({
             </FieldDescription>
           </Field>
           <Field>
-            <FieldLabel>{translations("max uploaded documents")}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field-9`}>
+              {translations("max uploaded documents")}
+            </FieldLabel>
             <Input
+              id={`${uid}-field-9`}
               type="number"
               min={1}
               max={30}
@@ -881,8 +901,11 @@ function FlowQuestionExtraProps({
             </FieldDescription>
           </Field>
           <Field>
-            <FieldLabel>{translations("allowed mime types")}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field-10`}>
+              {translations("allowed mime types")}
+            </FieldLabel>
             <MultiSelect
+              id={`${uid}-field-10`}
               options={mimeTypeOptions}
               value={extraConfigForm.watch("allowed-mime-types") ?? []}
               onValueChange={(value) =>
@@ -900,7 +923,7 @@ function FlowQuestionExtraProps({
       return (
         <>
           <Field>
-            <FieldLabel>{translations("Input Type")}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field-11`}>{translations("Input Type")}</FieldLabel>
             <Select
               items={inputTypeOptions}
               value={extraConfigForm.watch("input-type") ?? ""}
@@ -908,7 +931,7 @@ function FlowQuestionExtraProps({
                 extraConfigForm.setValue("input-type", value, { shouldDirty: true })
               }
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger id={`${uid}-field-11`} className="w-full">
                 <SelectValue placeholder={translations("Select Type")} />
               </SelectTrigger>
               <SelectContent>

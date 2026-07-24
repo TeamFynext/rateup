@@ -14,8 +14,8 @@ import Loading from "../Page/Loading.tsx";
 import { Button } from "../ui/button.tsx";
 import { CreativeAvatar } from "../ui/creative-avatar.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog.tsx";
+import { Field, FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
-import { Label } from "../ui/label.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 
@@ -197,13 +197,13 @@ const CreateTicketModal = ({
         ) : (
           <div className="flex flex-col gap-4 px-5 py-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
             {/* Board */}
-            <div className="space-y-1">
-              <Label
+            <Field>
+              <FieldLabel
                 htmlFor="ticket-board"
                 className="text-xs font-medium uppercase text-muted-foreground"
               >
                 {t("Board")} <span className="text-destructive">*</span>
-              </Label>
+              </FieldLabel>
               <Select
                 value={selectedBoardId}
                 onValueChange={(val) => setSelectedBoardId(val)}
@@ -220,16 +220,16 @@ const CreateTicketModal = ({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
 
             {/* Title */}
-            <div className="space-y-1">
-              <Label
+            <Field>
+              <FieldLabel
                 htmlFor="ticket-title"
                 className="text-xs font-medium uppercase text-muted-foreground"
               >
                 {t("Title")} <span className="text-destructive normal-case">*</span>
-              </Label>
+              </FieldLabel>
               <Input
                 id="ticket-title"
                 value={formData.title}
@@ -239,16 +239,16 @@ const CreateTicketModal = ({
                 className="h-9"
               />
               {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
-            </div>
+            </Field>
 
             {/* Description */}
-            <div className="space-y-1">
-              <Label
+            <Field>
+              <FieldLabel
                 htmlFor="ticket-description"
                 className="text-xs font-medium uppercase text-muted-foreground"
               >
                 {t("Description")}
-              </Label>
+              </FieldLabel>
               <Textarea
                 id="ticket-description"
                 value={formData.description}
@@ -257,13 +257,13 @@ const CreateTicketModal = ({
                 rows={3}
                 className="resize-none"
               />
-            </div>
+            </Field>
 
             {/* Assignee */}
             <div className="space-y-2">
-              <Label className="text-xs font-medium uppercase text-muted-foreground">
+              <FieldTitle className="text-xs font-medium uppercase text-muted-foreground">
                 {t("Assignee")}
-              </Label>
+              </FieldTitle>
               <div className="flex flex-wrap items-center gap-2">
                 {members.map((s: any) => {
                   const on = formData.assigneeId === s.id;
@@ -294,9 +294,9 @@ const CreateTicketModal = ({
             {/* Labels */}
             {labels && labels.length > 0 && (
               <div className="space-y-2">
-                <Label className="text-xs font-medium uppercase text-muted-foreground">
+                <FieldTitle className="text-xs font-medium uppercase text-muted-foreground">
                   {t("Labels")}
-                </Label>
+                </FieldTitle>
                 <div className="flex flex-wrap gap-1.5">
                   {labels.map((l: any) => {
                     const on = formData.labelIds.includes(l.id);

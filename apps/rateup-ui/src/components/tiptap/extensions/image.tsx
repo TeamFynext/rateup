@@ -27,6 +27,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useImageUpload } from "@/hooks/use-image-upload";
@@ -341,7 +342,7 @@ function TiptapImage(props: NodeViewProps) {
                           className="hidden"
                           id="replace-image-upload"
                         />
-                        <label
+                        <FieldLabel
                           htmlFor="replace-image-upload"
                           className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed p-4 hover:bg-accent"
                         >
@@ -356,7 +357,7 @@ function TiptapImage(props: NodeViewProps) {
                               <span>Choose Image</span>
                             </>
                           )}
-                        </label>
+                        </FieldLabel>
                         {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
                       </div>
 

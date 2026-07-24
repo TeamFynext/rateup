@@ -22,7 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -36,8 +36,8 @@ import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCa
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
+import { Field, FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
-import { Label } from "../ui/label.tsx";
 import { Loader } from "../ui/loader.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import AppleSignInButton from "./AppleSigninButton.tsx";
@@ -449,10 +449,10 @@ export function Step1({ formData, handleNext, authType }) {
         )}
         <div className="space-y-2 sm:space-y-3">
           <div className="space-y-1">
-            <Label htmlFor="email" className="text-xs font-medium">
+            <FieldLabel htmlFor="email" className="text-xs font-medium">
               Full Name
               <span className="text-red-500">*</span>
-            </Label>
+            </FieldLabel>
             <div className="relative">
               <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Controller
@@ -476,10 +476,10 @@ export function Step1({ formData, handleNext, authType }) {
             <>
               <div className="space-y-0.5 sm:space-y-1">
                 <div className="space-y-1">
-                  <Label htmlFor="email" className="text-xs font-medium">
+                  <FieldLabel htmlFor="email" className="text-xs font-medium">
                     Email Address
                     <span className="text-red-500">*</span>
-                  </Label>
+                  </FieldLabel>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Controller
@@ -531,10 +531,10 @@ export function Step1({ formData, handleNext, authType }) {
 
               {/* Password */}
               <div className="space-y-1">
-                <Label htmlFor="password" className="text-xs font-medium">
+                <FieldLabel htmlFor="password" className="text-xs font-medium">
                   Password
                   <span className="text-red-500">*</span>
-                </Label>
+                </FieldLabel>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Controller
@@ -636,14 +636,14 @@ export function Step1({ formData, handleNext, authType }) {
       </div>
       {/* Terms checkbox */}
       <div className="flex flex-col gap-1">
-        <div className="flex items-start space-x-3 pt-2">
+        <Field orientation="horizontal" className="gap-3 items-start pt-2">
           <Checkbox
             id="terms"
             checked={agreesToTerms}
             onCheckedChange={(checked) => setAgreesToTerms(checked as boolean)}
             className="border-2 border-gray-300 h-4 w-4 shrink mt-0.5"
           />
-          <Label htmlFor="terms" className="text-xs leading-relaxed cursor-pointer">
+          <FieldLabel htmlFor="terms" className="text-xs leading-relaxed cursor-pointer">
             I agree to the{" "}
             <button
               onClick={() =>
@@ -666,8 +666,8 @@ export function Step1({ formData, handleNext, authType }) {
             >
               Privacy Policy
             </button>
-          </Label>
-        </div>
+          </FieldLabel>
+        </Field>
 
         {/* Footer actions */}
 
@@ -696,6 +696,7 @@ export function Step1({ formData, handleNext, authType }) {
 }
 
 export function Step2({ formData, handleBack, handleNext }) {
+  const uid = useId();
   const industries = [
     "E-commerce",
     "Healthcare",
@@ -723,10 +724,10 @@ export function Step2({ formData, handleBack, handleNext }) {
       <div className="flex-1 space-y-4 overflow-y-auto pr-1">
         {/* Business Name */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium">
+          <FieldTitle className="text-xs font-medium">
             Business Name
             <span className="text-red-500">*</span>
-          </Label>
+          </FieldTitle>
           <div className="relative">
             <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Controller
@@ -745,7 +746,7 @@ export function Step2({ formData, handleBack, handleNext }) {
 
         {/* Website */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium">Website URL</Label>
+          <FieldTitle className="text-xs font-medium">Website URL</FieldTitle>
           <div className="relative">
             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Controller
@@ -766,16 +767,17 @@ export function Step2({ formData, handleBack, handleNext }) {
         </div>
 
         {/* Phone */}
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">
+        <Field>
+          <FieldLabel htmlFor={`${uid}-contact-number`} className="text-xs font-medium">
             Contact Number
             <span className="text-red-500">*</span>
-          </Label>
+          </FieldLabel>
           <Controller
             name="phoneNumber"
             control={formData.control}
             render={({ field }) => (
               <PhoneInput
+                id={`${uid}-contact-number`}
                 international
                 defaultCountry="IN"
                 value={field.value}
@@ -784,13 +786,13 @@ export function Step2({ formData, handleBack, handleNext }) {
               />
             )}
           />
-        </div>
+        </Field>
 
         {/* Industry */}
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">
+        <Field>
+          <FieldLabel htmlFor={`${uid}-industry`} className="text-xs font-medium">
             Industry <span className="text-red-500">*</span>
-          </Label>
+          </FieldLabel>
           <Controller
             name="industry"
             control={formData.control}
@@ -800,7 +802,10 @@ export function Step2({ formData, handleBack, handleNext }) {
                 onValueChange={field.onChange}
                 items={industries.map((industry) => ({ value: industry, label: industry }))}
               >
-                <SelectTrigger className="h-8 w-full text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white">
+                <SelectTrigger
+                  id={`${uid}-industry`}
+                  className="h-8 w-full text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
+                >
                   <SelectValue placeholder="Select Industry" />
                 </SelectTrigger>
                 <SelectContent>
@@ -813,12 +818,12 @@ export function Step2({ formData, handleBack, handleNext }) {
               </Select>
             )}
           />
-        </div>
+        </Field>
 
         <div className="space-y-1">
-          <Label className="text-xs font-medium">
+          <FieldTitle className="text-xs font-medium">
             Team Size <span className="text-red-500">*</span>
-          </Label>
+          </FieldTitle>
 
           <Controller
             name="teamSize"

@@ -1,6 +1,6 @@
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import type { ComponentProps, ReactNode } from "react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -21,6 +21,7 @@ export function LinkCopyElement({
   value: _value,
   ...props
 }: LinkCopyElementProps) {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const [copied, setCopied] = useState(false);
 
@@ -32,9 +33,9 @@ export function LinkCopyElement({
 
   return (
     <Field className={className} style={style}>
-      <FieldLabel>{label ?? translations("Register URL")}</FieldLabel>
+      <FieldLabel htmlFor={`${uid}-field`}>{label ?? translations("Register URL")}</FieldLabel>
       <InputGroup>
-        <InputGroupInput readOnly value={link} {...props} />
+        <InputGroupInput id={`${uid}-field`} readOnly value={link} {...props} />
         <InputGroupAddon align="inline-end">
           <Button
             type="button"

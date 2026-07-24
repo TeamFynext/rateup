@@ -19,8 +19,8 @@ import { contactAddType } from "@/utils/enums/index.ts";
 import RateupLoader from "../Loaders/RateupLoader.tsx";
 import { Button } from "../ui/button.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
+import { Field, FieldLabel, FieldLegend, FieldSet } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
-import { Label } from "../ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
 import { ScrollArea } from "../ui/scroll-area.tsx";
 import { Spinner } from "../ui/spinner.tsx";
@@ -151,27 +151,27 @@ const AddCustomerModal = ({
   const totalPageCount = (data?.totalCount ?? 1) / pagination.pageSize;
 
   return (
-    <div>
+    <FieldSet>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <Label className="text-lg font-bold">{translations("Choose")}</Label>
+          <FieldLegend variant="label">{translations("Choose")}</FieldLegend>
           <RadioGroup
             value={addType}
             onValueChange={(value) => setAddType(value)}
             className="flex flex-row items-center gap-4"
           >
-            <div className="flex items-center gap-2">
-              <RadioGroupItem value={contactAddType.NEW} id="add-type-new" />
-              <Label htmlFor="add-type-new" className="font-normal">
+            <Field orientation="horizontal">
+              <RadioGroupItem id="add-type-new" value={contactAddType.NEW} />
+              <FieldLabel htmlFor="add-type-new" className="font-normal">
                 {translations("Add New Contact")}
-              </Label>
-            </div>
-            <div className="flex items-center gap-2">
+              </FieldLabel>
+            </Field>
+            <Field orientation="horizontal">
               <RadioGroupItem value={contactAddType.EXISTING} id="add-type-existing" />
-              <Label htmlFor="add-type-existing" className="font-normal">
+              <FieldLabel htmlFor="add-type-existing" className="font-normal">
                 {translations("Add Existing Contacts")}
-              </Label>
-            </div>
+              </FieldLabel>
+            </Field>
           </RadioGroup>
         </div>
 
@@ -194,7 +194,7 @@ const AddCustomerModal = ({
               filterByTag={columnFilters}
             />
             <div className="flex items-center justify-between gap-2 px-4">
-              <div className="flex items-center gap-2">
+              <Field orientation="horizontal">
                 <Checkbox
                   id="select-all-contacts"
                   aria-label="select all"
@@ -206,10 +206,10 @@ const AddCustomerModal = ({
                     existingContactIds.includes(customer?.id),
                   )}
                 />
-                <Label htmlFor="select-all-contacts" className="font-normal">
+                <FieldLabel htmlFor="select-all-contacts" className="font-normal">
                   {translations("Select All")}
-                </Label>
-              </div>
+                </FieldLabel>
+              </Field>
               <div className="relative w-75">
                 <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -274,7 +274,7 @@ const AddCustomerModal = ({
           </div>
         )}
       </div>
-    </div>
+    </FieldSet>
   );
 };
 

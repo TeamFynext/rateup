@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useId, useCallback } from "react";
 
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -21,6 +21,7 @@ import {
 import styles from "./stylescomponent/StylesComponent.module.css";
 
 function HeaderStyles() {
+  const uid = useId();
   const selectedPageTab = useSelectedPageTab();
   const surveyTheme = useSurveyThemeContextValue();
   const { title } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
@@ -62,13 +63,15 @@ function HeaderStyles() {
       </div>
       <div className="flex flex-nowrap gap-2.5">
         <Field>
-          <FieldLabel className={styles["label"]}>Font weight</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-font-weight`} className={styles["label"]}>
+            Font weight
+          </FieldLabel>
           <Select
             value={title.styles.fontWeight}
             onValueChange={handleFontWeightChange}
             items={FontWeights}
           >
-            <SelectTrigger className="w-full rounded-xl">
+            <SelectTrigger id={`${uid}-font-weight`} className="w-full rounded-xl">
               <SelectValue placeholder="Font weight" />
             </SelectTrigger>
             <SelectContent className="min-w-[130px]">
@@ -81,8 +84,11 @@ function HeaderStyles() {
           </Select>
         </Field>
         <Field>
-          <FieldLabel className={styles["label"]}>Font Size</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-font-size`} className={styles["label"]}>
+            Font Size
+          </FieldLabel>
           <Input
+            id={`${uid}-font-size`}
             type="number"
             min={10}
             max={100}

@@ -20,8 +20,8 @@ import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
+import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
-import { Label } from "../ui/label.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
@@ -167,27 +167,27 @@ const CreateContactModal = ({
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             {initialValues ? null : (
-              <div className="flex flex-col gap-2">
-                <Label>{translations("Import Contacts")}</Label>
+              <FieldSet>
+                <FieldLegend variant="label">{translations("Import Contacts")}</FieldLegend>
                 <RadioGroup
                   value={sourceValue}
                   onValueChange={(value) => form.setValue("source", value, { shouldDirty: true })}
                   className="flex flex-row items-center gap-4"
                 >
-                  <div className="flex items-center gap-2">
+                  <Field orientation="horizontal" className="w-auto gap-2">
                     <RadioGroupItem value={importMethod.MANUAL} id="import-manual" />
-                    <Label htmlFor="import-manual" className="font-normal">
+                    <FieldLabel htmlFor="import-manual" className="font-normal">
                       {translations("Manual")}
-                    </Label>
-                  </div>
-                  <div className="flex items-center gap-2">
+                    </FieldLabel>
+                  </Field>
+                  <Field orientation="horizontal" className="w-auto gap-2">
                     <RadioGroupItem value={importMethod.CSV} id="import-csv" />
-                    <Label htmlFor="import-csv" className="font-normal">
+                    <FieldLabel htmlFor="import-csv" className="font-normal">
                       {translations("Import CSV/XLSX")}
-                    </Label>
-                  </div>
+                    </FieldLabel>
+                  </Field>
                 </RadioGroup>
-              </div>
+              </FieldSet>
             )}
 
             {customFields?.length > 0 && (
@@ -195,7 +195,7 @@ const CreateContactModal = ({
                 {customFields?.map((data) => {
                   const checked = contactTypeValue.includes(data?.slug);
                   return (
-                    <div className="flex items-center gap-2" key={data?.id}>
+                    <Field orientation="horizontal" className="w-auto gap-2" key={data?.id}>
                       <Checkbox
                         id={`contact-type-${data?.slug}`}
                         checked={checked}
@@ -209,13 +209,13 @@ const CreateContactModal = ({
                           );
                         }}
                       />
-                      <Label
+                      <FieldLabel
                         htmlFor={`contact-type-${data?.slug}`}
                         className="font-normal capitalize"
                       >
                         {data?.name}
-                      </Label>
-                    </div>
+                      </FieldLabel>
+                    </Field>
                   );
                 })}
               </Card>
@@ -246,38 +246,40 @@ const CreateContactModal = ({
                   </a>
                 </div>
               </blockquote>
-              <div className="mx-6 flex items-center gap-2">
-                <Controller
-                  name="updateExisting"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Switch
-                      id="update-existing"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  )}
-                />
-                <Label htmlFor="update-existing" className="font-normal">
-                  {translations("Update the existing data while importing")}
-                </Label>
-              </div>
-              <div className="mx-6 flex items-center gap-2">
-                <Controller
-                  name="hasHeaderRow"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Switch
-                      id="has-header-row"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  )}
-                />
-                <Label htmlFor="has-header-row" className="font-normal">
-                  {translations("First row contains column headers (name, phone, ...)")}
-                </Label>
-              </div>
+              <FieldGroup className="mx-6 gap-4">
+                <Field orientation="horizontal" className="gap-2">
+                  <Controller
+                    name="updateExisting"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Switch
+                        id="update-existing"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    )}
+                  />
+                  <FieldLabel htmlFor="update-existing" className="font-normal">
+                    {translations("Update the existing data while importing")}
+                  </FieldLabel>
+                </Field>
+                <Field orientation="horizontal" className="gap-2">
+                  <Controller
+                    name="hasHeaderRow"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Switch
+                        id="has-header-row"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    )}
+                  />
+                  <FieldLabel htmlFor="has-header-row" className="font-normal">
+                    {translations("First row contains column headers (name, phone, ...)")}
+                  </FieldLabel>
+                </Field>
+              </FieldGroup>
               <Input
                 type="file"
                 accept=".csv,.xlsx,.ods"

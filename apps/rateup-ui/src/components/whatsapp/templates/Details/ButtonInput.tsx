@@ -1,4 +1,5 @@
 import { IconChevronDown, IconPlus, IconTrash, IconVariable, IconX } from "@tabler/icons-react";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
@@ -41,6 +42,9 @@ const FIELD = "min-w-56 flex-1";
 
 const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailerIds }) => {
   const { t: translations } = useTranslation();
+  const uid = useId();
+  /** Stable, unique DOM id for one of this button's fields, e.g. fid("text"). */
+  const fid = (field: string) => `${uid}-${field}`;
   const { data: flows } = useWaFlowsFromDb(data.type === WHATSAPP_BUTTON_TYPE.FLOW);
   const buttonState = useButtonState({
     url: form.watch()?.buttons?.[index]?.url,
@@ -85,11 +89,10 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
       return (
         <>
           <Field className={FIELD} data-invalid={!!err("text")}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Button text")}</p>
-            </FieldLabel>
+            <FieldLabel htmlFor={fid("text")}>{translations("Button text")}</FieldLabel>
             <InputGroup>
               <InputGroupInput
+                id={fid("text")}
                 aria-invalid={!!err("text")}
                 {...registerField(form, `buttons.${index}.text`)}
               />
@@ -117,10 +120,9 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
       return (
         <div className="flex w-full flex-wrap items-end gap-3">
           <Field className={FIELD}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Type of action")}</p>
-            </FieldLabel>
+            <FieldLabel htmlFor={fid("type")}>{translations("Type of action")}</FieldLabel>
             <Input
+              id={fid("type")}
               value={
                 buttonState.isWebSurvey
                   ? translations("RateUp Web Survey")
@@ -130,11 +132,10 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             />
           </Field>
           <Field className={FIELD} data-invalid={!!err("text")}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Button text")}</p>
-            </FieldLabel>
+            <FieldLabel htmlFor={fid("text")}>{translations("Button text")}</FieldLabel>
             <InputGroup>
               <InputGroupInput
+                id={fid("text")}
                 aria-invalid={!!err("text")}
                 {...registerField(form, `buttons.${index}.text`)}
               />
@@ -159,11 +160,10 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
           ) : (
             <>
               <Field className={FIELD} data-invalid={!!err("url")}>
-                <FieldLabel>
-                  <p className="text-sm font-medium">{translations("Website Url")}</p>
-                </FieldLabel>
+                <FieldLabel htmlFor={fid("url")}>{translations("Website Url")}</FieldLabel>
                 <InputGroup>
                   <InputGroupInput
+                    id={fid("url")}
                     aria-invalid={!!err("url")}
                     type="url"
                     {...registerField(form, `buttons.${index}.url`)}
@@ -198,11 +198,10 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               </Field>
               {buttonState.hasVariableInUrl && (
                 <Field className={FIELD} data-invalid={!!err("example")}>
-                  <FieldLabel>
-                    <p className="text-sm font-medium">{translations("Example")}</p>
-                  </FieldLabel>
+                  <FieldLabel htmlFor={fid("example")}>{translations("Example")}</FieldLabel>
                   <InputGroup>
                     <InputGroupInput
+                      id={fid("example")}
                       aria-invalid={!!err("example")}
                       placeholder={translations("Enter example for {{1}}")}
                       {...registerField(form, `buttons.${index}.example`)}
@@ -230,17 +229,14 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
       return (
         <>
           <Field className={FIELD}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Type of action")}</p>
-            </FieldLabel>
-            <Input value={"Call phone number"} readOnly />
+            <FieldLabel htmlFor={fid("type")}>{translations("Type of action")}</FieldLabel>
+            <Input id={fid("type")} value={"Call phone number"} readOnly />
           </Field>
           <Field className={FIELD} data-invalid={!!err("text")}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Button text")}</p>
-            </FieldLabel>
+            <FieldLabel htmlFor={fid("text")}>{translations("Button text")}</FieldLabel>
             <InputGroup>
               <InputGroupInput
+                id={fid("text")}
                 aria-invalid={!!err("text")}
                 {...registerField(form, `buttons.${index}.text`)}
               />
@@ -269,14 +265,13 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
       return (
         <>
           <Field className={FIELD}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Type of action")}</p>
-            </FieldLabel>
-            <Input defaultValue={"otp"} readOnly />
+            <FieldLabel htmlFor={fid("type")}>{translations("Type of action")}</FieldLabel>
+            <Input id={fid("type")} defaultValue={"otp"} readOnly />
           </Field>
           <Field className={FIELD} data-invalid={!!err("text")}>
-            <FieldLabel>translations("Button text")</FieldLabel>
+            <FieldLabel htmlFor={fid("text")}>{translations("Button text")}</FieldLabel>
             <Input
+              id={fid("text")}
               aria-invalid={!!err("text")}
               placeholder="Copy code"
               {...registerField(form, `buttons.${index}.text`)}
@@ -298,28 +293,23 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
       return (
         <>
           <Field className={FIELD}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Type of action")}</p>
-            </FieldLabel>
-            <Input value={"Copy offer code"} readOnly />
+            <FieldLabel htmlFor={fid("type")}>{translations("Type of action")}</FieldLabel>
+            <Input id={fid("type")} value={"Copy offer code"} readOnly />
           </Field>
           <Field className={FIELD}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Button text")}</p>
-            </FieldLabel>
+            <FieldLabel htmlFor={fid("text")}>{translations("Button text")}</FieldLabel>
             <InputGroup>
-              <InputGroupInput value={"Copy offer code"} disabled />
+              <InputGroupInput id={fid("text")} value={"Copy offer code"} disabled />
               <InputGroupAddon align="inline-end">
                 <div></div>
               </InputGroupAddon>
             </InputGroup>
           </Field>
           <Field className={FIELD} data-invalid={!!err("example")}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Offer code")}</p>
-            </FieldLabel>
+            <FieldLabel htmlFor={fid("example")}>{translations("Offer code")}</FieldLabel>
             <InputGroup>
               <InputGroupInput
+                id={fid("example")}
                 aria-invalid={!!err("example")}
                 placeholder={translations("Enter sample code")}
                 {...registerField(form, `buttons.${index}.example`)}
@@ -348,17 +338,14 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
       return (
         <>
           <Field className={FIELD}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Type of action")}</p>
-            </FieldLabel>
-            <Input value={"Open a Flow"} readOnly />
+            <FieldLabel htmlFor={fid("type")}>{translations("Type of action")}</FieldLabel>
+            <Input id={fid("type")} value={"Open a Flow"} readOnly />
           </Field>
           <Field className={FIELD} data-invalid={!!err("text")}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Button text")}</p>
-            </FieldLabel>
+            <FieldLabel htmlFor={fid("text")}>{translations("Button text")}</FieldLabel>
             <InputGroup>
               <InputGroupInput
+                id={fid("text")}
                 aria-invalid={!!err("text")}
                 {...registerField(form, `buttons.${index}.text`)}
               />
@@ -394,17 +381,14 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-end gap-3">
             <Field className={FIELD}>
-              <FieldLabel>
-                <p className="text-sm font-medium">{translations("Type of action")}</p>
-              </FieldLabel>
-              <Input value={"Open order details"} readOnly />
+              <FieldLabel htmlFor={fid("type")}>{translations("Type of action")}</FieldLabel>
+              <Input id={fid("type")} value={"Open order details"} readOnly />
             </Field>
             <Field className={FIELD} data-invalid={!!err("text")}>
-              <FieldLabel>
-                <p className="text-sm font-medium">{translations("Button text")}</p>
-              </FieldLabel>
+              <FieldLabel htmlFor={fid("text")}>{translations("Button text")}</FieldLabel>
               <InputGroup>
                 <InputGroupInput
+                  id={fid("text")}
                   aria-invalid={!!err("text")}
                   disabled
                   {...registerField(form, `buttons.${index}.text`)}
@@ -439,16 +423,13 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
       return (
         <>
           <Field className={FIELD}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Type of action")}</p>
-            </FieldLabel>
-            <Input value={"View catalog"} readOnly />
+            <FieldLabel htmlFor={fid("type")}>{translations("Type of action")}</FieldLabel>
+            <Input id={fid("type")} value={"View catalog"} readOnly />
           </Field>
           <Field className={FIELD} data-invalid={!!err("text")}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Button text")}</p>
-            </FieldLabel>
+            <FieldLabel htmlFor={fid("text")}>{translations("Button text")}</FieldLabel>
             <Input
+              id={fid("text")}
               aria-invalid={!!err("text")}
               readOnly
               {...registerField(form, `buttons.${index}.text`)}
@@ -465,9 +446,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             )}
           </div>
           <Field className={FIELD}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{"Thumbnail product retailer id"}</p>
-            </FieldLabel>
+            <FieldLabel htmlFor={fid("thumb")}>Thumbnail product retailer id</FieldLabel>
             <Select
               items={toSelectOptions(productRetailerIds)}
               value={
@@ -477,7 +456,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
                 setValue(form, "defaultValues.catalog.thumbnail_product_retailer_id", value)
               }
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger id={fid("thumb")} className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -507,16 +486,13 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-end gap-3">
             <Field className={FIELD}>
-              <FieldLabel>
-                <p className="text-sm font-medium">{translations("Type of action")}</p>
-              </FieldLabel>
-              <Input value={"View Catalog items"} readOnly />
+              <FieldLabel htmlFor={fid("type")}>{translations("Type of action")}</FieldLabel>
+              <Input id={fid("type")} value={"View Catalog items"} readOnly />
             </Field>
             <Field className={FIELD} data-invalid={!!err("text")}>
-              <FieldLabel>
-                <p className="text-sm font-medium">{translations("Button text")}</p>
-              </FieldLabel>
+              <FieldLabel htmlFor={fid("text")}>{translations("Button text")}</FieldLabel>
               <Input
+                id={fid("text")}
                 aria-invalid={!!err("text")}
                 readOnly
                 {...registerField(form, `buttons.${index}.text`)}
@@ -534,9 +510,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             </div>
 
             <Field className={FIELD}>
-              <FieldLabel>
-                <p className="text-sm font-medium">{"Thumbnail product retailer id"}</p>
-              </FieldLabel>
+              <FieldLabel htmlFor={fid("thumb")}>Thumbnail product retailer id</FieldLabel>
               <Select
                 items={toSelectOptions(productRetailerIds)}
                 value={
@@ -546,7 +520,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
                   setValue(form, "defaultValues.catalog.thumbnail_product_retailer_id", value)
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id={fid("thumb")} className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -589,19 +563,19 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
               key={index}
             >
               <Field className={FIELD}>
-                <FieldLabel>
-                  <p className="text-sm font-medium">Section Title</p>
-                </FieldLabel>
+                <FieldLabel htmlFor={fid(`section-${index}-title`)}>Section Title</FieldLabel>
                 <Input
+                  id={fid(`section-${index}-title`)}
                   key={`defaultValues.catalog.mpm.sections.${index}.title`}
                   {...registerField(form, `defaultValues.catalog.mpm.sections.${index}.title`)}
                 />
               </Field>
               <Field className={FIELD}>
-                <FieldLabel>
-                  <p className="text-sm font-medium">{"Product Retailer Ids"}</p>
+                <FieldLabel htmlFor={fid(`section-${index}-products`)}>
+                  Product Retailer Ids
                 </FieldLabel>
                 <MultiSelect
+                  id={fid(`section-${index}-products`)}
                   options={toSelectOptions(productRetailerIds)}
                   value={
                     form.watch()["defaultValues"]["catalog"]["mpm"]["sections"][`${index}`][
@@ -629,16 +603,13 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
       return (
         <>
           <Field className={FIELD}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Type of action")}</p>
-            </FieldLabel>
-            <Input value={"View Single Product"} readOnly />
+            <FieldLabel htmlFor={fid("type")}>{translations("Type of action")}</FieldLabel>
+            <Input id={fid("type")} value={"View Single Product"} readOnly />
           </Field>
           <Field className={FIELD} data-invalid={!!err("text")}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{translations("Button text")}</p>
-            </FieldLabel>
+            <FieldLabel htmlFor={fid("text")}>{translations("Button text")}</FieldLabel>
             <Input
+              id={fid("text")}
               aria-invalid={!!err("text")}
               readOnly
               {...registerField(form, `buttons.${index}.text`)}
@@ -655,9 +626,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             )}
           </div>
           <Field className={FIELD}>
-            <FieldLabel>
-              <p className="text-sm font-medium">{"Product retailer id"}</p>
-            </FieldLabel>
+            <FieldLabel htmlFor={fid("retailer")}>Product retailer id</FieldLabel>
             <Select
               items={toSelectOptions(productRetailerIds)}
               value={form.watch()["defaultValues"]["catalog"]["spm"]["product_retailer_id"] ?? ""}
@@ -665,7 +634,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
                 setValue(form, "defaultValues.catalog.spm.product_retailer_id", value)
               }
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger id={fid("retailer")} className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -696,11 +665,12 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
 };
 
 const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
+  const uid = useId();
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field>
-          <FieldLabel>"Product Type"</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-product-type`}>Product Type</FieldLabel>
           <Select
             items={toSelectOptions(["physical-goods", "digital-goods"])}
             value={form.watch()["defaultValues"]["orderDetails"]["productType"] ?? ""}
@@ -708,7 +678,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
               setValue(form, "defaultValues.orderDetails.productType", value)
             }
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger id={`${uid}-product-type`} className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -721,12 +691,16 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           </Select>
         </Field>
         <Field>
-          <FieldLabel>"Product Name"</FieldLabel>
-          <Input {...registerField(form, "defaultValues.orderDetails.item.name")} />
+          <FieldLabel htmlFor={`${uid}-product-name`}>Product Name</FieldLabel>
+          <Input
+            id={`${uid}-product-name`}
+            {...registerField(form, "defaultValues.orderDetails.item.name")}
+          />
         </Field>
         <Field>
-          <FieldLabel>"Product Price"</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-product-price`}>Product Price</FieldLabel>
           <Input
+            id={`${uid}-product-price`}
             type="number"
             min={0}
             value={form.watch()["defaultValues"]["orderDetails"]["item"]["price"] ?? ""}
@@ -736,8 +710,9 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           />
         </Field>
         <Field>
-          <FieldLabel>"Product Sale Price"</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-product-sale-price`}>Product Sale Price</FieldLabel>
           <Input
+            id={`${uid}-product-sale-price`}
             type="number"
             min={0}
             value={form.watch()["defaultValues"]["orderDetails"]["item"]["salePrice"] ?? ""}
@@ -751,8 +726,9 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           />
         </Field>
         <Field>
-          <FieldLabel>"Quantity"</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-quantity`}>Quantity</FieldLabel>
           <Input
+            id={`${uid}-quantity`}
             type="number"
             min={0}
             step={1}
@@ -763,38 +739,57 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           />
         </Field>
         <Field>
-          <FieldLabel>"Country of origin"</FieldLabel>
-          <Input {...registerField(form, "defaultValues.orderDetails.item.origin")} />
-        </Field>
-      </div>
-      <Separator />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Field>
-          <FieldLabel>"Importer Name"</FieldLabel>
-          <Input {...registerField(form, "defaultValues.orderDetails.item.importerName")} />
-        </Field>
-        <Field>
-          <FieldLabel>"Importer Address"</FieldLabel>
-          <Input {...registerField(form, "defaultValues.orderDetails.item.importerAddress1")} />
-        </Field>
-        <Field>
-          <FieldLabel>"City"</FieldLabel>
-          <Input {...registerField(form, "defaultValues.orderDetails.item.importerCity")} />
-        </Field>
-        <Field>
-          <FieldLabel>"Postal Code"</FieldLabel>
-          <Input {...registerField(form, "defaultValues.orderDetails.item.importerPostalCode")} />
-        </Field>
-        <Field>
-          <FieldLabel>"Zone Code"</FieldLabel>
-          <Input {...registerField(form, "defaultValues.orderDetails.item.importerZoneCode")} />
-        </Field>
-      </div>
-      <Separator />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Field>
-          <FieldLabel>"Shipping Amount"</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-country-of-origin`}>Country of origin</FieldLabel>
           <Input
+            id={`${uid}-country-of-origin`}
+            {...registerField(form, "defaultValues.orderDetails.item.origin")}
+          />
+        </Field>
+      </div>
+      <Separator />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Field>
+          <FieldLabel htmlFor={`${uid}-importer-name`}>Importer Name</FieldLabel>
+          <Input
+            id={`${uid}-importer-name`}
+            {...registerField(form, "defaultValues.orderDetails.item.importerName")}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${uid}-importer-address`}>Importer Address</FieldLabel>
+          <Input
+            id={`${uid}-importer-address`}
+            {...registerField(form, "defaultValues.orderDetails.item.importerAddress1")}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${uid}-city`}>City</FieldLabel>
+          <Input
+            id={`${uid}-city`}
+            {...registerField(form, "defaultValues.orderDetails.item.importerCity")}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${uid}-postal-code`}>Postal Code</FieldLabel>
+          <Input
+            id={`${uid}-postal-code`}
+            {...registerField(form, "defaultValues.orderDetails.item.importerPostalCode")}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${uid}-zone-code`}>Zone Code</FieldLabel>
+          <Input
+            id={`${uid}-zone-code`}
+            {...registerField(form, "defaultValues.orderDetails.item.importerZoneCode")}
+          />
+        </Field>
+      </div>
+      <Separator />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Field>
+          <FieldLabel htmlFor={`${uid}-shipping-amount`}>Shipping Amount</FieldLabel>
+          <Input
+            id={`${uid}-shipping-amount`}
             type="number"
             min={0}
             value={form.watch()["defaultValues"]["orderDetails"]["shipping"] ?? ""}
@@ -804,8 +799,9 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           />
         </Field>
         <Field>
-          <FieldLabel>"Tax amount"</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-tax-amount`}>Tax amount</FieldLabel>
           <Input
+            id={`${uid}-tax-amount`}
             type="number"
             min={0}
             value={form.watch()["defaultValues"]["orderDetails"]["tax"] ?? ""}
@@ -815,12 +811,16 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           />
         </Field>
         <Field>
-          <FieldLabel>"Tax Description"</FieldLabel>
-          <Input {...registerField(form, "defaultValues.orderDetails.taxDescription")} />
+          <FieldLabel htmlFor={`${uid}-tax-description`}>Tax Description</FieldLabel>
+          <Input
+            id={`${uid}-tax-description`}
+            {...registerField(form, "defaultValues.orderDetails.taxDescription")}
+          />
         </Field>
         <Field>
-          <FieldLabel>"Discount Amount"</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-discount-amount`}>Discount Amount</FieldLabel>
           <Input
+            id={`${uid}-discount-amount`}
             type="number"
             min={0}
             step={1}
@@ -831,12 +831,16 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           />
         </Field>
         <Field>
-          <FieldLabel>"Discount Description"</FieldLabel>
-          <Input {...registerField(form, "defaultValues.orderDetails.discountDescription")} />
+          <FieldLabel htmlFor={`${uid}-discount-description`}>Discount Description</FieldLabel>
+          <Input
+            id={`${uid}-discount-description`}
+            {...registerField(form, "defaultValues.orderDetails.discountDescription")}
+          />
         </Field>
         <Field>
-          <FieldLabel>"Expiry Date"</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-expiry-date`}>Expiry Date</FieldLabel>
           <Input
+            id={`${uid}-expiry-date`}
             type="datetime-local"
             {...registerField(form, "defaultValues.orderDetails.expiry")}
           />
@@ -845,7 +849,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
       <Separator />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field>
-          <FieldLabel>"Payment gateway name"</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-payment-gateway-name`}>Payment gateway name</FieldLabel>
           <Select
             items={toSelectOptions(["razorpay", "payu", "zaakpay"])}
             value={form.watch()["defaultValues"]["orderDetails"]["paymentType"] ?? ""}
@@ -853,7 +857,7 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
               setValue(form, "defaultValues.orderDetails.paymentType", value)
             }
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger id={`${uid}-payment-gateway-name`} className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -869,8 +873,13 @@ const OrderDetailsButtonForm = ({ form }: { form: TemplateForm }) => {
           </FieldDescription>
         </Field>
         <Field>
-          <FieldLabel>"Payment gateway configuration name"</FieldLabel>
-          <Input {...registerField(form, "defaultValues.orderDetails.paymentConfigName")} />
+          <FieldLabel htmlFor={`${uid}-payment-gateway-configuration-name`}>
+            Payment gateway configuration name
+          </FieldLabel>
+          <Input
+            id={`${uid}-payment-gateway-configuration-name`}
+            {...registerField(form, "defaultValues.orderDetails.paymentConfigName")}
+          />
           <FieldDescription>
             "Configuration name of payment gateway you have configured on your WhatsApp Business
             Account"

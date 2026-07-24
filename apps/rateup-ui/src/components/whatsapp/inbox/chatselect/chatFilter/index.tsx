@@ -1,5 +1,6 @@
 import { useSearch } from "@tanstack/react-router";
 import { CheckCircle, Filter, RotateCcw } from "lucide-react";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -8,6 +9,7 @@ import { useTeamsByUser } from "@/backend/team/team.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums.ts";
 
 import { MultiSelect } from "../../../../ui/multi-select.tsx";
@@ -40,6 +42,7 @@ export interface ChatFilter {
 }
 
 export default function WaInboxChatFilter() {
+  const uid = useId();
   const { filter, setFilter, clearFilter, setPreviousFilterForTab, previousFilterForTab } =
     useChatFilterStore();
 
@@ -137,12 +140,12 @@ export default function WaInboxChatFilter() {
       <div className="flex flex-col gap-3">
         {/* Channel / Phone */}
         <div>
-          <label
+          <FieldLabel
             htmlFor="accountselector"
             className="flex items-center gap-2 text-sm font-medium text-gray-700"
           >
             <div className="leading-tight">{translations("Channel")}</div>
-          </label>
+          </FieldLabel>
 
           <div className="mt-2">
             <AccountSelector
@@ -175,12 +178,12 @@ export default function WaInboxChatFilter() {
               </span>
             </div>
 
-            <div className="mt-1 space-y-2">
+            <Field className="mt-1">
               {statusData.map((status) => {
                 const isChecked = filter.status?.includes(status.id);
 
                 return (
-                  <div key={status.id} className="flex items-center space-x-2">
+                  <Field key={status.id} orientation="horizontal" className="gap-2">
                     <Checkbox
                       id={status.id}
                       checked={isChecked}
@@ -211,28 +214,32 @@ export default function WaInboxChatFilter() {
                         setPreviousFilterForTab(updated);
                       }}
                     />
-                    <label
+                    <FieldLabel
                       htmlFor={status.id}
                       className="text-xs font-light text-muted-foreground cursor-pointer select-none"
                     >
                       {status.label}
-                    </label>
-                  </div>
+                    </FieldLabel>
+                  </Field>
                 );
               })}
-            </div>
+            </Field>
           </div>
         )}
 
         {/* Assigned Teams (open tab only) */}
         {tab === "open" && (
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <FieldLabel
+              htmlFor={`${uid}-field`}
+              className="flex items-center gap-2 text-sm font-medium text-gray-700"
+            >
               <div className="leading-tight">{translations("Assigned Teams")}</div>
-            </label>
+            </FieldLabel>
 
             <div className="mt-2">
               <MultiSelect
+                id={`${uid}-field`}
                 value={filter.assignedTeams || []}
                 onValueChange={(values) =>
                   setFilter({

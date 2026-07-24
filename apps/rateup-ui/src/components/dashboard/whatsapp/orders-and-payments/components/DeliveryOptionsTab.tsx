@@ -1,5 +1,6 @@
 import { Check, Loader2, Pencil, Plus, Trash2, Truck, X } from "lucide-react";
 import React, { useState } from "react";
+import { useId } from "react";
 
 import type { DeliveryOption } from "@/backend/whatsapp/catalog/catalog.api";
 import {
@@ -9,8 +10,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 const emptyOption = (): DeliveryOption => ({
@@ -22,6 +23,7 @@ const emptyOption = (): DeliveryOption => ({
 });
 
 export default function DeliveryOptionsTab({ catalogId }: { catalogId: string }) {
+  const uid = useId();
   const { data: settings, isLoading } = useCatalogSettings(catalogId);
   const { mutateAsync: save, isPending: isSaving } = useUpdateCatalogSettings(catalogId);
 
@@ -128,24 +130,30 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
 
       {/* Option list */}
       <div className="space-y-2">
-        {options.map((opt) => (
+        {options.map((opt, idx) => (
           <Card key={opt.id} className={`transition-all ${!opt.enabled ? "opacity-60" : ""}`}>
             <CardContent className="p-4">
               {editingId === opt.id ? (
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="col-span-2 sm:col-span-1 space-y-1">
-                      <Label className="text-xs">Partner Name</Label>
+                    <Field className="col-span-2 sm:col-span-1">
+                      <FieldLabel htmlFor={`${uid}-partner-name-${idx}`} className="text-xs">
+                        Partner Name
+                      </FieldLabel>
                       <Input
+                        id={`${uid}-partner-name-${idx}`}
                         value={editDraft.name ?? ""}
                         onChange={(e) => setEditDraft((p) => ({ ...p, name: e.target.value }))}
                         className="h-8 text-sm"
                         placeholder="e.g. Delhivery"
                       />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Charge (₹)</Label>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor={`${uid}-charge-${idx}`} className="text-xs">
+                        Charge (₹)
+                      </FieldLabel>
                       <Input
+                        id={`${uid}-charge-${idx}`}
                         type="number"
                         value={editDraft.charge ?? 0}
                         onChange={(e) =>
@@ -157,16 +165,19 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
                         className="h-8 text-sm"
                         placeholder="60"
                       />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Est. Days</Label>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor={`${uid}-est-days-${idx}`} className="text-xs">
+                        Est. Days
+                      </FieldLabel>
                       <Input
+                        id={`${uid}-est-days-${idx}`}
                         value={editDraft.days ?? ""}
                         onChange={(e) => setEditDraft((p) => ({ ...p, days: e.target.value }))}
                         className="h-8 text-sm"
                         placeholder="3-5"
                       />
-                    </div>
+                    </Field>
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -245,19 +256,25 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
           <CardContent className="p-4 space-y-3">
             <p className="text-sm font-medium">New Delivery Option</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="col-span-2 sm:col-span-1 space-y-1">
-                <Label className="text-xs">Partner Name</Label>
+              <Field className="col-span-2 sm:col-span-1">
+                <FieldLabel htmlFor={`${uid}-partner-name-2`} className="text-xs">
+                  Partner Name
+                </FieldLabel>
                 <Input
+                  id={`${uid}-partner-name-2`}
                   value={newDraft.name}
                   onChange={(e) => setNewDraft((p) => ({ ...p, name: e.target.value }))}
                   className="h-8 text-sm"
                   placeholder="e.g. Delhivery"
                   autoFocus
                 />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Charge (₹)</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor={`${uid}-charge-2`} className="text-xs">
+                  Charge (₹)
+                </FieldLabel>
                 <Input
+                  id={`${uid}-charge-2`}
                   type="number"
                   value={newDraft.charge}
                   onChange={(e) =>
@@ -269,16 +286,19 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
                   className="h-8 text-sm"
                   placeholder="60"
                 />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Est. Days</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor={`${uid}-est-days-2`} className="text-xs">
+                  Est. Days
+                </FieldLabel>
                 <Input
+                  id={`${uid}-est-days-2`}
                   value={newDraft.days ?? ""}
                   onChange={(e) => setNewDraft((p) => ({ ...p, days: e.target.value }))}
                   className="h-8 text-sm"
                   placeholder="3-5"
                 />
-              </div>
+              </Field>
             </div>
             <div className="flex gap-2">
               <Button

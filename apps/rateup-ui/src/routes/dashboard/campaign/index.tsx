@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Filter, MessageSquare, RotateCcw, Send } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCampaignById, useCampaignData } from "@/backend/campaign/campaign.query";
@@ -23,6 +23,7 @@ import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import {
   Select,
@@ -40,6 +41,7 @@ export const Route = createFileRoute("/dashboard/campaign/")({
 });
 
 function CampaignsPage() {
+  const uid = useId();
   const { t } = useTranslation("campaign.list");
   const navigate = useNavigate();
 
@@ -111,12 +113,14 @@ function CampaignsPage() {
       <PopoverContent align="end" className="w-72">
         <div className="space-y-4">
           <div>
-            <label className="text-xs">{t("Team")}</label>
+            <FieldTitle className="text-xs">{t("Team")}</FieldTitle>
             <TeamSelector value={selectedTeam} onChange={setSelectedTeam} enableAll />
           </div>
 
-          <div>
-            <label className="text-xs">{t("Status")}</label>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field`} className="text-xs">
+              {t("Status")}
+            </FieldLabel>
             <Select
               value={selectedStatus}
               onValueChange={setSelectedStatus}
@@ -129,7 +133,7 @@ function CampaignsPage() {
                 { value: "COMPLETED", label: t("Completed") },
               ]}
             >
-              <SelectTrigger className="h-9">
+              <SelectTrigger id={`${uid}-field`} className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -141,7 +145,7 @@ function CampaignsPage() {
                 <SelectItem value="COMPLETED">{t("Completed")}</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
           <div className="flex gap-2 border-t pt-2">
             <Button variant="outline" size="sm" className="flex-1" onClick={resetFilters}>

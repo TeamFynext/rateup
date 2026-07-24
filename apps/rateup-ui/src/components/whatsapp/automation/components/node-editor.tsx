@@ -618,7 +618,7 @@ const InputNodeEditor: React.FC<
         error={useFieldError("variableName")}
       />
 
-      {/* <label htmlFor="validation">Validation (optional)</label>
+      {/* <FieldLabel htmlFor="validation">Validation (optional)</FieldLabel>
       <input
         id="validation"
         type="text"

@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog.tsx";
-import { Label } from "../ui/label.tsx";
+import { Field, FieldLabel } from "../ui/field.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { getInitials } from "../ui/utils.ts";
 import {
@@ -151,11 +151,15 @@ const CreateOrEditContactModal = ({
             </div>
           </div>
         )}
-        <div className="space-y-4 max-h-[400px] overflow-y-auto p-1">
+        <Field className="max-h-[400px] overflow-y-auto p-1">
           {customFields?.length > 0 && (
-            <div className="border flex self-end gap-1 p-1 w-fit">
+            <Field className="border self-end p-1 w-fit">
               {customFields.map((field) => (
-                <div className="flex items-center gap-1 rounded-lg p-1 w-fit px-2" key={field.id}>
+                <Field
+                  key={field.id}
+                  orientation="horizontal"
+                  className="rounded-lg p-1 w-fit px-2"
+                >
                   <Checkbox
                     checked={contactType?.includes(field?.slug)}
                     id={field.slug}
@@ -170,15 +174,15 @@ const CreateOrEditContactModal = ({
                       );
                     }}
                   />
-                  <Label htmlFor={field.slug} className="text-sm font-normal">
+                  <FieldLabel htmlFor={field.slug} className="text-sm font-normal">
                     {field.name}
-                  </Label>
-                </div>
+                  </FieldLabel>
+                </Field>
               ))}
-            </div>
+            </Field>
           )}
           <ContactForm form={form} customFields={customFields} type={type} />
-        </div>
+        </Field>
         <DialogFooter>
           <DialogClose render={<Button variant="secondary" onClick={() => form.reset()} />}>
             <span className="text-sm font-normal">{t("Cancel")}</span>

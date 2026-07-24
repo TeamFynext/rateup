@@ -1,5 +1,6 @@
-import { useCallback } from "react";
+import { useId, useCallback } from "react";
 
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils.ts";
 
@@ -18,6 +19,7 @@ import CustomSwitch from "./stylescomponent/CustomSwitch/index.tsx";
 import styles from "./stylescomponent/StylesComponent.module.css";
 
 function BackgroundStyles() {
+  const uid = useId();
   const selectedPageTab = useSelectedPageTab();
   const selectedPreview = useSelectedPreview();
   const surveyTheme = useSurveyThemeContextValue();
@@ -108,19 +110,20 @@ function BackgroundStyles() {
           onValueChange={handleChooseBackgroundRadioGroupChange}
           className="flex flex-row gap-5"
         >
-          <label className="flex items-center gap-2">
+          <FieldLabel htmlFor={`${uid}-color`} className="flex items-center gap-2">
             <RadioGroupItem value="color" />
             Color
-          </label>
-          <label className="flex items-center gap-2">
-            <RadioGroupItem value="image" />
+          </FieldLabel>
+          <FieldLabel htmlFor={`${uid}-image`} className="flex items-center gap-2">
+            <RadioGroupItem id={`${uid}-color`} value="image" />
             Image
-          </label>
+          </FieldLabel>
         </RadioGroup>
 
         {chooseBgRadioInputValue === "color" && (
           <div className="custom-color-picker-and-heading-container">
             <CustomColorPicker
+              id={`${uid}-image`}
               value={bgColor}
               onChange={handleBgColorPickerChange}
               withoutEyedropper

@@ -293,7 +293,7 @@ const ChatselectPanelHeader = ({
         </div>
 
         {/* Row 2: Row count + Everyone/Mine + sort */}
-        <div className="flex items-center justify-between px-3 border-b">
+        <div className="flex h-9 shrink-0 items-center justify-between border-b px-3">
           <span className="whitespace-nowrap text-xs text-muted-foreground">{rowCountLabel}</span>
 
           <SortMenu

@@ -36,7 +36,6 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import {
   Select,
@@ -485,7 +484,7 @@ function Account() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <Label htmlFor="orgLogoUpload" className="cursor-pointer">
+                    <FieldLabel htmlFor="orgLogoUpload" className="cursor-pointer">
                       <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
                         <Upload className="w-4 h-4" />
                         <span className="text-sm">{translations("Upload Logo")}</span>
@@ -508,7 +507,7 @@ function Account() {
                           }
                         }}
                       />
-                    </Label>
+                    </FieldLabel>
                     <p className="text-xs text-muted-foreground mt-2">
                       {translations("JPG, PNG or GIF")}.{translations("Max size 2MB")}.
                     </p>
@@ -732,7 +731,7 @@ function Account() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <Label htmlFor="profileImageUpload" className="cursor-pointer">
+                  <FieldLabel htmlFor="profileImageUpload" className="cursor-pointer">
                     <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
                       <Upload className="w-4 h-4" />
                       <span className="text-sm">{translations("Upload Photo")}</span>
@@ -745,7 +744,7 @@ function Account() {
                       className="hidden"
                       onChange={handleImagePicker}
                     />
-                  </Label>
+                  </FieldLabel>
                   <p className="text-xs text-muted-foreground mt-2">
                     {translations("JPG, PNG or GIF")}. {translations("Max size 2MB")}.
                   </p>

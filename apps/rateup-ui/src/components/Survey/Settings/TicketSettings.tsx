@@ -1,5 +1,5 @@
 import { IconTicket } from "@tabler/icons-react";
-import { useEffect, useMemo, useState } from "react";
+import { useId, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
@@ -26,6 +26,7 @@ import {
 import NotificationEmailSettings from "./NotificationEmailSettings.tsx";
 
 const TicketSettings = ({ survey, surveyId, enabledModules }) => {
+  const uid = useId();
   const [enableTickets, setEnableTickets] = useState(survey?.enableTickets);
   const [ticketBoardId, setTicketBoardId] = useState(survey?.ticketBoardId);
   const [ticketColumnId, setTicketColumnId] = useState(survey?.ticketColumnId);
@@ -129,13 +130,15 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
                 <FieldGroup className="pt-3">
                   <div className="grid grid-cols-2 gap-3">
                     <Field>
-                      <FieldLabel>{translations("Select Board")}</FieldLabel>
+                      <FieldLabel htmlFor={`${uid}-field`}>
+                        {translations("Select Board")}
+                      </FieldLabel>
                       <Select
                         value={ticketBoardId ?? ""}
                         onValueChange={(v) => setTicketBoardId(v)}
                         items={boards ?? []}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger id={`${uid}-field`}>
                           <SelectValue placeholder={translations("Choose a board")} />
                         </SelectTrigger>
                         <SelectContent>
@@ -149,13 +152,15 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
                     </Field>
 
                     <Field>
-                      <FieldLabel>{translations("Select Column")}</FieldLabel>
+                      <FieldLabel htmlFor={`${uid}-field-2`}>
+                        {translations("Select Column")}
+                      </FieldLabel>
                       <Select
                         value={ticketColumnId ?? ""}
                         onValueChange={(v) => setTicketColumnId(v)}
                         items={columns}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger id={`${uid}-field-2`}>
                           <SelectValue placeholder={translations("Choose a column")} />
                         </SelectTrigger>
                         <SelectContent>

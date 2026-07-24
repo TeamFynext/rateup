@@ -1,6 +1,6 @@
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useContext, useMemo, useState } from "react";
+import { useId, useCallback, useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -93,6 +93,7 @@ function EncryptionPasswordModal({
   surveyId,
   close,
 }: EncryptionPasswordModalProps) {
+  const uid = useId();
   const {
     user: { encryptionKeys },
   } = useUser();
@@ -134,8 +135,9 @@ function EncryptionPasswordModal({
             {translations("Enter the password to view the survey data")}
           </p>
           <Field>
-            <FieldLabel>{translations("Password")}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field`}>{translations("Password")}</FieldLabel>
             <Input
+              id={`${uid}-field`}
               type="password"
               value={encryptionpassword}
               onChange={(e) => setEncryptionPassword(e.target.value)}

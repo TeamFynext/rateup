@@ -1,8 +1,8 @@
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -44,7 +44,7 @@ function ColorInput({
 
   return (
     <div className="flex flex-col gap-1">
-      {label && <Label className="text-xs text-muted-foreground">{label}</Label>}
+      {label && <FieldTitle className="text-xs text-muted-foreground">{label}</FieldTitle>}
       <div
         className="flex h-9 w-36 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2 hover:bg-accent"
         onClick={() => inputRef.current?.click()}
@@ -70,6 +70,7 @@ function ColorInput({
 }
 
 const SmileyExtraProps = ({ form }) => {
+  const uid = useId();
   const features = form.values.features ? { ...form.values.features } : {};
   const [opened, setOpened] = useState(true);
 
@@ -139,13 +140,15 @@ const SmileyExtraProps = ({ form }) => {
 
       <div className="flex items-center justify-between gap-2">
         <div className="flex gap-4">
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs text-muted-foreground">Variant</Label>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-variant`} className="text-xs text-muted-foreground">
+              Variant
+            </FieldLabel>
             <Select
               value={features?.iconStyle?.variant ?? SmileyVariantStyle.Default}
               onValueChange={(v) => handleChange("variant", v)}
             >
-              <SelectTrigger size="sm" className="w-36">
+              <SelectTrigger id={`${uid}-variant`} size="sm" className="w-36">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -156,16 +159,18 @@ const SmileyExtraProps = ({ form }) => {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs text-muted-foreground">Color</Label>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-color`} className="text-xs text-muted-foreground">
+              Color
+            </FieldLabel>
             <Select
               value={features?.iconStyle?.colorType ?? SmileyColorType.Default}
               onValueChange={(v) => handleChange("colorType", v)}
               disabled={isColorDisabled}
             >
-              <SelectTrigger size="sm" className="w-36">
+              <SelectTrigger id={`${uid}-color`} size="sm" className="w-36">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -176,7 +181,7 @@ const SmileyExtraProps = ({ form }) => {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
         </div>
 
         <Button

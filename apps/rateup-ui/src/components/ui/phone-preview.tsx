@@ -132,7 +132,7 @@ export function PhonePreviewPanel() {
       )}
     >
       <div className="flex h-full w-90 flex-col">
-        <div className="flex items-center justify-between border-b px-4 py-3.5">
+        <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
           <div className="flex items-center gap-2">
             <IconDeviceMobile className="size-4 text-muted-foreground" />
             <span className="text-sm font-medium">{t("Device Preview")}</span>

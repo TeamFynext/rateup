@@ -1,6 +1,6 @@
 import { toBlob } from "html-to-image";
 import { Check, ChevronLeft, ChevronRight, Copy, Download, Tags } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useId, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetShareSettings } from "@/backend/surveyShareSettings/surveyShareSettings.query";
@@ -42,6 +42,7 @@ function TagManager({
   surveyId,
   shareUrl,
 }) {
+  const uid = useId();
   const [isAllQrDownloadProcessing, setIsAllQrDownloadProcessing] = useState(false);
   const [tagManagerOpened, setTagManagerOpened] = useState(false);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -167,14 +168,14 @@ function TagManager({
             <div className="flex justify-between items-center">
               <Heading subtitle="URL Taggers" />
               <Field className="min-w-38">
-                <FieldLabel>{translations("Select Team")}</FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field`}>{translations("Select Team")}</FieldLabel>
                 <Select
                   items={teamSelectData}
                   value={selectTeamDropdownValue ?? ""}
                   onValueChange={onSelectTeamDropdownChange}
                   disabled={!isPublished}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id={`${uid}-field`} className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

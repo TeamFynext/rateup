@@ -1,5 +1,5 @@
 import { IconPlus } from "@tabler/icons-react";
-import { useContext, useEffect, useState } from "react";
+import { useId, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -24,6 +24,7 @@ type FieldFormValues = {
 };
 
 const MultiTextInputExtraProps = ({ form }) => {
+  const uid = useId();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = form.values.features?.[selectedLanguage];
   const { t: translations } = useTranslation();
@@ -123,8 +124,9 @@ const MultiTextInputExtraProps = ({ form }) => {
         <FieldGroup>
           <div className="flex flex-wrap items-end gap-3">
             <Field data-invalid={!!errors.fieldKey} className="flex-1 min-w-[160px]">
-              <FieldLabel>{translations("Field Key")}</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field`}>{translations("Field Key")}</FieldLabel>
               <Input
+                id={`${uid}-field`}
                 placeholder={translations("e.g. email")}
                 {...register("fieldKey", {
                   required: translations("Field key cannot be empty"),
@@ -141,8 +143,9 @@ const MultiTextInputExtraProps = ({ form }) => {
             </Field>
 
             <Field data-invalid={!!errors.placeholderText} className="flex-[2] min-w-[200px]">
-              <FieldLabel>{translations("Display Text")}</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field-2`}>{translations("Display Text")}</FieldLabel>
               <Input
+                id={`${uid}-field-2`}
                 placeholder={translations("e.g. Email address")}
                 {...register("placeholderText", {
                   required: translations("Display Text cannot be empty"),

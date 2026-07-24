@@ -8,8 +8,8 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 
@@ -133,10 +133,10 @@ export default function CollectionOptionsTab({ catalogId }: Readonly<{ catalogId
               </div>
 
               {fixedDeliveryCharge && (
-                <div className="flex flex-col gap-1.5 border-t pt-3">
-                  <Label htmlFor="fixed-amount" className="text-xs font-medium">
+                <Field className="border-t pt-3">
+                  <FieldLabel htmlFor="fixed-amount" className="text-xs font-medium">
                     Fixed delivery amount (₹)
-                  </Label>
+                  </FieldLabel>
                   <Input
                     id="fixed-amount"
                     type="number"
@@ -145,7 +145,7 @@ export default function CollectionOptionsTab({ catalogId }: Readonly<{ catalogId
                     placeholder="40"
                     className="h-8 w-36 text-sm"
                   />
-                </div>
+                </Field>
               )}
             </div>
           )}

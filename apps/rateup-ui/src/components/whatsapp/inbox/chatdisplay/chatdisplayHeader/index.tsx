@@ -69,8 +69,13 @@ export default function WaInboxChatDisplayHeader({
 
   if (!contact) return null;
   return (
-    <div className="shrink-0 border-b border-border bg-background">
-      <div className="flex items-center justify-between gap-2.5 px-5 py-2">
+    <div className="shrink-0 bg-background">
+      {/* h-14 is the shared panel-header height (sidebar, chat list, ticket panel,
+          phone preview). The divider has to live on the h-14 row itself, not on
+          this wrapper: borders are inside the box, so a wrapper border would sit
+          1px below every other header's line. Each row below owns its own
+          border-b for the same reason. */}
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2.5 border-b border-border px-5">
         <div className="flex items-center gap-2.5 min-w-0 shrink">
           {isMobile && (
             <button
@@ -205,16 +210,16 @@ export default function WaInboxChatDisplayHeader({
                 <p className="text-sm text-muted-foreground mb-2">
                   Enable/Disable AI response for this contact
                 </p>
-                <div className="flex items-center space-x-2">
+                <Field orientation="horizontal" className="gap-2">
                   <Switch
                     checked={contact.aiWaChat}
                     onCheckedChange={handleAiWaChat}
                     id="ai-chat-switch"
                   />
-                  <Label htmlFor="ai-chat-switchh" className="text-sm">
+                  <FieldLabel htmlFor="ai-chat-switchh" className="text-sm">
                     AI Chat
-                  </Label>
-                </div>
+                  </FieldLabel>
+                </Field>
               </PopoverContent>
             </Popover>
           )} */}

@@ -14,6 +14,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 
@@ -102,15 +103,15 @@ function StylesComponent({
 
       {!isSurveyPageTab && (
         <>
-          <div className="px-[1.1875rem] pt-[0.875rem]">
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <Field className="px-[1.1875rem] pt-[0.875rem]">
+            <FieldTitle className="flex cursor-pointer items-center gap-2 text-sm">
               <Checkbox
                 checked={selectedPageUseSurveyThemeValue}
                 onCheckedChange={handleUseSurveyThemeCheckboxChange}
               />
               Use Survey Theme
-            </label>
-          </div>
+            </FieldTitle>
+          </Field>
           <Separator />
         </>
       )}

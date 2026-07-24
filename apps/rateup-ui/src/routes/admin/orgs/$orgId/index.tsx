@@ -48,7 +48,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
@@ -264,19 +264,19 @@ function OrgById() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             {/* Annual Message Limit Toggle */}
             {(!subscription?.basePlan?.paymentPlan ||
               subscription?.basePlan?.paymentPlan?.period === "yearly") && (
-              <div className="flex items-center gap-2">
+              <Field orientation="horizontal">
                 <Switch
                   id="annual-limit"
                   checked={isAnnualMessageLimit}
                   onCheckedChange={handleAnnualMessageLimit}
                 />
-                <Label htmlFor="annual-limit" className="text-sm">
+                <FieldLabel htmlFor="annual-limit" className="text-sm">
                   Annual Message Limit
-                </Label>
+                </FieldLabel>
                 {subscription?.basePlan?.paymentPlan && (
                   <Tooltip>
                     <TooltipTrigger>
@@ -287,7 +287,7 @@ function OrgById() {
                     </TooltipContent>
                   </Tooltip>
                 )}
-              </div>
+              </Field>
             )}
 
             {/* Action Buttons */}

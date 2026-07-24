@@ -8,8 +8,8 @@ import { useImmer } from "use-immer";
 
 import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
@@ -73,8 +73,8 @@ function SelectField({
 }>) {
   const options = toOptions(data);
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
-      {label && <Label>{label}</Label>}
+    <Field className={cn("flex flex-col gap-1", className)}>
+      {label && <FieldTitle>{label}</FieldTitle>}
       <Select value={value ?? ""} onValueChange={onChange} items={options}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />
@@ -87,7 +87,7 @@ function SelectField({
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </Field>
   );
 }
 

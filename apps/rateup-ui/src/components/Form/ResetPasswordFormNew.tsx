@@ -16,7 +16,13 @@ import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
-import { Field, FieldError, FieldLabel } from "../ui/field.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field.tsx";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "../ui/input-group.tsx";
 import { Input } from "../ui/input.tsx";
 import { Loader } from "../ui/loader.tsx";
 
@@ -176,158 +182,156 @@ const ResetPasswordForm = ({ mode }) => {
           <div className="flex flex-col gap-4">
             {isEmailPage ? (
               <form
-                className="space-y-4"
                 onSubmit={emailForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
                   [SAVE_HOTKEY, (event: any) => emailForm.handleSubmit(onSubmit)(event)],
                 ])}
               >
-                <Controller
-                  name="email"
-                  control={emailForm.control}
-                  render={({ field, fieldState }) => (
-                    <Field className="space-y-2" data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="email">{translations("Email Address")}</FieldLabel>
-                      <Input
-                        {...field}
-                        id="email"
-                        type="email"
-                        placeholder={translations("Enter your email address")}
-                        required
-                        aria-invalid={fieldState.invalid}
-                        className="h-12 bg-gray-100"
-                      />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                    </Field>
-                  )}
-                />
+                <FieldGroup className="gap-4">
+                  <Controller
+                    name="email"
+                    control={emailForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="email">{translations("Email Address")}</FieldLabel>
+                        <Input
+                          {...field}
+                          id="email"
+                          type="email"
+                          placeholder={translations("Enter your email address")}
+                          required
+                          aria-invalid={fieldState.invalid}
+                          className="h-12"
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
 
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full h-12 bg-primary hover:bg-primary/80 cursor-pointer disabled:bg-primary/70"
-                >
-                  {isLoading ? <Loader /> : translations("Reset Password")}
-                </Button>
+                  <Button type="submit" disabled={isLoading} className="w-full h-12 cursor-pointer">
+                    {isLoading ? <Loader /> : translations("Reset Password")}
+                  </Button>
+                </FieldGroup>
               </form>
             ) : (
               <form
-                className="space-y-4"
                 onSubmit={pwdForm.handleSubmit(onSubmit)}
                 onKeyDown={getHotkeyHandler([
                   [SAVE_HOTKEY, (event: any) => pwdForm.handleSubmit(onSubmit)(event)],
                 ])}
               >
-                <Controller
-                  name="password"
-                  control={pwdForm.control}
-                  render={({ field, fieldState }) => (
-                    <Field className="space-y-1" data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="password" className="text-gray-700 text-sm">
-                        {translations("New Password")}
-                      </FieldLabel>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                          {...field}
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          placeholder={translations("Enter your new password")}
-                          aria-invalid={fieldState.invalid}
-                          className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-sm"
-                          onFocus={() => setIsPasswordFocused(true)}
-                          onBlur={() => {
-                            field.onBlur();
-                            setIsPasswordFocused(false);
-                          }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                          {showPassword ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                    </Field>
-                  )}
-                />
+                <FieldGroup className="gap-4">
+                  <Controller
+                    name="password"
+                    control={pwdForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="password">{translations("New Password")}</FieldLabel>
+                        <InputGroup>
+                          <InputGroupAddon>
+                            <Lock />
+                          </InputGroupAddon>
+                          <InputGroupInput
+                            {...field}
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder={translations("Enter your new password")}
+                            aria-invalid={fieldState.invalid}
+                            onFocus={() => setIsPasswordFocused(true)}
+                            onBlur={() => {
+                              field.onBlur();
+                              setIsPasswordFocused(false);
+                            }}
+                          />
+                          <InputGroupAddon align="inline-end">
+                            <InputGroupButton
+                              size="icon-xs"
+                              aria-label={
+                                showPassword
+                                  ? translations("Hide password")
+                                  : translations("Show password")
+                              }
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <EyeOff /> : <Eye />}
+                            </InputGroupButton>
+                          </InputGroupAddon>
+                        </InputGroup>
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
 
-                {/* Confirm Password */}
-                <Controller
-                  name="confirmPassword"
-                  control={pwdForm.control}
-                  render={({ field, fieldState }) => (
-                    <Field className="space-y-1" data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="confirmPassword" className="text-gray-700 text-sm">
-                        {translations("Confirm New Password")}
-                      </FieldLabel>
-                      <div className="relative">
-                        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                          {...field}
-                          id="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"}
-                          placeholder={translations("Confirm your new password")}
-                          aria-invalid={fieldState.invalid}
-                          className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-primary focus:ring-primary/20 bg-white text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                    </Field>
-                  )}
-                />
-                <AnimatePresence>
-                  {isPasswordFocused && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="text-xs text-gray-500 mt-1 overflow-hidden"
-                    >
-                      {translations("Password must have")}:
-                      <ul className="list-none mt-1 space-y-1">
-                        {rules.map((rule) => (
-                          <li key={rule.label} className="flex items-center space-x-1">
-                            {rule.valid ? (
-                              <span className="text-green-600">✔</span>
-                            ) : (
-                              <span className="text-gray-400">●</span>
-                            )}
-                            <span className={rule.valid ? "text-gray-800" : "text-gray-500"}>
-                              {rule.label}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  {/* Confirm Password */}
+                  <Controller
+                    name="confirmPassword"
+                    control={pwdForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="confirmPassword">
+                          {translations("Confirm New Password")}
+                        </FieldLabel>
+                        <InputGroup>
+                          <InputGroupAddon>
+                            <Shield />
+                          </InputGroupAddon>
+                          <InputGroupInput
+                            {...field}
+                            id="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder={translations("Confirm your new password")}
+                            aria-invalid={fieldState.invalid}
+                          />
+                          <InputGroupAddon align="inline-end">
+                            <InputGroupButton
+                              size="icon-xs"
+                              aria-label={
+                                showConfirmPassword
+                                  ? translations("Hide password")
+                                  : translations("Show password")
+                              }
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                              {showConfirmPassword ? <EyeOff /> : <Eye />}
+                            </InputGroupButton>
+                          </InputGroupAddon>
+                        </InputGroup>
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                  <AnimatePresence>
+                    {isPasswordFocused && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="text-xs text-gray-500 mt-1 overflow-hidden"
+                      >
+                        {translations("Password must have")}:
+                        <ul className="list-none mt-1 space-y-1">
+                          {rules.map((rule) => (
+                            <li key={rule.label} className="flex items-center space-x-1">
+                              {rule.valid ? (
+                                <span className="text-green-600">✔</span>
+                              ) : (
+                                <span className="text-gray-400">●</span>
+                              )}
+                              <span className={rule.valid ? "text-gray-800" : "text-gray-500"}>
+                                {rule.label}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full h-12 bg-primary hover:bg-primary/80 cursor-pointer disabled:bg-primary/70"
-                >
-                  {isLoading ? <Loader /> : translations("Update Password")}
-                </Button>
+                  <Button type="submit" disabled={isLoading} className="w-full h-12 cursor-pointer">
+                    {isLoading ? <Loader /> : translations("Update Password")}
+                  </Button>
+                </FieldGroup>
               </form>
             )}
 

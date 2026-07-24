@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
@@ -6,6 +7,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 
 const GoogleSheetSettings = ({ spreadSheetId }) => {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const url = spreadSheetId ? `https://docs.google.com/spreadsheets/d/${spreadSheetId}` : null;
 
@@ -19,9 +21,9 @@ const GoogleSheetSettings = ({ spreadSheetId }) => {
       <CardContent>
         <FieldGroup>
           <Field>
-            <FieldLabel>{translations("Sheet Url")}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field`}>{translations("Sheet Url")}</FieldLabel>
             <InputGroup>
-              <InputGroupInput readOnly value={url} />
+              <InputGroupInput id={`${uid}-field`} readOnly value={url} />
               <InputGroupAddon align="inline-end">
                 <ApiCopyButton value={url} />
               </InputGroupAddon>

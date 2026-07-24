@@ -1,5 +1,5 @@
 import { IconTrash, IconUpload } from "@tabler/icons-react";
-import { useCallback, useRef, useState } from "react";
+import { useId, useCallback, useRef, useState } from "react";
 
 import ImageCropModal from "@/components/Modal/ModalManagerModals/ImageCropModal/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -17,6 +17,7 @@ import {
 import styles from "./stylescomponent/StylesComponent.module.css";
 
 function LogoStyles() {
+  const uid = useId();
   const selectedPageTab = useSelectedPageTab();
   const surveyTheme = useSurveyThemeContextValue();
   const { logo } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
@@ -99,8 +100,11 @@ function LogoStyles() {
     >
       <div className="flex flex-nowrap justify-center gap-5">
         <Field className="flex-1">
-          <FieldLabel className={styles["label"]}>Height (px)</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-height-px`} className={styles["label"]}>
+            Height (px)
+          </FieldLabel>
           <Input
+            id={`${uid}-height-px`}
             type="number"
             min={10}
             max={200}
@@ -112,8 +116,11 @@ function LogoStyles() {
           />
         </Field>
         <Field className="flex-1">
-          <FieldLabel className={styles["label"]}>Width (px)</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-width-px`} className={styles["label"]}>
+            Width (px)
+          </FieldLabel>
           <Input
+            id={`${uid}-width-px`}
             type="number"
             min={10}
             max={200}

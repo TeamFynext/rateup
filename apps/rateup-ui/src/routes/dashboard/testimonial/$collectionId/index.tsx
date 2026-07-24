@@ -18,6 +18,7 @@ import TestimonialShare, {
 } from "@/components/testimonial/TestimonialShare.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
@@ -253,7 +254,7 @@ function UtilityComponent({
       {activeTab === TestimonialTabs.Edit && (
         <>
           {isDelete && (
-            <div className="flex items-center space-x-2">
+            <Field orientation="horizontal" className="gap-2">
               <Checkbox
                 id="select-all-delete"
                 checked={isAllSelectedForDelete}
@@ -263,10 +264,13 @@ function UtilityComponent({
                   else setSelectedTestimonialIds([]);
                 }}
               />
-              <label htmlFor="select-all-delete" className="text-sm font-medium cursor-pointer">
+              <FieldLabel
+                htmlFor="select-all-delete"
+                className="text-sm font-medium cursor-pointer"
+              >
                 {translations("Select All")}
-              </label>
-            </div>
+              </FieldLabel>
+            </Field>
           )}
           <Button
             size="sm"
@@ -300,17 +304,17 @@ function UtilityComponent({
 
       {activeTab === TestimonialTabs.Select && (
         <>
-          <div className="flex items-center space-x-2">
+          <Field orientation="horizontal" className="gap-2">
             <Checkbox
               id="select-all"
               checked={isAllSelected}
               disabled={!filteredTestimonialIds?.length}
               onCheckedChange={filterAndSelectTestimonialIds}
             />
-            <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+            <FieldLabel htmlFor="select-all" className="text-sm font-medium cursor-pointer">
               {translations("Select All")}
-            </label>
-          </div>
+            </FieldLabel>
+          </Field>
           <Button
             size="sm"
             variant="outline"

@@ -68,7 +68,7 @@ export function ReferralMessageSettings({
             control={form.control}
             name="referralMessageTemplate"
             render={({ fieldState }) => (
-              <Field className="space-y-2" data-invalid={fieldState.invalid}>
+              <Field data-invalid={fieldState.invalid}>
                 <FieldDescription className="text-xs">
                   {t("Use variables")}: {"{{1}}"} {t("for contact name")},{"{{2}}"}{" "}
                   {t("for referral code")}. {t("Both are required and each can be used only once.")}

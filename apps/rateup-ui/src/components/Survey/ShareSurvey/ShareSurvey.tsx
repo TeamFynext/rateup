@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CalendarClock, ChevronLeft, Copy, Pause, Pencil, Play } from "lucide-react";
+import { useId } from "react";
 import React, { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -16,9 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
@@ -70,6 +70,7 @@ const ShareSurvey = ({
   setActiveTab: (tab: any) => void;
   allowUnpublishedShare?: boolean;
 }) => {
+  const uid = useId();
   const surveyId = survey?.id;
   const [shareUrl, setShareUrl] = useState("");
   const [tag, setTag] = useState([]);
@@ -443,14 +444,16 @@ const ShareSurvey = ({
                   <h4 className="text-sm font-semibold">{translations("Share Survey")}</h4>
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-sm">{translations("Select Team")}</Label>
+                      <FieldLabel htmlFor={`${uid}-label`} className="text-sm">
+                        {translations("Select Team")}
+                      </FieldLabel>
                       <Select
                         value={selectTeamDropdownState}
                         onValueChange={handleContainedSelectionChange}
                         disabled={disableShare}
                         items={teamSelectData}
                       >
-                        <SelectTrigger className="min-w-[150px]">
+                        <SelectTrigger id={`${uid}-label`} className="min-w-[150px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -639,6 +642,7 @@ export const CopyLinkComponent = ({
 };
 
 const PubliShSettingsModal = ({ opened, close, editPublish, surveyUpdateMutation, survey }) => {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const [publishChoice, setPublishChoice] = useState<PublishEnum>(PublishEnum.NOW);
   const [surveyExpiry, setSurveyExpiry] = useState<ExpiryEnum>(ExpiryEnum.NO_EXPIRY);
@@ -742,12 +746,12 @@ const PubliShSettingsModal = ({ opened, close, editPublish, surveyUpdateMutation
           <DialogTitle>{translations("Publish Settings")}</DialogTitle>
         </DialogHeader>
 
-        <div className="mt-4 flex min-h-[250px] flex-col gap-6">
+        <FieldSet className="mt-4 min-h-[250px]">
           {(!editPublish || editPublish === "Publish") && (
             <div className="flex flex-col gap-3">
-              <Label className="text-sm font-medium">
+              <FieldLegend variant="label">
                 {translations("Publish")} <span className="text-destructive">*</span>
-              </Label>
+              </FieldLegend>
               <RadioGroup
                 value={publishChoice}
                 onValueChange={(v) => setPublishChoice(v as PublishEnum)}
@@ -755,21 +759,22 @@ const PubliShSettingsModal = ({ opened, close, editPublish, surveyUpdateMutation
               >
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value={PublishEnum.NOW} id="publish-now" />
-                  <Label htmlFor="publish-now">{translations("Now")}</Label>
+                  <FieldLabel htmlFor="publish-now">{translations("Now")}</FieldLabel>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value={PublishEnum.LATER} id="publish-later" />
-                  <Label htmlFor="publish-later">{translations("Schedule Later")}</Label>
+                  <FieldLabel htmlFor="publish-later">{translations("Schedule Later")}</FieldLabel>
                 </div>
               </RadioGroup>
               {publishChoice === PublishEnum.LATER && (
                 <div className="flex flex-col gap-2">
                   <Field>
-                    <FieldLabel>
+                    <FieldLabel htmlFor={`${uid}-label-4`}>
                       {translations("Publish Survey At")}{" "}
                       <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Input
+                      id={`${uid}-label-4`}
                       type="datetime-local"
                       min={minPublishAt}
                       {...register("surveyPublishAt")}
@@ -786,10 +791,10 @@ const PubliShSettingsModal = ({ opened, close, editPublish, surveyUpdateMutation
           )}
 
           {(!editPublish || editPublish === "Expiry") && (
-            <div className="flex flex-col gap-3">
-              <Label className="text-sm font-medium">
+            <FieldSet>
+              <FieldLegend variant="label">
                 {translations("Expiry Date")} <span className="text-destructive">*</span>
-              </Label>
+              </FieldLegend>
               <RadioGroup
                 value={surveyExpiry}
                 onValueChange={(v) => setSurveyExpiry(v as ExpiryEnum)}
@@ -797,27 +802,34 @@ const PubliShSettingsModal = ({ opened, close, editPublish, surveyUpdateMutation
               >
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value={ExpiryEnum.NO_EXPIRY} id="expiry-none" />
-                  <Label htmlFor="expiry-none">{translations("No Expiry")}</Label>
+                  <FieldLabel htmlFor="expiry-none">{translations("No Expiry")}</FieldLabel>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value={ExpiryEnum.CUSTOM_DATE} id="expiry-custom" />
-                  <Label htmlFor="expiry-custom">{translations("Custom Date")}</Label>
+                  <FieldLabel htmlFor="expiry-custom">{translations("Custom Date")}</FieldLabel>
                 </div>
               </RadioGroup>
               {surveyExpiry === ExpiryEnum.CUSTOM_DATE && (
                 <div className="flex flex-col gap-2">
                   <Field>
-                    <FieldLabel>{translations("End Survey At")}</FieldLabel>
-                    <Input type="datetime-local" min={minEndAt} {...register("surveyEndAt")} />
+                    <FieldLabel htmlFor={`${uid}-label-7`}>
+                      {translations("End Survey At")}
+                    </FieldLabel>
+                    <Input
+                      id={`${uid}-label-7`}
+                      type="datetime-local"
+                      min={minEndAt}
+                      {...register("surveyEndAt")}
+                    />
                   </Field>
                   <p className="text-xs text-red-500">
                     * {translations("End date must be after the publish date.")}
                   </p>
                 </div>
               )}
-            </div>
+            </FieldSet>
           )}
-        </div>
+        </FieldSet>
 
         <DialogFooter>
           <Button

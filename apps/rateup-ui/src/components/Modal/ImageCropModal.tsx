@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useId, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Cropper, type CropperRef } from "@/components/Cropper/Cropper.tsx";
@@ -30,6 +30,7 @@ export const ImageCropModal = ({
   aspect = 4 / 3,
   freeMode = false,
 }: ImageCropModalProps) => {
+  const uid = useId();
   const [scale, setScale] = useState(0.4);
   const { t: translations } = useTranslation();
   const fileExtension = imageName?.split(".")?.pop()?.toLowerCase() ?? "jpg";
@@ -111,8 +112,9 @@ export const ImageCropModal = ({
           <DialogTitle className="text-center">{translations("Crop Image")}</DialogTitle>
         </DialogHeader>
         <Field>
-          <FieldLabel>{translations("Zoom the Image")}</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-field`}>{translations("Zoom the Image")}</FieldLabel>
           <Input
+            id={`${uid}-field`}
             type="number"
             step={0.1}
             min={0.1}

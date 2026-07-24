@@ -1,5 +1,5 @@
 import { Check, Copy } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -25,6 +25,7 @@ interface IFrameModalProps {
 }
 
 const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [values, setValues] = useState({
@@ -67,8 +68,9 @@ const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
       <p className="text-center">{translations("Create an iframe to embed survey")}</p>
       <div className="grid grid-cols-12 gap-3">
         <Field className="col-span-9" data-invalid={!!errors.width}>
-          <FieldLabel>{translations("Width")}</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-field`}>{translations("Width")}</FieldLabel>
           <Input
+            id={`${uid}-field`}
             type="number"
             min={0}
             step={1}
@@ -80,13 +82,15 @@ const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
           {errors.width && <FieldError>{errors.width}</FieldError>}
         </Field>
         <Field className="col-span-3">
-          <FieldLabel className="sr-only">{translations("Width unit")}</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-field-2`} className="sr-only">
+            {translations("Width unit")}
+          </FieldLabel>
           <Select
             value={values.widthUnit}
             onValueChange={(unit) => setValues((prev) => ({ ...prev, widthUnit: unit }))}
             items={units}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger id={`${uid}-field-2`} className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -99,8 +103,9 @@ const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
           </Select>
         </Field>
         <Field className="col-span-9" data-invalid={!!errors.height}>
-          <FieldLabel>{translations("Height")}</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Height")}</FieldLabel>
           <Input
+            id={`${uid}-field-3`}
             type="number"
             min={0}
             step={1}
@@ -112,13 +117,15 @@ const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
           {errors.height && <FieldError>{errors.height}</FieldError>}
         </Field>
         <Field className="col-span-3">
-          <FieldLabel className="sr-only">{translations("Height unit")}</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-field-4`} className="sr-only">
+            {translations("Height unit")}
+          </FieldLabel>
           <Select
             value={values.heightUnit}
             onValueChange={(unit) => setValues((prev) => ({ ...prev, heightUnit: unit }))}
             items={units}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger id={`${uid}-field-4`} className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -9,8 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 
 const NAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_\s]{5,}$/;
 
@@ -63,19 +63,22 @@ function RenameThemeModal({ opened, onClose, themeId, oldName }) {
           <DialogTitle>Rename Theme</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleFormSubmit}>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="rename-theme-input">Theme Name</Label>
-            <Input
-              id="rename-theme-input"
-              placeholder="Enter New Theme Name"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setError("");
-              }}
-            />
-            {error && <p className="text-xs text-destructive">{error}</p>}
-          </div>
+          <FieldGroup>
+            <Field data-invalid={!!error}>
+              <FieldLabel htmlFor="rename-theme-input">Theme Name</FieldLabel>
+              <Input
+                id="rename-theme-input"
+                placeholder="Enter New Theme Name"
+                aria-invalid={!!error}
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setError("");
+                }}
+              />
+              {error && <FieldError>{error}</FieldError>}
+            </Field>
+          </FieldGroup>
           <DialogFooter className="mt-4">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel

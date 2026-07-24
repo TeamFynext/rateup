@@ -14,9 +14,8 @@ import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import VariableMapping from "@/components/shopify/VariableMapping.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldError } from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -287,9 +286,12 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
               id={`use-product-image-${index}`}
             />
             <div>
-              <Label htmlFor={`use-product-image-${index}`} className="cursor-pointer font-medium">
+              <FieldLabel
+                htmlFor={`use-product-image-${index}`}
+                className="cursor-pointer font-medium"
+              >
                 Use Shopify product image as header
-              </Label>
+              </FieldLabel>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Replaces the template's default header image with the product image from the
                 triggering Shopify order.

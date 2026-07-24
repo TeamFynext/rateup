@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
@@ -228,17 +229,17 @@ export function ManageLabels({
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">{t("Name")}</label>
+              <Field>
+                <FieldTitle className="text-sm font-medium mb-1.5 block">{t("Name")}</FieldTitle>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={t("Label name")}
                 />
-              </div>
+              </Field>
 
               <div>
-                <label className="text-sm font-medium mb-1.5 block">{t("Color")}</label>
+                <FieldTitle className="text-sm font-medium mb-1.5 block">{t("Color")}</FieldTitle>
                 <div className="grid grid-cols-8 gap-2 w-fit">
                   {PRESET_COLORS.map((c, i) => (
                     <button

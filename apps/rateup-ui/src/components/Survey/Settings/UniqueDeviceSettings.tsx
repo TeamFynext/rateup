@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
-import { Label } from "@/components/ui/label.tsx";
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
@@ -29,9 +29,9 @@ const UniqueDeviceSettings = ({ survey, surveyId }) => {
             : translations("Click here to allow only Single user entry from a device")}
         </TooltipContent>
       </Tooltip>
-      <Label htmlFor="unique-device" className="cursor-pointer text-[13px] font-semibold">
+      <FieldLabel htmlFor="unique-device" className="cursor-pointer text-[13px] font-semibold">
         {translations("Unique Device Entry")}
-      </Label>
+      </FieldLabel>
       <div />
       <p className="text-xs text-muted-foreground">
         {translations("Allow only Single user entry from a device")}

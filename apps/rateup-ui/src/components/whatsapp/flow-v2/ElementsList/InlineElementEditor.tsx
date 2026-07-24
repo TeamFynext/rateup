@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import {
   DateField,
@@ -261,7 +261,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {formValues?.visible !== undefined && (
-                <div className="flex items-center space-x-2">
+                <Field orientation="horizontal" className="w-auto gap-2">
                   <Controller
                     name="visible"
                     control={form.control}
@@ -278,15 +278,17 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                       />
                     )}
                   />
-                  <Label htmlFor="visible" className="text-sm font-semibold cursor-pointer">
+                  <FieldLabel htmlFor="visible" className="font-semibold">
                     {translations("Visible")}
-                  </Label>
-                </div>
+                  </FieldLabel>
+                </Field>
               )}
 
               {formValues?.required !== undefined && (
-                <div
-                  className={`flex items-center space-x-2 ${!visibleValue ? "opacity-50 pointer-events-none" : ""}`}
+                <Field
+                  orientation="horizontal"
+                  className="w-auto gap-2"
+                  data-disabled={!visibleValue}
                 >
                   <Checkbox
                     id="required"
@@ -294,13 +296,13 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                     disabled={!visibleValue}
                     onCheckedChange={(checked) => setValue("required", checked as boolean)}
                   />
-                  <Label htmlFor="required" className="text-sm font-semibold cursor-pointer">
+                  <FieldLabel htmlFor="required" className="font-semibold">
                     {translations("Required")}
-                  </Label>
-                </div>
+                  </FieldLabel>
+                </Field>
               )}
               {WaNPSQuestions2.includes(elementType) && (
-                <div className="flex items-center space-x-2">
+                <Field orientation="horizontal" className="w-auto gap-2">
                   <Checkbox
                     id="enableNpsAnalytics"
                     checked={enableNpsValue}
@@ -308,18 +310,15 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                       setValue("enableNpsAnalytics", checked as boolean)
                     }
                   />
-                  <Label
-                    htmlFor="enableNpsAnalytics"
-                    className="text-sm font-semibold cursor-pointer"
-                  >
+                  <FieldLabel htmlFor="enableNpsAnalytics" className="font-semibold">
                     {translations("NPS Analytics")}
-                  </Label>
-                </div>
+                  </FieldLabel>
+                </Field>
               )}
             </div>
 
             <Button type="submit" size="sm">
-              <IconDeviceFloppy size={16} className="mr-2" />
+              <IconDeviceFloppy data-icon="inline-start" />
               {translations("Save Changes")}
             </Button>
           </div>

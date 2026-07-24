@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconAsterisk, IconImageInPicture, IconInfoCircle } from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
+import { useId } from "react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { FieldPath } from "react-hook-form";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -84,6 +85,7 @@ import { parseStringWithVariables, parseTemplate } from "@/utils/whatsapp/templa
 export function WhatsappTemplateById({
   forceTemplateType,
 }: Readonly<{ forceTemplateType?: TemplateType }>) {
+  const uid = useId();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
   const { t: translations } = useTranslation();
@@ -877,7 +879,7 @@ export function WhatsappTemplateById({
             <div className="relative grid grid-cols-1 gap-4 md:grid-cols-2">
               <ReadonlyOverlay />
               <Field>
-                <FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field`}>
                   <div className="flex items-center gap-1 flex-nowrap">
                     <p className="text-sm font-medium">{translations("Template Name")}</p>
                     {requiredIcon}
@@ -888,6 +890,7 @@ export function WhatsappTemplateById({
                 </FieldLabel>
                 <InputGroup>
                   <InputGroupInput
+                    id={`${uid}-field`}
                     placeholder={translations("Name")}
                     disabled={!!editingItem?.data?.id}
                     aria-invalid={!!formErrors.name}
@@ -900,7 +903,7 @@ export function WhatsappTemplateById({
                 {formErrors.name && <FieldError>{formErrors.name.message}</FieldError>}
               </Field>
               <Field>
-                <FieldLabel>
+                <FieldLabel htmlFor={`${uid}-templatetype`}>
                   <div className="flex items-center gap-1 flex-nowrap">
                     <p className="text-sm font-medium">TemplateType</p>
                     {requiredIcon}
@@ -911,7 +914,7 @@ export function WhatsappTemplateById({
                   value={values.templateType ?? ""}
                   onValueChange={(value) => setTemplateValue("templateType", value)}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id={`${uid}-templatetype`} className="w-full">
                     <SelectValue placeholder={translations("TemplateType")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -930,7 +933,7 @@ export function WhatsappTemplateById({
               {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
                 form.getValues().templateType !== TemplateType.CAROUSEL && (
                   <Field>
-                    <FieldLabel>
+                    <FieldLabel htmlFor={`${uid}-category`}>
                       <div className="flex items-center gap-1 flex-nowrap">
                         <p className="text-sm font-medium">Category</p>
                         {requiredIcon}
@@ -942,7 +945,7 @@ export function WhatsappTemplateById({
                       onValueChange={(value) => setTemplateValue("category", value)}
                       disabled={isOrderCreate || catalogBtn || spmBtn || mpmBtn || checkoutBtn}
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger id={`${uid}-category`} className="w-full">
                         <SelectValue placeholder={translations("Category")} />
                       </SelectTrigger>
                       <SelectContent>
@@ -957,7 +960,7 @@ export function WhatsappTemplateById({
                 )}
 
               <Field>
-                <FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field-2`}>
                   <div className="flex items-center gap-1 flex-nowrap">
                     <p className="text-sm font-medium">{translations("Language")}</p>
                     {requiredIcon}
@@ -968,7 +971,7 @@ export function WhatsappTemplateById({
                   value={values.language ?? ""}
                   onValueChange={(value) => setTemplateValue("language", value)}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id={`${uid}-field-2`} className="w-full">
                     <SelectValue placeholder={translations("Language")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -999,7 +1002,7 @@ export function WhatsappTemplateById({
                   <ReadonlyOverlay />
                   <div>
                     <Field>
-                      <FieldLabel>
+                      <FieldLabel htmlFor={`${uid}-field-3`}>
                         <div>
                           <div className="flex items-center gap-1 flex-nowrap">
                             <p className="text-sm font-medium">
@@ -1029,7 +1032,7 @@ export function WhatsappTemplateById({
                         }}
                         disabled={spmBtn || catalogBtn || mpmBtn}
                       >
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger id={`${uid}-field-3`} className="w-full">
                           <SelectValue placeholder={translations("Broadcast Type")} />
                         </SelectTrigger>
                         <SelectContent>
@@ -1114,7 +1117,7 @@ export function WhatsappTemplateById({
                   <>
                     {values?.category !== WaTemplateCategory.AUTHENTICATION ? (
                       <Field data-invalid={!!formErrors.footer}>
-                        <FieldLabel>
+                        <FieldLabel htmlFor={`${uid}-field-4`}>
                           <div>
                             <p className="text-sm font-medium">
                               {translations("Footer (Optional)")}
@@ -1128,6 +1131,7 @@ export function WhatsappTemplateById({
                         </FieldLabel>
                         <InputGroup>
                           <InputGroupInput
+                            id={`${uid}-field-4`}
                             placeholder={translations("Footer")}
                             aria-invalid={!!formErrors.footer}
                             {...registerField("footer")}
@@ -1140,12 +1144,13 @@ export function WhatsappTemplateById({
                       </Field>
                     ) : (
                       <Field>
-                        <FieldLabel>
+                        <FieldLabel htmlFor={`${uid}-field-5`}>
                           <p className="text-sm font-medium">
                             {translations("Code Expiration (minutes)")}
                           </p>
                         </FieldLabel>
                         <Input
+                          id={`${uid}-field-5`}
                           type="number"
                           min={1}
                           max={90}
@@ -1196,22 +1201,27 @@ export function WhatsappTemplateById({
                         </div>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                           <Field>
-                            <FieldLabel>
+                            <FieldLabel htmlFor={`${uid}-field-6`}>
                               <div className="flex items-center gap-1 flex-nowrap">
                                 <p className="text-sm font-medium">{translations("Name")}</p>
                                 {requiredIcon}
                               </div>
                             </FieldLabel>
-                            <Input placeholder={"name"} {...configForm.register("name")} />
+                            <Input
+                              id={`${uid}-field-6`}
+                              placeholder={"name"}
+                              {...configForm.register("name")}
+                            />
                           </Field>
                           <Field>
-                            <FieldLabel>
+                            <FieldLabel htmlFor={`${uid}-field-7`}>
                               <div className="flex items-center gap-1 flex-nowrap">
                                 <p className="text-sm font-medium">{translations("Price")}</p>
                                 {requiredIcon}
                               </div>
                             </FieldLabel>
                             <Input
+                              id={`${uid}-field-7`}
                               type="number"
                               min={0}
                               placeholder={translations("price")}
@@ -1224,13 +1234,14 @@ export function WhatsappTemplateById({
                             />
                           </Field>
                           <Field>
-                            <FieldLabel>
+                            <FieldLabel htmlFor={`${uid}-field-8`}>
                               <div className="flex items-center gap-1 flex-nowrap">
                                 <p className="text-sm font-medium">{translations("Tax")}</p>
                                 {requiredIcon}
                               </div>
                             </FieldLabel>
                             <Input
+                              id={`${uid}-field-8`}
                               type="number"
                               min={0}
                               placeholder={translations("tax")}
@@ -1243,7 +1254,7 @@ export function WhatsappTemplateById({
                             />
                           </Field>
                           <Field>
-                            <FieldLabel>
+                            <FieldLabel htmlFor={`${uid}-field-9`}>
                               <p className="text-sm font-medium">{translations("OrderType")}</p>
                             </FieldLabel>
                             <Select
@@ -1255,7 +1266,7 @@ export function WhatsappTemplateById({
                                 })
                               }
                             >
-                              <SelectTrigger className="w-full">
+                              <SelectTrigger id={`${uid}-field-9`} className="w-full">
                                 <SelectValue placeholder={translations("order type")} />
                               </SelectTrigger>
                               <SelectContent>

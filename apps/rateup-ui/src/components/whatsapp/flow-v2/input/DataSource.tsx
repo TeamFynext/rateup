@@ -1,6 +1,6 @@
 import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useId, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import {
   DEFAULT_IMAGE_BASE64_START,
@@ -49,6 +49,7 @@ function schemaRefResolver(schemaRef: React.MutableRefObject<z.ZodTypeAny>) {
 }
 
 export function DataSourceInput(props) {
+  const uid = useId();
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
   const resetRef = useRef<(() => void) | null>(null);
   const choices = props.value ?? [];
@@ -149,15 +150,16 @@ export function DataSourceInput(props) {
         >
           <div className="flex w-full grow flex-col gap-1">
             <div className="flex items-start gap-2">
-              <div className="flex-[0_0_92%]">
+              <Field className="-[0_0_92%]">
                 <Controller
                   name="title"
                   control={form.control}
                   render={({ field, fieldState }) => (
-                    <div className="flex flex-col gap-1">
-                      <Label>{translations("Title")} *</Label>
+                    <Field>
+                      <FieldLabel htmlFor={`${uid}-field`}>{translations("Title")} *</FieldLabel>
                       <InputGroup aria-invalid={fieldState.invalid}>
                         <InputGroupInput
+                          id={`${uid}-field`}
                           placeholder={translations("Enter title here")}
                           {...field}
                           value={field.value ?? ""}
@@ -175,10 +177,10 @@ export function DataSourceInput(props) {
                       {fieldState.error && (
                         <p className="text-xs text-red-500">{fieldState.error.message}</p>
                       )}
-                    </div>
+                    </Field>
                   )}
                 />
-              </div>
+              </Field>
               <div className="mt-6">
                 <PopoverEmojiPicker
                   onEmojiClick={(e) => form.setValue("title", (form.getValues("title") ?? "") + e)}
@@ -191,10 +193,13 @@ export function DataSourceInput(props) {
                   name="description"
                   control={form.control}
                   render={({ field }) => (
-                    <div className="flex flex-col gap-1">
-                      <Label>{translations("Description")}</Label>
+                    <Field>
+                      <FieldLabel htmlFor={`${uid}-field-2`}>
+                        {translations("Description")}
+                      </FieldLabel>
                       <InputGroup>
                         <InputGroupInput
+                          id={`${uid}-field-2`}
                           placeholder={translations("Enter description here")}
                           {...field}
                           value={field.value ?? ""}
@@ -208,18 +213,19 @@ export function DataSourceInput(props) {
                           </InputGroupAddon>
                         )}
                       </InputGroup>
-                    </div>
+                    </Field>
                   )}
                 />
-                <div className="grid grid-cols-2 gap-2">
+                <Field className="grid grid-cols-2">
                   <Controller
                     name="metadata"
                     control={form.control}
                     render={({ field }) => (
-                      <div className="flex flex-col gap-1">
-                        <Label>Metadata</Label>
+                      <Field>
+                        <FieldLabel htmlFor={`${uid}-metadata`}>Metadata</FieldLabel>
                         <InputGroup>
                           <InputGroupInput
+                            id={`${uid}-metadata`}
                             placeholder="Enter metadata here"
                             {...field}
                             value={field.value ?? ""}
@@ -233,7 +239,7 @@ export function DataSourceInput(props) {
                             </InputGroupAddon>
                           )}
                         </InputGroup>
-                      </div>
+                      </Field>
                     )}
                   />
                   <Controller
@@ -261,7 +267,7 @@ export function DataSourceInput(props) {
                       />
                     )}
                   />
-                </div>
+                </Field>
               </>
             )}
           </div>
@@ -324,6 +330,7 @@ function ChoiceRow({
   disabled,
   onlyTitle,
 }: ChoiceProps) {
+  const uid = useId();
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] = useDisclosure(false);
   const resetRef = useRef<(() => void) | null>(null);
   const { t: translations } = useTranslation();
@@ -431,10 +438,11 @@ function ChoiceRow({
                 name="title"
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <div className="flex flex-col gap-1">
-                    <Label>{translations("Title")} *</Label>
+                  <Field>
+                    <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Title")} *</FieldLabel>
                     <InputGroup aria-invalid={fieldState.invalid}>
                       <InputGroupInput
+                        id={`${uid}-field-3`}
                         placeholder={translations("Enter title here")}
                         {...field}
                         value={field.value ?? ""}
@@ -452,7 +460,7 @@ function ChoiceRow({
                     {fieldState.error && (
                       <p className="text-xs text-red-500">{fieldState.error.message}</p>
                     )}
-                  </div>
+                  </Field>
                 )}
               />
               {!onlyTitle && (
@@ -461,10 +469,13 @@ function ChoiceRow({
                     name="description"
                     control={form.control}
                     render={({ field }) => (
-                      <div className="flex flex-col gap-1">
-                        <Label>{translations("Description")}</Label>
+                      <Field>
+                        <FieldLabel htmlFor={`${uid}-field-4`}>
+                          {translations("Description")}
+                        </FieldLabel>
                         <InputGroup>
                           <InputGroupInput
+                            id={`${uid}-field-4`}
                             placeholder={translations("Enter description here")}
                             {...field}
                             value={field.value ?? ""}
@@ -478,17 +489,20 @@ function ChoiceRow({
                             </InputGroupAddon>
                           )}
                         </InputGroup>
-                      </div>
+                      </Field>
                     )}
                   />
                   <Controller
                     name="metadata"
                     control={form.control}
                     render={({ field }) => (
-                      <div className="flex flex-col gap-1">
-                        <Label>{translations("Metadata")}</Label>
+                      <Field>
+                        <FieldLabel htmlFor={`${uid}-field-5`}>
+                          {translations("Metadata")}
+                        </FieldLabel>
                         <InputGroup>
                           <InputGroupInput
+                            id={`${uid}-field-5`}
                             placeholder={translations("Enter metadata here")}
                             {...field}
                             value={field.value ?? ""}
@@ -502,7 +516,7 @@ function ChoiceRow({
                             </InputGroupAddon>
                           )}
                         </InputGroup>
-                      </div>
+                      </Field>
                     )}
                   />
                   <Controller

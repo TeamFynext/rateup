@@ -1,4 +1,5 @@
 import { Loader2 } from "lucide-react";
+import { useId } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
@@ -36,6 +37,7 @@ export function PointsExpirationSettings({
   isPending,
   disabled = false,
 }: Readonly<PointsExpirationSettingsProps>) {
+  const uid = useId();
   const { t } = useTranslation();
 
   return (
@@ -51,12 +53,15 @@ export function PointsExpirationSettings({
             render={({ field }) => (
               <Field orientation="horizontal" className="p-2.5 border rounded-lg">
                 <FieldContent>
-                  <FieldLabel className="text-sm font-medium">{t("Enable Expiration")}</FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-field`} className="text-sm font-medium">
+                    {t("Enable Expiration")}
+                  </FieldLabel>
                   <FieldDescription className="text-xs text-muted-foreground">
                     {t("Points expire after period")}
                   </FieldDescription>
                 </FieldContent>
                 <Switch
+                  id={`${uid}-field`}
                   checked={field.value}
                   onCheckedChange={disabled ? undefined : field.onChange}
                   disabled={disabled}
@@ -70,7 +75,9 @@ export function PointsExpirationSettings({
             name="months"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel className="text-xs">{t("Expiration Period")}</FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field-2`} className="text-xs">
+                  {t("Expiration Period")}
+                </FieldLabel>
                 <Select
                   value={field.value.toString()}
                   onValueChange={
@@ -84,7 +91,11 @@ export function PointsExpirationSettings({
                     { value: "24", label: t("24 months") },
                   ]}
                 >
-                  <SelectTrigger className="h-9" aria-invalid={fieldState.invalid}>
+                  <SelectTrigger
+                    id={`${uid}-field-2`}
+                    className="h-9"
+                    aria-invalid={fieldState.invalid}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

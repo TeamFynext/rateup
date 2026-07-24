@@ -9,6 +9,7 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { FieldTitle } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
@@ -195,7 +196,7 @@ const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], g
 const ContactSelectCard = ({ contact, checked, onToggle }) => {
   if (!contact) return null;
   return (
-    <label
+    <FieldTitle
       data-checked={checked || undefined}
       className={"cursor-pointer rounded-md p-2 hover:bg-muted data-[checked]:bg-muted"}
     >
@@ -211,14 +212,14 @@ const ContactSelectCard = ({ contact, checked, onToggle }) => {
         </div>
         <Checkbox checked={checked} onCheckedChange={onToggle} />
       </div>
-    </label>
+    </FieldTitle>
   );
 };
 
 const ContactGroupSelectCard = ({ group, checked, onToggle }) => {
   if (!group) return null;
   return (
-    <label
+    <FieldTitle
       data-checked={checked || undefined}
       className={"cursor-pointer rounded-md p-2 hover:bg-muted data-[checked]:bg-muted"}
     >
@@ -234,7 +235,7 @@ const ContactGroupSelectCard = ({ group, checked, onToggle }) => {
         </div>
         <Checkbox checked={checked} onCheckedChange={onToggle} />
       </div>
-    </label>
+    </FieldTitle>
   );
 };
 

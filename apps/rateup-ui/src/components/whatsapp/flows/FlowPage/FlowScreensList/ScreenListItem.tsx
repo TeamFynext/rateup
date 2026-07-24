@@ -11,7 +11,7 @@ import {
 } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import classNames from "classnames/bind";
-import { useContext, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useId, useContext, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -20,8 +20,8 @@ import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/fl
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { FlowMaxElementsPerScreen, FlowMaxScreens } from "@/components/whatsapp/whatsappConfig.tsx";
@@ -72,6 +72,7 @@ function ScreenListItem({
   pageNo,
   handlers,
 }: Readonly<ScreenListItemProps>) {
+  const uid = useId();
   const {
     survey,
     flowJson,
@@ -247,7 +248,7 @@ function ScreenListItem({
       ) : (
         <>
           <div className="max-h-[85%]">
-            <div
+            <Field
               className={`flex items-center gap-1.5 ${styles["screen-title-input-and-chevrons-container"]}`}
             >
               <CustomTooltip
@@ -265,10 +266,11 @@ function ScreenListItem({
                 content={<span>{translations("Previous Screen")}</span>}
               />
 
-              <div className={`flex flex-1 flex-col gap-1 ${styles["text-input"]}`}>
-                <Label>{`Screen ${pageNo + 1}`}</Label>
+              <Field className={`flex flex-1 flex-col gap-1 ${styles["text-input"]}`}>
+                <FieldLabel htmlFor={`${uid}-field`}>{`Screen ${pageNo + 1}`}</FieldLabel>
                 <InputGroup>
                   <InputGroupInput
+                    id={`${uid}-field`}
                     ref={screenTitleInputRef}
                     value={screenTitleInputState}
                     onChange={handleScreenTitleInputChange}
@@ -295,7 +297,7 @@ function ScreenListItem({
                     </InputGroupAddon>
                   )}
                 </InputGroup>
-              </div>
+              </Field>
 
               <CustomTooltip
                 trigger={
@@ -311,7 +313,7 @@ function ScreenListItem({
                 }
                 content={<span>{translations("Next Screen")}</span>}
               />
-            </div>
+            </Field>
             <div className="mx-6 mt-2 flex items-center justify-between">
               <div className="flex items-center gap-1">
                 <CustomTooltip

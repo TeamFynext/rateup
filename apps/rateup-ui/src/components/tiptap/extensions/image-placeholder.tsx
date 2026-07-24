@@ -13,6 +13,7 @@ import { type FormEvent, useState } from "react";
 /* eslint-disable */
 // @ts-nocheck
 import { Button } from "@/components/ui/button";
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useImageUpload } from "@/hooks/use-image-upload";
@@ -236,7 +237,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
                         className="hidden"
                         id="image-upload"
                       />
-                      <label
+                      <FieldLabel
                         htmlFor="image-upload"
                         className="flex cursor-pointer flex-col items-center gap-4"
                       >
@@ -245,7 +246,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
                           <p className="text-sm font-medium">Click to upload or drag and drop</p>
                           <p className="text-xs text-muted-foreground">SVG, PNG, JPG or GIF</p>
                         </div>
-                      </label>
+                      </FieldLabel>
                     </>
                   )}
                   {error && <p className="mt-2 text-sm text-destructive">{error}</p>}

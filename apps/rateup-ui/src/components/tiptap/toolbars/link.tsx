@@ -4,8 +4,8 @@ import { Trash2, X } from "lucide-react";
 import React, { type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getUrlFromString } from "@/lib/tiptap-utils";
@@ -65,38 +65,39 @@ const LinkToolbar = React.forwardRef<HTMLButtonElement, React.ComponentProps<typ
             <X className="h-4 w-4" />
           </button>
           <form onSubmit={handleSubmit}>
-            <Label>Link</Label>
-            <p className="text-sm text-gray-11">Attach a link to the selected text</p>
-            <div className="mt-3 flex flex-col items-end justify-end gap-3">
-              <Input
-                value={link}
-                onChange={(e) => {
-                  setLink(e.target.value);
-                }}
-                className="w-full"
-                placeholder="https://example.com"
-              />
-              <div className="flex items-center gap-3">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="tiptap-link-url">Link</FieldLabel>
+                <FieldDescription>Attach a link to the selected text</FieldDescription>
+                <Input
+                  id="tiptap-link-url"
+                  value={link}
+                  onChange={(e) => {
+                    setLink(e.target.value);
+                  }}
+                  placeholder="https://example.com"
+                />
+              </Field>
+              <div className="flex items-center justify-end gap-3">
                 {editor?.getAttributes("link").href && (
                   <Button
                     type="reset"
                     size="sm"
-                    className="h-8 text-gray-11"
                     variant="ghost"
                     onClick={() => {
                       editor?.chain().focus().unsetLink().run();
                       setLink("");
                     }}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    <Trash2 data-icon="inline-start" />
                     Remove
                   </Button>
                 )}
-                <Button size="sm" className="h-8">
+                <Button size="sm">
                   {editor?.getAttributes("link").href ? "Update" : "Confirm"}
                 </Button>
               </div>
-            </div>
+            </FieldGroup>
           </form>
         </PopoverContent>
       </Popover>

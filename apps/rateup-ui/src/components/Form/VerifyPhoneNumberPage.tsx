@@ -1,5 +1,6 @@
 import { IconArrowAutofitLeft, IconSend } from "@tabler/icons-react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -12,7 +13,8 @@ import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Button } from "../ui/button.tsx";
-import { Input } from "../ui/input.tsx";
+import { Field, FieldGroup, FieldLabel } from "../ui/field.tsx";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 
 import styles from "./AuthForm.module.css";
@@ -98,15 +100,26 @@ function VerifyPhoneNumberPage() {
           `}
         onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleOTPInput]])}
       >
-        <div className={`${styles["root"]} mt-5 mb-4`}>
-          <Input
-            className={styles["input"]}
-            required
-            placeholder={translations("OTP Code")}
-            value={otpNumber}
-            onChange={(e) => setOtpNumber(e.target.value)}
-          />
-        </div>
+        <FieldGroup className="mt-5 mb-4">
+          <Field>
+            <FieldLabel htmlFor="verify-phone-otp">{translations("OTP Code")}</FieldLabel>
+            <InputOTP
+              id="verify-phone-otp"
+              maxLength={6}
+              pattern={REGEXP_ONLY_DIGITS}
+              value={otpNumber}
+              onChange={setOtpNumber}
+              onComplete={handleOTPInput}
+              autoFocus
+            >
+              <InputOTPGroup>
+                {Array.from({ length: 6 }, (_, i) => (
+                  <InputOTPSlot key={i} index={i} />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
+          </Field>
+        </FieldGroup>
         <Button
           type="button"
           disabled={isLoading}

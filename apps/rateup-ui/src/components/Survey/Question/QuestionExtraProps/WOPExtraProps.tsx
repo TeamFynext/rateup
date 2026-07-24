@@ -1,14 +1,19 @@
 import { IconX } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
+import { useId, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 
 import { DEFAULT_WOP } from "../../TakeSurvey/TakeSurveyComponent/util.tsx";
 
@@ -28,10 +33,10 @@ function ColorInput({
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <div className="flex flex-col gap-1">
-      <Label className="text-sm">
+      <FieldTitle className="text-sm">
         {label}
         {required && <span className="ml-0.5 text-destructive">*</span>}
-      </Label>
+      </FieldTitle>
       <div
         className="flex h-9 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2 hover:bg-accent"
         onClick={() => inputRef.current?.click()}
@@ -84,10 +89,10 @@ function TagInput({
 
   return (
     <div className="flex flex-col gap-1">
-      <Label className="text-sm">
+      <FieldTitle className="text-sm">
         {label}
         {required && <span className="ml-0.5 text-destructive">*</span>}
-      </Label>
+      </FieldTitle>
       <div className="flex min-h-9 flex-wrap gap-1.5 rounded-md border border-input bg-background px-2 py-1.5 focus-within:ring-1 focus-within:ring-ring">
         {value.map((tag) => (
           <Badge key={tag} variant="secondary" className="gap-1 pr-1">
@@ -135,6 +140,7 @@ type WopValues = {
 };
 
 const WOPExtraProps = ({ form }) => {
+  const uid = useId();
   const { t: translations } = useTranslation();
 
   const schema = z
@@ -215,9 +221,10 @@ const WOPExtraProps = ({ form }) => {
 
       <FieldGroup>
         <Field data-invalid={!!errors.imageSrc}>
-          <FieldLabel>{translations("Image URL")}</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-field`}>{translations("Image URL")}</FieldLabel>
           <div className="flex items-center gap-1">
             <Input
+              id={`${uid}-field`}
               type="url"
               placeholder={translations("Enter the url of image")}
               {...register("imageSrc")}
@@ -251,10 +258,11 @@ const WOPExtraProps = ({ form }) => {
 
       <FieldGroup>
         <Field data-invalid={!!errors.size}>
-          <FieldLabel>
+          <FieldLabel htmlFor={`${uid}-field-2`}>
             {translations("Wheel Size")} <span className="text-destructive">*</span>
           </FieldLabel>
           <Input
+            id={`${uid}-field-2`}
             type="number"
             placeholder={translations("Enter the size of wheel")}
             {...register("size", { valueAsNumber: true })}

@@ -2,12 +2,12 @@
 /* oxlint-disable */
 // @ts-nocheck
 import { ArrowLeftIcon, ArrowRightIcon, X, Repeat } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,6 +17,7 @@ import { type SearchAndReplaceStorage } from "../extensions/search-and-replace";
 import { useToolbar } from "./toolbar-provider";
 
 export function SearchAndReplaceToolbar() {
+  const uid = useId();
   const { editor } = useToolbar();
 
   const [open, setOpen] = useState(false);
@@ -156,9 +157,12 @@ export function SearchAndReplaceToolbar() {
             </div>
 
             <div className="my-2 w-full">
-              <div className="mb-3">
-                <Label className="mb-1 text-xs text-gray-11">Search</Label>
+              <Field className="mb-3">
+                <FieldLabel htmlFor={`${uid}-search`} className="mb-1 text-xs text-gray-11">
+                  Search
+                </FieldLabel>
                 <Input
+                  id={`${uid}-search`}
                   value={searchText}
                   onChange={(e) => {
                     setSearchText(e.target.value);
@@ -166,10 +170,13 @@ export function SearchAndReplaceToolbar() {
                   placeholder="Search..."
                 />
                 {results?.length === 0 ? selectedResult : selectedResult + 1}/{results?.length}
-              </div>
-              <div className="mb-2">
-                <Label className="mb-1 text-xs text-gray-11">Replace with</Label>
+              </Field>
+              <Field className="mb-2">
+                <FieldLabel htmlFor={`${uid}-replace-with`} className="mb-1 text-xs text-gray-11">
+                  Replace with
+                </FieldLabel>
                 <Input
+                  id={`${uid}-replace-with`}
                   className="w-full"
                   value={replaceText}
                   onChange={(e) => {
@@ -177,8 +184,8 @@ export function SearchAndReplaceToolbar() {
                   }}
                   placeholder="Replace..."
                 />
-              </div>
-              <div className="mt-3 flex items-center space-x-2">
+              </Field>
+              <Field orientation="horizontal" className="gap-2 mt-3">
                 <Checkbox
                   checked={checked}
                   onCheckedChange={(checked: boolean) => {
@@ -186,13 +193,13 @@ export function SearchAndReplaceToolbar() {
                   }}
                   id="match_case"
                 />
-                <Label
+                <FieldLabel
                   htmlFor="match_case"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Match case
-                </Label>
-              </div>
+                </FieldLabel>
+              </Field>
             </div>
 
             <div className="actions mt-6 flex items-center justify-between">

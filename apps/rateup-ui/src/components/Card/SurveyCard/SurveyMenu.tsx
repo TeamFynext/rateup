@@ -10,7 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -48,6 +48,7 @@ interface SurveyMenuProps {
 }
 
 export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }: SurveyMenuProps) {
+  const uid = useId();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const pathname = useRouterState({
@@ -182,13 +183,13 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
             onSubmit={submitClone}
             onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submitClone]])}
           >
-            <div className="flex flex-col gap-4">
+            <Field>
               <p className="text-sm text-muted-foreground">
                 {translations("Select the team/teams in which the survey copy to be created.")}
               </p>
               <div className="flex flex-col gap-2">
                 <Field>
-                  <FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-field`}>
                     {translations("Select teams")}
                     <span className="text-destructive">*</span>
                   </FieldLabel>
@@ -198,12 +199,12 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
                     name="selectTeams"
                     className="mt-2 flex flex-row items-center gap-4"
                   >
-                    <FieldLabel className="items-center font-normal">
-                      <RadioGroupItem value="all" />
+                    <FieldLabel htmlFor={`${uid}-field-2`} className="items-center font-normal">
+                      <RadioGroupItem id={`${uid}-field`} value="all" />
                       {translations("All teams")}
                     </FieldLabel>
-                    <FieldLabel className="items-center font-normal">
-                      <RadioGroupItem value="manual" />
+                    <FieldLabel htmlFor={`${uid}-field-3`} className="items-center font-normal">
+                      <RadioGroupItem id={`${uid}-field-2`} value="manual" />
                       {translations("Select Manually")}
                     </FieldLabel>
                   </RadioGroup>
@@ -212,6 +213,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
                 {teamChoice === "manual" && (
                   <Field>
                     <MultiSelect
+                      id={`${uid}-field-3`}
                       value={selectedTeams}
                       onValueChange={setSelectedTeams}
                       placeholder={translations("Select teams (type in to search)")}
@@ -224,7 +226,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
                   </Field>
                 )}
               </div>
-            </div>
+            </Field>
             <DialogFooter className="mt-4">
               <Button type="reset" variant="ghost" onClick={closeCloneModal}>
                 {translations("Cancel")}

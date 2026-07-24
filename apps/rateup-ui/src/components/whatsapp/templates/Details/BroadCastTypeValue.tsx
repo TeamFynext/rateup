@@ -1,13 +1,15 @@
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 import { getLabel } from "@/utils/file-upload/upload.ts";
+
+import { errorAt, registerField, setValue, type TemplateForm } from "./template-form.ts";
 
 const FILE_CONFIG = {
   [WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE]: {
@@ -33,69 +35,79 @@ const FILE_CONFIG = {
   },
 };
 
-export const BroadCastTypeValue = ({ form, type }) => {
+export const BroadCastTypeValue = ({
+  form,
+  type,
+}: Readonly<{ form: TemplateForm; type: string }>) => {
   const { t: translations } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uid = useId();
+
+  const error = errorAt(form, "header");
+  const header = form.watch("header");
 
   if (type === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT) {
-    const headerProps = form.getInputProps("header");
     return (
-      <div className="flex w-full flex-col gap-1.5">
-        <Label className="text-sm font-medium">Text</Label>
+      <Field className="gap-1.5" data-invalid={!!error}>
+        <FieldLabel htmlFor={`${uid}-header`}>Text</FieldLabel>
         <InputGroup>
           <InputGroupInput
-            {...form.getFieldProps("header")}
-            value={headerProps.value ?? ""}
+            id={`${uid}-header`}
+            {...registerField(form, "header")}
             placeholder={translations("Header")}
-            aria-invalid={!!headerProps.error}
+            aria-invalid={!!error}
           />
           <InputGroupAddon align="inline-end">
-            <LengthTracker length={form?.values?.header?.length ?? 0} maxValue={60} atStart />
+            <LengthTracker
+              length={typeof header === "string" ? header.length : 0}
+              maxValue={60}
+              atStart
+            />
           </InputGroupAddon>
         </InputGroup>
-        {headerProps.error && <p className="text-xs text-destructive">{headerProps.error}</p>}
-      </div>
+        {error && <FieldError>{error}</FieldError>}
+      </Field>
     );
   }
 
   const config = FILE_CONFIG[type];
   if (!config) return null;
 
-  const { error } = form.getInputProps("header");
-
   const handleFile = (file?: File) => {
     if (!file) return;
     if (file.size > config.maxSize) {
       toast.error(`${config.label} must be smaller than ${config.sizeText}`);
-      form.setFieldValue("header", null);
+      setValue(form, "header", null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
-    form.setFieldValue("header", file);
+    setValue(form, "header", file);
   };
 
   return (
-    <div className="flex w-full max-w-100 flex-col gap-1.5">
+    <Field className="w-full max-w-100 gap-1.5" data-invalid={!!error}>
       <input
         ref={fileInputRef}
         type="file"
         accept={config.accept}
         className="hidden"
+        aria-label={`Select a ${config.label}`}
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
       <Button
         type="button"
         variant="outline"
         className="w-full"
+        aria-invalid={!!error}
         onClick={() => fileInputRef.current?.click()}
       >
-        {getLabel(form.values.header, config.label)}
+        {getLabel((header as File | string) ?? "", config.label)}
       </Button>
       {error ? (
-        <p className="text-xs text-destructive">{error}</p>
+        <FieldError>{error}</FieldError>
       ) : (
-        config.helper && <p className="text-xs text-muted-foreground">{config.helper}</p>
+        config.helper && <FieldDescription>{config.helper}</FieldDescription>
       )}
-    </div>
+    </Field>
   );
 };

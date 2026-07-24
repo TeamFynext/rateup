@@ -1,4 +1,5 @@
 import { Info } from "lucide-react";
+import { useId } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 
 import type {
@@ -7,9 +8,14 @@ import type {
   PointRewardFormValues,
 } from "@/components/dashboard/loyalty/rewards/schemas.ts";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -53,6 +59,7 @@ export function LoyaltyRewardForm({
   setTimeRestrictionsEnabled,
   loyaltyTiers,
 }: Readonly<LoyaltyRewardFormProps>) {
+  const uid = useId();
   const DAYS_OF_WEEK = [
     { label: "Monday", value: "monday" },
     { label: "Tuesday", value: "tuesday" },
@@ -316,10 +323,14 @@ export function LoyaltyRewardForm({
                       name="availableDays"
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel className="text-xs">Available Days</FieldLabel>
+                          <FieldTitle className="text-xs">Available Days</FieldTitle>
                           <div className="grid grid-cols-2 gap-2">
                             {DAYS_OF_WEEK.map((day) => (
-                              <div key={day.value} className="flex items-center space-x-2">
+                              <Field
+                                key={day.value}
+                                orientation="horizontal"
+                                className="w-auto gap-2"
+                              >
                                 <Checkbox
                                   id={`day-${day.value}`}
                                   checked={field.value?.includes(day.value)}
@@ -330,13 +341,13 @@ export function LoyaltyRewardForm({
                                     field.onChange(updated);
                                   }}
                                 />
-                                <Label
+                                <FieldLabel
                                   htmlFor={`day-${day.value}`}
                                   className="text-sm font-normal cursor-pointer"
                                 >
                                   {day.label}
-                                </Label>
-                              </div>
+                                </FieldLabel>
+                              </Field>
                             ))}
                           </div>
                           {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -403,10 +414,10 @@ export function LoyaltyRewardForm({
                     name="tierIds"
                     render={({ field, fieldState }) => (
                       <Field className="pt-2 border-t" data-invalid={fieldState.invalid}>
-                        <FieldLabel className="text-xs">Applicable Tiers</FieldLabel>
+                        <FieldTitle className="text-xs">Applicable Tiers</FieldTitle>
                         <div className="space-y-2">
                           {loyaltyTiers?.map((tier) => (
-                            <div key={tier.id} className="flex items-center space-x-2">
+                            <Field key={tier.id} orientation="horizontal" className="w-auto gap-2">
                               <Checkbox
                                 id={`tier-${tier.id}`}
                                 checked={field.value?.includes(tier.id)}
@@ -417,7 +428,7 @@ export function LoyaltyRewardForm({
                                   field.onChange(updatedTiers);
                                 }}
                               />
-                              <Label
+                              <FieldLabel
                                 htmlFor={`tier-${tier.id}`}
                                 className="text-sm flex items-center gap-2 cursor-pointer font-normal"
                               >
@@ -426,8 +437,8 @@ export function LoyaltyRewardForm({
                                   style={{ backgroundColor: tier.color }}
                                 />
                                 <span>{tier.name}</span>
-                              </Label>
-                            </div>
+                              </FieldLabel>
+                            </Field>
                           ))}
                         </div>
                         <FieldDescription>
@@ -703,10 +714,10 @@ export function LoyaltyRewardForm({
                   name="tierIds"
                   render={({ field, fieldState }) => (
                     <Field className="pt-2 border-t" data-invalid={fieldState.invalid}>
-                      <FieldLabel className="text-xs">Applicable Tiers</FieldLabel>
+                      <FieldTitle className="text-xs">Applicable Tiers</FieldTitle>
                       <div className="space-y-2">
                         {loyaltyTiers?.map((tier) => (
-                          <div key={tier.id} className="flex items-center space-x-2">
+                          <Field key={tier.id} orientation="horizontal" className="w-auto gap-2">
                             <Checkbox
                               id={`coupon-create-tier-${tier.id}`}
                               checked={field.value?.includes(tier.id)}
@@ -717,7 +728,7 @@ export function LoyaltyRewardForm({
                                 field.onChange(updatedTiers);
                               }}
                             />
-                            <Label
+                            <FieldLabel
                               htmlFor={`coupon-create-tier-${tier.id}`}
                               className="text-sm flex items-center gap-2 cursor-pointer font-normal"
                             >
@@ -726,8 +737,8 @@ export function LoyaltyRewardForm({
                                 style={{ backgroundColor: tier.color }}
                               />
                               <span>{tier.name}</span>
-                            </Label>
-                          </div>
+                            </FieldLabel>
+                          </Field>
                         ))}
                       </div>
                       <FieldDescription>
@@ -823,8 +834,13 @@ export function LoyaltyRewardForm({
             <h3 className="text-base font-medium mb-3">Delivery Information (Optional)</h3>
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label className="text-xs">Shipping Required</Label>
-                <Switch className="data-[state=checked]:bg-[#1873E8]" />
+                <FieldLabel htmlFor={`${uid}-shipping-required`} className="text-xs">
+                  Shipping Required
+                </FieldLabel>
+                <Switch
+                  id={`${uid}-shipping-required`}
+                  className="data-[state=checked]:bg-[#1873E8]"
+                />
                 <p className="text-xs text-muted-foreground">
                   Enable if physical delivery is required
                 </p>
@@ -871,10 +887,10 @@ export function LoyaltyRewardForm({
                   name="tierIds"
                   render={({ field, fieldState }) => (
                     <Field className="pt-2 border-t" data-invalid={fieldState.invalid}>
-                      <FieldLabel className="text-xs">Applicable Tiers</FieldLabel>
+                      <FieldTitle className="text-xs">Applicable Tiers</FieldTitle>
                       <div className="space-y-2">
                         {loyaltyTiers?.map((tier) => (
-                          <div key={tier.id} className="flex items-center space-x-2">
+                          <Field key={tier.id} orientation="horizontal" className="w-auto gap-2">
                             <Checkbox
                               id={`gift-create-tier-${tier.id}`}
                               checked={field.value?.includes(tier.id)}
@@ -885,7 +901,7 @@ export function LoyaltyRewardForm({
                                 field.onChange(updatedTiers);
                               }}
                             />
-                            <Label
+                            <FieldLabel
                               htmlFor={`gift-create-tier-${tier.id}`}
                               className="text-sm flex items-center gap-2 cursor-pointer font-normal"
                             >
@@ -894,8 +910,8 @@ export function LoyaltyRewardForm({
                                 style={{ backgroundColor: tier.color }}
                               />
                               <span>{tier.name}</span>
-                            </Label>
-                          </div>
+                            </FieldLabel>
+                          </Field>
                         ))}
                       </div>
                       <FieldDescription>

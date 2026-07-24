@@ -1,5 +1,5 @@
 import { IconBrandGoogleDrive } from "@tabler/icons-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -13,10 +13,11 @@ import { IntegratedApps } from "@/types/enums.ts";
 
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import { Field, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 
 export function GoogleSheet() {
+  const uid = useId();
   const confirm = useConfirm();
 
   const { data: googleAccessToken } = useIntegrationByType(IntegratedApps.googlesheet);
@@ -73,24 +74,28 @@ export function GoogleSheet() {
       </div>
     );
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <Field className="p-8">
       <h3 className="text-xl font-semibold">{translations("Google Sheet Config")}</h3>
       <Card>
         <CardContent className="flex justify-between">
           {googleAccessToken?.credential?.userEmail && (
-            <div className="flex w-2/5 flex-col gap-4">
+            <Field className="w-2/5">
               <h4 className="text-lg font-semibold">{translations("Synced account info")}</h4>
-              <div>
-                <Label>{translations("Email Address")}</Label>
-                <Input value={googleAccessToken?.credential?.userEmail} disabled />
-              </div>
-            </div>
+              <Field>
+                <FieldLabel htmlFor={`${uid}-field`}>{translations("Email Address")}</FieldLabel>
+                <Input
+                  id={`${uid}-field`}
+                  value={googleAccessToken?.credential?.userEmail}
+                  disabled
+                />
+              </Field>
+            </Field>
           )}
           <Button onClick={handleSignOutGoogleSync} variant="destructive">
             {translations("Sign out of google synced account")}
           </Button>
         </CardContent>
       </Card>
-    </div>
+    </Field>
   );
 }

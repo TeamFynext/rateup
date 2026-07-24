@@ -7,7 +7,7 @@ import { useLoyaltyRewards } from "@/backend/loyalty/reward.query";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -101,15 +101,15 @@ export function BirthdayReminderSettings({
 
         {form.watch(`${LoyaltyEventType.BIRTHDAY}.enabled`) && (
           <>
-            <div className="space-y-2">
+            <Field>
               <Controller
                 control={form.control}
                 name={`${LoyaltyEventType.BIRTHDAY}.rewardId`}
                 render={({ field }) => (
                   <>
-                    <Label htmlFor="birthday-gift" className="text-sm">
+                    <FieldLabel htmlFor="birthday-gift" className="text-sm">
                       {t("Birthday Gift")}
-                    </Label>
+                    </FieldLabel>
                     <Select
                       value={field.value}
                       onValueChange={
@@ -139,7 +139,7 @@ export function BirthdayReminderSettings({
                   </>
                 )}
               />
-            </div>
+            </Field>
 
             <div className="space-y-2">
               <Controller

@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog.tsx";
-import { Label } from "../ui/label.tsx";
+import { FieldTitle } from "../ui/field.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import { Textarea } from "../ui/textarea.tsx";
@@ -162,7 +162,7 @@ const ContactDetailedView = ({
           <TabsContent value="groups" className="space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>Group Membership</Label>
+                <FieldTitle>Group Membership</FieldTitle>
                 <Button
                   size="sm"
                   variant="outline"

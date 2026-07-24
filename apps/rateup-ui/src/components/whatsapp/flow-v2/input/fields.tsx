@@ -1,4 +1,4 @@
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldDescription, FieldError, FieldTitle } from "@/components/ui/field.tsx";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
@@ -40,7 +40,7 @@ function Shell({
 }: React.PropsWithChildren<Pick<BaseFieldProps, "label" | "description" | "error" | "className">>) {
   return (
     <Field className={className}>
-      {label ? <FieldLabel>{label}</FieldLabel> : null}
+      {label ? <FieldTitle>{label}</FieldTitle> : null}
       {children}
       {description ? <FieldDescription>{description}</FieldDescription> : null}
       {error ? <FieldError>{String(error)}</FieldError> : null}

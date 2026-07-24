@@ -7,8 +7,8 @@ import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
+import { FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -61,7 +61,7 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
       <CardContent className="space-y-6 pt-6">
         <div className="flex gap-4">
           <div className="space-y-1">
-            <Label>Select Account</Label>
+            <FieldTitle>Select Account</FieldTitle>
             <div className="max-w-md">
               <AccountSelector
                 value={validAccountId}
@@ -73,7 +73,7 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
           </div>
 
           <div className="space-y-2">
-            <Label>Select Keyword</Label>
+            <FieldTitle>Select Keyword</FieldTitle>
             <div className="max-w-md">
               <Select
                 value={validKeyword}
@@ -98,7 +98,7 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHA
         {shareUrl && (
           <div className="mt-6 border-t pt-6 space-y-6">
             <div className="space-y-2">
-              <Label>Share Link</Label>
+              <FieldTitle>Share Link</FieldTitle>
               <div className="flex gap-2">
                 <Input value={shareUrl} readOnly />
                 <Button

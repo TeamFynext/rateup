@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
-import { useEffect } from "react";
+import { useId, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -20,6 +20,7 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldTitle,
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
@@ -122,6 +123,7 @@ export function BusinessHoursEditorDialog({
   onSave,
   editing,
 }: Readonly<Props>) {
+  const uid = useId();
   const { t } = useTranslation();
 
   const form = useForm<BusinessHoursFormValues>({
@@ -221,8 +223,12 @@ export function BusinessHoursEditorDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>{t("Name")} *</FieldLabel>
-                  <Input {...field} placeholder={t("e.g. Regular Business Hours")} />
+                  <FieldLabel htmlFor={`${uid}-field`}>{t("Name")} *</FieldLabel>
+                  <Input
+                    id={`${uid}-field`}
+                    {...field}
+                    placeholder={t("e.g. Regular Business Hours")}
+                  />
                   <FieldDescription>
                     {t("Give the business hours a recognizable name.")}
                   </FieldDescription>
@@ -236,7 +242,7 @@ export function BusinessHoursEditorDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>{t("Timezone")} *</FieldLabel>
+                  <FieldTitle>{t("Timezone")} *</FieldTitle>
                   <TimeZoneSelector value={field.value} onChange={field.onChange} />
                   <FieldDescription>
                     {t("Select the timezone for your business hours.")}
@@ -252,8 +258,8 @@ export function BusinessHoursEditorDialog({
               control={form.control}
               render={({ field }) => (
                 <Field>
-                  <FieldLabel>{t("Channels")}</FieldLabel>
-                  <MultiSelect
+                  <FieldLabel htmlFor={`${uid}-field-2`}>{t("Channels")}</FieldLabel>
+                  <MultiSelect id={`${uid}-field-2`}
                     options={availableChannels.map((channel) => ({
                       label: channel,
                       value: channel,
@@ -274,8 +280,9 @@ export function BusinessHoursEditorDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>{t("Description")}</FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-field-3`}>{t("Description")}</FieldLabel>
                   <Textarea
+                    id={`${uid}-field-3`}
                     {...field}
                     rows={2}
                     className="resize-none"
@@ -291,7 +298,7 @@ export function BusinessHoursEditorDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>{t("Business hours")}</FieldLabel>
+                  <FieldTitle>{t("Business hours")}</FieldTitle>
                   <FieldDescription>
                     {t(
                       "Click the toggle to open or close your business for this set of business hours and adjust the times. Time ranges in the same day must not overlap (e.g. 09:00-10:00 and 09:00-12:00 are invalid).",
@@ -299,7 +306,7 @@ export function BusinessHoursEditorDialog({
                   </FieldDescription>
 
                   <div className="mt-4 space-y-4">
-                    {days.map((day) => {
+                    {days.map((day, idx) => {
                       const daySchedule = field.value[day];
                       const dayErrors =
                         (fieldState.error as any)?.[day]?.timeSlots?.length > 0
@@ -322,6 +329,7 @@ export function BusinessHoursEditorDialog({
                                 {daySchedule.isOpen ? t("Open") : t("Closed")}
                               </span>
                               <Switch
+                                id={`${uid}-field-4-${idx}`}
                                 checked={daySchedule.isOpen}
                                 onCheckedChange={(checked) =>
                                   handleBusinessHoursChange(day, checked)

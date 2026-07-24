@@ -16,7 +16,7 @@ import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
 import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
 import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
 import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
-import { Dialog, DialogContent } from "@/components/ui/dialog.tsx";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { cn } from "@/lib/utils";
@@ -590,9 +590,11 @@ const ShowMedia = ({ opened, close }) => {
       }}
     >
       <DialogContent>
+        <DialogTitle className="sr-only">{media.name}</DialogTitle>
         <div className="flex flex-col gap-4">
           <Button
             size="icon"
+            aria-label="Remove media"
             className="bg-red-600 text-white hover:bg-red-700"
             onClick={async () => {
               await removeMedia(media.key);

@@ -23,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 
@@ -242,16 +242,16 @@ function BillingPage() {
                 {/* Plan Details Section */}
                 <div className="space-y-4 shrink-0">
                   {cart?.period === "yearly" && (
-                    <div className="flex items-center space-x-2">
+                    <Field orientation="horizontal" className="gap-2">
                       <Switch
                         id="annual-limit"
                         checked={isAnnualMessageLimit}
                         onCheckedChange={setIsAnnualMessageLimit}
                       />
-                      <Label htmlFor="annual-limit" className="cursor-pointer">
+                      <FieldLabel htmlFor="annual-limit" className="cursor-pointer">
                         {translations("Annual Message limit")}
-                      </Label>
-                    </div>
+                      </FieldLabel>
+                    </Field>
                   )}
 
                   <div className="space-y-2">

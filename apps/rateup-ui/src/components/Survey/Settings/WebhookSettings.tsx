@@ -1,5 +1,5 @@
 import { IconInfoCircle, IconWebhook } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetWebhookClientSecret } from "@/backend/org/org.query";
@@ -20,6 +20,7 @@ import {
 import { isValidUrl } from "@/utils/index.ts";
 
 const WebhookSettings = ({ responseWebhookEndpoint, editSurvey, enabledModules }) => {
+  const uid = useId();
   const [endpointUrl, setEndpointUrl] = useState("");
   const [error, setError] = useState("");
   const { data: webhookSecret } = useGetWebhookClientSecret(responseWebhookEndpoint);
@@ -56,9 +57,16 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey, enabledModules }
               <FieldGroup>
                 {responseWebhookEndpoint && (
                   <Field>
-                    <FieldLabel>{translations("Client Secret")}</FieldLabel>
+                    <FieldLabel htmlFor={`${uid}-field`}>
+                      {translations("Client Secret")}
+                    </FieldLabel>
                     <InputGroup>
-                      <InputGroupInput type="password" readOnly value={webhookSecret ?? ""} />
+                      <InputGroupInput
+                        id={`${uid}-field`}
+                        type="password"
+                        readOnly
+                        value={webhookSecret ?? ""}
+                      />
                       <InputGroupAddon align="inline-end">
                         <ApiCopyButton value={webhookSecret ?? ""} />
                       </InputGroupAddon>
@@ -67,7 +75,7 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey, enabledModules }
                 )}
 
                 <Field data-invalid={!!error}>
-                  <FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-field-2`}>
                     <span className="flex items-center gap-1">
                       {translations("Enter webhook url endpoint for response")}
                       <Tooltip>
@@ -81,6 +89,7 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey, enabledModules }
                     </span>
                   </FieldLabel>
                   <Input
+                    id={`${uid}-field-2`}
                     type="url"
                     value={endpointUrl}
                     placeholder={translations("https://example.com/webhook")}

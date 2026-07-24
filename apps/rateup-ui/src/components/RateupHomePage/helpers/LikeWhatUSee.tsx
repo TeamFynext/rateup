@@ -4,7 +4,7 @@ import { Calendar, X } from "lucide-react";
 import { imagesPath } from "@/components/HomePage/constants";
 import { RateupStar } from "@/components/integrations/logos";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 interface LikeWhatUSeeProps {
   open: boolean;
@@ -39,15 +39,15 @@ export default function LikeWhatUSee({
           </div>
 
           {/* TITLE */}
-          <h2 className="text-center text-2xl font-black leading-none tracking-[-0.03em] text-[#0D2550]">
+          <DialogTitle className="text-center text-2xl font-black leading-none tracking-[-0.03em] text-[#0D2550]">
             Like what you see?
-          </h2>
+          </DialogTitle>
 
           {/* SUBTITLE */}
-          <p className=" mx-auto max-w-[320px] text-center text-sm mt-2 text-slate-400">
+          <DialogDescription className="mx-auto max-w-[320px] text-center text-sm mt-2 text-slate-400">
             Turn one-time buyers into repeat customers on WhatsApp. Let&apos;s find the fastest way
             to get you started.
-          </p>
+          </DialogDescription>
 
           {/* ACTIONS */}
           <div className="mt-6 flex flex-col gap-3">

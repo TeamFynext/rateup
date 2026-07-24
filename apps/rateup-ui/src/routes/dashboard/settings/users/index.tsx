@@ -58,8 +58,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSeparator,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import {
@@ -74,6 +86,7 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { cn } from "@/lib/utils.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { getOrgIdRole, getUserID } from "@/utils/userInfo.ts";
@@ -299,7 +312,7 @@ function UsersPage() {
 
               <form
                 onSubmit={userForm.handleSubmit(() => addResourceMutation.mutate())}
-                className="space-y-4 py-3"
+                className="flex flex-col gap-4 py-3"
               >
                 <div className="grid grid-cols-[180px_1fr] gap-6">
                   {/* Left: Profile Picture */}
@@ -341,38 +354,33 @@ function UsersPage() {
                   </div>
 
                   {/* Right: Form Fields */}
-                  <div className="space-y-3">
+                  <FieldGroup className="gap-3">
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="new-name" className="text-xs">
-                          {translations("Full Name")} <span className="text-red-500">*</span>
-                        </Label>
-                        <Controller
-                          name="name"
-                          control={userForm.control}
-                          render={({ field, fieldState }) => (
-                            <>
-                              <Input
-                                {...field}
-                                id="new-name"
-                                placeholder="John Doe"
-                                className="h-9"
-                                aria-invalid={fieldState.invalid}
-                              />
-                              {fieldState.error && (
-                                <p className="text-xs text-red-500 mt-1">
-                                  {fieldState.error.message}
-                                </p>
-                              )}
-                            </>
-                          )}
-                        />
-                      </div>
+                      <Controller
+                        name="name"
+                        control={userForm.control}
+                        render={({ field, fieldState }) => (
+                          <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="new-name" className="text-xs">
+                              {translations("Full Name")}{" "}
+                              <span className="text-destructive">*</span>
+                            </FieldLabel>
+                            <Input
+                              {...field}
+                              id="new-name"
+                              placeholder="John Doe"
+                              className="h-9"
+                              aria-invalid={fieldState.invalid}
+                            />
+                            <FieldError errors={[fieldState.error]} className="text-xs" />
+                          </Field>
+                        )}
+                      />
 
-                      <div className="space-y-1.5">
-                        <Label htmlFor="new-phone" className="text-xs">
+                      <Field className="gap-1.5">
+                        <FieldLabel htmlFor="new-phone" className="text-xs">
                           {translations("Phone Number")}
-                        </Label>
+                        </FieldLabel>
                         <PhoneInput
                           id="new-phone"
                           placeholder={translations("Enter phone number")}
@@ -381,48 +389,40 @@ function UsersPage() {
                           value={newUserPhone}
                           onChange={(value) => setNewUserPhone(value || "")}
                         />
-                      </div>
+                      </Field>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="new-email" className="text-xs">
-                        {translations("Email Address")} <span className="text-red-500">*</span>
-                      </Label>
-                      <div className="relative">
-                        <Mail className="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                        <Controller
-                          name="email"
-                          control={userForm.control}
-                          render={({ field, fieldState }) => (
-                            <Input
+                    <Controller
+                      name="email"
+                      control={userForm.control}
+                      render={({ field, fieldState }) => (
+                        <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor="new-email" className="text-xs">
+                            {translations("Email Address")}{" "}
+                            <span className="text-destructive">*</span>
+                          </FieldLabel>
+                          <InputGroup className="h-9">
+                            <InputGroupAddon>
+                              <Mail />
+                            </InputGroupAddon>
+                            <InputGroupInput
                               {...field}
                               id="new-email"
                               type="email"
                               placeholder="john@company.com"
-                              className="h-9 pl-9"
                               aria-invalid={fieldState.invalid}
                             />
-                          )}
-                        />
-                      </div>
-                      <Controller
-                        name="email"
-                        control={userForm.control}
-                        render={({ fieldState }) =>
-                          fieldState.error ? (
-                            <p className="text-xs text-red-500 mt-1">{fieldState.error.message}</p>
-                          ) : (
-                            <></>
-                          )
-                        }
-                      />
-                    </div>
+                          </InputGroup>
+                          <FieldError errors={[fieldState.error]} className="text-xs" />
+                        </Field>
+                      )}
+                    />
 
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="new-role" className="text-xs">
-                          {translations("User Role")} <span className="text-red-500">*</span>
-                        </Label>
+                      <Field className="gap-1.5">
+                        <FieldLabel htmlFor="new-role" className="text-xs">
+                          {translations("User Role")} <span className="text-destructive">*</span>
+                        </FieldLabel>
                         <Select
                           defaultValue={UserRole.MEMBER}
                           items={[
@@ -464,12 +464,12 @@ function UsersPage() {
                             </SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
+                      </Field>
 
-                      <div className="space-y-1.5">
-                        <Label htmlFor="new-team" className="text-xs">
+                      <Field className="gap-1.5">
+                        <FieldLabel htmlFor="new-team" className="text-xs">
                           {translations("Team Assignment")}
-                        </Label>
+                        </FieldLabel>
                         {isLoadingTeamsUser ? (
                           <div className="h-9 w-full rounded-md bg-muted animate-pulse" />
                         ) : (
@@ -507,22 +507,24 @@ function UsersPage() {
                             </SelectContent>
                           </Select>
                         )}
-                      </div>
+                      </Field>
                     </div>
 
-                    <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs mb-0">{translations("Send welcome email")}</Label>
-                        <Switch defaultChecked disabled />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs mb-0">
+                    <FieldGroup className="gap-2 p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-900">
+                      <Field orientation="horizontal" data-disabled>
+                        <FieldLabel htmlFor="new-welcome-email" className="text-xs">
+                          {translations("Send welcome email")}
+                        </FieldLabel>
+                        <Switch id="new-welcome-email" defaultChecked disabled />
+                      </Field>
+                      <Field orientation="horizontal" data-disabled>
+                        <FieldLabel htmlFor="new-require-password-change" className="text-xs">
                           {translations("Require password change")}
-                        </Label>
-                        <Switch defaultChecked disabled />
-                      </div>
-                    </div>
-                  </div>
+                        </FieldLabel>
+                        <Switch id="new-require-password-change" defaultChecked disabled />
+                      </Field>
+                    </FieldGroup>
+                  </FieldGroup>
                 </div>
 
                 <DialogFooter className="gap-2 sm:gap-0">
@@ -1077,11 +1079,11 @@ function EditMember({
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="edit-gender" className="text-xs">
-                      {translations("Title")} <span className="text-red-500">*</span>
-                    </Label>
+                <FieldGroup className="gap-3">
+                  <Field className="gap-1.5" data-disabled={!canEditNameAndPhone}>
+                    <FieldLabel htmlFor="edit-gender" className="text-xs">
+                      {translations("Title")} <span className="text-destructive">*</span>
+                    </FieldLabel>
                     <Select
                       value={editableGender}
                       onValueChange={setEditableGender}
@@ -1101,13 +1103,13 @@ function EditMember({
                         <SelectItem value="OTHER">Mx</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </Field>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-name" className="text-xs">
-                        {translations("Full Name")} <span className="text-red-500">*</span>
-                      </Label>
+                    <Field className="gap-1.5" data-disabled={!canEditNameAndPhone}>
+                      <FieldLabel htmlFor="edit-name" className="text-xs">
+                        {translations("Full Name")} <span className="text-destructive">*</span>
+                      </FieldLabel>
                       <Input
                         id="edit-name"
                         value={editableName}
@@ -1115,12 +1117,12 @@ function EditMember({
                         className="h-9"
                         disabled={!canEditNameAndPhone}
                       />
-                    </div>
+                    </Field>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-phone" className="text-xs">
+                    <Field className="gap-1.5" data-disabled={!canEditNameAndPhone}>
+                      <FieldLabel htmlFor="edit-phone" className="text-xs">
                         {translations("Phone Number")}
-                      </Label>
+                      </FieldLabel>
                       <PhoneInput
                         id="edit-phone"
                         placeholder={translations("Enter phone number")}
@@ -1130,45 +1132,47 @@ function EditMember({
                         onChange={(value) => setEditablePhone(value || "")}
                         disabled={!canEditNameAndPhone}
                       />
-                    </div>
+                    </Field>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="edit-email" className="text-xs">
-                      {translations("Email Address")} <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Mail className="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                      <Input
+                  <Field className="gap-1.5" data-disabled>
+                    <FieldLabel htmlFor="edit-email" className="text-xs">
+                      {translations("Email Address")} <span className="text-destructive">*</span>
+                    </FieldLabel>
+                    <InputGroup className="h-9">
+                      <InputGroupAddon>
+                        <Mail />
+                      </InputGroupAddon>
+                      <InputGroupInput
                         id="edit-email"
                         type="email"
                         defaultValue={selectedUser.email}
-                        className="h-9 pl-9"
                         disabled
                       />
-                    </div>
-                  </div>
+                    </InputGroup>
+                  </Field>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="edit-last-active" className="text-xs">
-                      {translations("Last Active")}
-                    </Label>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border">
+                  <Field className="gap-1.5">
+                    <FieldTitle className="text-xs">{translations("Last Active")}</FieldTitle>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg border">
                       <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">
                         {selectedUser.lastActive || translations("Not available")}
                       </span>
                     </div>
-                  </div>
+                  </Field>
 
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{translations("Account Status")}</Label>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                  <Field className="gap-1.5">
+                    <FieldLabel htmlFor="edit-account-status" className="text-xs">
+                      {translations("Account Status")}
+                    </FieldLabel>
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg border">
                       <div className="flex items-center gap-2">
                         <div
-                          className={`w-2 h-2 rounded-full ${
-                            selectedUser.isPaused ? "bg-gray-400" : "bg-green-500"
-                          }`}
+                          className={cn(
+                            "size-2 rounded-full",
+                            selectedUser.isPaused ? "bg-gray-400" : "bg-green-500",
+                          )}
                         />
                         <span className="text-sm">
                           {selectedUser.isPaused
@@ -1176,19 +1180,23 @@ function EditMember({
                             : translations("Active Account")}
                         </span>
                       </div>
-                      <Switch checked={!selectedUser.isPaused} onCheckedChange={handleUserStatus} />
+                      <Switch
+                        id="edit-account-status"
+                        checked={!selectedUser.isPaused}
+                        onCheckedChange={handleUserStatus}
+                      />
                     </div>
-                  </div>
-                </div>
+                  </Field>
+                </FieldGroup>
               </div>
             </TabsContent>
 
             <TabsContent value="permissions" className="space-y-4">
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="edit-role" className="text-xs">
-                    {translations("User Role")} <span className="text-red-500">*</span>
-                  </Label>
+              <FieldGroup className="gap-3">
+                <Field className="gap-1.5" data-disabled={!canEditAll}>
+                  <FieldLabel htmlFor="edit-role" className="text-xs">
+                    {translations("User Role")} <span className="text-destructive">*</span>
+                  </FieldLabel>
                   <Select
                     value={role}
                     disabled={!canEditAll}
@@ -1204,7 +1212,7 @@ function EditMember({
                       onChangeRole(selectedUser.id, nextRole);
                     }}
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger id="edit-role" className="h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1237,12 +1245,10 @@ function EditMember({
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </Field>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="edit-team" className="text-xs">
-                    {translations("Team Assignment")}
-                  </Label>
+                <Field className="gap-1.5" data-disabled={!canEditAll || isUpdatingTeams}>
+                  <FieldTitle className="text-xs">{translations("Team Assignment")}</FieldTitle>
                   <MultiSelect
                     options={teamOptions}
                     value={selectedTeamIds}
@@ -1252,77 +1258,81 @@ function EditMember({
                     placeholder={translations("Select teams")}
                     emptyIndicator={translations("No teams found")}
                   />
-                </div>
+                </Field>
 
-                <Separator className="my-4" />
+                <FieldSeparator className="my-4" />
 
-                <div className="space-y-3">
-                  <Label className="text-xs">{translations("Additional Permissions")}</Label>
-                  <div className="space-y-2 p-3 bg-gray-50 rounded-lg border">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-primary" />
-                        <div>
-                          <p className="text-sm">{translations("Access to Inbox")}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {translations("View and respond to customer messages")}
-                          </p>
-                        </div>
-                      </div>
-                      <Switch defaultChecked disabled />
-                    </div>
+                <FieldSet>
+                  <FieldLegend variant="label" className="text-xs">
+                    {translations("Additional Permissions")}
+                  </FieldLegend>
+                  <FieldGroup className="gap-2 p-3 bg-muted rounded-lg border">
+                    <Field orientation="horizontal" data-disabled>
+                      <MessageSquare className="w-4 h-4 shrink-0 text-primary" />
+                      <FieldContent>
+                        <FieldLabel htmlFor="perm-inbox" className="font-normal">
+                          {translations("Access to Inbox")}
+                        </FieldLabel>
+                        <FieldDescription>
+                          {translations("View and respond to customer messages")}
+                        </FieldDescription>
+                      </FieldContent>
+                      <Switch id="perm-inbox" defaultChecked disabled />
+                    </Field>
                     <Separator />
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-rateup-orange" />
-                        <div>
-                          <p className="text-sm">{translations("Manage Automations")}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {translations("Create and edit workflow automation")}
-                          </p>
-                        </div>
-                      </div>
-                      <Switch disabled />
-                    </div>
+                    <Field orientation="horizontal" data-disabled>
+                      <Zap className="w-4 h-4 shrink-0 text-rateup-orange" />
+                      <FieldContent>
+                        <FieldLabel htmlFor="perm-automations" className="font-normal">
+                          {translations("Manage Automations")}
+                        </FieldLabel>
+                        <FieldDescription>
+                          {translations("Create and edit workflow automation")}
+                        </FieldDescription>
+                      </FieldContent>
+                      <Switch id="perm-automations" disabled />
+                    </Field>
                     <Separator />
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Database className="w-4 h-4 text-green-600" />
-                        <div>
-                          <p className="text-sm">{translations("View Analytics")}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {translations("Access reports and data insights")}
-                          </p>
-                        </div>
-                      </div>
-                      <Switch defaultChecked disabled />
-                    </div>
-                  </div>
-                </div>
-              </div>
+                    <Field orientation="horizontal" data-disabled>
+                      <Database className="w-4 h-4 shrink-0 text-green-600" />
+                      <FieldContent>
+                        <FieldLabel htmlFor="perm-analytics" className="font-normal">
+                          {translations("View Analytics")}
+                        </FieldLabel>
+                        <FieldDescription>
+                          {translations("Access reports and data insights")}
+                        </FieldDescription>
+                      </FieldContent>
+                      <Switch id="perm-analytics" defaultChecked disabled />
+                    </Field>
+                  </FieldGroup>
+                </FieldSet>
+              </FieldGroup>
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-4">
-              <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs mb-0">
+              <FieldGroup className="gap-3 p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg border border-blue-200 dark:border-blue-900">
+                <Field orientation="horizontal" data-disabled>
+                  <FieldLabel htmlFor="setting-email-notifications" className="text-xs">
                     {translations("Email notifications enabled")}
-                  </Label>
-                  <Switch defaultChecked disabled />
-                </div>
+                  </FieldLabel>
+                  <Switch id="setting-email-notifications" defaultChecked disabled />
+                </Field>
                 <Separator />
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs mb-0">
+                <Field orientation="horizontal" data-disabled>
+                  <FieldLabel htmlFor="setting-two-factor" className="text-xs">
                     {translations("Two-factor authentication")}
-                  </Label>
-                  <Switch disabled />
-                </div>
+                  </FieldLabel>
+                  <Switch id="setting-two-factor" disabled />
+                </Field>
                 <Separator />
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs mb-0">{translations("Allow mobile app access")}</Label>
-                  <Switch defaultChecked disabled />
-                </div>
-              </div>
+                <Field orientation="horizontal" data-disabled>
+                  <FieldLabel htmlFor="setting-mobile-access" className="text-xs">
+                    {translations("Allow mobile app access")}
+                  </FieldLabel>
+                  <Switch id="setting-mobile-access" defaultChecked disabled />
+                </Field>
+              </FieldGroup>
 
               <Separator className="my-4" />
 

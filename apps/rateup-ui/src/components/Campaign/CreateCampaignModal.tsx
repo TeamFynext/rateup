@@ -9,7 +9,7 @@ import {
   IconWand,
 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useId, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -32,9 +32,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -97,6 +102,7 @@ const CreateCampaignModal = ({
   campaign,
   campaignType = CampaignType.WHATSAPP,
 }: CreateCampaignProps) => {
+  const uid = useId();
   const [activeTab, setActiveTab] = useState<"basic" | "templates">("basic");
   const { t } = useTranslation("campaign.create");
   const { customFields } = useCustomFieldsContext();
@@ -606,7 +612,9 @@ const CreateCampaignModal = ({
                               }`}
                             >
                               <div className="space-y-2 col-span-full">
-                                <Label className="text-xs">{t("Choose Template *")}</Label>
+                                <FieldLabel htmlFor={`${uid}-label`} className="text-xs">
+                                  {t("Choose Template *")}
+                                </FieldLabel>
                                 <div className="flex items-center gap-2">
                                   <Select
                                     value={stage.templateId}
@@ -615,6 +623,7 @@ const CreateCampaignModal = ({
                                     items={templatesData}
                                   >
                                     <SelectTrigger
+                                      id={`${uid}-label`}
                                       className={`h-9 ${!stage.templateId ? "border-destructive" : ""}`}
                                     >
                                       <SelectValue
@@ -655,7 +664,7 @@ const CreateCampaignModal = ({
                               </div>
 
                               <div className="space-y-2">
-                                <Label className="text-xs">{t("Delay")}</Label>
+                                <FieldTitle className="text-xs">{t("Delay")}</FieldTitle>
                                 <div className="relative">
                                   <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                                   <Input
@@ -672,7 +681,9 @@ const CreateCampaignModal = ({
                               </div>
 
                               <div className="space-y-2">
-                                <Label className="text-xs">{t("Unit")}</Label>
+                                <FieldLabel htmlFor={`${uid}-label-2`} className="text-xs">
+                                  {t("Unit")}
+                                </FieldLabel>
                                 <Select
                                   value={stage.delayUnit}
                                   onValueChange={(val) => updateDripStage(idx, "delayUnit", val)}
@@ -684,7 +695,7 @@ const CreateCampaignModal = ({
                                     { value: "months", label: t("Months") },
                                   ]}
                                 >
-                                  <SelectTrigger className="h-9">
+                                  <SelectTrigger id={`${uid}-label-2`} className="h-9">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -701,7 +712,7 @@ const CreateCampaignModal = ({
                                 stage.delayUnit === "weeks" ||
                                 stage.delayUnit === "months") && (
                                 <div className="space-y-2">
-                                  <Label className="text-xs">{t("Send at time")}</Label>
+                                  <FieldTitle className="text-xs">{t("Send at time")}</FieldTitle>
                                   <div className="relative">
                                     <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                                     <Input

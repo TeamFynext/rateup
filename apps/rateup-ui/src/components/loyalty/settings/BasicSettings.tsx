@@ -53,7 +53,7 @@ export function BasicSettings({
             control={form.control}
             name="programName"
             render={({ field, fieldState }) => (
-              <Field className="space-y-1.5" data-invalid={fieldState.invalid}>
+              <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name} className="text-xs">
                   {t("Program Name")}
                 </FieldLabel>
@@ -73,7 +73,7 @@ export function BasicSettings({
             control={form.control}
             name="pointsCurrency"
             render={({ field, fieldState }) => (
-              <Field className="space-y-1.5" data-invalid={fieldState.invalid}>
+              <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name} className="text-xs">
                   {t("Points Currency")}
                 </FieldLabel>
@@ -93,7 +93,7 @@ export function BasicSettings({
             control={form.control}
             name="moneyCurrency"
             render={({ field, fieldState }) => (
-              <Field className="space-y-1.5" data-invalid={fieldState.invalid}>
+              <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name} className="text-xs">
                   {t("Money Currency")}
                 </FieldLabel>
@@ -114,7 +114,7 @@ export function BasicSettings({
             control={form.control}
             name="defaultCountryCode"
             render={({ field, fieldState }) => (
-              <Field className="space-y-1.5" data-invalid={fieldState.invalid}>
+              <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name} className="text-xs">
                   {t("Default Country")}
                 </FieldLabel>
@@ -134,7 +134,7 @@ export function BasicSettings({
             control={form.control}
             name="whatsappSettingsId"
             render={({ field, fieldState }) => (
-              <Field className="space-y-1.5" data-invalid={fieldState.invalid}>
+              <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name} className="text-xs">
                   {t("WhatsApp Account")}
                 </FieldLabel>

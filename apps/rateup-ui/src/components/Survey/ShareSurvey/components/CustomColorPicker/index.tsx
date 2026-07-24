@@ -17,6 +17,8 @@ function useEyeDropper() {
 }
 
 interface CustomColorPickerProps {
+  /** Id applied to the colour input, so a `FieldLabel htmlFor` can target it. */
+  id?: string;
   className?: string;
   value: string;
   onChange: any;
@@ -26,6 +28,7 @@ interface CustomColorPickerProps {
 }
 
 function CustomColorPicker({
+  id,
   className = "",
   value,
   onChange,
@@ -75,6 +78,7 @@ function CustomColorPicker({
 
   const colorInput = (
     <input
+      id={id}
       ref={colorInputRef}
       type="color"
       value={!value?.length ? "#000000" : value}

@@ -1,5 +1,5 @@
 import { IconChevronLeft, IconChevronRight, IconRefresh } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import {
   Select,
@@ -45,7 +44,7 @@ import {
 
 import { TeamSelector } from "../../input/TeamSelector.tsx";
 import RateupLoader from "../../Loaders/RateupLoader.tsx";
-import { Field, FieldLabel } from "../../ui/field.tsx";
+import { Field, FieldLabel, FieldTitle } from "../../ui/field.tsx";
 import { Input } from "../../ui/input.tsx";
 import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
 
@@ -175,6 +174,7 @@ function ConfigureFlow({
   form: UseFormReturn<{ map: Record<string, any> }>;
   handleNext: () => void;
 }) {
+  const uid = useId();
   const { data: flowJson, isLoading, error, isError } = useWaFlowJson(flow.id);
   const { t: translations } = useTranslation();
   useEffect(() => {
@@ -210,10 +210,10 @@ function ConfigureFlow({
   return (
     <>
       <Field>
-        <FieldLabel>{translations("Flow Name")}</FieldLabel>
-        <Input value={flow.name ?? ""} readOnly disabled />
+        <FieldLabel htmlFor={`${uid}-field`}>{translations("Flow Name")}</FieldLabel>
+        <Input id={`${uid}-field`} value={flow.name ?? ""} readOnly disabled />
       </Field>
-      <Label>{translations("Assign valid question types")}</Label>
+      <FieldTitle>{translations("Assign valid question types")}</FieldTitle>
       <div
         className="flex flex-col rounded-lg bg-muted p-4"
         style={{

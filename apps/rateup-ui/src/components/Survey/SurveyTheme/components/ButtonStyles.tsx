@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useId, useCallback } from "react";
 
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import {
@@ -22,6 +22,7 @@ import {
 import styles from "./stylescomponent/StylesComponent.module.css";
 
 function ButtonStyles() {
+  const uid = useId();
   const selectedPageTab = useSelectedPageTab();
   const surveyTheme = useSurveyThemeContextValue();
   const { button } = surveyTheme[getSurveyThemeKeyOf(selectedPageTab)];
@@ -83,13 +84,13 @@ function ButtonStyles() {
           <h2>Button position</h2>
           <div className="flex gap-3">
             <Field>
-              <FieldLabel>x axis</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-x-axis`}>x axis</FieldLabel>
               <Select
                 value={button?.position?.x ?? COORDINATESX?.[1]}
                 onValueChange={handleXCoOrdinateChange}
                 items={COORDINATESX.map((c) => ({ value: c, label: c }))}
               >
-                <SelectTrigger className="h-9 w-full text-xs">
+                <SelectTrigger id={`${uid}-x-axis`} className="h-9 w-full text-xs">
                   <SelectValue placeholder="X axis" />
                 </SelectTrigger>
                 <SelectContent className="min-w-[120px]">
@@ -102,13 +103,13 @@ function ButtonStyles() {
               </Select>
             </Field>
             <Field>
-              <FieldLabel>y axis</FieldLabel>
+              <FieldLabel htmlFor={`${uid}-y-axis`}>y axis</FieldLabel>
               <Select
                 value={button?.position?.y ?? COORDINATESY?.[3]}
                 onValueChange={handleYCoOrdinateChange}
                 items={COORDINATESY.map((c) => ({ value: c, label: c }))}
               >
-                <SelectTrigger className="h-9 w-full text-xs">
+                <SelectTrigger id={`${uid}-y-axis`} className="h-9 w-full text-xs">
                   <SelectValue placeholder="Y axis" />
                 </SelectTrigger>
                 <SelectContent className="min-w-[120px]">
