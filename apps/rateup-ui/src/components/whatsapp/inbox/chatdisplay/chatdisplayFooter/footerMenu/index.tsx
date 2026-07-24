@@ -35,7 +35,9 @@ export default function WaInboxFooterMenu(props: Props) {
               <Button
                 size="icon"
                 className={cn(
-                  "h-[30px] w-[30px] max-[1200px]:h-[35px] max-[1200px]:w-[35px] rounded-full transition-transform duration-300",
+                  // Bigger where it is a touch target, smaller once it sits in a
+                  // dense desktop toolbar.
+                  "size-9 rounded-full transition-transform duration-300 lg:size-7.5",
                   menuOpen ? "rotate-[135deg]" : "rotate-0",
                 )}
               />

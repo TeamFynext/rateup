@@ -28,11 +28,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { SidebarTrigger } from "@/components/ui/sidebar.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
 import WaInboxChatExport from "./chatExport/index.tsx";
 import WaInboxChatFilter, { useChatFilterStore } from "./chatFilter/index.tsx";
+import InboxTabStrip from "./InboxTabStrip.tsx";
 
 // Inbox tab → the sidebar rail's count for that tab. Blocked is absent on
 // purpose: the API returns no total for it.
@@ -150,11 +152,17 @@ const ChatselectPanelHeader = ({
       )}
       <div className="flex flex-col">
         {/* Row 1: Title and Actions */}
-        <div className="flex h-14 shrink-0 items-center justify-between gap-2.5 border-b border-border bg-background px-4 py-1">
-          <span className="text-[15px] font-extrabold whitespace-nowrap capitalize text-foreground">
-            {tab}
-          </span>
-          <div className="flex items-center gap-3 text-muted-foreground">
+        <div className="flex h-14 shrink-0 items-center justify-between gap-2.5 border-b border-border bg-background px-3 py-1 lg:px-4">
+          <div className="flex min-w-0 items-center gap-1.5">
+            {/* The nav rail collapses into a sheet below md and its own trigger
+                goes with it, so the inbox — a full-screen page there — carries the
+                only way back out. */}
+            <SidebarTrigger className="-ml-1 size-8 md:hidden" />
+            <span className="truncate text-[15px] font-extrabold whitespace-nowrap capitalize text-foreground">
+              {tab}
+            </span>
+          </div>
+          <div className="flex shrink-0 items-center gap-3 text-muted-foreground">
             <CustomTooltip
               trigger={
                 <button
@@ -292,7 +300,10 @@ const ChatselectPanelHeader = ({
           </div>
         </div>
 
-        {/* Row 2: Row count + Everyone/Mine + sort */}
+        {/* Row 2 (small screens only): the tab rail the sidebar cannot show here */}
+        <InboxTabStrip tab={tab} />
+
+        {/* Row 3: Row count + Everyone/Mine + sort */}
         <div className="flex h-9 shrink-0 items-center justify-between border-b px-3">
           <span className="whitespace-nowrap text-xs text-muted-foreground">{rowCountLabel}</span>
 

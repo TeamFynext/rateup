@@ -155,6 +155,38 @@ export const useChatSocket = () => {
             }
 
             break;
+          case "message_deleted":
+            // The message is still in the thread — flagging it is what turns it
+            // into the "deleted" placeholder. Deliberately not scoped to the open
+            // thread the way a status receipt is: whoever is connected corrects
+            // every cached copy, memory and IDB, so the message does not come
+            // back intact when that ticket is opened later.
+            messageStore.patchMessageEverywhere(data?.message_deleted?.messageId, {
+              deletedAt: data?.message_deleted?.deletedAt,
+            });
+
+            // The list snippet is a copy of the message body with no id on it, so
+            // the row is matched by the message's own timestamp. Anything else and
+            // the list would keep quoting text the customer deleted.
+            {
+              const deletedRowKey =
+                data?.message_deleted?.conversationId ?? data?.message_deleted?.contactId;
+              if (deletedRowKey && data?.message_deleted?.waCreatedAt) {
+                updateContactById(deletedRowKey, (contact) =>
+                  contact?.lastMessage?.waCreatedAt === data.message_deleted.waCreatedAt
+                    ? {
+                        ...contact,
+                        lastMessage: {
+                          ...contact.lastMessage,
+                          deletedAt: data.message_deleted.deletedAt,
+                        },
+                      }
+                    : contact,
+                );
+              }
+            }
+
+            break;
           default:
             break;
         }

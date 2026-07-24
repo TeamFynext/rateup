@@ -18,6 +18,7 @@ import {
   clearAllMessagesFromIDB,
   loadContactIdsForFilter,
   loadContactsFromDB,
+  patchMessageInIDB,
   removeContactsFromDB,
   saveContactIdsForFilter,
   saveContactsToDB,
@@ -883,6 +884,7 @@ interface MessagesStore {
     messageId: string,
     updatedData: Partial<WaGetMessagesBody>,
   ) => void;
+  patchMessageEverywhere: (messageId: string, updatedData: Partial<WaGetMessagesBody>) => void;
 }
 
 export const useMessagesStore = create<MessagesStore>()(
@@ -919,6 +921,10 @@ export const useMessagesStore = create<MessagesStore>()(
             const merged = {
               ...existingMsg,
               ...msg,
+              // Deletion is one-way — WhatsApp has no un-revoke. A copy that
+              // predates the deletion (a stale IDB entry, an in-flight page)
+              // must not resurrect the message's content.
+              deletedAt: msg.deletedAt ?? existingMsg.deletedAt,
               stats: {
                 read: msg.stats.read.length ? msg.stats.read : existingMsg.stats.read,
                 sent: msg.stats.sent.length ? msg.stats.sent : existingMsg.stats.sent,
@@ -1006,6 +1012,35 @@ export const useMessagesStore = create<MessagesStore>()(
           saveMessagesToIDB(key, [updatedMessage]);
           return { messagesByKey: newMap };
         }),
+      /**
+       * Patch a message in every bucket that holds it, in memory and in IDB.
+       * Unlike a delivery receipt, a change like a deletion is not about the
+       * thread the agent currently has open, so it must not be keyed off the
+       * selected contact — and it has to reach the durable cache, or a thread
+       * that is only in IDB would still show the message on the next open.
+       */
+      patchMessageEverywhere: (messageId, data) => {
+        if (!messageId) return;
+        set((state) => {
+          const newMap = new Map(state.messagesByKey);
+          let changed = false;
+
+          for (const [key, entry] of state.messagesByKey) {
+            const idx = entry.messages.findIndex((m) => (m.messageId ?? m.id) === messageId);
+            if (idx === -1) continue;
+
+            const messages = [...entry.messages];
+            messages[idx] = { ...messages[idx], ...data };
+            newMap.set(key, { messages });
+            changed = true;
+          }
+
+          return changed ? { messagesByKey: newMap } : state;
+        });
+
+        patchMessageInIDB(messageId, data);
+      },
+
       getMessages: (key) => get().messagesByKey.get(key)?.messages ?? [],
       clearMessages: async () => {
         await clearAllMessagesFromIDB();

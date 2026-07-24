@@ -275,7 +275,7 @@ function Account() {
       </div>
       {/* User Profile Section */}
       {isProfileLoading ? (
-        <Card className="p-4 sm:p-6 shadow-sm border-gray-200 bg-linear-to-br from-white to-gray-50/50">
+        <Card className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
             {/* Avatar Skeleton */}
             <div className="relative">
@@ -300,7 +300,7 @@ function Account() {
           </div>
         </Card>
       ) : (
-        <Card className="p-4 sm:p-6 shadow-sm border-gray-200 bg-linear-to-br from-white to-gray-50/50">
+        <Card className="p-4 sm:p-6 shadow-sm ">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
             {/* Avatar Section */}
             <div className="relative group">
@@ -323,9 +323,7 @@ function Account() {
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0">
                 {/* Name + Info */}
                 <div className="flex flex-col gap-0.5">
-                  <p className="text-lg sm:text-xl font-medium text-gray-900">
-                    {profileData?.data?.data?.name}
-                  </p>
+                  <p className="text-lg sm:text-xl font-medium">{profileData?.data?.data?.name}</p>
                   <p className="text-xs sm:text-sm text-gray-600">
                     {profileData?.data?.data?.email} • {translations("Member since")}{" "}
                     {profileData?.data?.data?.createdAt

@@ -1,6 +1,6 @@
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { Clock } from "lucide-react";
+import { Ban, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
@@ -95,6 +95,21 @@ export const SingleMessage = ({ message }) => {
         </span>
       );
   }
+};
+
+/**
+ * Stand-in for a message its sender deleted on WhatsApp. The original body is
+ * still stored — it is deliberately not rendered here, the same way WhatsApp
+ * itself shows the message as gone while the row stays in the thread.
+ */
+export const DeletedMessage = () => {
+  const { t: translations } = useTranslation();
+  return (
+    <span className="flex items-center gap-1.5 text-sm text-muted-foreground italic">
+      <Ban className="size-3.5 shrink-0" />
+      {translations("This message was deleted")}
+    </span>
+  );
 };
 
 export function getReactionMessage({

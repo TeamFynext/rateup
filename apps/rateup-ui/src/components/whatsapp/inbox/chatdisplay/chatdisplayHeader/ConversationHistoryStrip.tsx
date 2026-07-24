@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 
 import type { ContactConversation } from "@/backend/whatsapp/inbox/message/wamessage.api.ts";
 import { useConversationsByContact } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
-import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
 import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { getContactPlatform } from "@/utils/whatsapp/inbox.ts";
@@ -36,7 +35,6 @@ export default function ConversationHistoryStrip({
   const [open, setOpen] = useState(false);
   const contactsById = useContactsStore((s) => s.contactsById);
   const setSelectedContact = useContactsStore((s) => s.setSelectedContact);
-  const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
 
   const { data: conversations } = useConversationsByContact(contact?.id, !!contact?.id);
 
@@ -72,7 +70,6 @@ export default function ConversationHistoryStrip({
         unReadMessageCount: 0,
       });
     }
-    setIsChatDisplayOpen?.(true);
   }
 
   if (siblings.length === 0) return null;

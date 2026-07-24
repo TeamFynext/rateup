@@ -1627,7 +1627,7 @@ export interface Campaign {
 
 // type for org websocket messages
 export interface orgWsMessage {
-  type: "inbox" | "message_status_update";
+  type: "inbox" | "message_status_update" | "message_deleted";
   inbox?: {
     contact: ContactsData;
     message: WaGetMessagesBody;
@@ -1638,6 +1638,16 @@ export interface orgWsMessage {
     stats: any;
     timestamp: string;
     sourceIdentifier: string;
+  };
+  /** The customer revoked a message — the row stays, it just renders as deleted. */
+  message_deleted?: {
+    messageId: string;
+    contactId: string;
+    conversationId?: string | null;
+    sourceIdentifier?: string | null;
+    deletedAt: string;
+    /** Identifies the message inside the inbox row's last-message preview. */
+    waCreatedAt?: string | null;
   };
 }
 

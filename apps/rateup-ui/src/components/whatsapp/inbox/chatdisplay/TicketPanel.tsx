@@ -51,6 +51,8 @@ interface TicketPanelProps {
   groupId: string;
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
+  /** Placement, owned by the parent: inline column at xl, overlay sheet below it. */
+  className?: string;
 }
 
 const RESULT_LABELS: Record<ResolutionResult, string> = {
@@ -127,7 +129,12 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<TicketPanelProps>) {
+export default function TicketPanel({
+  contact,
+  isOpen,
+  setIsOpen,
+  className,
+}: Readonly<TicketPanelProps>) {
   const { t } = useTranslation();
   const { user } = useUser();
   const { updateContactById, setSelectedContact } = useContactsStore();
@@ -298,7 +305,12 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
   if (!isOpen) return null;
 
   return (
-    <div className="w-77 shrink-0 flex flex-col overflow-y-auto h-full border-l border-border bg-background">
+    <div
+      className={cn(
+        "flex h-full w-77 shrink-0 flex-col overflow-y-auto border-l border-border bg-background",
+        className,
+      )}
+    >
       {/* ---- Header ---- */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4.5">
         <div className="flex items-center gap-2 min-w-0">
