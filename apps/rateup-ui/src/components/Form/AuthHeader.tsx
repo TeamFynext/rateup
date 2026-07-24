@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
-import { Button } from "@/components/ui/button.tsx";
+import { Button, buttonVariants } from "@/components/ui/button.tsx";
 import { imagesPath } from "@/utils/constants.ts";
 
 interface AuthHeaderProps {
@@ -17,9 +17,7 @@ export function AuthHeader({
 }: Readonly<AuthHeaderProps>) {
   const logoUrl = `${imagesPath}/rateup-logo-horizontal-transparent.png`;
 
-  const ButtonContent = () => (
-    <span className="text-xs">{isSignup ? "Sign In" : "Create account"}</span>
-  );
+  const switchLabel = isSignup ? "Sign In" : "Create account";
 
   return (
     <header className="w-full bg-[#081C3F] border-b border-white/5 shadow-md">
@@ -41,17 +39,23 @@ export function AuthHeader({
           </span>
           {onSwitch ? (
             <Button
+              type="button"
               variant="outline"
               onClick={onSwitch}
               className="h-[30px] px-4 bg-transparent text-white"
             >
-              <ButtonContent />
+              <span className="text-xs">{switchLabel}</span>
             </Button>
           ) : (
-            <Link to={isSignup ? "/login" : "/signup"}>
-              <Button variant="outline" className="h-[30px] px-4 bg-transparent text-white">
-                <ButtonContent />
-              </Button>
+            <Link
+              to={isSignup ? "/login" : "/signup"}
+              aria-label={switchLabel}
+              className={buttonVariants({
+                variant: "outline",
+                className: "h-[30px] px-4 bg-transparent text-white",
+              })}
+            >
+              <span className="text-xs">{switchLabel}</span>
             </Link>
           )}
         </div>

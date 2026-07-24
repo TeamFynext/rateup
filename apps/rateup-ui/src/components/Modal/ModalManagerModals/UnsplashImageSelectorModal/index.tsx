@@ -1,25 +1,18 @@
-import {
-  ActionIcon,
-  Card,
-  Center,
-  Image,
-  LoadingOverlay,
-  Modal,
-  rem,
-  SimpleGrid,
-  Stack,
-  Text,
-} from "@mantine/core";
-import { useDisclosure, useIntersection, useMediaQuery } from "@mantine/hooks";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTriggeringDownload, useUnsplashPhotosList } from "@/backend/unsplash/unsplash.query";
-import { mmImageCropModalClassnames } from "@/utils/constants.ts";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { LoadingOverlay } from "@/components/ui/loading-overlay.tsx";
+import { useIntersection } from "@/hooks/use-intersection.ts";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
+import { useDisclosure } from "@/hooks/useDisclosure";
 
-import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput.tsx";
 import useDebounce from "../../../menu/hook/useDebounce.ts";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../../../ui/input-group.tsx";
 import ImageCropModal from "../ImageCropModal/index.tsx";
 
 function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
@@ -60,30 +53,29 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
   }, []);
 
   return (
-    <Stack mih={"70vh"}>
-      <LoadingOverlay
-        visible={unsplashPhotosList?.isPending}
-        zIndex={1000}
-        overlayProps={{ radius: "sm", blur: 2 }}
-      />
-      {unsplashPhotosList?.isError && <Text c={"red"}>Currently Unsplash Is Unavailable</Text>}
-      {!unsplashPhotosList?.isError && (
-        <Center mb={"lg"}>
-          <ContainedTextField
-            w={largeScreen ? "60%" : "90%"}
-            leftSection={<IconSearch style={{ width: rem(18), height: rem(18) }} stroke={1.5} />}
-            rightSection={
-              <ActionIcon size={32} radius="xl" color={"var(--tertiary-color)"} variant="filled">
-                <IconArrowRight style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
-              </ActionIcon>
-            }
-            onChange={(e) => setSearchQuery(e?.target?.value)}
-          />
-        </Center>
+    <div className="relative flex flex-col gap-4 min-h-[70vh]">
+      <LoadingOverlay visible={unsplashPhotosList?.isPending} />
+      {unsplashPhotosList?.isError && (
+        <p className="text-red-500">Currently Unsplash Is Unavailable</p>
       )}
-      <SimpleGrid cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 4, xl: 5 }} mx={"lg"}>
+      {!unsplashPhotosList?.isError && (
+        <div className="flex items-center justify-center mb-6">
+          <InputGroup style={{ width: largeScreen ? "60%" : "90%" }}>
+            <InputGroupAddon align="inline-start">
+              <IconSearch size={18} stroke={1.5} />
+            </InputGroupAddon>
+            <InputGroupInput onChange={(e) => setSearchQuery(e?.target?.value)} />
+            <InputGroupAddon align="inline-end">
+              <Button size="icon-sm" className="rounded-full" aria-label={translations("Search")}>
+                <IconArrowRight size={18} stroke={1.5} />
+              </Button>
+            </InputGroupAddon>
+          </InputGroup>
+        </div>
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mx-6">
         {_photoList?.length === 0 ? (
-          <Text>{translations("Images Not Found")}</Text>
+          <p>{translations("Images Not Found")}</p>
         ) : (
           _photoList?.map((photo, i) => (
             <UnsplashPhoto
@@ -96,23 +88,27 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
             />
           ))
         )}
-      </SimpleGrid>
-      <Modal
-        opened={cropModalOpened}
-        onClose={closeCropModal}
-        title={translations("Crop Image")}
-        centered
-        classNames={mmImageCropModalClassnames}
+      </div>
+      <Dialog
+        open={cropModalOpened}
+        onOpenChange={(next) => {
+          if (!next) closeCropModal();
+        }}
       >
-        {cropModalProps && (
-          <ImageCropModal
-            context={{ closeModal: closeCropModal }}
-            id="imageCropModal"
-            innerProps={cropModalProps}
-          />
-        )}
-      </Modal>
-    </Stack>
+        <DialogContent className="flex max-h-[90vh] flex-col gap-5 overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-center">{translations("Crop Image")}</DialogTitle>
+          </DialogHeader>
+          {cropModalProps && (
+            <ImageCropModal
+              context={{ closeModal: closeCropModal }}
+              id="imageCropModal"
+              innerProps={cropModalProps}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 
@@ -145,16 +141,12 @@ const UnsplashPhoto = ({
   };
   const { t: translations } = useTranslation();
   return (
-    <Card
-      shadow="sm"
-      style={{ cursor: "pointer" }}
-      onClick={handleImageSelection}
-      mb={"lg"}
-      ref={reference}
-    >
-      <Card.Section>
-        <Image src={regular} h={200} alt={translations("image from unsplash")} />
-      </Card.Section>
+    <Card className="mb-6 cursor-pointer py-0" onClick={handleImageSelection} ref={reference}>
+      <img
+        src={regular}
+        className="h-50 w-full object-cover"
+        alt={translations("image from unsplash")}
+      />
     </Card>
   );
 };

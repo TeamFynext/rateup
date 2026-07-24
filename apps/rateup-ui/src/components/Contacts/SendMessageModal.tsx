@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog.tsx";
-import { Label } from "../ui/label.tsx";
+import { Field, FieldLabel } from "../ui/field.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 
@@ -50,7 +50,7 @@ const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2 w-full">
-            <Label htmlFor="message-channel">Select Channel</Label>
+            <FieldLabel htmlFor="message-channel">Select Channel</FieldLabel>
             <Select
               value={platform}
               onValueChange={setPlatform}
@@ -79,15 +79,15 @@ const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
             </Select>
           </div>
           <div className="space-y-2 w-full">
-            <Label htmlFor="message-account">Account</Label>
+            <FieldLabel htmlFor="message-account">Account</FieldLabel>
             <AccountSelector
               value={whatsappSettingsPhoneId}
               onChange={(value) => setWhatsappSettingsPhoneId(value)}
               platform={platform as MessagePlatform}
             />
           </div>
-          <div className="space-y-2 w-full">
-            <Label htmlFor="message-text">Message</Label>
+          <Field className="w-full">
+            <FieldLabel htmlFor="message-text">Message</FieldLabel>
             <Textarea
               id="message-text"
               placeholder="Type your message here..."
@@ -95,7 +95,7 @@ const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
               value={message}
               onChange={(e) => setMessage(e.currentTarget.value)}
             />
-          </div>
+          </Field>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpened(false)}>

@@ -1,16 +1,15 @@
-import { Text } from "@mantine/core";
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { LengthTracker } from "@/components/input/LengthTracker.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
 import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 import { getLabel } from "@/utils/file-upload/upload.ts";
 
-import {
-  ContainedFileButton,
-  ContainedTextField,
-} from "../../../input/ContainedInput/ContainedInput.tsx";
-import { LengthTracker } from "../../../input/LengthTracker.tsx";
+import { errorAt, registerField, setValue, type TemplateForm } from "./template-form.ts";
 
 const FILE_CONFIG = {
   [WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE]: {
@@ -36,52 +35,79 @@ const FILE_CONFIG = {
   },
 };
 
-export const BroadCastTypeValue = ({ form, type }) => {
+export const BroadCastTypeValue = ({
+  form,
+  type,
+}: Readonly<{ form: TemplateForm; type: string }>) => {
   const { t: translations } = useTranslation();
-  const resetRef = useRef<() => void>(null);
-  const style = {
-    maxWidth: 400,
-  };
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uid = useId();
+
+  const error = errorAt(form, "header");
+  const header = form.watch("header");
 
   if (type === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT) {
     return (
-      <ContainedTextField
-        label={
-          <Text fz={14} fw={500}>
-            Text
-          </Text>
-        }
-        mt={"md"}
-        placeholder={translations("Header")}
-        {...form.getInputProps("header")}
-        rightSection={<LengthTracker length={form?.values?.header?.length} maxValue={60} atStart />}
-      />
+      <Field className="gap-1.5" data-invalid={!!error}>
+        <FieldLabel htmlFor={`${uid}-header`}>Text</FieldLabel>
+        <InputGroup>
+          <InputGroupInput
+            id={`${uid}-header`}
+            {...registerField(form, "header")}
+            placeholder={translations("Header")}
+            aria-invalid={!!error}
+          />
+          <InputGroupAddon align="inline-end">
+            <LengthTracker
+              length={typeof header === "string" ? header.length : 0}
+              maxValue={60}
+              atStart
+            />
+          </InputGroupAddon>
+        </InputGroup>
+        {error && <FieldError>{error}</FieldError>}
+      </Field>
     );
   }
+
   const config = FILE_CONFIG[type];
   if (!config) return null;
+
+  const handleFile = (file?: File) => {
+    if (!file) return;
+    if (file.size > config.maxSize) {
+      toast.error(`${config.label} must be smaller than ${config.sizeText}`);
+      setValue(form, "header", null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setValue(form, "header", file);
+  };
+
   return (
-    <ContainedFileButton
-      resetRef={resetRef}
-      label={getLabel(form.values.header, config.label)}
-      mt={"xl"}
-      placeholder={`Select a ${config.label}`}
-      {...form.getInputProps("header")}
-      accept={config.accept}
-      style={style}
-      helperText={config.helper}
-      onChange={(file) => {
-        if (!file) return;
-
-        if (file.size > config.maxSize) {
-          toast.error(`${config.label} must be smaller than ${config.sizeText}`);
-          form.setFieldValue("header", null);
-          resetRef.current?.();
-          return;
-        }
-
-        form.setFieldValue("header", file);
-      }}
-    />
+    <Field className="w-full max-w-100 gap-1.5" data-invalid={!!error}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={config.accept}
+        className="hidden"
+        aria-label={`Select a ${config.label}`}
+        onChange={(e) => handleFile(e.target.files?.[0])}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        aria-invalid={!!error}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        {getLabel((header as File | string) ?? "", config.label)}
+      </Button>
+      {error ? (
+        <FieldError>{error}</FieldError>
+      ) : (
+        config.helper && <FieldDescription>{config.helper}</FieldDescription>
+      )}
+    </Field>
   );
 };

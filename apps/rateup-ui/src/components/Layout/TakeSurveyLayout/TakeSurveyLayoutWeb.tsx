@@ -1,4 +1,3 @@
-import { MantineProvider } from "@mantine/core";
 import { useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -10,22 +9,32 @@ import {
 } from "@/backend/surveys/surveys.query";
 import { getQuestionsLength } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/util.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
-import { useMediaQuery } from "@/hooks/use-media-querry.ts";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { PageType } from "@/types/enums.ts";
+import { SAVE_HOTKEY } from "@/utils/constants.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { CreditsCard } from "../../Card/CreditsCard.tsx";
-import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput.tsx";
-import FormModalLayout from "../../Modal/FormModalLayout.tsx";
 import {
   useIsSurveyThemeEditView,
   useIsSurveyThemePreview,
 } from "../../Survey/SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../Survey/SurveyTheme/SurveyThemeContext.tsx";
+import { Button } from "../../ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../ui/dialog.tsx";
+import { Field, FieldError, FieldLabel } from "../../ui/field.tsx";
+import { Input } from "../../ui/input.tsx";
 import LanguageSelectionPage from "../LanguageSelectionPage/index.tsx";
 import WelcomePage from "../WelcomePage/WelcomePage.tsx";
 import { getBgImgAndBgColor } from "./utils.ts";
 
-export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
+export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme ?? {};
   const pagesThemeData = survey?.webSurveyPagesTheme;
 
@@ -60,6 +69,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   const open = () => setOpened(true);
   const close = () => setOpened(false);
   const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
 
   useEffect(() => {
@@ -110,6 +120,20 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
     setIsPasswordVerified,
   );
 
+  /**
+   * The hotkey path submits without going through the form, so the empty check lives here rather
+   * than relying on the input's `required` attribute alone.
+   */
+  const submitSurveyPassword = () => {
+    if (!passwordInput.trim()) {
+      setPasswordError("Enter the survey password to continue.");
+      return;
+    }
+    setPasswordError("");
+    toast.loading(`Hold on, your access is getting verified.`, { id: "load-data" });
+    verifySurveyPassword.mutate();
+  };
+
   if (!selectedLanguage && survey?.languages?.length <= 1) {
     setSelectedLanguage(survey?.languages[0]);
   }
@@ -117,8 +141,6 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   if (!selectedLanguage && isSurveyThemeEditView) {
     setSelectedLanguage("English");
   }
-
-  const surveyThemeDataPrimaryColor = surveyThemeData?.surveyTheme?.input?.primaryColor;
 
   const isLanguagePageActive =
     !selectedLanguage && survey?.languages?.length > 1 && !isSurveyThemeEditView;
@@ -139,17 +161,6 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
 
   const isUnsplashImage = backgroundImageSrc?.startsWith("https://images.unsplash.com");
 
-  const getRootElementForMantineProvider: () => HTMLElement = () => {
-    if (!(typeof window === "undefined")) {
-      if (isSurveyThemePreview) {
-        return document.getElementById(previewId);
-      } else {
-        return document.documentElement;
-      }
-    }
-    return undefined;
-  };
-
   const questionsArr = survey?.questions;
 
   if (!getQuestionsLength(survey)) {
@@ -161,55 +172,59 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   }
 
   return (
-    // MantineProvider stays: it generates the --mantine-color-primaryColor-* CSS vars (scoped to
-    // this survey's configured input color) that still-Mantine descendants (Select, MultiSelect,
-    // DatePickerInput, FormModalLayout, etc.) rely on for their accent color.
-    <MantineProvider
-      cssVariablesSelector={isSurveyThemePreview ? `#${previewId}` : ":root"}
-      getRootElement={getRootElementForMantineProvider}
-      theme={{
-        colors: {
-          // @ts-ignore
-          primaryColor: Array(10).fill(
-            surveyThemeDataPrimaryColor === "rateup-blue" || !surveyThemeDataPrimaryColor
-              ? "#1C518E"
-              : surveyThemeDataPrimaryColor,
-          ),
-        },
-        primaryColor: "primaryColor",
-      }}
-    >
-      <FormModalLayout
-        opened={opened}
-        onClose={close}
-        title={"Survey Login"}
-        centered
-        onSubmit={() => {
-          toast.loading(`Hold on, your access is getting verified.`, {
-            id: "load-data",
-          });
-          verifySurveyPassword.mutate();
+    <>
+      <Dialog
+        open={opened}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) close();
         }}
-        buttonTitle={"Login"}
-        submitBtnColor={"var(--tertiary-color)"}
       >
-        <p className="mt-5 text-sm text-gray-500">
-          Hey Welcome , <br /> You need to enter password to continue.
-        </p>
-        <div className="h-5" />
-        <ContainedPasswordInput
-          required
-          label="Password"
-          placeholder="Enter survey password"
-          onChange={(event) => setPasswordInput(event?.target?.value)}
-          my="lg"
-        />
-      </FormModalLayout>
+        <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-125">
+          <DialogHeader>
+            <DialogTitle className="text-center text-3xl font-semibold">Survey Login</DialogTitle>
+          </DialogHeader>
+          <form
+            className="p-5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              submitSurveyPassword();
+            }}
+            onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, submitSurveyPassword]])}
+          >
+            <p className="mt-5 text-sm text-gray-500">
+              Hey Welcome , <br /> You need to enter password to continue.
+            </p>
+            <div className="h-5" />
+            <Field className="my-5" data-invalid={!!passwordError}>
+              <FieldLabel htmlFor="survey-password">
+                Password
+                <span className="text-destructive"> *</span>
+              </FieldLabel>
+              <Input
+                id="survey-password"
+                type="password"
+                required
+                autoComplete="current-password"
+                placeholder="Enter survey password"
+                value={passwordInput}
+                aria-invalid={!!passwordError}
+                aria-describedby={passwordError ? "survey-password-error" : undefined}
+                onChange={(event) => {
+                  setPasswordInput(event.target.value);
+                  if (passwordError) setPasswordError("");
+                }}
+              />
+              {passwordError && <FieldError id="survey-password-error">{passwordError}</FieldError>}
+            </Field>
+            <DialogFooter className="mt-4 sm:justify-center">
+              <Button type="submit">Login</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       <div
         className="take-survey-layout-web-root-div flex h-dvh w-full flex-col gap-0
-          [&_.mantine-Modal-inner]:absolute [&_.mantine-Modal-inner]:p-0
-          [&_.mantine-Modal-overlay]:absolute
-          [&_.search-input-and-options-container]:absolute [&_.search-input-and-options-container]:z-[100]"
+          [&_.search-input-and-options-container]:absolute [&_.search-input-and-options-container]:z-100"
         style={{ position: "relative", backgroundColor }}
       >
         <CreditsCard
@@ -300,6 +315,6 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
           </div>
         </CreditsCard>
       </div>
-    </MantineProvider>
+    </>
   );
 };

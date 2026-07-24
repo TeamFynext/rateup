@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
+import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
@@ -16,7 +17,7 @@ import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
-import { useMediaQuery } from "@/hooks/use-media-querry.ts";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
 
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
@@ -183,11 +184,11 @@ const MCQGridMobileForm = ({
   return (
     <ScrollArea className="max-h-full w-full p-3">
       {questions?.map((question, index) => (
-        <div className="flex flex-col gap-4" key={index}>
+        <Field key={index}>
           <h5 className="text-base font-medium" style={{ color: titleColor || "black" }}>
             {question}
           </h5>
-          <div className="flex flex-col gap-4">
+          <Field>
             <Controller
               name={question}
               control={control}
@@ -202,7 +203,7 @@ const MCQGridMobileForm = ({
                   {choices?.map((choice) => {
                     const isSelected = response?.[question]?.value == choice?.value;
                     return (
-                      <label
+                      <FieldTitle
                         key={choice?.value as string}
                         className="flex cursor-pointer items-center gap-3 rounded-[5px] p-2"
                         style={{
@@ -216,17 +217,15 @@ const MCQGridMobileForm = ({
                           style={{ borderColor: textColor }}
                         />
                         {choice?.value as string}
-                      </label>
+                      </FieldTitle>
                     );
                   })}
                 </RadioGroup>
               )}
             />
-          </div>
-          {index + 1 < questions?.length && (
-            <Separator className="my-3 bg-[var(--mantine-color-gray-6)]" />
-          )}
-        </div>
+          </Field>
+          {index + 1 < questions?.length && <Separator className="my-3 bg-[#868e96]" />}
+        </Field>
       ))}
     </ScrollArea>
   );

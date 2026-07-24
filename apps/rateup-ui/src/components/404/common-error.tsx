@@ -3,7 +3,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { cx } from "class-variance-authority";
 import { useEffect } from "react";
 
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
 const CommonError = ({
   error,
@@ -37,7 +37,9 @@ const CommonError = ({
       <p className="text-gray-600 mb-6 text-center">
         We couldn&apos;t load your {lastSegment}. Please try again.
       </p>
-      <RateupButtonPrimary title="Retry" onClick={handleRetry} className="mt-5" size="md" />
+      <Button onClick={handleRetry} className="mt-5">
+        Retry
+      </Button>
     </div>
   );
 };

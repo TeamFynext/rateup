@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -12,7 +12,7 @@ import { useCreateSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
@@ -54,6 +54,7 @@ export function CreateSurveyModal({
   template,
   setTemplate,
 }: CreateSurveyModalProps) {
+  const uid = useId();
   const [teamChoice, setTeamChoice] = useState("all");
   const navigate = useNavigate();
   const { t: translations } = useTranslation();
@@ -191,7 +192,7 @@ export function CreateSurveyModal({
   };
   return isLoading ? (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center rounded-sm bg-background/50 backdrop-blur-[2px]">
-      <Spinner className="size-8" style={{ color: "var(--tertiary-color)" }} />
+      <Spinner className="size-8 text-primary" />
     </div>
   ) : (
     <Dialog
@@ -216,7 +217,7 @@ export function CreateSurveyModal({
             }
           }}
         >
-          <div className="flex flex-col gap-4" style={{ minHeight: "300px" }}>
+          <Field style={{ minHeight: "300px" }}>
             <Controller
               name="title"
               control={control}
@@ -247,10 +248,11 @@ export function CreateSurveyModal({
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>
+                    <FieldLabel htmlFor={`${uid}-field`}>
                       {translations("Select Languages")} <span className="text-destructive">*</span>
                     </FieldLabel>
                     <MultiSelect
+                      id={`${uid}-field`}
                       options={languageOptions}
                       value={field.value}
                       onValueChange={field.onChange}
@@ -262,25 +264,31 @@ export function CreateSurveyModal({
               />
             )}
 
-            <Field>
-              <FieldLabel>
+            <FieldSet>
+              <FieldLegend variant="label">
                 {translations("Select teams")} <span className="text-destructive">*</span>
-              </FieldLabel>
+              </FieldLegend>
               <RadioGroup
                 value={teamChoice}
                 onValueChange={setTeamChoice}
                 className="flex flex-row gap-4"
               >
-                <label className="flex items-center gap-2">
-                  <RadioGroupItem value="all" />
+                <FieldLabel
+                  htmlFor="team-choice-all"
+                  className="flex-row items-center gap-2 font-normal"
+                >
+                  <RadioGroupItem id="team-choice-all" value="all" />
                   {translations("All Teams")}
-                </label>
-                <label className="flex items-center gap-2">
-                  <RadioGroupItem value="manual" />
+                </FieldLabel>
+                <FieldLabel
+                  htmlFor="team-choice-manual"
+                  className="flex-row items-center gap-2 font-normal"
+                >
+                  <RadioGroupItem id="team-choice-manual" value="manual" />
                   {translations("Select Manually")}
-                </label>
+                </FieldLabel>
               </RadioGroup>
-            </Field>
+            </FieldSet>
 
             {teamChoice === "manual" && (
               <Controller
@@ -306,14 +314,16 @@ export function CreateSurveyModal({
                 control={control}
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel>{translations("Select Theme")}</FieldLabel>
+                    <FieldLabel htmlFor={`${uid}-field-3`}>
+                      {translations("Select Theme")}
+                    </FieldLabel>
                     <div className="flex items-center gap-2">
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
                         items={selectThemeDropdownData}
                       >
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger id={`${uid}-field-3`} className="w-full">
                           <SelectValue placeholder={translations("Select Theme")} />
                         </SelectTrigger>
                         <SelectContent>
@@ -330,7 +340,7 @@ export function CreateSurveyModal({
                 )}
               />
             )}
-          </div>
+          </Field>
           <div className="mt-6 flex justify-center">
             <Button type="submit">{translations("Submit")}</Button>
           </div>

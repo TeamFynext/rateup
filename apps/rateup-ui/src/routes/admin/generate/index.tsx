@@ -15,8 +15,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { isProduction } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/admin/generate/")({
@@ -90,10 +90,10 @@ function GenerateData() {
             </div>
           </CardHeader>
           <CardContent className="relative space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="surveyMapId" className="text-sm font-medium">
+            <Field>
+              <FieldLabel htmlFor="surveyMapId" className="text-sm font-medium">
                 {translations("Enter surveyMapId")}
-              </Label>
+              </FieldLabel>
               <Input
                 id="surveyMapId"
                 placeholder={translations("Enter a surveyMapId")}
@@ -101,12 +101,12 @@ function GenerateData() {
                 onChange={(e) => setSelectedSurveyTeamMapId(e.target.value)}
                 className="w-full"
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="batchSize" className="text-sm font-medium">
+            <Field>
+              <FieldLabel htmlFor="batchSize" className="text-sm font-medium">
                 {translations("Number of generated data")}
-              </Label>
+              </FieldLabel>
               <Input
                 id="batchSize"
                 type="number"
@@ -116,7 +116,7 @@ function GenerateData() {
                 onChange={(e) => setBatchSize(Number(e.target.value))}
                 className="w-full"
               />
-            </div>
+            </Field>
 
             <Button
               onClick={handleSubmit}
@@ -165,10 +165,10 @@ function GenerateData() {
             </div>
           </CardHeader>
           <CardContent className="relative space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="numberOfContacts" className="text-sm font-medium">
+            <Field>
+              <FieldLabel htmlFor="numberOfContacts" className="text-sm font-medium">
                 {translations("How many contacts to add message")}
-              </Label>
+              </FieldLabel>
               <Input
                 id="numberOfContacts"
                 type="number"
@@ -178,12 +178,12 @@ function GenerateData() {
                 onChange={(e) => setNumberOfContacts(Number(e.target.value))}
                 className="w-full"
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="messagesPerContact" className="text-sm font-medium">
+            <Field>
+              <FieldLabel htmlFor="messagesPerContact" className="text-sm font-medium">
                 {translations("How many messages per contact")}
-              </Label>
+              </FieldLabel>
               <Input
                 id="messagesPerContact"
                 type="number"
@@ -193,7 +193,7 @@ function GenerateData() {
                 onChange={(e) => setMessagesPerContact(Number(e.target.value))}
                 className="w-full"
               />
-            </div>
+            </Field>
 
             <Button
               onClick={handleWaChat}

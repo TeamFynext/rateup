@@ -1,8 +1,8 @@
-import { useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, UserPlus } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
 import {
@@ -11,7 +11,6 @@ import {
 } from "@/backend/campaign/contacts/contacts.query";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { ContactGroupType } from "@/types/enums.ts";
-import { importMethod } from "@/utils/enums/index.ts";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar.tsx";
 import { Button } from "../ui/button.tsx";
@@ -25,11 +24,30 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog.tsx";
-import { Label } from "../ui/label.tsx";
+import { Field, FieldError, FieldLabel } from "../ui/field.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { getInitials } from "../ui/utils.ts";
+import {
+  buildContactSchema,
+  type ContactFormValues,
+  contactFormDefaults,
+} from "./contact-form-schema.ts";
 import ContactForm from "./ContactForm.tsx";
 import { getSourceBadge } from "./utils/utils.tsx";
+
+/**
+ * react-hook-form nests errors (custom fields arrive as an array), so pull every message out of
+ * the tree for the submit-time summary. `ref` holds a DOM node, so it must not be walked.
+ */
+const collectErrorMessages = (node: unknown, messages: string[] = []): string[] => {
+  if (!node || typeof node !== "object") return messages;
+  const { message } = node as { message?: unknown };
+  if (typeof message === "string" && message) messages.push(message);
+  for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+    if (key !== "ref" && value && typeof value === "object") collectErrorMessages(value, messages);
+  }
+  return messages;
+};
 
 const CreateOrEditContactModal = ({
   opened,
@@ -48,72 +66,23 @@ const CreateOrEditContactModal = ({
   const { customFields = [] } = useCustomFieldsContext();
   const createContactMutation = useCreateContactMutation();
   const editContactMutation = useEditContactMutation();
-  const form = useForm({
-    initialValues: initialValues ?? {
-      name: "",
-      phone: "",
-      email: "",
-      dob: null,
-      source: importMethod.MANUAL,
+  const contactSchema = useMemo(() => buildContactSchema(t, customFields), [t, customFields]);
+  const form = useForm<ContactFormValues>({
+    resolver: zodResolver(contactSchema) as any,
+    defaultValues: {
+      ...contactFormDefaults,
       contactType: customFields?.map((field) => field.slug) || [],
-      countryCode: "91",
-      customFields: [],
-      updateExisting: false,
-      external_id: "",
-      labels: [],
-      contactGroupIds: [],
-      assignedUserIds: [],
-      lifecycleId: "",
-      notes: "",
-    },
-    validate: {
-      phone: (value, values) => {
-        if (values.source == importMethod.MANUAL)
-          return !value
-            ? t("Phone Number cannot be blank")
-            : !isValidPhoneNumber(value)
-              ? t("Invalid phone number")
-              : null;
-      },
-      name: (value, values) =>
-        values.source == importMethod.MANUAL && (value.length ? null : t("Name cannot be blank")),
-      customFields: {
-        "*": (value, _values, path) => {
-          const fieldId = path.split(".")[1];
-          const customField = customFields.find((field) => field.slug === fieldId);
-
-          if (!customField) return null;
-
-          if (value && customField.type === "email") {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(value)) {
-              return t("Invalid email format.");
-            }
-          }
-
-          if (value && customField.type === "number") {
-            if (isNaN(Number(value))) {
-              return t("Must be a valid number");
-            }
-          }
-
-          return null;
-        },
-      },
+      ...initialValues,
     },
   });
-  const handleSubmit = async () => {
-    const validation = form.validate();
-    if (validation.hasErrors) {
-      return;
-    }
+
+  const handleSubmit = form.handleSubmit((values) => {
     const contactData = {
-      ...form.getValues(),
-      dob: form.getValues()?.dob ? new Date(form.getValues().dob).toISOString() : null,
-      external_id: form.getValues()?.external_id || undefined,
-      phone: form.getValues()?.phone?.replace(/^\+/, "") || "",
-      source:
-        type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : form.getValues().source,
+      ...values,
+      dob: values.dob ? new Date(values.dob).toISOString() : null,
+      external_id: values.external_id || undefined,
+      phone: values.phone?.replace(/^\+/, "") || "",
+      source: type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : values.source,
       lastReceivedMessageTimeStamp: undefined,
     };
     if (initialValues) {
@@ -126,50 +95,54 @@ const CreateOrEditContactModal = ({
           },
         },
       );
-    } else {
-      if (createNewContactMutation) {
-        createNewContactMutation.mutate([contactData], {
-          onSuccess: () => {
-            setOpened(false);
-            form.reset();
-            toast.success("contact added successfully");
-          },
-        });
-      } else {
-        createContactMutation.mutate(contactData, {
-          onSuccess: () => {
-            setOpened(false);
-            form.reset();
-            toast.success("contact added successfully");
-          },
-          onError: (error) => {
-            toast.error(error?.message || "Error in adding contact");
-          },
-        });
-      }
+      return;
     }
-  };
+    if (createNewContactMutation) {
+      createNewContactMutation.mutate([contactData], {
+        onSuccess: () => {
+          setOpened(false);
+          form.reset();
+          toast.success("contact added successfully");
+        },
+      });
+      return;
+    }
+    createContactMutation.mutate(contactData, {
+      onSuccess: () => {
+        setOpened(false);
+        form.reset();
+        toast.success("contact added successfully");
+      },
+      onError: (error) => {
+        toast.error(error?.message || "Error in adding contact");
+      },
+    });
+  });
 
   useEffect(() => {
     if (initialValues) {
-      form.setValues(initialValues);
-      form.setFieldValue("phone", "+" + initialValues.phone);
+      form.reset({ ...contactFormDefaults, ...initialValues, phone: "+" + initialValues.phone });
     }
-  }, [initialValues]);
+  }, [initialValues, form]);
+
   useEffect(() => {
-    form.setInitialValues({
-      ...form.values,
-      contactType: customFields?.map((field) => field.slug) || [],
-    });
-    form.setFieldValue("contactType", customFields?.map((field) => field.slug) || []);
-  }, [customFields]);
+    form.setValue("contactType", customFields?.map((field) => field.slug) || []);
+  }, [customFields, form]);
+
+  const contactType = form.watch("contactType");
+  const { errors, isSubmitted } = form.formState;
+  const errorMessages = useMemo(() => [...new Set(collectErrorMessages(errors))], [errors]);
+  const showErrorSummary = isSubmitted && errorMessages.length > 0;
+
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
-      <DialogContent className="min-w-[500px]">
+      {/* Below `sm` the dialog keeps DialogContent's responsive max-width; a hard min-width here
+          would overflow a 320px viewport. */}
+      <DialogContent className="sm:min-w-125">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {!initialValues && (
-              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-rateup-blue to-blue-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-blue-600 flex items-center justify-center">
                 <UserPlus className="w-4 h-4 text-white" />
               </div>
             )}
@@ -185,7 +158,7 @@ const CreateOrEditContactModal = ({
           <div className="flex items-center gap-3 pb-3 border-b">
             <Avatar className="w-16 h-16">
               <AvatarImage src={initialValues.profilePic} />
-              <AvatarFallback className="bg-linear-to-br from-rateup-blue to-blue-600 text-white">
+              <AvatarFallback className="bg-linear-to-br from-primary to-blue-600 text-white">
                 {getInitials(initialValues.name)}
               </AvatarFallback>
             </Avatar>
@@ -197,33 +170,48 @@ const CreateOrEditContactModal = ({
             </div>
           </div>
         )}
-        <div className="space-y-4 max-h-[400px] overflow-y-auto p-1">
+        <Field className="max-h-[400px] overflow-y-auto p-1">
           {customFields?.length > 0 && (
-            <div className="border flex self-end gap-1 p-1 w-fit">
+            <Field className="border self-end p-1 w-fit">
               {customFields.map((field) => (
-                <div className="flex items-center gap-1 rounded-lg p-1 w-fit px-2" key={field.id}>
+                <Field
+                  key={field.id}
+                  orientation="horizontal"
+                  className="rounded-lg p-1 w-fit px-2"
+                >
                   <Checkbox
-                    checked={form.values.contactType?.includes(field?.slug)}
+                    checked={contactType?.includes(field?.slug)}
                     id={field.slug}
                     className="rounded-xl"
                     onCheckedChange={(checked) => {
-                      form.setFieldValue(
+                      form.setValue(
                         "contactType",
                         checked
-                          ? [...form.values.contactType, field.slug]
-                          : form.values.contactType.filter((slug) => field.slug !== slug),
+                          ? [...contactType, field.slug]
+                          : contactType.filter((slug) => field.slug !== slug),
+                        { shouldDirty: true },
                       );
                     }}
                   />
-                  <Label htmlFor={field.slug} className="text-sm font-normal">
+                  <FieldLabel htmlFor={field.slug} className="text-sm font-normal">
                     {field.name}
-                  </Label>
-                </div>
+                  </FieldLabel>
+                </Field>
               ))}
-            </div>
+            </Field>
+          )}
+          {showErrorSummary && (
+            <FieldError className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
+              <p className="font-medium">{t("Fix the following before saving:")}</p>
+              <ul className="ml-4 mt-1 flex list-disc flex-col gap-1">
+                {errorMessages.map((message) => (
+                  <li key={message}>{message}</li>
+                ))}
+              </ul>
+            </FieldError>
           )}
           <ContactForm form={form} customFields={customFields} type={type} />
-        </div>
+        </Field>
         <DialogFooter>
           <DialogClose render={<Button variant="secondary" onClick={() => form.reset()} />}>
             <span className="text-sm font-normal">{t("Cancel")}</span>

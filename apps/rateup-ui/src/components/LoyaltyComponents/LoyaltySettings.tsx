@@ -1,9 +1,12 @@
-import { isNotEmpty, useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
+import { EditorContent } from "@tiptap/react";
+import { TypeOutline } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import z from "zod";
 
 import {
   useCreateLoyaltyTemplate,
@@ -13,6 +16,19 @@ import {
 } from "@/backend/loyalty/settings/settings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
+import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
+import { WaTextCharacterCount } from "@/components/RichTextEditor/wa-editor/character-count.tsx";
+import { useWaEditor } from "@/components/RichTextEditor/wa-editor/use-wa-editor.ts";
+import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
+import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
+import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
+import { CodeToolbar } from "@/components/tiptap/toolbars/code.tsx";
+import { ItalicToolbar } from "@/components/tiptap/toolbars/italic.tsx";
+import { OrderedListToolbar } from "@/components/tiptap/toolbars/ordered-list.tsx";
+import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
+import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
+import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
+import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -30,8 +46,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import {
   Select,
@@ -41,11 +67,12 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { TemplateType, WaAutomatedReplyResponseType } from "@/types/enums.ts";
 
 import { AccountSelector } from "../input/AccountSelector.tsx";
-import WaTextEditor from "../RichTextEditor/waTextEditor.tsx";
 import { DataTable } from "../Table/data-table.tsx";
 
 interface LoyaltyTemplateConfig {
@@ -159,28 +186,55 @@ const LoyaltyWaTemplateConfig = ({
     whatsappSettingsPhoneId: "",
   };
 
+  const loyaltyTemplateSchema = useMemo(
+    () =>
+      z
+        .object({
+          type: z.custom<LoyaltyTemplateTypes>(),
+          waTemplateId: z.string(),
+          requestMessage: z.string().trim().min(1, "required"),
+          content: z.custom<any>(),
+          responseType: z.custom<WaAutomatedReplyResponseType>(),
+          whatsappSettingsPhoneId: z.string().trim().min(1, "required"),
+        })
+        .superRefine((values, ctx) => {
+          if (
+            values.responseType === WaAutomatedReplyResponseType.Template &&
+            !values.waTemplateId?.length
+          ) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["waTemplateId"],
+              message: translations("whatsApp Template") + translations("required"),
+            });
+          }
+          if (
+            values.responseType === WaAutomatedReplyResponseType.Text &&
+            !getPlainTextFromRichContent(values.content).trim().length
+          ) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["content"],
+              message: translations("content cannot be blank"),
+            });
+          }
+        }),
+    [translations],
+  );
+
   const form = useForm<LoyaltyTemplateFormValues>({
-    mode: "controlled",
-    initialValues,
-    validate: {
-      requestMessage: isNotEmpty("required"),
-      waTemplateId: (value, values) =>
-        values.responseType === WaAutomatedReplyResponseType.Template && !value?.length
-          ? translations("whatsApp Template") + translations("required")
-          : null,
-      content: (value, values) =>
-        values.responseType === WaAutomatedReplyResponseType.Text &&
-        !getPlainTextFromRichContent(value).trim().length
-          ? translations("content cannot be blank")
-          : null,
-      whatsappSettingsPhoneId: isNotEmpty("required"),
-    },
+    resolver: zodResolver(loyaltyTemplateSchema) as any,
+    defaultValues: initialValues,
+  });
+  const values = form.watch();
+  const contentEditor = useWaEditor({
+    content: form.getValues("content"),
+    onChange: (value) =>
+      form.setValue("content", value, { shouldDirty: true, shouldValidate: true }),
   });
 
-  const hanldeTemplateConfig = async () => {
-    const validationRes = await form.validate();
-    if (validationRes.hasErrors) return;
-    const { type, ...rest } = form.values;
+  const hanldeTemplateConfig = form.handleSubmit((submitted) => {
+    const { type, ...rest } = submitted;
     if (config) {
       updateTempMut.mutate(rest, {
         onSettled: () => {
@@ -199,13 +253,12 @@ const LoyaltyWaTemplateConfig = ({
         },
       },
     );
-  };
+  });
 
   useEffect(() => {
     const nextValues = config ? { ...initialValues, ...sanitizeConfig(config) } : initialValues;
 
-    form.setInitialValues(nextValues);
-    form.setValues(nextValues);
+    form.reset(nextValues);
   }, [config]);
 
   const typeData = Object.values(LoyaltyTemplateTypes).map((t) => ({
@@ -213,22 +266,22 @@ const LoyaltyWaTemplateConfig = ({
     label: getLoyaltyTemplateLabel(t).label,
   }));
 
-  const variableMeta = getLoyaltyTemplateVariableMeta(form.values.type);
+  const variableMeta = getLoyaltyTemplateVariableMeta(values.type);
   const selectedTemplate = loyaltyTemplates?.find(
-    (template) => template.id === form.values.waTemplateId,
+    (template) => template.id === values.waTemplateId,
   );
   const sampleReply = getSampleReplyMessage({
-    responseType: form.values.responseType,
-    content: getPlainTextFromRichContent(form.values.content),
-    waTemplateId: form.values.waTemplateId,
+    responseType: values.responseType,
+    content: getPlainTextFromRichContent(values.content),
+    waTemplateId: values.waTemplateId,
     selectedTemplate,
     variableMeta,
   });
-  const requestMessageError =
-    typeof form.errors.requestMessage === "string" ? form.errors.requestMessage : "";
-  const responseErrorCandidate = form.errors.waTemplateId || form.errors.content;
+  const requestMessageError = form.formState.errors.requestMessage?.message ?? "";
   const responseMessageError =
-    typeof responseErrorCandidate === "string" ? responseErrorCandidate : "";
+    form.formState.errors.waTemplateId?.message ??
+    (form.formState.errors.content?.message as string | undefined) ??
+    "";
   const isSaving = templateMut.isPending || updateTempMut.isPending;
 
   return (
@@ -254,72 +307,103 @@ const LoyaltyWaTemplateConfig = ({
         </DialogHeader>
 
         <form
-          className="space-y-4"
+          className="flex flex-col gap-4"
           onSubmit={(event) => {
             event.preventDefault();
             hanldeTemplateConfig();
           }}
         >
-          <div className="space-y-4">
+          <Field>
             <Card className="gap-4 py-4">
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>{translations("Service Type")}</Label>
-                  <Select
-                    value={form.values.type}
-                    onValueChange={(value) =>
-                      form.setFieldValue("type", value as LoyaltyTemplateTypes)
-                    }
-                    disabled={!!config}
-                    items={typeData}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={translations("Select type")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {typeData.map((item) => (
-                        <SelectItem key={item.value} value={item.value}>
-                          {item.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <CardContent>
+                <FieldGroup className="gap-4">
+                  <Field>
+                    <FieldLabel htmlFor="loyalty-service-type">
+                      {translations("Service Type")}
+                    </FieldLabel>
+                    <Select
+                      value={values.type}
+                      onValueChange={(value) =>
+                        form.setValue("type", value as LoyaltyTemplateTypes, { shouldDirty: true })
+                      }
+                      disabled={!!config}
+                      items={typeData}
+                    >
+                      <SelectTrigger id="loyalty-service-type" className="w-full">
+                        <SelectValue placeholder={translations("Select type")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {typeData.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
 
-                <AccountSelector {...form.getInputProps("whatsappSettingsPhoneId")} />
-
-                <div className="space-y-2">
-                  <Label htmlFor="loyalty-request-message">{translations("Request Message")}</Label>
-                  <Input
-                    id="loyalty-request-message"
-                    placeholder={translations("Example: /points")}
-                    value={form.values.requestMessage}
-                    onChange={(event) => form.setFieldValue("requestMessage", event.target.value)}
+                  <Controller
+                    name="whatsappSettingsPhoneId"
+                    control={form.control}
+                    render={({ field }) => (
+                      <AccountSelector value={field.value} onChange={field.onChange} />
+                    )}
                   />
-                  {requestMessageError && (
-                    <p className="text-xs text-destructive">{requestMessageError}</p>
-                  )}
-                </div>
 
-                <div className="space-y-2">
-                  <Label>{translations("Response Type")}</Label>
-                  <RadioGroup
-                    value={form.values.responseType}
-                    onValueChange={(value) =>
-                      form.setFieldValue("responseType", value as WaAutomatedReplyResponseType)
-                    }
-                    className="grid grid-cols-2 gap-2"
-                  >
-                    <Label className="flex items-center gap-2 rounded-md border p-3 font-normal">
-                      <RadioGroupItem value={WaAutomatedReplyResponseType.Template} />
-                      {WaAutomatedReplyResponseType.Template}
-                    </Label>
-                    <Label className="flex items-center gap-2 rounded-md border p-3 font-normal">
-                      <RadioGroupItem value={WaAutomatedReplyResponseType.Text} />
-                      {WaAutomatedReplyResponseType.Text}
-                    </Label>
-                  </RadioGroup>
-                </div>
+                  <Field data-invalid={!!requestMessageError}>
+                    <FieldLabel htmlFor="loyalty-request-message">
+                      {translations("Request Message")}
+                    </FieldLabel>
+                    <Input
+                      id="loyalty-request-message"
+                      placeholder={translations("Example: /points")}
+                      aria-invalid={!!requestMessageError}
+                      value={values.requestMessage}
+                      onChange={(event) =>
+                        form.setValue("requestMessage", event.target.value, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }
+                    />
+                    {requestMessageError && <FieldError>{requestMessageError}</FieldError>}
+                  </Field>
+
+                  <FieldSet>
+                    <FieldLegend variant="label">{translations("Response Type")}</FieldLegend>
+                    <RadioGroup
+                      value={values.responseType}
+                      onValueChange={(value) =>
+                        form.setValue("responseType", value as WaAutomatedReplyResponseType, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }
+                      className="grid grid-cols-2 gap-2"
+                    >
+                      <FieldLabel
+                        htmlFor="response-type-template"
+                        className="flex-row items-center gap-2 rounded-md border p-3 font-normal"
+                      >
+                        <RadioGroupItem
+                          id="response-type-template"
+                          value={WaAutomatedReplyResponseType.Template}
+                        />
+                        {WaAutomatedReplyResponseType.Template}
+                      </FieldLabel>
+                      <FieldLabel
+                        htmlFor="response-type-text"
+                        className="flex-row items-center gap-2 rounded-md border p-3 font-normal"
+                      >
+                        <RadioGroupItem
+                          id="response-type-text"
+                          value={WaAutomatedReplyResponseType.Text}
+                        />
+                        {WaAutomatedReplyResponseType.Text}
+                      </FieldLabel>
+                    </RadioGroup>
+                  </FieldSet>
+                </FieldGroup>
               </CardContent>
             </Card>
 
@@ -334,32 +418,83 @@ const LoyaltyWaTemplateConfig = ({
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {form.values.responseType === WaAutomatedReplyResponseType.Template ? (
+                  {values.responseType === WaAutomatedReplyResponseType.Template ? (
                     <WaTemplateSelector
                       templateType={TemplateType.LOYALTY}
-                      comboboxProps={{ withinPortal: false }}
-                      label={getLoyaltyTemplateLabel(form.values.type)?.templateLabel}
-                      description={getLoyaltyTemplateLabel(form.values.type)?.templateDescription}
-                      value={form.values.waTemplateId}
-                      onChange={(value) => form.setFieldValue("waTemplateId", value || "")}
+                      label={getLoyaltyTemplateLabel(values.type)?.templateLabel}
+                      description={getLoyaltyTemplateLabel(values.type)?.templateDescription}
+                      value={values.waTemplateId}
+                      onChange={(value) =>
+                        form.setValue("waTemplateId", value || "", {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }
                     />
                   ) : (
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">{translations("Reply Message")}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {getLoyaltyTemplateLabel(form.values.type).templateDescription}
-                      </p>
-                      <WaTextEditor
-                        handleInputChange={(value) => {
-                          form.setFieldValue("content", value);
-                        }}
-                        content={form.values.content}
-                      />
-                    </div>
+                    <Field>
+                      <FieldTitle>{translations("Reply Message")}</FieldTitle>
+                      <FieldDescription>
+                        {getLoyaltyTemplateLabel(values.type).templateDescription}
+                      </FieldDescription>
+                      <div className="flex-1">
+                        <ToolbarProvider editor={contentEditor}>
+                          <TooltipProvider>
+                            <EditorContent
+                              editor={contentEditor}
+                              style={{
+                                backgroundColor: "var(--accent)",
+                                borderRadius: "5px",
+                                maxHeight: "200px",
+                                minHeight: "120px",
+                              }}
+                              className="overflow-y-auto rounded-xl"
+                            />
+                            <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                              <WaTextCharacterCount editor={contentEditor} max={1024} />
+                            </div>
+                            <div className="flex flex-wrap p-2">
+                              <div className="mt-1 flex items-center">
+                                <InsertEmoji editor={contentEditor} />
+                              </div>
+                              <Popover>
+                                <PopoverTrigger>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    title="Format"
+                                  >
+                                    <TypeOutline className="h-5 w-5" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full">
+                                  <div className="flex flex-nowrap gap-1">
+                                    <div className="flex items-center">
+                                      <BoldToolbar />
+                                      <ItalicToolbar />
+                                      <StrikeThroughToolbar />
+                                      <CodeToolbar />
+                                    </div>
+                                    <div className="flex items-center">
+                                      <BlockquoteToolbar />
+                                      <BulletListToolbar />
+                                      <OrderedListToolbar />
+                                    </div>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                              <div className="flex items-center">
+                                <UndoToolbar />
+                                <RedoToolbar />
+                              </div>
+                            </div>
+                          </TooltipProvider>
+                        </ToolbarProvider>
+                      </div>
+                    </Field>
                   )}
-                  {responseMessageError && (
-                    <p className="text-xs text-destructive">{responseMessageError}</p>
-                  )}
+                  {responseMessageError && <FieldError>{responseMessageError}</FieldError>}
                 </CardContent>
               </Card>
 
@@ -375,7 +510,7 @@ const LoyaltyWaTemplateConfig = ({
                     <p className="mb-2 text-xs text-muted-foreground">WhatsApp</p>
                     <div className="space-y-2">
                       <div className="ml-auto max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">
-                        {form.values.requestMessage || "/points"}
+                        {values.requestMessage || "/points"}
                       </div>
                       <div className="max-w-[85%] rounded-lg border bg-background px-3 py-2 text-sm">
                         {sampleReply}
@@ -403,7 +538,7 @@ const LoyaltyWaTemplateConfig = ({
                 </CardContent>
               </Card>
             </div>
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button

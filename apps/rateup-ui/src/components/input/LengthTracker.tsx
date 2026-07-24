@@ -1,4 +1,4 @@
-import { Group, Text } from "@mantine/core";
+import { cn } from "@/lib/utils";
 
 export interface LengthTrackerProps {
   length: number;
@@ -7,17 +7,11 @@ export interface LengthTrackerProps {
 }
 export function LengthTracker({ maxValue, length, atStart = false }: LengthTrackerProps) {
   return (
-    <Group justify={atStart ? "start" : "flex-end"}>
-      <Text c="dimmed" fz={".8rem"} pr="sm">
-        <span
-          style={{
-            color: length > maxValue ? "red" : "inherit",
-          }}
-        >
-          {length}
-        </span>
+    <div className={cn("flex", atStart ? "justify-start" : "justify-end")}>
+      <p className="pr-2 text-[0.8rem] text-muted-foreground">
+        <span className={length > maxValue ? "text-red-500" : ""}>{length}</span>
         <span>{` / ${maxValue}`}</span>
-      </Text>
-    </Group>
+      </p>
+    </div>
   );
 }

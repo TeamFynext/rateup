@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Check, Copy, RefreshCw, Trash2, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -31,8 +31,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 
 function ReferralActionsCell({ id, code }: { id: string; code: string }) {
@@ -195,6 +195,7 @@ export const Route = createFileRoute("/admin/referrals/")({
 });
 
 function ReferralsPage() {
+  const uid = useId();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
@@ -348,10 +349,10 @@ function ReferralsPage() {
             className={`relative transition-all duration-300 ${generatedCode ? "grid grid-cols-1 md:grid-cols-2 gap-8" : "space-y-6"}`}
           >
             <div className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="influencerName" className="text-sm font-medium">
+              <Field>
+                <FieldLabel htmlFor="influencerName" className="text-sm font-medium">
                   Name
-                </Label>
+                </FieldLabel>
                 <Input
                   id="influencerName"
                   placeholder="e.g. John"
@@ -360,12 +361,12 @@ function ReferralsPage() {
                   className="w-full text-black dark:text-white bg-white dark:bg-black"
                   disabled={createReferralMutation.isPending}
                 />
-              </div>
+              </Field>
 
-              <div className="space-y-2">
-                <Label htmlFor="influencerEmail" className="text-sm font-medium">
+              <Field>
+                <FieldLabel htmlFor="influencerEmail" className="text-sm font-medium">
                   Email
-                </Label>
+                </FieldLabel>
                 <Input
                   id="influencerEmail"
                   type="email"
@@ -375,7 +376,7 @@ function ReferralsPage() {
                   className="w-full text-black dark:text-white bg-white dark:bg-black"
                   disabled={createReferralMutation.isPending}
                 />
-              </div>
+              </Field>
 
               <Button
                 onClick={handleCreateReferral}
@@ -397,11 +398,15 @@ function ReferralsPage() {
             {generatedCode && (
               <div className="space-y-6 pt-6 md:pt-0 md:pl-8">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">
+                  <FieldLabel
+                    htmlFor={`${uid}-generated-referral-code`}
+                    className="text-sm font-medium text-muted-foreground"
+                  >
                     Generated Referral Code
-                  </Label>
+                  </FieldLabel>
                   <div className="flex gap-2">
                     <Input
+                      id={`${uid}-generated-referral-code`}
                       value={generatedCode}
                       readOnly
                       className="bg-gray-50 dark:bg-gray-900/50 font-mono text-sm text-black dark:text-white"
@@ -423,11 +428,15 @@ function ReferralsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">
+                  <FieldLabel
+                    htmlFor={`${uid}-final-referral-link`}
+                    className="text-sm font-medium text-muted-foreground"
+                  >
                     Final Referral Link
-                  </Label>
+                  </FieldLabel>
                   <div className="flex gap-2">
                     <Input
+                      id={`${uid}-final-referral-link`}
                       value={generatedLink}
                       readOnly
                       className="bg-gray-50 dark:bg-gray-900/50 font-mono text-xs text-black dark:text-white"

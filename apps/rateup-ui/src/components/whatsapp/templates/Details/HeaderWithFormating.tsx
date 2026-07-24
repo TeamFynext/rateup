@@ -1,48 +1,35 @@
-import { Box, Center, Image, Stack, Text } from "@mantine/core";
 import { IconFileText, IconMapPin, IconPhoto, IconVideo } from "@tabler/icons-react";
 
 import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 
 const MediaCardPreview = ({ children }) => {
   return (
-    <Stack w={"100%"} mih={"80px"} justify="center" align="center" component={"span"}>
-      {children}
-    </Stack>
+    <span className="flex min-h-20 w-full flex-col items-center justify-center">{children}</span>
   );
 };
 
 export function HeaderWithFormatting(text, type) {
   switch (type) {
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT:
-      return (
-        <Text
-          fz={14}
-          style={{
-            wordBreak: "break-all",
-          }}
-        >
-          {text}
-        </Text>
-      );
+      return <p className="text-sm break-all">{text}</p>;
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE:
       return (
         <MediaCardPreview>
-          <Box pos={"relative"} w={"100%"} p={0} component="span">
+          <span className="relative block w-full p-0">
             {text instanceof File ? (
-              <Image
+              <img
                 src={URL.createObjectURL(text)}
-                mih={70}
-                w={"100%"}
+                className="min-h-17.5 w-full"
                 alt="image of the template content"
               />
             ) : text?.startsWith("http") ? (
-              <Image src={text} mih={70} w={"100%"} alt="image of the template content" />
+              <img src={text} className="min-h-17.5 w-full" alt="image of the template content" />
             ) : (
-              <Center component="span">
+              <span className="flex items-center justify-center">
                 <IconPhoto size={40} />
-              </Center>
+              </span>
             )}
-          </Box>
+          </span>
         </MediaCardPreview>
       );
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO:
@@ -63,10 +50,10 @@ export function HeaderWithFormatting(text, type) {
           <MediaCardPreview>
             <IconMapPin size={40} />
           </MediaCardPreview>
-          <Box bg={"var(--light-grey-color)"}>
-            <Text fz={10}>{"{{Location name}}"}</Text>
-            <Text fz={10}>{"{{Address}}"}</Text>
-          </Box>
+          <div className="bg-muted">
+            <p className="text-[10px]">{"{{Location name}}"}</p>
+            <p className="text-[10px]">{"{{Address}}"}</p>
+          </div>
         </>
       );
     default:

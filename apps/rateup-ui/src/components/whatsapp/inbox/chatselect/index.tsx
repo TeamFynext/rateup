@@ -428,7 +428,11 @@ const WaInboxChatSelect = () => {
   };
 
   return (
-    <div className="h-full bg-background">
+    // Column with a scrolling body: the list used to be sized as
+    // `100dvh - 120px`, which only held while the header was exactly that tall
+    // and the panel started at the top of the viewport — neither is true once
+    // the header wraps a tab strip or a phone's URL bar moves.
+    <div className="flex h-full min-h-0 flex-col bg-background">
       <ChatselectPanelHeader
         isRefetchingFilteredContacts={isRefetchingFilteredContacts}
         onUnknownContactAddSuccess={onUnknownContactAddSuccess}
@@ -440,7 +444,7 @@ const WaInboxChatSelect = () => {
         setIsSelectionMode={setIsSelectionMode}
         setSelectedChats={setSelectedChats}
       />
-      <div>
+      <div className="flex min-h-0 flex-1 flex-col">
         {isStoreLoading || (!contactIds.length && filteredContactsStatus === "pending") ? (
           <p className="px-4 py-2 text-sm text-muted-foreground">Loading...</p>
         ) : !contactIds.length && filteredContactsStatus === "error" ? (
@@ -448,15 +452,7 @@ const WaInboxChatSelect = () => {
             Error: {filteredContactsError?.message}
           </p>
         ) : (
-          <div
-            ref={parentRef}
-            className="List"
-            style={{
-              height: `calc(100dvh - 120px)`,
-              width: `100%`,
-              overflow: "auto",
-            }}
-          >
+          <div ref={parentRef} className="List min-h-0 w-full flex-1 overflow-auto">
             <div className="border-t border-border" />
             {isSelectionMode && selectedChats.length > 0 && (
               <div className="h-12 px-3 border-b flex items-center justify-between transition-all">

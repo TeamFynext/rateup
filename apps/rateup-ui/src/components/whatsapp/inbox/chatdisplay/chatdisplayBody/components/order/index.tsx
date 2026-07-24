@@ -2,6 +2,7 @@ import { Package, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Button } from "@/components/ui/button.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.tsx";
 import { formatDate } from "@/utils/dateTime.ts";
@@ -44,27 +45,31 @@ const WaInboxOrder = ({
   return (
     <>
       <div className="flex flex-col min-w-60 max-w-75">
-        <div className="flex items-center gap-3 rounded-lg bg-[#025144] p-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#0a6e5c]">
-            <ShoppingCart className="h-6 w-6 text-white/80" />
+        {/* Cart summary: green is the commerce accent, but the labels track the
+            bubble's own foreground so they stay legible on any bubble variant. */}
+        <div className="flex items-center gap-3 rounded-lg bg-green-600/10 p-3 dark:bg-green-500/15">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-green-600/20 dark:bg-green-500/25">
+            <ShoppingCart className="h-6 w-6 text-green-700 dark:text-green-500" />
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium text-white">
+            <span className="text-sm font-medium">
               <ShoppingCart className="mr-1 inline h-3.5 w-3.5" />
               {totalQty} {totalQty === 1 ? translations("item") : translations("items")}
             </span>
-            <span className="text-xs text-white/70">
+            <span className="text-xs opacity-70">
               {formatPrice(total, currency)} ({translations("estimated total")})
             </span>
           </div>
         </div>
-        <button
-          type="button"
-          className="w-full border-t border-white/10 py-2 text-center text-sm font-medium text-[#53bdeb] hover:text-[#7dd3f0] transition-colors"
+        <Button
+          variant="ghost"
+          // Same treatment as template buttons: inherit the bubble's colour instead
+          // of naming one, so the action never disappears into the bubble fill.
+          className="w-full justify-center h-9 rounded-none text-current hover:bg-current/15 hover:text-current dark:hover:bg-current/15"
           onClick={() => setOpen(true)}
         >
           {translations("View sent cart")}
-        </button>
+        </Button>
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>

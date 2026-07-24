@@ -66,7 +66,12 @@ export default function ApiAccessKeyPage() {
             {data.createdAt ? (
               <div className="space-y-4">
                 <div className="relative">
-                  <Input readOnly value={apiKey || "•".repeat(48)} className="font-mono pr-24" />
+                  <Input
+                    readOnly
+                    aria-label={translations("Api Access Key")}
+                    value={apiKey || "•".repeat(48)}
+                    className="font-mono pr-24"
+                  />
                   <div className="absolute right-1 top-0 h-full flex items-center gap-1 p-1">
                     {apiKey ? (
                       <ApiCopyButton value={apiKey} />
@@ -103,14 +108,22 @@ export default function ApiAccessKeyPage() {
                     )}
                   </p>
                 </div>
-                <Button onClick={handleGenerateApiKey} disabled={generateMutation.isPending}>
+                <Button
+                  type="button"
+                  onClick={handleGenerateApiKey}
+                  disabled={generateMutation.isPending}
+                  aria-busy={generateMutation.isPending}
+                >
                   {generateMutation.isPending ? (
-                    <IconReload className="mr-2 h-4 w-4 animate-spin" />
+                    <IconReload className="mr-2 h-4 w-4 animate-spin" data-icon="inline-start" />
                   ) : (
-                    <IconKey className="mr-2 h-4 w-4" />
+                    <IconKey className="mr-2 h-4 w-4" data-icon="inline-start" />
                   )}
                   {translations("Generate Api Key")}
                 </Button>
+                <span role="status" aria-live="polite" className="sr-only">
+                  {generateMutation.isPending ? translations("Generating API key…") : ""}
+                </span>
               </div>
             )}
           </CardContent>
@@ -129,7 +142,12 @@ export default function ApiAccessKeyPage() {
           </CardHeader>
           <CardContent>
             <div className="relative">
-              <Input readOnly value={apiEndpoint} className="font-mono pr-12 bg-muted/50" />
+              <Input
+                readOnly
+                aria-label={translations("API Base URL")}
+                value={apiEndpoint}
+                className="font-mono pr-12 bg-muted/50"
+              />
               <div className="absolute right-1 top-0 h-full flex items-center p-1">
                 <ApiCopyButton value={apiEndpoint} />
               </div>
@@ -152,15 +170,22 @@ export function ApiCopyButton({ value }: Readonly<{ value: string }>) {
   };
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-8 w-8"
-      onClick={handleCopy}
-      title={translations("Copy")}
-    >
-      {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
-    </Button>
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={handleCopy}
+        aria-label={copied ? translations("Copied") : translations("Copy")}
+        title={translations("Copy")}
+      >
+        {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+      </Button>
+      {/* The copied state is otherwise icon-only, so announce it. */}
+      <span role="status" aria-live="polite" className="sr-only">
+        {copied ? translations("Copied") : ""}
+      </span>
+    </>
   );
 }
 

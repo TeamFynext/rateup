@@ -11,7 +11,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { SurveyContextProvider } from "@/context/SurveyObjContext.tsx";
 import { SurveyThemeContextProvider } from "@/context/SurveyThemeContext.tsx";
-import { useMediaQuery } from "@/hooks/use-media-querry.ts";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import type { QuestionType } from "@/types/enums.ts";
 import { LogicAction, PageType } from "@/types/enums.ts";
 import { encryptResponse } from "@/utils/encryption/index.ts";

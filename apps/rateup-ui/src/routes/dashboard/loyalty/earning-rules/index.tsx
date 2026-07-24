@@ -13,7 +13,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -43,9 +43,14 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -116,6 +121,7 @@ function getRuleIcon(rule: LoyaltyEarningRule) {
 }
 
 function EarningRulesPage() {
+  const uid = useId();
   const { t } = useTranslation("loyalty.earningRules");
 
   const [earningRulesViewMode, setEarningRulesViewMode] = useState<"list" | "create">("list");
@@ -494,7 +500,7 @@ function EarningRulesPage() {
                   name="name"
                   control={ruleForm.control}
                   render={({ field, fieldState }) => (
-                    <Field className="space-y-2" data-invalid={fieldState.invalid}>
+                    <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor={field.name}>{t("Rule Name")}</FieldLabel>
                       <Input
                         {...field}
@@ -514,7 +520,7 @@ function EarningRulesPage() {
                   name="description"
                   control={ruleForm.control}
                   render={({ field, fieldState }) => (
-                    <Field className="space-y-2" data-invalid={fieldState.invalid}>
+                    <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor={field.name}>
                         {t("Define how customers earn points through purchases and activities")}
                       </FieldLabel>
@@ -533,8 +539,9 @@ function EarningRulesPage() {
                 {/* Icon + Rule Type (UI-only, for design parity) */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Icon</Label>
+                    <FieldLabel htmlFor={`${uid}-icon`}>Icon</FieldLabel>
                     <Input
+                      id={`${uid}-icon`}
                       value={ruleIcon}
                       onChange={(e) => setRuleIcon(e.target.value)}
                       placeholder="e.g., 🎉, 💰, ⭐, 🎂"
@@ -542,7 +549,7 @@ function EarningRulesPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Rule Type</Label>
+                    <FieldLabel htmlFor={`${uid}-rule-type`}>Rule Type</FieldLabel>
                     <Select
                       value={ruleType}
                       onValueChange={(v) => setRuleType(v as typeof ruleType)}
@@ -552,7 +559,7 @@ function EarningRulesPage() {
                         { value: "percentage", label: "Percentage Bonus" },
                       ]}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger id={`${uid}-rule-type`}>
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -572,7 +579,7 @@ function EarningRulesPage() {
                     name="multiplier"
                     control={ruleForm.control}
                     render={({ field, fieldState }) => (
-                      <Field className="space-y-2" data-invalid={fieldState.invalid}>
+                      <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("Multiplier")}</FieldLabel>
                         <Input
                           {...field}
@@ -593,7 +600,7 @@ function EarningRulesPage() {
                     name="bonusPoints"
                     control={ruleForm.control}
                     render={({ field, fieldState }) => (
-                      <Field className="space-y-2" data-invalid={fieldState.invalid}>
+                      <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>{t("Bonus Points")}</FieldLabel>
                         <Input
                           {...field}
@@ -644,7 +651,7 @@ function EarningRulesPage() {
                             control={ruleForm.control}
                             render={({ field, fieldState }) => (
                               <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel className="text-xs">Available Days</FieldLabel>
+                                <FieldTitle className="text-xs">Available Days</FieldTitle>
                                 <div className="grid grid-cols-2 gap-2">
                                   {[
                                     "MONDAY",
@@ -655,7 +662,11 @@ function EarningRulesPage() {
                                     "SATURDAY",
                                     "SUNDAY",
                                   ].map((day) => (
-                                    <div key={day} className="flex items-center space-x-2">
+                                    <Field
+                                      key={day}
+                                      orientation="horizontal"
+                                      className="w-auto gap-2"
+                                    >
                                       <Checkbox
                                         id={`create-day-${day}`}
                                         checked={field.value?.includes(day)}
@@ -666,13 +677,13 @@ function EarningRulesPage() {
                                           field.onChange(updated);
                                         }}
                                       />
-                                      <Label
+                                      <FieldLabel
                                         htmlFor={`create-day-${day}`}
                                         className="cursor-pointer text-sm font-normal capitalize"
                                       >
                                         {day.charAt(0) + day.slice(1).toLowerCase()}
-                                      </Label>
-                                    </div>
+                                      </FieldLabel>
+                                    </Field>
                                   ))}
                                 </div>
                                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -746,10 +757,14 @@ function EarningRulesPage() {
                           control={ruleForm.control}
                           render={({ field, fieldState }) => (
                             <Field className="border-t pt-3" data-invalid={fieldState.invalid}>
-                              <FieldLabel className="text-xs">Applicable Tiers</FieldLabel>
+                              <FieldTitle className="text-xs">Applicable Tiers</FieldTitle>
                               <div className="space-y-2">
                                 {loyaltyTiers.map((tier) => (
-                                  <div key={tier.id} className="flex items-center space-x-2">
+                                  <Field
+                                    key={tier.id}
+                                    orientation="horizontal"
+                                    className="w-auto gap-2"
+                                  >
                                     <Checkbox
                                       id={`create-tier-${tier.id}`}
                                       checked={field.value?.includes(tier.id)}
@@ -760,7 +775,7 @@ function EarningRulesPage() {
                                         field.onChange(updated);
                                       }}
                                     />
-                                    <Label
+                                    <FieldLabel
                                       htmlFor={`create-tier-${tier.id}`}
                                       className="flex cursor-pointer items-center gap-2 text-sm font-normal"
                                     >
@@ -771,8 +786,8 @@ function EarningRulesPage() {
                                         }}
                                       />
                                       {tier.name}
-                                    </Label>
-                                  </div>
+                                    </FieldLabel>
+                                  </Field>
                                 ))}
                               </div>
                               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -809,8 +824,11 @@ function EarningRulesPage() {
                             control={ruleForm.control}
                             render={({ field, fieldState }) => (
                               <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel className="text-xs">Valid From</FieldLabel>
+                                <FieldLabel htmlFor={`${uid}-valid-from`} className="text-xs">
+                                  Valid From
+                                </FieldLabel>
                                 <Input
+                                  id={`${uid}-valid-from`}
                                   type="date"
                                   value={field.value ?? ""}
                                   onChange={(e) => field.onChange(e.target.value || null)}
@@ -825,8 +843,11 @@ function EarningRulesPage() {
                             control={ruleForm.control}
                             render={({ field, fieldState }) => (
                               <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel className="text-xs">Valid To</FieldLabel>
+                                <FieldLabel htmlFor={`${uid}-valid-to`} className="text-xs">
+                                  Valid To
+                                </FieldLabel>
                                 <Input
+                                  id={`${uid}-valid-to`}
                                   type="date"
                                   value={field.value ?? ""}
                                   onChange={(e) => field.onChange(e.target.value || null)}
@@ -1140,6 +1161,7 @@ function TierCard({ tier, index, isEditing, onStartEdit, onCancelEdit, onDelete 
 }
 
 function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDeleting }: any) {
+  const uid = useId();
   const { t } = useTranslation();
   const { data: loyaltyTiers = [] } = useLoyaltyTiers();
   const ruleForm = useForm<EarningRuleFormValues>({
@@ -1482,7 +1504,7 @@ function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDele
                     name="allowedDays"
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel className="text-xs">Available Days</FieldLabel>
+                        <FieldTitle className="text-xs">Available Days</FieldTitle>
                         <div className="grid grid-cols-2 gap-2">
                           {[
                             "MONDAY",
@@ -1493,7 +1515,7 @@ function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDele
                             "SATURDAY",
                             "SUNDAY",
                           ].map((day) => (
-                            <div key={day} className="flex items-center space-x-2">
+                            <Field key={day} orientation="horizontal" className="w-auto gap-2">
                               <Checkbox
                                 id={`edit-day-${rule.id}-${day}`}
                                 checked={field.value?.includes(day)}
@@ -1504,13 +1526,13 @@ function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDele
                                   field.onChange(updated);
                                 }}
                               />
-                              <Label
+                              <FieldLabel
                                 htmlFor={`edit-day-${rule.id}-${day}`}
                                 className="cursor-pointer text-xs font-normal capitalize"
                               >
                                 {day.charAt(0) + day.slice(1).toLowerCase()}
-                              </Label>
-                            </div>
+                              </FieldLabel>
+                            </Field>
                           ))}
                         </div>
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -1586,10 +1608,10 @@ function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDele
                   name="applicableToTiers"
                   render={({ field, fieldState }) => (
                     <Field className="border-t pt-3" data-invalid={fieldState.invalid}>
-                      <FieldLabel className="text-xs">Applicable Tiers</FieldLabel>
+                      <FieldTitle className="text-xs">Applicable Tiers</FieldTitle>
                       <div className="space-y-2">
                         {loyaltyTiers.map((tier: any) => (
-                          <div key={tier.id} className="flex items-center space-x-2">
+                          <Field key={tier.id} orientation="horizontal" className="w-auto gap-2">
                             <Checkbox
                               id={`edit-tier-${rule.id}-${tier.id}`}
                               checked={field.value?.includes(tier.id)}
@@ -1600,7 +1622,7 @@ function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDele
                                 field.onChange(updated);
                               }}
                             />
-                            <Label
+                            <FieldLabel
                               htmlFor={`edit-tier-${rule.id}-${tier.id}`}
                               className="flex cursor-pointer items-center gap-2 text-xs font-normal"
                             >
@@ -1609,8 +1631,8 @@ function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDele
                                 style={{ backgroundColor: tier.color }}
                               />
                               {tier.name}
-                            </Label>
-                          </div>
+                            </FieldLabel>
+                          </Field>
                         ))}
                       </div>
                       {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -1689,8 +1711,11 @@ function RuleCard({ rule, isEditing, onStartEdit, onCancelEdit, onDelete, isDele
 
           <div className="flex items-center justify-between border-t pt-3">
             <div className="flex items-center gap-2">
-              <Label className="text-xs">Enable Rule</Label>
+              <FieldLabel htmlFor={`${uid}-enable-rule`} className="text-xs">
+                Enable Rule
+              </FieldLabel>
               <Switch
+                id={`${uid}-enable-rule`}
                 checked={isEnabled}
                 onCheckedChange={onToggle}
                 className="data-[state=checked]:bg-[#1873E8]"

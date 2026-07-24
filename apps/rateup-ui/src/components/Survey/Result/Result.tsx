@@ -1,6 +1,6 @@
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useContext, useMemo, useState } from "react";
+import { useId, useCallback, useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -8,6 +8,7 @@ import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
@@ -16,7 +17,6 @@ import { QuestionType2 } from "@/types/enums.ts";
 import { decryptPrivateKey } from "@/utils/encryption/index.ts";
 import { pushToSessionStorage } from "@/utils/essential/index.ts";
 
-import SimpleModalLayout from "../../Modal/SimpleModalLayout.tsx";
 import Responses from "../Response/Responses.tsx";
 import WaResponses from "../Response/WaResponses.tsx";
 
@@ -93,6 +93,7 @@ function EncryptionPasswordModal({
   surveyId,
   close,
 }: EncryptionPasswordModalProps) {
+  const uid = useId();
   const {
     user: { encryptionKeys },
   } = useUser();
@@ -118,33 +119,39 @@ function EncryptionPasswordModal({
   }, []);
 
   return (
-    <SimpleModalLayout
-      centered
-      opened={passwordModalOpened}
-      onClose={close}
-      title={translations("Enter the password")}
-      withCloseButton={false}
-    >
-      <div className="flex flex-col gap-4">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          {translations("Enter the password to view the survey data")}
-        </p>
-        <Field>
-          <FieldLabel>{translations("Password")}</FieldLabel>
-          <Input
-            type="password"
-            value={encryptionpassword}
-            onChange={(e) => setEncryptionPassword(e.target.value)}
-          />
-        </Field>
-        <div className="flex justify-center gap-10">
-          <Button variant="outline" onClick={handleGoback}>
-            <IconArrowLeft data-icon="inline-start" />
-            {translations("Go back")}
-          </Button>
-          <Button onClick={onSubmitPassword}>{translations("Submit")}</Button>
+    // Not dismissible: the password is required to view the page at all.
+    <Dialog open={passwordModalOpened}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-h-[90vh] w-full overflow-auto sm:max-w-125"
+      >
+        <DialogHeader className="items-center">
+          <DialogTitle className="text-2xl font-bold">
+            {translations("Enter the password")}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {translations("Enter the password to view the survey data")}
+          </p>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field`}>{translations("Password")}</FieldLabel>
+            <Input
+              id={`${uid}-field`}
+              type="password"
+              value={encryptionpassword}
+              onChange={(e) => setEncryptionPassword(e.target.value)}
+            />
+          </Field>
+          <div className="flex justify-center gap-10">
+            <Button variant="outline" onClick={handleGoback}>
+              <IconArrowLeft data-icon="inline-start" />
+              {translations("Go back")}
+            </Button>
+            <Button onClick={onSubmitPassword}>{translations("Submit")}</Button>
+          </div>
         </div>
-      </div>
-    </SimpleModalLayout>
+      </DialogContent>
+    </Dialog>
   );
 }

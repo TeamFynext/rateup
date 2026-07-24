@@ -32,14 +32,15 @@ import {
 } from "@/backend/campaign/contacts/contacts.query";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
-import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
 import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
   Select,
@@ -207,16 +208,21 @@ export default function WaInboxContactDetails({
 
   const renderCustomField = (field) => {
     const fieldValue = getCustomFieldValue(field.slug);
+    const inputId = `customField-${field.slug}`;
+    const fieldLabel = (
+      <FieldLabel htmlFor={inputId} className="text-[11px] text-muted-foreground">
+        {field.name}
+        {field.required && <span className="text-destructive ml-0.5">*</span>}
+      </FieldLabel>
+    );
 
     switch (field.type) {
       case "email":
         return (
-          <div className="space-y-1" key={`customField-${field.slug}`}>
-            <label className="text-[11px] text-muted-foreground font-medium">
-              {field.name}
-              {field.required && <span className="text-destructive ml-0.5">*</span>}
-            </label>
+          <Field className="gap-1" key={inputId}>
+            {fieldLabel}
             <Input
+              id={inputId}
               type="email"
               placeholder={`Enter ${field.name}`}
               value={fieldValue}
@@ -225,17 +231,15 @@ export default function WaInboxContactDetails({
               }}
               className="h-8 text-xs"
             />
-          </div>
+          </Field>
         );
 
       case "number":
         return (
-          <div className="space-y-1" key={`customField-${field.slug}`}>
-            <label className="text-[11px] text-muted-foreground font-medium">
-              {field.name}
-              {field.required && <span className="text-destructive ml-0.5">*</span>}
-            </label>
+          <Field className="gap-1" key={inputId}>
+            {fieldLabel}
             <Input
+              id={inputId}
               type="number"
               placeholder={`Enter ${field.name}`}
               value={fieldValue}
@@ -244,7 +248,7 @@ export default function WaInboxContactDetails({
               }}
               className="h-8 text-xs"
             />
-          </div>
+          </Field>
         );
 
       case "multivalue": {
@@ -255,11 +259,8 @@ export default function WaInboxContactDetails({
           })) || [];
 
         return (
-          <div className="space-y-1" key={`customField-${field.slug}`}>
-            <label className="text-[11px] text-muted-foreground font-medium">
-              {field.name}
-              {field.required && <span className="text-destructive ml-0.5">*</span>}
-            </label>
+          <Field className="gap-1" key={inputId}>
+            {fieldLabel}
             <Select
               value={fieldValue}
               onValueChange={(value) => {
@@ -267,7 +268,7 @@ export default function WaInboxContactDetails({
               }}
               items={options}
             >
-              <SelectTrigger size="sm" className="w-full h-8 text-xs">
+              <SelectTrigger id={inputId} size="sm" className="w-full h-8 text-xs">
                 <SelectValue placeholder={`Select ${field.name}`} />
               </SelectTrigger>
               <SelectContent>
@@ -278,19 +279,17 @@ export default function WaInboxContactDetails({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
         );
       }
 
       case "text":
       default:
         return (
-          <div className="space-y-1" key={`customField-${field.slug}`}>
-            <label className="text-[11px] text-muted-foreground font-medium">
-              {field.name}
-              {field.required && <span className="text-destructive ml-0.5">*</span>}
-            </label>
+          <Field className="gap-1" key={inputId}>
+            {fieldLabel}
             <Input
+              id={inputId}
               type="text"
               placeholder={`Enter ${field.name}`}
               value={fieldValue}
@@ -299,7 +298,7 @@ export default function WaInboxContactDetails({
               }}
               className="h-8 text-xs"
             />
-          </div>
+          </Field>
         );
     }
   };
@@ -432,70 +431,89 @@ export default function WaInboxContactDetails({
                 <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2.5">
                   {t("Contact Information")}
                 </h4>
-                <div className="space-y-2">
+                <FieldGroup className="gap-2">
                   {/* Name Field */}
                   <motion.div
-                    className="space-y-1"
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.18, duration: 0.2 }}
                   >
-                    <label className="text-[11px] text-muted-foreground">{t("Name")}</label>
-                    <Input
-                      placeholder={t("Enter name")}
-                      className="h-7 text-xs"
-                      {...register("name")}
-                    />
-                    {errors.name && (
-                      <p className="text-[10px] text-destructive mt-0.5">{errors.name.message}</p>
-                    )}
+                    <Field className="gap-1" data-invalid={!!errors.name}>
+                      <FieldLabel
+                        htmlFor="contact-name"
+                        className="text-[11px] text-muted-foreground"
+                      >
+                        {t("Name")}
+                      </FieldLabel>
+                      <Input
+                        id="contact-name"
+                        placeholder={t("Enter name")}
+                        className="h-7 text-xs"
+                        aria-invalid={!!errors.name}
+                        {...register("name")}
+                      />
+                      <FieldError errors={[errors.name]} className="text-[10px]" />
+                    </Field>
                   </motion.div>
 
                   {/* Phone Field */}
                   <motion.div
-                    className="space-y-1"
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.21, duration: 0.2 }}
                   >
-                    <label className="text-[11px] text-muted-foreground">{t("Phone")}</label>
-                    <Controller
-                      name="phone"
-                      control={control}
-                      render={({ field }) => (
-                        <PhoneInputWithCountry
-                          defaultCountry="IN"
-                          international
-                          countryCallingCodeEditable={false}
-                          value={field.value}
-                          onChange={field.onChange}
-                          borderRadius={4}
-                          placeholder={t("Enter the phone")}
-                          error={errors.phone?.message}
-                        />
-                      )}
-                    />
+                    <Field className="gap-1" data-invalid={!!errors.phone}>
+                      <FieldLabel
+                        htmlFor="contact-phone"
+                        className="text-[11px] text-muted-foreground"
+                      >
+                        {t("Phone")}
+                      </FieldLabel>
+                      <Controller
+                        name="phone"
+                        control={control}
+                        render={({ field }) => (
+                          <PhoneInput
+                            id="contact-phone"
+                            defaultCountry="IN"
+                            international
+                            countryCallingCodeEditable={false}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder={t("Enter the phone")}
+                            aria-invalid={!!errors.phone}
+                          />
+                        )}
+                      />
+                      <FieldError errors={[errors.phone]} className="text-[10px]" />
+                    </Field>
                   </motion.div>
 
                   {/* Email Field */}
                   <motion.div
-                    className="space-y-1"
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.24, duration: 0.2 }}
                   >
-                    <label className="text-[11px] text-muted-foreground">{t("Email")}</label>
-                    <Input
-                      type="email"
-                      placeholder={t("Enter email")}
-                      className="h-7 text-xs border border-gray-300 py-4 placeholder:text-gray-400"
-                      {...register("email")}
-                    />
-                    {errors.email && (
-                      <p className="text-[10px] text-destructive mt-0.5">{errors.email.message}</p>
-                    )}
+                    <Field className="gap-1" data-invalid={!!errors.email}>
+                      <FieldLabel
+                        htmlFor="contact-email"
+                        className="text-[11px] text-muted-foreground"
+                      >
+                        {t("Email")}
+                      </FieldLabel>
+                      <Input
+                        id="contact-email"
+                        type="email"
+                        placeholder={t("Enter email")}
+                        className="h-7 text-xs"
+                        aria-invalid={!!errors.email}
+                        {...register("email")}
+                      />
+                      <FieldError errors={[errors.email]} className="text-[10px]" />
+                    </Field>
                   </motion.div>
-                </div>
+                </FieldGroup>
               </motion.div>
 
               {/* <Separator /> */}
@@ -510,10 +528,12 @@ export default function WaInboxContactDetails({
                 <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2.5">
                   {t("Additional Details")}
                 </h4>
-                <div className="space-y-2">
+                <FieldGroup className="gap-2">
                   {/* Lifecycle Field */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground">{t("Lifecycle")}</label>
+                  <Field className="gap-1">
+                    <FieldTitle className="text-[11px] font-normal text-muted-foreground">
+                      {t("Lifecycle")}
+                    </FieldTitle>
                     <Controller
                       name="lifecycleId"
                       control={control}
@@ -526,19 +546,27 @@ export default function WaInboxContactDetails({
                         />
                       )}
                     />
-                  </div>
+                  </Field>
 
                   {/* Other Field */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground">{t("Other")}</label>
+                  <Field className="gap-1">
+                    <FieldLabel
+                      htmlFor="contact-other"
+                      className="text-[11px] text-muted-foreground"
+                    >
+                      {t("Other")}
+                    </FieldLabel>
                     <Input
+                      id="contact-other"
                       placeholder={t("Enter other")}
-                      className="h-7 text-xs border border-gray-300 py-4 placeholder:text-gray-400"
+                      className="h-7 text-xs"
                       {...register("other")}
                     />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground">{t("Labels")}</label>
+                  </Field>
+                  <Field className="gap-1">
+                    <FieldTitle className="text-[11px] font-normal text-muted-foreground">
+                      {t("Labels")}
+                    </FieldTitle>
                     <Controller
                       name="labels"
                       control={control}
@@ -554,8 +582,8 @@ export default function WaInboxContactDetails({
                         />
                       )}
                     />
-                  </div>
-                </div>
+                  </Field>
+                </FieldGroup>
               </motion.div>
 
               {/* Custom Fields */}
@@ -571,9 +599,9 @@ export default function WaInboxContactDetails({
                     <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2.5">
                       {t("Custom Fields")}
                     </h4>
-                    <div className="space-y-2">
+                    <FieldGroup className="gap-2">
                       {customFields.map((field) => renderCustomField(field))}
-                    </div>
+                    </FieldGroup>
                   </motion.div>
                 </>
               )}

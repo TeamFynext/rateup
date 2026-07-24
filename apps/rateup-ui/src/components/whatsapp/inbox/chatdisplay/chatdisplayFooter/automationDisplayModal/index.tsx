@@ -7,10 +7,11 @@ import {
   useAllWaAutomatedReplies,
   useInitiateWaAutomatedReplyMutation,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
-import SimpleModalLayout from "@/components/Modal/SimpleModalLayout.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { cn } from "@/lib/utils.ts";
 
@@ -42,13 +43,16 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
   }
 
   return (
-    <>
-      <SimpleModalLayout
-        opened={props?.opened}
-        onClose={onClose}
-        title="Initiate Automation"
-        centered={true}
-      >
+    <Dialog
+      open={props?.opened}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
+    >
+      <DialogContent className="max-h-[90vh] w-full overflow-auto sm:max-w-125">
+        <DialogHeader className="items-center">
+          <DialogTitle className="text-2xl font-bold">Initiate Automation</DialogTitle>
+        </DialogHeader>
         {isLoading && (
           <div className="flex items-center justify-center p-6">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -62,17 +66,20 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
         {automations && automations?.length > 0 ? (
           <>
             <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto p-1">
-              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                Select an automation
-              </h4>
-              <RadioGroup value={selectedAutomationId} onValueChange={setSelectedAutomationId}>
-                <div className="flex flex-col gap-2">
+              <FieldSet>
+                <FieldLegend
+                  variant="label"
+                  className="text-sm font-semibold text-muted-foreground uppercase tracking-wider"
+                >
+                  Select an automation
+                </FieldLegend>
+                <RadioGroup value={selectedAutomationId} onValueChange={setSelectedAutomationId}>
                   {automations?.map((automation) => (
-                    <label
+                    <FieldLabel
                       key={automation?.id}
                       htmlFor={automation?.id}
                       className={cn(
-                        "flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all hover:bg-muted/50",
+                        "flex-row items-center justify-between p-3 border rounded-lg cursor-pointer transition-all hover:bg-muted/50",
                         selectedAutomationId === automation?.id
                           ? "border-primary bg-primary/5"
                           : "border-border",
@@ -82,10 +89,10 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
                         <RadioGroupItem value={automation?.id} id={automation?.id} />
                         <span className="text-xs font-medium select-none">{automation?.name}</span>
                       </div>
-                    </label>
+                    </FieldLabel>
                   ))}
-                </div>
-              </RadioGroup>
+                </RadioGroup>
+              </FieldSet>
             </div>
             <div className="flex justify-end pt-4 border-t border-border mt-4">
               <Button
@@ -101,7 +108,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
         ) : (
           !isLoading && <NothingFound text={"No Automations found"} />
         )}
-      </SimpleModalLayout>
-    </>
+      </DialogContent>
+    </Dialog>
   );
 }

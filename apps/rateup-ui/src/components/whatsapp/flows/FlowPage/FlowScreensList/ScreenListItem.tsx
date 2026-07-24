@@ -1,19 +1,5 @@
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import {
-  ActionIcon,
-  Badge,
-  Box,
-  Flex,
-  Group,
-  Image,
-  ScrollAreaAutosize,
-  Stack,
-  Text,
-  TextInput,
-  Tooltip,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import {
   IconChevronLeft,
   IconChevronRight,
   IconDeviceFloppy,
@@ -25,15 +11,22 @@ import {
 } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import classNames from "classnames/bind";
-import { useContext, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useId, useContext, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useReplaceQuestionsMutation } from "@/backend/surveys/questions/questions.query";
 import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { FlowMaxElementsPerScreen, FlowMaxScreens } from "@/components/whatsapp/whatsappConfig.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import type { QuestionType } from "@/types/enums.ts";
 import { WaFlowFormElementType, WaFlowStatus } from "@/types/enums.ts";
 import type { WaFlowFormElement, WaFlowScreen } from "@/types/global";
@@ -79,6 +72,7 @@ function ScreenListItem({
   pageNo,
   handlers,
 }: Readonly<ScreenListItemProps>) {
+  const uid = useId();
   const {
     survey,
     flowJson,
@@ -236,154 +230,156 @@ function ScreenListItem({
   };
 
   return (
-    <Stack p="xs" key={screen?.id} justify="space-between" h={"100%"}>
+    <div className="flex h-full flex-col justify-between p-2" key={screen?.id}>
       {!screen ? (
-        <Stack
-          h={"100%"}
-          align="center"
-          justify="center"
-          style={{
-            cursor: "pointer",
-          }}
-        >
-          <Tooltip label={translations("Add Screen")} openDelay={500}>
-            <Stack align="center" onClick={handleCreateScreenClick}>
-              <IconPlus size={30} />
-              <RateupButtonPrimary
-                mt={"xl"}
-                size="lg"
-                title={translations("Add Screen")}
-                disabled={!flowEditable}
-              />
-            </Stack>
-          </Tooltip>
-        </Stack>
+        <div className="flex h-full cursor-pointer flex-col items-center justify-center">
+          <CustomTooltip
+            trigger={
+              <div className="flex flex-col items-center" onClick={handleCreateScreenClick}>
+                <IconPlus size={30} />
+                <Button size="lg" className="mt-6" disabled={!flowEditable}>
+                  {translations("Add Screen")}
+                </Button>
+              </div>
+            }
+            content={<span>{translations("Add Screen")}</span>}
+          />
+        </div>
       ) : (
         <>
-          <Box mah={"85%"}>
-            {/* <Text w={"100%"}></Text> */}
-            <Group gap={5} className={styles["screen-title-input-and-chevrons-container"]}>
-              <Tooltip label={translations("Previous Screen")}>
-                <ActionIcon
-                  onClick={handlers.decrement}
-                  radius={"lg"}
-                  disabled={pageNo === 0}
-                  mt={28}
-                >
-                  <IconChevronLeft size={20} />
-                </ActionIcon>
-              </Tooltip>
-
-              {/* <EditableText
-                label={`Screen ${pageNo + 1}`}
-                text={screen.title}
-                setText={updateScreenTitle}
-                id={screen.title}
-                editMode={flowEditable && editingItem === screen.title}
-                setEditingItem={setEditingItem}
-                placeholder="Section title (Required if more than one section is added)"
-                style={{
-                  flex: 1,
-                  fontWeight: "bold",
-                  fontSize: "1.2rem",
-                }}
-              /> */}
-
-              <TextInput
-                ref={screenTitleInputRef}
-                className={styles["text-input"]}
-                label={`Screen ${pageNo + 1}`}
-                value={screenTitleInputState}
-                onChange={handleScreenTitleInputChange}
-                readOnly={!flowEditable}
-                placeholder={translations(
-                  "Section title (Required if more than one section is added)",
-                )}
-                onBlur={handleScreenTitleInputBlur}
-                rightSection={
-                  flowEditable && (
-                    <ActionIcon
-                      variant="subtle"
-                      onClick={() => screenTitleInputRef.current?.focus()}
-                    >
-                      <IconPencil size={20} />
-                    </ActionIcon>
-                  )
+          <div className="max-h-[85%]">
+            <Field
+              className={`flex items-center gap-1.5 ${styles["screen-title-input-and-chevrons-container"]}`}
+            >
+              <CustomTooltip
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="mt-7 rounded-full"
+                    onClick={handlers.decrement}
+                    disabled={pageNo === 0}
+                  >
+                    <IconChevronLeft size={20} />
+                  </Button>
                 }
-                onKeyUp={(e) => {
-                  if (e.code === "Enter") {
-                    screenTitleInputRef.current?.blur();
-                  }
-                }}
+                content={<span>{translations("Previous Screen")}</span>}
               />
 
-              <Tooltip label={translations("Next Screen")}>
-                <ActionIcon
-                  onClick={handlers.increment}
-                  radius={"lg"}
-                  disabled={pageNo === flowJson?.screens?.length - 1}
-                  mt={28}
-                >
-                  <IconChevronRight size={20} />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
-            <Group mx={"xl"} justify="space-between" mt={"xs"}>
-              <Group gap={4}>
-                <Tooltip label={translations("Add Screen")} openDelay={500}>
-                  <ActionIcon
-                    onClick={handleCreateScreenClick}
-                    variant="subtle"
-                    disabled={!flowEditable}
+              <Field className={`flex flex-1 flex-col gap-1 ${styles["text-input"]}`}>
+                <FieldLabel htmlFor={`${uid}-field`}>{`Screen ${pageNo + 1}`}</FieldLabel>
+                <InputGroup>
+                  <InputGroupInput
+                    id={`${uid}-field`}
+                    ref={screenTitleInputRef}
+                    value={screenTitleInputState}
+                    onChange={handleScreenTitleInputChange}
+                    readOnly={!flowEditable}
+                    placeholder={translations(
+                      "Section title (Required if more than one section is added)",
+                    )}
+                    onBlur={handleScreenTitleInputBlur}
+                    onKeyUp={(e) => {
+                      if (e.code === "Enter") {
+                        screenTitleInputRef.current?.blur();
+                      }
+                    }}
+                  />
+                  {flowEditable && (
+                    <InputGroupAddon align="inline-end">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() => screenTitleInputRef.current?.focus()}
+                      >
+                        <IconPencil size={20} />
+                      </Button>
+                    </InputGroupAddon>
+                  )}
+                </InputGroup>
+              </Field>
+
+              <CustomTooltip
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="mt-7 rounded-full"
+                    onClick={handlers.increment}
+                    disabled={pageNo === flowJson?.screens?.length - 1}
                   >
-                    <IconPlus />
-                  </ActionIcon>
-                </Tooltip>
+                    <IconChevronRight size={20} />
+                  </Button>
+                }
+                content={<span>{translations("Next Screen")}</span>}
+              />
+            </Field>
+            <div className="mx-6 mt-2 flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <CustomTooltip
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={handleCreateScreenClick}
+                      disabled={!flowEditable}
+                    >
+                      <IconPlus />
+                    </Button>
+                  }
+                  content={<span>{translations("Add Screen")}</span>}
+                />
                 {flowEditable && (
                   <>
-                    <Tooltip label={translations("Delete Screen")}>
-                      <ActionIcon onClick={handleDeleteScreen} variant="subtle">
-                        <IconTrash size={20} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label={translations("Swap order of screens")} openDelay={500}>
-                      <ActionIcon onClick={open} variant={"subtle"} size={20}>
-                        <IconReplace size={20} />
-                      </ActionIcon>
-                    </Tooltip>
+                    <CustomTooltip
+                      trigger={
+                        <Button variant="ghost" size="icon-sm" onClick={handleDeleteScreen}>
+                          <IconTrash size={20} />
+                        </Button>
+                      }
+                      content={<span>{translations("Delete Screen")}</span>}
+                    />
+                    <CustomTooltip
+                      trigger={
+                        <Button variant="ghost" size="icon-sm" onClick={open}>
+                          <IconReplace size={20} />
+                        </Button>
+                      }
+                      content={<span>{translations("Swap order of screens")}</span>}
+                    />
                   </>
                 )}
-              </Group>
-              <Group>
-                <Tooltip
-                  label={
-                    dbFlow.pendingSave
-                      ? translations(
-                          "Save your flow to WhatsApp, so that you can test or share draft version before publishing.",
-                        )
-                      : translations("No changes to save")
+              </div>
+              <div className="flex items-center gap-3">
+                <CustomTooltip
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={handleSaveJsonToWa}
+                      disabled={!dbFlow.pendingSave || pushToWaMutation.isPending}
+                    >
+                      {pushToWaMutation.isPending ? <Spinner /> : <IconDeviceFloppy size={22} />}
+                    </Button>
                   }
-                >
-                  <ActionIcon
-                    onClick={handleSaveJsonToWa}
-                    loading={pushToWaMutation.isPending}
-                    variant={"subtle"}
-                    size={20}
-                    disabled={!dbFlow.pendingSave}
-                  >
-                    <IconDeviceFloppy size={22} />
-                  </ActionIcon>
-                </Tooltip>
-                <Text c={"dimmed"}>{`${flowJson.screens.length}/${FlowMaxScreens}`}</Text>
-              </Group>
-            </Group>
-            <ScrollAreaAutosize mah={"88%"}>
+                  content={
+                    <span>
+                      {dbFlow.pendingSave
+                        ? translations(
+                            "Save your flow to WhatsApp, so that you can test or share draft version before publishing.",
+                          )
+                        : translations("No changes to save")}
+                    </span>
+                  }
+                />
+                <p className="text-muted-foreground">{`${flowJson.screens.length}/${FlowMaxScreens}`}</p>
+              </div>
+            </div>
+            <ScrollArea className="max-h-[88%]">
               <Droppable droppableId={screen?.id} direction="vertical">
                 {(provided) => (
-                  <Stack
-                    pt="lg"
-                    px={"xs"}
-                    gap={0}
+                  <div
+                    className="flex flex-col gap-0 px-2 pt-6"
                     {...provided.droppableProps}
                     ref={provided.innerRef}
                   >
@@ -403,48 +399,50 @@ function ScreenListItem({
                       );
                     })}
                     {provided.placeholder}
-                  </Stack>
+                  </div>
                 )}
               </Droppable>
-              <Group m={"md"}>
-                <RateupButtonPrimary
-                  title={translations("Add Element")}
-                  rightIcon={<IconPlus />}
-                  onClick={handleAddElementClick}
-                  fullWidth
-                />
-              </Group>
-            </ScrollAreaAutosize>
-          </Box>
-          <Flex w={"100%"} mt={"md"} gap={"xs"}>
-            <Stack align="center" w={"100%"} gap={4}>
-              <TextInput
-                ref={footerLabelInputRef}
-                className={cx("text-input", "footer-label-input")}
-                value={footerLabelInputState}
-                onChange={handleFooterLabelInputChange}
-                readOnly={!flowEditable}
-                placeholder={translations("Next button text")}
-                onBlur={handleFooterLabelInputBlur}
-                rightSection={
-                  flowEditable && (
-                    <ActionIcon
-                      variant="subtle"
-                      onClick={() => footerLabelInputRef.current?.focus()}
-                    >
-                      <IconPencil size={20} />
-                    </ActionIcon>
-                  )
-                }
-                onKeyUp={(e) => {
-                  if (e.code === "Enter") {
-                    footerLabelInputRef.current?.blur();
-                  }
-                }}
-              />
-              <Text fz={"xs"}>{translations("Next button text")}</Text>
-            </Stack>
-          </Flex>
+              <div className="m-4 flex">
+                <Button className="w-full" onClick={handleAddElementClick}>
+                  {translations("Add Element")}
+                  <IconPlus />
+                </Button>
+              </div>
+            </ScrollArea>
+          </div>
+          <div className="mt-4 flex w-full gap-2">
+            <div className="flex w-full flex-col items-center gap-1">
+              <div className={cx("text-input", "footer-label-input") + " w-full"}>
+                <InputGroup>
+                  <InputGroupInput
+                    ref={footerLabelInputRef}
+                    value={footerLabelInputState}
+                    onChange={handleFooterLabelInputChange}
+                    readOnly={!flowEditable}
+                    placeholder={translations("Next button text")}
+                    onBlur={handleFooterLabelInputBlur}
+                    onKeyUp={(e) => {
+                      if (e.code === "Enter") {
+                        footerLabelInputRef.current?.blur();
+                      }
+                    }}
+                  />
+                  {flowEditable && (
+                    <InputGroupAddon align="inline-end">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() => footerLabelInputRef.current?.focus()}
+                      >
+                        <IconPencil size={20} />
+                      </Button>
+                    </InputGroupAddon>
+                  )}
+                </InputGroup>
+              </div>
+              <p className="text-xs">{translations("Next button text")}</p>
+            </div>
+          </div>
           <SortDrawerFlow
             close={close}
             data={flowJson.screens?.map((data) => ({
@@ -455,7 +453,7 @@ function ScreenListItem({
           />
         </>
       )}
-    </Stack>
+    </div>
   );
 }
 
@@ -473,13 +471,13 @@ function DraggableFormElementCard(props: Readonly<Omit<FormElementCardProps, "dr
   return (
     <Draggable key={props.fe.id} index={props.index} draggableId={props.fe.id}>
       {(provided, _snapshot) => (
-        <Box
+        <div
           {...provided.draggableProps}
           ref={provided.innerRef}
           style={provided.draggableProps.style as CSSProperties}
         >
           <FormElementCard {...props} dragHandleProps={provided.dragHandleProps} />
-        </Box>
+        </div>
       )}
     </Draggable>
   );
@@ -504,55 +502,37 @@ function FormElementCard({
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
 
   return (
-    <Box
+    <div
       onClick={() => handleOpen(index)}
-      style={{
-        backgroundColor: selected
-          ? "light-dark(var(--light-grey-color),var(--mantine-color-dark-7))"
-          : "var(--mantine-body-color)",
-      }}
-      className={dndClasses.item}
+      className={`${dndClasses.item} ${selected ? "bg-muted" : "bg-background"}`}
     >
-      <div
-        style={{
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-        }}
-        {...dragHandleProps}
-      >
+      <div className="flex h-full items-center" {...dragHandleProps}>
         <IconGripVertical size={20} stroke={1.5} />
       </div>
-      <Badge style={{ minWidth: "30px" }} c={"white"} variant={"filled"}>
-        {index + 1}
-      </Badge>
-      <Text px="xs" fw={500} style={{ flex: 1 }} lineClamp={2}>
-        {text}
-      </Text>
+      <Badge className="min-w-7.5 justify-center">{index + 1}</Badge>
+      <p className="line-clamp-2 flex-1 px-2 font-medium">{text}</p>
       {Object.keys(dbFlow.logicJumps).includes(screen) && (
-        <Image
+        <img
           src={`${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
-          w={30}
-          h={30}
-          fit="contain"
+          className="h-7.5 w-7.5 object-contain"
           alt="image of logic jump"
         />
       )}
       {flowEditable && (
-        <ActionIcon
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="me-2 text-muted-foreground"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             handleDelete(index);
           }}
-          variant="subtle"
-          color="gray"
-          me={"xs"}
         >
           <IconTrash />
-        </ActionIcon>
+        </Button>
       )}
-    </Box>
+    </div>
   );
 }
 

@@ -12,8 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import {
   Tooltip,
   TooltipContent,
@@ -95,19 +95,22 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
             <DialogTitle>{translations("Create New Theme")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleFormSubmit}>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="create-theme-input">{translations("Theme Name")}</Label>
-              <Input
-                id="create-theme-input"
-                placeholder={translations("Enter Theme Name")}
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  setError("");
-                }}
-              />
-              {error && <p className="text-xs text-destructive">{error}</p>}
-            </div>
+            <FieldGroup>
+              <Field data-invalid={!!error}>
+                <FieldLabel htmlFor="create-theme-input">{translations("Theme Name")}</FieldLabel>
+                <Input
+                  id="create-theme-input"
+                  placeholder={translations("Enter Theme Name")}
+                  aria-invalid={!!error}
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setError("");
+                  }}
+                />
+                {error && <FieldError>{error}</FieldError>}
+              </Field>
+            </FieldGroup>
             <DialogFooter className="mt-4">
               <Button type="button" variant="outline" onClick={() => setOpened(false)}>
                 {translations("Cancel")}

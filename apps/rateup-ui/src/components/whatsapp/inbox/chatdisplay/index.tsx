@@ -8,6 +8,7 @@ import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/w
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
 import { Alert, AlertTitle } from "@/components/ui/alert.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { cn } from "@/lib/utils.ts";
 
 import WaInboxChatDisplayBody from "./chatdisplayBody/index.tsx";
 import WaInboxChatDisplayFooter, {
@@ -32,7 +33,13 @@ export default function WaInboxChatDisplay() {
 
   const { t: translations } = useTranslation();
   const { isLoading } = useMessagesStore();
+  // Two independent switches for one panel, so neither has to ask the viewport
+  // what it is: `showCustomerInfo` governs the inline third column that only
+  // exists from xl up, `showDetailsOverlay` the sheet that replaces it below xl.
+  // A single flag would have to start open (right for the column) and would then
+  // cover the conversation on a phone.
   const [showCustomerInfo, setShowCustomerInfo] = useState(true);
+  const [showDetailsOverlay, setShowDetailsOverlay] = useState(false);
   const contactId = contact?.id;
   const { data: assignedUserList } = useGetAssignedUserForContact(contactId);
   const MAX_FILES = 10;
@@ -168,20 +175,42 @@ export default function WaInboxChatDisplay() {
         </div>
       ) : (
         <div className="flex h-full min-w-0 flex-1">
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex min-w-0 flex-1 flex-col">
             <WaInboxChatDisplayHeader
               contact={contact}
               onToggleContextPanel={() => setShowCustomerInfo((v) => !v)}
+              onToggleDetailsOverlay={() => setShowDetailsOverlay((v) => !v)}
             />
             <WaInboxChatDisplayBody isContactDetailsOpened={showCustomerInfo} />
             {!isLoading && footerContent}
           </div>
-          <TicketPanel
-            contact={contact}
-            groupId={""}
-            isOpen={showCustomerInfo}
-            setIsOpen={setShowCustomerInfo}
-          />
+          {showDetailsOverlay && (
+            <button
+              type="button"
+              aria-label="Close ticket details"
+              onClick={() => setShowDetailsOverlay(false)}
+              className="absolute inset-0 z-20 bg-black/40 xl:hidden"
+            />
+          )}
+          {(showCustomerInfo || showDetailsOverlay) && (
+            <TicketPanel
+              contact={contact}
+              groupId={""}
+              isOpen
+              setIsOpen={() => {
+                setShowCustomerInfo(false);
+                setShowDetailsOverlay(false);
+              }}
+              // One element, two placements: an inline column at xl, and a
+              // right-hand sheet over the conversation below it.
+              className={cn(
+                showCustomerInfo ? "xl:flex" : "xl:hidden",
+                showDetailsOverlay
+                  ? "max-xl:absolute max-xl:inset-y-0 max-xl:right-0 max-xl:z-30 max-xl:w-full max-xl:max-w-sm max-xl:shadow-xl"
+                  : "max-xl:hidden",
+              )}
+            />
+          )}
         </div>
       )}
       {isDragging && contact && (

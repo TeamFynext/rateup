@@ -1,7 +1,17 @@
-import { Avatar, Badge, Image } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
 import type { Post } from "@/lib/posts.ts";
+
+function initials(name?: string) {
+  return (name ?? "")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+}
 
 export default function PostGrid({
   posts,
@@ -72,7 +82,7 @@ export default function PostGrid({
               <Link to={`/blog/${post.slug}`} className="block overflow-hidden">
                 <div className="aspect-video overflow-hidden bg-slate-100">
                   {post.feature_image ? (
-                    <Image
+                    <img
                       src={post.feature_image}
                       alt=""
                       className="h-full w-full transform object-cover transition duration-300 group-hover:scale-105"
@@ -95,12 +105,13 @@ export default function PostGrid({
                   </h3>
                   <p className="mb-4 line-clamp-2 text-sm text-slate-600">{post.excerpt}</p>
                   <div className="mt-auto flex items-center">
-                    <Avatar
-                      name={post?.primary_author?.name}
-                      src={post?.primary_author?.profile_image}
-                      color="initials"
-                      className="mr-3"
-                    />
+                    <Avatar className="mr-3">
+                      <AvatarImage
+                        src={post?.primary_author?.profile_image}
+                        alt={post?.primary_author?.name}
+                      />
+                      <AvatarFallback>{initials(post?.primary_author?.name)}</AvatarFallback>
+                    </Avatar>
                     <div className="text-xs text-slate-600">
                       <span className="font-medium text-slate-900">
                         {post?.primary_author?.name}

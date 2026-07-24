@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { TagsInput } from "@mantine/core";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -22,6 +21,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { TagsInput } from "@/components/ui/tags-input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 
 type CustomFieldType = "multivalue" | "number" | "text" | "email";
@@ -146,9 +146,12 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
                 {...field}
                 id={field.name}
                 aria-invalid={fieldState.invalid}
+                aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
                 placeholder={t("Custom field name")}
               />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              {fieldState.invalid && (
+                <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+              )}
             </Field>
           )}
         />
@@ -164,9 +167,12 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
                 id={field.name}
                 disabled={!!data}
                 aria-invalid={fieldState.invalid}
+                aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
                 placeholder={t("Auto-generated from name")}
               />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              {fieldState.invalid && (
+                <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+              )}
             </Field>
           )}
         />
@@ -187,6 +193,7 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
                   id="custom-field-type"
                   className="w-full"
                   aria-invalid={fieldState.invalid}
+                  aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
                 >
                   <SelectValue placeholder={t("Select field type")} />
                 </SelectTrigger>
@@ -198,7 +205,9 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
                   ))}
                 </SelectContent>
               </Select>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              {fieldState.invalid && (
+                <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+              )}
             </Field>
           )}
         />
@@ -213,11 +222,14 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
                 <TagsInput
                   id="custom-field-list-values"
                   value={field.value}
-                  onChange={field.onChange}
+                  onValueChange={field.onChange}
                   aria-invalid={fieldState.invalid}
+                  aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
                   placeholder={t("Enter values and press Enter")}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -230,7 +242,9 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
             <Field orientation="horizontal" data-invalid={fieldState.invalid}>
               <FieldContent>
                 <FieldLabel htmlFor="custom-field-visibility">{t("Visibility")}</FieldLabel>
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+                )}
               </FieldContent>
               <Switch
                 id="custom-field-visibility"
@@ -238,6 +252,7 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
                 checked={field.value}
                 onCheckedChange={field.onChange}
                 aria-invalid={fieldState.invalid}
+                aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
               />
             </Field>
           )}
@@ -253,9 +268,12 @@ export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps
                 {...field}
                 id={field.name}
                 aria-invalid={fieldState.invalid}
+                aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
                 placeholder={t("Describe this custom field")}
               />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              {fieldState.invalid && (
+                <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+              )}
             </Field>
           )}
         />

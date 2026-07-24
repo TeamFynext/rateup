@@ -45,7 +45,7 @@ export const Route = createFileRoute("/dashboard/")({
       });
     }
 
-    const teamIds = user.role === UserRole.SUPADM ? [] : (user.teams ?? []);
+    const teamIds = user?.role === UserRole.SUPADM ? [] : (user.teams ?? []);
 
     if (teamIds.length > 0) {
       const allowedFeatures = await getMemberAllowedFeatures(teamIds);

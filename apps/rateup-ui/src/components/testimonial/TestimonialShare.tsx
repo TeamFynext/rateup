@@ -38,7 +38,7 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
 
 export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
   const shareUrl = `${import.meta.env.VITE_FRONTEND_URL}/public/testimonial/${collectionId}`;
-  const iframe = `<iframe src="${shareUrl}" width="100%"></iframe>`;
+  const iframe = `<iframe title="Testimonials" src="${shareUrl}" width="100%"></iframe>`;
 
   const [isPreview, setIsPreview] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -61,10 +61,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
         <DialogTitle className="sr-only">{translations("Share Your Testimonials")}</DialogTitle>
         {!isPreview ? (
           <div className="flex flex-col gap-4">
-            <div
-              className="flex flex-col gap-0 rounded-[10px] p-8 text-white"
-              style={{ background: "var(--tertiary-color)" }}
-            >
+            <div className="flex flex-col gap-0 rounded-[10px] p-8 text-white bg-primary">
               <div className="flex justify-end">
                 <Button variant="ghost" size="icon" className="text-white" onClick={onClose}>
                   <IconX size={"1.5rem"} />
@@ -111,8 +108,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
           <>
             <Button
               variant="ghost"
-              className="w-fit"
-              style={{ color: "var(--tertiary-color)" }}
+              className="w-fit text-primary"
               onClick={() => setIsPreview(false)}
             >
               <IconChevronLeft data-icon="inline-start" />
@@ -121,6 +117,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
             <div className="flex flex-col gap-3 px-3">
               <div>
                 <iframe
+                  title={translations("Testimonial wall preview")}
                   src={shareUrl}
                   width={"100%"}
                   height={400}

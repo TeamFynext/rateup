@@ -1,11 +1,10 @@
-import { RichTextEditor } from "@mantine/tiptap";
 import { IconFile, IconUpload, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -57,7 +56,10 @@ const InsertInboxFile = () => {
     <Popover>
       <PopoverTrigger
         render={
-          <RichTextEditor.Control
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 p-0 sm:h-9 sm:w-9"
             aria-label="Insert File"
             title="Insert File"
             disabled={isUploadingFile || media.length > 0}
@@ -95,14 +97,11 @@ const InsertInboxFile = () => {
           </div>
         ))}
 
-        <RateupButtonPrimary
-          loading={isUploadingFile}
-          title="Upload"
-          onClick={onSubmit}
-          rightIcon={<IconUpload size="1rem" />}
-          size="sm"
-          disabled={!files.length}
-        />
+        <Button size="sm" onClick={onSubmit} disabled={isUploadingFile || !files.length}>
+          {isUploadingFile && <Spinner />}
+          Upload
+          <IconUpload size="1rem" />
+        </Button>
       </PopoverContent>
     </Popover>
   );

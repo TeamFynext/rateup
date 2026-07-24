@@ -6,29 +6,25 @@
   gap: 0.875rem;
 }
 
-.editor-select-dropdown :global(.mantine-Select-section) svg {
-  color: white;
-}
-
 .editor-selector-dropdown-input {
   font-family: var(--font-geist);
   font-weight: 400;
-  background-color: var(--tertiary-color);
+  background-color: var(--primary);
   color: white;
   border-radius: 0.625rem;
 }
 
 .editor-select-dropdown-option[data-checked="true"] {
-  background-color: var(--mantine-primary-color-5);
+  background-color: var(--primary);
   color: white;
 }
 
 .editor-select-dropdown-option:hover {
-  background-color: var(--mantine-color-rateup-blue-light-hover);
+  background-color: #d4e8fa;
 }
 
 .editor-select-dropdown-option[data-checked="true"]:hover {
-  background-color: var(--mantine-primary-color-5);
+  background-color: var(--primary);
 }
 
 .editor-container {
@@ -43,7 +39,7 @@
 
 /* common styles */
 .theme-styles-div :global(.style-section-div h2) {
-  color: var(--mantine-color-gray-7);
+  color: #495057;
   font-weight: 400;
   font-size: 1rem;
   margin-bottom: 1rem;

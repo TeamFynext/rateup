@@ -1,11 +1,10 @@
-import { Flex, Popover, PopoverDropdown, Stack, Text } from "@mantine/core";
-import { RichTextEditorControl } from "@mantine/tiptap";
 import { IconLocation, IconMapPin } from "@tabler/icons-react";
 import type { Point } from "pigeon-maps";
 import { Map, Marker } from "pigeon-maps";
 import { useEffect, useState } from "react";
 
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 
 const InboxLocationControl = () => {
@@ -16,17 +15,21 @@ const InboxLocationControl = () => {
     setOpened((o) => !o);
   }
   return (
-    <Popover position="top" opened={opened} onChange={setOpened}>
-      <Popover.Target>
-        <RichTextEditorControl
-          title="location"
-          aria-label="location"
-          onClick={() => setOpened((o) => !o)}
-        >
-          <IconMapPin size={15} />
-        </RichTextEditorControl>
-      </Popover.Target>
-      <PopoverDropdown>
+    <Popover open={opened} onOpenChange={setOpened}>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            title="location"
+            aria-label="location"
+            className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+          />
+        }
+      >
+        <IconMapPin size={15} />
+      </PopoverTrigger>
+      <PopoverContent side="top" className="w-auto">
         <LocationMap
           onCancel={() => {
             setOpened((o) => !o);
@@ -34,7 +37,7 @@ const InboxLocationControl = () => {
           onGetLocation={handleLocation}
           submitBtnTitle={"send"}
         />
-      </PopoverDropdown>
+      </PopoverContent>
     </Popover>
   );
 };
@@ -64,15 +67,19 @@ const LocationMap = ({ onGetLocation, onCancel, submitBtnTitle }) => {
     onGetLocation({ latitude: coordinates[0], longitude: coordinates[1] });
   }
 
-  if (permissionStatus === "denied") return <Text>Browser location access denied</Text>;
-  if (permissionStatus === "prompt") return <Text>loading...</Text>;
+  if (permissionStatus === "denied") return <p>Browser location access denied</p>;
+  if (permissionStatus === "prompt") return <p>loading...</p>;
 
   return (
-    <Stack>
-      <Flex justify={"space-between"}>
-        <RateupButtonPrimary variant="light" size="xs" title="cancel" onClick={handleCancel} />
-        <RateupButtonPrimary title={submitBtnTitle ?? "next"} size="xs" onClick={handleSubmit} />
-      </Flex>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="sm" onClick={handleCancel}>
+          cancel
+        </Button>
+        <Button size="sm" onClick={handleSubmit}>
+          {submitBtnTitle ?? "next"}
+        </Button>
+      </div>
       <Map
         height={300}
         width={300}
@@ -82,10 +89,8 @@ const LocationMap = ({ onGetLocation, onCancel, submitBtnTitle }) => {
       >
         <Marker anchor={[coordinates[0], coordinates[1]]} width={25} color="red" />
       </Map>
-      <RateupButtonPrimary
-        variant="transparent"
-        leftIcon={<IconLocation size={15} />}
-        title="Send Current location"
+      <Button
+        variant="ghost"
         onClick={() => {
           setCoordinates(currentLocation);
           onGetLocation({
@@ -93,8 +98,11 @@ const LocationMap = ({ onGetLocation, onCancel, submitBtnTitle }) => {
             longitude: currentLocation[1],
           });
         }}
-      />
-    </Stack>
+      >
+        <IconLocation size={15} />
+        Send Current location
+      </Button>
+    </div>
   );
 };
 

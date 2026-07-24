@@ -10,8 +10,12 @@ import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field.tsx";
-import { Input } from "../ui/input.tsx";
-import { Label } from "../ui/label.tsx";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "../ui/input-group.tsx";
 import { Loader } from "../ui/loader.tsx";
 import AppleSignInButton from "./AppleSigninButton.tsx";
 import { AuthHeader } from "./AuthHeader.tsx";
@@ -117,23 +121,19 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
                   control={loginForm.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name} className="sr-only">
-                        {translations("Email")}
-                      </FieldLabel>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="password">Email</Label>
-                        <div className="relative">
-                          <Mail className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
-                          <Input
-                            {...field}
-                            id={field.name}
-                            type="email"
-                            aria-invalid={fieldState.invalid}
-                            placeholder="abcd@example.com"
-                            className="pl-8 sm:pl-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
-                          />
-                        </div>
-                      </div>
+                      <FieldLabel htmlFor={field.name}>{translations("Email")}</FieldLabel>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <Mail />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          {...field}
+                          id={field.name}
+                          type="email"
+                          aria-invalid={fieldState.invalid}
+                          placeholder="abcd@example.com"
+                        />
+                      </InputGroup>
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} className="text-xs" />
                       )}
@@ -146,34 +146,32 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
                   control={loginForm.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name} className="sr-only">
-                        {translations("Password")}
-                      </FieldLabel>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="password">Password</Label>
-                        <div className="relative">
-                          <Lock className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
-                          <Input
-                            {...field}
-                            id={field.name}
-                            type={showPassword ? "text" : "password"}
-                            aria-invalid={fieldState.invalid}
-                            placeholder="Enter your password"
-                            className="pl-8 sm:pl-10 pr-8 sm:pr-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
-                          />
-                          <button
-                            type="button"
+                      <FieldLabel htmlFor={field.name}>{translations("Password")}</FieldLabel>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <Lock />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          {...field}
+                          id={field.name}
+                          type={showPassword ? "text" : "password"}
+                          aria-invalid={fieldState.invalid}
+                          placeholder="Enter your password"
+                        />
+                        <InputGroupAddon align="inline-end">
+                          <InputGroupButton
+                            size="icon-xs"
+                            aria-label={
+                              showPassword
+                                ? translations("Hide password")
+                                : translations("Show password")
+                            }
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                           >
-                            {showPassword ? (
-                              <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            ) : (
-                              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
+                            {showPassword ? <EyeOff /> : <Eye />}
+                          </InputGroupButton>
+                        </InputGroupAddon>
+                      </InputGroup>
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} className="text-xs" />
                       )}
@@ -183,15 +181,12 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
               </FieldGroup>
 
               <div className="flex items-center justify-between py-2">
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <Checkbox
-                    id="remember"
-                    className="border-2 border-gray-300 h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0"
-                  />
-                  <Label htmlFor="remember" className="text-xs sm:text-sm text-gray-600">
+                <Field orientation="horizontal" className="w-auto">
+                  <Checkbox id="remember" />
+                  <FieldLabel htmlFor="remember" className="font-normal">
                     Remember me
-                  </Label>
-                </div>
+                  </FieldLabel>
+                </Field>
                 <button
                   type="button"
                   onClick={() =>
@@ -199,7 +194,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
                       to: "/login/reset-password",
                     })
                   }
-                  className="text-xs sm:text-sm text-rateup-blue hover:text-rateup-blue/80 underline flex items-center space-x-1 transition-colors cursor-pointer"
+                  className="text-xs sm:text-sm text-primary hover:text-primary/80 underline flex items-center space-x-1 transition-colors cursor-pointer"
                 >
                   <Key className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   <span className="text-xs sm:text-sm">Forgot password?</span>

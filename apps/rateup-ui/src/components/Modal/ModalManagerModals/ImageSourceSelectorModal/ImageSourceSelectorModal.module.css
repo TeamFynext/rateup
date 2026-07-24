@@ -22,5 +22,5 @@
 .card:hover {
   background-color: white;
   color: black;
-  outline: 2px solid var(--hover-border-color);
+  outline: 2px solid color-mix(in oklch, var(--primary) 20%, transparent);
 }

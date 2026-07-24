@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 
 import { isJSONString } from ".";
-import { parseFromWhatsAppFormat, parseJsonToReact } from "../waTextEditor.tsx";
+import { parseFromWhatsAppFormat, parseJsonToReact } from "../wa-editor/format.tsx";
 
 const QuickReplyItem = ({
   reply,

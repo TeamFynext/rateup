@@ -96,15 +96,16 @@
 .ProseMirror {
   caret-color: var(--editor-text-default);
   outline: none;
-  padding: var(--editor-spacing-16) var(--editor-spacing-8);
+  padding-left: var(--editor-spacing-8);
+  /* padding: var(--editor-spacing-16) var(--editor-spacing-8); */
   margin: 0 auto;
-  max-width: 90ch;
+  /* max-width: 90ch; */
   font-family: var(--editor-font-sans);
   position: relative;
   /* background-color: var(--editor-bg-default); */
   color: var(--editor-text-default);
   transition: all var(--editor-transition-normal);
-  min-height: 100vh;
+  /* min-height: 100vh; */
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -372,14 +373,10 @@
   color: var(--editor-text-blue);
 }
 
-/* Placeholder Styles
+/* /* Placeholder Styles */
 .ProseMirror p.is-editor-empty:first-child::before {
-  content: "Start writing or press '/' for commands...";
-  color: var(--editor-text-gray);
-  pointer-events: none;
-  float: left;
-  height: 0;
-} */
+  font-size: 16px;
+}
 
 /* Mobile Optimizations */
 @media (max-width: 640px) {

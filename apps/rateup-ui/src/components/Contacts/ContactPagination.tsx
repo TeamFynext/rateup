@@ -2,8 +2,10 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-r
 
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
-import { ContainedSelection } from "../input/ContainedInput/ContainedInput.tsx";
 import { Button } from "../ui/button.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
+
+const pageSizeOptions = PAGE_SIZE.map((size) => ({ value: size, label: size }));
 
 const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
   const totalPages = Math.max(1, Math.round(totalPageCount));
@@ -17,50 +19,68 @@ const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
   const isLast = pagination.pageIndex >= totalPages - 1;
 
   return (
-    <div className="mt-2 flex items-center gap-2">
-      <Button variant="outline" size="icon" disabled={isFirst} onClick={() => goTo(0)}>
+    <nav className="mt-2 flex items-center gap-2" aria-label="Contact pagination">
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label="First page"
+        disabled={isFirst}
+        onClick={() => goTo(0)}
+      >
         <ChevronsLeft />
       </Button>
       <Button
         variant="outline"
         size="icon"
+        aria-label="Previous page"
         disabled={isFirst}
         onClick={() => goTo(pagination.pageIndex - 1)}
       >
         <ChevronLeft />
       </Button>
-      <span className="text-sm text-muted-foreground">
+      <span className="text-sm text-muted-foreground" aria-current="page">
         {pagination.pageIndex + 1} / {totalPages}
       </span>
       <Button
         variant="outline"
         size="icon"
+        aria-label="Next page"
         disabled={isLast}
         onClick={() => goTo(pagination.pageIndex + 1)}
       >
         <ChevronRight />
       </Button>
-      <Button variant="outline" size="icon" disabled={isLast} onClick={() => goTo(totalPages - 1)}>
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label="Last page"
+        disabled={isLast}
+        onClick={() => goTo(totalPages - 1)}
+      >
         <ChevronsRight />
       </Button>
-      <ContainedSelection
-        onChange={(value) => {
+      <Select
+        items={pageSizeOptions}
+        value={String(pagination.pageSize)}
+        onValueChange={(value) => {
           setPagination((prev) => ({
             ...prev,
             pageSize: Number(value),
           }));
         }}
-        value={String(pagination.pageSize)}
-        data={PAGE_SIZE}
-        allowDeselect={false}
-        styles={{
-          input: {
-            height: 10,
-            width: 80,
-          },
-        }}
-      />
-    </div>
+      >
+        <SelectTrigger size="sm" aria-label="Contacts per page" className="w-20">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {pageSizeOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </nav>
   );
 };
 

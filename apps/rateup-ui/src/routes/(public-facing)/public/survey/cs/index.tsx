@@ -1,9 +1,8 @@
-import { Button, Container, Image, Paper, Stack, Text, Title } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { useMediaQuery } from "@/hooks/use-media-query.ts";
 
 export const Route = createFileRoute("/(public-facing)/public/survey/cs/")({
   component: Page,
@@ -14,30 +13,29 @@ function Page() {
   const [startClicked, setStartClicked] = useState(false);
 
   return (
-    <Container fluid px="10vw" py="5vh" style={{ background: "#F7F6FB", height: "100vh" }}>
+    <div className="px-[10vw] py-[5vh] bg-[#F7F6FB] min-h-screen w-full">
       <>
         {/* <Image pb={30}
               src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/logo.svg`} 
               alt="RateUp Logo" width={140} height={35} /> */}
 
-        <Image
-          pb={30}
+        <img
+          className={`pb-[30px] ${largeScreen ? "w-[600px]" : "w-[310px]"}`}
           src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/cs-logo.jpeg`}
           alt="Govt Logo"
-          w={largeScreen ? 600 : 310}
         />
       </>
-      <Paper p="sm" radius="lg" shadow="lg" style={{ minHeight: "80vh" }}>
-        <Container fluid>
+      <div className="p-4 rounded-lg shadow-lg bg-white min-h-[80vh]">
+        <div>
           {startClicked ? (
             <StartPage largeScreen={largeScreen} />
           ) : (
             <Welcome largeScreen={largeScreen} setStartClicked={setStartClicked} />
           )}
-        </Container>
+        </div>
         {/* <RateupRedirectCard /> */}
-      </Paper>
-    </Container>
+      </div>
+    </div>
   );
 }
 
@@ -45,20 +43,20 @@ function Welcome({ setStartClicked, largeScreen }) {
   return (
     <>
       {/* .........Survey Welcome page.......... */}
-      <Stack align="center" justify="center" gap="xl" style={{ height: "70vh" }}>
-        <Title order={2} style={{ fontSize: largeScreen ? "4rem" : "3rem" }}>
+      <div className="flex flex-col items-center justify-center gap-6 h-[70vh]">
+        <h2 className="font-bold text-center" style={{ fontSize: largeScreen ? "4rem" : "3rem" }}>
           Welcome
-        </Title>
-        <Text>Please fill the survey..</Text>
-        <RateupButtonBlue
-          radius={"xl"}
-          title="Start Survey"
+        </h2>
+        <p>Please fill the survey..</p>
+        <Button
           size="lg"
           onClick={() => {
             setStartClicked(true);
           }}
-        />
-      </Stack>
+        >
+          Start Survey
+        </Button>
+      </div>
     </>
   );
 }
@@ -72,10 +70,13 @@ const survey3 =
 
 function StartPage({ largeScreen }) {
   return (
-    <Stack align="center" justify="center" gap="xl" style={{ height: "70vh" }}>
-      <Title order={3} mb="xl" pb="sm" style={{ fontSize: largeScreen ? "3rem" : "1.5rem" }}>
+    <div className="flex flex-col items-center justify-center gap-6 h-[70vh]">
+      <h3
+        className="font-bold text-center mb-6 pb-2"
+        style={{ fontSize: largeScreen ? "3rem" : "1.5rem" }}
+      >
         Select one option :
-      </Title>
+      </h3>
 
       <Link to={`${survey1}`}>
         <Button variant="outline" size={largeScreen ? "lg" : "sm"}>
@@ -94,6 +95,6 @@ function StartPage({ largeScreen }) {
           I have No Aadhaar & Ration Card
         </Button>
       </Link>
-    </Stack>
+    </div>
   );
 }

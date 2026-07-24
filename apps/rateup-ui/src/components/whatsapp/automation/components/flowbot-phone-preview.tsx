@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query.ts";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query.ts";
-import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
+import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { WhatsAppChatHeader } from "@/components/whatsapp/whatsapp-preview-shell.tsx";

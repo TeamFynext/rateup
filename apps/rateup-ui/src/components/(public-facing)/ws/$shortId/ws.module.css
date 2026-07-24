@@ -15,6 +15,6 @@
 }
 
 .reload-btn {
-  border: 2px solid var(--tertiary-color);
+  border: 2px solid var(--primary);
   border-radius: 0.625rem;
 }

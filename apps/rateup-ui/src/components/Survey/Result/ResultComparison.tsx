@@ -67,7 +67,7 @@ export default function ResultComparison({
 
   const { data: teamWiseComparison, isPending } = useResponseForComparison(surveyId);
 
-  if (isPendingCount || isPending) return <RateupLoader h={"100dvh"} />;
+  if (isPendingCount || isPending) return <RateupLoader className="h-dvh" />;
   if (countError) return <div>Error...</div>;
   if (responseCountData?.all === 0)
     return <NothingFound text={translations("No responses found for comparison")} />;

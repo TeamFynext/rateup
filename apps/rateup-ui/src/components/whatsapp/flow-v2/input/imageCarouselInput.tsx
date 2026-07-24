@@ -1,27 +1,40 @@
-import { Button, Card, Flex, SimpleGrid } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useEffect, useRef } from "react";
+import { useId, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { RateupFileUploadButton } from "@/components/Button/RateupButtons.tsx";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { FileUploadButton } from "@/components/ui/file-upload-button.tsx";
+import { Input } from "@/components/ui/input.tsx";
 
 import { FileConverter } from "./DataSource.tsx";
 
 const MIN_IMAGES = 1;
 
+interface CarouselImage {
+  src: string;
+  "alt-text": string;
+}
+
 const ImageCarouselInput = (props) => {
+  const uid = useId();
   const MAX_IMAGES = props.maxImages || 3;
-  const resetRefs = useRef<Array<() => void>>([]);
-  const form = useForm({
-    initialValues: {
-      images: [{ src: "", "alt-text": "" }],
-    },
-  });
+  const resetRefs = useRef<Array<React.MutableRefObject<(() => void) | null>>>([]);
+  const [images, setImages] = useState<CarouselImage[]>([{ src: "", "alt-text": "" }]);
+
+  const getResetRef = (idx: number) => {
+    if (!resetRefs.current[idx]) resetRefs.current[idx] = { current: null };
+    return resetRefs.current[idx];
+  };
+
+  const commit = (next: CarouselImage[]) => {
+    setImages(next);
+    props.onChange(next);
+  };
 
   useEffect(() => {
     if (props.value?.length > 0) {
-      form.setFieldValue("images", props.value || [{ src: "", "alt-text": "" }]);
+      setImages(props.value);
     }
   }, [props.value]);
 
@@ -30,12 +43,10 @@ const ImageCarouselInput = (props) => {
       if (!file) return;
       if (file.size > 400000) {
         toast.error("Max image size is 400KB");
-        return form.setFieldError(`images.${idx}.src`, "max image size is 400KB");
+        return;
       }
-      form.clearFieldError(`images.${idx}.src`);
       const base64String = await FileConverter.fileToBase64(file);
-      form.setFieldValue(`images.${idx}.src`, base64String);
-      triggerOnChange();
+      commit(images.map((img, i) => (i === idx ? { ...img, src: base64String } : img)));
     } catch (error) {
       toast.error("Error converting file to Base64:" + JSON.stringify(error), {
         id: "file-converting",
@@ -44,85 +55,78 @@ const ImageCarouselInput = (props) => {
   };
 
   const handleAltTextChange = (value: string, idx: number) => {
-    form.setFieldValue(`images.${idx}.alt-text`, value);
-    triggerOnChange();
+    commit(images.map((img, i) => (i === idx ? { ...img, "alt-text": value } : img)));
   };
 
   const clearFile = (idx: number, altText: string) => {
-    form.replaceListItem("images", idx, { src: "", "alt-text": altText });
-    resetRefs.current[idx]?.();
-    triggerOnChange();
+    commit(images.map((img, i) => (i === idx ? { src: "", "alt-text": altText } : img)));
+    getResetRef(idx).current?.();
   };
 
   const addImage = () => {
-    if (form.values.images.length < MAX_IMAGES) {
-      form.insertListItem("images", { src: "", "alt-text": "" });
-      triggerOnChange();
+    if (images.length < MAX_IMAGES) {
+      commit([...images, { src: "", "alt-text": "" }]);
     }
   };
 
   const removeImage = (idx: number) => {
-    if (form.values.images.length > MIN_IMAGES) {
-      form.removeListItem("images", idx);
-      resetRefs?.current?.[idx]?.();
-      triggerOnChange();
+    if (images.length > MIN_IMAGES) {
+      commit(images.filter((_, i) => i !== idx));
+      getResetRef(idx).current?.();
     }
   };
 
-  const triggerOnChange = () => {
-    props.onChange(form.getValues()?.images);
-  };
-
   return (
-    <Flex direction="column" gap="md">
-      <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-        {form.values?.images.map((img, idx) => (
-          <Card key={idx} p="md" withBorder radius={"md"}>
-            <RateupFileUploadButton
+    <Field>
+      <Field className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+        {images.map((img, idx) => (
+          <Card key={idx} className="gap-2 rounded-md p-4">
+            <FileUploadButton
               clearFile={() => clearFile(idx, img?.["alt-text"])}
               handleFileChange={(file) => handleFileChange(file, idx)}
-              resetRef={{ current: resetRefs.current[idx] }}
+              resetRef={getResetRef(idx)}
               fileSrc={img.src}
               error={props.errors?.[`images.${idx}.src`] as string}
               size="md"
               accept="image/png,image/jpeg"
-              style={{ width: "100%" }}
+              className="w-full"
             />
-            <ContainedTextField
-              label="Alt Text"
-              placeholder="Describe this image"
-              value={img["alt-text"]}
-              onChange={(e) => handleAltTextChange(e.target.value, idx)}
-              error={props.errors?.[`images.${idx}.alt-text`] as string}
-              required
-              style={{ width: "100%" }}
-            />
-            {form.values.images.length > MIN_IMAGES && (
+            <Field>
+              <FieldLabel htmlFor={`${uid}-alt-text-${idx}`}>Alt Text *</FieldLabel>
+              <Input
+                id={`${uid}-alt-text-${idx}`}
+                placeholder="Describe this image"
+                value={img["alt-text"]}
+                onChange={(e) => handleAltTextChange(e.target.value, idx)}
+                aria-invalid={!!props.errors?.[`images.${idx}.alt-text`]}
+              />
+              {props.errors?.[`images.${idx}.alt-text`] && (
+                <p className="text-xs text-red-500">
+                  {props.errors[`images.${idx}.alt-text`] as string}
+                </p>
+              )}
+            </Field>
+            {images.length > MIN_IMAGES && (
               <Button
-                color="red"
+                variant="destructive"
                 onClick={() => removeImage(idx)}
-                variant="light"
                 size="sm"
-                mt={"xs"}
-                leftSection={<span>x</span>}
+                className="mt-2"
               >
+                <span>x</span>
                 Remove Image
               </Button>
             )}
           </Card>
         ))}
-      </SimpleGrid>
+      </Field>
 
-      {form.values.images.length < MAX_IMAGES && (
-        <Button
-          onClick={addImage}
-          variant="light"
-          style={{ alignSelf: "flex-start", marginTop: "10px" }}
-        >
-          + Add Image ({form.values.images.length}/{MAX_IMAGES})
+      {images.length < MAX_IMAGES && (
+        <Button variant="secondary" onClick={addImage} className="mt-2.5 self-start">
+          + Add Image ({images.length}/{MAX_IMAGES})
         </Button>
       )}
-    </Flex>
+    </Field>
   );
 };
 

@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AlertTriangle, Eye, EyeOff, Loader2, Lock, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -24,9 +24,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { UserRole } from "@/utils/enums/index.ts";
@@ -36,6 +35,7 @@ export const Route = createFileRoute("/dashboard/settings/security/")({
 });
 
 function Security() {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -290,12 +290,14 @@ function Security() {
         <Card className="p-6 border-red-200 bg-linear-to-br from-red-50 to-orange-50 shadow-sm">
           <h3 className="mb-4 text-red-700">{translations("Danger Zone")}</h3>
           <div className="space-y-4">
-            {user.role === UserRole.SUPADM && (
+            {user?.role === UserRole.SUPADM && (
               <div className="flex items-center justify-between p-5 bg-white border-2 border-red-200 rounded-xl">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Trash2 className="w-4 h-4 text-red-600" />
-                    <Label className="text-red-700">{translations("Delete Organization")}</Label>
+                    <FieldTitle className="text-red-700">
+                      {translations("Delete Organization")}
+                    </FieldTitle>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {translations("Permanently delete your organization and all associated data")}.
@@ -316,7 +318,7 @@ function Security() {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <Trash2 className="w-4 h-4 text-red-600" />
-                  <Label className="text-red-700">{translations("Delete Account")}</Label>
+                  <FieldTitle className="text-red-700">{translations("Delete Account")}</FieldTitle>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {translations("Permanently delete your user account")}.{" "}
@@ -337,7 +339,7 @@ function Security() {
         </Card>
       </div>
       {/* Delete Confirmation Dialog */}
-      {user.role === UserRole.SUPADM && (
+      {user?.role === UserRole.SUPADM && (
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
@@ -387,13 +389,13 @@ function Security() {
               <Separator />
 
               <div className="space-y-3">
-                <Label htmlFor="confirm-delete" className="text-sm font-semibold">
+                <FieldLabel htmlFor="confirm-delete" className="text-sm font-semibold">
                   Type{" "}
                   <code className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-mono">
                     DELETE ORGANIZATION
                   </code>{" "}
                   {translations("to confirm")}
-                </Label>
+                </FieldLabel>
                 <Input
                   id="confirm-delete"
                   value={confirmText}
@@ -472,15 +474,16 @@ function Security() {
             </Alert>
 
             <div className="space-y-3">
-              <Label className="text-sm font-semibold">
+              <FieldLabel htmlFor={`${uid}-type-delete-account`} className="text-sm font-semibold">
                 Type{" "}
                 <code className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-mono">
                   DELETE ACCOUNT
                 </code>{" "}
                 {translations("to confirm")}
-              </Label>
+              </FieldLabel>
 
               <Input
+                id={`${uid}-type-delete-account`}
                 value={userConfirmText}
                 onChange={(e) => setUserConfirmText(e.target.value)}
                 placeholder="Type here to confirm..."

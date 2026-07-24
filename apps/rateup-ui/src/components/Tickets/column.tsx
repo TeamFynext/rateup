@@ -22,7 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldTitle } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -335,12 +335,11 @@ export function Column({
           state.type === "is-column-over"
             ? "border-2 border-dashed border-blue-500/50 bg-blue-500/5"
             : "border border-dashed border-slate-300 dark:border-slate-700"
-        }`}
+        } text-foreground`}
         style={{
           display: "flex",
           maxHeight: "100%",
           flexDirection: "column",
-          color: "var(--board-text)",
           opacity: state.type === "is-dragging" ? 0.4 : 1,
           cursor: state.type === "idle" ? "grab" : "default",
         }}
@@ -450,15 +449,15 @@ export function Column({
             <DialogTitle>{t("Edit Column")}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label>{t("Title")}</Label>
+            <Field>
+              <FieldTitle>{t("Title")}</FieldTitle>
               <Input
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder={t("Column title")}
                 autoFocus
               />
-            </div>
+            </Field>
 
             <div className="flex justify-end gap-2 mt-2">
               <Button variant="outline" onClick={closeEditModal}>
@@ -471,14 +470,16 @@ export function Column({
       </Dialog>
       <Dialog open={isAddCardModalOpen} onOpenChange={(open) => !open && closeAddCardModal()}>
         <DialogContent className="w-[460px] max-w-[calc(100vw-32px)] rounded-2xl p-[28px_28px_24px]">
-          <div className="mb-5 font-display text-lg font-extrabold text-ink-900">
-            {t("New Ticket")}
-          </div>
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg font-extrabold ">
+              {t("New Ticket")}
+            </DialogTitle>
+          </DialogHeader>
 
-          <div className="">
-            <Label className="mb-1.5 block text-muted-foreground text-xs font-semibold uppercase">
+          <Field>
+            <FieldTitle className="mb-1.5 block text-muted-foreground text-xs font-semibold uppercase">
               {t("Title")}
-            </Label>
+            </FieldTitle>
             <Input
               autoFocus
               value={newCard.title}
@@ -490,12 +491,12 @@ export function Column({
               placeholder={t("What needs to be resolved?")}
               className={`${titleError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
             />
-          </div>
+          </Field>
 
-          <div className="">
-            <Label className="mb-1.5 block text-muted-foreground text-xs font-semibold uppercase">
+          <Field>
+            <FieldTitle className="mb-1.5 block text-muted-foreground text-xs font-semibold uppercase">
               {t("Column")}
-            </Label>
+            </FieldTitle>
             <Select
               value={newCard.columnId}
               onValueChange={(val) => setNewCard((prev) => ({ ...prev, columnId: val }))}
@@ -513,7 +514,7 @@ export function Column({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
           <div className="flex justify-end gap-2.5">
             <Button variant="outline" size="sm" onClick={closeAddCardModal}>

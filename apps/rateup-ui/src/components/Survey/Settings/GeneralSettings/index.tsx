@@ -1,5 +1,5 @@
 import { IconAdjustmentsHorizontal } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -18,7 +18,13 @@ import {
   ComboboxList,
   ComboboxValue,
 } from "@/components/ui/combobox.tsx";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
@@ -37,6 +43,7 @@ type FormValues = {
 };
 
 const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const { data: teamRes } = useTeamsByUser();
   const editSurvey = useEditSurveyMutation(survey?.id);
@@ -110,10 +117,11 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
           <FieldGroup>
             {enabledModules.includes("name") && (
               <Field data-invalid={!!errors.title}>
-                <FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field`}>
                   {translations("Survey Name")} <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Input
+                  id={`${uid}-field`}
                   placeholder={translations("Enter Survey name")}
                   {...register("title", {
                     required: translations("Cannot be Empty"),
@@ -129,9 +137,9 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
 
             {enabledModules.includes("language") && (
               <Field data-invalid={!!errors.languages}>
-                <FieldLabel>
+                <FieldTitle>
                   {translations("Survey Languages")} <span className="text-destructive">*</span>
-                </FieldLabel>
+                </FieldTitle>
                 <Controller
                   control={control}
                   name="languages"
@@ -153,10 +161,11 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
 
             {enabledModules.includes("teams") && (
               <Field data-invalid={!!errors.teams}>
-                <FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field-2`}>
                   {translations("Select Teams")} <span className="text-destructive">*</span>
                 </FieldLabel>
                 <MultiSelect
+                  id={`${uid}-field-2`}
                   options={teamOptions}
                   value={selectedTeams}
                   onValueChange={(v) =>

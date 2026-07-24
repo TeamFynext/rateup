@@ -22,7 +22,7 @@ export const Route = createFileRoute("/(public-facing)/lt/$shortId/")({
 
 // Linktree Public Page
 function Lt() {
-  const { linktreeObj } = Route.useLoaderData();
+  const linktreeObj = Route.useLoaderData();
   if (!linktreeObj) {
     return (
       <div className={`flex items-center gap-2 ${styles["not-available-div"]}`}>

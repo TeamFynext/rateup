@@ -1,47 +1,5 @@
-.modal-content {
-  /* height: 100%; */
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header h2 {
-  width: 100%;
-  font-size: 1.125rem;
-  font-weight: bold;
-  text-align: center;
-}
-
-.modal-header :global(.mantine-Modal-close) {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-}
-
-.modal-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  overflow: auto;
-}
-
-.react-crop-container {
+.cropper-container {
   position: relative;
-  height: 400px;
-}
-
-.cancel-btn {
-  background-color: initial;
-  border: 1px solid var(--tertiary-color);
-  color: var(--tertiary-color);
-  border-radius: 0.625rem;
-}
-
-.cancel-btn:hover {
-  color: var(--tertiary-color);
-  background-color: rgba(28, 81, 142, 0.1);
-}
-
-.save-btn {
-  border-radius: 0.625rem;
+  height: 350px;
+  overflow: hidden;
 }

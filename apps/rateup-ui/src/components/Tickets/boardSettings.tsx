@@ -11,7 +11,7 @@ import {
   Tag,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useId, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateBoardMutation, useBoardQueries } from "@/backend/tickets/tickets.query";
@@ -27,8 +27,8 @@ import {
 } from "@/components/ui/alert-dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { cn } from "@/lib/utils";
 
@@ -98,6 +98,7 @@ interface BoardDetailsDialogProps {
 }
 
 function BoardDetailsDialog({ board, open, onClose, onSave }: BoardDetailsDialogProps) {
+  const uid = useId();
   const { t } = useTranslation();
   const [title, setTitle] = useState(board.title);
   const [description, setDescription] = useState(board.description || "");
@@ -121,19 +122,28 @@ function BoardDetailsDialog({ board, open, onClose, onSave }: BoardDetailsDialog
       <DialogContent className="sm:max-w-md">
         <DialogTitle>{t("Board Details")}</DialogTitle>
         <div className="py-2">
-          <div className="mb-4">
-            <Label className="mb-1.5 block">{t("Board Name *")}</Label>
+          <Field className="mb-4">
+            <FieldLabel htmlFor={`${uid}-field`} className="mb-1.5 block">
+              {t("Board Name *")}
+            </FieldLabel>
             <Input
+              id={`${uid}-field`}
               autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submit()}
             />
-          </div>
-          <div className="mb-5">
-            <Label className="mb-1.5 block">{t("Description")}</Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} />
-          </div>
+          </Field>
+          <Field className="mb-5">
+            <FieldLabel htmlFor={`${uid}-field-2`} className="mb-1.5 block">
+              {t("Description")}
+            </FieldLabel>
+            <Input
+              id={`${uid}-field-2`}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </Field>
         </div>
         <div className="flex justify-end gap-2.5 mt-2">
           <Button variant="ghost" size="sm" onClick={onClose}>

@@ -1,26 +1,10 @@
-import type { TextInputProps } from "@mantine/core";
-import {
-  Alert,
-  Badge,
-  Box,
-  Checkbox,
-  Divider,
-  Group,
-  Image,
-  ScrollArea,
-  SimpleGrid,
-  Stack,
-  Switch,
-  Text,
-  TextInput,
-} from "@mantine/core";
-import type { UseFormReturnType } from "@mantine/form";
-import { schemaResolver, useForm } from "@mantine/form";
-import { getHotkeyHandler } from "@mantine/hooks";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { isEqual } from "lodash";
-import { useContext, useEffect, useState } from "react";
+import { useId, useContext, useEffect, useRef, useState } from "react";
+import type { UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -30,16 +14,29 @@ import {
   useQuestionUpdateMutation,
 } from "@/backend/surveys/questions/questions.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { RateupButtonPrimary, RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
-import {
-  ContainedMultiSelect,
-  ContainedNumberInput,
-  ContainedSelection,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
+import { TextareaWithLengthTracker } from "@/components/input/TextareaWithLengthTracker.tsx";
 import GoogleReviewEditor from "@/components/Survey/Question/GoogleReviewEditor.tsx";
 import { ChoicesCreator } from "@/components/Survey/Question/QuestionExtraProps/ChoicesCreator.tsx";
-import { TextareaWithLengthTracker } from "@/components/Survey/ShareSurvey/FlowShareTemplateEditor.tsx";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Field, FieldDescription, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 import {
   getFlowLabelLimit,
   getFlowOptionsLimit,
@@ -60,7 +57,9 @@ import {
 import type { WaFlowScreen } from "@/types/global";
 import { SAVE_HOTKEY, WaNPSQuestions } from "@/utils/constants.ts";
 import { googleReviewSupportedTypes, logicSupportedTypes } from "@/utils/data.ts";
+import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 import { getInitialQuestionValues, validateAllLanguagesArePopulated } from "@/utils/questions.ts";
+import { toSelectOptions } from "@/utils/select-options.ts";
 import { getFlowTextLimit, questionTypeToFlowFormElementType } from "@/utils/whatsapp/flow.utils";
 
 import { EditFlowContext } from "./EditFlowContext.ts";
@@ -167,26 +166,41 @@ function ElementEditor({
   }
 
   const formInitialValues = getInitialQuestionValues(question, surveyLanguages, SurveyType.WaFlow);
-  const form = useForm({
-    initialValues: formInitialValues,
-    validate: {
-      title: (title) => {
-        const value = title[selectedLanguage];
-        if (value.trim().length > WA_FLOW_HEADING_CHAR_LIMIT) {
-          return `Max ${WA_FLOW_HEADING_CHAR_LIMIT} characters allowed`;
-        }
-      },
-      description: (description) => {
-        const value = description[selectedLanguage];
-        if (value.trim().length > WA_FLOW_BODY_CHAR_LIMIT) {
-          return `Max ${WA_FLOW_BODY_CHAR_LIMIT} characters allowed`;
-        }
-      },
-      label: (label) => {
-        return validateLabel(label[selectedLanguage]);
-      },
-    },
+  const form = useForm<any>({
+    defaultValues: formInitialValues,
   });
+  const values = form.watch();
+
+  /**
+   * Validates the fields of the language currently being edited and writes the results
+   * onto the form. Kept synchronous — `handleSave` returns "saved" / "error" to its
+   * callers, so it cannot await RHF's async `trigger()`.
+   */
+  /** Writes a `<field>.<language>` path; these are built from the active locale. */
+  const setLocalised = (path: string, value: unknown) =>
+    form.setValue(path, value, { shouldDirty: true });
+
+  const validateSelectedLanguage = () => {
+    const current = form.getValues();
+    const issues: Array<[string, string]> = [];
+
+    const title = current.title?.[selectedLanguage] ?? "";
+    if (title.trim().length > WA_FLOW_HEADING_CHAR_LIMIT) {
+      issues.push(["title", `Max ${WA_FLOW_HEADING_CHAR_LIMIT} characters allowed`]);
+    }
+    const description = current.description?.[selectedLanguage] ?? "";
+    if (description.trim().length > WA_FLOW_BODY_CHAR_LIMIT) {
+      issues.push(["description", `Max ${WA_FLOW_BODY_CHAR_LIMIT} characters allowed`]);
+    }
+    const labelError = validateLabel(current.label?.[selectedLanguage]);
+    if (labelError) issues.push(["label", labelError]);
+
+    form.clearErrors(["title", "description", "label"]);
+    for (const [name, message] of issues) {
+      form.setError(name, { type: "validation", message });
+    }
+    return issues.length === 0;
+  };
 
   const fileSchema = z
     .object({
@@ -243,11 +257,9 @@ function ElementEditor({
     }
   };
 
-  const extraConfigForm = useForm({
-    validate: schemaResolver(fileSchema, {
-      sync: true,
-    }),
-    initialValues: {
+  const extraConfigForm = useForm<any>({
+    resolver: zodResolver(fileSchema) as any,
+    defaultValues: {
       "photo-source": PhotoSource.cameraGallery,
       "max-file-size-kb": 5120,
       "min-uploaded-photos": 1,
@@ -260,16 +272,23 @@ function ElementEditor({
   });
   useEffect(() => {
     if (question.extraConfig) {
-      extraConfigForm.setValues(question.extraConfig);
+      extraConfigForm.reset({ ...extraConfigForm.getValues(), ...question.extraConfig });
     }
   }, [question.extraConfig]);
 
-  form.watch("choices", () => {
+  const watchedChoices = form.watch("choices");
+  const choicesInitialised = useRef(false);
+  useEffect(() => {
+    if (!choicesInitialised.current) {
+      choicesInitialised.current = true;
+      return;
+    }
     handleSave();
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedChoices]);
 
   function getIncompleteLanguages() {
-    return validateAllLanguagesArePopulated(form.values, surveyLanguages, ["choices"]);
+    return validateAllLanguagesArePopulated(form.getValues(), surveyLanguages, ["choices"]);
   }
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
@@ -279,8 +298,7 @@ function ElementEditor({
     }
 
     // Form validation
-    const formValidation = form.validate();
-    if (formValidation.hasErrors) {
+    if (!validateSelectedLanguage()) {
       toast.error(translations("Fix errors before saving"));
       return "error";
     }
@@ -303,12 +321,11 @@ function ElementEditor({
         QuestionType.Phone,
       ].includes(question.type as QuestionType)
     ) {
-      const { hasErrors: extraConfigErrors } = extraConfigForm.validate();
-      if (extraConfigErrors) return "error";
+      if (!fileSchema.safeParse(extraConfigForm.getValues()).success) return "error";
 
       toast.dismiss();
       const updatedValues = getUpdatedValues();
-      form.setFieldValue("extraConfig", updatedValues);
+      form.setValue("extraConfig", updatedValues, { shouldDirty: true });
     }
     // Save the question - create new or update existing
     if (!question.id) {
@@ -322,27 +339,28 @@ function ElementEditor({
 
   // Helper function to extract updated values based on question type
   const getUpdatedValues = () => {
+    const allExtraConfig = extraConfigForm.getValues();
     const extraConfigValues = (() => {
       switch (question.type) {
         case QuestionType.PhotoPicker:
           return {
-            "photo-source": extraConfigForm.values["photo-source"],
-            "max-file-size-kb": extraConfigForm.values["max-file-size-kb"],
-            "min-uploaded-photos": extraConfigForm.values["min-uploaded-photos"],
-            "max-uploaded-photos": extraConfigForm.values["max-uploaded-photos"],
+            "photo-source": allExtraConfig["photo-source"],
+            "max-file-size-kb": allExtraConfig["max-file-size-kb"],
+            "min-uploaded-photos": allExtraConfig["min-uploaded-photos"],
+            "max-uploaded-photos": allExtraConfig["max-uploaded-photos"],
           };
         case QuestionType.DocumentPicker:
           return {
-            "max-file-size-kb": extraConfigForm.values["max-file-size-kb"],
-            "min-uploaded-documents": extraConfigForm.values["min-uploaded-documents"],
-            "max-uploaded-documents": extraConfigForm.values["max-uploaded-documents"],
-            "allowed-mime-types": extraConfigForm.values["allowed-mime-types"],
+            "max-file-size-kb": allExtraConfig["max-file-size-kb"],
+            "min-uploaded-documents": allExtraConfig["min-uploaded-documents"],
+            "max-uploaded-documents": allExtraConfig["max-uploaded-documents"],
+            "allowed-mime-types": allExtraConfig["allowed-mime-types"],
           };
         case QuestionType.Text:
         case QuestionType.Email:
         case QuestionType.Phone:
           return {
-            "input-type": extraConfigForm.values["input-type"],
+            "input-type": allExtraConfig["input-type"],
           };
       }
     })();
@@ -390,43 +408,40 @@ function ElementEditor({
 
   const isSaving = questionCreateMutation.isPending || questionUpdateMutation.isPending;
 
-  const labelInputProps = form.getInputProps(`label.${selectedLanguage}`);
+  const rawLabelValue = values.label?.[selectedLanguage];
   // Ensure value is always a string (handle undefined, null, or non-string values)
-  const labelValue = typeof labelInputProps.value === "string" ? labelInputProps.value : "";
+  const labelValue = typeof rawLabelValue === "string" ? rawLabelValue : "";
   // TODO: defer error checking until user has entered some text
-  labelInputProps.error = validateLabel(labelValue);
+  const labelError = validateLabel(labelValue);
 
   useEffect(() => {
-    if (formInitialValues.required !== form.values.required && form.isValid()) handleSave();
-  }, [form.values.required]);
+    if (formInitialValues.required !== values.required && validateSelectedLanguage()) handleSave();
+  }, [values.required]);
 
   return (
-    <Stack
+    <div
+      className="flex flex-col justify-between"
       style={{
         height: "100%",
         display: "flex",
         flexDirection: "column",
         position: "relative",
       }}
-      justify="space-between"
       onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSave]])}
     >
-      <ScrollArea h={"80%"}>
-        <Group justify="space-between">
-          <Badge variant="outline" size="lg">
-            {question.type}
-          </Badge>
-        </Group>
-        <Group p={2} gap={2} pr={42}>
-          <Stack
+      <ScrollArea className="h-4/5">
+        <div className="flex items-center justify-between">
+          <Badge variant="outline">{question.type}</Badge>
+        </div>
+        <div className="flex items-center gap-0.5 p-0.5 pr-10">
+          <div
+            className="flex flex-col gap-0 p-3"
             style={{
               height: "100%",
               overflowY: "auto",
               overflowX: "clip",
               flex: 1,
             }}
-            gap={0}
-            p={"sm"}
           >
             {question.type !== QuestionType.Optin && (
               <>
@@ -441,35 +456,42 @@ function ElementEditor({
                   className="max-h-24 overflow-y-auto border-none bg-transparent px-0 shadow-none"
                   placeholder={translations("Enter question title here")}
                   maxValue={getFlowTextLimit(WaFlowFormElementType.textSubHeading)}
-                  {...form.getInputProps(`title.${selectedLanguage}`)}
+                  value={values.title?.[selectedLanguage] ?? ""}
+                  onChange={(event) =>
+                    setLocalised(`title.${selectedLanguage}`, event.target.value)
+                  }
                   onBlur={() => {
-                    if (!isEqual(form.values, formInitialValues) && form.isValid()) handleSave();
+                    if (!isEqual(values, formInitialValues) && validateSelectedLanguage())
+                      handleSave();
                   }}
                 />
 
                 <TextareaWithLengthTracker
                   className="max-h-48 overflow-y-auto border-none bg-transparent px-0 shadow-none"
                   placeholder={translations("Enter question description here")}
-                  {...form.getInputProps(`description.${selectedLanguage}`)}
-                  value={form.values.description[selectedLanguage]}
+                  value={values.description?.[selectedLanguage] ?? ""}
+                  onChange={(event) =>
+                    setLocalised(`description.${selectedLanguage}`, event.target.value)
+                  }
                   inputStyle={{
                     fontSize: "1.1rem",
                     fontWeight: 400, // set custom font size for this TextInput
                   }}
                   maxValue={getFlowTextLimit(WaFlowFormElementType.textBody)}
                   onBlur={() => {
-                    if (!isEqual(form.values, formInitialValues) && form.isValid()) handleSave();
+                    if (!isEqual(values, formInitialValues) && validateSelectedLanguage())
+                      handleSave();
                   }}
                 />
               </>
             )}
             <LabelTextInput
               value={labelValue}
-              onChange={(e) => form.setFieldValue(`label.${selectedLanguage}`, e.target.value)}
-              error={labelInputProps.error}
+              onChange={(e) => setLocalised(`label.${selectedLanguage}`, e.target.value)}
+              error={labelError}
               maxLength={labelMaxLength}
               onBlur={() => {
-                if (!isEqual(form.values, formInitialValues) && form.isValid()) handleSave();
+                if (!isEqual(values, formInitialValues) && validateSelectedLanguage()) handleSave();
               }}
             />
 
@@ -479,43 +501,38 @@ function ElementEditor({
               nextScreens={nextScreens}
               extraConfigForm={extraConfigForm}
             />
-          </Stack>
-        </Group>
+          </div>
+        </div>
       </ScrollArea>
-      <Stack>
-        <Divider />
-        <Group justify="space-between" p="xs" px={"sm"}>
-          <Group>
-            <Checkbox
-              label={translations("Required")}
-              fw={600}
-              {...form.getInputProps("required", { type: "checkbox" })}
-            />
-            {WaNPSQuestions.includes(question?.type as QuestionType) && (
+      <div className="flex flex-col">
+        <Separator />
+        <div className="flex items-center justify-between p-2.5 px-3">
+          <div className="flex items-center">
+            <FieldTitle className="flex items-center gap-2 font-semibold">
               <Checkbox
-                label={translations("NPS Analytics")}
-                fw={600}
-                checked={form.values?.enableNpsAnalytics}
-                onChange={(e) => {
-                  const checked = e.currentTarget.checked;
-                  form.setFieldValue("enableNpsAnalytics", checked);
-                }}
-              />
-            )}
-          </Group>
-          <Group>
-            {logicSupportedTypes.includes(question?.type as QuestionType) && (
-              <RateupButtonSecondary
-                title={translations("Logic Jump")}
-                leftIcon={
-                  <Image
-                    src={`${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
-                    w={30}
-                    h={30}
-                    fit={"contain"}
-                    alt="image of logic jump"
-                  />
+                checked={!!values?.required}
+                onCheckedChange={(checked) =>
+                  form.setValue("required", !!checked, { shouldDirty: true })
                 }
+              />
+              {translations("Required")}
+            </FieldTitle>
+            {WaNPSQuestions.includes(question?.type as QuestionType) && (
+              <FieldTitle className="flex items-center gap-2 font-semibold">
+                <Checkbox
+                  checked={!!values?.enableNpsAnalytics}
+                  onCheckedChange={(checked) =>
+                    form.setValue("enableNpsAnalytics", !!checked, { shouldDirty: true })
+                  }
+                />
+                {translations("NPS Analytics")}
+              </FieldTitle>
+            )}
+          </div>
+          <div className="flex items-center">
+            {logicSupportedTypes.includes(question?.type as QuestionType) && (
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => {
                   const save = handleSave();
@@ -523,13 +540,19 @@ function ElementEditor({
                     setActiveTab(EditorType.LogicEditor);
                   }
                 }}
-              />
+              >
+                <img
+                  src={`${import.meta.env.VITE_FRONTEND_URL}/images/logic-jump-whatsapp.svg`}
+                  className="h-7.5 w-7.5 object-contain"
+                  alt="image of logic jump"
+                />
+                {translations("Logic Jump")}
+              </Button>
             )}
             {/* TODO: Implement Custom Validation*/}
             {googleReviewSupportedTypes.includes(question?.type as QuestionType) && (
-              <RateupButtonSecondary
-                title={translations("Google Review")}
-                leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => {
                   const save = handleSave();
@@ -537,58 +560,51 @@ function ElementEditor({
                     setActiveTab(EditorType.GoogleReviewEditor);
                   }
                 }}
-              />
+              >
+                <IconBrandGoogle size={"1rem"} stroke={4} />
+                {translations("Google Review")}
+              </Button>
             )}
-          </Group>
-          <RateupButtonPrimary
-            title={
-              getIncompleteLanguages().length > 1 ||
-              (getIncompleteLanguages().length > 0 &&
-                getIncompleteLanguages()[0] !== selectedLanguage)
-                ? "Fill Next Language"
-                : "Save"
-            }
-            size="md"
-            leftIcon={<IconDeviceSdCard />}
-            onClick={handleSave}
-            loading={isSaving}
-          />
-        </Group>
-      </Stack>
-    </Stack>
+          </div>
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? <Spinner /> : <IconDeviceSdCard />}
+            {getIncompleteLanguages().length > 1 ||
+            (getIncompleteLanguages().length > 0 &&
+              getIncompleteLanguages()[0] !== selectedLanguage)
+              ? "Fill Next Language"
+              : "Save"}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
-function LabelTextInput(props: TextInputProps & { maxLength: number }) {
+function LabelTextInput(
+  props: React.ComponentProps<"input"> & { maxLength: number; error?: React.ReactNode },
+) {
   // Ensure value is a string for the length tracker
   const safeValue = typeof props.value === "string" ? props.value : "";
   return (
-    <TextInput
-      variant="unstyled"
-      placeholder="Enter question label here *"
-      {...props}
-      value={safeValue}
-      styles={{
-        input: {
-          fontSize: "1.1rem",
-          fontWeight: 400, // set custom font size for this TextInput
-        },
-      }}
-      rightSection={<LengthTracker length={safeValue.length} maxValue={props.maxLength} />}
-      rightSectionProps={{
-        style: {
-          minWidth: "80px",
-        },
-      }}
-    />
+    <InputGroup className="border-none shadow-none">
+      <InputGroupInput
+        placeholder="Enter question label here *"
+        {...props}
+        value={safeValue}
+        style={{ fontSize: "1.1rem", fontWeight: 400 }}
+      />
+      <InputGroupAddon align="inline-end" className="min-w-20">
+        <LengthTracker length={safeValue.length} maxValue={props.maxLength} />
+      </InputGroupAddon>
+    </InputGroup>
   );
 }
 
 interface ExtraPropsProps {
-  form: UseFormReturnType<any>;
+  form: UseFormReturn<any>;
   question: Question;
   nextScreens?: WaFlowScreen[];
-  extraConfigForm: UseFormReturnType<any>;
+  extraConfigForm: UseFormReturn<any>;
 }
 function FlowQuestionExtraProps({
   form,
@@ -596,8 +612,18 @@ function FlowQuestionExtraProps({
   nextScreens,
   extraConfigForm,
 }: Readonly<ExtraPropsProps>) {
+  const uid = useId();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { t: translations } = useTranslation();
+  const nextScreenOptions = toSelectOptions(
+    nextScreens?.map((data) => ({ label: data?.title, value: data?.id })),
+  );
+  const integrationAppOptions = toSelectOptions([IntegratedApps.amelia]);
+  const photoSourceOptions = toSelectOptions(Object.values(PhotoSource));
+  const inputTypeOptions = toSelectOptions(Object.values(InputType));
+  const mimeTypeOptions = toSelectOptions(
+    Object.entries(DocumentMimeType).map(([key, value]) => ({ label: key, value })),
+  );
   switch (question.type) {
     case QuestionType.MCQ:
     case QuestionType.MSQ:
@@ -606,165 +632,317 @@ function FlowQuestionExtraProps({
     case QuestionType.CustomNPS:
       const maxChoiceCount = getFlowOptionsLimit(questionTypeToFlowFormElementType(question.type));
       return (
-        <Stack gap={0} mt="xl">
-          <Group justify="space-between">
-            <Text fw="bold" c="dimmed">
-              {translations("Choices")}
-            </Text>
-            <Divider style={{ flexGrow: 1 }} />
+        <div className="flex flex-col gap-0 mt-8">
+          <div className="flex items-center justify-between">
+            <p className="font-bold text-muted-foreground">{translations("Choices")}</p>
+            <Separator className="grow" />
             <LengthTracker
-              length={form.values.choices?.[selectedLanguage]?.length || 0}
+              length={form.watch().choices?.[selectedLanguage]?.length || 0}
               maxValue={maxChoiceCount}
             />
-          </Group>
-          <Box pl="xs">
+          </div>
+          <div className="pl-2.5">
             <ChoicesCreator
               qId={question.id}
               form={form}
               maxCharCount={30}
               maxChoiceCount={maxChoiceCount}
             />
-          </Box>
-        </Stack>
+          </div>
+        </div>
       );
     case QuestionType.Optin:
       return (
-        <ContainedSelection
-          data={nextScreens?.map((data) => ({
-            label: data?.title,
-            value: data?.id,
-          }))}
-          {...form.getInputProps("optinScreenId")}
-          label={translations("Read more screen")}
-          placeholder={translations("select next screen to show the details")}
-          w={300}
-        />
+        <Field className="w-75">
+          <FieldLabel htmlFor={`${uid}-field`}>{translations("Read more screen")}</FieldLabel>
+          <Select
+            items={nextScreenOptions}
+            value={form.watch("optinScreenId") ?? ""}
+            onValueChange={(value) => form.setValue("optinScreenId", value, { shouldDirty: true })}
+          >
+            <SelectTrigger id={`${uid}-field`} className="w-full">
+              <SelectValue placeholder={translations("select next screen to show the details")} />
+            </SelectTrigger>
+            <SelectContent>
+              {nextScreenOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
       );
     case QuestionType.Date:
       return (
-        <Stack mt={"xs"}>
-          <Switch
-            size="md"
-            label={translations("Enable dynamic datepicker")}
-            {...form.getInputProps("onSelectAction", {
-              type: "checkbox",
-            })}
-          />
-          {form.values.onSelectAction && (
-            <ContainedSelection
-              label={translations("Integration App Name")}
-              placeholder={translations("Select Integration App Name")}
-              data={[IntegratedApps.amelia]}
-              {...form.getInputProps("waAppName")}
-              w={400}
+        <div className="flex flex-col mt-2.5">
+          <FieldLabel htmlFor={`${uid}-label`} className="flex items-center gap-2">
+            <Switch
+              checked={!!form.watch().onSelectAction}
+              onCheckedChange={(checked) =>
+                form.setValue("onSelectAction", !!checked, { shouldDirty: true })
+              }
             />
+            {translations("Enable dynamic datepicker")}
+          </FieldLabel>
+          {form.watch().onSelectAction && (
+            <Field className="w-100">
+              <FieldLabel htmlFor={`${uid}-label`}>
+                {translations("Integration App Name")}
+              </FieldLabel>
+              <Select
+                items={integrationAppOptions}
+                value={form.watch("waAppName") ?? ""}
+                onValueChange={(value) => form.setValue("waAppName", value, { shouldDirty: true })}
+              >
+                <SelectTrigger id={`${uid}-label`} className="w-full">
+                  <SelectValue placeholder={translations("Select Integration App Name")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {integrationAppOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
           )}
-        </Stack>
+        </div>
       );
     case QuestionType.PhotoPicker:
       return (
-        <SimpleGrid mt={"xs"} cols={2}>
-          <Alert variant="light" color="blue" title="Info">
-            {translations(
-              "No more than 10 images or documents can be sent as part of the response message.",
-            )}
+        <div className="mt-2.5 grid grid-cols-2 gap-4">
+          <Alert>
+            <AlertTitle>Info</AlertTitle>
+            <AlertDescription>
+              {translations(
+                "No more than 10 images or documents can be sent as part of the response message.",
+              )}
+            </AlertDescription>
           </Alert>
-          <Alert variant="light" color="blue" title="Info">
-            {translations(
-              "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB.",
-            )}
+          <Alert>
+            <AlertTitle>Info</AlertTitle>
+            <AlertDescription>
+              {translations(
+                "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB.",
+              )}
+            </AlertDescription>
           </Alert>
-          <ContainedSelection
-            label={translations("Photo Source")}
-            placeholder={translations("Select Photo Source")}
-            description={translations("source where the image can be selected from")}
-            data={Object.values(PhotoSource)}
-            {...extraConfigForm.getInputProps("photo-source")}
-          />
-          <ContainedNumberInput
-            label={translations("max file size in kb")}
-            description={translations("maximum file size (in kilobytes) that can be uploaded")}
-            placeholder={translations("max file size in kb")}
-            min={1}
-            max={25600}
-            {...extraConfigForm.getInputProps("max-file-size-kb")}
-          />
-          <ContainedNumberInput
-            label={translations("min uploaded photos")}
-            description={translations("minimum number of photos that are required")}
-            placeholder={translations("min uploaded photos")}
-            min={0}
-            max={30}
-            {...extraConfigForm.getInputProps("min-uploaded-photos")}
-          />
-          <ContainedNumberInput
-            label={translations("max uploaded photos")}
-            description={translations("maximum number of photos that can be uploaded")}
-            placeholder={translations("max uploaded photos")}
-            min={1}
-            max={30}
-            {...extraConfigForm.getInputProps("max-uploaded-photos")}
-          />
-        </SimpleGrid>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Photo Source")}</FieldLabel>
+            <Select
+              items={photoSourceOptions}
+              value={extraConfigForm.watch("photo-source") ?? ""}
+              onValueChange={(value) =>
+                extraConfigForm.setValue("photo-source", value, { shouldDirty: true })
+              }
+            >
+              <SelectTrigger id={`${uid}-field-3`} className="w-full">
+                <SelectValue placeholder={translations("Select Photo Source")} />
+              </SelectTrigger>
+              <SelectContent>
+                {photoSourceOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldDescription>
+              {translations("source where the image can be selected from")}
+            </FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-4`}>
+              {translations("max file size in kb")}
+            </FieldLabel>
+            <Input
+              id={`${uid}-field-4`}
+              type="number"
+              min={1}
+              max={25600}
+              placeholder={translations("max file size in kb")}
+              value={extraConfigForm.watch("max-file-size-kb") ?? ""}
+              onChange={(event) =>
+                extraConfigForm.setValue("max-file-size-kb", Number(event.target.value), {
+                  shouldDirty: true,
+                })
+              }
+            />
+            <FieldDescription>
+              {translations("maximum file size (in kilobytes) that can be uploaded")}
+            </FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-5`}>
+              {translations("min uploaded photos")}
+            </FieldLabel>
+            <Input
+              id={`${uid}-field-5`}
+              type="number"
+              min={0}
+              max={30}
+              placeholder={translations("min uploaded photos")}
+              value={extraConfigForm.watch("min-uploaded-photos") ?? ""}
+              onChange={(event) =>
+                extraConfigForm.setValue("min-uploaded-photos", Number(event.target.value), {
+                  shouldDirty: true,
+                })
+              }
+            />
+            <FieldDescription>
+              {translations("minimum number of photos that are required")}
+            </FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-6`}>
+              {translations("max uploaded photos")}
+            </FieldLabel>
+            <Input
+              id={`${uid}-field-6`}
+              type="number"
+              min={1}
+              max={30}
+              placeholder={translations("max uploaded photos")}
+              value={extraConfigForm.watch("max-uploaded-photos") ?? ""}
+              onChange={(event) =>
+                extraConfigForm.setValue("max-uploaded-photos", Number(event.target.value), {
+                  shouldDirty: true,
+                })
+              }
+            />
+            <FieldDescription>
+              {translations("maximum number of photos that can be uploaded")}
+            </FieldDescription>
+          </Field>
+        </div>
       );
     case QuestionType.DocumentPicker:
       return (
-        <SimpleGrid mt={"xs"} cols={2}>
-          <Alert variant="light" color="blue" title="Info">
-            {translations(
-              "No more than 10 images or documents can be sent as part of the response message.",
-            )}
+        <div className="mt-2.5 grid grid-cols-2 gap-4">
+          <Alert>
+            <AlertTitle>Info</AlertTitle>
+            <AlertDescription>
+              {translations(
+                "No more than 10 images or documents can be sent as part of the response message.",
+              )}
+            </AlertDescription>
           </Alert>
-          <Alert variant="light" color="blue" title="Info">
-            {translations(
-              "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB.",
-            )}
+          <Alert>
+            <AlertTitle>Info</AlertTitle>
+            <AlertDescription>
+              {translations(
+                "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB.",
+              )}
+            </AlertDescription>
           </Alert>
-          <ContainedNumberInput
-            label={translations("max file size in kb")}
-            description={translations("maximum file size (in kilobytes) that can be uploaded")}
-            placeholder={translations("max file size in kb")}
-            min={1}
-            max={25600}
-            {...extraConfigForm.getInputProps("max-file-size-kb")}
-          />
-          <ContainedNumberInput
-            label={translations("min uploaded documents")}
-            description={translations("minimum number of documents that are required")}
-            placeholder={translations("min uploaded documents")}
-            min={0}
-            max={30}
-            {...extraConfigForm.getInputProps("min-uploaded-documents")}
-          />
-          <ContainedNumberInput
-            label={translations("max uploaded documents")}
-            description={translations("maximum number of documents that can be uploaded")}
-            placeholder={translations("max uploaded documents")}
-            min={1}
-            max={30}
-            {...extraConfigForm.getInputProps("max-uploaded-documents")}
-          />
-          <ContainedMultiSelect
-            label={translations("allowed mime types")}
-            placeholder={translations("Select allowed mime types")}
-            description={translations("by default all the mime types are allowed")}
-            data={Object.entries(DocumentMimeType).map(([key, value]) => ({
-              label: key,
-              value: value,
-            }))}
-            {...extraConfigForm.getInputProps("allowed-mime-types")}
-          />
-        </SimpleGrid>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-7`}>
+              {translations("max file size in kb")}
+            </FieldLabel>
+            <Input
+              id={`${uid}-field-7`}
+              type="number"
+              min={1}
+              max={25600}
+              placeholder={translations("max file size in kb")}
+              value={extraConfigForm.watch("max-file-size-kb") ?? ""}
+              onChange={(event) =>
+                extraConfigForm.setValue("max-file-size-kb", Number(event.target.value), {
+                  shouldDirty: true,
+                })
+              }
+            />
+            <FieldDescription>
+              {translations("maximum file size (in kilobytes) that can be uploaded")}
+            </FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-8`}>
+              {translations("min uploaded documents")}
+            </FieldLabel>
+            <Input
+              id={`${uid}-field-8`}
+              type="number"
+              min={0}
+              max={30}
+              placeholder={translations("min uploaded documents")}
+              value={extraConfigForm.watch("min-uploaded-documents") ?? ""}
+              onChange={(event) =>
+                extraConfigForm.setValue("min-uploaded-documents", Number(event.target.value), {
+                  shouldDirty: true,
+                })
+              }
+            />
+            <FieldDescription>
+              {translations("minimum number of documents that are required")}
+            </FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-9`}>
+              {translations("max uploaded documents")}
+            </FieldLabel>
+            <Input
+              id={`${uid}-field-9`}
+              type="number"
+              min={1}
+              max={30}
+              placeholder={translations("max uploaded documents")}
+              value={extraConfigForm.watch("max-uploaded-documents") ?? ""}
+              onChange={(event) =>
+                extraConfigForm.setValue("max-uploaded-documents", Number(event.target.value), {
+                  shouldDirty: true,
+                })
+              }
+            />
+            <FieldDescription>
+              {translations("maximum number of documents that can be uploaded")}
+            </FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-10`}>
+              {translations("allowed mime types")}
+            </FieldLabel>
+            <MultiSelect
+              id={`${uid}-field-10`}
+              options={mimeTypeOptions}
+              value={extraConfigForm.watch("allowed-mime-types") ?? []}
+              onValueChange={(value) =>
+                extraConfigForm.setValue("allowed-mime-types", value, { shouldDirty: true })
+              }
+              placeholder={translations("Select allowed mime types")}
+            />
+            <FieldDescription>
+              {translations("by default all the mime types are allowed")}
+            </FieldDescription>
+          </Field>
+        </div>
       );
     case QuestionType.Text:
       return (
         <>
-          <ContainedSelection
-            label={translations("Input Type")}
-            placeholder={translations("Select Type")}
-            data={Object.values(InputType)}
-            {...extraConfigForm.getInputProps("input-type")}
-          />
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-11`}>{translations("Input Type")}</FieldLabel>
+            <Select
+              items={inputTypeOptions}
+              value={extraConfigForm.watch("input-type") ?? ""}
+              onValueChange={(value) =>
+                extraConfigForm.setValue("input-type", value, { shouldDirty: true })
+              }
+            >
+              <SelectTrigger id={`${uid}-field-11`} className="w-full">
+                <SelectValue placeholder={translations("Select Type")} />
+              </SelectTrigger>
+              <SelectContent>
+                {inputTypeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
         </>
       );
 

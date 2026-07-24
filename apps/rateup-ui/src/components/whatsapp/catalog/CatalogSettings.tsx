@@ -1,7 +1,6 @@
-import { useDisclosure } from "@mantine/hooks";
 import { IconLogin2, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -30,9 +29,11 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { ImportFromShopifyModal } from "@/components/whatsapp/catalog/products/ImportFromShopifyModal.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { MetaLoginAssets, WaConfigType } from "@/types/enums.ts";
 
 const CatalogSettings = ({ catalogData }) => {
+  const uid = useId();
   const navigate = useNavigate();
   const update = useUpateCatalog(catalogData?.catalogId);
   const disconnect = useDisconnectCatalogFromWa(catalogData?.catalogId);
@@ -128,10 +129,13 @@ const CatalogSettings = ({ catalogData }) => {
     <Card className="flex flex-col gap-4 p-2">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <Field className="w-full sm:w-1/2">
-          <FieldLabel>Connected WhatsApp Business Account ID</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-connected-whatsapp-business-account-id`}>
+            Connected WhatsApp Business Account ID
+          </FieldLabel>
           <div className="flex items-center gap-3 mb-2">
             <span className="text-sm font-medium">Normal Account</span>
             <Switch
+              id={`${uid}-connected-whatsapp-business-account-id`}
               checked={connectMode === "manual"}
               onCheckedChange={(checked) => setConnectMode(checked ? "manual" : "automatic")}
             />
@@ -183,8 +187,9 @@ const CatalogSettings = ({ catalogData }) => {
       </div>
       {catalogData.autoCheckoutEnabled && (
         <Field>
-          <FieldLabel>Checkout Message</FieldLabel>
+          <FieldLabel htmlFor={`${uid}-checkout-message`}>Checkout Message</FieldLabel>
           <Input
+            id={`${uid}-checkout-message`}
             placeholder="Thanks for your order! Complete your purchase here: {{link}}"
             defaultValue={catalogData.checkoutMessage || ""}
             onBlur={(e) => {
@@ -247,13 +252,14 @@ const ProductManagementSection = ({ catalogData }) => {
               catalog.
             </p>
           </div>
-          <RateupButtonBlue
-            leftIcon={<IconShoppingBag size={16} />}
+          <Button
+            className="w-fit"
             onClick={openShopifyImport}
-            title="Import from Shopify"
-            w="fit-content"
             disabled={!catalogId || !shopifyIntegration || shopifyLoading}
-          />
+          >
+            <IconShoppingBag size={16} />
+            Import from Shopify
+          </Button>
         </div>
         {!shopifyLoading && !shopifyIntegration && (
           <p className="text-xs text-red-500 italic mt-1 ml-1">

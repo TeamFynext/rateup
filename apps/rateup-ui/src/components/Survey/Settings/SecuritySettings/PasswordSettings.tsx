@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateSurveyPwdMutation } from "@/backend/surveys/surveys.query";
@@ -16,6 +16,7 @@ import {
 import { updatePwdSurvey } from "../updateSettings.ts";
 
 const PasswordSettings = ({ survey, surveyId }) => {
+  const uid = useId();
   const [password, setPassword] = useState("");
   const [passwordProtection, setPasswordProtection] = useState(survey?.isProtected);
   const [isPasswordInputInvalid, setIsPasswordInputInvalid] = useState<boolean | string>(false);
@@ -66,10 +67,11 @@ const PasswordSettings = ({ survey, surveyId }) => {
 
         <FieldGroup>
           <Field data-invalid={!!isPasswordInputInvalid}>
-            <FieldLabel>
+            <FieldLabel htmlFor={`${uid}-field`}>
               {translations("Password")} <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
+              id={`${uid}-field`}
               type="password"
               disabled={!passwordProtection}
               value={password}

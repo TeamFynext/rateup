@@ -1,13 +1,12 @@
-import { useDisclosure } from "@mantine/hooks";
 import { useParams } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
-import { Label } from "@/components/ui/label";
+import { Field, FieldTitle } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
+import { useDisclosure } from "@/hooks/useDisclosure";
 
-import PaperLayout from "../../../styled/Layouts/PaperLayout.tsx";
 import { CopyLinkComponent } from "../../../Survey/ShareSurvey/ShareSurvey.tsx";
 import { useLinktreeObj } from "../LinktreeContext/LinktreeContext.tsx";
 import NoLinksFoundModal from "./NoLinksFoundModal.tsx";
@@ -40,13 +39,15 @@ function SharePage() {
   const { t: translations } = useTranslation();
   return (
     <div className={styles["share-linktree-root-div"]}>
-      <PaperLayout>
-        <Label className="flex items-center gap-2">
+      <Field className="w-full overflow-auto rounded-lg bg-card p-4 shadow-md">
+        <FieldTitle className="flex items-center gap-2">
           <Switch onClick={handlePublishSwitchClick} checked={isPublished} />
           {translations("Published")}
-        </Label>
-      </PaperLayout>
-      <PaperLayout className={styles["share-options-container"]}>
+        </FieldTitle>
+      </Field>
+      <div
+        className={`w-full overflow-auto rounded-lg bg-card p-4 shadow-md ${styles["share-options-container"]}`}
+      >
         <div className={styles["linktree-link-container"]}>
           <h2>{translations("Share Linktree")}</h2>
           <CopyLinkComponent value={shareUrl} disabled={!isPublished} />
@@ -60,11 +61,13 @@ function SharePage() {
             isPublished={isPublished}
           />
         </div>
-      </PaperLayout>
-      <PaperLayout className={styles["share-qr-card"]}>
+      </div>
+      <div
+        className={`w-full overflow-auto rounded-lg bg-card p-4 shadow-md ${styles["share-qr-card"]}`}
+      >
         <h2>{translations("Share QR Code")}</h2>
         <ShareLinktree url={shareUrl} isPublished={isPublished} title={name} />
-      </PaperLayout>
+      </div>
       <NoLinksFoundModal opened={isNoLinksFoundModalOpen} onClose={closeNoLinksFoundModal} />
     </div>
   );

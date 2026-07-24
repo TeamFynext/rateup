@@ -38,7 +38,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
           </div>
           <Button
             variant="default"
-            className="bg-rateup-blue"
+            className="bg-primary"
             size="sm"
             onClick={() => setIsOpenedAddModal(true)}
           >

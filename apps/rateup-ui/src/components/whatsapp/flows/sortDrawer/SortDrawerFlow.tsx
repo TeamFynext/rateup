@@ -1,11 +1,19 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { Card, Flex, Stack, Text } from "@mantine/core";
-import { useListState } from "@mantine/hooks";
 import { IconGripVertical } from "@tabler/icons-react";
 import React, { useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-import FormModalLayout from "../../../Modal/FormModalLayout.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
+import { useListState } from "@/hooks/use-list-state.ts";
+
 import useFlowStore from "../../flow-v2/utils/store.ts";
 import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext.ts";
 
@@ -34,23 +42,19 @@ const SortDrawerFlow = ({ opened, close, data = [], v = 1 }: ISortDrawerProps) =
   const items = state?.map((item, index) => (
     <Draggable key={item?.id} index={index} draggableId={item?.id}>
       {(provided) => (
-        <Flex
-          className={classes.itemDragging}
+        <div
+          className={`${classes.itemDragging} my-4 flex gap-2`}
           ref={provided.innerRef}
           {...provided.draggableProps}
           style={provided.draggableProps.style as React.CSSProperties}
-          gap={"sm"}
-          my={"md"}
         >
-          <Stack {...provided.dragHandleProps} justify={"center"}>
+          <div {...provided.dragHandleProps} className="flex flex-col justify-center">
             <IconGripVertical size={24} stroke={1.5} />
-          </Stack>
-          <Card shadow="sm" padding="lg" radius="lg" w={"90%"} p={"xs"}>
-            <Text fz={24} tt={"capitalize"}>
-              {item?.name}
-            </Text>
+          </div>
+          <Card className="w-[90%] rounded-lg p-2 shadow-sm">
+            <p className="text-2xl capitalize">{item?.name}</p>
           </Card>
-        </Flex>
+        </div>
       )}
     </Draggable>
   ));
@@ -98,34 +102,40 @@ const SortDrawerFlow = ({ opened, close, data = [], v = 1 }: ISortDrawerProps) =
   };
   const { t: translations } = useTranslation();
   return (
-    <FormModalLayout
-      opened={opened}
-      onClose={close}
-      title={translations("Swap the order of flow screens")}
-      centered
-      onSubmit={handleSortOrder}
-      buttonTitle={translations("Save")}
-      size={"lg"}
-      includeCancelButton={true}
-    >
-      <DragDropContext
-        onDragEnd={({ destination, source }) =>
-          handlers.reorder({
-            from: source.index,
-            to: destination?.index || 0,
-          })
-        }
-      >
-        <Droppable droppableId="dnd-list" direction="vertical">
-          {(provided) => (
-            <div {...provided.droppableProps} ref={provided.innerRef}>
-              {items}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
-    </FormModalLayout>
+    <Dialog open={opened} onOpenChange={(open) => !open && close()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-center text-lg">
+            {translations("Swap the order of flow screens")}
+          </DialogTitle>
+        </DialogHeader>
+        <DragDropContext
+          onDragEnd={({ destination, source }) =>
+            handlers.reorder({
+              from: source.index,
+              to: destination?.index || 0,
+            })
+          }
+        >
+          <Droppable droppableId="dnd-list" direction="vertical">
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef}>
+                {items}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+        <DialogFooter>
+          <Button variant="outline" type="button" onClick={close}>
+            {translations("Cancel")}
+          </Button>
+          <Button type="button" onClick={handleSortOrder}>
+            {translations("Save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

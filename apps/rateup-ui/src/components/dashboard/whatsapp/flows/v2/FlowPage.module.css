@@ -37,10 +37,10 @@
 }
 
 .tabs-tab[data-active="true"] {
-  background-color: var(--mantine-primary-color-filled);
+  background-color: var(--primary);
   color: white;
 }
 
 .tabs-tab:hover:not([data-active]) {
-  background-color: var(--mantine-primary-color-light);
+  background-color: color-mix(in oklch, var(--primary) 12%, transparent);
 }

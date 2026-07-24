@@ -1,11 +1,11 @@
-import { useDisclosure } from "@mantine/hooks";
 import { IconBrandMeta } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldTitle } from "@/components/ui/field.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { MetaLoginAssets } from "@/types/enums.ts";
 
 import { MetaLoginButton } from "./meta-login-button.tsx";
@@ -103,17 +103,20 @@ export function ConnectMetaAccountButton() {
       <Dialog open={opened} onOpenChange={(next) => (next ? open() : close())}>
         <DialogContent>
           <DialogTitle>Connect Meta account</DialogTitle>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
+          <Field>
+            <Field>
               <p className="text-sm font-medium">
                 Select assets you want to connect
                 <span className="text-destructive"> *</span>
               </p>
-              <div className="mt-2 flex flex-col gap-2">
+              <Field className="mt-2">
                 {assets.map((asset) => {
                   const checked = selectedAssets.includes(asset);
                   return (
-                    <Label key={asset} className="flex items-center gap-2 font-normal capitalize">
+                    <FieldTitle
+                      key={asset}
+                      className="flex items-center gap-2 font-normal capitalize"
+                    >
                       <Checkbox
                         disabled={asset === MetaLoginAssets.WHATSAPP}
                         checked={checked}
@@ -124,18 +127,18 @@ export function ConnectMetaAccountButton() {
                         }
                       />
                       {asset}
-                    </Label>
+                    </FieldTitle>
                   );
                 })}
-              </div>
+              </Field>
               {error && <p className="text-sm text-destructive">{error}</p>}
-            </div>
+            </Field>
             <MetaLoginButton
               disabled={Boolean(error)}
               configId={configId}
               selectedAssets={selectedAssets}
             />
-          </div>
+          </Field>
         </DialogContent>
       </Dialog>
     </>

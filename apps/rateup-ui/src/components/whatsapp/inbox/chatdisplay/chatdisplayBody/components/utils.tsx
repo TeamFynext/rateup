@@ -1,10 +1,10 @@
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
-import { Clock } from "lucide-react";
+import { Ban, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
+import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Bubble, BubbleContent } from "@/components/ui/bubble.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker.tsx";
@@ -46,7 +46,7 @@ const IgCommentBubble = ({
 }) => {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs text-[var(--grey-color-7)] p-2 bg-[var(--light-grey-color-5)] rounded-[10px] w-fit">
+      <span className="text-xs text-foreground p-2 bg-muted rounded-[10px] w-fit">
         Commented on your post
       </span>
       {messageContent.text ? <WaInboxText messageContent={messageContent.text} /> : null}
@@ -95,6 +95,21 @@ export const SingleMessage = ({ message }) => {
         </span>
       );
   }
+};
+
+/**
+ * Stand-in for a message its sender deleted on WhatsApp. The original body is
+ * still stored — it is deliberately not rendered here, the same way WhatsApp
+ * itself shows the message as gone while the row stays in the thread.
+ */
+export const DeletedMessage = () => {
+  const { t: translations } = useTranslation();
+  return (
+    <span className="flex items-center gap-1.5 text-sm text-muted-foreground italic">
+      <Ban className="size-3.5 shrink-0" />
+      {translations("This message was deleted")}
+    </span>
+  );
 };
 
 export function getReactionMessage({

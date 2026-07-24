@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -18,6 +19,7 @@ const FlowSettingsUpdate = ({
   dbFlowId: string;
   anonymous: boolean;
 }) => {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const updateFlowMetaDataMutation = useUpdateFlowMetaDataMutation();
 
@@ -43,10 +45,11 @@ const FlowSettingsUpdate = ({
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <FieldGroup>
             <Field>
-              <FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field`}>
                 {translations("Flow Name")} <span className="text-destructive">*</span>
               </FieldLabel>
               <Input
+                id={`${uid}-field`}
                 placeholder={translations("Enter Flow name")}
                 {...register("name", { required: true })}
               />

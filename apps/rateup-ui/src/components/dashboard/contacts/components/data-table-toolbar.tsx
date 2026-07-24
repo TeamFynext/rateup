@@ -51,8 +51,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -219,7 +219,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
             </div>
             <LifecycleSelector
               all={true}
-              className="border-none w-48 bg-secondary h-full rounded-sm px-2"
+              className="w-48"
               value={filter?.lifecycleId}
               onChange={(value, _lifecycleObj) => setFilter({ ...filter, lifecycleId: value })}
             />
@@ -235,7 +235,7 @@ export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProp
             />
             <Button
               variant="default"
-              className="bg-rateup-blue"
+              className="bg-primary"
               size="sm"
               onClick={() => setIsOpenedAddContactModal(true)}
             >
@@ -434,13 +434,14 @@ const ImportContactModal = ({ opened, setOpened }) => {
             {t("Import contacts from a CSV file to add them to your contact list.")}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-2 p-6">
+        <div className="flex flex-col gap-4">
           <p className="text-sm">{t("Custom Fields")}</p>
-          <div className="flex gap-2">
+          <Field>
             {customFields.map((field) => (
-              <div
-                className="flex items-center gap-3 rounded-lg bg-blue-100 p-1 w-fit px-2"
+              <Field
                 key={field.id}
+                orientation="horizontal"
+                className="rounded-lg bg-blue-100 p-1 w-fit px-2"
               >
                 <Checkbox
                   checked={fields.some((p) => p.id === field.id)}
@@ -452,12 +453,12 @@ const ImportContactModal = ({ opened, setOpened }) => {
                     );
                   }}
                 />
-                <Label htmlFor={field.id} className="text-sm font-normal">
+                <FieldLabel htmlFor={field.id} className="text-sm font-normal">
                   {field.name}
-                </Label>
-              </div>
+                </FieldLabel>
+              </Field>
             ))}
-          </div>
+          </Field>
 
           <blockquote className="border-l-4 border-blue-500 bg-blue-50 p-4 flex flex-col gap-2">
             <div className="flex gap-2 text-blue-700 text-sm">
@@ -472,28 +473,28 @@ const ImportContactModal = ({ opened, setOpened }) => {
               <span className="font-medium text-sm">{t("Download Demo Csv File")}</span>
             </Button>
           </blockquote>
-          <div className="flex items-center space-x-2 mt-4">
+          <Field orientation="horizontal" className="gap-2 mt-4">
             <Switch
               id="update-existing-data"
               className="data-[state=unchecked]:bg-gray-400"
               checked={updateExisting}
               onCheckedChange={setUpdateExisting}
             />
-            <Label htmlFor="update-existing-data">
+            <FieldLabel htmlFor="update-existing-data">
               {t("Update the existing data while importing")}
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2 mt-4">
+            </FieldLabel>
+          </Field>
+          <Field orientation="horizontal" className="gap-2 mt-4">
             <Switch
               id="has-header-row"
               className="data-[state=unchecked]:bg-gray-400"
               checked={hasHeaderRow}
               onCheckedChange={setHasHeaderRow}
             />
-            <Label htmlFor="has-header-row">
+            <FieldLabel htmlFor="has-header-row">
               {t("First row contains column headers (name, phone, ...)")}
-            </Label>
-          </div>
+            </FieldLabel>
+          </Field>
           <div className="grid items-center gap-3 mt-4">
             <Input
               id="contact-csv"

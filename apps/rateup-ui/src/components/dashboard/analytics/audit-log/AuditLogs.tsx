@@ -37,7 +37,7 @@ export function AuditLogs() {
   }
 
   if (isLoading) {
-    return <RateupLoader h="100dvh" />;
+    return <RateupLoader className="h-dvh" />;
   }
 
   const tableData = isFetched ? data?.data || [] : [];

@@ -1,7 +1,7 @@
 import { IconCircleDashedCheck } from "@tabler/icons-react";
 import { CornerUpLeft, ExternalLink, List } from "lucide-react";
 
-import { whatsappToHTML } from "@/components/RichTextEditor/waTextEditor.tsx";
+import { whatsappToHTML } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";

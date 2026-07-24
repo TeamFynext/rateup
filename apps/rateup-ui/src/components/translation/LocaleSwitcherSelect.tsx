@@ -1,7 +1,13 @@
-import { Select } from "@mantine/core";
 import { IconLanguage } from "@tabler/icons-react";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import i18n from "@/i18n.ts";
 
 type Locale = "en" | "ar" | "de" | "fr" | "hi";
@@ -14,10 +20,12 @@ interface Props {
 
 export default function LocaleSwitcherSelect({ defaultValue, items, label }: Readonly<Props>) {
   const [isPending, startTransition] = useTransition();
+  const [value, setValue] = useState(defaultValue);
 
-  function onChange(value: string | null) {
-    if (!value) return;
-    const locale = value as Locale;
+  function onChange(next: string | null) {
+    if (!next) return;
+    setValue(next);
+    const locale = next as Locale;
     startTransition(() => {
       document.cookie = `i18next=${locale}; path=/; max-age=31536000`;
       void i18n.changeLanguage(locale);
@@ -26,15 +34,19 @@ export default function LocaleSwitcherSelect({ defaultValue, items, label }: Rea
 
   return (
     <div className="relative">
-      <Select
-        maw={300}
-        aria-label={label}
-        data={items}
-        defaultValue={defaultValue}
-        onChange={onChange}
-        disabled={isPending}
-        rightSection={<IconLanguage className="h-6 w-6 text-slate-600" />}
-      />
+      <Select value={value} onValueChange={onChange} items={items} disabled={isPending}>
+        <SelectTrigger aria-label={label} className="w-full max-w-75">
+          <SelectValue />
+          <IconLanguage className="h-6 w-6 text-slate-600" />
+        </SelectTrigger>
+        <SelectContent>
+          {items.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

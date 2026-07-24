@@ -1,10 +1,9 @@
-import { Group, Stack } from "@mantine/core";
 import { IconHome } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
+import { buttonVariants } from "@/components/ui/button.tsx";
 
 function BodyComp({
   enableGoogleReview,
@@ -17,16 +16,7 @@ function BodyComp({
 }) {
   const { t: translations } = useTranslation();
   return (
-    <Stack
-      align="center"
-      justify="center"
-      gap="xl"
-      style={{
-        flex: 1,
-        borderRadius: "28px 28px 0px 0px",
-        backgroundColor: "whitesmoke",
-      }}
-    >
+    <div className="flex flex-1 flex-col items-center justify-center gap-8 rounded-t-[28px] bg-muted">
       {enableGoogleReview && (
         <GoogleReview
           reviewSuggestions={reviews}
@@ -37,13 +27,20 @@ function BodyComp({
         />
       )}
       {k === "cs" && (
-        <Group m="xl" p="xl">
-          <Link to={`${import.meta.env.VITE_FRONTEND_URL}/public/survey/cs`} target="_blank">
-            <RateupButtonBlue leftIcon={<IconHome />} title={translations("Go to Home")} />
+        <div className="m-8 flex p-8">
+          {/* A single anchor styled as a button — a Button wrapping a Link would nest two
+              interactive controls. */}
+          <Link
+            to={`${import.meta.env.VITE_FRONTEND_URL}/public/survey/cs`}
+            target="_blank"
+            className={buttonVariants()}
+          >
+            <IconHome data-icon="inline-start" />
+            {translations("Go to Home")}
           </Link>
-        </Group>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 }
 

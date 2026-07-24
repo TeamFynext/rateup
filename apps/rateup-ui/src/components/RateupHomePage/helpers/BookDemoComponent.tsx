@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { useBookDemoMutation } from "@/backend/bookdemo/bookdemo.query";
 import { RateupStar } from "@/components/integrations/logos";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
@@ -105,93 +106,107 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
             <RateupStar className="h-8 w-8" />
           </div>
 
-          <h2 className="text-center text-2xl font-black leading-none tracking-[-0.03em] text-[#021B49]">
+          <DialogTitle className="text-center text-2xl font-black leading-none tracking-[-0.03em] text-[#021B49]">
             Book a Demo
-          </h2>
+          </DialogTitle>
 
-          <p className="mx-auto mt-1 max-w-[340px] text-center text-xs leading-[1.6] text-slate-600">
+          <DialogDescription className="mx-auto mt-1 max-w-[340px] text-center text-xs leading-[1.6] text-slate-600">
             See how RateUp turns WhatsApp into your loyalty engine. We'll reach out to schedule a
             quick walkthrough.
-          </p>
+          </DialogDescription>
 
-          <form className="mt-2 flex flex-col gap-4" onSubmit={handleSubmit}>
-            <div className="space-y-2">
-              <label className="text-sm font-bold">Name</label>
+          <form className="mt-2" onSubmit={handleSubmit}>
+            <FieldGroup className="gap-4">
+              <Field data-invalid={!!errors.name}>
+                <FieldLabel htmlFor="demo-name" className="font-bold">
+                  Name
+                </FieldLabel>
+                <Input
+                  id="demo-name"
+                  placeholder="Your full name"
+                  className="rounded-sm px-4"
+                  aria-invalid={!!errors.name}
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                />
+                {errors.name && <FieldError>{errors.name}</FieldError>}
+              </Field>
 
-              <Input
-                placeholder="Your full name"
-                className="rounded-sm px-4 text-sm"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-              />
-              {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
-            </div>
+              <Field data-invalid={!!errors.email}>
+                <FieldLabel htmlFor="demo-email" className="font-bold">
+                  Email
+                </FieldLabel>
+                <Input
+                  id="demo-email"
+                  type="email"
+                  placeholder="Email address"
+                  className="rounded-sm px-4"
+                  aria-invalid={!!errors.email}
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                />
+                {errors.email && <FieldError>{errors.email}</FieldError>}
+              </Field>
 
-            <div className="space-y-2">
-              <label className="text-sm font-bold">Email</label>
+              <Field data-invalid={!!errors.businessName}>
+                <FieldLabel htmlFor="demo-business" className="font-bold">
+                  Business Name
+                </FieldLabel>
+                <Input
+                  id="demo-business"
+                  placeholder="Your company"
+                  className="rounded-sm px-4"
+                  aria-invalid={!!errors.businessName}
+                  value={formData.businessName}
+                  onChange={(e) => handleInputChange("businessName", e.target.value)}
+                />
+                {errors.businessName && <FieldError>{errors.businessName}</FieldError>}
+              </Field>
 
-              <Input
-                placeholder="Email address"
-                className="rounded-sm px-4 text-sm"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-              />
-              {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
-            </div>
+              <Field data-invalid={!!errors.phone}>
+                <FieldLabel htmlFor="demo-phone" className="font-bold">
+                  Phone
+                </FieldLabel>
+                <PhoneInput
+                  id="demo-phone"
+                  defaultCountry="IN"
+                  international
+                  countryCallingCodeEditable={false}
+                  placeholder="Enter phone number"
+                  aria-invalid={!!errors.phone}
+                  value={formData.phone}
+                  onChange={(value) => handleInputChange("phone", value ?? "")}
+                />
+                {errors.phone && <FieldError>{errors.phone}</FieldError>}
+              </Field>
 
-            <div className="space-y-2">
-              <label className="text-sm font-bold">Business Name</label>
+              <Field>
+                <FieldLabel htmlFor="demo-message" className="font-bold">
+                  Message
+                  <span className="ml-1 text-xs font-medium text-muted-foreground">(Optional)</span>
+                </FieldLabel>
+                <Textarea
+                  id="demo-message"
+                  rows={3}
+                  placeholder="Tell us a bit about what you're looking for..."
+                  className="rounded-sm px-4"
+                  value={formData.message}
+                  onChange={(e) => handleInputChange("message", e.target.value)}
+                />
+              </Field>
 
-              <Input
-                placeholder="Your company"
-                className="rounded-sm px-4 text-sm"
-                value={formData.businessName}
-                onChange={(e) => handleInputChange("businessName", e.target.value)}
-              />
-              {errors.businessName && <p className="text-red-500 text-xs">{errors.businessName}</p>}
-            </div>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="inline-flex items-center gap-[9px] px-[18px] py-[10px] rounded-[9px] border border-transparent cursor-pointer text-[14px] font-bold text-white  bg-[linear-gradient(180deg,#3d8bee,#2360c8)]  shadow-[0_10px_30px_rgba(45,111,214,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]  transition-all  hover:-translate-y-[2px]  hover:shadow-[0_14px_38px_rgba(45,111,214,0.6),inset_0_1px_0_rgba(255,255,255,0.3)]  active:scale-[0.97]"
+              >
+                {isPending ? "Booking..." : "Book My Demo"}
+              </Button>
 
-            <div className="space-y-2">
-              <label className="text-sm font-bold">Phone</label>
-              <PhoneInput
-                id="demo-phone"
-                defaultCountry="IN"
-                international
-                countryCallingCodeEditable={false}
-                placeholder="Enter phone number"
-                className="w-full"
-                value={formData.phone}
-                onChange={(value) => handleInputChange("phone", value ?? "")}
-              />
-              {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-bold">
-                Message
-                <span className="ml-1 text-[12px] font-medium text-slate-400">(Optional)</span>
-              </label>
-
-              <Textarea
-                rows={3}
-                placeholder="Tell us a bit about what you're looking for..."
-                className="rounded-sm px-4 text-sm"
-                value={formData.message}
-                onChange={(e) => handleInputChange("message", e.target.value)}
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="inline-flex items-center gap-[9px] px-[18px] py-[10px] rounded-[9px] border border-transparent cursor-pointer text-[14px] font-bold text-white  bg-[linear-gradient(180deg,#3d8bee,#2360c8)]  shadow-[0_10px_30px_rgba(45,111,214,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]  transition-all  hover:-translate-y-[2px]  hover:shadow-[0_14px_38px_rgba(45,111,214,0.6),inset_0_1px_0_rgba(255,255,255,0.3)]  active:scale-[0.97]"
-            >
-              {isPending ? "Booking..." : "Book My Demo"}
-            </Button>
-
-            <p className="text-center text-[11px] text-slate-400">
-              No credit card required · We'll only use your details to schedule the demo.
-            </p>
+              <p className="text-center text-[11px] text-slate-400">
+                No credit card required · We'll only use your details to schedule the demo.
+              </p>
+            </FieldGroup>
           </form>
         </div>
       </DialogContent>

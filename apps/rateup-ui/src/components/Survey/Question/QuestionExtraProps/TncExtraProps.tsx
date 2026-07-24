@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useId, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 const TncExtraProps = ({ form }) => {
+  const uid = useId();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const { t: translations } = useTranslation();
 
@@ -32,8 +33,9 @@ const TncExtraProps = ({ form }) => {
   return (
     <FieldGroup>
       <Field>
-        <FieldLabel>{translations("Title")}</FieldLabel>
+        <FieldLabel htmlFor={`${uid}-field`}>{translations("Title")}</FieldLabel>
         <Input
+          id={`${uid}-field`}
           placeholder={translations("eg: I agree to")}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -41,8 +43,9 @@ const TncExtraProps = ({ form }) => {
       </Field>
 
       <Field>
-        <FieldLabel>{translations("URL Text")}</FieldLabel>
+        <FieldLabel htmlFor={`${uid}-field-2`}>{translations("URL Text")}</FieldLabel>
         <Input
+          id={`${uid}-field-2`}
           placeholder={translations("eg: terms and conditions")}
           value={urlTitle}
           onChange={(e) => setUrlTitle(e.target.value)}
@@ -50,8 +53,9 @@ const TncExtraProps = ({ form }) => {
       </Field>
 
       <Field>
-        <FieldLabel>{translations("Terms Content")}</FieldLabel>
+        <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Terms Content")}</FieldLabel>
         <Textarea
+          id={`${uid}-field-3`}
           placeholder={translations("Terms & Conditions ..........")}
           value={content}
           rows={4}

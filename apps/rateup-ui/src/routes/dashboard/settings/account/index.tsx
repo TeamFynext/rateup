@@ -1,14 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import { Building, Camera, Edit, Globe, Home, Mail, MapPin, Phone, Upload } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
 import "react-phone-number-input/style.css";
 
-import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import PhoneInputWithCountrySelect, { isValidPhoneNumber } from "react-phone-number-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import SelectR from "react-select";
 import countryList from "react-select-country-list";
 import { toast } from "sonner";
@@ -37,7 +36,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import {
   Select,
   SelectContent,
@@ -48,6 +47,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { UserRole } from "@/utils/enums/index.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -275,7 +275,7 @@ function Account() {
       </div>
       {/* User Profile Section */}
       {isProfileLoading ? (
-        <Card className="p-4 sm:p-6 shadow-sm border-gray-200 bg-linear-to-br from-white to-gray-50/50">
+        <Card className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
             {/* Avatar Skeleton */}
             <div className="relative">
@@ -300,7 +300,7 @@ function Account() {
           </div>
         </Card>
       ) : (
-        <Card className="p-4 sm:p-6 shadow-sm border-gray-200 bg-linear-to-br from-white to-gray-50/50">
+        <Card className="p-4 sm:p-6 shadow-sm ">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
             {/* Avatar Section */}
             <div className="relative group">
@@ -323,9 +323,7 @@ function Account() {
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0">
                 {/* Name + Info */}
                 <div className="flex flex-col gap-0.5">
-                  <p className="text-lg sm:text-xl font-medium text-gray-900">
-                    {profileData?.data?.data?.name}
-                  </p>
+                  <p className="text-lg sm:text-xl font-medium">{profileData?.data?.data?.name}</p>
                   <p className="text-xs sm:text-sm text-gray-600">
                     {profileData?.data?.data?.email} • {translations("Member since")}{" "}
                     {profileData?.data?.data?.createdAt
@@ -484,7 +482,7 @@ function Account() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <Label htmlFor="orgLogoUpload" className="cursor-pointer">
+                    <FieldLabel htmlFor="orgLogoUpload" className="cursor-pointer">
                       <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
                         <Upload className="w-4 h-4" />
                         <span className="text-sm">{translations("Upload Logo")}</span>
@@ -507,7 +505,7 @@ function Account() {
                           }
                         }}
                       />
-                    </Label>
+                    </FieldLabel>
                     <p className="text-xs text-muted-foreground mt-2">
                       {translations("JPG, PNG or GIF")}.{translations("Max size 2MB")}.
                     </p>
@@ -595,16 +593,17 @@ function Account() {
                         <FieldLabel htmlFor="businessPhone">
                           {translations("Business Phone")}
                         </FieldLabel>
-                        <PhoneInputWithCountrySelect
+                        <PhoneInput
                           id="businessPhone"
                           defaultCountry="IN"
                           international
                           countryCallingCodeEditable={false}
                           placeholder={translations("Phone Number")}
                           value={field.value || ""}
-                          onChange={(value) => field.onChange(value ?? "")}
+                          onChange={field.onChange}
                           onBlur={field.onBlur}
-                          className="rounded-md border border-gray-300 px-2 py-1 w-full"
+                          aria-invalid={fieldState.invalid}
+                          className="w-full"
                         />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
@@ -730,7 +729,7 @@ function Account() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <Label htmlFor="profileImageUpload" className="cursor-pointer">
+                  <FieldLabel htmlFor="profileImageUpload" className="cursor-pointer">
                     <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
                       <Upload className="w-4 h-4" />
                       <span className="text-sm">{translations("Upload Photo")}</span>
@@ -743,7 +742,7 @@ function Account() {
                       className="hidden"
                       onChange={handleImagePicker}
                     />
-                  </Label>
+                  </FieldLabel>
                   <p className="text-xs text-muted-foreground mt-2">
                     {translations("JPG, PNG or GIF")}. {translations("Max size 2MB")}.
                   </p>
@@ -827,16 +826,17 @@ function Account() {
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="profilePhone">{translations("Phone Number")}</FieldLabel>
-                    <PhoneInputWithCountrySelect
+                    <PhoneInput
                       id="profilePhone"
                       defaultCountry="IN"
                       international
                       countryCallingCodeEditable={false}
                       placeholder={translations("Phone Number")}
                       value={field.value || ""}
-                      onChange={(value) => field.onChange(value ?? "")}
+                      onChange={field.onChange}
                       onBlur={field.onBlur}
-                      className="rounded-md border border-gray-300 px-2 py-1 w-full"
+                      aria-invalid={fieldState.invalid}
+                      className="w-full"
                     />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>

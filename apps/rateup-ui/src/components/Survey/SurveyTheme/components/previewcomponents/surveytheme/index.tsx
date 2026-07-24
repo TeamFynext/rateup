@@ -76,7 +76,7 @@ function SurveyThemeView({
     componentToBeRendered = <ResponseSubmitted isSurveyPreview={true} />;
   } else {
     componentToBeRendered = (
-      <TakeSurveyLayoutWeb survey={surveyCopy} previewId={previewId}>
+      <TakeSurveyLayoutWeb survey={surveyCopy}>
         <TakeSurvey
           survey={surveyCopy}
           setIsReviewPage={setIsReviewPage}

@@ -12,6 +12,7 @@ import useContactStore from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
+import { Field, FieldLabel, FieldLegend, FieldSet, FieldTitle } from "@/components/ui/field.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 
@@ -161,48 +162,33 @@ export default function WaInboxChatExport() {
           name="date.type"
           control={control}
           render={({ field }) => (
-            <RadioGroup
-              value={field.value}
-              onValueChange={field.onChange}
-              className="flex flex-row gap-3 items-center"
-            >
-              <div className="flex items-center gap-1.5">
-                <RadioGroupItem value={DateType.BETWEEN} id="date-between" />
-                <label
-                  htmlFor="date-between"
-                  className="text-xs text-muted-foreground cursor-pointer select-none"
-                >
-                  {translations("Between")}
-                </label>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <RadioGroupItem value={DateType.BEFORE} id="date-before" />
-                <label
-                  htmlFor="date-before"
-                  className="text-xs text-muted-foreground cursor-pointer select-none"
-                >
-                  {translations("Before")}
-                </label>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <RadioGroupItem value={DateType.AFTER} id="date-after" />
-                <label
-                  htmlFor="date-after"
-                  className="text-xs text-muted-foreground cursor-pointer select-none"
-                >
-                  {translations("After")}
-                </label>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <RadioGroupItem value={DateType.ON} id="date-on" />
-                <label
-                  htmlFor="date-on"
-                  className="text-xs text-muted-foreground cursor-pointer select-none"
-                >
-                  {translations("On")}
-                </label>
-              </div>
-            </RadioGroup>
+            <FieldSet>
+              <FieldLegend variant="label" className="sr-only">
+                {translations("Date range")}
+              </FieldLegend>
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="flex flex-row gap-3 items-center"
+              >
+                {[
+                  { value: DateType.BETWEEN, id: "date-between", label: translations("Between") },
+                  { value: DateType.BEFORE, id: "date-before", label: translations("Before") },
+                  { value: DateType.AFTER, id: "date-after", label: translations("After") },
+                  { value: DateType.ON, id: "date-on", label: translations("On") },
+                ].map((option) => (
+                  <Field key={option.id} orientation="horizontal" className="w-auto gap-1.5">
+                    <RadioGroupItem value={option.value} id={option.id} />
+                    <FieldLabel
+                      htmlFor={option.id}
+                      className="text-xs font-normal text-muted-foreground"
+                    >
+                      {option.label}
+                    </FieldLabel>
+                  </Field>
+                ))}
+              </RadioGroup>
+            </FieldSet>
           )}
         />
 
@@ -280,19 +266,19 @@ export default function WaInboxChatExport() {
               name="repliesOnly"
               control={control}
               render={({ field }) => (
-                <div className="flex items-center gap-1.5">
+                <Field orientation="horizontal" className="w-auto gap-1.5">
                   <Checkbox
                     id="replies-only"
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />
-                  <label
+                  <FieldLabel
                     htmlFor="replies-only"
-                    className="text-xs text-muted-foreground cursor-pointer select-none"
+                    className="text-xs font-normal text-muted-foreground"
                   >
                     {translations("Replies Only")}
-                  </label>
-                </div>
+                  </FieldLabel>
+                </Field>
               )}
             />
             {selectedDateType !== "between" && selectedDateType !== "on" && (
@@ -300,19 +286,19 @@ export default function WaInboxChatExport() {
                 name="date.inclusive"
                 control={control}
                 render={({ field }) => (
-                  <div className="flex items-center gap-1.5">
+                  <Field orientation="horizontal" className="w-auto gap-1.5">
                     <Checkbox
                       id="date-inclusive"
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
-                    <label
+                    <FieldLabel
                       htmlFor="date-inclusive"
-                      className="text-xs text-muted-foreground cursor-pointer select-none"
+                      className="text-xs font-normal text-muted-foreground"
                     >
                       {translations("Inclusive")}
-                    </label>
-                  </div>
+                    </FieldLabel>
+                  </Field>
                 )}
               />
             )}
@@ -343,9 +329,9 @@ const CustomDatePicker = ({
   onChange?: (date: Date) => void;
 }) => {
   return (
-    <div className="flex flex-col gap-1 p-2 border rounded-lg bg-card max-w-[140px] flex-1">
-      <span className="capitalize text-[10px] font-semibold text-primary">{label}</span>
+    <Field className="gap-1 p-2 border rounded-lg bg-card max-w-[140px] flex-1">
+      <FieldTitle className="capitalize text-[10px] font-semibold text-primary">{label}</FieldTitle>
       <DatePicker value={value} onChange={onChange} className="h-7 w-full text-[11px]" />
-    </div>
+    </Field>
   );
 };

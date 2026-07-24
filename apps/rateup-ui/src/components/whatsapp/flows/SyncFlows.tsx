@@ -1,21 +1,7 @@
-import {
-  Button,
-  Checkbox,
-  Flex,
-  Group,
-  InputLabel,
-  Modal,
-  Progress,
-  Select,
-  Stack,
-  Table,
-  Text,
-} from "@mantine/core";
-import type { UseFormReturnType } from "@mantine/form";
-import { useForm } from "@mantine/form";
-import { useDisclosure, useListState } from "@mantine/hooks";
 import { IconChevronLeft, IconChevronRight, IconRefresh } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
+import type { UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -24,6 +10,27 @@ import {
   useUnsyncedFlows,
   useWaFlowJson,
 } from "@/backend/whatsapp/flow/flow.query";
+import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Progress } from "@/components/ui/progress.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table.tsx";
+import { useListState } from "@/hooks/use-list-state.ts";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { WaFlowFormElementType } from "@/types/enums.ts";
 import type { WaFlowFormChoice, WaFlowFormElement, WaFlowWa } from "@/types/global";
 import { getNestedProperty } from "@/utils/misc/obj.utils";
@@ -35,12 +42,11 @@ import {
   waFlowFormToQuestionTypeMaps,
 } from "@/utils/whatsapp/flow.utils";
 
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
 import { TeamSelector } from "../../input/TeamSelector.tsx";
 import RateupLoader from "../../Loaders/RateupLoader.tsx";
+import { Field, FieldLabel, FieldTitle } from "../../ui/field.tsx";
+import { Input } from "../../ui/input.tsx";
 import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
-
-import classes from "../templates/template.module.css";
 
 function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
   const [selectedFlows, handlers] = useListState([]);
@@ -58,28 +64,26 @@ function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
   }
 
   return (
-    <Modal
-      opened={opened}
-      onClose={handleClose}
-      title="Sync Flows"
-      h="80vh"
-      size={"xl"}
-      closeOnClickOutside={false}
-    >
-      {currentScreen === "selectFlows" ? (
-        <DisplayTemplates
-          selectedTemplates={selectedFlows}
-          unregisteredTemplates={unsyncedFlows}
-          handlers={handlers}
-          onImport={() => setCurrentScreen("configureFlows")}
-        />
-      ) : (
-        <ImportFlows
-          flows={selectedFlows.map((flowId) => unsyncedFlows.find((flow) => flow.id === flowId))}
-          handleClose={handleClose}
-        />
-      )}
-    </Modal>
+    <Dialog open={opened} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="h-[80vh] sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Sync Flows</DialogTitle>
+        </DialogHeader>
+        {currentScreen === "selectFlows" ? (
+          <DisplayTemplates
+            selectedTemplates={selectedFlows}
+            unregisteredTemplates={unsyncedFlows}
+            handlers={handlers}
+            onImport={() => setCurrentScreen("configureFlows")}
+          />
+        ) : (
+          <ImportFlows
+            flows={selectedFlows.map((flowId) => unsyncedFlows.find((flow) => flow.id === flowId))}
+            handleClose={handleClose}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -105,7 +109,7 @@ function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
         {
           waFlowIds: flows.map((flow) => flow.id),
           teamIds: [selectedTeam], // TODO: allow user to select multiple teams?
-          mapData: form.values.map,
+          mapData: form.getValues("map"),
         },
         {
           onSuccess: () => {
@@ -121,17 +125,18 @@ function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
     }
   }
 
-  const form = useForm({
-    initialValues: {
+  const form = useForm<{ map: Record<string, any> }>({
+    defaultValues: {
       map: {},
     },
   });
+  const values = form.watch();
 
-  const isOptionsValid = validateOptions({ form, path: `map.${flow.id}` });
+  const isOptionsValid = validateOptions({ values, path: `map.${flow.id}` });
   const isLastFlow = currentFlowIndex === flows.length - 1;
 
   return (
-    <Stack mah={"80vh"}>
+    <div className="flex flex-col">
       <Progress value={((currentFlowIndex + 1) / flows.length) * 100} />
       <ConfigureFlow flow={flow} form={form} handleNext={handleNext} key={flow.id} />
       <TeamSelector
@@ -139,32 +144,23 @@ function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
         onChange={setSelectedTeam}
         label={translations("Import Flows To")}
       />
-      <Group
-        justify="space-between"
+      <div
+        className="flex items-center justify-between pt-2.5"
         style={{
           position: "sticky",
           bottom: "0px",
         }}
-        pt="xs"
       >
-        <Button
-          variant="outline"
-          leftSection={<IconChevronLeft size={20} />}
-          disabled={currentFlowIndex === 0}
-          onClick={handlePrevious}
-        >
+        <Button variant="outline" disabled={currentFlowIndex === 0} onClick={handlePrevious}>
+          <IconChevronLeft size={20} />
           {translations("Previous")}
         </Button>
-        <Button
-          rightSection={isLastFlow ? undefined : <IconChevronRight size={20} />}
-          disabled={!isOptionsValid}
-          onClick={handleNext}
-          loading={importMutation.isPending}
-        >
+        <Button disabled={!isOptionsValid || importMutation.isPending} onClick={handleNext}>
           {isLastFlow ? translations("Import Flows") : translations("Next")}
+          {!isLastFlow && <IconChevronRight size={20} />}
         </Button>
-      </Group>
-    </Stack>
+      </div>
+    </div>
   );
 }
 
@@ -175,9 +171,10 @@ function ConfigureFlow({
   handleNext,
 }: {
   flow: WaFlowWa;
-  form: UseFormReturnType<any>;
+  form: UseFormReturn<{ map: Record<string, any> }>;
   handleNext: () => void;
 }) {
+  const uid = useId();
   const { data: flowJson, isLoading, error, isError } = useWaFlowJson(flow.id);
   const { t: translations } = useTranslation();
   useEffect(() => {
@@ -208,15 +205,17 @@ function ConfigureFlow({
   if (isLoading || !flowJson) return <RateupLoader />;
 
   const flowPath = `map.${flow.id}`;
-  if (!form.values.map[flow.id]) form.setFieldValue(flowPath, {});
+  if (!form.getValues("map")[flow.id]) setMapValue(form, flowPath, {});
 
   return (
     <>
-      <ContainedTextField label={translations("Flow Name")} value={flow.name} disabled />
-      <InputLabel>{translations("Assign valid question types")}</InputLabel>
-      <Stack
-        bg="whitesmoke"
-        p="md"
+      <Field>
+        <FieldLabel htmlFor={`${uid}-field`}>{translations("Flow Name")}</FieldLabel>
+        <Input id={`${uid}-field`} value={flow.name ?? ""} readOnly disabled />
+      </Field>
+      <FieldTitle>{translations("Assign valid question types")}</FieldTitle>
+      <div
+        className="flex flex-col rounded-lg bg-muted p-4"
         style={{
           borderRadius: "8px",
           height: "100%",
@@ -237,7 +236,8 @@ function ConfigureFlow({
                   const qPath = `${flowPath}.${fc.name}`;
 
                   // setting first question type as default
-                  if (!form.isTouched(qPath)) form.setFieldValue(qPath, { type: qTypes[0] });
+                  if (!getNestedProperty(form.watch(), qPath))
+                    setMapValue(form, qPath, { type: qTypes[0] });
 
                   // For opt in checkboxes we need to show which of the options go with 'checked' and 'unchecked' state
                   const choices =
@@ -255,70 +255,93 @@ function ConfigureFlow({
                       : (fc["data-source"] as Array<WaFlowFormChoice>);
 
                   return (
-                    <Stack key={fc.name}>
-                      <Group>
-                        <Group>
-                          <Text>{`${screenIndex + 1}.${elementIndex + 1})`}</Text>
-                          <Text>
+                    <div className="flex flex-col" key={fc.name}>
+                      <div className="flex items-center">
+                        <div className="flex items-center">
+                          <p>{`${screenIndex + 1}.${elementIndex + 1})`}</p>
+                          <p>
                             {JSON.stringify({
                               type: fc.type,
                               label: fc.label,
                             })}
-                          </Text>
-                        </Group>
+                          </p>
+                        </div>
                         <Select
-                          data={qTypes}
-                          clearable={false}
-                          value={getNestedProperty(form.values, qPath)?.type}
-                          onChange={(value) => {
-                            form.setFieldValue(qPath, {
+                          items={qTypes.map((t) => ({ label: t, value: t }))}
+                          value={getNestedProperty(form.watch(), qPath)?.type ?? ""}
+                          onValueChange={(value) => {
+                            setMapValue(form, qPath, {
                               type: value,
                             });
                           }}
                           disabled={qTypes.length === 1}
-                        />
-                      </Group>
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {qTypes.map((t) => (
+                              <SelectItem key={t} value={t}>
+                                {t}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
                       {
                         // Choice
                         choices ? (
-                          <Stack pl="64px">
+                          <div className="flex flex-col pl-16">
                             {choices.map((choice) => {
                               const choicePath = `${qPath}.${choice.id}`;
                               let qRes = [];
-                              const qType = getNestedProperty(form.values, qPath)?.type;
+                              const qType = getNestedProperty(form.watch(), qPath)?.type;
                               if (qType) {
                                 qRes = getQuestionResponses(qType);
-                                if (qRes?.length > 0 && !getNestedProperty(form.values, choicePath))
-                                  form.setFieldValue(choicePath, qRes[0]);
+                                if (
+                                  qRes?.length > 0 &&
+                                  !getNestedProperty(form.watch(), choicePath)
+                                )
+                                  setMapValue(form, choicePath, qRes[0]);
                               }
                               return (
-                                <Group key={choice.id}>
-                                  <Text>{choice.title}</Text>
+                                <div className="flex items-center" key={choice.id}>
+                                  <p>{choice.title}</p>
                                   {qTypesWithAmbiguousChoices.includes(qType) ? (
                                     <Select
-                                      clearable={false}
-                                      data={qRes}
-                                      value={getNestedProperty(form.values, choicePath)}
-                                      onChange={(value) => {
-                                        form.setFieldValue(choicePath, value);
+                                      items={qRes.map((r) => ({ label: r, value: r }))}
+                                      value={getNestedProperty(form.watch(), choicePath) ?? ""}
+                                      onValueChange={(value) => {
+                                        setMapValue(form, choicePath, value);
                                       }}
-                                    />
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {qRes.map((r) => (
+                                          <SelectItem key={r} value={r}>
+                                            {r}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   ) : null}
-                                </Group>
+                                </div>
                               );
                             })}
-                          </Stack>
+                          </div>
                         ) : null
                       }
-                    </Stack>
+                    </div>
                   );
                 }
               });
             }
           });
         })}
-      </Stack>
+      </div>
     </>
   );
 }
@@ -350,68 +373,53 @@ function DisplayTemplates({ selectedTemplates, unregisteredTemplates, handlers, 
   const allChecked = selectedTemplates.length === unregisteredTemplates?.length;
   const { t: translations } = useTranslation();
   return (
-    <Flex direction={"column"} h="80vh">
-      <Table.ScrollContainer
-        minWidth={"100%"}
-        style={{
-          position: "relative",
-          flexGrow: 1,
-        }}
-      >
+    <div className="flex h-[80vh] flex-col">
+      <div className="relative grow overflow-auto">
         <Table>
-          <Table.Thead
-            style={{
-              position: "sticky",
-              top: "0px",
-              backgroundColor: "white",
-              zIndex: 1,
-              boxShadow: "0px 0px 3px rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <Table.Tr>
-              <Table.Th>
+          <TableHeader className="sticky top-0 z-1 bg-background shadow-sm">
+            <TableRow>
+              <TableHead>
                 <Checkbox
                   checked={allChecked}
                   indeterminate={selectedTemplates.length > 0 && !allChecked}
-                  onChange={(event) => handleMasterSelect(event.currentTarget.checked)}
+                  onCheckedChange={(checked) => handleMasterSelect(!!checked)}
                 />
-              </Table.Th>
-              <Table.Th>{translations("Template")}</Table.Th>
-              <Table.Th>Status</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody w="100%">
+              </TableHead>
+              <TableHead>{translations("Template")}</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {unregisteredTemplates.map((template) => (
-              <Table.Tr key={template.id}>
-                <Table.Td>
+              <TableRow key={template.id}>
+                <TableCell>
                   <Checkbox
                     checked={selectedTemplates.includes(template.id)}
-                    onChange={(event) => handleSelect(event.currentTarget.checked, template.id)}
+                    onCheckedChange={(checked) => handleSelect(!!checked, template.id)}
                   />
-                </Table.Td>
-                <Table.Td>{template.name}</Table.Td>
-                <Table.Td>
+                </TableCell>
+                <TableCell>{template.name}</TableCell>
+                <TableCell>
                   <WaTemplateStatusBadge status={template.status} />
-                </Table.Td>
-              </Table.Tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </Table.Tbody>
+          </TableBody>
         </Table>
-      </Table.ScrollContainer>
-      <Group
-        justify="end"
+      </div>
+      <div
+        className="flex items-center justify-end pt-2.5"
         style={{
           position: "sticky",
           bottom: "0px",
         }}
-        pt="xs"
       >
         <Button variant="outline">{translations("Cancel")}</Button>
         <Button disabled={selectedTemplates.length === 0} onClick={onImport}>
           {translations("Import")}
         </Button>
-      </Group>
-    </Flex>
+      </div>
+    </div>
   );
 }
 
@@ -426,15 +434,8 @@ export function SyncFlowsButton({ disabled = false }) {
   const { t: translations } = useTranslation();
   return (
     <>
-      <Button
-        leftSection={
-          <IconRefresh className={isLoading && openModal ? classes.rotateInfinitely : ""} />
-        }
-        variant="outline"
-        onClick={open}
-        radius={"lg"}
-        disabled={disabled}
-      >
+      <Button variant="outline" onClick={open} disabled={disabled}>
+        <IconRefresh className={isLoading && openModal ? "animate-spin" : ""} />
         {translations("Sync")}
       </Button>
       <SyncTemplatesModal
@@ -444,4 +445,16 @@ export function SyncFlowsButton({ disabled = false }) {
       />
     </>
   );
+}
+
+/**
+ * Writes to a `map.<flowId>.<questionId>` path. These are built at runtime from flow data,
+ * so they cannot be expressed as a statically-known RHF `FieldPath`.
+ */
+function setMapValue(
+  form: UseFormReturn<{ map: Record<string, any> }>,
+  path: string,
+  value: unknown,
+) {
+  form.setValue(path as never, value as never, { shouldDirty: true });
 }

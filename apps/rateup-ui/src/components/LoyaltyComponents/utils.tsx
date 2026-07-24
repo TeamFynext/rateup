@@ -1,12 +1,12 @@
-import { Card, Group, Skeleton } from "@mantine/core";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 export const SelectSkeleton = () => {
   return (
-    <Card h={46} w={240} radius={"md"} withBorder p={0}>
-      <Group justify="space-between" w={"100%"} my={"auto"}>
-        <Skeleton w={100} h={20} ml={"xs"} />
-        <Skeleton w={20} h={20} mr={"xs"} />
-      </Group>
-    </Card>
+    <div className="h-11.5 w-60 rounded-md border border-border bg-card">
+      <div className="flex h-full w-full flex-row items-center justify-between">
+        <Skeleton className="ml-2 h-5 w-25" />
+        <Skeleton className="mr-2 h-5 w-5" />
+      </div>
+    </div>
   );
 };

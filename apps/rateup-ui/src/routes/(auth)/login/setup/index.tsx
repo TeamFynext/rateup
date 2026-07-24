@@ -490,7 +490,10 @@ function CollapsibleCard({
       >
         <CollapsibleTrigger
           render={
-            <div className="flex items-center gap-3.5 px-4 sm:px-5 cursor-pointer select-none" />
+            <button
+              type="button"
+              className="flex w-full items-center gap-3.5 px-4 sm:px-5 text-left cursor-pointer select-none"
+            />
           }
         >
           {/* Progress ring */}
@@ -509,8 +512,8 @@ function CollapsibleCard({
           </div>
           {/* Title */}
           <div className="flex-1">
-            <p className="text-sm font-bold">{section.title}</p>
-            <p className="text-xs text-gray-400">{section.sub}</p>
+            <span className="block text-sm font-bold">{section.title}</span>
+            <span className="block text-xs text-gray-400">{section.sub}</span>
           </div>
           {/* Count */}
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">

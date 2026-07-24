@@ -51,6 +51,8 @@ interface TicketPanelProps {
   groupId: string;
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
+  /** Placement, owned by the parent: inline column at xl, overlay sheet below it. */
+  className?: string;
 }
 
 const RESULT_LABELS: Record<ResolutionResult, string> = {
@@ -127,7 +129,12 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<TicketPanelProps>) {
+export default function TicketPanel({
+  contact,
+  isOpen,
+  setIsOpen,
+  className,
+}: Readonly<TicketPanelProps>) {
   const { t } = useTranslation();
   const { user } = useUser();
   const { updateContactById, setSelectedContact } = useContactsStore();
@@ -298,9 +305,14 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
   if (!isOpen) return null;
 
   return (
-    <div className="w-77 shrink-0 flex flex-col overflow-y-auto h-full border-l border-border bg-background">
+    <div
+      className={cn(
+        "flex h-full w-77 shrink-0 flex-col overflow-y-auto border-l border-border bg-background",
+        className,
+      )}
+    >
       {/* ---- Header ---- */}
-      <div className="flex items-center justify-between border-b border-border px-4.5 py-3.75">
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4.5">
         <div className="flex items-center gap-2 min-w-0">
           <Ticket className="size-4 shrink-0 text-primary" />
           <span className="text-[13px] font-extrabold truncate text-foreground">
@@ -661,12 +673,12 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
       </Section>
 
       {/* ---- Board ticket / spam (contact-level, so it toggles both ways) ---- */}
-      <div className="flex flex-col gap-2 px-4.5 pb-4.5">
-        <button
+      <div className="flex flex-col gap-2 p-4.5">
+        <Button
           type="button"
           onClick={() => toggleSpam(!contact?.isSpam)}
           disabled={spamMutation.isPending}
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[9px] text-[13px] font-semibold cursor-pointer text-muted-foreground border border-border"
+          variant={contact?.isSpam ? "outline" : "destructive"}
         >
           {contact?.isSpam ? (
             <ShieldOff className="size-3.75" />
@@ -674,7 +686,7 @@ export default function TicketPanel({ contact, isOpen, setIsOpen }: Readonly<Tic
             <ShieldAlert className="size-3.75" />
           )}
           {contact?.isSpam ? t("Not spam") : t("Mark contact as spam")}
-        </button>
+        </Button>
       </div>
     </div>
   );

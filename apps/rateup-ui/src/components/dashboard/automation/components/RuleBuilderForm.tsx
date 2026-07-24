@@ -24,7 +24,7 @@ import {
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldGroup, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import {
@@ -192,9 +192,9 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                 name="platform"
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    <FieldTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                       Platform
-                    </FieldLabel>
+                    </FieldTitle>
                     <div className="inline-flex gap-1 rounded-lg bg-muted/50 p-1">
                       {PLATFORMS.map((p) => (
                         <button
@@ -246,9 +246,9 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                 name="name"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    <FieldTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                       Rule Name
-                    </FieldLabel>
+                    </FieldTitle>
                     <Input
                       placeholder="e.g., Welcome message for new customers"
                       className="h-9"
@@ -269,9 +269,9 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
               name="whatsappSettingsPhoneIds"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                  <FieldTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                     Channels
-                  </FieldLabel>
+                  </FieldTitle>
                   <AccountSelector
                     multiple
                     value={field.value}
@@ -492,7 +492,7 @@ const TriggerPanel: React.FC<{
       name="triggerEvent"
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <FieldLabel>Trigger Event</FieldLabel>
+          <FieldTitle>Trigger Event</FieldTitle>
           <Select
             key={field.value}
             onValueChange={(value) => {
@@ -548,7 +548,7 @@ const TriggerPanel: React.FC<{
         name="options.shopifyEvent"
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel>Shopify Trigger Condition</FieldLabel>
+            <FieldTitle>Shopify Trigger Condition</FieldTitle>
             <Select onValueChange={field.onChange} value={field.value} items={shopifyEventData}>
               <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
                 <SelectValue placeholder="Select Shopify event" />
@@ -681,9 +681,9 @@ const ConditionsPanel: React.FC<{
                     name="options.instagramPostIds"
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>
+                        <FieldTitle>
                           Select {isInstagramCommentTrigger ? "posts / reels" : "stories"}
-                        </FieldLabel>
+                        </FieldTitle>
                         <MultiSelect
                           options={mediaOptions}
                           value={field.value ?? []}
@@ -729,7 +729,7 @@ const ConditionsPanel: React.FC<{
                   name={`options.shopifyProductIds.${index}`}
                   render={({ field, fieldState }) => (
                     <Field className="flex-1" data-invalid={fieldState.invalid}>
-                      <FieldLabel>Product {index + 1}</FieldLabel>
+                      <FieldTitle>Product {index + 1}</FieldTitle>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value ?? ""}

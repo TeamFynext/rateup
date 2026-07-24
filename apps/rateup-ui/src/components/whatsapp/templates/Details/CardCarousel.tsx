@@ -1,20 +1,4 @@
 import {
-  ActionIcon,
-  Card,
-  CardSection,
-  Group,
-  Image,
-  Menu,
-  MenuDropdown,
-  MenuItem,
-  MenuTarget,
-  Stack,
-  Text,
-  Textarea,
-  Tooltip,
-} from "@mantine/core";
-import type { UseFormReturnType } from "@mantine/form";
-import {
   IconAdjustments,
   IconAsterisk,
   IconBulb,
@@ -28,26 +12,46 @@ import {
   IconWorld,
   IconX,
 } from "@tabler/icons-react";
-import { useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import type { z } from "zod/v4";
 
-import { RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-import {
-  ContainedFileInput,
-  ContainedSelection,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { LengthTracker } from "@/components/input/LengthTracker.tsx";
-import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 import { WHATSAPP_BUTTON_TYPE, WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "@/utils/constants.ts";
 import { parseStringWithVariables } from "@/utils/whatsapp/templates.tsx";
 
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector.tsx";
 import { QuickReplyButton } from "../../MessageComponents.tsx";
-import type { templateSchema } from "../Schema/templateSchema.ts";
+import { PhoneNumberField } from "./PhoneNumberField.tsx";
+import {
+  appendItem,
+  errorAt,
+  inputProps,
+  registerField,
+  removeItem,
+  setValue,
+  type TemplateForm,
+} from "./template-form.ts";
 import { TextFormateToolBar } from "./TextFormateToolBar.tsx";
 
 const CardCarousel = ({
@@ -55,17 +59,18 @@ const CardCarousel = ({
   catalog,
   productRetailerIds,
 }: {
-  form: UseFormReturnType<z.infer<typeof templateSchema>>;
+  form: TemplateForm;
   catalog: any;
   productRetailerIds: string[];
 }) => {
+  const uid = useId();
   function handleMediaCarousel() {
-    if (form.values.mediaCarousel.length === 10) {
+    if (form.watch().mediaCarousel.length === 10) {
       toast.error("Only 10 cards are allowed");
       return;
     }
-    const firstCard = form.values.mediaCarousel[0];
-    form.insertListItem("mediaCarousel", {
+    const firstCard = form.watch().mediaCarousel[0];
+    appendItem(form, "mediaCarousel", {
       body: "",
       format: "IMAGE",
       header: null,
@@ -75,12 +80,12 @@ const CardCarousel = ({
   }
 
   function handleProductCarousel() {
-    if (form.values.productCarousel.length === 10) {
+    if (form.watch().productCarousel.length === 10) {
       toast.error("Only 10 cards are allowed");
       return;
     }
-    const firstCard = form.values.productCarousel[0];
-    form.insertListItem("productCarousel", {
+    const firstCard = form.watch().productCarousel[0];
+    appendItem(form, "productCarousel", {
       button: firstCard
         ? firstCard.button
         : {
@@ -96,11 +101,11 @@ const CardCarousel = ({
   const inputRefs = useRef<Array<HTMLTextAreaElement | null>>([]);
 
   const applyFormatting = (style, index) => {
-    const content = form.values.mediaCarousel[index].body;
+    const content = form.watch().mediaCarousel[index].body;
 
     if (style.startsWith("{{")) {
       const newContent = content + style;
-      form.setFieldValue(`mediaCarousel.${index}.body`, newContent);
+      setValue(form, `mediaCarousel.${index}.body`, newContent);
       return;
     }
     if (!selectedText) return;
@@ -110,13 +115,13 @@ const CardCarousel = ({
     }
     contentHistory.current[index].push(content);
     const newContent = content.replace(selectedText, formattedText);
-    form.setFieldValue(`mediaCarousel.${index}.body`, newContent);
+    setValue(form, `mediaCarousel.${index}.body`, newContent);
   };
 
   const undo = (index) => {
     if (contentHistory.current[index].length > 0) {
       const previousContent = contentHistory.current[index].pop();
-      form.setFieldValue(`mediaCarousel.${index}.body`, previousContent);
+      setValue(form, `mediaCarousel.${index}.body`, previousContent);
     }
   };
 
@@ -127,7 +132,7 @@ const CardCarousel = ({
     const end = input.selectionEnd;
     const text = input.value;
     const newText = text.substring(0, start) + value + text.substring(end);
-    form.setFieldValue(`mediaCarousel.${index}.body`, newText);
+    setValue(form, `mediaCarousel.${index}.body`, newText);
     const newCursorPosition = start + value.length;
     input.setSelectionRange(newCursorPosition, newCursorPosition);
     input.focus();
@@ -139,10 +144,10 @@ const CardCarousel = ({
   };
 
   function deleteMediaCard(index) {
-    form.removeListItem("mediaCarousel", index);
+    removeItem(form, "mediaCarousel", index);
   }
   function deleteProductCard(index) {
-    form.removeListItem("productCarousel", index);
+    removeItem(form, "productCarousel", index);
   }
   function handleButtonSelect(btn, index) {
     const newObject = { type: btn, text: "" };
@@ -150,15 +155,28 @@ const CardCarousel = ({
       newObject.type = "URL";
       newObject["example"] = [];
     }
-    const existing = form.values.mediaCarousel[index].buttons.find(
-      (b) => b.type === newObject.type,
-    );
+    const existing = form
+      .watch()
+      .mediaCarousel[index].buttons.find((b) => b.type === newObject.type);
     if (existing) {
       toast.error(`Only one button allowed for this type`);
       return;
     }
-    form.insertListItem(`mediaCarousel.${index}.buttons`, newObject);
+    appendItem(form, `mediaCarousel.${index}.buttons`, newObject);
   }
+
+  const headerFormatOptions = [
+    {
+      value: WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
+      label: WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
+    },
+    {
+      value: WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO,
+      label: WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO,
+    },
+  ];
+
+  const productItemOptions = productRetailerIds.map((id) => ({ value: id, label: id }));
 
   const productCarouselButtons = [
     {
@@ -189,379 +207,432 @@ const CardCarousel = ({
   }
 
   return (
-    <Stack pt={"sm"}>
-      <Menu position="top">
-        <MenuTarget>
-          <RateupButtonSecondary
-            w={"fit-content"}
-            radius={"md"}
-            rightIcon={<IconChevronDown size={15} />}
-            title="Add Carousel"
-            fw={600}
-            leftIcon={<IconPlus size={15} />}
+    <div className="flex flex-col gap-4 pt-4">
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="outline" className="w-fit font-semibold" />}>
+          <IconPlus size={15} />
+          Add Carousel
+          <IconChevronDown size={15} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <CustomTooltip
+            content={
+              <span>
+                {form.watch().productCarousel?.length
+                  ? "Remove prodcut card to add media card"
+                  : ""}
+              </span>
+            }
+            trigger={
+              <span>
+                <DropdownMenuItem
+                  onClick={handleMediaCarousel}
+                  disabled={form.watch().productCarousel?.length > 0}
+                >
+                  <IconCarouselHorizontal size={16} />
+                  Media Card
+                </DropdownMenuItem>
+              </span>
+            }
           />
-        </MenuTarget>
-        <MenuDropdown>
-          <Tooltip
-            label={
-              form.values.productCarousel?.length ? "Remove prodcut card to add media card" : ""
+          <CustomTooltip
+            content={
+              <span>
+                {form.watch().mediaCarousel.length > 0
+                  ? "Remove media card to add product card"
+                  : ""}
+              </span>
             }
-            disabled={!form.values.productCarousel?.length}
-          >
-            <MenuItem
-              leftSection={<IconCarouselHorizontal size={16} />}
-              onClick={handleMediaCarousel}
-              disabled={form.values.productCarousel?.length > 0}
-            >
-              Media Card
-            </MenuItem>
-          </Tooltip>
-          <Tooltip
-            disabled={!form.values.mediaCarousel?.length}
-            label={
-              form.values.mediaCarousel.length > 0 ? "Remove media card to add product card" : ""
+            trigger={
+              <span>
+                <DropdownMenuItem
+                  onClick={handleProductCarousel}
+                  disabled={form.watch().mediaCarousel?.length > 0}
+                >
+                  <IconShoppingCart size={16} />
+                  Catalog Product Card
+                </DropdownMenuItem>
+              </span>
             }
-          >
-            <MenuItem
-              leftSection={<IconShoppingCart size={16} />}
-              onClick={handleProductCarousel}
-              disabled={form.values.mediaCarousel?.length > 0}
-            >
-              Catalog Product Card
-            </MenuItem>
-          </Tooltip>
-        </MenuDropdown>
-      </Menu>
-      {form.values.mediaCarousel.length ? (
-        <Card bg={"var(--light-grey-color-2)"} p={"sm"} radius={"md"}>
-          <Group fz={14} gap={"xs"} wrap="nowrap" mb={"xs"}>
+          />
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {form.watch().mediaCarousel.length ? (
+        <Card className="gap-4 rounded-lg bg-muted p-4">
+          <div className="flex items-center gap-2.5 text-sm">
             <IconBulb size={16} />
             Use the same structure for all cards
-          </Group>
-          {form.values.mediaCarousel.map((card, index) => (
-            <Card withBorder mb={"sm"} radius={"md"} key={index}>
-              <CardSection withBorder p={4}>
-                <Group justify="space-between">
-                  <Text>Card {index + 1}</Text>
-                  <ActionIcon variant="subtle" onClick={() => deleteMediaCard(index)}>
+          </div>
+          {form.watch().mediaCarousel.map((card, index) => (
+            <Card className="gap-0 overflow-hidden rounded-lg border p-0" key={index}>
+              <div className="border-b px-3 py-2">
+                <div className="flex items-center justify-between">
+                  <p>Card {index + 1}</p>
+                  <Button variant="ghost" size="icon-sm" onClick={() => deleteMediaCard(index)}>
                     <IconTrash size={16} color="red" />
-                  </ActionIcon>
-                </Group>
-              </CardSection>
-              <Stack>
-                <Stack pos={"relative"} gap={0}>
-                  <Text fz={14} fw={500}>
-                    Body{" "}
-                    <sup>
-                      {" "}
-                      <IconAsterisk color="red" size={5} />
-                    </sup>
-                  </Text>
-                  <Text fz={13}>
-                    {translations(
-                      "Make your messages personal using variables and get more replies!",
-                    )}
-                  </Text>
-                  <TextFormateToolBar
-                    applyFormatting={(style) => applyFormatting(style, index)}
-                    insertValue={(value) => insertValue(value, index)}
-                    undo={() => undo(index)}
-                    dynamicVariables={parseStringWithVariables(card.body)}
-                  />
-                  <Textarea
-                    // ref={(el) => (inputRefs.current[index] = el)}
-                    ref={(el) => {
-                      inputRefs.current[index] = el;
-                    }}
-                    styles={{
-                      input: {
-                        borderRadius: "0px 0px 12px 12px",
-                        paddingRight: 90,
-                      },
-                      section: {
-                        width: "fit-content",
-                      },
-                    }}
-                    placeholder={translations("Enter the text")}
-                    autosize
-                    minRows={3}
-                    onSelect={handleSelect}
-                    {...form.getInputProps(`mediaCarousel.${index}.body`)}
-                    rightSection={
-                      <LengthTracker
-                        length={form?.values?.mediaCarousel[index].body?.length}
-                        maxValue={1024}
-                        atStart
+                  </Button>
+                </div>
+              </div>
+              <div className="flex flex-col gap-4 p-3">
+                <div className="flex flex-col gap-2">
+                  <div>
+                    <p className="text-sm font-medium">
+                      Body{" "}
+                      <sup>
+                        {" "}
+                        <IconAsterisk color="red" size={5} />
+                      </sup>
+                    </p>
+                    <p className="text-[13px] text-muted-foreground">
+                      {translations(
+                        "Make your messages personal using variables and get more replies!",
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex flex-col">
+                    <TextFormateToolBar
+                      applyFormatting={(style) => applyFormatting(style, index)}
+                      insertValue={(value) => insertValue(value, index)}
+                      undo={() => undo(index)}
+                      dynamicVariables={parseStringWithVariables(card.body)}
+                    />
+                    <div className="relative">
+                      <Textarea
+                        ref={(el) => {
+                          inputRefs.current[index] = el;
+                        }}
+                        className="field-sizing-content rounded-t-none rounded-b-xl pr-22.5"
+                        placeholder={translations("Enter the text")}
+                        rows={3}
+                        onSelect={handleSelect}
+                        aria-invalid={!!errorAt(form, `mediaCarousel.${index}.body`)}
+                        {...registerField(form, `mediaCarousel.${index}.body`)}
                       />
-                    }
-                  />
-                </Stack>
-                {parseStringWithVariables(card.body).map((data, _index) => (
-                  <ContainedTextField
-                    key={data}
-                    placeholder={`${translations("Enter the content for")} {{${data}}}`}
-                    {...form.getInputProps(`mediaCarousel.${index}.example.${_index}`)}
-                  />
-                ))}
-                <Group>
-                  <ContainedSelection
-                    data={[
-                      WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
-                      WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO,
-                    ]}
-                    {...form.getInputProps(`mediaCarousel.${index}.format`)}
-                    label={"Header Format"}
-                  />
-                  <ContainedFileInput
-                    {...form.getInputProps(`mediaCarousel.${index}.header`)}
-                    label={
-                      card?.header
+                      <div className="pointer-events-none absolute right-2 bottom-2">
+                        <LengthTracker
+                          length={form.watch()?.mediaCarousel[index].body?.length}
+                          maxValue={1024}
+                          atStart
+                        />
+                      </div>
+                    </div>
+                    {errorAt(form, `mediaCarousel.${index}.body`) && (
+                      <FieldError>{errorAt(form, `mediaCarousel.${index}.body`)}</FieldError>
+                    )}
+                  </div>
+                </div>
+                {parseStringWithVariables(card.body).length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {parseStringWithVariables(card.body).map((data, _index) => (
+                      <Input
+                        key={data}
+                        placeholder={`${translations("Enter the content for")} {{${data}}}`}
+                        {...registerField(form, `mediaCarousel.${index}.example.${_index}`)}
+                      />
+                    ))}
+                  </div>
+                )}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor={`${uid}-header-format-${index}`}>Header Format</FieldLabel>
+                    <Select
+                      items={headerFormatOptions}
+                      value={form.watch().mediaCarousel?.[index]?.format ?? ""}
+                      onValueChange={(value) =>
+                        setValue(form, `mediaCarousel.${index}.format`, value)
+                      }
+                    >
+                      <SelectTrigger id={`${uid}-header-format-${index}`} className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {headerFormatOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor={`${uid}-choose-${index}`}>
+                      {card?.header
                         ? `Update ${card.format.toLowerCase()}`
-                        : `Choose ${card.format.toLowerCase()}`
-                    }
-                    w={250}
-                    placeholder={"Select"}
-                  />
-                </Group>
+                        : `Choose ${card.format.toLowerCase()}`}
+                    </FieldLabel>
+                    <Input
+                      id={`${uid}-choose-${index}`}
+                      type="file"
+                      onChange={(event) =>
+                        setValue(
+                          form,
+                          `mediaCarousel.${index}.header`,
+                          event.target.files?.[0] ?? null,
+                        )
+                      }
+                    />
+                  </Field>
+                </div>
                 <CarouselButtonMenu
                   btnLength={card.buttons.length}
                   handleButtonSelect={(btn) => handleButtonSelect(btn, index)}
                 />
                 {card.buttons.map((btn, btnIndex) => (
-                  <Group
-                    bg={"var(--light-grey-color-4)"}
-                    p={"xs"}
+                  <div
+                    className="flex flex-wrap items-end gap-3 rounded-lg bg-background p-3"
                     key={`${btn.type}_${btnIndex}`}
-                    style={{ borderRadius: "5px" }}
                   >
-                    <ContainedTextField
-                      value={getButtonAction(
-                        btn.example ? WHATSAPP_BUTTON_TYPE.WEBSURVEY : btn.type,
-                      )}
-                      readOnly
-                      label={"Button Type"}
-                    />
-                    <ContainedTextField
-                      label={"Button Text"}
-                      {...form.getInputProps(`mediaCarousel.${index}.buttons.${btnIndex}.text`)}
-                    />
-                    {btn.type === WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER ? (
-                      <PhoneInputWithCountry
-                        label={"Phone Number"}
-                        {...form.getInputProps(
-                          `mediaCarousel.${index}.buttons.${btnIndex}.phone_number`,
+                    <Field className="min-w-56 flex-1">
+                      <FieldLabel htmlFor={`${uid}-button-type-${index}`}>Button Type</FieldLabel>
+                      <Input
+                        id={`${uid}-button-type-${index}`}
+                        value={getButtonAction(
+                          btn.example ? WHATSAPP_BUTTON_TYPE.WEBSURVEY : btn.type,
                         )}
+                        readOnly
+                      />
+                    </Field>
+                    <Field className="min-w-56 flex-1">
+                      <FieldLabel htmlFor={`${uid}-button-text-${index}`}>Button Text</FieldLabel>
+                      <Input
+                        id={`${uid}-button-text-${index}`}
+                        {...registerField(form, `mediaCarousel.${index}.buttons.${btnIndex}.text`)}
+                      />
+                    </Field>
+                    {btn.type === WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER ? (
+                      <PhoneNumberField
+                        form={form}
+                        path={`mediaCarousel.${index}.buttons.${btnIndex}.phone_number`}
                       />
                     ) : btn.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE && btn.example ? (
                       <WebsurveySelector
                         onlyPublished
                         searchable
-                        label={
-                          <Text fz={14} fw={500}>
-                            {translations("Web Survey")}
-                          </Text>
-                        }
-                        comboboxProps={{ position: "top" }}
+                        label={<p className="text-sm font-medium">{translations("Web Survey")}</p>}
                         form={form}
                         index={btnIndex}
                         carousel={`mediaCarousel.${index}.buttons.${btnIndex}`}
                       />
                     ) : btn.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE ? (
-                      <ContainedTextField
-                        label={"Url"}
-                        {...form.getInputProps(`mediaCarousel.${index}.buttons.${btnIndex}.url`)}
-                      />
+                      <Field className="min-w-56 flex-1">
+                        <FieldLabel htmlFor={`${uid}-url-${index}`}>Url</FieldLabel>
+                        <Input
+                          id={`${uid}-url-${index}`}
+                          {...registerField(form, `mediaCarousel.${index}.buttons.${btnIndex}.url`)}
+                        />
+                      </Field>
                     ) : null}
-                    <ActionIcon
-                      variant="subtle"
-                      mt={24}
-                      onClick={() =>
-                        form.removeListItem(`mediaCarousel.${index}.buttons`, btnIndex)
-                      }
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="shrink-0"
+                      onClick={() => removeItem(form, `mediaCarousel.${index}.buttons`, btnIndex)}
                     >
                       <IconX size={17} />
-                    </ActionIcon>
-                  </Group>
+                    </Button>
+                  </div>
                 ))}
-              </Stack>
+              </div>
             </Card>
           ))}
         </Card>
       ) : null}
-      {form.values.productCarousel.length ? (
-        <Card bg={"var(--light-grey-color-2)"} p={"sm"} radius={"md"}>
+      {form.watch().productCarousel.length ? (
+        <Card className="gap-4 rounded-lg bg-muted p-4">
           <AccountSelector
             label={"Select catalog linked account"}
-            {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
+            {...inputProps(form, `defaultValues.whatsappSettingsPhoneId`)}
           />
-          {form.values.defaultValues.whatsappSettingsPhoneId.length && !catalog && (
-            <Text size="xs" c="red">
-              No catalogs are linked to selected account
-            </Text>
+          {form.watch().defaultValues.whatsappSettingsPhoneId.length && !catalog && (
+            <p className="text-xs text-destructive">No catalogs are linked to selected account</p>
           )}
-          <Group fz={14} gap={"xs"} wrap="nowrap" mb={"xs"} mt={"lg"}>
+          <div className="flex items-center gap-2.5 text-sm">
             <IconBulb size={16} />
             Use the same structure for all cards
-          </Group>
-          {form.values.productCarousel.map((card, index) => (
-            <Card withBorder mb={"sm"} radius={"md"} key={index}>
-              <CardSection withBorder p={4}>
-                <Group justify="space-between">
-                  <Text>Card {index + 1}</Text>
-                  <ActionIcon variant="subtle" onClick={() => deleteProductCard(index)}>
+          </div>
+          {form.watch().productCarousel.map((card, index) => (
+            <Card className="gap-0 overflow-hidden rounded-lg border p-0" key={index}>
+              <div className="border-b px-3 py-2">
+                <div className="flex items-center justify-between">
+                  <p>Card {index + 1}</p>
+                  <Button variant="ghost" size="icon-sm" onClick={() => deleteProductCard(index)}>
                     <IconTrash size={16} color="red" />
-                  </ActionIcon>
-                </Group>
-              </CardSection>
-              <Group p={"xs"}>
-                <ContainedSelection
-                  data={productCarouselButtons}
-                  {...form.getInputProps(`productCarousel.${index}.button.type`)}
-                  label={
-                    <Text fz={14} fw={500}>
-                      {translations("Type of action")}
-                    </Text>
-                  }
-                  placeholder="Select a action"
-                  onChange={(value, _option) => {
-                    const spmBtn = value === WHATSAPP_BUTTON_TYPE.SPM;
-                    form.setFieldValue(`productCarousel.${index}.button`, {
-                      type: value === WHATSAPP_BUTTON_TYPE.WEBSURVEY ? "URL" : value,
-                      text: spmBtn ? "View" : "",
-                      ...(!spmBtn
-                        ? {
-                            url: "",
-                            ...(value === WHATSAPP_BUTTON_TYPE.WEBSURVEY
-                              ? {
-                                  example: [],
-                                }
-                              : {}),
-                          }
-                        : {}),
-                    });
-                  }}
-                />
-                <ContainedTextField
-                  {...form.getInputProps(`productCarousel.${index}.button.text`)}
-                  readOnly={card.button.type === WHATSAPP_BUTTON_TYPE.SPM}
-                  label={
-                    <Text fz={14} fw={500}>
-                      {translations("Button text")}
-                    </Text>
-                  }
-                />
-                {!card.button.example && (
-                  <ContainedTextField
-                    {...form.getInputProps(`productCarousel.${index}.button.url`)}
-                    display={
-                      card.button.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE ? "block" : "none"
-                    }
-                    label={
-                      <Text fz={14} fw={500}>
-                        {translations("Website Url")}
-                      </Text>
-                    }
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 p-3 sm:grid-cols-2 lg:grid-cols-3">
+                <Field>
+                  <FieldLabel htmlFor={`${uid}-field-${index}`}>
+                    <p className="text-sm font-medium">{translations("Type of action")}</p>
+                  </FieldLabel>
+                  <Select
+                    items={productCarouselButtons}
+                    value={form.watch().productCarousel?.[index]?.button?.type ?? ""}
+                    onValueChange={(value) => {
+                      const spmBtn = value === WHATSAPP_BUTTON_TYPE.SPM;
+                      setValue(form, `productCarousel.${index}.button`, {
+                        type: value === WHATSAPP_BUTTON_TYPE.WEBSURVEY ? "URL" : value,
+                        text: spmBtn ? "View" : "",
+                        ...(!spmBtn
+                          ? {
+                              url: "",
+                              ...(value === WHATSAPP_BUTTON_TYPE.WEBSURVEY
+                                ? {
+                                    example: [],
+                                  }
+                                : {}),
+                            }
+                          : {}),
+                      });
+                    }}
+                  >
+                    <SelectTrigger id={`${uid}-field-${index}`} className="w-full">
+                      <SelectValue placeholder="Select a action" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {productCarouselButtons.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor={`${uid}-field-2-${index}`}>
+                    <p className="text-sm font-medium">{translations("Button text")}</p>
+                  </FieldLabel>
+                  <Input
+                    id={`${uid}-field-2-${index}`}
+                    {...registerField(form, `productCarousel.${index}.button.text`)}
+                    readOnly={card.button.type === WHATSAPP_BUTTON_TYPE.SPM}
                   />
+                </Field>
+                {!card.button.example && (
+                  <Field
+                    className={
+                      card.button.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE ? "" : "hidden"
+                    }
+                  >
+                    <FieldLabel htmlFor={`${uid}-field-3-${index}`}>
+                      <p className="text-sm font-medium">{translations("Website Url")}</p>
+                    </FieldLabel>
+                    <Input
+                      id={`${uid}-field-3-${index}`}
+                      {...registerField(form, `productCarousel.${index}.button.url`)}
+                    />
+                  </Field>
                 )}
 
                 {card.button.example && (
                   <WebsurveySelector
                     onlyPublished
                     searchable
-                    label={
-                      <Text fz={14} fw={500}>
-                        {translations("Web Survey")}
-                      </Text>
-                    }
-                    comboboxProps={{ position: "top" }}
+                    label={<p className="text-sm font-medium">{translations("Web Survey")}</p>}
                     form={form}
                     index={0}
                     carousel={`productCarousel.${index}.button`}
                   />
                 )}
-                <ContainedSelection
-                  data={productRetailerIds}
-                  {...form.getInputProps(`productCarousel.${index}.product_retailer_id`)}
-                  label={
-                    <Text fz={14} fw={500}>
-                      Product Item
-                    </Text>
-                  }
-                  placeholder="Select a product"
-                />
-              </Group>
+                <Field>
+                  <FieldLabel htmlFor={`${uid}-product-item-${index}`}>
+                    <p className="text-sm font-medium">Product Item</p>
+                  </FieldLabel>
+                  <Select
+                    items={productItemOptions}
+                    value={form.watch().productCarousel?.[index]?.product_retailer_id ?? ""}
+                    onValueChange={(value) =>
+                      setValue(form, `productCarousel.${index}.product_retailer_id`, value)
+                    }
+                  >
+                    <SelectTrigger id={`${uid}-product-item-${index}`} className="w-full">
+                      <SelectValue placeholder="Select a product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {productItemOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
             </Card>
           ))}
         </Card>
       ) : null}
-    </Stack>
+    </div>
   );
 };
 
 const CarouselButtonMenu = ({ btnLength, handleButtonSelect }) => {
   return (
-    <Menu position="top">
-      <MenuTarget>
-        <RateupButtonSecondary
-          w={"fit-content"}
-          radius={"md"}
-          rightIcon={<IconChevronDown size={15} />}
-          title="Add Button"
-          fw={600}
-          leftIcon={<IconPlus size={15} />}
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="outline" className="w-fit font-semibold" />}>
+        <IconPlus size={15} />
+        Add Button
+        <IconChevronDown size={15} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <CustomTooltip
+          content={<span>{btnLength === 2 ? "Maximum 2 buttons allowed" : ""}</span>}
+          trigger={
+            <span>
+              <DropdownMenuItem
+                disabled={btnLength === 2}
+                onClick={() => handleButtonSelect(WHATSAPP_BUTTON_TYPE.QUICK_REPLY)}
+              >
+                <IconAdjustments size={16} />
+                Quick Reply Button
+              </DropdownMenuItem>
+            </span>
+          }
         />
-      </MenuTarget>
-      <MenuDropdown>
-        <Tooltip
-          label={btnLength === 2 ? "Maximum 2 buttons allowed" : ""}
-          disabled={btnLength < 2}
-        >
-          <Menu.Item
-            disabled={btnLength === 2}
-            leftSection={<IconAdjustments size={16} />}
-            onClick={() => handleButtonSelect(WHATSAPP_BUTTON_TYPE.QUICK_REPLY)}
-          >
-            Quick Reply Button
-          </Menu.Item>
-        </Tooltip>
-        <Tooltip
-          label={btnLength === 2 ? "Maximum 2 buttons allowed" : ""}
-          disabled={btnLength < 2}
-        >
-          <Menu.Item
-            disabled={btnLength === 2}
-            leftSection={<IconLink size={16} />}
-            onClick={() => handleButtonSelect(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)}
-          >
-            Visit website
-          </Menu.Item>
-        </Tooltip>
-        <Tooltip
-          label={btnLength === 2 ? "Maximum 2 buttons allowed" : ""}
-          disabled={btnLength < 2}
-        >
-          <Menu.Item
-            disabled={btnLength === 2}
-            leftSection={<IconWorld size={16} />}
-            onClick={() => handleButtonSelect(WHATSAPP_BUTTON_TYPE.WEBSURVEY)}
-          >
-            Rateup Web Survey
-          </Menu.Item>
-        </Tooltip>
-        <Tooltip
-          label={btnLength === 2 ? "Maximum 2 buttons allowed" : ""}
-          disabled={btnLength < 2}
-        >
-          <Menu.Item
-            disabled={btnLength === 2}
-            leftSection={<IconPhone size={16} />}
-            onClick={() => handleButtonSelect(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER)}
-          >
-            Call phone number
-          </Menu.Item>
-        </Tooltip>
-      </MenuDropdown>
-    </Menu>
+        <CustomTooltip
+          content={<span>{btnLength === 2 ? "Maximum 2 buttons allowed" : ""}</span>}
+          trigger={
+            <span>
+              <DropdownMenuItem
+                disabled={btnLength === 2}
+                onClick={() => handleButtonSelect(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)}
+              >
+                <IconLink size={16} />
+                Visit website
+              </DropdownMenuItem>
+            </span>
+          }
+        />
+        <CustomTooltip
+          content={<span>{btnLength === 2 ? "Maximum 2 buttons allowed" : ""}</span>}
+          trigger={
+            <span>
+              <DropdownMenuItem
+                disabled={btnLength === 2}
+                onClick={() => handleButtonSelect(WHATSAPP_BUTTON_TYPE.WEBSURVEY)}
+              >
+                <IconWorld size={16} />
+                Rateup Web Survey
+              </DropdownMenuItem>
+            </span>
+          }
+        />
+        <CustomTooltip
+          content={<span>{btnLength === 2 ? "Maximum 2 buttons allowed" : ""}</span>}
+          trigger={
+            <span>
+              <DropdownMenuItem
+                disabled={btnLength === 2}
+                onClick={() => handleButtonSelect(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER)}
+              >
+                <IconPhone size={16} />
+                Call phone number
+              </DropdownMenuItem>
+            </span>
+          }
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
@@ -569,13 +640,13 @@ export const ProductCardCarouselPreview = ({
   form,
   catalog,
 }: {
-  form: UseFormReturnType<z.infer<typeof templateSchema>>;
+  form: TemplateForm;
   catalog: any;
 }) => {
   const productCardData = useMemo(
     () =>
       catalog
-        ? form.values.productCarousel?.map((card) => {
+        ? form.watch().productCarousel?.map((card) => {
             const product = catalog?.products?.find(
               (p) => p?.retailer_id === card.product_retailer_id,
             );
@@ -587,24 +658,24 @@ export const ProductCardCarouselPreview = ({
             };
           })
         : [],
-    [catalog, form.values.productCarousel],
+    [catalog, form.watch().productCarousel],
   );
   if (!productCardData?.length) return;
   return (
     <>
       {productCardData.map((card, index) => (
-        <Stack gap={0} style={{ borderRadius: "10px" }} key={index} p={1} bg={"white"} w={"180px"}>
-          <Image src={card.image || null} h={100} w={"100%"} alt="image of the product" />
-          <Stack gap={1} bg={"var(--light-grey-color)"} p={"xs"}>
-            <Text fw={600} truncate>
-              {card.title}
-            </Text>
-            <Text c="dimmed" size="sm">
-              {card.price}
-            </Text>
-          </Stack>
+        <div className="flex w-45 flex-col gap-0 overflow-hidden rounded-xl bg-white" key={index}>
+          <img
+            src={card.image || undefined}
+            className="h-25 w-full object-cover"
+            alt="image of the product"
+          />
+          <div className="flex flex-col gap-px bg-(--light-grey-color) p-2.5">
+            <p className="truncate font-semibold">{card.title}</p>
+            <p className="text-sm text-muted-foreground">{card.price}</p>
+          </div>
           <QuickReplyButton text={card.button.text} type={card.button.type} />
-        </Stack>
+        </div>
       ))}
     </>
   );

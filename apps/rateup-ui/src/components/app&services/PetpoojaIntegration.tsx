@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -25,8 +25,8 @@ import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import { Field, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 
 const PETPOOJA_WEBHOOK_ENDPOINT = `${import.meta.env.VITE_API_URL}/api/public/integrations/petpooja`;
 
@@ -47,6 +47,7 @@ export function PetpoojaIntegration() {
 }
 
 function PetpoojaConfig({ integration, updateIntegration }) {
+  const uid = useId();
   const [restaurantId, setRestaurantId] = useState("");
   const [error, setError] = useState(null);
   const createIntegration = useCreateIntegrationMutation(IntegratedApps.petpooja);
@@ -91,9 +92,10 @@ function PetpoojaConfig({ integration, updateIntegration }) {
     <Card>
       <CardContent className="flex flex-col gap-4">
         <h4 className="text-lg font-semibold">Petpooja Config</h4>
-        <div>
-          <Label>Restaurant ID</Label>
+        <Field>
+          <FieldLabel htmlFor={`${uid}-restaurant-id`}>Restaurant ID</FieldLabel>
           <Input
+            id={`${uid}-restaurant-id`}
             value={restaurantId}
             onChange={(e) => {
               if (error) setError(null);
@@ -103,7 +105,7 @@ function PetpoojaConfig({ integration, updateIntegration }) {
             required
           />
           {error && <p className="text-sm text-red-500">{error}</p>}
-        </div>
+        </Field>
         <div className="flex items-center justify-between">
           <Button onClick={handleConfig}>
             {createIntegration.isPending ? "Saving..." : "Save"}
@@ -128,6 +130,7 @@ function PetpoojaConfig({ integration, updateIntegration }) {
 }
 
 function WaTemplateSendSettings({ integration, updateIntegration }) {
+  const uid = useId();
   const { t: translations } = useTranslation();
   const schema = z.object({
     teamId: z.string().trim().min(1, "Team is required"),
@@ -208,7 +211,6 @@ function WaTemplateSendSettings({ integration, updateIntegration }) {
           render={({ field, fieldState }) => (
             <WaTemplateSelector
               withAsterisk
-              searchable
               {...field}
               error={fieldState.error?.message}
               teamId={form.watch("teamId")}
@@ -219,13 +221,15 @@ function WaTemplateSendSettings({ integration, updateIntegration }) {
           name="timeDelay"
           control={form.control}
           render={({ field, fieldState }) => (
-            <div>
-              <Label>{translations("Time Delay (in minutes)")}</Label>
-              <Input {...field} type="number" />
+            <Field>
+              <FieldLabel htmlFor={`${uid}-field`}>
+                {translations("Time Delay (in minutes)")}
+              </FieldLabel>
+              <Input id={`${uid}-field`} {...field} type="number" />
               {fieldState.error?.message && (
                 <p className="text-sm text-red-500">{fieldState.error?.message}</p>
               )}
-            </div>
+            </Field>
           )}
         />
         <div className="flex items-center justify-between">

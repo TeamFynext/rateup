@@ -13,14 +13,14 @@ function PreviewDeviceSelector({ onChange, value, withLabel = true, className = 
         <ToggleGroupItem
           pressed={value === PreviewTypeEnum.DESKTOP}
           onPressedChange={() => onChange(PreviewTypeEnum.DESKTOP)}
-          className="aria-pressed:bg-[var(--tertiary-color)] aria-pressed:text-white"
+          className="aria-pressed:bg-primary aria-pressed:text-white"
         >
           <IconDeviceDesktop size={"1.25rem"} />
         </ToggleGroupItem>
         <ToggleGroupItem
           pressed={value === PreviewTypeEnum.MOBILE}
           onPressedChange={() => onChange(PreviewTypeEnum.MOBILE)}
-          className="aria-pressed:bg-[var(--tertiary-color)] aria-pressed:text-white"
+          className="aria-pressed:bg-primary aria-pressed:text-white"
         >
           <IconDeviceMobile size={"1.25rem"} />
         </ToggleGroupItem>

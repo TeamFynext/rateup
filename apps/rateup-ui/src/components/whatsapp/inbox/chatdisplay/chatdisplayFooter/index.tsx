@@ -1,6 +1,7 @@
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { EditorContent } from "@tiptap/react";
 import dayjs from "dayjs";
 import {
   Ban,
@@ -8,6 +9,7 @@ import {
   Send,
   ShieldAlert,
   StickyNote,
+  TypeOutline,
   UserCheck,
   UserPlus,
   Zap,
@@ -33,15 +35,30 @@ import useContactStore, {
   useMessagesStore,
 } from "@/components/dashboard/inbox/store.ts";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder.tsx";
-import WaTextEditor, {
+import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
+import {
   extractMentionUserIds,
   parseToWhatsAppFormat,
-} from "@/components/RichTextEditor/waTextEditor.tsx";
+} from "@/components/RichTextEditor/wa-editor/format.tsx";
+import { useWaEditor } from "@/components/RichTextEditor/wa-editor/use-wa-editor.ts";
+import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
+import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
+import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
+import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
+import { CodeToolbar } from "@/components/tiptap/toolbars/code.tsx";
+import { ItalicToolbar } from "@/components/tiptap/toolbars/italic.tsx";
+import { OrderedListToolbar } from "@/components/tiptap/toolbars/ordered-list.tsx";
+import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
+import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
+import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
+import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 import type { User } from "@/context/UserContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
@@ -85,7 +102,10 @@ function FooterCharacterCount({ body, max }: { body: { text?: { body?: unknown }
   const count = countEditorCharacters(body?.text?.body);
   const atLimit = count >= max;
   return (
-    <Badge variant={atLimit ? "destructive" : "outline"} className="tabular-nums">
+    <Badge
+      variant={atLimit ? "destructive" : "outline"}
+      className="px-1.5 py-0 text-[10px] whitespace-nowrap tabular-nums sm:text-xs"
+    >
       {count} / {max}
     </Badge>
   );
@@ -133,6 +153,14 @@ export default function WaInboxChatDisplayFooter({
     () => (orgMembers?.data ?? []).map((m) => ({ id: m.id, name: m.name })),
     [orgMembers],
   );
+
+  const privateNoteEditor = useWaEditor({
+    content: body.text.body,
+    placeholder: "Add a private note",
+    enableMention: true,
+    mentionUsers,
+    onChange: (value) => setBody({ ...body, text: { ...body.text, body: value } }),
+  });
 
   useEffect(() => {
     if (body.type === "location" && body.location) {
@@ -370,7 +398,7 @@ export default function WaInboxChatDisplayFooter({
         trigger={
           <Button
             size="icon-lg"
-            className="bg-green-600 hover:bg-green-700"
+            className="size-9 shrink-0 bg-green-600 hover:bg-green-700 sm:size-10"
             onClick={handleSendMessage}
             disabled={
               isSessionExpired ||
@@ -392,7 +420,7 @@ export default function WaInboxChatDisplayFooter({
         trigger={
           <Button
             size="icon-lg"
-            className="bg-amber-600 hover:bg-amber-700"
+            className="size-9 shrink-0 bg-amber-600 hover:bg-amber-700 sm:size-10"
             onClick={handleSendPrivateMessage}
             disabled={
               isSessionExpired ||
@@ -412,57 +440,55 @@ export default function WaInboxChatDisplayFooter({
     if (platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK)
       return null;
     return (
-      <div className="flex gap-2.5 items-start p-2 max-[1200px]:p-4 bg-background border-t border-border justify-start">
+      <div className="flex items-start justify-start gap-2.5 border-t border-border bg-background p-3 lg:p-2">
         <WaInboxFooterMenu sessionExpired={isSessionExpired} contact={contact} />
       </div>
     );
   }
   return (
-    <div>
+    // The composer is the one part of the thread that must never be compressed:
+    // in a column flex the body above it can give up space, this cannot.
+    <div className="shrink-0">
       <div className="flex flex-col gap-2">
         <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as any)}
-          className="p-2 bg-white dark:bg-transparent"
+          className="bg-white p-1.5 dark:bg-transparent sm:p-2"
         >
+          {/* One line, always: the tabs give up width (the note tab shortens its
+              label) so the character count never wraps to a row of its own. Every
+              row here is height the message list does not get. */}
           <div className="flex items-center justify-between gap-2">
-            <TabsList className="bg-muted p-1 rounded-lg">
+            <TabsList className="h-8! min-w-0 shrink rounded-lg bg-muted p-0.5 sm:h-9! sm:p-1">
               <TabsTrigger
                 value="message"
-                className="
-      flex items-center
-      data-[state=active]:bg-primary
-      data-[state=active]:text-white
-    "
+                className="flex items-center px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-white sm:text-sm"
               >
-                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+                <MessageSquare className="mr-1.5 size-3.5" />
                 Message
               </TabsTrigger>
 
               <TabsTrigger
                 value="private"
-                className="
-      flex items-center
-      data-[state=active]:bg-amber-600
-      data-[state=active]:text-white
-    "
+                className="flex items-center px-2 text-xs data-[state=active]:bg-amber-600 data-[state=active]:text-white sm:text-sm"
               >
-                <StickyNote className="w-3.5 h-3.5 mr-1.5" />
-                Private Note
+                <StickyNote className="mr-1.5 size-3.5" />
+                <span className="sm:hidden">Note</span>
+                <span className="hidden sm:inline">Private Note</span>
               </TabsTrigger>
             </TabsList>
 
             {activeTab === "message" && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex shrink-0 items-center gap-1">
                 <CustomTooltip
                   trigger={
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 w-7 p-0"
+                      className="size-7 p-0"
                       onClick={() => setQuickRepliesOpen((prev) => !prev)}
                     >
-                      <Zap className="w-4 h-4 text-cyan-600" />
+                      <Zap className="size-4 text-cyan-600" />
                     </Button>
                   }
                   content={<p>Quick Replies</p>}
@@ -502,7 +528,6 @@ export default function WaInboxChatDisplayFooter({
                 }}
                 content={body.text.body}
                 mih={67}
-                flex={1}
                 inbox={true}
                 customEnter={() => submiRef.current()}
                 editable={!isSessionExpired && !isRecording && !audioUrl && body.type === "text"}
@@ -518,22 +543,71 @@ export default function WaInboxChatDisplayFooter({
           </TabsContent>
 
           <TabsContent value="private">
-            <WaTextEditor
-              handleInputChange={(value) => {
-                setBody({ ...body, text: { ...body.text, body: value } });
-              }}
-              content={body.text.body}
-              mih={67}
-              flex={1}
-              privateMessage={true}
-              editable={true}
-              placeholder="Add a private note"
-              sendMessageButton={<SendPrivateMessageComponent />}
-              border={true}
-              hideCharacterCount={true}
-              enableMention={true}
-              mentionUsers={mentionUsers}
-            />
+            {/* Same shape as the message composer, so it gets the same treatment:
+                the editor column is allowed to shrink and the send button is not. */}
+            <div className="flex items-start gap-2 p-2 pb-0 sm:p-4 sm:pb-0">
+              <div className="min-w-0 flex-1">
+                <ToolbarProvider editor={privateNoteEditor}>
+                  <TooltipProvider>
+                    <EditorContent
+                      editor={privateNoteEditor}
+                      style={{
+                        backgroundColor: "var(--accent)",
+                        borderRadius: "5px",
+                      }}
+                      // Same as the message composer: one line to start on a
+                      // phone, the roomier fixed box once there is height to spare.
+                      className="max-h-40 min-h-9 overflow-y-auto rounded-xl sm:max-h-50 sm:min-h-16.75"
+                    />
+                    <div className="flex flex-wrap items-center p-2">
+                      <div className="mt-1 flex items-center">
+                        <InsertEmoji editor={privateNoteEditor} />
+                      </div>
+                      <Popover>
+                        <PopoverTrigger>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            title="Format Message"
+                          >
+                            <TypeOutline className="h-5 w-5" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full">
+                          <div className="flex flex-nowrap gap-1">
+                            <div className="flex items-center">
+                              <BoldToolbar />
+                              <ItalicToolbar />
+                              <StrikeThroughToolbar />
+                              <CodeToolbar />
+                            </div>
+                            <div className="flex items-center">
+                              <BlockquoteToolbar />
+                              <BulletListToolbar />
+                              <OrderedListToolbar />
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      <div className="flex items-center">
+                        <UndoToolbar />
+                        <RedoToolbar />
+                      </div>
+                      {/* Sits with the tools on a phone, as in the message tab —
+                          a send column beside the editor costs its width down the
+                          full height of the composer. */}
+                      <div className="ml-auto sm:hidden">
+                        <SendPrivateMessageComponent />
+                      </div>
+                    </div>
+                  </TooltipProvider>
+                </ToolbarProvider>
+              </div>
+              <div className="mt-5 hidden shrink-0 sm:block">
+                <SendPrivateMessageComponent />
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -656,7 +730,7 @@ export const WaInboxAssignUserFooter = ({
       // Shadcn Alert, overridden to a full-width warm footer bar (grid → flex,
       // rounded box → top-bordered bar) so it keeps the mockup's warm palette.
       // `flex!` because Alert's base `grid` would otherwise win the display cascade.
-      className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-6 py-2.5 dark:bg-amber-950/40"
+      className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-3 py-2.5 sm:px-6 dark:bg-amber-950/40"
     >
       <UserPlus className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
       <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
@@ -720,7 +794,7 @@ export const WaInboxBlockedContactFooter = ({ contact }) => {
   return (
     // Same banner shape as the assign footer, so the three footer states read as
     // one family rather than a black bar next to a redesigned one.
-    <Alert className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-6 py-2.5 dark:bg-amber-950/40">
+    <Alert className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-3 py-2.5 sm:px-6 dark:bg-amber-950/40">
       <Ban className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
       <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
         This contact has been blocked by you.
@@ -759,7 +833,7 @@ export const WaInboxSpamContactFooter = ({ contact }) => {
   }
 
   return (
-    <Alert className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-6 py-2.5 dark:bg-amber-950/40">
+    <Alert className="flex! shrink-0 flex-wrap items-center gap-3 rounded-none border-x-0 border-t border-b-0 border-border bg-amber-50 px-3 py-2.5 sm:px-6 dark:bg-amber-950/40">
       <ShieldAlert className="size-4 shrink-0 text-amber-700 dark:text-amber-500" />
       <AlertTitle className="flex-1 text-[13px] font-semibold text-amber-700 dark:text-amber-500">
         This contact is marked as spam.

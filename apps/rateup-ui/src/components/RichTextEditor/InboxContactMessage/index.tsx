@@ -1,33 +1,21 @@
-import {
-  Avatar,
-  Checkbox,
-  CloseButton,
-  Flex,
-  Group,
-  Indicator,
-  Popover,
-  ScrollArea,
-  SegmentedControl,
-  Stack,
-  Tabs,
-  Text,
-  Title,
-} from "@mantine/core";
-import { RichTextEditor } from "@mantine/tiptap";
-import { IconAddressBook } from "@tabler/icons-react";
+import { IconAddressBook, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
-import { RateupButtonPrimary, RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
 import ContactPagination from "@/components/Contacts/ContactPagination.tsx";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { FieldTitle } from "@/components/ui/field.tsx";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
-
-import classes from "./ContactSelect.module.css";
 
 const InboxContactsControl = () => {
   const [opened, setOpened] = useState(false);
@@ -39,21 +27,18 @@ const InboxContactsControl = () => {
     setOpened((o) => !o);
   }
   return (
-    <Popover position="top" opened={opened} onChange={setOpened}>
-      <Popover.Target>
-        <Indicator
-          inline
-          size={16}
-          position="top-end"
-          disabled={!body.contacts.contactIds.length && !body.contacts.groupIds.length}
-          label={`${body.contacts.contactIds.length} contacts, ${body.contacts.groupIds.length} groups selected`}
-        >
-          <RichTextEditor.Control title="Contacts" onClick={() => setOpened((o) => !o)}>
-            <IconAddressBook size={16} />
-          </RichTextEditor.Control>
-        </Indicator>
-      </Popover.Target>
-      <Popover.Dropdown>
+    <Popover open={opened} onOpenChange={setOpened}>
+      <PopoverTrigger render={<div className="relative inline-flex" />}>
+        {(body.contacts.contactIds.length > 0 || body.contacts.groupIds.length > 0) && (
+          <span className="absolute -top-2 -right-2 z-10 rounded-full bg-primary px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap text-primary-foreground">
+            {`${body.contacts.contactIds.length} contacts, ${body.contacts.groupIds.length} groups selected`}
+          </span>
+        )}
+        <Button variant="ghost" size="icon" title="Contacts" className="h-8 w-8 p-0 sm:h-9 sm:w-9">
+          <IconAddressBook size={16} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent side="top" className="w-auto">
         <SelectContacts
           submitbtnTitle={"Next"}
           onSubmit={handleSubmit}
@@ -64,7 +49,7 @@ const InboxContactsControl = () => {
           contactIds={body.contacts.contactIds}
           groupIds={body.contacts.groupIds}
         />
-      </Popover.Dropdown>
+      </PopoverContent>
     </Popover>
   );
 };
@@ -106,68 +91,96 @@ const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], g
   if (isLoading || isPending) return <RateupLoader />;
 
   return (
-    <Stack w={350}>
-      <Flex justify={"space-between"} gap={"md"}>
-        <SegmentedControl
-          data={Object.values(ContactMethods)}
-          value={selectedTab}
-          onChange={(value) => setSelectedTab(value)}
-          color={"var(--mantine-color-whatsapp-green-filled)"}
-          radius={"md"}
-          defaultValue={ContactMethods.Individual}
-          tt={"capitalize"}
-          miw={150}
-          size="xs"
+    <Tabs
+      value={selectedTab}
+      onValueChange={(value) => setSelectedTab(value as ContactMethods)}
+      className="flex flex-col gap-4 w-[350px]"
+    >
+      <div className="flex items-center justify-between gap-4">
+        <TabsList className="min-w-38">
+          {Object.values(ContactMethods).map((method) => (
+            <TabsTrigger key={method} value={method} className="capitalize">
+              {method}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button size="sm" onClick={handleSubmit}>
+            {submitbtnTitle}
+          </Button>
+        </div>
+      </div>
+      <InputGroup>
+        <InputGroupInput
+          placeholder={`Search ${selectedTab?.toLowerCase()}`}
+          value={searchText}
+          onChange={(e) => setSearchText(e.currentTarget.value)}
         />
-        <Group gap={4}>
-          <RateupButtonSecondary variant="light" title="Cancel" onClick={handleCancel} size="xs" />
-          <RateupButtonPrimary title={submitbtnTitle} onClick={handleSubmit} size="xs" />
-        </Group>
-      </Flex>
-      <ContainedTextField
-        placeholder={`Search ${selectedTab?.toLowerCase()}`}
-        defaultValue={searchText}
-        onChange={(e) => setSearchText(e.currentTarget.value)}
-        rightSection={
-          <CloseButton
+        <InputGroupAddon align="inline-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
             aria-label="Clear input"
             onClick={() => setSearchText("")}
-            display={searchText ? undefined : "none"}
-            mr={"xs"}
-          />
-        }
-        mah={40}
-      />
-      <Group justify="space-between" mb={4}>
-        <Title order={6}>
+            className={searchText ? "" : "hidden"}
+          >
+            <IconX size={16} />
+          </Button>
+        </InputGroupAddon>
+      </InputGroup>
+      <div className="flex items-center justify-between mb-1">
+        <h6 className="font-semibold text-sm">
           {translations("Select")} {selectedTab?.toLowerCase()} (Max 100 contacts/members)
-        </Title>
-      </Group>
-      <ScrollArea h={selectedTab === ContactMethods.Individual ? 280 : 342} pr={"sm"}>
-        <Tabs value={selectedTab} color="var(--tertiary-color)">
-          <Tabs.Panel value={ContactMethods.Individual}>
-            {contacts.users?.length > 0 ? (
-              <Checkbox.Group value={selectedContactIds} onChange={setSelectedContactIds}>
-                {contacts.users.map((contact) => {
-                  return <ContactSelectCard contact={contact} />;
-                })}
-              </Checkbox.Group>
-            ) : (
-              <Text>{translations("No contacts found")}</Text>
-            )}
-          </Tabs.Panel>
-          <Tabs.Panel value={ContactMethods.Group}>
-            {groups?.length > 0 ? (
-              <Checkbox.Group value={selectedGroupIds} onChange={setSelectedGroupIds}>
-                {groups.map((group) => (
-                  <ContactGroupSelectCard group={group} />
-                ))}
-              </Checkbox.Group>
-            ) : (
-              <Text>{translations("No group found")}</Text>
-            )}
-          </Tabs.Panel>
-        </Tabs>
+        </h6>
+      </div>
+      <ScrollArea
+        className="pr-3"
+        style={{ height: selectedTab === ContactMethods.Individual ? 280 : 342 }}
+      >
+        <TabsContent value={ContactMethods.Individual}>
+          {contacts.users?.length > 0 ? (
+            <div className="flex flex-col">
+              {contacts.users.map((contact) => (
+                <ContactSelectCard
+                  key={contact.id}
+                  contact={contact}
+                  checked={selectedContactIds.includes(contact.id)}
+                  onToggle={(next) =>
+                    setSelectedContactIds((prev) =>
+                      next ? [...prev, contact.id] : prev.filter((id) => id !== contact.id),
+                    )
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <p>{translations("No contacts found")}</p>
+          )}
+        </TabsContent>
+        <TabsContent value={ContactMethods.Group}>
+          {groups?.length > 0 ? (
+            <div className="flex flex-col">
+              {groups.map((group) => (
+                <ContactGroupSelectCard
+                  key={group.id}
+                  group={group}
+                  checked={selectedGroupIds.includes(group.id)}
+                  onToggle={(next) =>
+                    setSelectedGroupIds((prev) =>
+                      next ? [...prev, group.id] : prev.filter((id) => id !== group.id),
+                    )
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <p>{translations("No group found")}</p>
+          )}
+        </TabsContent>
       </ScrollArea>
       {selectedTab === ContactMethods.Individual && contacts?.users?.length > 0 && (
         <ContactPagination
@@ -176,57 +189,53 @@ const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], g
           totalPageCount={totalPageCount}
         />
       )}
-    </Stack>
+    </Tabs>
   );
 };
 
-const ContactSelectCard = ({ contact }) => {
-  if (!contact) return;
+const ContactSelectCard = ({ contact, checked, onToggle }) => {
+  if (!contact) return null;
   return (
-    <Checkbox.Card
-      value={contact.id}
-      key={contact.id}
-      bd={0}
-      className={classes["contact-card"]}
-      p={"xs"}
+    <FieldTitle
+      data-checked={checked || undefined}
+      className={"cursor-pointer rounded-md p-2 hover:bg-muted data-[checked]:bg-muted"}
     >
-      <Group wrap="nowrap" justify="space-between">
-        <Group gap={"sm"}>
-          <Avatar name={contact.name} />
-          <Stack gap={2}>
-            <Text fw={500} size="sm">
-              {contact.name}
-            </Text>
-            <Text size="xs" c={"dimmed"}>
-              {contact.phone}
-            </Text>
-          </Stack>
-        </Group>
-        <Checkbox.Indicator />
-      </Group>
-    </Checkbox.Card>
+      <div className="flex items-center justify-between flex-nowrap">
+        <div className="flex items-center gap-2">
+          <Avatar>
+            <AvatarFallback>{contact.name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col gap-0.5">
+            <span className="font-medium text-sm">{contact.name}</span>
+            <span className="text-xs text-muted-foreground">{contact.phone}</span>
+          </div>
+        </div>
+        <Checkbox checked={checked} onCheckedChange={onToggle} />
+      </div>
+    </FieldTitle>
   );
 };
 
-const ContactGroupSelectCard = ({ group }) => {
-  if (!group) return;
+const ContactGroupSelectCard = ({ group, checked, onToggle }) => {
+  if (!group) return null;
   return (
-    <Checkbox.Card value={group.id} key={group.id} bd={0}>
-      <Group wrap="nowrap" justify="space-between">
-        <Group gap={"sm"}>
-          <Avatar name={group.name} />
-          <Stack gap={2}>
-            <Text fw={500} size="sm">
-              {group.name}
-            </Text>
-            <Text size="xs" c={"dimmed"}>
-              {group._count.contacts} members
-            </Text>
-          </Stack>
-        </Group>
-        <Checkbox.Indicator />
-      </Group>
-    </Checkbox.Card>
+    <FieldTitle
+      data-checked={checked || undefined}
+      className={"cursor-pointer rounded-md p-2 hover:bg-muted data-[checked]:bg-muted"}
+    >
+      <div className="flex items-center justify-between flex-nowrap">
+        <div className="flex items-center gap-2">
+          <Avatar>
+            <AvatarFallback>{group.name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col gap-0.5">
+            <span className="font-medium text-sm">{group.name}</span>
+            <span className="text-xs text-muted-foreground">{group._count.contacts} members</span>
+          </div>
+        </div>
+        <Checkbox checked={checked} onCheckedChange={onToggle} />
+      </div>
+    </FieldTitle>
   );
 };
 

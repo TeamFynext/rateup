@@ -1,6 +1,7 @@
-import { Badge } from "@mantine/core";
 import { Node } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
+
+import { Badge } from "@/components/ui/badge.tsx";
 
 const MantineComponentExtension = ({ MantineComponent, componentName }) => {
   return Node.create({
@@ -41,7 +42,7 @@ const MantineComponentExtension = ({ MantineComponent, componentName }) => {
 const VariableComponent = ({ node }) => {
   return (
     <NodeViewWrapper as={"span"}>
-      <Badge variant="light" radius={"sm"}>
+      <Badge variant="system" className="rounded-sm">
         {node.attrs.label || "Default Label"}
       </Badge>
     </NodeViewWrapper>

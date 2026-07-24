@@ -73,6 +73,42 @@ export function ThemeProvider({
     setThemeState(next);
   };
 
+  // Global dark-mode shortcut (Cmd/Ctrl+Shift+D), registered here so it is available app-wide.
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key?.toLowerCase() !== "d") return;
+      if (
+        !(event.metaKey || event.ctrlKey) ||
+        !event.shiftKey ||
+        event.altKey ||
+        import.meta.env.VITE_EXPERIMENT !== "TRUE"
+      )
+        return;
+
+      // Never steal the keystroke from a text-entry target.
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName;
+      if (
+        tagName === "INPUT" ||
+        tagName === "TEXTAREA" ||
+        tagName === "SELECT" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      const prefersDark = globalThis.matchMedia("(prefers-color-scheme: dark)").matches;
+      const resolved = themeState === "system" ? (prefersDark ? "dark" : "light") : themeState;
+      const next: Theme = resolved === "dark" ? "light" : "dark";
+      localStorage.setItem(storageKey, next);
+      setThemeState(next);
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [themeState, storageKey]);
+
   return (
     <ThemeProviderContext value={{ theme: themeState, setTheme }}>
       <ScriptOnce>{getThemeScript(storageKey, defaultTheme)}</ScriptOnce>
@@ -85,4 +121,23 @@ export function useTheme() {
   const context = useContext(ThemeProviderContext);
   if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider");
   return context;
+}
+
+/**
+ * The theme actually in effect — `"system"` resolved against the OS preference.
+ * Use this when you need a concrete `"light" | "dark"`, e.g. to pick a class name.
+ */
+export function useResolvedTheme(): "light" | "dark" {
+  const { theme } = useTheme();
+  const [systemTheme, setSystemTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const media = globalThis.matchMedia("(prefers-color-scheme: dark)");
+    const sync = () => setSystemTheme(media.matches ? "dark" : "light");
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  return theme === "system" ? systemTheme : theme;
 }

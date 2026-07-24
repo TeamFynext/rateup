@@ -1,13 +1,14 @@
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Field, FieldLabel, FieldLegend, FieldSet, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import SliderCompatible from "@/components/ui/sliderCompatible.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
 function LogoTabpanel({ state, dispatch }) {
+  const uid = useId();
   const { qrBgColor, qrColor, logoSize, logoBorderRadius, isLogoEnabled } = state;
 
   const { t: translations } = useTranslation();
@@ -27,18 +28,19 @@ function LogoTabpanel({ state, dispatch }) {
   const displayLogoRadius = normalizedLogoRadius[0];
 
   return (
-    <div className="flex flex-col gap-4">
+    <Field>
       {/* Logo Upload Section */}
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium dark:text-gray-200">
+        <FieldLabel htmlFor={`${uid}-logo-optional`}>
           Logo (Optional)
           <Switch
             checked={isLogoEnabled}
             onCheckedChange={(checked) => dispatch({ type: "logo-image-switch", payload: checked })}
           />
-        </Label>
+        </FieldLabel>
         <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors bg-gray-50 dark:bg-[#1a1a1a] dark:border-gray-600 dark:hover:border-primary">
           <Input
+            id={`${uid}-logo-optional`}
             ref={fileInputRef}
             type="file"
             accept="image/png,image/jpeg,image/svg+xml"
@@ -75,7 +77,7 @@ function LogoTabpanel({ state, dispatch }) {
       {/* Logo Size Slider */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium dark:text-gray-200">Logo Size</Label>
+          <FieldTitle className="text-sm font-medium dark:text-gray-200">Logo Size</FieldTitle>
           <span className="text-sm font-medium text-primary dark:text-blue-400">
             {displayLogoSize}px
           </span>
@@ -95,7 +97,9 @@ function LogoTabpanel({ state, dispatch }) {
       {/* Logo Border Radius Slider */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium dark:text-gray-200">Logo Border Radius</Label>
+          <FieldTitle className="text-sm font-medium dark:text-gray-200">
+            Logo Border Radius
+          </FieldTitle>
           <span className="text-sm font-medium text-primary dark:text-blue-400">
             {displayLogoRadius}px
           </span>
@@ -116,8 +120,8 @@ function LogoTabpanel({ state, dispatch }) {
         />
       </div>
       {/* Background Section */}
-      <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium dark:text-gray-200">Background</Label>
+      <FieldSet>
+        <FieldLegend variant="label">Background</FieldLegend>
         <RadioGroup
           value={qrBgColor.startsWith("#") ? "color" : "transparent"}
           onValueChange={(value) => {
@@ -135,32 +139,39 @@ function LogoTabpanel({ state, dispatch }) {
           }}
         >
           <div className="flex gap-2">
-            <div className="flex-1 flex gap-2 items-center rounded-lg px-3 py-2 border dark:border-gray-700 cursor-pointer hover:border-primary dark:hover:border-primary transition-colors">
+            <Field
+              orientation="horizontal"
+              className="flex-1 rounded-lg px-3 py-2 border dark:border-gray-700 cursor-pointer hover:border-primary dark:hover:border-primary transition-colors"
+            >
               <RadioGroupItem
-                value="transparent"
                 id="transparent"
+                value="transparent"
+
                 className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
-              <Label
+              <FieldLabel
                 htmlFor="transparent"
                 className="text-sm cursor-pointer font-normal dark:text-gray-300"
               >
                 {translations("Transparent")}
-              </Label>
-            </div>
-            <div className="flex-1 flex gap-2 items-center rounded-lg px-3 py-2 border dark:border-gray-700 cursor-pointer hover:border-primary dark:hover:border-primary transition-colors">
+              </FieldLabel>
+            </Field>
+            <Field
+              orientation="horizontal"
+              className="flex-1 rounded-lg px-3 py-2 border dark:border-gray-700 cursor-pointer hover:border-primary dark:hover:border-primary transition-colors"
+            >
               <RadioGroupItem
                 value="color"
                 id="color"
                 className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
-              <Label
+              <FieldLabel
                 htmlFor="color"
                 className="text-sm cursor-pointer font-normal dark:text-gray-300"
               >
                 {translations("Custom Color")}
-              </Label>
-            </div>
+              </FieldLabel>
+            </Field>
           </div>
         </RadioGroup>
 
@@ -192,13 +203,19 @@ function LogoTabpanel({ state, dispatch }) {
             placeholder="#FFFFFF"
           />
         </div>
-      </div>
+      </FieldSet>
       {/* QR Code Color Section */}
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium dark:text-gray-200">QR Code Color</Label>
+        <FieldLabel
+          htmlFor={`${uid}-qr-code-color`}
+          className="text-sm font-medium dark:text-gray-200"
+        >
+          QR Code Color
+        </FieldLabel>
         <div className="flex gap-2">
           <div className="w-10 h-10 rounded border dark:border-gray-700 overflow-hidden">
             <Input
+              id={`${uid}-qr-code-color`}
               type="color"
               value={qrColor}
               onChange={(e) => {
@@ -223,7 +240,7 @@ function LogoTabpanel({ state, dispatch }) {
           />
         </div>
       </div>
-    </div>
+    </Field>
   );
 }
 

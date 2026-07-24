@@ -21,7 +21,6 @@ import {
   useToggleFavorite,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
 import useContactStore, {
   useContactsStore,
   useMessagesStore,
@@ -95,7 +94,6 @@ export default function WaInboxChatSelectCard({
 }: Readonly<WaInboxChatSelectCardProps>) {
   const lastMessage = contact?.lastMessage;
   const { t: translations } = useTranslation();
-  const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   const { user } = useUser();
   const qc = useQueryClient();
 
@@ -206,8 +204,9 @@ export default function WaInboxChatSelectCard({
           );
           return;
         }
+        // Selecting the row is all it takes to open the thread — stacked layouts
+        // swap panes off the selection itself.
         setSelectedContact(contact);
-        setIsChatDisplayOpen(true);
       }}
       className={cn(
         "group box-border flex max-w-full cursor-pointer gap-2.75 border-b border-l-[3px] border-b-border px-4 py-3.25 transition-colors",
@@ -313,10 +312,14 @@ export default function WaInboxChatSelectCard({
           )}
         >
           {lastMessage &&
-            returnMessageContentBasedOnParsedMessage(
-              parseWaMessage(lastMessage),
-              lastMessage.messageBody.exchangeProcess,
-            )}
+            (lastMessage.deletedAt ? (
+              <span className="italic">{translations("This message was deleted")}</span>
+            ) : (
+              returnMessageContentBasedOnParsedMessage(
+                parseWaMessage(lastMessage),
+                lastMessage.messageBody.exchangeProcess,
+              )
+            ))}
         </div>
 
         {/* Chip row */}

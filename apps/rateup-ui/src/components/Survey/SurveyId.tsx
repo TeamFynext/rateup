@@ -191,7 +191,7 @@ export default function SurveyID() {
     setNavOpened(false);
   }, []);
 
-  if (isLoading || isSurveyLoading || !activeTab) return <RateupLoader h={"80dvh"} />;
+  if (isLoading || isSurveyLoading || !activeTab) return <RateupLoader className="h-[80dvh]" />;
 
   if (error || surveyError) {
     return (

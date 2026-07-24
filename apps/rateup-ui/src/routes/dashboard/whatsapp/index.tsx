@@ -38,7 +38,7 @@ export const Route = createFileRoute("/dashboard/whatsapp/")({
       throw redirect({ to: "/login", replace: true });
     }
 
-    const teamIds = user.role === UserRole.SUPADM ? [] : (user.teams ?? []);
+    const teamIds = user?.role === UserRole.SUPADM ? [] : (user.teams ?? []);
 
     if (teamIds.length > 0) {
       const allowedFeatures = await getMemberAllowedFeatures(teamIds);

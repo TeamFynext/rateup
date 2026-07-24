@@ -1,25 +1,19 @@
-import {
-  Badge,
-  Button,
-  Divider,
-  FileButton,
-  Group,
-  Image,
-  NumberInput,
-  ScrollAreaAutosize,
-  Stack,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
 import { IconDeviceSdCard } from "@tabler/icons-react";
-import { useContext, useEffect, useState } from "react";
+import { useId, useContext, useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
 import { getWaFlowFormElementTypeLabel } from "@/utils/enums/index.ts";
 import { fileToBase64 } from "@/utils/misc/base64.utils";
 import { getFlowFormElementById, getFormObjFromScreenId } from "@/utils/whatsapp/flow.utils";
 
-import { RateupButtonPrimary } from "../../../../Button/RateupButtons.tsx";
 import { EditFlowContext } from "./EditFlowContext.ts";
 
 export function FlowImageDetailedView() {
@@ -27,8 +21,8 @@ export function FlowImageDetailedView() {
     useContext(EditFlowContext);
   const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
 
-  const form = useForm({
-    initialValues: {
+  const form = useForm<any>({
+    defaultValues: {
       type: selectedFormElement.type,
       id: selectedFormElement.id,
       "scale-type": "cover",
@@ -36,99 +30,79 @@ export function FlowImageDetailedView() {
       height: selectedFormElement.height || 200,
       width: selectedFormElement.width || 300,
     },
-    validate: {
-      src: (value) => (value?.length ? null : "Upload image to save"),
-    },
   });
   const { t: translations } = useTranslation();
-  // TODO: figure out why this can't be set in initialValues above
-  // init
+
+  // TODO: figure out why this can't be set in defaultValues above
   useEffect(() => {
-    if (!form.values.src) {
-      form.setFieldValue("src", selectedFormElement.src);
-      form.setFieldValue("height", selectedFormElement.height || 200);
-      form.setFieldValue("width", selectedFormElement.width || 300);
+    if (!form.getValues("src")) {
+      form.setValue("src", selectedFormElement.src);
+      form.setValue("height", selectedFormElement.height || 200);
+      form.setValue("width", selectedFormElement.width || 300);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormElement]);
 
   function handleChange(updatedData: any) {
-    form.setValues({
-      ...form.values,
-      ...updatedData,
-    });
+    Object.entries(updatedData).forEach(([key, value]) => form.setValue(key, value));
   }
   function handleSaveElement() {
-    const { hasErrors } = form.validate();
-    if (hasErrors) return toast.error(translations("Unable to Save Image"));
+    if (!form.getValues("src")?.length) return toast.error(translations("Unable to Save Image"));
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
     const index = flowForm.children.findIndex((fe) => fe === selectedFormElement);
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
-      formEl.children[index] = form.values as any;
+      formEl.children[index] = form.getValues() as any;
     });
   }
 
+  const height = form.watch("height");
+  const width = form.watch("width");
+  const src = form.watch("src");
+
   return (
-    <Stack
-      style={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-      }}
-      justify="space-between"
-    >
-      <ScrollAreaAutosize mah={"65dvh"}>
-        <Group justify="space-between">
-          <Badge variant="outline" size="lg" color="gray">
+    <div className="relative flex h-full flex-col justify-between">
+      <ScrollArea className="max-h-[65dvh]">
+        <div className="flex justify-between">
+          <Badge variant="outline" className="text-muted-foreground">
             {getWaFlowFormElementTypeLabel(selectedFormElement.type)}
           </Badge>
-        </Group>
-        <Group p={2} gap={2} pr={42}>
-          <Stack
-            style={{
-              height: "100%",
-              overflowY: "auto",
-              overflowX: "clip",
-              flex: 1,
-            }}
-            gap={0}
-            p={"sm"}
-          >
+        </div>
+        <div className="flex gap-0.5 p-0.5 pr-10">
+          <div className="flex flex-1 flex-col gap-2 overflow-x-clip overflow-y-auto p-3">
             <FlowImageElementEditor
               onChange={handleChange}
-              height={form.values.height}
-              width={form.values.width}
-              src={form.values.src}
+              height={height}
+              width={width}
+              src={src}
             />
-          </Stack>
-        </Group>
-      </ScrollAreaAutosize>
+          </div>
+        </div>
+      </ScrollArea>
 
-      <Stack>
-        <Divider />
-        <Group justify="flex-end" p="xs" px={"sm"}>
-          <RateupButtonPrimary
-            title={"Save"}
-            size="md"
-            leftIcon={<IconDeviceSdCard />}
-            onClick={handleSaveElement}
-          />
-        </Group>
-      </Stack>
-    </Stack>
+      <div className="flex flex-col gap-3">
+        <Separator />
+        <div className="flex items-center justify-end p-2 px-3">
+          <Button size="lg" onClick={handleSaveElement}>
+            <IconDeviceSdCard />
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
 // currently not allowing user to edit width
 function FlowImageElementEditor({ onChange, src, height, width }) {
+  const uid = useId();
   const [file, setFile] = useState<File | null>(null);
   const [base64, setBase64] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const { t: translations } = useTranslation();
   useEffect(() => {
-    onChange({
-      src: base64.split(",")[1],
-    });
+    if (base64) onChange({ src: base64.split(",")[1] });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [base64]);
 
   useEffect(() => {
@@ -142,42 +116,52 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
       const base64 = await fileToBase64(file);
       setBase64(base64);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file]);
 
   return (
-    <Stack>
-      <FileButton onChange={setFile} accept="image/png,image/jpeg,image/jpg">
-        {(props) => (
-          <Button {...props}>
-            {file ? translations("Change Image") : translations("Upload image")}
-          </Button>
-        )}
-      </FileButton>
+    <div className="flex flex-col gap-3">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/jpg"
+        className="hidden"
+        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+      />
+      <Button type="button" className="w-fit" onClick={() => inputRef.current?.click()}>
+        {file ? translations("Change Image") : translations("Upload image")}
+      </Button>
       {src && (
         <>
-          <Image
+          <img
             src={`data:image/jpg;base64,${src}`}
-            h={height}
-            w={width - 100}
-            mah={height}
+            style={{ height, width: width - 100, maxHeight: height }}
             alt="flow Image"
           />
-          <NumberInput
-            label={translations("Width")}
-            min={100}
-            max={400}
-            value={width}
-            onChange={(width) => onChange({ width })}
-          />
-          <NumberInput
-            label={translations("Height")}
-            min={100}
-            max={600}
-            value={height}
-            onChange={(height) => onChange({ height })}
-          />
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field`}>{translations("Width")}</FieldLabel>
+            <Input
+              id={`${uid}-field`}
+              type="number"
+              min={100}
+              max={400}
+              value={width}
+              onChange={(e) => onChange({ width: Number(e.target.value) })}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-2`}>{translations("Height")}</FieldLabel>
+            <Input
+              id={`${uid}-field-2`}
+              type="number"
+              min={100}
+              max={600}
+              value={height}
+              onChange={(e) => onChange({ height: Number(e.target.value) })}
+            />
+          </Field>
         </>
       )}
-    </Stack>
+    </div>
   );
 }

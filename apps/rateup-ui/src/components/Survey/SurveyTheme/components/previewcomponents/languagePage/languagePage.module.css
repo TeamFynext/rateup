@@ -47,10 +47,6 @@
   overflow: hidden;
 }
 
-.languages-list-radio-grp-container :global(.mantine-ScrollArea-viewport) {
-  padding-left: 10px;
-}
-
 .autosave-input-right-chevron-icon-container {
   position: relative;
 }

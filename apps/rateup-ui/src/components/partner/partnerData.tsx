@@ -21,8 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CountryDropdown } from "@/components/ui/country-dropdown";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Field, FieldLegend, FieldSet, FieldTitle } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -183,9 +183,9 @@ function FormField({
 }>) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+      <FieldTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
         {label}
-      </Label>
+      </FieldTitle>
       {children}
       {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
     </div>
@@ -379,7 +379,7 @@ function Step3({
   errors: ValidationErrors;
 }>) {
   return (
-    <div className="space-y-5">
+    <FieldSet className="gap-5">
       <SectionHeading>Partnership qualification</SectionHeading>
       <FormField label="Why do you want to partner with RateUp?" error={errors.whyPartner}>
         <Textarea
@@ -391,14 +391,15 @@ function Step3({
       </FormField>
 
       <FormField label="Services you currently offer" error={errors.services}>
-        <div
+        <Field
           className={cn(
             "grid grid-cols-2 gap-2 mt-0.5",
             errors.services ? "border border-red-500 rounded p-2" : "",
           )}
         >
           {SERVICES.map((s) => (
-            <label
+            <FieldLegend
+              variant="label"
               key={s}
               className={cn(
                 "flex items-center gap-2.5 rounded-md border px-3 py-2.5 cursor-pointer text-sm transition-colors",
@@ -413,9 +414,9 @@ function Step3({
                 className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <span className="leading-none">{s}</span>
-            </label>
+            </FieldLegend>
           ))}
-        </div>
+        </Field>
       </FormField>
 
       <FieldGroup className="grid-cols-2">
@@ -445,7 +446,7 @@ function Step3({
             className="flex gap-2 mt-0.5"
           >
             {["Yes", "No"].map((opt) => (
-              <label
+              <FieldTitle
                 key={opt}
                 className={cn(
                   "flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2.5 cursor-pointer text-sm transition-colors",
@@ -456,12 +457,12 @@ function Step3({
               >
                 <RadioGroupItem value={opt} className="sr-only" />
                 {opt}
-              </label>
+              </FieldTitle>
             ))}
           </RadioGroup>
         </FormField>
       </FieldGroup>
-    </div>
+    </FieldSet>
   );
 }
 
@@ -494,7 +495,7 @@ function Step4({
           )}
         >
           {apiOptions.map((opt) => (
-            <label
+            <FieldTitle
               key={opt}
               className={cn(
                 "flex items-center gap-2.5 rounded-md border px-3 py-2.5 cursor-pointer text-sm transition-colors",
@@ -505,7 +506,7 @@ function Step4({
             >
               <RadioGroupItem value={opt} />
               <span className="leading-tight">{opt}</span>
-            </label>
+            </FieldTitle>
           ))}
         </RadioGroup>
       </FormField>
@@ -523,7 +524,7 @@ function Step4({
           )}
         >
           {onboardOptions.map((opt) => (
-            <label
+            <FieldTitle
               key={opt}
               className={cn(
                 "flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2.5 cursor-pointer text-sm transition-colors",
@@ -534,7 +535,7 @@ function Step4({
             >
               <RadioGroupItem value={opt} className="sr-only" />
               {opt}
-            </label>
+            </FieldTitle>
           ))}
         </RadioGroup>
       </FormField>

@@ -1,18 +1,25 @@
 import { toBlob } from "html-to-image";
 import { Check, ChevronLeft, ChevronRight, Copy, Download, Tags } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useId, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetShareSettings } from "@/backend/surveyShareSettings/surveyShareSettings.query";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
-import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput.tsx";
 import Heading from "../../../styled/Heading/Heading.tsx";
 import { Badge } from "../../../ui/badge.tsx";
 import { Button } from "../../../ui/button.tsx";
 import { Checkbox } from "../../../ui/checkbox.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../../ui/dialog.tsx";
+import { Field, FieldLabel } from "../../../ui/field.tsx";
 import { Input } from "../../../ui/input.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../ui/select.tsx";
 import {
   Table,
   TableBody,
@@ -35,6 +42,7 @@ function TagManager({
   surveyId,
   shareUrl,
 }) {
+  const uid = useId();
   const [isAllQrDownloadProcessing, setIsAllQrDownloadProcessing] = useState(false);
   const [tagManagerOpened, setTagManagerOpened] = useState(false);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -159,15 +167,26 @@ function TagManager({
           <DialogHeader className="space-y-4">
             <div className="flex justify-between items-center">
               <Heading subtitle="URL Taggers" />
-              <ContainedSelection
-                disabled={!isPublished}
-                label={translations("Select Team")}
-                allowDeselect={false}
-                miw={150}
-                value={selectTeamDropdownValue}
-                data={teamSelectData}
-                onChange={onSelectTeamDropdownChange}
-              />
+              <Field className="min-w-38">
+                <FieldLabel htmlFor={`${uid}-field`}>{translations("Select Team")}</FieldLabel>
+                <Select
+                  items={teamSelectData}
+                  value={selectTeamDropdownValue ?? ""}
+                  onValueChange={onSelectTeamDropdownChange}
+                  disabled={!isPublished}
+                >
+                  <SelectTrigger id={`${uid}-field`} className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teamSelectData.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
             </div>
             <DialogTitle>{translations("Manage URL Tags")}</DialogTitle>
           </DialogHeader>

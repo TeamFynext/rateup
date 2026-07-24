@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import {
   Tooltip,
@@ -45,9 +45,9 @@ function SwitchRow({
         </TooltipTrigger>
         <TooltipContent>{tooltip}</TooltipContent>
       </Tooltip>
-      <Label htmlFor={id} className="cursor-pointer text-[13px] font-semibold">
+      <FieldLabel htmlFor={id} className="cursor-pointer text-[13px] font-semibold">
         {label}
-      </Label>
+      </FieldLabel>
       <div />
       <p className="text-xs text-muted-foreground">{description}</p>
     </div>

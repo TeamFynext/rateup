@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useDisclosure } from "@mantine/hooks";
 import { IconRefresh } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
@@ -38,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { IntegratedApps } from "@/types/enums.ts";
 
 // TODO: re add create and get all wa payment config list
@@ -121,11 +121,6 @@ export function WhatsappPayment() {
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center gap-2">
-        {/* <RateupButtonPrimary
-          title="New Configuration"
-          rightIcon={<IconPlus />}
-          onClick={open}
-        /> */}
         <Button
           variant="secondary"
           onClick={() => {

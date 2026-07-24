@@ -18,8 +18,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 
 function CreateLinktreeModal({ opened, onClose, mode, shortUrlId, initialName }) {
   const { t: translations } = useTranslation();
@@ -99,32 +99,25 @@ function CreateLinktreeModal({ opened, onClose, mode, shortUrlId, initialName })
               : form.handleSubmit(handleUpdateLinktreeFormSubmit)
           }
         >
-          <div className="px-6 py-5 space-y-4">
+          <FieldGroup className="px-6 py-5 gap-4">
             {/* Link Display Name */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="display-name"
-                className="text-sm font-semibold flex items-center gap-2"
-              >
-                <div className="w-5 h-5 bg-primary rounded-md flex items-center justify-center shadow-sm">
-                  <Edit className="w-3 h-3 text-white" />
+            <Field data-invalid={!!form.formState.errors.name}>
+              <FieldLabel htmlFor="display-name" className="font-semibold">
+                <div className="size-5 bg-primary rounded-md flex items-center justify-center shadow-sm">
+                  <Edit className="size-3 text-white" />
                 </div>
-                {translations("Access Link Name")} <span className="text-red-500">*</span>
-              </Label>
+                {translations("Access Link Name")} <span className="text-destructive">*</span>
+              </FieldLabel>
               <Input
                 id="display-name"
                 {...form.register("name")}
                 onClick={(e) => e.stopPropagation()}
+                aria-invalid={!!form.formState.errors.name}
                 placeholder="Summer Campaign Survey Link"
-                className="w-full h-11 shadow-sm"
+                className="h-11 shadow-sm"
               />
-
-              {form.formState.errors.name?.message && (
-                <p className="text-xs text-red-600 mt-1">
-                  {form.formState.errors.name.message?.toString()}
-                </p>
-              )}
-            </div>
+              <FieldError errors={[form.formState.errors.name]} />
+            </Field>
 
             {/* Info Box */}
             <div className="bg-linear-to-r from-blue-50 to-indigo-50 dark:from-rateup-darkblue dark:to-transparent border-l-4 border-primary rounded-r-lg p-3.5 flex gap-3">
@@ -138,7 +131,7 @@ function CreateLinktreeModal({ opened, onClose, mode, shortUrlId, initialName })
                 )}
               </p>
             </div>
-          </div>
+          </FieldGroup>
 
           {/* Footer */}
           <DialogFooter className="px-6 py-4 border-t gap-3 sm:gap-3">
@@ -152,12 +145,11 @@ function CreateLinktreeModal({ opened, onClose, mode, shortUrlId, initialName })
                   ? createLinktreeMutation.isPending
                   : updateLinktreeMutation.isPending
               }
-              className="bg-primary"
             >
               {mode === "create" ? (
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus data-icon="inline-start" />
               ) : (
-                <Edit className="w-4 h-4 mr-2" />
+                <Edit data-icon="inline-start" />
               )}
               {mode === "create" ? translations("Create Link") : translations("Rename Link")}
             </Button>

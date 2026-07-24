@@ -126,6 +126,33 @@ export async function getMessagesFromIDB(key: string) {
   return messages;
 }
 
+/**
+ * Patch one message wherever it is cached, without knowing which thread bucket
+ * holds it. The cache outlives the session — a message revoked while an agent
+ * had the tab closed, or while they were reading another ticket, would otherwise
+ * keep rendering its original text until the server happened to re-send that row
+ * in a fetched page. The scan is over a rare event, so a full cursor walk is fine.
+ *
+ * Matches on the WhatsApp id (`messageId`) and on the row id, because outbound
+ * rows are cached under whichever of the two they have.
+ */
+export async function patchMessageInIDB(messageId: string, data: Record<string, any>) {
+  if (!messageId) return;
+  const db = await getDB();
+  const tx = db.transaction(STORE_MESSAGES, "readwrite");
+  const store = tx.objectStore(STORE_MESSAGES);
+
+  let cursor = await store.openCursor();
+  while (cursor) {
+    const cached = cursor.value?.message;
+    if (cached && (cached.messageId === messageId || cached.id === messageId)) {
+      await cursor.update({ ...cursor.value, message: { ...cached, ...data } });
+    }
+    cursor = await cursor.continue();
+  }
+  await tx.done;
+}
+
 export async function clearAllMessagesFromIDB() {
   const db = await getDB();
   await db.clear(STORE_MESSAGES);

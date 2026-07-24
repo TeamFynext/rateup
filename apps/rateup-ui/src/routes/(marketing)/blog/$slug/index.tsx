@@ -3,6 +3,8 @@ import { Image } from "@unpic/react";
 
 import Layout from "@/components/blog/Layout.tsx";
 import SharePopover from "@/components/blog/ShareBlog.tsx";
+import ErrorPage from "@/components/error.tsx";
+import RoutePending from "@/components/Loaders/RoutePending.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { getMarkdownContent } from "@/lib/content.ts";
 import { getSinglePost } from "@/lib/posts.ts";
@@ -25,6 +27,8 @@ export const Route = createFileRoute("/(marketing)/blog/$slug/")({
     ],
   },
   component: Page,
+  pendingComponent: RoutePending,
+  errorComponent: ErrorPage,
   loader: async ({ params }) => {
     const { slug } = params;
     const post = await getSinglePost(slug);

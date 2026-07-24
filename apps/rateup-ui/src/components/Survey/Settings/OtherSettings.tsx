@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useContext, useEffect, useState } from "react";
+import { useId, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -21,6 +21,7 @@ import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 
 const OtherSettings = () => {
+  const uid = useId();
   const [resetOpen, setResetOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const params = useParams({ strict: false });
@@ -101,10 +102,11 @@ const OtherSettings = () => {
           </DialogHeader>
           <FieldGroup>
             <Field>
-              <FieldLabel>
+              <FieldLabel htmlFor={`${uid}-field`}>
                 {translations("Verify email")} <span className="text-destructive">*</span>
               </FieldLabel>
               <Input
+                id={`${uid}-field`}
                 placeholder={translations("Enter your login email")}
                 value={verifyEmail}
                 onChange={(e) => setVerifyEmail(e.target.value)}

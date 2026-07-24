@@ -3,7 +3,7 @@ import { IconBrandWhatsapp, IconUserPlus } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -12,8 +12,9 @@ import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.q
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { importMethod } from "@/utils/enums/index.ts";
 
 interface UnknownContactModalProps {
@@ -159,78 +160,82 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
 
   return (
     <div className="flex flex-col w-full gap-4">
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        {/* Full name */}
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="fullName">
-            {translations("Full Name")} <span className="text-red-500">*</span>
-          </Label>
-          <Input id="fullName" placeholder="Enter contact name" {...register("name")} />
-          {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <FieldGroup className="gap-4">
+          {/* Full name */}
+          <Field data-invalid={!!errors.name}>
+            <FieldLabel htmlFor="fullName">
+              {translations("Full Name")} <span className="text-destructive">*</span>
+            </FieldLabel>
+            <Input
+              id="fullName"
+              placeholder="Enter contact name"
+              aria-invalid={!!errors.name}
+              {...register("name")}
+            />
+            <FieldError errors={[errors.name]} />
+          </Field>
 
-        {/* two-column row: WhatsApp + Email */}
-        <div className="flex items-start justify-center gap-4">
-          <div className="flex flex-col gap-1 flex-1">
-            <Label htmlFor="whatsapp">
-              {translations("WhatsApp Number")} <span className="text-red-500">*</span>
-            </Label>
+          {/* two-column row: WhatsApp + Email */}
+          <div className="flex items-start justify-center gap-4">
+            <Field data-invalid={!!errors.phone} className="flex-1">
+              <FieldLabel htmlFor="whatsapp">
+                {translations("WhatsApp Number")} <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Controller
+                name="phone"
+                control={control}
+                render={({ field }) => (
+                  <PhoneInput
+                    id="whatsapp"
+                    international
+                    defaultCountry="IN"
+                    value={field.value}
+                    onChange={field.onChange}
+                    aria-invalid={!!errors.phone}
+                  />
+                )}
+              />
+              <FieldError errors={[errors.phone]} />
+            </Field>
+
+            <Field data-invalid={!!errors.email} className="flex-1">
+              <FieldLabel htmlFor="email">{translations("Email Address")}</FieldLabel>
+              <Input
+                id="email"
+                placeholder="contact@email.com"
+                aria-invalid={!!errors.email}
+                {...register("email")}
+              />
+              <FieldError errors={[errors.email]} />
+            </Field>
+          </div>
+
+          <Field>
+            <FieldTitle>{translations("Lifecycle Stage")}</FieldTitle>
             <Controller
-              name="phone"
+              name="lifecycleId"
               control={control}
               render={({ field }) => (
-                <PhoneInput
-                  id="whatsapp"
-                  international
-                  defaultCountry="IN"
+                <LifecycleSelector
                   value={field.value}
                   onChange={field.onChange}
-                  className="border border-input focus-within:ring-1 focus-within:ring-ring focus-within:border-ring rounded-md px-3 py-1.5 text-xs sm:text-sm bg-background [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full bg-white [&>input]:bg-white dark:bg-zinc-950 dark:[&>input]:bg-zinc-950"
+                  placeholder={"Enter lifecycle"}
+                  className="w-full"
                 />
               )}
             />
-            {errors.phone && (
-              <p className="text-xs text-destructive mt-1">{errors.phone.message}</p>
-            )}
+          </Field>
+
+          <div className="w-full flex items-center justify-end gap-4 mt-2">
+            <Button type="submit" disabled={loading || !isValid} className="min-w-[12vw]">
+              <IconBrandWhatsapp data-icon="inline-start" />
+              <span className="font-semibold">
+                {loading ? translations("Please wait..") : translations("Start Conversation")}
+              </span>
+            </Button>
           </div>
-
-          <div className="flex flex-col gap-1 flex-1">
-            <Label htmlFor="email">{translations("Email Address")}</Label>
-            <Input id="email" placeholder="contact@email.com" {...register("email")} />
-            {errors.email && (
-              <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="lifecycle">{translations("Lifecycle Stage")}</Label>
-          <Controller
-            name="lifecycleId"
-            control={control}
-            render={({ field }) => (
-              <LifecycleSelector
-                value={field.value}
-                onChange={field.onChange}
-                placeholder={"Enter lifecycle"}
-                className="w-full"
-              />
-            )}
-          />
-        </div>
-
-        <div className="w-full flex items-center justify-end gap-4 mt-2">
-          <Button
-            type="submit"
-            disabled={loading || !isValid}
-            className="bg-green-600 hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-1.5 min-w-[12vw] text-white"
-          >
-            <IconBrandWhatsapp color="white" size={28} />
-            <span className="font-semibold">
-              {loading ? translations("Please wait..") : translations("Start Conversation")}
-            </span>
-          </Button>
-        </div>
+        </FieldGroup>
       </form>
     </div>
   );

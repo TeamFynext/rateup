@@ -2,7 +2,7 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { Link, useParams } from "@tanstack/react-router";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { Button } from "@/components/ui/button.tsx";
+import { buttonVariants } from "@/components/ui/button.tsx";
 
 import { FacebookSettingsDetail } from "./components/facebook-settings-detail";
 import { InstagramSettingsDetail } from "./components/instagram-settings-detail";
@@ -24,10 +24,13 @@ export function ChannelDetailsPage() {
       <div className="space-y-4 rounded-xl border bg-background p-4">
         <div className="flex items-center justify-between border-b pb-3">
           <h3 className="text-lg font-semibold">Channel not found</h3>
-          <Button variant="outline" size="sm" render={<Link to="/dashboard/settings/channels" />}>
+          <Link
+            to="/dashboard/settings/channels"
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
             <IconArrowLeft className="mr-2 h-4 w-4" />
             Back to channels
-          </Button>
+          </Link>
         </div>
       </div>
     );
@@ -37,10 +40,13 @@ export function ChannelDetailsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl">Channel Details</h2>
-        <Button variant="outline" size="sm" render={<Link to="/dashboard/settings/channels" />}>
+        <Link
+          to="/dashboard/settings/channels"
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
           <IconArrowLeft className="mr-2 h-4 w-4" />
           Back to channels
-        </Button>
+        </Link>
       </div>
       {isWhatsapp && <WhatsAppSettingsDetail waSettings={waSettings} isLoading={isLoading} />}
       {isInstagram && <InstagramSettingsDetail waSettings={waSettings} isLoading={isLoading} />}

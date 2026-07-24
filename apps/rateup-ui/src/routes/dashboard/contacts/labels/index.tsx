@@ -17,8 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
 
@@ -143,7 +143,7 @@ function LabelsPage() {
                 setIsCreateModalOpen(true);
               }}
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus data-icon="inline-start" />
               Create Label
             </Button>
           </div>
@@ -171,9 +171,9 @@ function LabelsPage() {
             <DialogTitle>Create New Label</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate}>
-            <div className="space-y-4 py-4">
-              <div>
-                <Label htmlFor="name">Name *</Label>
+            <FieldGroup className="gap-4 py-4">
+              <Field>
+                <FieldLabel htmlFor="name">Name *</FieldLabel>
                 <Input
                   id="name"
                   value={formData.name}
@@ -181,26 +181,27 @@ function LabelsPage() {
                   placeholder="Enter label name"
                   required
                 />
-              </div>
-              <div>
-                <Label htmlFor="color">Color</Label>
-                <div className="flex items-center space-x-2">
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="color">Color</FieldLabel>
+                <div className="flex items-center gap-2">
                   <input
                     type="color"
                     id="color"
                     value={formData.color}
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    className="w-12 h-10 rounded border"
+                    className="h-10 w-12 rounded border"
                   />
                   <Input
+                    aria-label="Label color hex value"
                     value={formData.color}
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                     placeholder="#3b82f6"
                   />
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="description">Description</FieldLabel>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -208,8 +209,8 @@ function LabelsPage() {
                   placeholder="Optional description"
                   rows={3}
                 />
-              </div>
-            </div>
+              </Field>
+            </FieldGroup>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
                 Cancel
@@ -229,9 +230,9 @@ function LabelsPage() {
             <DialogTitle>Edit Label</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEdit}>
-            <div className="space-y-4 py-4">
-              <div>
-                <Label htmlFor="edit-name">Name *</Label>
+            <FieldGroup className="gap-4 py-4">
+              <Field>
+                <FieldLabel htmlFor="edit-name">Name *</FieldLabel>
                 <Input
                   id="edit-name"
                   value={formData.name}
@@ -239,26 +240,27 @@ function LabelsPage() {
                   placeholder="Enter label name"
                   required
                 />
-              </div>
-              <div>
-                <Label htmlFor="edit-color">Color</Label>
-                <div className="flex items-center space-x-2">
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="edit-color">Color</FieldLabel>
+                <div className="flex items-center gap-2">
                   <input
                     type="color"
                     id="edit-color"
                     value={formData.color}
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    className="w-12 h-10 rounded border"
+                    className="h-10 w-12 rounded border"
                   />
                   <Input
+                    aria-label="Label color hex value"
                     value={formData.color}
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                     placeholder="#3b82f6"
                   />
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="edit-description">Description</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="edit-description">Description</FieldLabel>
                 <Textarea
                   id="edit-description"
                   value={formData.description}
@@ -266,8 +268,8 @@ function LabelsPage() {
                   placeholder="Optional description"
                   rows={3}
                 />
-              </div>
-            </div>
+              </Field>
+            </FieldGroup>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
                 Cancel

@@ -1,12 +1,28 @@
+import { EditorContent } from "@tiptap/react";
 import { Loader2 } from "lucide-react";
+import { TypeOutline } from "lucide-react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
-import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
+import InsertEmoji from "@/components/RichTextEditor/InsertEmoji/index.tsx";
+import { WaTextCharacterCount } from "@/components/RichTextEditor/wa-editor/character-count.tsx";
+import { useWaEditor } from "@/components/RichTextEditor/wa-editor/use-wa-editor.ts";
+import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
+import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
+import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
+import { CodeToolbar } from "@/components/tiptap/toolbars/code.tsx";
+import { ItalicToolbar } from "@/components/tiptap/toolbars/italic.tsx";
+import { OrderedListToolbar } from "@/components/tiptap/toolbars/ordered-list.tsx";
+import { RedoToolbar } from "@/components/tiptap/toolbars/redo.tsx";
+import { StrikeThroughToolbar } from "@/components/tiptap/toolbars/strikethrough.tsx";
+import { ToolbarProvider } from "@/components/tiptap/toolbars/toolbar-provider.tsx";
+import { UndoToolbar } from "@/components/tiptap/toolbars/undo.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Field, FieldDescription, FieldError } from "@/components/ui/field.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 
 import { DEFAULT_JOIN_MESSAGE_TEMPLATE } from "./constants.ts";
 import type { BasicSettingsSchema } from "./schemas.ts";
@@ -30,6 +46,12 @@ export function ReferralMessageSettings({
     referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEMPLATE,
   );
   const editorContent = toEditorContent(normalizedTemplate);
+  const referralEditor = useWaEditor({
+    content: editorContent,
+    onChange: (value) => {
+      if (!disabled) form.setValue("referralMessageTemplate", value);
+    },
+  });
   const plainTextMessage = getPlainText(editorContent);
   const previewWithSamples = replacePreviewVariables(plainTextMessage);
   const hasContactNameVariable = plainTextMessage.includes("{{1}}");
@@ -46,7 +68,7 @@ export function ReferralMessageSettings({
             control={form.control}
             name="referralMessageTemplate"
             render={({ fieldState }) => (
-              <Field className="space-y-2" data-invalid={fieldState.invalid}>
+              <Field data-invalid={fieldState.invalid}>
                 <FieldDescription className="text-xs">
                   {t("Use variables")}: {"{{1}}"} {t("for contact name")},{"{{2}}"}{" "}
                   {t("for referral code")}. {t("Both are required and each can be used only once.")}
@@ -102,16 +124,61 @@ export function ReferralMessageSettings({
                   </Button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <WaTextEditor
-                    handleInputChange={(value) => {
-                      if (!disabled) {
-                        form.setValue("referralMessageTemplate", value);
-                      }
-                    }}
-                    content={editorContent}
-                    mah={250}
-                    mih={150}
-                  />
+                  <div className="flex-1">
+                    <ToolbarProvider editor={referralEditor}>
+                      <TooltipProvider>
+                        <EditorContent
+                          editor={referralEditor}
+                          style={{
+                            backgroundColor: "var(--accent)",
+                            borderRadius: "5px",
+                            maxHeight: "250px",
+                            minHeight: "150px",
+                          }}
+                          className="overflow-y-auto rounded-xl"
+                        />
+                        <div className="flex items-center justify-end space-x-1 px-2 pt-1">
+                          <WaTextCharacterCount editor={referralEditor} max={1024} />
+                        </div>
+                        <div className="flex flex-wrap p-2">
+                          <div className="mt-1 flex items-center">
+                            <InsertEmoji editor={referralEditor} />
+                          </div>
+                          <Popover>
+                            <PopoverTrigger>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                title="Format"
+                              >
+                                <TypeOutline className="h-5 w-5" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full">
+                              <div className="flex flex-nowrap gap-1">
+                                <div className="flex items-center">
+                                  <BoldToolbar />
+                                  <ItalicToolbar />
+                                  <StrikeThroughToolbar />
+                                  <CodeToolbar />
+                                </div>
+                                <div className="flex items-center">
+                                  <BlockquoteToolbar />
+                                  <BulletListToolbar />
+                                  <OrderedListToolbar />
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <div className="flex items-center">
+                            <UndoToolbar />
+                            <RedoToolbar />
+                          </div>
+                        </div>
+                      </TooltipProvider>
+                    </ToolbarProvider>
+                  </div>
 
                   <div className="space-y-1.5">
                     <p className="text-xs font-medium text-muted-foreground">{t("Preview")}</p>

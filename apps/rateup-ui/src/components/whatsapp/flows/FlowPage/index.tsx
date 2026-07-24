@@ -1,4 +1,3 @@
-import { Tabs } from "@mantine/core";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -7,6 +6,7 @@ import { useImmer } from "use-immer";
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { TabsContent } from "@/components/ui/tabs.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
@@ -249,16 +249,11 @@ function FlowPage() {
                   <FlowPreviewPhoneContent currentScreen={currentPreviewScreen} version={1} />
                 }
               />
-              <StyledTabs
-                className="flex-1 overflow-hidden"
-                keepMounted={false}
-                value={tab}
-                h={"100%"}
-              >
-                <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
+              <StyledTabs className="flex-1 overflow-hidden" value={tab}>
+                <TabsContent value={FlowTabEnum.Edit} className="h-full">
                   <EditFlow />
-                </Tabs.Panel>
-                <Tabs.Panel value={FlowTabEnum.Settings}>
+                </TabsContent>
+                <TabsContent value={FlowTabEnum.Settings}>
                   <SurveySettings
                     surveyId={survey.id}
                     survey={survey}
@@ -267,30 +262,30 @@ function FlowPage() {
                     flowDbId={flow.dbFlowId}
                     anonymous={flow?.anonymous}
                   />
-                </Tabs.Panel>
-                <Tabs.Panel value={FlowTabEnum.Responses}>
+                </TabsContent>
+                <TabsContent value={FlowTabEnum.Responses}>
                   <Result
                     encryptionpassword={""}
                     setEncryptionPassword={() => {}}
                     survey={survey}
                   />
-                </Tabs.Panel>
-                <Tabs.Panel value={FlowTabEnum.Share}>
+                </TabsContent>
+                <TabsContent value={FlowTabEnum.Share}>
                   <ShareFlow allowUnpublishedShare={true} />
-                </Tabs.Panel>
-                <Tabs.Panel value={FlowTabEnum.Analytics}>
+                </TabsContent>
+                <TabsContent value={FlowTabEnum.Analytics}>
                   <div className="p-6 text-center text-gray-500">
                     Analytics content coming soon...
                   </div>
-                </Tabs.Panel>
-                <Tabs.Panel value={FlowTabEnum.TeamAnalytics}>
+                </TabsContent>
+                <TabsContent value={FlowTabEnum.TeamAnalytics}>
                   <ResultComparison
                     surveyId={survey.id}
                     version={2}
                     flowQuestions={survey.questions}
                     questions={survey.questions}
                   />
-                </Tabs.Panel>
+                </TabsContent>
               </StyledTabs>
             </SurveyContext.Provider>
           </div>

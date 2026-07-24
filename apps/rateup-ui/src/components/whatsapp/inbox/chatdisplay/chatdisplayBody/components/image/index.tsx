@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Dialog, DialogContent } from "@/components/ui/dialog.tsx";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 interface Props {
@@ -25,6 +25,7 @@ export default function WaInboxImage(props: Props) {
       </div>
       <Dialog open={opened} onOpenChange={setOpened}>
         <DialogContent className="max-w-2xl p-0 overflow-hidden border-none bg-transparent shadow-none [&>button]:text-white">
+          <DialogTitle className="sr-only">Expanded image</DialogTitle>
           <img
             src={imageUrl}
             alt="chat media expanded"

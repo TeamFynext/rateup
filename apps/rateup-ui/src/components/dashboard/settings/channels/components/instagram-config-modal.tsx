@@ -11,7 +11,7 @@ import {
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { FieldTitle } from "@/components/ui/field.tsx";
 import {
   Select,
   SelectContent,
@@ -84,7 +84,7 @@ export function InstagramConfigModal({
           {!isLoading && (
             <div className="flex items-end gap-2">
               <div className="flex-1 space-y-2">
-                <Label>{translations("Instagram Connected Facebook Page")}</Label>
+                <FieldTitle>{translations("Instagram Connected Facebook Page")}</FieldTitle>
 
                 <Select
                   value={config.fbPageId ?? ""}

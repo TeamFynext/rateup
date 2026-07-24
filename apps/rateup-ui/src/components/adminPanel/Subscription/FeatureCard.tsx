@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import type { Control } from "react-hook-form";
 import { useController, useWatch } from "react-hook-form";
@@ -6,6 +5,7 @@ import { useController, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 import { getNestedProperty } from "@/utils/misc/obj.utils";
 

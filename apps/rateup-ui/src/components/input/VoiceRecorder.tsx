@@ -1,4 +1,3 @@
-import { Group, Text } from "@mantine/core";
 import WavesurferPlayer from "@wavesurfer/react";
 import { Mic, Pause, Play, Square, Trash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -195,13 +194,13 @@ const VoiceRecorder = () => {
   }, [useVoiceRecordStore.getState().analyser]);
 
   return (
-    <Group>
+    <div className="flex items-center gap-2">
       {audioUrl && (
-        <Group>
+        <div className="flex items-center gap-2">
           <CustomTooltip
             trigger={
               <Button onClick={onPlayPause} variant="ghost" size="sm" className="h-8 w-8 p-0">
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                {isPlaying ? <Pause /> : <Play />}
               </Button>
             }
             content={<p>{isPlaying ? "Pause" : "Play"}</p>}
@@ -216,16 +215,15 @@ const VoiceRecorder = () => {
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
           />
-          <Text size={"xs"}>
-            {" "}
+          <p className="text-xs">
             {wavesurfer &&
               `${Math.floor(wavesurfer?.getDuration() / 60)}:${Math.floor(
                 wavesurfer?.getDuration() % 60,
               )
                 .toString()
                 .padStart(2, "0")}`}
-          </Text>
-        </Group>
+          </p>
+        </div>
       )}
 
       {barHeights.length > 0 && (
@@ -248,7 +246,7 @@ const VoiceRecorder = () => {
               size="sm"
               className="h-8 w-8 p-0"
             >
-              <Trash className="w-5 h-5 text-red-500" />
+              <Trash className="text-red-500" />
             </Button>
           }
           content={<p>Delete</p>}
@@ -268,7 +266,7 @@ const VoiceRecorder = () => {
                 startRecording();
               }}
             >
-              <Mic className="w-5 h-5" />
+              <Mic />
             </Button>
           }
           content={<p>Record</p>}
@@ -282,13 +280,13 @@ const VoiceRecorder = () => {
               className="h-8 w-8 p-0"
               onClick={async () => await stopAndUploadRecording()}
             >
-              <Square className="w-5 h-5" />
+              <Square />
             </Button>
           }
           content={<p>Stop</p>}
         />
       )}
-    </Group>
+    </div>
   );
 };
 

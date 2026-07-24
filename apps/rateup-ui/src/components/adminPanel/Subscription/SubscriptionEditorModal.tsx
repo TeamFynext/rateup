@@ -1,4 +1,3 @@
-import { DateInput } from "@mantine/dates";
 import { useRouterState } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useEffect } from "react";
@@ -11,6 +10,7 @@ import { useUpdateSubscriptionMutation } from "@/backend/subscription/subscripti
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 
@@ -101,15 +101,18 @@ export function SubscriptionEditorModal({
             <>
               <Field>
                 <FieldLabel htmlFor="expires-at">{translations("Expires At")}</FieldLabel>
-                <DateInput
+                <Input
                   id="expires-at"
-                  value={dayjs(expiresAt).toDate()}
-                  onChange={(value) => subscriptionForm.setValue("expiresAt", new Date(value))}
+                  type="date"
+                  value={expiresAt ? dayjs(expiresAt).format("YYYY-MM-DD") : ""}
+                  onChange={(event) =>
+                    subscriptionForm.setValue("expiresAt", dayjs(event.target.value).toDate())
+                  }
                   disabled={!!isRazorPayPlan}
                 />
               </Field>
               {new Date(subscription?.expiresAt) < new Date() && isRazorPayPlan && (
-                <p className="text-sm font-bold text-(--tertiary-color)">
+                <p className="text-sm font-bold text-primary">
                   Cannot change expiry date of payment plan subscription. Try changing the plan
                 </p>
               )}
@@ -132,7 +135,7 @@ export function SubscriptionEditorModal({
                 })}
             </div>
             {isRazorPayPlan && (
-              <p className="text-sm font-bold text-(--tertiary-color)">
+              <p className="text-sm font-bold text-primary">
                 {translations(
                   "*Note: The updated feature will be valid only till end of the current billing cycle",
                 )}

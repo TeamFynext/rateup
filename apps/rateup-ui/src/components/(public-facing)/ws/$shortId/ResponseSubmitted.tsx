@@ -30,6 +30,7 @@ export function ResponseSubmitted({ isSurveyPreview = false }) {
             <a href="https://www.rateup.app" style={{ width: "fit-content" }}>
               <img
                 src={rateupLogoStackedWhiteTransparent}
+                alt="RateUp"
                 style={{ height: 60, width: 60, objectFit: "contain" }}
               />
             </a>

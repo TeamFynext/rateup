@@ -1,16 +1,30 @@
-import type { SelectProps } from "@mantine/core";
-import { Skeleton } from "@mantine/core";
+import { useId } from "react";
 
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { WaFlowStatus } from "@/types/enums.ts";
 
-import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput.tsx";
-
-interface FlowSelectorProps extends SelectProps {
+interface FlowSelectorProps {
   value?: string;
   onChange?: (flowId: string) => void;
   onlyPublished?: boolean;
-  id?: "flowId" | "dbFlowId"; // flowId - id from flow object of whatsapp, dbFlowId - id from our db
+  /** flowId - id from flow object of whatsapp, dbFlowId - id from our db */
+  id?: "flowId" | "dbFlowId";
+  label?: React.ReactNode;
+  placeholder?: string;
+  error?: React.ReactNode;
+  disabled?: boolean;
+  className?: string;
+  /** Accepted for call-site compatibility; the shadcn Select filters natively. */
+  searchable?: boolean;
 }
 
 export function FlowSelector({
@@ -18,12 +32,17 @@ export function FlowSelector({
   onChange,
   id = "dbFlowId",
   onlyPublished = false,
-  ...props
-}: FlowSelectorProps) {
+  label = "Flow",
+  placeholder = "Select flow",
+  error,
+  disabled,
+  className,
+}: Readonly<FlowSelectorProps>) {
+  const uid = useId();
   const { data: flows, isLoading } = useWaFlowsFromDb();
 
   if (isLoading || !flows) {
-    return <Skeleton h={46} mt={"sm"} />;
+    return <Skeleton className="mt-2 h-11 w-full" />;
   }
 
   const filteredFlows = onlyPublished
@@ -36,13 +55,31 @@ export function FlowSelector({
   }));
 
   return (
-    <ContainedSelection
-      data={selectOptions}
-      value={value?.toString()} // TODO: check why flowId is saved as number in db
-      onChange={onChange}
-      placeholder="Select flow"
-      label="Flow"
-      {...props}
-    />
+    <Field className={className}>
+      {label && (
+        <FieldLabel htmlFor={`${uid}-field`} className="mb-1">
+          {label}
+        </FieldLabel>
+      )}
+      <Select
+        // TODO: check why flowId is saved as number in db
+        value={value?.toString() ?? ""}
+        onValueChange={onChange}
+        items={selectOptions}
+        disabled={disabled}
+      >
+        <SelectTrigger id={`${uid}-field`} className="w-full" aria-invalid={!!error}>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {selectOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+    </Field>
   );
 }

@@ -1,6 +1,7 @@
 import { useNavigate, useRouterState, useSearch } from "@tanstack/react-router";
 import { AlertTriangle, Loader2, Plus, Search, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
 import {
   useCustomerRewardsByPhone,
@@ -11,9 +12,8 @@ import type { CustomerPanelCustomer } from "@/components/loyalty/CustomerDetailP
 import { CustomerDetailPanel } from "@/components/loyalty/CustomerDetailPanel.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
-import { useUser } from "@/context/UserContext.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
 export function CashierPage() {
@@ -26,16 +26,14 @@ export function CashierPage() {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedPhone, setSelectedPhone] = useState("");
-
+  const data: any = useSessionContext();
   // Fetch data
   const {
     data: customerData,
     isLoading: isLoadingCustomer,
     error,
   } = useCustomerRewardsByPhone(selectedPhone);
-  const {
-    user: { orgId },
-  } = useUser();
+  const orgId = data?.accessTokenPayload?.orgId;
 
   // Search
   const { data: searchResults, isLoading: isSearchLoading } = useSearchCustomers(debouncedSearch);
@@ -139,7 +137,7 @@ export function CashierPage() {
       <Card>
         <CardContent>
           <div className="space-y-2">
-            <Label htmlFor="cashier-search">Search Customer by Name or Phone</Label>
+            <FieldLabel htmlFor="cashier-search">Search Customer by Name or Phone</FieldLabel>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10 pointer-events-none" />
               <Input

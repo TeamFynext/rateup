@@ -10,7 +10,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
@@ -20,8 +20,11 @@ const WhatsappNotificationSettings = () => {
 
   return (
     <div className="space-y-3 pt-1">
-      <div className="flex items-center justify-between rounded-md border border-border p-3">
-        <Label htmlFor="wa-assigned">Allow notification on chat assigned</Label>
+      <Field
+        orientation="horizontal"
+        className="justify-between rounded-md border border-border p-3"
+      >
+        <FieldLabel htmlFor="wa-assigned">Allow notification on chat assigned</FieldLabel>
         {isLoading ? (
           <Skeleton className="h-5 w-10" />
         ) : (
@@ -35,10 +38,13 @@ const WhatsappNotificationSettings = () => {
             }}
           />
         )}
-      </div>
+      </Field>
 
-      <div className="flex items-center justify-between rounded-md border border-border p-3">
-        <Label htmlFor="wa-closed">Allow notification on chat closed</Label>
+      <Field
+        orientation="horizontal"
+        className="justify-between rounded-md border border-border p-3"
+      >
+        <FieldLabel htmlFor="wa-closed">Allow notification on chat closed</FieldLabel>
         {isLoading ? (
           <Skeleton className="h-5 w-10" />
         ) : (
@@ -52,7 +58,7 @@ const WhatsappNotificationSettings = () => {
             }}
           />
         )}
-      </div>
+      </Field>
     </div>
   );
 };
@@ -62,9 +68,12 @@ const TicketNotificationSettings = () => {
   const update = useUpdateNotificationSettings();
 
   return (
-    <div className="pt-1">
-      <div className="flex items-center justify-between rounded-md border border-border p-3">
-        <Label htmlFor="ticket-assigned">Allow notification on ticket assigned</Label>
+    <Field className="pt-1">
+      <Field
+        orientation="horizontal"
+        className="justify-between rounded-md border border-border p-3"
+      >
+        <FieldLabel htmlFor="ticket-assigned">Allow notification on ticket assigned</FieldLabel>
         {isLoading ? (
           <Skeleton className="h-5 w-10" />
         ) : (
@@ -78,8 +87,8 @@ const TicketNotificationSettings = () => {
             }}
           />
         )}
-      </div>
-    </div>
+      </Field>
+    </Field>
   );
 };
 

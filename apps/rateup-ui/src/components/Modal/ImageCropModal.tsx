@@ -1,8 +1,12 @@
-import { Box, Button, Group, LoadingOverlay, Modal, NumberInput } from "@mantine/core";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useId, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Cropper, type CropperRef } from "@/components/Cropper/Cropper.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { LoadingOverlay } from "@/components/ui/loading-overlay.tsx";
 import { mimeTypesForImage } from "@/utils/constants.ts";
 
 import styles from "./ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
@@ -26,6 +30,7 @@ export const ImageCropModal = ({
   aspect = 4 / 3,
   freeMode = false,
 }: ImageCropModalProps) => {
+  const uid = useId();
   const [scale, setScale] = useState(0.4);
   const { t: translations } = useTranslation();
   const fileExtension = imageName?.split(".")?.pop()?.toLowerCase() ?? "jpg";
@@ -93,57 +98,49 @@ export const ImageCropModal = ({
   }, [isUnsplashImage, fileExtension, image, imageName, handleCropImageSave]);
 
   return (
-    <Modal
-      classNames={{
-        content: styles["modal-content"],
-        header: styles["modal-header"],
-        body: styles["modal-body"],
+    <Dialog
+      open={opened}
+      onOpenChange={(next) => {
+        if (!next) {
+          onclose();
+          setScale(0.4);
+        }
       }}
-      title={translations("Crop Image")}
-      centered
-      onClose={() => {
-        onclose();
-        setScale(0.4);
-      }}
-      opened={opened}
-      radius={"lg"}
-      zIndex={9999}
     >
-      <NumberInput
-        label={translations("Zoom the Image")}
-        step={0.1}
-        min={0.1}
-        max={1}
-        defaultValue={0.4}
-        value={scale}
-        onChange={(e) => setScale(Number(e))}
-        decimalScale={1}
-        fixedDecimalScale
-      />
-      <Box className={styles["cropper-container"]}>
-        <LoadingOverlay
-          visible={!isReady}
-          zIndex={1000}
-          overlayProps={{ radius: "sm", blur: 2 }}
-          loaderProps={{ type: "bars" }}
-        />
+      <DialogContent className="flex max-h-[90vh] flex-col gap-5 overflow-auto">
+        <DialogHeader>
+          <DialogTitle className="text-center">{translations("Crop Image")}</DialogTitle>
+        </DialogHeader>
+        <Field>
+          <FieldLabel htmlFor={`${uid}-field`}>{translations("Zoom the Image")}</FieldLabel>
+          <Input
+            id={`${uid}-field`}
+            type="number"
+            step={0.1}
+            min={0.1}
+            max={1}
+            value={scale}
+            onChange={(e) => setScale(Number(e.target.value))}
+          />
+        </Field>
+        <div className={styles["cropper-container"]}>
+          <LoadingOverlay visible={!isReady} />
 
-        <Cropper
-          ref={cropperRef}
-          src={image}
-          aspectRatio={aspect}
-          freeMode={freeMode}
-          onReady={() => setIsReady(true)}
-        />
-      </Box>
-      <Group className={styles["cancel-save-btn-container"]} justify="right">
-        <Button className={styles["cancel-btn"]} onClick={handleCancelBtnClick}>
-          {translations("Cancel")}
-        </Button>
-        <Button className={styles["save-btn"]} onClick={handleSaveBtnClick}>
-          {translations("Save")}
-        </Button>
-      </Group>
-    </Modal>
+          <Cropper
+            ref={cropperRef}
+            src={image}
+            aspectRatio={aspect}
+            freeMode={freeMode}
+            onReady={() => setIsReady(true)}
+          />
+        </div>
+        <div className={`${styles["cancel-save-btn-container"]} flex justify-end gap-2`}>
+          <Button variant="outline" onClick={handleCancelBtnClick}>
+            {translations("Cancel")}
+          </Button>
+          <Button onClick={handleSaveBtnClick}>{translations("Save")}</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };

@@ -11,9 +11,11 @@ import { Button as UiButton } from "@/components/ui/button.tsx";
 import { DatePicker } from "@/components/ui/date-picker.tsx";
 import {
   Field as UiField,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldLabel,
+  FieldTitle,
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
@@ -279,9 +281,11 @@ export function Switch({
   onChange?: (e: { target: { checked: boolean }; currentTarget: { checked: boolean } }) => void;
   onCheckedChange?: (checked: boolean) => void;
 }>) {
+  const id = React.useId();
   return (
-    <label className="flex cursor-pointer items-start gap-3">
+    <UiField orientation="horizontal" className="gap-3">
       <UiSwitch
+        id={id}
         checked={!!checked}
         onCheckedChange={(v) => {
           onChange?.({ target: { checked: v }, currentTarget: { checked: v } });
@@ -289,11 +293,11 @@ export function Switch({
         }}
         className="mt-0.5"
       />
-      <span className="flex flex-col gap-0.5">
-        {label && <span className="text-sm font-medium">{label}</span>}
-        {description && <span className="text-xs text-muted-foreground">{description}</span>}
-      </span>
-    </label>
+      <FieldContent className="gap-0.5">
+        {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
+        {description && <FieldDescription className="text-xs">{description}</FieldDescription>}
+      </FieldContent>
+    </UiField>
   );
 }
 
@@ -318,10 +322,10 @@ function Field({
   return (
     <UiField className={cn("gap-1.5", className)} style={style} data-invalid={!!error || undefined}>
       {label && (
-        <FieldLabel className="text-sm font-medium">
+        <FieldTitle className="text-sm font-medium">
           {label}
           {required && <span className="text-destructive"> *</span>}
-        </FieldLabel>
+        </FieldTitle>
       )}
       {children}
       {error ? (
@@ -542,11 +546,14 @@ export function RadioGroup({
 }
 
 export function Radio({ value, label }: Readonly<{ value: string; label?: React.ReactNode }>) {
+  const id = React.useId();
   return (
-    <label className="flex cursor-pointer items-center gap-2 text-sm">
-      <RadioGroupItem value={value} />
-      {label}
-    </label>
+    <UiField orientation="horizontal" className="w-auto gap-2">
+      <RadioGroupItem id={id} value={value} />
+      <FieldLabel htmlFor={id} className="font-normal">
+        {label}
+      </FieldLabel>
+    </UiField>
   );
 }
 

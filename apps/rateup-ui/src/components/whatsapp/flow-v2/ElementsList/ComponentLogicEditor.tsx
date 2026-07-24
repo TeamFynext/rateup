@@ -1,5 +1,5 @@
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useEffect, useMemo } from "react";
+import { useId, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -9,8 +9,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import {
   Select,
@@ -50,6 +50,7 @@ interface ComponentLogicEditorProps {
 }
 
 const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) => {
+  const uid = useId();
   const { getCurrentScreen, currentScreenId } = useFlowStoreV3();
   const { t: translations } = useTranslation();
 
@@ -240,8 +241,10 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                       const operatorData = q && getResponses2(q);
                       return (
                         <div key={condIndex} className="flex gap-2 items-start">
-                          <div className="flex-1 space-y-1.5">
-                            <Label className="text-xs">{translations("Question")}</Label>
+                          <Field className="flex-1">
+                            <FieldLabel htmlFor={`${uid}-field-${index}`} className="text-xs">
+                              {translations("Question")}
+                            </FieldLabel>
                             <Select
                               value={condition.field}
                               onValueChange={(value) => {
@@ -249,7 +252,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                               }}
                               items={questions}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger id={`${uid}-field-${index}`}>
                                 <SelectValue placeholder={translations("Select question")} />
                               </SelectTrigger>
                               <SelectContent>
@@ -260,9 +263,11 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                                 ))}
                               </SelectContent>
                             </Select>
-                          </div>
-                          <div className="flex-1 space-y-1.5">
-                            <Label className="text-xs">{translations("Operator")}</Label>
+                          </Field>
+                          <Field className="flex-1">
+                            <FieldLabel htmlFor={`${uid}-field-2-${index}`} className="text-xs">
+                              {translations("Operator")}
+                            </FieldLabel>
                             <Select
                               value={condition.operator}
                               onValueChange={(value) => {
@@ -270,7 +275,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                               }}
                               items={getOperators(condition.field)}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger id={`${uid}-field-2-${index}`}>
                                 <SelectValue placeholder={translations("Select operator")} />
                               </SelectTrigger>
                               <SelectContent>
@@ -281,10 +286,12 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                                 ))}
                               </SelectContent>
                             </Select>
-                          </div>
+                          </Field>
                           {operatorData ? (
-                            <div className="flex-1 space-y-1.5">
-                              <Label className="text-xs">{translations("Value")}</Label>
+                            <Field className="flex-1">
+                              <FieldLabel htmlFor={`${uid}-field-3-${index}`} className="text-xs">
+                                {translations("Value")}
+                              </FieldLabel>
                               <Select
                                 value={condition.value}
                                 onValueChange={(value) => {
@@ -294,7 +301,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                                   typeof item === "string" ? { value: item, label: item } : item,
                                 )}
                               >
-                                <SelectTrigger>
+                                <SelectTrigger id={`${uid}-field-3-${index}`}>
                                   <SelectValue placeholder={translations("Select value")} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -305,11 +312,14 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                                   ))}
                                 </SelectContent>
                               </Select>
-                            </div>
+                            </Field>
                           ) : (
-                            <div className="flex-1 space-y-1.5">
-                              <Label className="text-xs">{translations("Value")}</Label>
+                            <Field className="flex-1">
+                              <FieldLabel htmlFor={`${uid}-field-4-${index}`} className="text-xs">
+                                {translations("Value")}
+                              </FieldLabel>
                               <Input
+                                id={`${uid}-field-4-${index}`}
                                 placeholder={translations("Enter value")}
                                 value={condition.value}
                                 type={q?.["input-type"] || "text"}
@@ -321,11 +331,13 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                                   updateCondition(index, condIndex, "value", value);
                                 }}
                               />
-                            </div>
+                            </Field>
                           )}
                           {condIndex > 0 && (
-                            <div className="flex-1 space-y-1.5">
-                              <Label className="text-xs">{translations("Logic")}</Label>
+                            <Field className="flex-1">
+                              <FieldLabel htmlFor={`${uid}-field-5-${index}`} className="text-xs">
+                                {translations("Logic")}
+                              </FieldLabel>
                               <Select
                                 value={condition.logic}
                                 onValueChange={(value) => {
@@ -333,7 +345,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                                 }}
                                 items={logicalOperators}
                               >
-                                <SelectTrigger>
+                                <SelectTrigger id={`${uid}-field-5-${index}`}>
                                   <SelectValue placeholder={translations("Select logic")} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -344,7 +356,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                                   ))}
                                 </SelectContent>
                               </Select>
-                            </div>
+                            </Field>
                           )}
                           <Button
                             variant="ghost"
@@ -372,14 +384,16 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
 
                 {block.type === "Switch" && (
                   <>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">{translations("Question")}</Label>
+                    <Field>
+                      <FieldLabel htmlFor={`${uid}-field-6-${index}`} className="text-xs">
+                        {translations("Question")}
+                      </FieldLabel>
                       <Select
                         value={block.value}
                         onValueChange={(value) => updateSwitchValue(index, value)}
                         items={questions}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger id={`${uid}-field-6-${index}`}>
                           <SelectValue placeholder={translations("Select question")} />
                         </SelectTrigger>
                         <SelectContent>
@@ -390,21 +404,25 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
+                    </Field>
                     {Object.keys(block.cases).map((caseKey, caseIndex) => (
                       <div key={caseIndex} className="flex flex-col gap-3">
                         {caseKey !== "default" ? (
-                          <div className="flex gap-2 items-end">
-                            <div className="flex-1 space-y-1.5">
-                              <Label className="text-xs">{`${translations("Case")} ${caseKey}`}</Label>
+                          <Field className="items-end">
+                            <Field className="flex-1">
+                              <FieldLabel
+                                htmlFor={`${uid}-field-7-${index}`}
+                                className="text-xs"
+                              >{`${translations("Case")} ${caseKey}`}</FieldLabel>
                               <Input
+                                id={`${uid}-field-7-${index}`}
                                 placeholder={translations("Enter case key")}
                                 value={caseKey}
                                 onChange={(e) =>
                                   updateSwitchCaseKey(index, caseKey, e.target.value)
                                 }
                               />
-                            </div>
+                            </Field>
                             {caseIndex > 2 && (
                               <Button
                                 variant="ghost"
@@ -415,13 +433,16 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                                 <IconTrash size={16} />
                               </Button>
                             )}
-                          </div>
+                          </Field>
                         ) : (
                           <h4 className="text-sm font-semibold">{`${translations("Case")} ${caseKey}`}</h4>
                         )}
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">{translations("Add Components")}</Label>
+                        <Field>
+                          <FieldLabel htmlFor={`${uid}-field-8-${index}`} className="text-xs">
+                            {translations("Add Components")}
+                          </FieldLabel>
                           <MultiSelect
+                            id={`${uid}-field-8-${index}`}
                             options={componentsList.map((item) => ({
                               label: item.label,
                               value: item.value,
@@ -433,7 +454,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                             placeholder={translations("Select component")}
                             emptyIndicator="No items found."
                           />
-                        </div>
+                        </Field>
                       </div>
                     ))}
                     <Button
@@ -455,11 +476,14 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                 <>
                   <Separator className="my-4" />
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-3">
+                    <Field>
                       <h4 className="text-sm font-semibold">{translations("Then")}:</h4>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">{translations("Add Then Component")}</Label>
+                      <Field>
+                        <FieldLabel htmlFor={`${uid}-field-9-${index}`} className="text-xs">
+                          {translations("Add Then Component")}
+                        </FieldLabel>
                         <MultiSelect
+                          id={`${uid}-field-9-${index}`}
                           options={componentsList
                             ?.map((d) => ({
                               label: d.label ?? d.value,
@@ -477,14 +501,17 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                           placeholder={translations("Select component")}
                           emptyIndicator="No items found."
                         />
-                      </div>
-                    </div>
+                      </Field>
+                    </Field>
 
-                    <div className="flex flex-col gap-3">
+                    <Field>
                       <h4 className="text-sm font-semibold">{translations("Else")}:</h4>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">{translations("Add Else Component")}</Label>
+                      <Field>
+                        <FieldLabel htmlFor={`${uid}-field-10-${index}`} className="text-xs">
+                          {translations("Add Else Component")}
+                        </FieldLabel>
                         <MultiSelect
+                          id={`${uid}-field-10-${index}`}
                           options={componentsList
                             ?.map((d) => ({
                               label: d?.label ?? d.value,
@@ -502,8 +529,8 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
                           placeholder={translations("Select component")}
                           emptyIndicator="No items found."
                         />
-                      </div>
-                    </div>
+                      </Field>
+                    </Field>
                   </div>
                 </>
               )}

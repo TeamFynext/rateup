@@ -1,11 +1,13 @@
-import { Link, RichTextEditor } from "@mantine/tiptap";
 import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import { Color, TextStyle } from "@tiptap/extension-text-style";
 import Youtube from "@tiptap/extension-youtube";
-import { useEditor } from "@tiptap/react";
+import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect } from "react";
+
+import { EditorToolbar } from "@/components/tiptap/toolbars/editor-toolbar.tsx";
 
 import InsertEmoji from "./InsertEmoji/index.tsx";
 import InsertImage from "./InsertImage/index.tsx";
@@ -42,78 +44,20 @@ export default function CustomTextEditor({ content, onUpdate }) {
     }
   }, [content, editor]);
 
+  if (!editor) return null;
+
   return (
-    <RichTextEditor editor={editor} h={300}>
-      <RichTextEditor.Toolbar sticky stickyOffset={60}>
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.ColorPicker
-            colors={[
-              "#25262b",
-              "#868e96",
-              "#fa5252",
-              "#e64980",
-              "#be4bdb",
-              "#7950f2",
-              "#4c6ef5",
-              "#228be6",
-              "#15aabf",
-              "#12b886",
-              "#40c057",
-              "#82c91e",
-              "#fab005",
-              "#fd7e14",
-            ]}
-          />
-          <RichTextEditor.UnsetColor />
-        </RichTextEditor.ControlsGroup>
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.Bold />
-          <RichTextEditor.Italic />
-          <RichTextEditor.Underline />
-          <RichTextEditor.Strikethrough />
-          <RichTextEditor.ClearFormatting />
-          <RichTextEditor.Highlight />
-          <RichTextEditor.Code />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.H1 />
-          <RichTextEditor.H2 />
-          <RichTextEditor.H3 />
-          <RichTextEditor.H4 />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.Blockquote />
-          <RichTextEditor.Hr />
-          <RichTextEditor.BulletList />
-          <RichTextEditor.OrderedList />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.Link />
-          <RichTextEditor.Unlink />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.AlignLeft />
-          <RichTextEditor.AlignCenter />
-          <RichTextEditor.AlignJustify />
-          <RichTextEditor.AlignRight />
-        </RichTextEditor.ControlsGroup>
-
-        <RichTextEditor.ControlsGroup>
-          <RichTextEditor.Undo />
-          <RichTextEditor.Redo />
-        </RichTextEditor.ControlsGroup>
-        <RichTextEditor.ControlsGroup>
-          <InsertEmoji />
-          <InsertImage />
-          <InsertVideo />
-        </RichTextEditor.ControlsGroup>
-      </RichTextEditor.Toolbar>
-
-      <RichTextEditor.Content />
-    </RichTextEditor>
+    <div
+      className="relative w-full overflow-hidden rounded-md border bg-card"
+      style={{ height: 300 }}
+    >
+      <EditorToolbar editor={editor} />
+      <div className="flex flex-row flex-wrap items-center gap-1.5 border-b px-2 py-1">
+        <InsertEmoji editor={editor} />
+        <InsertImage editor={editor} />
+        <InsertVideo editor={editor} />
+      </div>
+      <EditorContent editor={editor} className="w-full cursor-text overflow-auto p-3" />
+    </div>
   );
 }

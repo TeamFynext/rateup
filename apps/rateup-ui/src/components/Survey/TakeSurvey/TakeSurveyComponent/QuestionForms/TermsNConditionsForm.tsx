@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { FieldLabel } from "@/components/ui/field.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
@@ -28,7 +29,7 @@ export function TermsNConditionsForm({ tncData }) {
   return (
     <>
       <FormPaperLayout>
-        <label htmlFor="tnc-checkbox" className="flex items-center gap-2 p-3">
+        <FieldLabel htmlFor="tnc-checkbox" className="flex items-center gap-2 p-3">
           <Checkbox
             id="tnc-checkbox"
             checked={response || false}
@@ -40,16 +41,11 @@ export function TermsNConditionsForm({ tncData }) {
           />
           <span className="-mt-0.5 flex items-center gap-1.5" style={{ color: textColor }}>
             {tnc?.title}
-            <a
-              href="#"
-              onClick={() => setOpened(true)}
-              className="underline"
-              style={{ color: "var(--tertiary-color)" }}
-            >
+            <a href="#" onClick={() => setOpened(true)} className="underline text-primary">
               {tnc?.urlTitle}
             </a>
           </span>
-        </label>
+        </FieldLabel>
       </FormPaperLayout>
       <Dialog open={opened} onOpenChange={setOpened}>
         <DialogContent>

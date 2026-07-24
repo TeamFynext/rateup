@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import * as React from "react";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -37,8 +37,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -900,6 +900,7 @@ function SetupView({
   isCreating,
   isReordering,
 }: Readonly<SetupViewProps>) {
+  const uid = useId();
   const { t } = useTranslation("contacts.lifecycle");
   const stages = useMemo(
     () => sortStages(backendStages.filter((stage) => stage.category !== "lost")),
@@ -968,8 +969,13 @@ function SetupView({
                   : "grid-cols-1 md:grid-cols-2",
               )}
             >
-              <div className="space-y-2">
-                <Label className="text-xs font-bold text-muted-foreground">{t("Event Name")}</Label>
+              <Field>
+                <FieldLabel
+                  htmlFor={`${uid}-field`}
+                  className="text-xs font-bold text-muted-foreground"
+                >
+                  {t("Event Name")}
+                </FieldLabel>
                 <Select
                   value={conversionData.event_name || "Purchase"}
                   items={[
@@ -983,7 +989,7 @@ function SetupView({
                     })
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id={`${uid}-field`} className="w-full">
                     <SelectValue placeholder={t("Select Event")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -991,10 +997,15 @@ function SetupView({
                     <SelectItem value="Lead">{t("Lead")}</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
               {conversionData.event_name === "Purchase" && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-muted-foreground">{t("Currency")}</Label>
+                <Field>
+                  <FieldLabel
+                    htmlFor={`${uid}-field-2`}
+                    className="text-xs font-bold text-muted-foreground"
+                  >
+                    {t("Currency")}
+                  </FieldLabel>
                   <Select
                     value={conversionData.currency || "INR"}
                     items={[
@@ -1011,7 +1022,7 @@ function SetupView({
                       })
                     }
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id={`${uid}-field-2`} className="w-full">
                       <SelectValue placeholder={t("Select Currency")} />
                     </SelectTrigger>
                     <SelectContent>
@@ -1022,12 +1033,18 @@ function SetupView({
                       <SelectItem value="AED">{t("AED")}</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </Field>
               )}
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-muted-foreground">{t("Pixel ID")}</Label>
+                <FieldLabel
+                  htmlFor={`${uid}-field-3`}
+                  className="text-xs font-bold text-muted-foreground"
+                >
+                  {t("Pixel ID")}
+                </FieldLabel>
                 <div className="relative">
                   <Input
+                    id={`${uid}-field-3`}
                     value={pixelIdDraft}
                     onChange={(e) => setPixelIdDraft(e.target.value)}
                     placeholder={t("Enter Pixel ID")}
@@ -1389,6 +1406,7 @@ function AddStageForm({
   isLost,
   isCreating,
 }: Readonly<AddStageFormProps>) {
+  const uid = useId();
   const { t } = useTranslation("contacts.lifecycle");
   return (
     <div
@@ -1413,34 +1431,42 @@ function AddStageForm({
         </Button>
       </div>
 
-      <div className="space-y-1">
-        <Label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+      <Field>
+        <FieldLabel
+          htmlFor={`${uid}-field-4`}
+          className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground"
+        >
           {t("Name")}
-        </Label>
+        </FieldLabel>
         <Input
+          id={`${uid}-field-4`}
           placeholder={isLost ? t("Enter name. eg: Lost") : t("Enter name. eg: New Lead")}
           value={addName}
           onChange={(event) => setAddName(event.target.value)}
           className="border-input bg-background text-xs font-semibold text-foreground"
         />
-      </div>
+      </Field>
 
-      <div className="space-y-1">
-        <Label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+      <Field>
+        <FieldLabel
+          htmlFor={`${uid}-field-5`}
+          className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground"
+        >
           {t("Description")}
-        </Label>
+        </FieldLabel>
         <Input
+          id={`${uid}-field-5`}
           placeholder={t("Enter description")}
           value={addDesc}
           onChange={(event) => setAddDesc(event.target.value)}
           className="border-input bg-background text-xs font-semibold text-foreground"
         />
-      </div>
+      </Field>
 
       <div className="relative space-y-1.5">
-        <Label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+        <FieldTitle className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
           {t("Emoji Icon")}
-        </Label>
+        </FieldTitle>
 
         <div className="flex items-center gap-2.5">
           <Button

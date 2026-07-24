@@ -1,4 +1,3 @@
-import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -31,6 +30,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import type { SubscriptionFeaturePathName } from "@/types/enums.ts";
 
 import { DataTableToolbar } from "../../../components/admin/subscriptions/data-table-toolbar.tsx";

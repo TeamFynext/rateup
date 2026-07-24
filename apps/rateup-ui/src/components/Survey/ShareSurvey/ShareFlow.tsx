@@ -1,5 +1,5 @@
 import { useParams } from "@tanstack/react-router";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useId, useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { usePushToWaMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
@@ -39,6 +39,7 @@ export const ShareFlow = ({
 }: {
   allowUnpublishedShare?: boolean;
 }) => {
+  const uid = useId();
   const { survey } = useContext(EditFlowContext);
   const params = useParams({
     strict: false,
@@ -149,14 +150,14 @@ export const ShareFlow = ({
               <h4 className="text-lg font-semibold">{translations("Share Survey")}</h4>
               <div className="flex gap-3">
                 <Field className="flex-1">
-                  <FieldLabel>{translations("Select Team")}</FieldLabel>
+                  <FieldLabel htmlFor={`${uid}-field`}>{translations("Select Team")}</FieldLabel>
                   <Select
                     disabled={disableShare}
                     value={surveyTeamMapId}
                     onValueChange={setSurveyTeamMapId}
                     items={teamSelectData}
                   >
-                    <SelectTrigger className="w-full min-w-[150px]">
+                    <SelectTrigger id={`${uid}-field`} className="w-full min-w-[150px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -170,14 +171,14 @@ export const ShareFlow = ({
                 </Field>
                 <div className="flex flex-1 items-start gap-0.5">
                   <Field className="flex-1">
-                    <FieldLabel>{translations("Select Tag")}</FieldLabel>
+                    <FieldLabel htmlFor={`${uid}-field-2`}>{translations("Select Tag")}</FieldLabel>
                     <Select
                       disabled={disableShare || tagSelectData.length === 0}
                       value={tag}
                       onValueChange={(value) => setTag(value)}
                       items={tagSelectData}
                     >
-                      <SelectTrigger className="w-full min-w-[150px]">
+                      <SelectTrigger id={`${uid}-field-2`} className="w-full min-w-[150px]">
                         <SelectValue placeholder={translations("select a single Tag")} />
                       </SelectTrigger>
                       <SelectContent>

@@ -1,5 +1,5 @@
 import { IconCircleCheckFilled } from "@tabler/icons-react";
-import { useContext, useEffect, useState } from "react";
+import { useId, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -19,6 +19,7 @@ type QuestionTitles = {
 };
 
 const TestimonialExtraProps = ({ form }: { form: any }) => {
+  const uid = useId();
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const features = form.values.features?.[selectedLanguage] || {
     rating: false,
@@ -80,8 +81,12 @@ const TestimonialExtraProps = ({ form }: { form: any }) => {
     const isFocused = selectedField === key;
     const field = (
       <Field key={key}>
-        <FieldLabel className="capitalize">{`${label} ${translations("Title")}`}</FieldLabel>
+        <FieldLabel
+          htmlFor={`${uid}-field`}
+          className="capitalize"
+        >{`${label} ${translations("Title")}`}</FieldLabel>
         <Textarea
+          id={`${uid}-field`}
           placeholder={`${translations("Enter")} ${label}'s ${translations("title here")}`}
           disabled={isDisabled}
           className="bg-background"
@@ -166,8 +171,9 @@ const TestimonialExtraProps = ({ form }: { form: any }) => {
           {toggles.map(({ featureKey, label, value, titleKey, titleLabel }) => (
             <div key={featureKey} className="rounded-lg border">
               <Field orientation="horizontal" className="p-4">
-                <FieldLabel>{label}</FieldLabel>
+                <FieldLabel htmlFor={`${uid}-field-2-${featureKey}`}>{label}</FieldLabel>
                 <Switch
+                  id={`${uid}-field-2-${featureKey}`}
                   checked={value}
                   onCheckedChange={(checked) => updateFeatures(featureKey, checked)}
                 />

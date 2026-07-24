@@ -1,11 +1,11 @@
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { Fragment, useEffect, useState } from "react";
+import { useId, Fragment, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useImmer } from "use-immer";
 
 import { Button } from "@/components/ui/button.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import {
@@ -170,6 +170,7 @@ function AtomicConditionBlock({
   setCondition,
   handleDelete,
 }: AtomicConditionBlockProps) {
+  const uid = useId();
   const { getCurrentScreen } = useFlowStore();
   const { t: translations } = useTranslation();
 
@@ -222,14 +223,14 @@ function AtomicConditionBlock({
   return (
     <div className="flex gap-2 bg-white rounded-lg relative p-4 min-w-[320px]">
       <div className="flex flex-col gap-2 grow">
-        <div>
-          <Label>{translations("For Question")}</Label>
+        <Field>
+          <FieldLabel htmlFor={`${uid}-field`}>{translations("For Question")}</FieldLabel>
           <Select
             value={selectedQId}
             onValueChange={setSelectedQId}
             items={logicSupportedQuestionsInScreen.map((q) => ({ value: q.id, label: q.label }))}
           >
-            <SelectTrigger className="shrink-0">
+            <SelectTrigger id={`${uid}-field`} className="shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -240,10 +241,10 @@ function AtomicConditionBlock({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
 
-        <div>
-          <Label>{translations("If condition")}</Label>
+        <Field>
+          <FieldLabel htmlFor={`${uid}-field-2`}>{translations("If condition")}</FieldLabel>
           <Select
             value={selectedCondition}
             onValueChange={(val: any) => setSelectedCondition(val)}
@@ -252,7 +253,7 @@ function AtomicConditionBlock({
               label: opt.label,
             }))}
           >
-            <SelectTrigger>
+            <SelectTrigger id={`${uid}-field-2`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -263,7 +264,7 @@ function AtomicConditionBlock({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
 
         {selectedCondition === LogicCondition.Submitted ? (
           <></>
@@ -274,9 +275,10 @@ function AtomicConditionBlock({
           ].includes(selectedCondition) ||
           (selectedQ.metaType === WaQuestions.CheckboxGroup &&
             selectedCondition === LogicCondition.Equals) ? (
-          <div>
-            <Label>{translations("Response")}</Label>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Response")}</FieldLabel>
             <MultiSelect
+              id={`${uid}-field-3`}
               options={(getResponses2(selectedQ) || []).map((opt: any) =>
                 typeof opt === "string" ? { label: opt, value: opt } : opt,
               )}
@@ -285,10 +287,10 @@ function AtomicConditionBlock({
               placeholder={translations("Select Responses")}
               emptyIndicator="No items found."
             />
-          </div>
+          </Field>
         ) : (
-          <div>
-            <Label>{translations("Response")}</Label>
+          <Field>
+            <FieldLabel htmlFor={`${uid}-field-4`}>{translations("Response")}</FieldLabel>
             <Select
               value={Array.isArray(matchData) ? "" : matchData}
               onValueChange={setMatchData}
@@ -297,7 +299,7 @@ function AtomicConditionBlock({
                 label: opt.label,
               }))}
             >
-              <SelectTrigger>
+              <SelectTrigger id={`${uid}-field-4`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -308,7 +310,7 @@ function AtomicConditionBlock({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
         )}
       </div>
       <Button
@@ -335,6 +337,7 @@ function ConditionsActionMapBlock({
   updateLogicJumps,
   index,
 }: ConditionsActionMapBlockProps) {
+  const uid = useId();
   const { screens, currentScreenId } = useFlowStore();
   const { t: translations } = useTranslation();
 
@@ -408,17 +411,17 @@ function ConditionsActionMapBlock({
           </Button>
         </div>
       </div>
-      <div className="flex flex-col min-w-[300px] max-w-[350px]">
+      <Field className="min-w-[300px] max-w-[350px]">
         <h5 className="text-base font-semibold text-center mb-4">{translations("Action")}</h5>
-        <div className="grow rounded-lg p-6 bg-white flex items-center justify-center">
-          <div className="w-full">
-            <Label>{translations("Navigate to")}</Label>
+        <div className="flex grow rounded-lg p-6 bg-white items-center justify-center gap-2">
+          <Field className="w-full">
+            <FieldLabel htmlFor={`${uid}-field-5`}>{translations("Navigate to")}</FieldLabel>
             <Select
               value={selectedAction}
               onValueChange={(val: any) => setSelectedAction(val)}
               items={possibleActions}
             >
-              <SelectTrigger>
+              <SelectTrigger id={`${uid}-field-5`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -429,9 +432,9 @@ function ConditionsActionMapBlock({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
         </div>
-      </div>
+      </Field>
     </div>
   );
 }

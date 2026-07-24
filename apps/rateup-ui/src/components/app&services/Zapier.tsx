@@ -31,6 +31,7 @@ import { Card, CardContent } from "../ui/card";
 import { Field, FieldDescription, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
+import { Spinner } from "../ui/spinner";
 
 export function Zapier() {
   const {
@@ -63,6 +64,7 @@ export function Zapier() {
 function APIKeyGenerate({ integration }) {
   const [apiKey, setApiKey] = useState(undefined);
   const { t: translations } = useTranslation();
+  const confirm = useConfirm();
   const user = useUser();
   const updateKey = useUpdateIntegrationMutation(IntegratedApps.zapier);
   const deleteMut = useDeleteIntegrationMutation(IntegratedApps.zapier);
@@ -77,7 +79,15 @@ function APIKeyGenerate({ integration }) {
       },
     );
   }
-  function handleDelete() {
+  async function handleDelete() {
+    const shouldDelete = await confirm({
+      title: translations("Delete API key"),
+      description: translations("Any Zap using this key will stop working. This cannot be undone."),
+      confirmText: translations("Delete"),
+    });
+
+    if (!shouldDelete) return;
+
     deleteMut.mutate();
   }
   function handleCreate() {
@@ -125,10 +135,16 @@ function APIKeyGenerate({ integration }) {
                         <Tooltip>
                           <TooltipTrigger
                             render={
-                              <Button onClick={handleRegenerate} variant="ghost" size="icon" />
+                              <Button
+                                onClick={handleRegenerate}
+                                disabled={updateKey.isPending}
+                                aria-label={translations("Regenerate")}
+                                variant="ghost"
+                                size="icon"
+                              />
                             }
                           >
-                            <IconReload />
+                            {updateKey.isPending ? <Spinner /> : <IconReload />}
                           </TooltipTrigger>
                           <TooltipContent>{translations("Regenerate")}</TooltipContent>
                         </Tooltip>
@@ -138,13 +154,15 @@ function APIKeyGenerate({ integration }) {
                           render={
                             <Button
                               onClick={handleDelete}
+                              disabled={deleteMut.isPending}
+                              aria-label={translations("Delete")}
                               variant="ghost"
                               size="icon"
                               className="text-red-500"
                             />
                           }
                         >
-                          <IconTrash />
+                          {deleteMut.isPending ? <Spinner /> : <IconTrash />}
                         </TooltipTrigger>
                         <TooltipContent>{translations("Delete")}</TooltipContent>
                       </Tooltip>
@@ -167,8 +185,8 @@ function APIKeyGenerate({ integration }) {
             <p className="mb-2 text-sm text-muted-foreground">
               Use this key to set up your Zapier connection
             </p>
-            <Button onClick={handleCreate}>
-              <IconKey />
+            <Button onClick={handleCreate} disabled={createMut.isPending}>
+              {createMut.isPending ? <Spinner /> : <IconKey />}
               {createMut.isPending
                 ? translations("Generating...")
                 : translations("Generate Api Key")}

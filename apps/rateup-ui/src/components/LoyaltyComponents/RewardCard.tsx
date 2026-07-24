@@ -1,4 +1,5 @@
 import { Edit2, Save, Trash2, X } from "lucide-react";
+import { useId } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
 import type {
@@ -9,7 +10,7 @@ import type {
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { LoyaltyRewardStatus } from "@/types/enums.ts";
 
@@ -66,6 +67,7 @@ export function RewardCard({
   loyaltyTemplates,
   getRewardIcon,
 }: RewardCardProps) {
+  const uid = useId();
   const getCategoryLabel = () => {
     switch (category) {
       case "point-rewards":
@@ -156,14 +158,17 @@ export function RewardCard({
               loyaltyTemplates={loyaltyTemplates}
             />
 
-            <div className="flex items-center justify-between pt-3 border-t">
-              <div className="flex items-center gap-2">
-                <Label className="text-xs">Enable Reward</Label>
+            <div className="flex items-center justify-between pt-3 border-t gap-2">
+              <Field orientation="horizontal">
+                <FieldLabel htmlFor={`${uid}-enable-reward`} className="text-xs">
+                  Enable Reward
+                </FieldLabel>
                 <Switch
+                  id={`${uid}-enable-reward`}
                   checked={reward.status === LoyaltyRewardStatus.ACTIVE}
                   onCheckedChange={onToggleStatus}
                 />
-              </div>
+              </Field>
               <Button variant="destructive" size="sm" className="h-8" onClick={onDelete}>
                 <Trash2 className="w-3.5 h-3.5 mr-1" />
                 Delete Reward

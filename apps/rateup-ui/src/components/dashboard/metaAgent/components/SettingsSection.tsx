@@ -9,8 +9,8 @@ import {
 } from "@/backend/metaAgent/metaAgent.query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FieldTitle } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -206,7 +206,7 @@ function SettingRow({
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-4">
       <div>
-        <Label className="text-sm">{title}</Label>
+        <FieldTitle className="text-sm">{title}</FieldTitle>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
       {children}

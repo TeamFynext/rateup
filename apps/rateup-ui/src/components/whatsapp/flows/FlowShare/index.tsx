@@ -6,14 +6,14 @@ import {
   IconMail,
   IconUpload,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useId, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
   SelectContent,
@@ -34,6 +34,7 @@ interface FlowShareProps {
 }
 
 export default function FlowShare({ flowName, flowDbId, survey, surveyId }: FlowShareProps) {
+  const uid = useId();
   // Share Survey state
 
   const updateFlowMutation = useUpdateFlowMutation();
@@ -149,14 +150,19 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
           leftContent={
             <div className="flex flex-col gap-4">
               <div className="flex flex-1 gap-4">
-                <div className="flex-1">
-                  <Label className="text-xs text-gray-500 dark:text-gray-400">Select Team</Label>
+                <Field className="flex-1">
+                  <FieldLabel
+                    htmlFor={`${uid}-select-team`}
+                    className="text-xs text-gray-500 dark:text-gray-400"
+                  >
+                    Select Team
+                  </FieldLabel>
                   <Select
                     value={selectedTeam}
                     onValueChange={(value) => setSelectedTeam(value)}
                     items={teamOptions}
                   >
-                    <SelectTrigger className="h-9 text-sm w-full">
+                    <SelectTrigger id={`${uid}-select-team`} className="h-9 text-sm w-full">
                       <SelectValue placeholder="Team" />
                     </SelectTrigger>
                     <SelectContent>
@@ -167,15 +173,20 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                </Field>
                 <div className="flex-1">
-                  <Label className="text-xs text-gray-500 dark:text-gray-400">Select Tag</Label>
+                  <FieldLabel
+                    htmlFor={`${uid}-select-tag`}
+                    className="text-xs text-gray-500 dark:text-gray-400"
+                  >
+                    Select Tag
+                  </FieldLabel>
                   <Select
                     value={selectedTag}
                     onValueChange={(value) => setSelectedTag(value)}
                     items={tagOptions}
                   >
-                    <SelectTrigger className="h-9 text-sm w-full">
+                    <SelectTrigger id={`${uid}-select-tag`} className="h-9 text-sm w-full">
                       <SelectValue placeholder="Optional" />
                     </SelectTrigger>
                     <SelectContent>
@@ -196,9 +207,15 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs text-gray-500 dark:text-gray-400">Share Link</Label>
+                <FieldLabel
+                  htmlFor={`${uid}-share-link`}
+                  className="text-xs text-gray-500 dark:text-gray-400"
+                >
+                  Share Link
+                </FieldLabel>
                 <div className="flex gap-2">
                   <Input
+                    id={`${uid}-share-link`}
                     value={shareUrl}
                     readOnly
                     className="flex-1 h-9 text-xs font-mono bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-300"
@@ -243,9 +260,12 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
           }
           leftContent={
             <div className="flex flex-col gap-2">
-              <div className="relative">
-                <Label className="text-xs">Body</Label>
+              <Field className="relative">
+                <FieldLabel htmlFor={`${uid}-body`} className="text-xs">
+                  Body
+                </FieldLabel>
                 <Textarea
+                  id={`${uid}-body`}
                   value={startMessageBody}
                   onChange={(e) => setStartMessageBody(e.currentTarget.value)}
                   rows={3}
@@ -254,10 +274,13 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                 <span className="absolute bottom-1 right-2 text-[10px] text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-950 px-1 py-0.5 rounded pointer-events-none">
                   {startMessageBody.length} / 1024
                 </span>
-              </div>
-              <div className="relative">
-                <Label className="text-xs">Suffix</Label>
+              </Field>
+              <Field className="relative">
+                <FieldLabel htmlFor={`${uid}-suffix`} className="text-xs">
+                  Suffix
+                </FieldLabel>
                 <Textarea
+                  id={`${uid}-suffix`}
                   value={startMessageSuffix}
                   onChange={(e) => setStartMessageSuffix(e.currentTarget.value)}
                   rows={3}
@@ -266,7 +289,7 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                 <span className="absolute bottom-1 right-2 text-[10px] text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-950 px-1 py-0.5 rounded pointer-events-none">
                   {startMessageSuffix.length} / 1024
                 </span>
-              </div>
+              </Field>
               <div className="flex justify-end">
                 <Button
                   size="sm"
@@ -362,9 +385,12 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                 </Button>
               </div>
 
-              <div className="relative">
-                <Label className="text-xs">Body</Label>
+              <Field className="relative">
+                <FieldLabel htmlFor={`${uid}-body-2`} className="text-xs">
+                  Body
+                </FieldLabel>
                 <Textarea
+                  id={`${uid}-body-2`}
                   value={templateBody}
                   onChange={(e) => setTemplateBody(e.currentTarget.value)}
                   rows={4}
@@ -373,11 +399,14 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                 <span className="absolute bottom-1 right-2 text-[10px] text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-950 px-1 py-0.5 rounded pointer-events-none">
                   {templateBody.length} / 1024
                 </span>
-              </div>
+              </Field>
 
-              <div className="relative">
-                <Label className="text-xs">Footer</Label>
+              <Field className="relative">
+                <FieldLabel htmlFor={`${uid}-footer`} className="text-xs">
+                  Footer
+                </FieldLabel>
                 <Textarea
+                  id={`${uid}-footer`}
                   value={templateFooter}
                   onChange={(e) => setTemplateFooter(e.currentTarget.value)}
                   rows={1}
@@ -386,11 +415,14 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                 <span className="absolute bottom-1 right-2 text-[10px] text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-950 px-1 py-0.5 rounded pointer-events-none">
                   {templateFooter.length} / 60
                 </span>
-              </div>
+              </Field>
 
-              <div className="relative">
-                <Label className="text-xs">CTA</Label>
+              <Field className="relative">
+                <FieldLabel htmlFor={`${uid}-cta`} className="text-xs">
+                  CTA
+                </FieldLabel>
                 <Input
+                  id={`${uid}-cta`}
                   value={templateCTA}
                   onChange={(e) => setTemplateCTA(e.currentTarget.value)}
                   className="mt-0.5 h-8 text-sm"
@@ -398,7 +430,7 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
                 <span className="absolute bottom-1 right-2 text-[10px] text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-950 px-1 py-0.5 rounded pointer-events-none">
                   {templateCTA.length} / 20
                 </span>
-              </div>
+              </Field>
               <div className="flex w-full justify-end">
                 <Button
                   size="sm"

@@ -1,4 +1,3 @@
-import { Spoiler } from "@mantine/core";
 import { useNavigate } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { CheckCircle2 } from "lucide-react";
@@ -8,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import { currencyLabel } from "@/components/menu/util/currencyData.ts";
 import { BookDemoModal1 } from "@/components/RateupHomePage/helper/BookDemoModal";
+import { Spoiler } from "@/components/ui/spoiler.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
 
@@ -113,7 +113,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
   return (
     <section className="relative flex flex-col items-center justify-center gap-6 bg-[#FAFAF7] px-6 py-20 text-gray-800 md:px-12">
       <div className="max-w-xl text-center">
-        <h4 className="text-sm font-bold uppercase tracking-[0.08em] text-[#1C518E]">Pricing</h4>
+        <p className="text-sm font-bold uppercase tracking-[0.08em] text-[#1C518E]">Pricing</p>
         <h1 className="mt-3 text-4xl font-bold text-[#0A0B0A] md:text-5xl">Choose What You Need</h1>
         <p className="mt-3 text-gray-600">
           No apps. No forms. Just results — pick the plan that fits your team.
@@ -179,8 +179,8 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
 
             <Spoiler
               maxHeight={310}
-              pb={"xs"}
-              styles={{ control: { fontSize: "14px", color: "#1C518E" } }}
+              className="pb-2.5"
+              controlClassName="text-sm text-[#1C518E]"
               showLabel={"Show all available features"}
               hideLabel={"See less"}
             >
