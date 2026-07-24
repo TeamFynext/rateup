@@ -77,7 +77,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
       case "multivalue":
         return (
           <Field className="flex flex-col gap-1" data-invalid={!!fieldError}>
-            <FieldLabel htmlFor={`${uid}-field`}>{commonProps.label}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-${fieldId}`}>{commonProps.label}</FieldLabel>
             <Select
               required={commonProps.required}
               value={fieldValue}
@@ -85,9 +85,10 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               items={options}
             >
               <SelectTrigger
-                id={`${uid}-field`}
+                id={`${uid}-${fieldId}`}
                 className="bg-accent border-none placeholder:text-sm"
                 aria-invalid={!!fieldError}
+                aria-describedby={fieldError ? `${uid}-${fieldId}-error` : undefined}
               >
                 <SelectValue placeholder={commonProps.placeholder} />
               </SelectTrigger>
@@ -99,7 +100,7 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
                 ))}
               </SelectContent>
             </Select>
-            {fieldError && <FieldError>{fieldError}</FieldError>}
+            {fieldError && <FieldError id={`${uid}-${fieldId}-error`}>{fieldError}</FieldError>}
           </Field>
         );
 
@@ -109,19 +110,20 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
       default:
         return (
           <Field className="flex flex-col gap-1" data-invalid={!!fieldError}>
-            <FieldLabel htmlFor={`${uid}-field-2`}>{commonProps.label}</FieldLabel>
+            <FieldLabel htmlFor={`${uid}-${fieldId}`}>{commonProps.label}</FieldLabel>
             <Input
-              id={`${uid}-field-2`}
+              id={`${uid}-${fieldId}`}
               {...commonProps}
               type={customField.type === "email" ? "email" : customField.type}
               defaultValue={fieldValue}
               aria-invalid={!!fieldError}
+              aria-describedby={fieldError ? `${uid}-${fieldId}-error` : undefined}
               onChange={(event) =>
                 updateCustomField(fieldId, event.currentTarget.value, customField)
               }
               className="bg-accent border-none placeholder:text-sm"
             />
-            {fieldError && <FieldError>{fieldError}</FieldError>}
+            {fieldError && <FieldError id={`${uid}-${fieldId}-error`}>{fieldError}</FieldError>}
           </Field>
         );
     }
@@ -142,10 +144,14 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               id={field.name}
               placeholder={translations("Enter full name")}
               required
+              autoComplete="name"
               aria-invalid={fieldState.invalid}
+              aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
               className="bg-accent border-none placeholder:text-sm"
             />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+            )}
           </Field>
         )}
       />
@@ -165,9 +171,12 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               onChange={field.onChange}
               onBlur={field.onBlur}
               aria-invalid={fieldState.invalid}
+              aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
               className="w-full"
             />
-            {fieldState.invalid && <FieldError>*{fieldState.error?.message}</FieldError>}
+            {fieldState.invalid && (
+              <FieldError id={`${field.name}-error`}>*{fieldState.error?.message}</FieldError>
+            )}
           </Field>
         )}
       />
@@ -182,10 +191,14 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
               id={field.name}
               placeholder={translations("email@example.com")}
               type="email"
+              autoComplete="email"
               aria-invalid={fieldState.invalid}
+              aria-describedby={fieldState.invalid ? `${field.name}-error` : undefined}
               className="bg-accent border-none placeholder:text-sm"
             />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError id={`${field.name}-error`} errors={[fieldState.error]} />
+            )}
           </Field>
         )}
       />

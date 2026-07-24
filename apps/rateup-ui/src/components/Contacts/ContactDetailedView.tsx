@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog.tsx";
-import { FieldTitle } from "../ui/field.tsx";
+import { FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import { Textarea } from "../ui/textarea.tsx";
@@ -191,6 +191,7 @@ const ContactDetailedView = ({
                           <Button
                             variant="ghost"
                             size="sm"
+                            aria-label={`Remove from ${group.name}`}
                             onClick={() => {
                               setSelectedGroup(group);
                               handleRemoveContactFromGroup(group, [selectedContact.id]);
@@ -221,6 +222,9 @@ const ContactDetailedView = ({
           </TabsContent>
           <TabsContent value="notes" className="space-y-4">
             <div className="space-y-3">
+              <FieldLabel htmlFor="contact-notes" className="sr-only">
+                Notes
+              </FieldLabel>
               <Textarea
                 id="contact-notes"
                 placeholder="Add notes about this contact..."

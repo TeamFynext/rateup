@@ -44,7 +44,7 @@ import {
 } from "@/components/dashboard/instagram/instagram-preview.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Button, buttonVariants } from "@/components/ui/button.tsx";
 import {
   Card,
   CardContent,
@@ -77,6 +77,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.t
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { WaAutomationCards } from "@/components/whatsapp/automation/AutomationCards.tsx";
+import { cn } from "@/lib/utils.ts";
 import type { WaAutomatedReply } from "@/types/global";
 import { AutomationPlatform } from "@/types/platform.ts";
 
@@ -139,7 +140,9 @@ function InstagramDashboard() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button render={<Link to="/dashboard/settings" />}>{t("Go to Settings")}</Button>
+          <Link to="/dashboard/settings" className={buttonVariants()}>
+            {t("Go to Settings")}
+          </Link>
         </EmptyContent>
       </Empty>
     );
@@ -528,15 +531,22 @@ function IgMeLinksTab({
             )}
             {copied ? t("Copied!") : t("Copy link")}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!link}
-            render={<a href={link} target="_blank" rel="noreferrer" />}
+          <a
+            href={link || undefined}
+            target="_blank"
+            rel="noreferrer"
+            aria-disabled={!link}
+            tabIndex={link ? undefined : -1}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              // `disabled:` variants only match real form controls, so an anchor needs
+              // the disabled look and click-blocking spelled out.
+              !link && "pointer-events-none opacity-50",
+            )}
           >
             <IconExternalLink className="mr-1.5 size-4" />
             {t("Open in browser")}
-          </Button>
+          </a>
         </div>
       </CardContent>
     </Card>

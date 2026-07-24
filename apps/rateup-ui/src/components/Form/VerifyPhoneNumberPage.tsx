@@ -12,7 +12,7 @@ import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
-import { Button } from "../ui/button.tsx";
+import { Button, buttonVariants } from "../ui/button.tsx";
 import { Field, FieldGroup, FieldLabel } from "../ui/field.tsx";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp.tsx";
 import { Spinner } from "../ui/spinner.tsx";
@@ -141,16 +141,15 @@ function VerifyPhoneNumberPage() {
           </Button>
         </div>
       </form>
-      <Link to="/logout" className="no-underline">
-        <Button
-          type="button"
-          variant="ghost"
-          render={<div />}
-          className="w-full justify-start font-semibold"
-        >
-          <IconArrowAutofitLeft size="1rem" stroke={1.5} />
-          {translations("Logout")}
-        </Button>
+      <Link
+        to="/logout"
+        className={buttonVariants({
+          variant: "ghost",
+          className: "w-full justify-start font-semibold no-underline",
+        })}
+      >
+        <IconArrowAutofitLeft size="1rem" stroke={1.5} data-icon="inline-start" />
+        {translations("Logout")}
       </Link>
     </>
   );

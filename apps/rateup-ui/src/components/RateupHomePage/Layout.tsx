@@ -95,7 +95,16 @@ export default function Layout({
       </header>
       <main>{children}</main>
       {footer}
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          /* Placeholder launcher so the corner reserves its space instead of popping in. */
+          <div
+            role="status"
+            aria-label="Loading support chat"
+            className="fixed right-1 bottom-8 z-50 size-12 animate-pulse rounded-full bg-muted sm:right-8"
+          />
+        }
+      >
         <SupportWidget
           orgId={import.meta.env.VITE_ROOT_ORG || ""}
           token={import.meta.env.VITE_ROOT_TOKEN || ""}

@@ -184,6 +184,7 @@ const PlanCard = ({
             )}
             {opened && (
               <iframe
+                title="Contact Sales form"
                 onLoad={upadateLoadingStateOfIframe}
                 className={styles["contact-form-iframe"]}
                 src="https://rateup.app/ws/8hKp9bb9"

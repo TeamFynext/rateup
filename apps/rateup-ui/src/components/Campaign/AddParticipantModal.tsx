@@ -227,8 +227,13 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
           {/* Search and Tab Selection */}
           <div className="grid grid-cols-[1fr_auto] gap-4 items-center">
             <div className="relative">
+              <FieldLabel htmlFor="add-participant-search" className="sr-only">
+                {t("Search {type}...", { type: selectedTab?.toLowerCase() })}
+              </FieldLabel>
               <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
+                id="add-participant-search"
+                type="search"
                 placeholder={t("Search {type}...", {
                   type: selectedTab?.toLowerCase(),
                 })}
@@ -238,8 +243,10 @@ const AddParticipantModal = ({ close, campaign, campaignType }: AddParticipantMo
               />
               {searchText && (
                 <button
+                  type="button"
+                  aria-label={t("Clear search")}
                   onClick={() => setSearchText("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-sm text-slate-400 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                   <IconX className="h-4 w-4" />
                 </button>

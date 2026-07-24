@@ -32,7 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
@@ -188,27 +188,31 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
                 {translations("Select the team/teams in which the survey copy to be created.")}
               </p>
               <div className="flex flex-col gap-2">
-                <Field>
-                  <FieldLabel htmlFor={`${uid}-field`}>
+                <FieldSet>
+                  <FieldLegend id={`${uid}-teams-legend`}>
                     {translations("Select teams")}
                     <span className="text-destructive">*</span>
-                  </FieldLabel>
+                  </FieldLegend>
                   <RadioGroup
                     value={teamChoice}
                     onValueChange={(value) => setTeamChoice(value as string)}
                     name="selectTeams"
+                    aria-labelledby={`${uid}-teams-legend`}
                     className="mt-2 flex flex-row items-center gap-4"
                   >
-                    <FieldLabel htmlFor={`${uid}-field-2`} className="items-center font-normal">
-                      <RadioGroupItem id={`${uid}-field`} value="all" />
+                    <FieldLabel htmlFor={`${uid}-teams-all`} className="items-center font-normal">
+                      <RadioGroupItem id={`${uid}-teams-all`} value="all" />
                       {translations("All teams")}
                     </FieldLabel>
-                    <FieldLabel htmlFor={`${uid}-field-3`} className="items-center font-normal">
-                      <RadioGroupItem id={`${uid}-field-2`} value="manual" />
+                    <FieldLabel
+                      htmlFor={`${uid}-teams-manual`}
+                      className="items-center font-normal"
+                    >
+                      <RadioGroupItem id={`${uid}-teams-manual`} value="manual" />
                       {translations("Select Manually")}
                     </FieldLabel>
                   </RadioGroup>
-                </Field>
+                </FieldSet>
 
                 {teamChoice === "manual" && (
                   <Field>

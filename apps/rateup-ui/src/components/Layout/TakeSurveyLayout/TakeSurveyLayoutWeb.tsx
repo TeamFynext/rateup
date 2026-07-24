@@ -28,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../ui/dialog.tsx";
-import { Field, FieldLabel } from "../../ui/field.tsx";
+import { Field, FieldError, FieldLabel } from "../../ui/field.tsx";
 import { Input } from "../../ui/input.tsx";
 import LanguageSelectionPage from "../LanguageSelectionPage/index.tsx";
 import WelcomePage from "../WelcomePage/WelcomePage.tsx";
@@ -69,6 +69,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
   const open = () => setOpened(true);
   const close = () => setOpened(false);
   const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
 
   useEffect(() => {
@@ -119,7 +120,16 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
     setIsPasswordVerified,
   );
 
+  /**
+   * The hotkey path submits without going through the form, so the empty check lives here rather
+   * than relying on the input's `required` attribute alone.
+   */
   const submitSurveyPassword = () => {
+    if (!passwordInput.trim()) {
+      setPasswordError("Enter the survey password to continue.");
+      return;
+    }
+    setPasswordError("");
     toast.loading(`Hold on, your access is getting verified.`, { id: "load-data" });
     verifySurveyPassword.mutate();
   };
@@ -185,7 +195,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
               Hey Welcome , <br /> You need to enter password to continue.
             </p>
             <div className="h-5" />
-            <Field className="my-5">
+            <Field className="my-5" data-invalid={!!passwordError}>
               <FieldLabel htmlFor="survey-password">
                 Password
                 <span className="text-destructive"> *</span>
@@ -194,10 +204,17 @@ export const TakeSurveyLayoutWeb = ({ survey, children }) => {
                 id="survey-password"
                 type="password"
                 required
+                autoComplete="current-password"
                 placeholder="Enter survey password"
                 value={passwordInput}
-                onChange={(event) => setPasswordInput(event.target.value)}
+                aria-invalid={!!passwordError}
+                aria-describedby={passwordError ? "survey-password-error" : undefined}
+                onChange={(event) => {
+                  setPasswordInput(event.target.value);
+                  if (passwordError) setPasswordError("");
+                }}
               />
+              {passwordError && <FieldError id="survey-password-error">{passwordError}</FieldError>}
             </Field>
             <DialogFooter className="mt-4 sm:justify-center">
               <Button type="submit">Login</Button>

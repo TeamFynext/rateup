@@ -20,7 +20,7 @@ import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
-import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field.tsx";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
@@ -51,6 +51,7 @@ const CreateContactModal = ({
   createNewContactMutation?: any;
 }) => {
   const [csvfile, setCsvfile] = useState<File | null>(null);
+  const [csvFileError, setCsvFileError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const createContactMutation = useCreateContactMutation();
   const editContactMutation = useEditContactMutation(null);
@@ -71,9 +72,11 @@ const CreateContactModal = ({
     setIsCreating(true);
     if (values.source == importMethod.CSV && !initialValues) {
       if (!csvfile) {
+        setCsvFileError(translations("Choose a CSV, XLSX or ODS file to import."));
         setIsCreating(false);
         return;
       }
+      setCsvFileError("");
       const formData = new FormData();
       formData.append("update", values.updateExisting?.toString());
       formData.append("hasHeaderRow", values.hasHeaderRow?.toString() ?? "true");
@@ -153,6 +156,16 @@ const CreateContactModal = ({
 
   const sourceValue = form.watch("source");
   const contactTypeValue = form.watch("contactType") ?? [];
+
+  // ContactForm renders its own per-field errors, but it is unmounted on the CSV branch. Surface
+  // anything it cannot show so a rejected submit always explains itself.
+  const isContactFormVisible =
+    sourceValue == importMethod.MANUAL || sourceValue != importMethod.CSV || !!initialValues;
+  const unrenderedErrors = isContactFormVisible
+    ? []
+    : Object.values(form.formState.errors)
+        .flatMap((error) => (Array.isArray(error) ? error : [error]))
+        .filter((error): error is { message: string } => typeof error?.message === "string");
 
   return (
     <div>
@@ -280,17 +293,29 @@ const CreateContactModal = ({
                   </FieldLabel>
                 </Field>
               </FieldGroup>
-              <Input
-                type="file"
-                accept=".csv,.xlsx,.ods"
-                aria-label={translations(
-                  "Upload a csv file (.csv), excel file (.xlsx) or opendocument file (.ods)",
-                )}
-                onChange={(event) => setCsvfile(event.target.files?.[0] ?? null)}
-                className="mx-5 h-15 border-2 border-dashed border-gray-300 text-center"
-              />
+              <Field className="mx-5" data-invalid={!!csvFileError}>
+                <Input
+                  type="file"
+                  accept=".csv,.xlsx,.ods"
+                  aria-label={translations(
+                    "Upload a csv file (.csv), excel file (.xlsx) or opendocument file (.ods)",
+                  )}
+                  aria-invalid={!!csvFileError}
+                  aria-describedby={csvFileError ? "csv-file-error" : undefined}
+                  onChange={(event) => {
+                    setCsvfile(event.target.files?.[0] ?? null);
+                    setCsvFileError("");
+                  }}
+                  className="h-15 border-2 border-dashed border-gray-300 text-center"
+                />
+                {csvFileError && <FieldError id="csv-file-error">{csvFileError}</FieldError>}
+              </Field>
             </div>
           )}
+
+          {/* Errors from fields that the currently-visible branch does not render, so a failed
+              submit is never silent. */}
+          {unrenderedErrors.length > 0 && <FieldError className="px-5" errors={unrenderedErrors} />}
 
           <div className="flex items-center justify-end gap-2">
             <Button variant="secondary" type="button" onClick={contactClose}>

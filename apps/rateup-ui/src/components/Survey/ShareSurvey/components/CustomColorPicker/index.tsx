@@ -115,8 +115,10 @@ function CustomColorPicker({
 
       <input
         type="text"
+        aria-label="Hex colour value"
         className={cn(
-          "flex-none rounded-2xl border-2 border-[#868e96] text-center uppercase outline-none",
+          "flex-none rounded-2xl border-2 border-[#868e96] text-center uppercase",
+          "focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
           size === Size.md ? "h-9 flex-1 p-2.5 text-sm" : "px-3.5 py-2.5 text-base",
           isFocused && "border-primary",
         )}

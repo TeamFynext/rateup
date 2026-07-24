@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { buttonVariants } from "@/components/ui/button.tsx";
 
 function BodyComp({
   enableGoogleReview,
@@ -28,11 +28,15 @@ function BodyComp({
       )}
       {k === "cs" && (
         <div className="m-8 flex p-8">
-          <Link to={`${import.meta.env.VITE_FRONTEND_URL}/public/survey/cs`} target="_blank">
-            <Button>
-              <IconHome />
-              {translations("Go to Home")}
-            </Button>
+          {/* A single anchor styled as a button — a Button wrapping a Link would nest two
+              interactive controls. */}
+          <Link
+            to={`${import.meta.env.VITE_FRONTEND_URL}/public/survey/cs`}
+            target="_blank"
+            className={buttonVariants()}
+          >
+            <IconHome data-icon="inline-start" />
+            {translations("Go to Home")}
           </Link>
         </div>
       )}

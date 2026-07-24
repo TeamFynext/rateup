@@ -121,6 +121,7 @@ function LinkCard({ linkObj, onDelete }) {
             </Button>
           ) : (
             <Input
+              aria-label="Link display name"
               className={`${styles["link-card-input"]} ${styles["display-name-input"]}`}
               value={linkDisplayNameInputState}
               onChange={(e) => setLinkDisplayNameInputState(e.target.value)}

@@ -198,12 +198,16 @@ const ResetPasswordForm = ({ mode }) => {
                           {...field}
                           id="email"
                           type="email"
+                          autoComplete="email"
                           placeholder={translations("Enter your email address")}
                           required
                           aria-invalid={fieldState.invalid}
+                          aria-describedby={fieldState.invalid ? "email-error" : undefined}
                           className="h-12"
                         />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        {fieldState.invalid && (
+                          <FieldError id="email-error" errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />

@@ -53,7 +53,7 @@ const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
   if (!hasError) {
     const width = values.width + values.widthUnit;
     const height = values.height + values.heightUnit;
-    iframe = `<iframe src="${shareUrl}" width="${width}" height="${height}"></iframe>`;
+    iframe = `<iframe title="Survey" src="${shareUrl}" width="${width}" height="${height}"></iframe>`;
   }
 
   function handleCopy() {

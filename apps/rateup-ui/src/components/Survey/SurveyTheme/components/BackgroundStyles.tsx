@@ -106,16 +106,17 @@ function BackgroundStyles() {
           />
         )}
         <RadioGroup
+          aria-label="Background type"
           value={chooseBgRadioInputValue}
           onValueChange={handleChooseBackgroundRadioGroupChange}
           className="flex flex-row gap-5"
         >
-          <FieldLabel htmlFor={`${uid}-color`} className="flex items-center gap-2">
-            <RadioGroupItem value="color" />
+          <FieldLabel htmlFor={`${uid}-bg-color`} className="flex items-center gap-2">
+            <RadioGroupItem id={`${uid}-bg-color`} value="color" />
             Color
           </FieldLabel>
-          <FieldLabel htmlFor={`${uid}-image`} className="flex items-center gap-2">
-            <RadioGroupItem id={`${uid}-color`} value="image" />
+          <FieldLabel htmlFor={`${uid}-bg-image`} className="flex items-center gap-2">
+            <RadioGroupItem id={`${uid}-bg-image`} value="image" />
             Image
           </FieldLabel>
         </RadioGroup>

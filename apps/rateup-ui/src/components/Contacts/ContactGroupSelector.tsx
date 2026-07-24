@@ -30,7 +30,7 @@ const ContactGroupSelector = ({ value, onChange, className = "", allowMultiSelec
   const groupItems = groups?.map((g) => ({ value: g.id, label: g.name })) ?? [];
   return (
     <Select value={value} onValueChange={onChange} items={groupItems}>
-      <SelectTrigger className={`${className}`}>
+      <SelectTrigger aria-label="Select a group" className={`${className}`}>
         <SelectValue placeholder={"Select a group"} />
       </SelectTrigger>
       <SelectContent>

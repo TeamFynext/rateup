@@ -212,7 +212,12 @@ const AddCustomerModal = ({
               </Field>
               <div className="relative w-75">
                 <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <FieldLabel htmlFor="add-customer-search" className="sr-only">
+                  {translations("Search Contact")}
+                </FieldLabel>
                 <Input
+                  id="add-customer-search"
+                  type="search"
                   className="rounded-full pl-9"
                   placeholder={translations("Search Contact")}
                   defaultValue={searchTerm}

@@ -41,7 +41,9 @@ function AuthTypeSignupForm({
 
     email: z.email("Invalid email").optional(),
 
-    website: z.url("Invalid website URL").optional(),
+    // `.optional()` only permits `undefined`, but the field defaults to "" — accept
+    // the empty string explicitly so a blank optional website doesn't block the step.
+    website: z.literal("").or(z.url("Invalid website URL")).optional(),
 
     phoneNumber: z.string().optional(),
 

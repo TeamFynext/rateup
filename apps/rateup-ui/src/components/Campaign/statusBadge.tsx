@@ -12,16 +12,25 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, errorMessage }: Readonly<StatusBadgeProps>) {
+  const isFailed = status === CampaignParticipantStatus.FAILED && errorMessage;
+
   const badge = (
-    <Badge variant="outline" className={`text-xs font-medium ${getStatusBadgeStyle(status)}`}>
+    <Badge
+      variant="outline"
+      // Delivery status flips while a campaign sends, so announce the change in place.
+      role="status"
+      aria-label={isFailed ? `${status}: ${errorMessage}` : undefined}
+      className={`text-xs font-medium ${getStatusBadgeStyle(status)}`}
+    >
       {status}
     </Badge>
   );
 
-  if (status === CampaignParticipantStatus.FAILED && errorMessage) {
+  if (isFailed) {
     return (
       <HoverCard>
-        <HoverCardTrigger delay={200} render={<span className="cursor-default" />}>
+        {/* tabIndex keeps the failure reason reachable without a pointer. */}
+        <HoverCardTrigger delay={200} render={<span tabIndex={0} className="cursor-default" />}>
           {badge}
         </HoverCardTrigger>
         <HoverCardContent className="w-64">

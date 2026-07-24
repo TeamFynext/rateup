@@ -93,14 +93,15 @@ function TagInput({
         {label}
         {required && <span className="ml-0.5 text-destructive">*</span>}
       </FieldTitle>
-      <div className="flex min-h-9 flex-wrap gap-1.5 rounded-md border border-input bg-background px-2 py-1.5 focus-within:ring-1 focus-within:ring-ring">
+      <div className="flex min-h-9 flex-wrap gap-1.5 rounded-md border border-input bg-background px-2 py-1.5">
         {value.map((tag) => (
           <Badge key={tag} variant="secondary" className="gap-1 pr-1">
             {tag}
             <button
               type="button"
+              aria-label={`Remove ${tag}`}
               onClick={() => onChange(value.filter((t) => t !== tag))}
-              className="rounded-sm opacity-60 hover:opacity-100"
+              className="rounded-sm opacity-60 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <IconX className="size-3" />
             </button>
@@ -118,8 +119,9 @@ function TagInput({
               onChange(value.slice(0, -1));
             }
           }}
+          aria-label={label}
           placeholder={value.length ? "" : placeholder}
-          className="min-w-[120px] flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          className="min-w-[120px] flex-1 rounded-sm bg-transparent text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground"
         />
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}

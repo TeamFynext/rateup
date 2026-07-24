@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { signIn, signUp } from "supertokens-auth-react/recipe/emailpassword";
 import {
+  EmailVerificationClaim,
   sendVerificationEmail,
   verifyEmail,
 } from "supertokens-auth-react/recipe/emailverification";
@@ -13,6 +14,25 @@ import {
 } from "supertokens-auth-react/recipe/passwordless";
 
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
+
+/**
+ * Pull a fresh `st-ev` value into the session's access token payload.
+ *
+ * `EmailVerificationReact.init()` defaults to `mode: "REQUIRED"`, which registers an
+ * `isVerified(10)` claim validator that <SessionAuth> enforces on /dashboard. That
+ * validator reads the cached claim and only refetches a `false` after ~10s, so anyone
+ * whose email was verified elsewhere (another tab, another device, a social login)
+ * carries a stale `false` and gets redirected here — where we send them back. Refreshing
+ * before we navigate is what breaks the cycle.
+ */
+const refreshEmailVerificationClaim = async () => {
+  try {
+    await EmailVerificationClaim.refresh({});
+  } catch (err) {
+    // Navigate anyway: the guard re-checks and the claim refetches on its own timer.
+    console.error("Failed to refresh the email verification claim:", err);
+  }
+};
 
 const handleCreateCode = async (phoneNumber: string, navigate: ReturnType<typeof useNavigate>) => {
   try {
@@ -266,7 +286,11 @@ export const useConsumeVerificationCode = () => {
         toast.success("Verified email successfully.", {
           id: "verify-email",
         });
-        // router.push(route);
+        // <SessionAuth> guards /dashboard with the `st-ev` session claim, and a `false`
+        // value is cached in the access token payload for ~10s before it is refetched.
+        // Without this refresh the dashboard redirects straight back here, and this page
+        // sends the user to the dashboard again — the two bounce off each other.
+        await refreshEmailVerificationClaim();
         navigate({
           to: "/dashboard",
         });
@@ -293,6 +317,9 @@ export function useEmailSend() {
     try {
       const response = await sendVerificationEmail();
       if (response?.status === "EMAIL_ALREADY_VERIFIED_ERROR") {
+        // The backend says verified but the session claim may still say otherwise.
+        // Refresh it first, or /dashboard sends the user right back here.
+        await refreshEmailVerificationClaim();
         navigate({
           to: "/dashboard",
         });

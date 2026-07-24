@@ -7,7 +7,7 @@ import {
   ReactNodeViewRenderer,
   mergeAttributes,
 } from "@tiptap/react";
-import { Image, Link, Upload, Loader2, X } from "lucide-react";
+import { ImageIcon, Link, Upload, Loader2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
 
 /* eslint-disable */
@@ -163,7 +163,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
             )}
           >
             <div className="rounded-full bg-background p-4 shadow-sm transition-colors group-hover:bg-accent">
-              <Image className="h-6 w-6" />
+              <ImageIcon className="h-6 w-6" aria-hidden="true" />
             </div>
             <div className="text-center">
               <p className="text-sm font-medium">Click to upload or drag and drop</p>
@@ -214,6 +214,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
                         <Input
                           value={altText}
                           onChange={(e) => setAltText(e.target.value)}
+                          aria-label="Image alt text"
                           placeholder="Alt text (optional)"
                         />
                         <div className="flex justify-end gap-2">

@@ -290,7 +290,7 @@ function Security() {
         <Card className="p-6 border-red-200 bg-linear-to-br from-red-50 to-orange-50 shadow-sm">
           <h3 className="mb-4 text-red-700">{translations("Danger Zone")}</h3>
           <div className="space-y-4">
-            {user.role === UserRole.SUPADM && (
+            {user?.role === UserRole.SUPADM && (
               <div className="flex items-center justify-between p-5 bg-white border-2 border-red-200 rounded-xl">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -339,7 +339,7 @@ function Security() {
         </Card>
       </div>
       {/* Delete Confirmation Dialog */}
-      {user.role === UserRole.SUPADM && (
+      {user?.role === UserRole.SUPADM && (
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>

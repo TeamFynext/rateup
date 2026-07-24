@@ -59,7 +59,7 @@ export function GoogleSheet() {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <div className="flex flex-col items-center justify-center gap-4">
-          <img src={"../../images/googlesheeticon.png"} className="h-25 w-20" />
+          <img src={"../../images/googlesheeticon.png"} alt="Google Sheets" className="h-25 w-20" />
           <Button
             onClick={() => {
               persistCallbackRoute("/dashboard/apps&services/googlesheet");

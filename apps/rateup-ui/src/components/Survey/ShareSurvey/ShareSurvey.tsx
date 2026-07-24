@@ -749,10 +749,11 @@ const PubliShSettingsModal = ({ opened, close, editPublish, surveyUpdateMutation
         <FieldSet className="mt-4 min-h-[250px]">
           {(!editPublish || editPublish === "Publish") && (
             <div className="flex flex-col gap-3">
-              <FieldLegend variant="label">
+              <FieldLegend id="publish-legend" variant="label">
                 {translations("Publish")} <span className="text-destructive">*</span>
               </FieldLegend>
               <RadioGroup
+                aria-labelledby="publish-legend"
                 value={publishChoice}
                 onValueChange={(v) => setPublishChoice(v as PublishEnum)}
                 className="flex gap-4"
@@ -792,10 +793,11 @@ const PubliShSettingsModal = ({ opened, close, editPublish, surveyUpdateMutation
 
           {(!editPublish || editPublish === "Expiry") && (
             <FieldSet>
-              <FieldLegend variant="label">
+              <FieldLegend id="expiry-legend" variant="label">
                 {translations("Expiry Date")} <span className="text-destructive">*</span>
               </FieldLegend>
               <RadioGroup
+                aria-labelledby="expiry-legend"
                 value={surveyExpiry}
                 onValueChange={(v) => setSurveyExpiry(v as ExpiryEnum)}
                 className="flex gap-4"

@@ -55,7 +55,7 @@ export default function LikeWhatUSee({
               onClick={() => onBookDemo?.()}
               className="h-12 w-full rounded-xl bg-gradient-to-r from-[#2c6fd6] to-[#1e5bb8] font-bold text-white shadow-[0_4px_12px_rgba(44,111,214,0.25)] transition-all duration-200 hover:from-[#1e5bb8] hover:to-[#174895] hover:shadow-[0_6px_16px_rgba(44,111,214,0.35)] hover:-translate-y-[0.5px] active:translate-y-0"
             >
-              <Calendar className="mr-2 h-5 w-5" /> Book a Demo
+              <Calendar data-icon="inline-start" className="h-5 w-5" /> Book a Demo
             </Button>
 
             <Button
@@ -67,7 +67,8 @@ export default function LikeWhatUSee({
               }}
               className="h-12 w-full rounded-xl bg-gradient-to-r from-[#22c55e] to-[#16a34a] font-bold text-white shadow-[0_4px_12px_rgba(22,163,74,0.25)] transition-all duration-200 hover:from-[#16a34a] hover:to-[#15803d] hover:shadow-[0_6px_16px_rgba(22,163,74,0.35)] hover:-translate-y-[0.5px] active:translate-y-0"
             >
-              <IconBrandWhatsapp className="mr-2 h-5 w-5" /> Chat with us on WhatsApp
+              <IconBrandWhatsapp data-icon="inline-start" className="h-5 w-5" /> Chat with us on
+              WhatsApp
             </Button>
           </div>
 

@@ -38,7 +38,7 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
 
 export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
   const shareUrl = `${import.meta.env.VITE_FRONTEND_URL}/public/testimonial/${collectionId}`;
-  const iframe = `<iframe src="${shareUrl}" width="100%"></iframe>`;
+  const iframe = `<iframe title="Testimonials" src="${shareUrl}" width="100%"></iframe>`;
 
   const [isPreview, setIsPreview] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -117,6 +117,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
             <div className="flex flex-col gap-3 px-3">
               <div>
                 <iframe
+                  title={translations("Testimonial wall preview")}
                   src={shareUrl}
                   width={"100%"}
                   height={400}

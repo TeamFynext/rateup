@@ -104,7 +104,7 @@ export default function DeliveryOptionsTab({ catalogId }: { catalogId: string })
           disabled={addingNew}
           className="gap-1.5"
         >
-          <Plus className="h-3.5 w-3.5" /> Add Option
+          <Plus className="h-3.5 w-3.5" data-icon="inline-start" /> Add Option
         </Button>
       </div>
 

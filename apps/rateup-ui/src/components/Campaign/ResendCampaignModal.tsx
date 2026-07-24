@@ -233,8 +233,12 @@ export const ResendCampaignModal = ({
 
                   {/* TIME PICKER */}
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background">
+                    <FieldLabel htmlFor="resend-schedule-time" className="sr-only">
+                      {t("Send time")}
+                    </FieldLabel>
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <Input
+                      id="resend-schedule-time"
                       type="time"
                       value={scheduleTime}
                       onChange={(e) => setScheduleTime(e.target.value)}
@@ -269,19 +273,29 @@ export const ResendCampaignModal = ({
             {isDailyLimitEnabled && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
+                  <FieldLabel htmlFor="dailySendLimitValue" className="sr-only">
+                    {t("Messages per day")}
+                  </FieldLabel>
                   <Input
+                    id="dailySendLimitValue"
                     type="number"
                     min={1}
                     step={1}
                     value={dailySendLimit}
                     onChange={(e) => setDailySendLimit(e.target.value)}
+                    aria-invalid={!isDailyLimitValid}
+                    aria-describedby={!isDailyLimitValid ? "dailySendLimitValue-error" : undefined}
                     className="w-32"
                   />
                   <span className="text-sm text-muted-foreground">{t("messages per day")}</span>
                 </div>
 
                 {!isDailyLimitValid ? (
-                  <p className="text-xs text-destructive flex items-center gap-1.5">
+                  <p
+                    id="dailySendLimitValue-error"
+                    role="alert"
+                    className="text-xs text-destructive flex items-center gap-1.5"
+                  >
                     <AlertCircle className="w-3 h-3" />
                     {t("Enter a daily send limit of at least 1")}
                   </p>
