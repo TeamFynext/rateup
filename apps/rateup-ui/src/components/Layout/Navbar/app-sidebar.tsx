@@ -49,6 +49,7 @@ import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { useNavMain } from "./hooks.tsx";
 import { NavUser } from "./user-nav.tsx";
 import { WhatsAppSettingsModal } from "./utils.tsx";
+import WhatsNewButton from "./whats-new/WhatsNewButton.tsx";
 
 const sidebarIconProps = { className: "size-5!", strokeWidth: 1.75 };
 
@@ -806,6 +807,7 @@ export default function AppSidebar({
 
         <SidebarFooter>
           <ModeToggle />
+          <WhatsNewButton />
           <NotificationBellIcon />
           <NavUser user={userData?.data} />
         </SidebarFooter>

@@ -51,6 +51,14 @@ This file provides essential guidance for AI coding agents working in this codeb
 - Do not perform broad Mantine-to-shadcn rewrites unless explicitly requested.
 - shadcn/ui primitives in `src/components/ui/` are built on `@base-ui/react` (not Radix). There is no direct `@radix-ui/*` dependency in `package.json`; don't add one or reintroduce `cmdk`/`Command`-based patterns.
 - For select-style fields prefer `Select` (`src/components/ui/select.tsx`) for single choice and `MultiSelect` (`src/components/ui/multi-select.tsx`, a thin wrapper over `Combobox` in `src/components/ui/combobox.tsx`) for multi choice. Always pass `items` on `<Select>`/`<Combobox>` roots so the trigger renders the correct label.
+- **`ScrollArea` needs a bounded height, not a `max-h-*`.** Base UI puts `overflow: scroll` on an
+  inner viewport that is `size-full`, so in an auto-height parent the viewport grows to its content
+  and a `max-h-*` on the `<ScrollArea>` root never scrolls — it just overflows, and gets silently
+  clipped if an ancestor (e.g. `Card`) is `overflow-hidden`. Either give the root a definite height
+  (`h-96`, or `flex-1 min-h-0` inside a fixed-height flex column — how the working usages in
+  `NotificationList.tsx` and sheets do it), or drop `ScrollArea` for a plain `div` carrying both
+  `max-h-*` and `overflow-y-auto` (plus `overscroll-contain`), which keeps the cap and the overflow
+  on one element. `whats-new/WhatsNewButton.tsx` is an example of the plain-`div` form.
 
 ## Styling & Design Tokens
 
@@ -80,6 +88,26 @@ reintroduce them.)
 ## Internationalization
 
 - Uses `react-i18next` with locale files in `src/locales/`
+
+## Product Announcements ("What's new")
+
+User-visible changes are announced in-app from the megaphone button in the icon rail
+(`src/components/Layout/Navbar/whats-new/`). Ship the announcement in the same PR as the change.
+
+- **Any big UI change must ship with an announcement.** If a change alters how a screen looks or
+  works enough that a returning user would notice — a new feature or tab, a restructured page or
+  panel, a moved/renamed/removed control, a changed default or workflow — add an announcement entry
+  in the same change. When in doubt, announce it; when the change is invisible to users (refactors,
+  token/styling parity work, tests, internal types, pure bug fixes with no behaviour shift), don't.
+- **Add an entry to `src/config/announcements.ts`** — that file is the only source. Order does not
+  matter; the list is sorted by `publishedAt`, newest first.
+- **Never reuse or renumber an `id`.** Read state is a list of ids in the reader's `localStorage`
+  (`rateup:whats-new:read`), so a changed id resurfaces as unread for everyone, and an entry
+  inheriting a retired id is never seen. Convention: `YYYY-MM-DD-short-slug`.
+- **`kinds`** (`new` / `improvement` / `fix`) and the optional one-or-two-word `area` render as
+  chips; `link` deep-links into the app via TanStack `Link` (`{ to, search?, label? }`).
+- Read state is per browser and not synced — there is no announcements API in `rateup-api`. Do not
+  add a second read-state store; extend `useAnnouncements` if that changes.
 
 ## Additional Notes
 
