@@ -88,7 +88,10 @@ function AnnouncementEntry({
   return (
     <article className="flex gap-2.5 border-b border-border px-3 py-3 last:border-b-0">
       {unread ? (
-        <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary">
+        // `relative` is load-bearing: `sr-only` is `position: absolute`, and without a positioned
+        // parent its containing block is the popover positioner, so it escapes the list's
+        // `overflow-y-auto` and stretches the document down to its static position.
+        <span className="relative mt-1.5 size-1.5 shrink-0 rounded-full bg-primary">
           <span className="sr-only">{translations("Unread")}</span>
         </span>
       ) : (
