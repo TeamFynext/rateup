@@ -1,4 +1,4 @@
-import { useNavigate, useRouterState, useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AlertTriangle, Loader2, Plus, Search, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
@@ -16,11 +16,10 @@ import { FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
+const CASHIER_PATH = "/dashboard/loyalty/cashier";
+
 export function CashierPage() {
   const navigate = useNavigate();
-  const pathname = useRouterState({
-    select: (s) => s.location.pathname,
-  });
   const searchParams = useSearch({ strict: false });
 
   const [searchInput, setSearchInput] = useState("");
@@ -41,7 +40,9 @@ export function CashierPage() {
 
   const customer = customerData?.customer;
 
-  const normalizePhone = (phone: string) => phone.replaceAll("+", "");
+  // `phone` can arrive from the URL, where an all-digit value is parsed as a
+  // number — stringify before touching it.
+  const normalizePhone = (phone: string | number) => String(phone).replaceAll("+", "");
 
   // Debounce search input
   useEffect(() => {
@@ -54,21 +55,29 @@ export function CashierPage() {
   }, [searchInput]);
 
   useEffect(() => {
-    const phoneFromQuery = searchParams.phone || "";
+    const phoneFromQuery = searchParams.phone ? String(searchParams.phone) : "";
     setSearchInput(phoneFromQuery);
     setSelectedPhone(phoneFromQuery ? normalizePhone(phoneFromQuery) : "");
   }, [searchParams]);
 
   const updatePhoneQueryParam = (phone: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+    // `searchParams` is the router's parsed object, not a URLSearchParams — building
+    // from `.toString()` produced a literal "[object Object]" key in the URL.
+    const params = new URLSearchParams(
+      Object.entries(searchParams).flatMap(([key, value]) =>
+        value == null ? [] : [[key, String(value)] as [string, string]],
+      ),
+    );
+
     if (phone) {
       params.set("phone", phone);
     } else {
       params.delete("phone");
     }
+
     const query = params.toString();
     navigate({
-      to: query ? `${pathname}?${query}` : pathname,
+      to: query ? `${CASHIER_PATH}?${query}` : CASHIER_PATH,
       replace: true,
     });
   };

@@ -86,6 +86,7 @@ export const ColorHighlightToolbar = () => {
   const currentHighlight = editor?.getAttributes("highlight").color;
 
   const handleSetColor = (color: string) => {
+    if (typeof editor?.commands.setColor !== "function") return;
     editor
       ?.chain()
       .focus()
@@ -94,6 +95,7 @@ export const ColorHighlightToolbar = () => {
   };
 
   const handleSetHighlight = (color: string) => {
+    if (typeof editor?.commands.setHighlight !== "function") return;
     editor
       ?.chain()
       .focus()
@@ -101,45 +103,57 @@ export const ColorHighlightToolbar = () => {
       .run();
   };
 
+  // These commands only exist when the Color/Highlight extensions are registered on the editor,
+  // and not every editor mounting this toolbar registers both.
+  const supportsColor = typeof editor?.commands.setColor === "function";
+  const supportsHighlight = typeof editor?.commands.setHighlight === "function";
+
+  if (!supportsColor && !supportsHighlight) return null;
+
   const isDisabled =
-    !editor?.can().chain().setHighlight().run() || !editor?.can().chain().setColor("").run();
+    (!supportsHighlight || !editor?.can().chain().setHighlight().run()) &&
+    (!supportsColor || !editor?.can().chain().setColor("").run());
 
   if (isMobile) {
     return (
       <div className="flex gap-1">
-        <MobileToolbarGroup label="Color">
-          {TEXT_COLORS.map(({ name, color }) => (
-            <MobileToolbarItem
-              key={name}
-              onClick={() => handleSetColor(color)}
-              active={currentColor === color}
-            >
-              <div className="flex items-center gap-2">
-                <div className="rounded-sm border px-2" style={{ color }}>
-                  A
+        {supportsColor && (
+          <MobileToolbarGroup label="Color">
+            {TEXT_COLORS.map(({ name, color }) => (
+              <MobileToolbarItem
+                key={name}
+                onClick={() => handleSetColor(color)}
+                active={currentColor === color}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="rounded-sm border px-2" style={{ color }}>
+                    A
+                  </div>
+                  <span>{name}</span>
                 </div>
-                <span>{name}</span>
-              </div>
-            </MobileToolbarItem>
-          ))}
-        </MobileToolbarGroup>
+              </MobileToolbarItem>
+            ))}
+          </MobileToolbarGroup>
+        )}
 
-        <MobileToolbarGroup label="Highlight">
-          {HIGHLIGHT_COLORS.map(({ name, color }) => (
-            <MobileToolbarItem
-              key={name}
-              onClick={() => handleSetHighlight(color)}
-              active={currentHighlight === color}
-            >
-              <div className="flex items-center gap-2">
-                <div className="rounded-sm border px-2" style={{ backgroundColor: color }}>
-                  A
+        {supportsHighlight && (
+          <MobileToolbarGroup label="Highlight">
+            {HIGHLIGHT_COLORS.map(({ name, color }) => (
+              <MobileToolbarItem
+                key={name}
+                onClick={() => handleSetHighlight(color)}
+                active={currentHighlight === color}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="rounded-sm border px-2" style={{ backgroundColor: color }}>
+                    A
+                  </div>
+                  <span>{name}</span>
                 </div>
-                <span>{name}</span>
-              </div>
-            </MobileToolbarItem>
-          ))}
-        </MobileToolbarGroup>
+              </MobileToolbarItem>
+            ))}
+          </MobileToolbarGroup>
+        )}
       </div>
     );
   }
@@ -173,30 +187,38 @@ export const ColorHighlightToolbar = () => {
 
         <PopoverContent align="start" className="w-56 p-1 dark:bg-gray-2">
           <ScrollArea className="max-h-80 overflow-y-auto pr-2">
-            <div className="mb-2.5 mt-2 px-2 text-xs text-gray-11">Color</div>
-            {TEXT_COLORS.map(({ name, color }) => (
-              <ColorHighlightButton
-                key={name}
-                name={name}
-                color={color}
-                isActive={currentColor === color}
-                onClick={() => handleSetColor(color)}
-              />
-            ))}
+            {supportsColor && (
+              <>
+                <div className="mb-2.5 mt-2 px-2 text-xs text-gray-11">Color</div>
+                {TEXT_COLORS.map(({ name, color }) => (
+                  <ColorHighlightButton
+                    key={name}
+                    name={name}
+                    color={color}
+                    isActive={currentColor === color}
+                    onClick={() => handleSetColor(color)}
+                  />
+                ))}
+              </>
+            )}
 
-            <Separator className="my-3" />
+            {supportsColor && supportsHighlight && <Separator className="my-3" />}
 
-            <div className="mb-2.5 w-full px-2 pr-3 text-xs text-gray-11">Background</div>
-            {HIGHLIGHT_COLORS.map(({ name, color }) => (
-              <ColorHighlightButton
-                key={name}
-                name={name}
-                color={color}
-                isActive={currentHighlight === color}
-                onClick={() => handleSetHighlight(color)}
-                isHighlight
-              />
-            ))}
+            {supportsHighlight && (
+              <>
+                <div className="mb-2.5 w-full px-2 pr-3 text-xs text-gray-11">Background</div>
+                {HIGHLIGHT_COLORS.map(({ name, color }) => (
+                  <ColorHighlightButton
+                    key={name}
+                    name={name}
+                    color={color}
+                    isActive={currentHighlight === color}
+                    onClick={() => handleSetHighlight(color)}
+                    isHighlight
+                  />
+                ))}
+              </>
+            )}
           </ScrollArea>
         </PopoverContent>
       </div>

@@ -38,6 +38,15 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-07-25-docs-shortcut",
+    title: "Documentation is one click away",
+    summary:
+      "A book icon now sits in the sidebar rail, next to the theme toggle and What's new. It opens docs.rateup.app in a new tab from wherever you are in the app.",
+    publishedAt: "2026-07-25",
+    kinds: ["new"],
+    area: "Navigation",
+  },
+  {
     id: "2026-07-25-inbox-channel-filter",
     title: "Channel filter moved to the sidebar",
     summary:

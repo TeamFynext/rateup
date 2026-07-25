@@ -47,6 +47,7 @@ import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
+import DocsButton from "./docs-button.tsx";
 import { useNavMain } from "./hooks.tsx";
 import { NavUser } from "./user-nav.tsx";
 import { WhatsAppSettingsModal } from "./utils.tsx";
@@ -818,6 +819,7 @@ export default function AppSidebar({
 
         <SidebarFooter>
           <ModeToggle />
+          <DocsButton />
           <WhatsNewButton />
           <NotificationBellIcon />
           <NavUser user={userData?.data} />
