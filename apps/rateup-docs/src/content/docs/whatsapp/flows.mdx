@@ -4,20 +4,14 @@ description: Multi-screen forms customers complete without leaving WhatsApp.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 A **flow** is a form built from screens that a customer fills in inside WhatsApp — no browser, no
 link, no app switch.
 
 Use flows for anything structured: a booking, a feedback survey, a lead form, an order detail.
 
-<ImagePlaceholder
-  file="whatsapp/flows-list.png"
-  shot="The Flows list page with existing flows, the account selector, search box and Create Flow button; empty state reads 'No Flows Available'."
-  caption="Your WhatsApp flows."
-/>
-
-{/* TODO: capture the flows list */}
+<ScreenShot src="/docs/screenshots/whatsapp/flows-list.png" alt="Your WhatsApp flows" />
 
 ---
 
@@ -32,7 +26,8 @@ Select the **WhatsApp account** the flow belongs to. You will be asked to
 Click **Create Flow** and name it.
 </Step>
 <Step>
-Build the screens — each screen is one step the customer sees.
+Build the screens in the [flow editor](/whatsapp/flow-editor) — each screen is one step the customer
+sees.
 </Step>
 <Step>
 Add the fields on each screen: text inputs, choices, dates, uploads.
@@ -98,6 +93,7 @@ Flows live on Meta's side too. Use **Sync** to align RateUp with WhatsApp after 
 
 ## Related Pages
 
+- [Flow Editor](/whatsapp/flow-editor) — screens, elements, logic jumps and settings
 - [Templates](/whatsapp/templates) — attaching a flow to a message
 - [Chatbots](/whatsapp/chatbots)
 - [Web Forms](/web-forms) — the browser-based alternative

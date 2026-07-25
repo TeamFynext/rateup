@@ -5,7 +5,7 @@ description: How the Inbox turns customer messages into tickets, and how ticket 
 
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 The RateUp Inbox is organised around **tickets**. Everything else in this section — views,
 assignment, closing, reporting — is built on this one idea, so it is worth reading properly.
@@ -34,13 +34,7 @@ Each ticket has:
 
 A customer can have any number of tickets, and several can be open at once.
 
-<ImagePlaceholder
-  file="inbox/tickets-same-contact.png"
-  shot="The conversation list filtered to one customer, showing three rows for the same person: two closed tickets and one open, each with a different number and title."
-  caption="Three tickets for the same customer, each its own row."
-/>
-
-{/* TODO: capture three rows belonging to the same customer */}
+<ScreenShot src="/docs/screenshots/inbox/tickets-same-contact.png" alt="Three tickets for the same customer, each its own row" />
 
 Each ticket:
 
@@ -77,7 +71,7 @@ three values:
 |--------|---------|-----------------|
 | **New** | Nobody is assigned yet | The moment someone is assigned |
 | **Assigned** | At least one agent or team owns it | When it is closed, or all assignees are removed |
-| **Closed** | Closed, resolved, unresolved or spam | When it is reopened — as a new ticket |
+| **Closed** | Closed, resolved or unresolved | When it is reopened — as a new ticket |
 
 <Callout type="info">
   Status is worked out automatically from assignment and closure. There is no status field to keep
@@ -92,13 +86,7 @@ When a customer has more than one ticket, an amber bar appears under the chat he
 
 > 🕘 **3 previous conversations** · last on Mar 12, 2026
 
-<ImagePlaceholder
-  file="inbox/previous-conversations.png"
-  shot="The amber previous-conversations bar expanded, listing three earlier tickets with channel icon, number, title, status pill, assignee and result badge."
-  caption="Expanded ticket history for a returning customer."
-/>
-
-{/* TODO: capture the expanded previous-conversations bar */}
+<ScreenShot src="/docs/screenshots/inbox/previous-conversations.png" alt="Expanded ticket history for a returning customer" />
 
 Click the bar to expand it. Each earlier ticket shows:
 
@@ -155,8 +143,8 @@ Add a description if there is context the messages do not make obvious, then cli
 **The team works on it.** Replies go to the customer; private notes and @mentions stay internal.
 </Step>
 <Step>
-**It is closed with an outcome** — resolved, closed, unresolved or spam. Assignees are cleared and
-the ticket moves to **Closed**.
+**It is closed with an outcome** — resolved, closed or unresolved. Assignees are cleared and the
+ticket moves to **Closed**.
 </Step>
 <Step>
 **The customer comes back.** A new ticket is created. The closed one keeps its record and shows up

@@ -1,0 +1,165 @@
+---
+title: "Template Editor"
+description: The template detail page — every field, the formatting toolbar, button rules, what each template type forces, and what happens on submit.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+Creating a template, or opening one from the [Templates](/whatsapp/templates) list, opens the
+editor: one form, top to bottom, with the rendered message a click away behind **Preview**.
+
+<ScreenShot src="/docs/screenshots/whatsapp/template-editor.png" alt="The template editor" />
+
+---
+
+## The Header
+
+| Control | Does |
+|---------|------|
+| **Preview** | Shows the message as WhatsApp will render it, in a phone frame |
+| **Save as draft** | Keeps it in RateUp without sending it to WhatsApp. `Ctrl`/`Cmd` + `S` does the same |
+| **Save & Submit** | Sends it to WhatsApp for approval |
+| **Edit** | Appears instead on a template already submitted — the fields are read-only until you click it |
+| **Status badge** | Where the template stands with WhatsApp — **DRAFT** until you submit |
+| **Template ID** | Meta's id for the template, with a copy button. Only on a saved template |
+
+Anything the save rejects appears in a red band at the top of the form — *"Error Saving Changes"*
+plus whatever WhatsApp reported.
+
+---
+
+## The Fields
+
+| Field | Notes |
+|-------|-------|
+| **Template Name** | **Lower-case letters and underscores only** — the hint sits beside the label. Counter runs to **512** |
+| **TemplateType** | What kind of message this is — see below |
+| **Category** | **MARKETING**, **UTILITY** or **AUTHENTICATION** |
+| **Language** | One template, one language. Send the wrong language and it will not match your audience |
+| **Account** | Which of your WhatsApp numbers owns the template |
+| **Broadcast header** | The header: **None**, **Text**, **Image**, **Video**, **Document**, **Location** or **Product** |
+| **Body** | The message. Required, up to **1024** characters |
+| **Footer (Optional)** | Small print — *"Footers are great to add any disclaimers or to add a thoughtful PS"*. Up to **60** characters |
+| **Buttons (Optional)** | Added with **+ Add Action Button** — see below |
+| **Code Expiration (minutes)** | Replaces **Footer** on an **AUTHENTICATION** template. Between 1 and 90 minutes |
+
+Required fields carry a red asterisk, and every counter shows how much room is left.
+
+### Template types
+
+The dropdown shows them in the API's own spelling:
+
+| Type | What it changes |
+|------|-----------------|
+| **GENERAL_NOTIFICATION** | The default. You choose the category |
+| **ORDER_DETAILS** | Forces **UTILITY** and an image header, and adds the checkout configuration below. Cannot be saved as a draft |
+| **PAYMENT_CONFIRMATION** | Forces **UTILITY** |
+| **LOYALTY** | For [loyalty](/loyalty/notifications) messages |
+| **CAROUSEL** | Forces **MARKETING** and builds a scrollable card set |
+
+<Callout type="info">
+  Switching type after you have written the message can move your category out from under you. Pick
+  the type first, then write.
+</Callout>
+
+---
+
+## Writing the Body
+
+The toolbar above the body applies WhatsApp's own formatting:
+
+| Button | Produces |
+|--------|----------|
+| **Bold** | `*bold*` |
+| **Italic** | `_italic_` |
+| **StikeThough** | `~struck through~` |
+| **Monospace** | ` ```monospace``` ` |
+| **Add Variable** | Inserts the next `{{n}}` at the cursor |
+| **Undo the last text formating** | Reverts the last formatting change |
+
+There is an emoji picker at the left of the same toolbar.
+
+### Variables
+
+**Add Variable** numbers them for you — `{{1}}`, then `{{2}}`, and so on. Each one gets its own
+example field below the body, prompting *"Enter the content for `{{1}}`"*.
+
+<Callout type="warn">
+  Both variable rules are enforced only when you submit, and both reject the whole template:
+  *"Dynamic variables name should is sequential numeric order"* if the numbers skip or repeat, and
+  *"Please provide example values for all dynamic variables"* if any example is blank. Fill the
+  examples in as you add each variable rather than at the end.
+</Callout>
+
+---
+
+## Buttons
+
+Click **+ Add Action Button** and pick from the grouped menu. Up to **12** in total — what you may
+combine is constrained by WhatsApp, and the editor refuses the combination rather than letting
+WhatsApp reject it later.
+
+| Group | Buttons |
+|-------|---------|
+| **Quick Reply Buttons** | **Custom** — sends a canned reply back to you. The only type you may have several of |
+| **Call-To-Action Buttons** | **Call phone number** · **Copy offer code** · **Visit website** |
+| **Rateup Interactive Buttons** | **Whatsapp Flow** opens a [flow](/whatsapp/flow-editor); **Rateup Web Survey** opens a [web form](/web-forms) |
+| **Catalog Buttons** | **View Catalog** · **MPM (Multi-Product)** · **SPM (Single-Product)** · **Checkout Button** |
+| **Authentication Buttons** | **OTP (One-Time Password)** — offered only when the category is **AUTHENTICATION** |
+
+An option you cannot use is disabled with the reason on hover — *"Already added"*,
+*"Only one authentication button allowed"*, *"Remove all buttons to add View catalog button"*.
+
+| Message you may hit | Meaning |
+|---------------------|---------|
+| *"Only one button allowed for this type"* | Every type except quick reply is limited to one |
+| *"Only quick reply buttons are allowed along with checkout button. Remove others to add checkout button"* | Clear the other buttons first |
+| *"Max number of button in buttons should be 12"* | Remove one |
+
+---
+
+## Order Details & Checkout
+
+Choosing **ORDER_DETAILS** — or adding a **Checkout Button** — turns the template into a payable order
+and adds a configuration block: the item's **name**, **price** and **tax**, the **order type**, and
+the payment configuration to charge through.
+
+The category is set to **UTILITY** and the header to an image for you, because WhatsApp requires
+both. **Save as draft** is not offered for this type.
+
+[Payments →](/commerce/payments)
+
+---
+
+## Read-Only After Submission
+
+Once a template has been submitted, its fields lock. Click **Edit** to change it — and remember that
+an edit puts the template back through WhatsApp's review.
+
+<Callout type="warn">
+  Editing an approved template is not free: it re-enters review, and until it clears you cannot rely
+  on it for a campaign. If you need a variant in a hurry, create a new template instead of editing
+  the one your campaigns already use.
+</Callout>
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| *"Error in Template"* on submit | A required field is empty | The message names the first field it found |
+| Name rejected | Capitals, spaces or punctuation | Lower-case letters and underscores only |
+| Category keeps changing back | The template type forces it | Change the type, or accept the category |
+| Fields cannot be typed in | The template is submitted or approved | Click **Edit** |
+| Approved template will not send | Wrong account, or no consent from the contact | Check the **Account** field and the contact's consent |
+
+---
+
+## Related Pages
+
+- [Templates](/whatsapp/templates) — the list, approval and syncing
+- [Sending Templates](/inbox/send-templates) — using one in a conversation
+- [Campaigns](/campaign) — sending one to many people
+- [Flow Editor](/whatsapp/flow-editor) — what a flow button opens

@@ -3,18 +3,12 @@ title: "Channels"
 description: Connect the WhatsApp, Instagram and Facebook accounts your customers message you on.
 ---
 
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 **Channels** is where your messaging accounts are connected. Everything else in RateUp — the Inbox,
 Commerce, Campaigns, Loyalty notifications — depends on at least one channel being live here.
 
-<ImagePlaceholder
-  file="settings/channels.png"
-  shot="The Channels page showing WhatsApp, Instagram and Facebook cards with their connected accounts and pages."
-  caption="Connected channels."
-/>
-
-{/* TODO: capture the Channels page */}
+<ScreenShot src="/docs/screenshots/settings/channels.png" alt="Connected channels" />
 
 ---
 
@@ -69,8 +63,19 @@ identity they are replying as.
 
 ---
 
+## Who Can See Which Channel
+
+Every member of the organisation sees every channel unless you say otherwise. To restrict a group to
+one number or account, set **Channel Access** on their [team](/settings/teams).
+
+Agents can then narrow their own view further with the Inbox's
+[Channel filter](/inbox/inbox-filter) — which never widens what their team is allowed to see.
+
+---
+
 ## Related Pages
 
 - [WhatsApp Settings](/whatsapp/settings)
 - [Instagram](/instagram)
+- [Teams](/settings/teams) — per-team channel access
 - [Integrations](/settings/integrations)

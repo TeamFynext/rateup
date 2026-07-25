@@ -1,87 +1,110 @@
 ---
 title: "Spam"
-description: Keep promotional and automated noise out of your working views.
+description: Flag a contact as spam to take them out of every working view — and take them back out of it.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
-**Spam** holds tickets marked as junk — promotional blasts, automated noise, and anything that is
-not a genuine customer query.
+**Spam** holds the contacts you have flagged as junk — promotional blasts, automated noise, and
+anyone who is not a genuine customer.
 
-Marking a ticket as spam closes it and removes it from every working view.
+Spam is a flag on the **contact**, not a status on a ticket. Flag someone once and they leave every
+working view, however many tickets they have.
+
+<Callout type="info">
+  This is the one tab that lists **contacts** rather than tickets — one row per spam contact, and the
+  row count reads *"12 contacts"* instead of *"12 conversations"*. Every other tab is one row per
+  ticket.
+</Callout>
 
 ---
 
-## Mark a Ticket as Spam
+## Mark a Contact as Spam
 
 Two routes, same result:
 
 | From | How |
 |------|-----|
-| **The Close menu** | Open the ticket → **Close** → **Mark as Spam** |
-| **Ticket Details panel** | Open the panel → **Mark as spam** at the bottom |
+| **The Close menu** | Open a ticket → **Close** → **Mark contact as spam**. On an already-closed ticket it sits in the **⋮** overflow menu |
+| **Ticket Details panel** | Open the panel → **Mark contact as spam** at the bottom |
 
-<ImagePlaceholder
-  file="inbox/mark-as-spam.png"
-  shot="The Close dropdown open with the four options visible, Mark as Spam highlighted."
-  caption="Marking a ticket as spam from the Close menu."
-/>
+You are asked to confirm — *"Mark Priya Sharma as spam"* — with a warning that their open tickets
+will be closed. Click **Mark as spam**.
 
-{/* TODO: capture the Close dropdown */}
+<ScreenShot src="/docs/screenshots/inbox/mark-as-spam.png" alt="Mark contact as spam, below the close statuses in the Close menu" />
 
 ---
 
 ## What Happens
 
-- The ticket is treated as **closed** — the composer is hidden
-- It disappears from **Open**, **New** and **Mine**
-- Its assignees are cleared
-- A system note records who marked it and when
-- It remains available in the **Spam** view
+- **Every open ticket** for that contact is closed, with the close reason **Spam**
+- All assignees are cleared
+- The contact disappears from **Open**, **New**, **Closed**, **All**, **Mine**, **@Mentions** and
+  **Favourites**, and stops counting towards their badges
+- They appear once in **Spam**, with a red **Spam** pill on the row
+- A system note records who flagged them and when
+- The composer is replaced by a banner: *"This contact is marked as spam."*
+
+New messages from a spam contact still arrive — WhatsApp is not told anything — but they land on
+that contact's row in **Spam** rather than in **New**.
+
+<Callout type="info">
+  Because the flag is on the contact, there is no **Close** or **Reopen** on a spam ticket, and the
+  Spam tab has no assign or bulk-select controls. Only **Not spam** moves the contact forward.
+</Callout>
 
 ---
 
-## Recovering a Ticket Marked by Mistake
+## Take a Contact Back Out of Spam
 
 <Steps>
 <Step>
-Open the ticket from the **Spam** view.
+Open the contact from the **Spam** tab.
 </Step>
 <Step>
-Click **Reopen** in the chat header.
+Click **Not spam** — in the chat header, in the banner above the composer, or at the bottom of the
+**Ticket Details** panel.
 </Step>
 <Step>
-A fresh ticket is opened for the customer and you can carry on as normal.
+Confirm. The flag is cleared and the contact returns to your working views.
 </Step>
 </Steps>
+
+Their old tickets stay closed — they were genuinely finished. The contact's next message opens a
+fresh ticket in **New**.
 
 ---
 
 ## Spam vs Blocking
 
-| | Mark as spam | Block contact |
-|---|-------------|---------------|
-| **Scope** | This one ticket | The contact, permanently |
-| **Effect** | Ticket closes and moves to Spam | Neither side can message the other |
-| **Future messages** | Still arrive, as new tickets | Do not arrive at all |
-| **Reversible** | Yes, by reopening | Yes, by unblocking |
+Both apply to the contact. The difference is whether the messages still reach you.
 
-To block: open the ticket, use the **Close** menu — or the **⋮** overflow menu if the ticket is
+| | Mark contact as spam | Block contact |
+|---|---------------------|---------------|
+| **Scope** | The contact, and all their tickets | The contact |
+| **Effect** | Open tickets close; the contact moves to **Spam** | Neither side can message the other |
+| **Future messages** | Still arrive, into the **Spam** tab | Do not arrive at all |
+| **Reversible** | Yes, with **Not spam** | Yes, by unblocking |
+
+To block: open a ticket, use the **Close** menu — or the **⋮** overflow menu if the ticket is
 already closed — and choose **Block contact**. You will be asked to confirm.
 
 <Callout type="warn">
-  Blocking cuts communication in both directions. Use it for repeat offenders, not for a single
-  unwanted message.
+  Blocking cuts communication in both directions. Use it for repeat offenders; use spam for noise
+  you simply do not want in the queue.
 </Callout>
+
+A contact who is both spam **and** blocked still appears in **Blocked**, so they never vanish
+entirely.
 
 ---
 
 ## Best Practices
 
-- Use **Spam** for noise and **Close** for real conversations that are finished
-- Review the Spam view occasionally — genuine customers do end up here by accident
-- Block only when marking as spam is not enough
+- Use **Spam** for people, and the close statuses for conversations that are finished
+- Review the tab occasionally — genuine customers do end up here by accident
+- Block only when flagging as spam is not enough
 
 ---
 
@@ -89,3 +112,4 @@ already closed — and choose **Block contact**. You will be asked to confirm.
 
 - [Closing & Reopening](/inbox/conversation-lifecycle)
 - [Closed](/inbox/inboxview/closed)
+- [Ticket Details](/inbox/ticket-details)

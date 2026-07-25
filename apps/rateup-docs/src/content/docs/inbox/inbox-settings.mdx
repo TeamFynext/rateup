@@ -5,21 +5,13 @@ description: Configure quick replies and auto-close automation for your Inbox.
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
-import { CDN } from "@/lib/cdn";
 
 Inbox Settings is where admins configure the two things that shape how the Inbox behaves for
 everyone: **quick replies** and **auto-close rules**.
 
 Open it from **Inbox → Settings** in the sidebar. It has two tabs.
 
-<ImagePlaceholder
-  file="inbox/inbox-settings-tabs.png"
-  shot="The Inbox Settings screen with the Quick Replies and Automation tabs visible, Quick Replies active."
-  caption="Inbox Settings."
-/>
-
-{/* TODO: capture the settings screen with both tabs */}
+<ScreenShot src="/docs/screenshots/inbox/inbox-settings-tabs.png" alt="Inbox Settings" />
 
 <Callout type="info">
   These settings apply to the whole organisation. Changing them affects every agent's Inbox
@@ -36,7 +28,7 @@ Agents reach them by clicking the **lightning** button in the composer, or by ty
 message box.
 
 <ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/quick-replies-list.png`}
+  src={`/docs/screenshots/inbox/quick-replies-list.png`}
   alt="Quick replies list"
   width={"70%"}
 />
@@ -63,7 +55,7 @@ Write the **reply text**, then click **Save Changes**.
 </Steps>
 
 <ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/add-quick-reply.png`}
+  src={`/docs/screenshots/inbox/add-quick-reply.png`}
   alt="Add quick reply"
   width={650}
 />
@@ -89,13 +81,7 @@ Changes apply instantly across the Inbox.
 
 Tickets that go quiet forever are noise. Auto-close rules end them for you.
 
-<ImagePlaceholder
-  file="inbox/auto-close-rules.png"
-  shot="The Automation tab showing the two auto-close rule cards — New / Unassigned Chats and Assigned Chats — each with its inactivity period and a toggle."
-  caption="Auto-close rules."
-/>
-
-{/* TODO: capture the Automation tab */}
+<ScreenShot src="/docs/screenshots/inbox/auto-close-rules.png" alt="Auto-close rules" />
 
 There are two rules, each switched on or off independently:
 

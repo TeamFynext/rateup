@@ -4,18 +4,12 @@ description: Group members into teams, control which features each team can use,
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 **Teams** organises members into groups and controls what each group can reach. It is the main tool
 for routing work and for limiting access without editing every user one by one.
 
-<ImagePlaceholder
-  file="settings/teams.png"
-  shot="The Team Management page: team cards with colour, member count and team code, plus the Create Team button."
-  caption="Team Management."
-/>
-
-{/* TODO: capture the Teams page */}
+<ScreenShot src="/docs/screenshots/settings/teams.png" alt="Team Management" />
 
 ---
 
@@ -73,6 +67,56 @@ Use **Enable All** or **Disable All** to set the whole list quickly, then adjust
 
 ---
 
+## Channel Access
+
+Under **Feature Access**, on the same tab, sits **Channel Access** — *"Choose which channels this
+team can see."* It decides which of your WhatsApp numbers, Instagram accounts and Facebook pages the
+team's conversations come from.
+
+<Steps>
+<Step>
+Open the team and go to **Feature Access**.
+</Step>
+<Step>
+Leave **All channels** on to give the team everything — including any channel you connect in future.
+</Step>
+<Step>
+Or switch **All channels** off, then turn on the individual channels this team should see. Each is
+labelled with its name and a platform badge.
+</Step>
+<Step>
+Click **Save Changes**.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Switching **All channels** off and selecting nothing shows *"No channels selected — members of this
+  team will not see any channel."* Their Inbox will be empty. Either pick a channel or turn **All
+  channels** back on.
+</Callout>
+
+### How the scope is worked out
+
+| Situation | What the person sees |
+|-----------|---------------------|
+| In several teams | The **union** of every team's channels — being in a team can only widen access |
+| In one team with **All channels** on | Every channel |
+| In no team at all | Every channel — scoping is opt-in per team |
+| Organisation owner | Every channel, always |
+
+<Callout type="info">
+  Channel access controls what the dashboard **shows**. It is not an API permission boundary: the
+  [External API](/external-api) key is organisation-wide and is not scoped by team.
+</Callout>
+
+Saving a channel selection takes effect straight away. Adding or removing a **member** can take up
+to a minute to change what they see — if a new team member still has the old view, wait, then
+refresh.
+
+[Connecting channels →](/settings/channels) · [Filtering by channel in the Inbox →](/inbox/inbox-filter)
+
+---
+
 ## Members
 
 Add members to a team from the team's detail page, or assign a team when
@@ -88,6 +132,7 @@ Teams are how work is routed without naming individuals:
 
 - A ticket assigned to a **team** is available to every member of it
 - The Inbox's [team filter](/inbox/inbox-filter) narrows any view to one team's work
+- **Channel Access** decides which conversations reach the team in the first place
 - Team-based routing survives people being on leave; individual routing does not
 
 ---
@@ -107,5 +152,6 @@ Avoid one team per person — that is what user permissions are for, and it make
 ## Related Pages
 
 - [Users](/settings/users)
+- [Channels](/settings/channels)
 - [Assignment & Reassignment](/inbox/asigning-conversation)
-- [Staff & Team Filters](/inbox/inbox-filter)
+- [Sidebar Filters](/inbox/inbox-filter)

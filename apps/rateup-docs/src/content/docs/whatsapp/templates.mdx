@@ -4,19 +4,13 @@ description: Build and manage the pre-approved messages you need to reach custom
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 A **template** is a message format approved by WhatsApp in advance. Templates are the only way to
 message a customer more than 24 hours after their last message — which makes them the backbone of
 campaigns and re-engagement.
 
-<ImagePlaceholder
-  file="whatsapp/templates-list.png"
-  shot="The Templates list with template cards, the account selector, Filter by Teams, search and the Create Template button."
-  caption="Your templates."
-/>
-
-{/* TODO: capture the templates list */}
+<ScreenShot src="/docs/screenshots/whatsapp/templates-list.png" alt="Your templates" />
 
 ---
 
@@ -34,7 +28,8 @@ Enter a **template name**. Lower-case letters and underscores only.
 Choose the **category** and **language**.
 </Step>
 <Step>
-Build the message — header, body, footer and buttons.
+Build the message in the [template editor](/whatsapp/template-editor) — header, body, footer and
+buttons.
 </Step>
 <Step>
 **Save as draft** while you work, or **Save & Submit** to send it to WhatsApp for approval.
@@ -127,6 +122,7 @@ Common rejection causes:
 
 ## Related Pages
 
+- [Template Editor](/whatsapp/template-editor) — every field and rule in the editor
 - [Campaigns](/campaign) — sending a template to many people
 - [Sending Templates](/inbox/send-templates) — sending one from a conversation
 - [Flows](/whatsapp/flows)

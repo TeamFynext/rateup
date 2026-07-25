@@ -3,18 +3,12 @@ title: "Inbox Views"
 description: The eight Inbox views — what each one contains, who it is for, and how to choose between them.
 ---
 
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 The sidebar splits your tickets into **eight views**. Each carries a live count, so you can see
 where work is waiting without opening anything.
 
-<ImagePlaceholder
-  file="inbox/sidebar-views.png"
-  shot="The Inbox sidebar showing all eight views with their counts: Open, New, Closed, All, Mine, @Mentions, Favourites, Spam."
-  caption="The eight Inbox views, each with a live count."
-/>
-
-{/* TODO: capture the sidebar with all eight views and counts */}
+<ScreenShot src="/docs/screenshots/inbox/sidebar-views.png" alt="The eight Inbox views, each with a live count" />
 
 ---
 
@@ -29,7 +23,7 @@ where work is waiting without opening anything.
 | **[Mine](/inbox/inboxview/mine)** | Tickets assigned to **you** | Agents |
 | **[@Mentions](/inbox/inboxview/mentions)** | Tickets where a colleague mentioned you | Everyone |
 | **[Favourites](/inbox/inboxview/favourites)** | Tickets you starred | Everyone |
-| **[Spam](/inbox/inboxview/spam)** | Tickets marked as spam | Admins |
+| **[Spam](/inbox/inboxview/spam)** | Contacts flagged as spam — one row each | Admins |
 
 ---
 
@@ -40,17 +34,20 @@ The views are not mutually exclusive — the same ticket can appear in several a
 - **New** and **Mine** are both subsets of **Open**
 - A ticket is in **New** only while nobody owns it; assign it and it moves to **Mine**
 - **@Mentions** and **Favourites** cut across status — a closed ticket can still be starred
-- **All** contains everything, including **Closed** and **Spam**
+- **All** contains every ticket, open and closed
+
+**Spam** sits outside all of it. Flagging a contact as spam removes them from every other view,
+including **All**, and the badges stop counting them.
 
 ```
 All
 ├── Open
 │   ├── New      (no owner)
 │   └── Mine     (owner = you)
-├── Closed
-└── Spam
+└── Closed
 
 @Mentions and Favourites overlap with all of the above.
+Spam is separate: contacts in it appear nowhere else.
 ```
 
 ---
@@ -70,12 +67,13 @@ All
 Views and filters do different jobs and work together:
 
 - A **view** decides which tickets are in the list (status and ownership)
-- **Filters** narrow that list further — by staff, team, channel, label, campaign or status
+- **Filters** narrow that list further — by channel, lifecycle stage, label, user or team
 
-Filters are remembered per view, and view-specific filters are cleared when you switch, so they
-never leak from one tab into another.
+Filters live in the sidebar, below the views, and **stay applied as you move between views** — they
+are remembered until you clear them, in this browser. If a view looks emptier than it should, check
+the filter sections for an active selection.
 
-[Search, filters & sorting →](/inbox/toolbar) · [Staff & team filters →](/inbox/inbox-filter)
+[Sidebar filters →](/inbox/inbox-filter) · [Search & sorting →](/inbox/toolbar)
 
 ---
 

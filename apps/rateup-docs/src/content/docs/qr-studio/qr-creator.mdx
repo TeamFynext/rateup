@@ -4,18 +4,12 @@ description: Generate branded QR codes, redirect them after printing, and track 
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 **QR Creator** generates QR codes that you control after they are printed. The code stays the same;
 where it sends people does not have to.
 
-<ImagePlaceholder
-  file="qr-studio/qr-list.png"
-  shot="The QR Creator list page: a grid of generated QR cards with names and previews, plus the search box, sort dropdown and Create QR button."
-  caption="Your generated QR codes."
-/>
-
-{/* TODO: capture the QR list page */}
+<ScreenShot src="/docs/screenshots/qr-studio/qr-list.png" alt="Your generated QR codes" />
 
 ---
 
@@ -48,13 +42,7 @@ Click **Create**. The code is generated and appears in your list.
 Open a QR from the list and switch to **Editor Mode** to style it — colours, patterns and shape —
 so it matches your brand instead of looking like a default black square.
 
-<ImagePlaceholder
-  file="qr-studio/qr-editor.png"
-  shot="The QR detail page in Editor Mode, showing the styled QR preview alongside the design controls, the Destination URL field, the QR URL copy row, and the Total Scans statistic."
-  caption="Editing and tracking a QR code."
-/>
-
-{/* TODO: capture the QR editor */}
+<ScreenShot src="/docs/screenshots/qr-studio/qr-editor.png" alt="Editing and tracking a QR code" />
 
 <Callout type="warn">
   Keep contrast high and do not over-style. A beautiful QR that phones cannot read is worse than a

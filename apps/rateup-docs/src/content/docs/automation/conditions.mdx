@@ -3,18 +3,12 @@ title: "Conditions"
 description: Narrow a trigger down so the rule fires only when it should.
 ---
 
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 **Conditions** are the `IF` part of a rule. They are optional — a rule with none fires on every
 occurrence of its trigger.
 
-<ImagePlaceholder
-  file="automation/conditions.png"
-  shot="The IF section of the rule builder with two conditions and the Match all / Match any selector."
-  caption="Building conditions."
-/>
-
-{/* TODO: capture the conditions builder */}
+<ScreenShot src="/docs/screenshots/automation/conditions.png" alt="Building conditions" />
 
 ---
 
@@ -72,10 +66,6 @@ occurrence of its trigger.
 - **Check the direction** if a rule is looping; an outgoing message can re-trigger a badly scoped
   rule
 
-<Callout type="warn">
-  A rule with no conditions on **Message Received** fires on every single incoming message. That is
-  occasionally what you want — usually it is not.
-</Callout>
 
 ---
 

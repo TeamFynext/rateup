@@ -3,18 +3,12 @@ title: "Inbox Layout"
 description: A guided tour of the four regions of the RateUp Inbox and every control in them.
 ---
 
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 The Inbox is split into four regions. This page names every one of them, so the rest of the
 documentation can point at things without describing them again.
 
-<ImagePlaceholder
-  file="inbox/layout-annotated.png"
-  shot="The full Inbox with the four regions numbered: 1 sidebar, 2 conversation list, 3 chat window, 4 ticket details panel."
-  caption="The four regions of the Inbox."
-/>
-
-{/* TODO: capture an annotated full-width screenshot with the four regions numbered */}
+<ScreenShot src="/docs/screenshots/inbox/layout-annotated.png" alt="The four regions of the Inbox" />
 
 | # | Region | Purpose |
 |---|--------|---------|
@@ -39,11 +33,12 @@ waiting without opening anything.
 | **Mine** | Tickets assigned to you |
 | **@Mentions** | Tickets where a colleague mentioned you |
 | **Favourites** | Tickets you have starred |
-| **Spam** | Tickets marked as spam |
+| **Spam** | Contacts you have flagged as spam — one row each |
 
-Below the views sit the **staff** and **team** filters, used mainly by admins and managers.
+Below the views sits the **Filter** group: **Channel**, **Lifecycle**, **Labels**, **Users** and
+**Teams**. Each narrows whatever view you are in and stays applied as you move between them.
 
-[Views in detail →](/inbox/inboxview) · [Staff & team filters →](/inbox/inbox-filter)
+[Views in detail →](/inbox/inboxview) · [Sidebar filters →](/inbox/inbox-filter)
 
 ---
 
@@ -51,13 +46,7 @@ Below the views sit the **staff** and **team** filters, used mainly by admins an
 
 Each row is a **ticket**, not a customer. A customer with three tickets appears three times.
 
-<ImagePlaceholder
-  file="inbox/ticket-row-annotated.png"
-  shot="A single conversation-list row, zoomed in, with callouts on: star, name, ticket number and title, message preview, status pill, mention chip, labels, unread badge, assignee avatar, amber left edge."
-  caption="Anatomy of a ticket row."
-/>
-
-{/* TODO: capture a zoomed, annotated single row */}
+<ScreenShot src="/docs/screenshots/inbox/ticket-row-annotated.png" alt="Anatomy of a ticket row" />
 
 ### What a row tells you
 
@@ -74,11 +63,14 @@ Each row is a **ticket**, not a customer. A customer with three tickets appears 
 | **Avatar on the right** | Who the ticket is assigned to (`+2` if several) |
 | **Amber left edge** | Nobody owns this ticket yet |
 | **Person + button** | Assign the ticket to yourself in one click |
+| **Red Spam pill** | The contact is flagged as spam — only shown in **Spam** |
+
+A deleted message reads *"This message was deleted"* in the preview, in place of its text.
 
 ### Above the list
 
-- The **view name** and the toolbar: search, advanced filters, select, export, refresh, **New**
-- A second row with the **ticket count** for the view and the **sort** control
+- The **view name** and the toolbar: search, select, export, refresh, **New**
+- A second row with the **count** for the view and the **sort** control
 
 [Toolbar in detail →](/inbox/toolbar)
 
@@ -89,13 +81,7 @@ Each row is a **ticket**, not a customer. A customer with three tickets appears 
 The chat window shows the selected **ticket** — only its messages, never the customer's whole
 history.
 
-<ImagePlaceholder
-  file="inbox/chat-window-annotated.png"
-  shot="An open ticket with callouts on the header row (star, @ clear-mention, countdown, status pill, Close button, panel toggle), the ticket strip, the previous conversations bar, and the composer tabs."
-  caption="The chat window, top to bottom."
-/>
-
-{/* TODO: capture an annotated chat window */}
+<ScreenShot src="/docs/screenshots/inbox/chat-window-annotated.png" alt="The chat window, top to bottom" />
 
 ### Header row
 
@@ -107,6 +93,8 @@ history.
 | **Countdown** | Time left in WhatsApp's 24-hour reply window |
 | **Status pill** | New, Assigned or Closed |
 | **Close / Reopen** | End the ticket, or start a successor once it is closed |
+| **Not spam** | Replaces Close / Reopen when the contact is flagged as spam |
+| **⋮** | Contact actions on a closed or spam ticket — where the **Close** menu would otherwise host them |
 | **Panel icon** | Show or hide the Ticket Details panel |
 
 ### Ticket strip
@@ -124,8 +112,9 @@ and result, and click any of them to jump straight there.
 
 - Customer messages on the left, your replies on the right
 - **Internal notes** appear centred, with a padlock and the author's name
-- **System notes** record assignments, closures and reopenings
+- **System notes** record assignments, closures, reopenings and spam flags
 - Delivery ticks show **Sent → Delivered → Read**
+- A message deleted on WhatsApp keeps its place, shown as *"This message was deleted"*
 
 ### Composer
 
@@ -134,7 +123,7 @@ sit the quick-replies button and the character counter.
 
 <Callout type="info">
   The composer is replaced by a banner when you cannot reply — because the ticket is unassigned,
-  closed, blocked, or outside WhatsApp's 24-hour window.
+  closed, the contact is blocked or flagged as spam, or you are outside WhatsApp's 24-hour window.
 </Callout>
 
 [Replying in detail →](/inbox/responding-to-conversation)
@@ -145,13 +134,7 @@ sit the quick-replies button and the character counter.
 
 Open it with the panel icon at the far right of the chat header.
 
-<ImagePlaceholder
-  file="inbox/ticket-details-full.png"
-  shot="The right-hand Ticket Details panel, full height, showing Assignment, Lifecycle Stage, Labels, Contact, Ticket Info, Title & Description and Mark as spam."
-  caption="The Ticket Details panel."
-/>
-
-{/* TODO: capture the full ticket details panel */}
+<ScreenShot src="/docs/screenshots/inbox/ticket-details-full.png" alt="The Ticket Details panel" />
 
 It contains, top to bottom:
 
@@ -162,7 +145,7 @@ It contains, top to bottom:
 - **Contact** — name, phone, channel, customer since, consent
 - **Ticket Info** — channel, account, created date, close result
 - **Title & Description** — editable with the pencil icon
-- **Mark as spam**
+- **Mark contact as spam** — or **Not spam**, if they are already flagged
 
 [Ticket Details in full →](/inbox/ticket-details)
 
@@ -170,9 +153,12 @@ It contains, top to bottom:
 
 ## On Smaller Screens
 
-Below roughly 1200px wide, the list and the chat window take turns instead of sitting side by
-side. Opening a ticket fills the screen, and a **back arrow** appears in the header to return to
-the list.
+Below roughly 1024px wide, the list and the chat window take turns instead of sitting side by side.
+Opening a ticket fills the screen, and a **back arrow** appears in the header to return to the list.
+
+Narrower still — below roughly 768px — the sidebar is off-screen entirely, so the conversation list
+carries what you would otherwise lose: a scrollable **strip of the eight views** with their counts,
+and the **Channel** selector. Both are the same controls as the sidebar's, not a reduced version.
 
 ---
 

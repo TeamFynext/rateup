@@ -4,7 +4,7 @@ description: Start blank or from a template, add questions, and preview before y
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 ---
 
@@ -32,17 +32,15 @@ well-structured form is put together. If none match, you will see *"No templates
 
 ## Adding Questions
 
-<ImagePlaceholder
-  file="web-forms/editor.png"
-  shot="The survey editor: the questions sidebar on the left, the question being edited in the centre with its title, description and options, and the preview."
-  caption="The form editor."
-/>
+The editor has three parts: the **question list** down the left, the **Page Editor** in the centre
+with a **Preview** button in its header, and the **Add Element** pane you pick new questions from.
 
-{/* TODO: capture the survey editor */}
+<ScreenShot src="/docs/screenshots/web-forms/editor.png" alt="The form editor" />
 
 <Steps>
 <Step>
-Click **Add Question** and pick a [type](/web-forms/question-types).
+Click **Add Question**, then pick a [type](/web-forms/question-types) from **Add Element**. The tiles
+are grouped by category — type in **Search elements…** to jump straight to one.
 </Step>
 <Step>
 Write the question in **Enter question here**.

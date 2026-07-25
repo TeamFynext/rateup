@@ -4,18 +4,12 @@ description: Automated WhatsApp conversations that answer common questions and h
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 A **chatbot** answers a WhatsApp conversation automatically — handling the questions you get
 constantly, and passing anything else to a person.
 
-<ImagePlaceholder
-  file="whatsapp/chatbots-list.png"
-  shot="The Chatbots list with existing bots, search box and Create Chatbot button; empty state reads 'No chatbots found'."
-  caption="Your WhatsApp chatbots."
-/>
-
-{/* TODO: capture the chatbots list */}
+<ScreenShot src="/docs/screenshots/whatsapp/chatbots-list.png" alt="Your WhatsApp chatbots" />
 
 ---
 
@@ -26,7 +20,8 @@ constantly, and passing anything else to a person.
 Click **Create Chatbot** and enter a name.
 </Step>
 <Step>
-Build the conversation as a series of steps — a message, then the replies the customer can choose.
+The [builder](/whatsapp/chatbot-builder) opens. Build the conversation as connected nodes — a
+message, then the replies the customer can choose.
 </Step>
 <Step>
 Attach a **flow** or **template** to a step where you need structured input or approved wording.
@@ -95,6 +90,7 @@ repeat themselves.
 
 ## Related Pages
 
+- [Chatbot Builder](/whatsapp/chatbot-builder) — the canvas in detail
 - [Flows](/whatsapp/flows)
 - [Templates](/whatsapp/templates)
 - [Automation](/automation)

@@ -1,40 +1,42 @@
 ---
-title: "Search, Filters & Sorting"
-description: Every control in the Inbox toolbar — search, advanced filters, sorting, bulk selection, export and adding a contact.
+title: "Search, Selection & Sorting"
+description: Every control in the Inbox toolbar — search, sorting, bulk selection, export and adding a contact.
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
-import { CDN } from "@/lib/cdn";
 
 The toolbar sits above the conversation list. The left side names the view you are in; the right
 side holds the actions.
 
 <ImagePlaceholder
   file="inbox/toolbar-annotated.png"
-  shot="The toolbar with callouts on each icon: search, advanced filters with its active-count badge, select chats, download, refresh, and the blue New button; plus the second row showing the ticket count and sort control."
+  shot="The conversation-list toolbar, zoomed: search, select, download, refresh and the New button — five controls, no filter icon."
   caption="The Inbox toolbar."
 />
 
-{/* TODO: capture an annotated toolbar */}
+{/* TODO: re-capture — the advanced-filters (sliders) icon has been removed */}
 
 | Icon | Action | What it does |
 |------|--------|--------------|
 | 🔍 | **Search** | Find tickets by contact name or phone number |
-| 🎚️ | **Advanced Filters** | Narrow the list; a badge shows how many filters are active |
 | ✅ | **Select Chats** | Turn on selection mode for bulk actions |
 | ⬇️ | **Download Chats** | Export conversation history |
 | 🔄 | **Refresh** | Reload the list |
 | ➕ | **New** | Add a WhatsApp contact and start a conversation |
 
-Below them, a second row shows the **ticket count for the current view** on the left and the
-**sort** control on the right.
+Below them, a second row shows the **count for the current view** on the left and the **sort**
+control on the right.
 
 <Callout type="info">
   The count comes from the server, so it reflects the entire view — not just the rows loaded so
-  far. While a search is running it shows the number of matching rows instead.
+  far. While a search is running it shows the number of matching rows instead. In **Spam** it counts
+  contacts, because that tab lists one row per contact.
 </Callout>
+
+Filtering is **not** in this toolbar. Channel, lifecycle, label, user and team filters live in the
+sidebar — see [Sidebar Filters](/inbox/inbox-filter).
 
 ---
 
@@ -57,43 +59,10 @@ Search runs **within the current view**. To search everything — open and close
 
 ---
 
-## Advanced Filters
-
-Click the **filters** icon to open the panel. The badge on the icon tells you how many filters are
-currently applied.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/inbox-filter.png`}
-  alt="Advanced filters panel"
-  width={350}
-/>
-
-{/* TODO: re-capture the filter panel against the current UI */}
-
-| Filter | Use |
-|--------|-----|
-| **Channel** | Show one channel only — WhatsApp, Instagram and so on |
-| **Tags / Groups / Campaigns** | Tickets linked to a specific tag, group or campaign |
-| **Category** | Tickets in a given category |
-| **Labels** | Tickets whose contact carries a label |
-| **Status** | Available in **All** and **Closed** — pick exact statuses |
-| **Message type** | Include or exclude automated and system messages |
-
-Click **Reset** to clear everything and return to the plain view.
-
-<Callout type="info">
-  Filters are scoped to the view you set them in. Switching views clears view-specific filters, so
-  a status filter set in **Closed** does not silently follow you into **Open**.
-</Callout>
-
-For filtering by who owns the work, see [Staff & Team Filters](/inbox/inbox-filter).
-
----
-
 ## Sorting
 
 <ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/inbox-sort.png`}
+  src={`/docs/screenshots/inbox/inbox-sort.png`}
   alt="Sorting options"
   width={300}
 />
@@ -125,7 +94,8 @@ Click the select icon again to leave selection mode.
 </Step>
 </Steps>
 
-Selection mode is cleared automatically when you switch views.
+Selection mode is cleared automatically when you switch views. It is not offered in **Spam** — a
+flagged contact's tickets are already closed, so there is nothing to assign.
 
 ---
 
@@ -141,12 +111,15 @@ the file.
   a file outside the company.
 </Callout>
 
+Messages that were [deleted on WhatsApp](/inbox/responding-to-conversation) keep their row in the
+export but their text is withheld — the cell reads *"This message was deleted"*.
+
 ---
 
 ## Adding a Contact
 
 <ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/add-whatsapp-contact.png`}
+  src={`/docs/screenshots/inbox/add-whatsapp-contact.png`}
   alt="Add new WhatsApp contact"
   width={550}
 />
@@ -183,5 +156,5 @@ about a ticket you cannot see, or after a bulk change made elsewhere.
 ## Related Pages
 
 - [Inbox Views](/inbox/inboxview) — the list before you filter it
-- [Staff & Team Filters](/inbox/inbox-filter)
+- [Sidebar Filters](/inbox/inbox-filter) — channel, lifecycle, labels, users and teams
 - [Ticket Details](/inbox/ticket-details)

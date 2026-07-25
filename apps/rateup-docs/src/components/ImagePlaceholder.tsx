@@ -15,7 +15,7 @@ interface ImagePlaceholderProps {
  *
  * Renders a dashed frame describing the shot to take and the file name to
  * upload, instead of a broken image. Replace the whole tag with
- * `<ScreenShot src={`${CDN}/docs/screenshots/<file>`} alt="..." />` once the
+ * `<ScreenShot src={`/docs/screenshots/<file>`} alt="..." />` once the
  * image exists.
  */
 const ImagePlaceholder = ({ file, shot, caption }: ImagePlaceholderProps) => {

@@ -4,7 +4,7 @@ description: Give every ticket an owner — assign to yourself, a colleague or a
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 Assignment decides **who is responsible for a ticket**. It is not optional bookkeeping: a ticket
 with no owner cannot be replied to.
@@ -51,13 +51,7 @@ unlocks.
 </Step>
 </Steps>
 
-<ImagePlaceholder
-  file="inbox/assign-to-me.png"
-  shot="An unassigned ticket open in the chat window, showing the amber 'Assign to me' bar in place of the composer, with the dropdown arrow beside it."
-  caption="Messaging is blocked until the ticket has an owner."
-/>
-
-{/* TODO: capture the assign bar on an unassigned ticket */}
+<ScreenShot src="/docs/screenshots/inbox/assign-to-me.png" alt="Messaging is blocked until the ticket has an owner" />
 
 A system note is added to the thread recording who took the ticket, so ownership history is always
 visible.
@@ -82,13 +76,7 @@ The ticket is assigned instantly and appears in that person's **Mine** view.
 </Step>
 </Steps>
 
-<ImagePlaceholder
-  file="inbox/assign-panel.png"
-  shot="The 'Assign to team or individual' picker open, showing teams at the top and individual members with online/offline indicators."
-  caption="Choosing between a team and an individual."
-/>
-
-{/* TODO: capture the assignment picker */}
+<ScreenShot src="/docs/screenshots/inbox/assign-panel.png" alt="Choosing between a team and an individual" />
 
 ---
 

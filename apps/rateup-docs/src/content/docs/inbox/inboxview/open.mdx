@@ -4,7 +4,7 @@ description: The Open view shows every active ticket — the full live workload,
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 **Open** shows every **active** ticket: those already assigned and those still waiting for an
 owner. Nothing closed appears here.
@@ -15,13 +15,7 @@ It is the default view when you enter the Inbox, and the one managers live in.
 
 ## What You See
 
-<ImagePlaceholder
-  file="inbox/view-open.png"
-  shot="The Open view: a mix of rows with Assigned pills and assignee avatars, and rows with New pills and amber left edges."
-  caption="Assigned and unassigned tickets side by side."
-/>
-
-{/* TODO: capture the Open view */}
+<ScreenShot src="/docs/screenshots/inbox/view-open.png" alt="Assigned and unassigned tickets side by side" />
 
 - Every ticket is still active
 - Each row shows **New** (unassigned) or **Assigned**
@@ -100,4 +94,4 @@ Pick another team or team member. The ticket is reassigned instantly and a syste
 
 - [New](/inbox/inboxview/newchat) — the unowned queue
 - [Mine](/inbox/inboxview/mine) — your own workload
-- [Staff & Team Filters](/inbox/inbox-filter) — narrowing Open down
+- [Sidebar Filters](/inbox/inbox-filter) — narrowing Open down

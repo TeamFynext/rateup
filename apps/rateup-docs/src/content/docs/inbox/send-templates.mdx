@@ -6,7 +6,6 @@ description: Use approved WhatsApp templates to message customers inside or outs
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
-import { CDN } from "@/lib/cdn";
 
 WhatsApp **templates** are pre-approved messages. They are the only way to write to a customer
 once the 24-hour window has closed — and they are useful inside it too.
@@ -49,7 +48,7 @@ Click **Send**. The message is delivered immediately and appears in the thread.
 </Steps>
 
 <ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/send-template-after-24h.png`}
+  src={`/docs/screenshots/inbox/send-template-after-24h.png`}
   alt="Sending a template after the 24-hour window"
   width={650}
 />
@@ -84,7 +83,7 @@ Templates still work while the window is open. Use one when you want:
 Manual replies and templates can sit side by side in the same ticket.
 
 <ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/send-template-within-24h.png`}
+  src={`/docs/screenshots/inbox/send-template-within-24h.png`}
   alt="Sending a template within the 24-hour window"
   width={650}
 />

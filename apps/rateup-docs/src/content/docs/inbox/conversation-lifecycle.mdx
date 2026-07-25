@@ -1,6 +1,6 @@
 ---
 title: "Closing & Reopening Tickets"
-description: The ticket lifecycle end to end — the four close options, what closing changes, and what reopening actually does.
+description: The ticket lifecycle end to end — the three close outcomes, what closing changes, and what reopening actually does.
 ---
 
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
@@ -17,7 +17,7 @@ Every ticket ends. This page covers how to end one properly, and what happens af
 |--------|---------|--------|
 | **New** | Nobody is assigned yet | Created automatically with the ticket |
 | **Assigned** | At least one agent or team owns it | Assigning someone |
-| **Closed** | Closed, resolved, unresolved or spam | Using the **Close** menu |
+| **Closed** | Closed, resolved or unresolved | Using the **Close** menu |
 
 <Callout type="info">
   Status is derived from assignment and closure — there is no status field to maintain separately.
@@ -32,11 +32,11 @@ The green **Close** button sits in the top-right of the chat window, next to the
 
 <ImagePlaceholder
   file="inbox/close-menu.png"
-  shot="The Close dropdown open, showing Mark as Resolved, Mark as Closed, Mark as Spam, Mark as Unresolved, a separator, and Block contact in red."
+  shot="The Close dropdown open on an active ticket: the three close statuses, a separator, then the contact actions 'Mark contact as spam' and 'Block contact'."
   caption="The Close menu."
 />
 
-{/* TODO: capture the Close dropdown */}
+{/* TODO: re-capture — the menu no longer lists "Mark as Spam" among the close statuses */}
 
 <Steps>
 <Step>
@@ -57,12 +57,15 @@ Pick the outcome that describes what actually happened.
 | **Mark as Resolved** | The customer's problem was solved | Closed |
 | **Mark as Closed** | Finished, with no specific outcome to record | Closed |
 | **Mark as Unresolved** | You could not solve it, and want that on record | Closed |
-| **Mark as Spam** | Not a genuine customer query | Spam |
 
 <Callout type="info">
   These outcomes feed your reporting. "Resolved" and "Unresolved" are the difference between a
   support team that looks perfect and one that can actually find its weak spots — pick honestly.
 </Callout>
+
+Below the outcomes, separated from them, sit the two **contact** actions — **Mark contact as spam**
+and **Block contact**. They are not ways of finishing a ticket: they apply to the person, and to
+every ticket they have. [Spam in detail →](/inbox/inboxview/spam)
 
 ---
 
@@ -75,7 +78,7 @@ Pick the outcome that describes what actually happened.
 
 Once a ticket is closed:
 
-- It moves to the **Closed** view (or **Spam**)
+- It moves to the **Closed** view
 - All assignees are cleared
 - A system note records **who** closed it and **when**
 - The composer is replaced by a banner — the ticket becomes **read-only**
@@ -100,8 +103,9 @@ Confirm in the dialog.
 A blocked contact cannot message you, and you cannot message them.
 
 <Callout type="warn">
-  Blocking cuts communication in both directions and applies to the **contact**, not just this
-  ticket. For one-off junk, **Mark as Spam** is the right tool.
+  Blocking cuts communication in both directions — the customer cannot reach you even if they later
+  need to. To get junk out of your queue while still receiving whatever arrives, use
+  [**Mark contact as spam**](/inbox/inboxview/spam) instead.
 </Callout>
 
 ---
@@ -196,7 +200,7 @@ The first close wins. The second person will see the read-only banner.
 - Close only when the topic is genuinely finished
 - Pick the outcome that is true, not the one that looks best
 - Do not reuse an old ticket for a new question — let a new one be created
-- Use **Spam** for noise and **Block** only for repeat offenders
+- Flag the **contact** as spam for noise, and **Block** only for repeat offenders
 - Let auto-close handle the tickets nobody will ever answer
 
 ---

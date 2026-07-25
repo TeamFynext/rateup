@@ -6,7 +6,6 @@ description: Sign up for RateUp with email, Google or Apple, and complete the th
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
-import { CDN } from "@/lib/cdn";
 
 Signing up takes three short steps. What you are asked for depends on whether you register with
 **email** or with **Google / Apple**.
@@ -37,8 +36,8 @@ Choose how to register:
 </Steps>
 
 <ScreenShot
-  src={`${CDN}/docs/screenshots/authentication/login.png`}
-  alt="The create account option on the login page"
+  src={`/docs/screenshots/authentication/register.png`}
+  alt="The RateUp login page with the 'Create account' button highlighted."
   width="350px"
 />
 
@@ -71,10 +70,10 @@ required, and it is verified later with a one-time code.
 
 ## Step 2 · Tell Us About Your Business
 
-<ImagePlaceholder
-  file="authentication/signup-step2.png"
-  shot="Signup step 2 'Tell Us About Your Business' with business name, website, industry, location and team size, and the Step 2 of 3 progress indicator."
-  caption="Business details."
+<ScreenShot
+  src={`/docs/screenshots/authentication/signup-step2.png`}
+  alt="Signup step 2 'Tell Us About Your Business' with business name, website, industry, location and team size, and the Step 2 of 3 progress indicator."
+  width="350px"
 />
 
 {/* TODO: capture signup step 2 */}

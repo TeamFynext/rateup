@@ -4,24 +4,21 @@ description: Finished tickets — how they are stored, why they are read-only, a
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
-**Closed** holds tickets that have been **closed, resolved, marked unresolved or marked as spam**.
+**Closed** holds tickets that have been **closed, resolved or marked unresolved**.
 
 They are finished work: no longer active, but kept as a permanent record for reference and
 reporting.
+
+Tickets belonging to a contact you have flagged as spam are not here — they are in
+[**Spam**](/inbox/inboxview/spam), with the contact.
 
 ---
 
 ## What You See
 
-<ImagePlaceholder
-  file="inbox/view-closed.png"
-  shot="The Closed view: rows with green Closed pills, one hovered to show the tooltip 'Marked as RESOLVED by … at …'."
-  caption="Closed tickets, with the closing details on hover."
-/>
-
-{/* TODO: capture the Closed view including the status tooltip */}
+<ScreenShot src="/docs/screenshots/inbox/view-closed.png" alt="Closed tickets, with the closing details on hover" />
 
 - Every ticket is finished
 - The status pill is green — hover it to see **who** closed it, **when**, and **how**

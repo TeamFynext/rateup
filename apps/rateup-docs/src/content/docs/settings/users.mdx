@@ -4,18 +4,12 @@ description: Invite people, set their role and permissions, and remove access wh
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 **Users** is the list of everyone with access to your organisation, and the controls that decide
 what each of them can do.
 
-<ImagePlaceholder
-  file="settings/users.png"
-  shot="The Users page: the member list with avatars, roles, active-account badges and the Add New User button."
-  caption="Organisation members."
-/>
-
-{/* TODO: capture the Users page */}
+<ScreenShot src="/docs/screenshots/settings/users.png" alt="Organisation members" />
 
 ---
 
@@ -102,7 +96,7 @@ Confirm in the dialog — you will be asked to confirm the specific person.
 <Steps>
 <Step>
 Reassign their open tickets — check the [Mine](/inbox/inboxview/mine) view filtered to them from
-[Staff Filters](/inbox/inbox-filter).
+[the sidebar's Users filter](/inbox/inbox-filter).
 </Step>
 <Step>
 Check whether any automation or routing points at them specifically.

@@ -1,80 +1,112 @@
 ---
-title: "Staff & Team Filters"
-description: Narrow any Inbox view down to a single agent or team — the main tool for managers monitoring workload.
+title: "Sidebar Filters"
+description: Narrow any Inbox view by channel, lifecycle stage, label, agent or team — all from the sidebar, under the views.
 ---
 
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
-Below the eight views in the sidebar sit two filters: **All Staff** and **All Teams**.
+Below the eight views in the sidebar sits a **Filter** group. Every section in it narrows whichever
+view you are looking at.
 
-They answer the question every manager asks a dozen times a day: *whose work is this, and how much
+| Section | Filters by |
+|---------|-----------|
+| **Channel** | The number or account the customer wrote to |
+| **Lifecycle** | The contact's lifecycle stage |
+| **Labels** | Labels on the contact |
+| **Users** | The agent the ticket is assigned to |
+| **Teams** | The team the ticket is assigned to |
+
+<ScreenShot src="/docs/screenshots/inbox/staff-team-filters.png" alt="The Filter group in the Inbox sidebar" />
+
+{/* TODO: re-capture the whole filter group, including the Channel section at the top */}
+
+A section only appears if there is something to filter by: no labels defined, no **Labels** section.
+
+<Callout type="info">
+  Filtering used to live in an **Advanced Filters** popover above the conversation list. That popover
+  has been removed — everything it did is in the sidebar now, where you can see what is active
+  without opening anything.
+</Callout>
+
+---
+
+## Channel
+
+Scopes the list to **one channel**: a WhatsApp number, an Instagram account or a Facebook page. Each
+entry carries its platform's icon.
+
+Use it when you run more than one number and they mean different things — a support line and a sales
+line, or one number per branch.
+
+Channel applies to **every** view, including **Spam**, and stays applied as you move between them.
+
+<Callout type="info">
+  On a narrow screen the sidebar is off-screen, so the **Channel** selector appears in the
+  conversation list header instead. It is the same filter — changing one changes the other.
+</Callout>
+
+---
+
+## Lifecycle & Labels
+
+Both filter on the **contact** rather than the ticket:
+
+- **Lifecycle** — one stage at a time, shown with its emoji
+- **Labels** — several at once; a ticket matches if its contact carries any of them
+
+Useful for triage: work through **New Lead** enquiries first, or find everyone tagged **VIP** who is
+waiting.
+
+---
+
+## Users & Teams
+
+These answer the question every manager asks a dozen times a day: *whose work is this, and how much
 of it is there?*
 
-<ImagePlaceholder
-  file="inbox/staff-team-filters.png"
-  shot="The sidebar's All Staff and All Teams filter dropdowns, one of them open showing a list of agents."
-  caption="The staff and team filters."
-/>
-
-{/* TODO: capture the staff and team filters */}
-
----
-
-## How They Differ From Advanced Filters
-
-| | Staff & team filters | [Advanced filters](/inbox/toolbar) |
-|---|---------------------|-----------------------------------|
-| **Where** | Sidebar, under the views | Toolbar, above the list |
-| **Filter by** | Who owns the ticket | What the ticket is — channel, labels, campaign, status |
-| **Mainly for** | Managers and admins | Everyone |
-
-Both stack on top of the view you are in. **Open** + *Team: Support* + *Channel: WhatsApp* is a
-perfectly normal combination.
-
----
-
-## All Staff
-
-Filters the list by **assigned agent**.
-
-Use it to:
+**Users** filters by assigned agent. Use it to:
 
 - See everything one agent is handling right now
 - Check whether someone is overloaded before assigning them more
 - Review an individual's work before a coaching conversation
-- Find out who has been handling a particular customer
 
-Set it back to **All Staff** to see everyone again.
-
----
-
-## All Teams
-
-Filters the list by **assigned team**.
-
-Use it to:
+**Teams** filters by assigned team. Use it to:
 
 - Focus on one department's queue — Support, Sales, Billing
 - Compare load across teams
 - Manage region- or language-based routing
 
-Set it back to **All Teams** to clear.
+Both accept several selections at once.
+
+---
+
+## Clearing a Filter
+
+Each section header shows a **clear** button once something in it is selected. Clearing one section
+leaves the others alone.
+
+<Callout type="warn">
+  Filters persist across views **and across sessions** in this browser. A view that looks suspiciously
+  empty is usually a filter you set yesterday — check the Filter group before assuming work has gone
+  missing.
+</Callout>
 
 ---
 
 ## Combining Them
 
-Applying both narrows the list to the intersection: *tickets assigned to **Agent John** within
-**Team Support***.
+Applying several narrows the list to the intersection: *tickets on the **Sales** number, assigned to
+**Team Support**, whose contact is a **New Lead***.
 
 Useful combinations:
 
-| Goal | View | Staff | Team |
-|------|------|-------|------|
-| What is my team sitting on right now? | Open | All | Support |
-| Is this agent overloaded? | Open | John | All |
-| What did Sales close last week? | Closed | All | Sales |
-| Who has unowned work in my department? | New | All | Support |
+| Goal | View | Filters |
+|------|------|---------|
+| What is my team sitting on right now? | Open | Team: Support |
+| Is this agent overloaded? | Open | User: John |
+| What did Sales close last week? | Closed | Team: Sales |
+| Who has unowned work on the support line? | New | Channel: Support number |
+| Which leads are waiting? | Open | Lifecycle: New Lead |
 
 ---
 
@@ -82,13 +114,14 @@ Useful combinations:
 
 | Role | Filter visibility |
 |------|-------------------|
-| **Business Admin** | Every staff member and every team |
+| **Business Admin** | Every staff member, team and channel |
 | **Manager** | The staff and teams they manage |
 | **Agent** | Limited or hidden, depending on permissions |
 
 <Callout type="info">
-  The filters never widen your access. They only narrow what you can already see — an agent
-  filtering by a colleague still sees only the tickets their role permits.
+  The filters never widen your access. They only narrow what you can already see — an agent whose
+  team is [restricted to one channel](/settings/teams) cannot reach another channel's conversations
+  by picking it here.
 </Callout>
 
 ---
@@ -96,8 +129,8 @@ Useful combinations:
 ## Best Practices
 
 - Clear the filters when you switch tasks, or you will wonder where your tickets went
-- Combine with **oldest first** sorting to surface stale work in one team
-- Use **New** + a team filter to find work nobody in that department has picked up
+- Combine a team filter with **oldest first** sorting to surface stale work
+- Use **New** plus a channel filter to see what nobody has picked up on one number
 - Rebalance by reassigning, not by asking people to "check the Inbox"
 
 ---
@@ -105,5 +138,6 @@ Useful combinations:
 ## Related Pages
 
 - [Inbox Views](/inbox/inboxview)
-- [Search, Filters & Sorting](/inbox/toolbar)
+- [Search, Selection & Sorting](/inbox/toolbar)
 - [Assignment & Reassignment](/inbox/asigning-conversation)
+- [Teams](/settings/teams) — which channels a team may see at all

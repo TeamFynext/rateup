@@ -5,8 +5,6 @@ description: The right-hand panel — assignment, lifecycle, labels, contact inf
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
-import { CDN } from "@/lib/cdn";
 
 The **Ticket Details** panel is everything about a ticket and its customer that does not belong in
 the message thread.
@@ -14,13 +12,7 @@ the message thread.
 Open it with the **panel icon** at the far right of the chat header; close it with the chevron in
 the panel's own header.
 
-<ImagePlaceholder
-  file="inbox/ticket-details-full.png"
-  shot="The full-height Ticket Details panel showing every section from the ticket number header down to the Mark as spam button."
-  caption="The Ticket Details panel."
-/>
-
-{/* TODO: capture the full panel */}
+<ScreenShot src="/docs/screenshots/inbox/ticket-details-full.png" alt="The Ticket Details panel" />
 
 ---
 
@@ -94,7 +86,7 @@ The customer's own details:
 - Consent status
 
 <ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/edit-contact.png`}
+  src={`/docs/screenshots/inbox/edit-contact.png`}
   alt="Editing contact details"
   width={420}
 />
@@ -149,10 +141,12 @@ Click **Save**, or **Cancel** to discard.
 
 ---
 
-## Mark as Spam
+## Mark Contact as Spam
 
-At the bottom of the panel. Closes the ticket and moves it to the **Spam** view in one click —
-the same as **Close → Mark as Spam**.
+At the bottom of the panel — the same action as **Close → Mark contact as spam**. It flags the
+**contact**, closes their open tickets and moves them into the **Spam** tab.
+
+If the contact is already flagged, the button reads **Not spam** and takes them back out again.
 
 [More about spam →](/inbox/inboxview/spam)
 
@@ -169,6 +163,7 @@ Knowing which is which saves confusion:
 | Status and result | Labels |
 | Created and closed dates | Consent |
 | Favourite star | Custom fields |
+| | Spam and blocked flags |
 
 Change a contact field and it applies to every ticket that customer will ever have. Change a
 ticket field and only this ticket is affected.

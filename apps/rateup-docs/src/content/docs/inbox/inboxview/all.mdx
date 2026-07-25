@@ -3,10 +3,11 @@ title: "All"
 description: Every ticket in one list, regardless of status — the view to use when you are searching.
 ---
 
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
-**All** shows every ticket with no status restriction: open, closed, spam, assigned and unassigned
-together.
+**All** shows every ticket with no status restriction: open, closed, assigned and unassigned
+together. The one exception is contacts flagged as spam, who appear only in
+[**Spam**](/inbox/inboxview/spam).
 
 It is not a working queue. Use it when you need to **find** something rather than act on a list.
 
@@ -23,13 +24,7 @@ It is not a working queue. Use it when you need to **find** something rather tha
 
 ## What You See
 
-<ImagePlaceholder
-  file="inbox/view-all.png"
-  shot="The All view showing a mix of New, Assigned and Closed status pills in one list."
-  caption="Every status in one list."
-/>
-
-{/* TODO: capture the All view */}
+<ScreenShot src="/docs/screenshots/inbox/view-all.png" alt="Every status in one list" />
 
 Rows look the same as everywhere else — status pills are what tell the difference.
 
@@ -42,12 +37,12 @@ Rows look the same as everywhere else — status pills are what tell the differe
 | Tool | Use |
 |------|-----|
 | **Search** | Find a customer by name or phone number |
-| **Status filter** | Available in **All** and **Closed** — pick exact statuses |
-| **Channel / labels / campaign** | Narrow by where the ticket came from or how it is tagged |
-| **Staff / team filters** | See one person's or one team's history |
+| **Channel** | Narrow to one WhatsApp number, Instagram account or Facebook page |
+| **Lifecycle / labels** | Narrow by how the contact is tagged |
+| **Users / teams** | See one person's or one team's history |
 | **Sort** | Switch between newest and oldest first |
 
-[Search, filters & sorting →](/inbox/toolbar)
+[Sidebar filters →](/inbox/inbox-filter) · [Search & sorting →](/inbox/toolbar)
 
 ---
 

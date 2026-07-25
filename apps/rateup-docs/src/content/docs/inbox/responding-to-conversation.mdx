@@ -5,7 +5,7 @@ description: Send messages, quick replies, attachments and templates — and und
 
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 This page covers everything about answering a customer: the composer, its limits, and the four
 situations where you cannot reply.
@@ -36,13 +36,7 @@ free-form reply.
 
 ## The Composer
 
-<ImagePlaceholder
-  file="inbox/composer-annotated.png"
-  shot="The composer with callouts on: the Message and Private Note tabs, the quick-replies lightning button, the character counter, the attachment and template menu, and the send button."
-  caption="The composer and its controls."
-/>
-
-{/* TODO: capture an annotated composer */}
+<ScreenShot src="/docs/screenshots/inbox/composer-annotated.png" alt="The composer and its controls" />
 
 Two tabs decide where your text goes:
 
@@ -137,6 +131,7 @@ The composer is replaced by a banner in four situations:
 | **Unassigned ticket** | Amber **Assign to me** bar | Take the ticket, or assign it to someone |
 | **Closed ticket** | "This chat has been closed by … at …" | Click **Reopen** in the header |
 | **Blocked contact** | Blocked-contact banner | Unblock the contact |
+| **Contact flagged as spam** | "This contact is marked as spam." | Click **Not spam** in the banner |
 | **24-hour window expired** | Template-only options | Send an approved template |
 | **Conversation limit reached** | Amber upgrade callout | Upgrade the plan, or wait for the reset |
 
@@ -186,6 +181,33 @@ Hover a message to see the exact timestamps.
 
 ---
 
+## Deleted Messages
+
+If a WhatsApp user deletes a message they had sent — "delete for everyone" — the message stays in
+the thread but its content is withheld. In its place you see, in italics:
+
+> 🚫 This message was deleted
+
+This applies both ways: a customer deleting their own message, and your business deleting a message
+it sent from the WhatsApp Business app.
+
+| Where | What it shows |
+|-------|---------------|
+| The thread | The placeholder, in the same position in the timeline |
+| The conversation list preview | *"This message was deleted"* |
+| An [exported](/inbox/toolbar) chat | The row is kept; the text is replaced by the placeholder |
+
+<Callout type="info">
+  Deletions are reported by WhatsApp only for accounts using the **WhatsApp Business app**
+  (coexistence). On a Cloud API-only number, a customer deleting a message on their phone changes
+  nothing on your side — you keep seeing what they sent.
+</Callout>
+
+A deletion is an edit to history, not a new message: it starts no automations, opens no ticket and
+does not touch the 24-hour window.
+
+---
+
 ## Automated vs Manual Messages
 
 A ticket can contain both:
@@ -206,7 +228,9 @@ Either you are over the 1024-character limit, or the ticket is unassigned, close
 24-hour window. The banner above the composer tells you which.
 </Accordion>
 <Accordion title="Can I edit or delete a message I already sent?">
-No. Sent messages are part of the permanent record. Send a correction as a follow-up message.
+Not from RateUp — sent messages are part of the record here. Send a correction as a follow-up
+message. If you delete the message from the WhatsApp Business app instead, RateUp marks it as
+deleted in the thread rather than removing the row.
 </Accordion>
 <Accordion title="The customer replied but my ticket did not update.">
 Click the **refresh** icon in the toolbar. If the reply came after the ticket was closed, it has

@@ -3,17 +3,11 @@ title: "Triggers"
 description: The events that start an automation rule.
 ---
 
-import ImagePlaceholder from "@/components/ImagePlaceholder";
+import ScreenShot from "@/components/Screenshot";
 
 A **trigger** is the event that starts a rule. Every automation has exactly one.
 
-<ImagePlaceholder
-  file="automation/trigger-select.png"
-  shot="The WHEN section of the rule builder with the Trigger Event dropdown open, showing the available events."
-  caption="Choosing a trigger."
-/>
-
-{/* TODO: capture the trigger selector */}
+<ScreenShot src="/docs/screenshots/automation/trigger-select.png" alt="Choosing a trigger" />
 
 ---
 
@@ -36,7 +30,6 @@ This is the workhorse trigger. Most routing and auto-reply rules start here.
 |---------|-----------|
 | **Chat Assigned** | A ticket is given an owner |
 | **Chat Closed** | A ticket is closed |
-| **Elapsed Time** | A set period passes without activity |
 
 Use **Chat Closed** for follow-ups — a satisfaction survey sent after resolution, for example.
 

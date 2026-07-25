@@ -18,7 +18,11 @@ Every page in this site was written by reading the actual implementation in the 
 | `rateup-ui` | `src/routes/` | Which routes exist — the definitive list |
 | `rateup-ui` | `src/components/Layout/Navbar/hooks.tsx` | The real sidebar: section names, order, feature gates |
 | `rateup-ui` | `src/components/**` | Button labels, field names, validation messages, empty states |
+| `rateup-ui` | `src/config/announcements.ts` | **What changed, and when.** The in-app "What's new" list — start here for a docs-refresh pass |
 | `rateup-api` | `src/modules/**`, `src/external/v1/**` | Endpoints, payloads, retry behaviour, error strings |
+
+`announcements.ts` is the product's own changelog: every user-visible change ships an entry with a
+date. Diff it against the last docs commit to find what the docs have not caught up with yet.
 
 Before writing about a feature, grep its labels out of the source:
 
@@ -132,7 +136,6 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 ```mdx
 import ScreenShot from "@/components/Screenshot";       // a real, uploaded screenshot
 import ImagePlaceholder from "@/components/ImagePlaceholder";  // a screenshot still to be taken
-import { CDN } from "@/lib/cdn";
 ```
 
 Put all imports **at the top**, directly after the frontmatter.
@@ -141,8 +144,15 @@ Put all imports **at the top**, directly after the frontmatter.
 
 ## 5. Screenshots
 
-Most screenshots have not been captured yet. Rather than link broken images, the site uses a
-placeholder that renders a labelled dashed frame:
+Captured screenshots are committed to `public/docs/screenshots/` and referenced with a
+root-relative path:
+
+```mdx
+<ScreenShot src="/docs/screenshots/inbox/view-open.png" alt="Unassigned tickets in the New view" />
+```
+
+For a shot that has **not** been taken, use the placeholder instead of a broken image. It renders a
+labelled dashed frame:
 
 ```mdx
 <ImagePlaceholder
@@ -154,19 +164,23 @@ placeholder that renders a labelled dashed frame:
 {/* TODO: capture a zoomed, annotated single row */}
 ```
 
-- `file` — the path the final image should be uploaded to, under `<CDN>/docs/screenshots/`
+- `file` — where the image will live under `public/docs/screenshots/`
 - `shot` — precise instructions for whoever takes it
 - Always pair it with a `{/* TODO: … */}` comment
 
-**To replace one**, upload the image and swap the tag:
+**99 screenshots are referenced from `public/docs/screenshots/`** as `/docs/screenshots/<file>` —
+served from `public/`, not the CDN. Every reference resolves. **3 placeholders remain** (§10), and 8
+older inbox shots still point at the CDN.
 
-```mdx
-<ScreenShot src={`${CDN}/docs/screenshots/inbox/ticket-row-annotated.png`} alt="…" />
-```
+**A screenshot that shows a control which no longer exists is worse than no screenshot.** When a
+change removes or renames something visible in a captured shot: swap the `<ScreenShot>` back to an
+`<ImagePlaceholder>` with a `{/* TODO: re-capture — … */}` saying what changed, **delete the stale
+file** so nothing can re-reference it, and list it in §10.
 
-There are currently **~102 placeholders**. The highest-value ones are the annotated overviews:
-`inbox/layout-annotated`, `inbox/ticket-row-annotated`, `inbox/chat-window-annotated`,
-`inbox/composer-annotated`, `inbox/toolbar-annotated`.
+Captures are automated and **redacted**: customer names, phone numbers, emails and message bodies
+are swapped for consistent fake data *before* the screenshot is taken, and avatar photos are
+blurred. Avatar initials are regenerated to match the fake names. If you re-capture, reuse that
+pipeline — never publish a raw screenshot of the running app.
 
 ---
 
@@ -219,7 +233,11 @@ npm run build
 cd src/content/docs && grep -rhoE "\]\((/|\.)[^)#]*" . | sed 's/](//;s/#.*//' | sort -u \
   | while read -r u; do p="${u#/}"; [ -f "$p.mdx" ] || [ -f "$p/index.mdx" ] || echo "BROKEN $u"; done
 
-# 3. Every section has a meta.json and appears in the root meta.json
+# 3. Every referenced screenshot exists on disk
+grep -rho 'src="/docs/screenshots/[^"]*"' src/content/docs | sed 's/src="\///;s/"//' | sort -u \
+  | while read -r f; do [ -f "public/$f" ] || echo "MISSING $f"; done
+
+# 4. Every section has a meta.json and appears in the root meta.json
 ```
 
 A build failure naming a `.mdx` file with "Could not parse expression with acorn" is almost always
@@ -229,8 +247,12 @@ an unescaped `{{ }}`.
 
 ## 9. Where We Are Now
 
-**101 pages across 15 sections + 2 top-level pages.** Every section maps 1:1 to an app sidebar
-entry. Build clean, zero broken links.
+**103 pages across 15 sections + 2 top-level pages.** Every section maps 1:1 to an app sidebar
+entry. Build clean.
+
+Each of the three WhatsApp builders now has a **detail page** alongside its list page — the pattern
+to follow whenever a feature's real work happens on a `$id` route: the list page covers creating and
+managing, the detail page covers the editor itself.
 
 | Section | Pages | Covers |
 |---------|-------|--------|
@@ -239,7 +261,7 @@ entry. Build clean, zero broken links.
 | `analytics` | 7 | All six analytics tabs |
 | `contacts` | 6 | Managing, groups, labels, lifecycle, custom fields |
 | `campaign` | 3 | Creating, details, broadcast vs drip |
-| `whatsapp` | 7 | Flows, chatbots, templates, conversational components, catalog, settings |
+| `whatsapp` | 9 | Flows + flow editor, chatbots + chatbot builder, templates + template editor, conversational components, settings |
 | `instagram` | 4 | Chatbots, comment/story automations, entry points |
 | `automation` | 4 | Triggers, conditions, actions |
 | `commerce` | 6 | Overview, catalogs, orders, payments, checkout settings |
@@ -279,7 +301,9 @@ externally, they need redirects — **this has not been done.**
 | Item | Notes |
 |------|-------|
 | **Onboarding / setup page** | `/login/setup` — the post-signup checklist. Three sections (Connect WhatsApp, Team & automation, Design your loyalty program), 11 task cards, progress tracking, **Continue to Dashboard**. Belongs in `getting-started/`. **Not written.** |
-| **Screenshots** | ~102 placeholders awaiting capture |
+| **Screenshots** | **3 placeholders**: `inbox/toolbar-annotated` and `inbox/close-menu` (stale captures, deleted — see below) and `web-forms/webhook-settings` (needs a survey's Settings → Webhook section). Everything else is shot, including all three WhatsApp detail pages |
+| **`whatsapp/catalogs.mdx` was deleted** | The deletion is staged, but `/whatsapp/catalogs` is still linked from `commerce/catalogs.mdx` (×2), `commerce/index.mdx` and `whatsapp/index.mdx`, and `public/docs/screenshots/whatsapp/catalog.png` is now orphaned. Either restore the page or repoint those four links — the `/dashboard/whatsapp/catalog` route does still exist |
+| **Stale captures to re-shoot** | `inbox/close-menu` (the menu no longer lists "Mark as Spam"; spam and block sit below a separator) and `inbox/toolbar-annotated` (the advanced-filters icon is gone). Both files were **deleted**; the pages carry `ImagePlaceholder`s with the shot instructions. `inbox/mark-as-spam` has been re-shot against the new menu. `inbox/staff-team-filters` and `inbox/layout-annotated` still work but predate the sidebar's **Channel** section |
 | **Old-URL redirects** | For the two renamed sections |
 | **Nothing is visually verified** | Every page was written from source, not from a running app |
 
@@ -291,6 +315,19 @@ externally, they need redirects — **this has not been done.**
   `Role.SUPER_ADMIN`. There is no scoping. Documented as such.
 - **The WhatsApp message-status webhook is unsigned and unretried.** Both are documented as
   warnings; if either changes, `settings/integrations.mdx` must be updated.
+- **Spam is a flag on the contact** (`Contact.isSpam`), not a ticket status — `SPAM` survives in the
+  enums only as a thread *event* label and for pre-migration rows. The Spam tab is the one
+  contact-grained list in the Inbox: one row per contact, and its badge counts contacts. Spam
+  contacts are excluded from every other tab, **including All**. Documented in
+  `inbox/inboxview/spam.mdx`; do not describe spam as a close outcome anywhere.
+- **Team → Channel Access is visibility, not authorisation.** `wa_channel_access.ts` scopes what the
+  dashboard shows; the endpoints stay open to any authenticated member, and the External API key is
+  unscoped. Team-less users and org owners see every channel, and membership of several teams takes
+  the *union*. Documented that way in `settings/teams.mdx`.
+- **Message deletion is reported only on WhatsApp Business app / coexistence numbers.** The revoke
+  webhook flags `WaMessage.deletedAt` and the body is kept but withheld from the thread, the list
+  preview and chat exports. On a Cloud API-only number nothing arrives. See
+  `inbox/responding-to-conversation.mdx`.
 
 ---
 
