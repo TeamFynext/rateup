@@ -8,7 +8,7 @@ import type {
   WaGetMessagesBody,
 } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { getRowKey, markWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import type { ChatFilter } from "@/components/whatsapp/inbox/chatselect/chatFilter/index.tsx";
+import type { ChatFilter } from "@/components/whatsapp/inbox/chatselect/chatFilterStore.ts";
 import type { User } from "@/context/UserContext.tsx";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";

@@ -20,7 +20,7 @@ import { MessagePlatform } from "@/types/enums.ts";
 import type { IgReceiveMessageBody } from "@/types/global";
 import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
-import { useChatFilterStore } from "../../chatselect/chatFilter/index.tsx";
+import { useChatFilterStore } from "../../chatselect/chatFilterStore.ts";
 import WhatsAppInboxLoader from "../../loader/index.tsx";
 import { useComposerTabStore } from "../chatdisplayFooter/composerTabStore.ts";
 import { useTemperoryMessageStore } from "../chatdisplayFooter/index.tsx";

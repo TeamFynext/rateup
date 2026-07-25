@@ -1,5 +1,5 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { useContactLabels, useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
@@ -9,7 +9,9 @@ import { useTeamsByUser } from "@/backend/team/team.query";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { useUserInfo } from "@/backend/user/user.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query.ts";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
+import { getChannelOptions } from "@/components/input/channelOptions.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import useLocalStorage from "@/hooks/localStorage.tsx";
 
@@ -82,6 +84,14 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
       : pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
         pathname?.includes("/dashboard/whatsapp/flowbots/") ||
         pathname?.includes("/dashboard/instagram/flowbots/");
+
+  // Only the inbox's Channel filter needs these, and the query is shared and
+  // cached forever — so it costs nothing on the pages that already fetched it.
+  const { data: waSettings } = useWaSettings(Boolean(isInbox));
+  const channels = useMemo(
+    () => getChannelOptions(waSettings, { platform: "all", usePhoneNumber: true }),
+    [waSettings],
+  );
 
   const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
   const setSectionCounts = useChatContactCountStore((state) => state.setSectionCounts);
@@ -176,6 +186,7 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   }, [navigate, resolvedUserData]);
 
   return {
+    channels,
     contactLabels,
     customFieldData,
     isCorruptedSession,

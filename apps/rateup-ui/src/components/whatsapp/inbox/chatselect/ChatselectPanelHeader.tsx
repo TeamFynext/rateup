@@ -7,7 +7,6 @@ import {
   Plus,
   RefreshCw,
   Search,
-  SlidersHorizontal,
   X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -32,8 +31,9 @@ import { SidebarTrigger } from "@/components/ui/sidebar.tsx";
 import { cn } from "@/lib/utils.ts";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
+import ChannelFilter from "./ChannelFilter.tsx";
 import WaInboxChatExport from "./chatExport/index.tsx";
-import WaInboxChatFilter, { useChatFilterStore } from "./chatFilter/index.tsx";
+import { useChatFilterStore } from "./chatFilterStore.ts";
 import InboxTabStrip from "./InboxTabStrip.tsx";
 
 // Inbox tab → the sidebar rail's count for that tab. Blocked is absent on
@@ -59,7 +59,6 @@ const ChatselectPanelHeader = ({
   setSelectedChats,
 }) => {
   const [showSearchBar, setShowSearchBar] = useState(false);
-  const [filterCount, setFilterCount] = useState(0);
   const sortData = [
     {
       groupName: "Message received",
@@ -104,24 +103,7 @@ const ChatselectPanelHeader = ({
 
   useEffect(() => {
     if (filter.searchTerm.length && !showSearchBar) setShowSearchBar(true);
-    function getFilterActiveCount() {
-      let count = 0;
-      if (filter.messageType !== "usermessages") {
-        count += 1;
-      }
-      if (filter.strictFilter !== false) {
-        count += 1;
-      }
-      if ((tab === "all" || tab === "closed") && filter.status?.length) {
-        count += filter.status.length;
-      }
-      if (tab === "open" && filter.assignedTeams) {
-        count += filter.assignedTeams.length;
-      }
-      return count;
-    }
-    setFilterCount(getFilterActiveCount());
-  }, [filter, tab]);
+  }, [filter.searchTerm, showSearchBar]);
 
   return (
     <div className="relative shrink-0">
@@ -175,32 +157,6 @@ const ChatselectPanelHeader = ({
               content={<p>Search</p>}
               side="bottom"
             />
-
-            <Popover>
-              <CustomTooltip
-                trigger={
-                  <PopoverTrigger
-                    render={
-                      <button className="flex items-center justify-center border-0 bg-transparent p-0 outline-none" />
-                    }
-                  >
-                    <div className="relative">
-                      <SlidersHorizontal className="size-4 cursor-pointer" />
-                      {filterCount > 0 && (
-                        <div className="absolute -right-1.5 -top-1.5 flex size-3.5 items-center justify-center rounded-full text-[8px] text-white bg-primary">
-                          {filterCount}
-                        </div>
-                      )}
-                    </div>
-                  </PopoverTrigger>
-                }
-                content={<p>Advanced Filters</p>}
-                side="bottom"
-              />
-              <PopoverContent className="w-full">
-                <WaInboxChatFilter />
-              </PopoverContent>
-            </Popover>
 
             <CustomTooltip
               trigger={
@@ -302,6 +258,12 @@ const ChatselectPanelHeader = ({
 
         {/* Row 2 (small screens only): the tab rail the sidebar cannot show here */}
         <InboxTabStrip tab={tab} />
+
+        {/* Row 2b (small screens only): same reason — the sidebar's Channel filter
+            is off-screen below md, so the list panel carries it. */}
+        <div className="shrink-0 border-b border-border px-3 py-2 md:hidden">
+          <ChannelFilter />
+        </div>
 
         {/* Row 3: Row count + Everyone/Mine + sort */}
         <div className="flex h-9 shrink-0 items-center justify-between border-b px-3">

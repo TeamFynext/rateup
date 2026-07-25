@@ -26,6 +26,7 @@ type MainSidebarProps = Readonly<{
 
 export default function MainSidebar({ children, welcomeMessage = false }: MainSidebarProps) {
   const {
+    channels,
     contactLabels,
     customFieldData,
     isCorruptedSession,
@@ -65,6 +66,7 @@ export default function MainSidebar({ children, welcomeMessage = false }: MainSi
             ) : (
               <AppSidebar
                 subscription={subscription}
+                channels={channels}
                 contactLabels={contactLabels}
                 lifecycles={lifecycles}
                 userData={resolvedUserInfo ?? undefined}

@@ -1,6 +1,7 @@
 import { MessagePlatform } from "@/types/enums.ts";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar.tsx";
+import { getAvatarInitials, isEmojiName } from "./utils.ts";
 
 interface CreativeAvatarProps {
   name: string;
@@ -97,18 +98,6 @@ const getAvatarColor = (name: string) => {
   return colors[index];
 };
 
-// Extract initials from name (first letter of first name + first letter of last name)
-const getInitials = (name: string): string => {
-  if (!name) return "";
-  const parts = name.trim().split(/\s+/);
-
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0][0].toUpperCase();
-
-  // First letter of first name + first letter of last name
-  return (parts[0][0] + parts.at(-1)[0]).toUpperCase();
-};
-
 // Size configurations
 const sizeClasses = {
   xs: {
@@ -196,7 +185,10 @@ export function CreativeAvatar({
   variant,
   ringClassName,
 }: Readonly<CreativeAvatarProps>) {
-  const initials = getInitials(name);
+  const initials = getAvatarInitials(name);
+  // An emoji is the whole identity, not an abbreviation of one: it gets no drop
+  // shadow (which muddies a colour glyph) and a size step up so it reads at xs.
+  const showsEmoji = isEmojiName(name);
   const colors =
     variant || ringClassName
       ? {
@@ -219,7 +211,9 @@ export function CreativeAvatar({
         <AvatarFallback
           className={`${colors.bg} ${colors.text} ${sizes.text} font-semibold tracking-tight`}
         >
-          <span className="drop-shadow-sm">{initials}</span>
+          <span className={showsEmoji ? "text-[1.35em] leading-none" : "drop-shadow-sm"}>
+            {initials}
+          </span>
         </AvatarFallback>
       </Avatar>
       {showOnlineStatus && (

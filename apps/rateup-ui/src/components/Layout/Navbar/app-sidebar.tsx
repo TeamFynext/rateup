@@ -7,6 +7,7 @@ import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
 import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
+import type { ChannelOption } from "@/components/input/channelOptions.ts";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import NotificationBellIcon from "@/components/Layout/Notification/index.tsx";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
@@ -40,7 +41,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilter/index.tsx";
+import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilterStore.ts";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
@@ -82,6 +83,10 @@ function useChatFilter() {
           ...filter,
           lifecycle: filter.lifecycle === value ? "" : value,
         });
+      } else if (label === "channel") {
+        // Single choice, like lifecycle: picking the selected channel again clears
+        // the scope back to every channel.
+        setFilter({ ...filter, phone: filter.phone === value ? "" : value });
       } else if (label === "assignedStaff") {
         setFilter({
           ...filter,
@@ -456,8 +461,11 @@ function NavItem({
   // variant === "default"
   if (item.type === "component") {
     const Component = sidebarComponentMap?.[item.componentKey];
+    // An unmapped key (or a caller that forgot to pass the map) used to render as
+    // a bare separator with nothing above it — fail visibly nowhere instead.
+    if (!Component) return null;
     return (
-      <SidebarMenuItem>
+      <SidebarMenuItem className={item.className}>
         <div className="flex flex-col gap-2">
           {item.hasSepeartorOnTop && <SidebarSeparator className="m-0" />}
           {Component}
@@ -612,6 +620,7 @@ export default function AppSidebar({
   subscription,
   lifecycles,
   contactLabels,
+  channels = [],
   userData,
   staff,
   teams,
@@ -619,6 +628,7 @@ export default function AppSidebar({
   subscription?: any;
   lifecycles?: any[];
   contactLabels?: any[];
+  channels?: ChannelOption[];
   userData?: IUserInfoApiResponse;
   staff: any[];
   teams: any[];
@@ -674,6 +684,7 @@ export default function AppSidebar({
     subscription,
     lifecycles: user?.showLifecycle ? lifecycles : [],
     contactLabels,
+    channels,
     staff,
     teams,
     chatFilterStore,
@@ -864,6 +875,7 @@ export default function AppSidebar({
                                 item={item}
                                 fullPathname={fullPathname}
                                 onRouteGuard={handleRouteGuard}
+                                sidebarComponentMap={sidebarComponentMap}
                                 activeSubPath={activePanelItemPath}
                               />
                             </SidebarMenu>
