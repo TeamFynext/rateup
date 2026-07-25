@@ -96,9 +96,11 @@ ticket.
 
 | Role | In the Closed view |
 |------|--------------------|
-| **Business Admin** | Views and reopens any closed ticket |
-| **Manager** | Views and reopens within their teams |
-| **Agent** | Views closed tickets; reopening depends on permissions |
+| **Super Admin** | Views and reopens any closed ticket, on every channel |
+| **Admin** | Views and reopens closed tickets on the channels their teams grant |
+| **Staff** | The same channel scope, minus any assigned tickets their organisation hides from them |
+
+Reopening is not role-gated — anyone who can see a closed ticket can reopen it.
 
 ---
 

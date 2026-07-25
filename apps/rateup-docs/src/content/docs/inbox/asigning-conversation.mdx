@@ -158,11 +158,14 @@ Useful at shift changes, or when redistributing an absent colleague's queue.
 
 ## Permissions
 
+Assignment is not gated by role. Anyone who can open the Inbox can assign any ticket they can see,
+to anyone — the limit is **visibility**, not permission:
+
 | Role | Can assign |
 |------|-----------|
-| **Business Admin** | Any ticket, to anyone, across all teams |
-| **Manager** | Tickets within the teams they manage |
-| **Agent** | To themselves; reassigning to others depends on role settings |
+| **Super Admin** | Any ticket, to anyone — no channel scoping applies |
+| **Admin** | Any ticket on the channels their teams grant |
+| **Staff** | The same channel scope, minus any assigned tickets their organisation hides from them |
 
 ---
 

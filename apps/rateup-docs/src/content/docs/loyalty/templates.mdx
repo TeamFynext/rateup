@@ -3,36 +3,77 @@ title: "WhatsApp Templates"
 description: The approved message templates the loyalty programme uses for each kind of notification.
 ---
 
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
 
-Loyalty sends its notifications as WhatsApp **templates**. This page is where each notification
-type is mapped to the template that carries it.
+Loyalty sends its notifications as WhatsApp **templates**. This page is where those templates are
+created from a predefined set; mapping each notification to a template happens in
+[Settings](/loyalty/settings).
 
 <ScreenShot src="/docs/screenshots/loyalty/templates.png" alt="Loyalty message templates" />
 
 ---
 
-## Mapping Templates
+## Creating a Loyalty Template
 
-Select the **WhatsApp Account** the programme sends from, then choose a template for each
-notification type:
+This page lists the loyalty templates you have created, each with its WhatsApp account and approval
+status. Click **Create** to start a new one:
+
+<Steps>
+<Step>
+**Pick a Template** — choose one of the predefined loyalty templates. Each comes with a ready body
+and example values.
+</Step>
+<Step>
+Choose the **WhatsApp account** it will belong to.
+</Step>
+<Step>
+The draft is created and opens in the template editor, where you edit and submit it for approval.
+</Step>
+</Steps>
+
+Each predefined template is listed by its WhatsApp template name, with its type on a badge:
+
+| Template name | Type |
+|---------------|------|
+| `loyalty_customer_registration` | `CustomerRegistration` |
+| `loyalty_point_information` | `PointInformation` |
+| `loyalty_referral` | `Referral` |
+| `loyalty_customer_removal` | `CustomerRemoval` |
+| `loyalty_rewards_issued` | `RewardsIssued` |
+| `loyalty_points_issued` | `PointsIssued` |
+| `loyalty_points_adjusted` | `PointsAdjusted` |
+| `loyalty_reward_issued` | `RewardIssued` |
+| `loyalty_reward_redeemed` | `RewardRedeemed` |
+| `loyalty_tier_upgraded` | `TierUpgraded` |
+| `loyalty_birthday` | `Birthday` |
+| `loyalty_inactivity_reminder` | `InactivityReminder` |
+
+Use **Search loyalty templates…** to filter the list. A template with no account shows
+**No Account**.
+
+---
+
+## Mapping Templates to Notifications
+
+Mapping does not happen on this page — it happens in [Settings](/loyalty/settings), where each
+notification has its own template selector:
 
 | Notification | Template for |
 |--------------|-------------|
 | **Points Issued** | Points awarded |
 | **Points Adjusted** | A manual balance change |
-| **Points Expired** | Points removed by expiry |
-| **Points Expiry Alert** | An upcoming expiry |
-| **Rewards Issued** | A reward granted |
+| **Reward Issued** | A reward granted |
 | **Reward Redeemed** | A reward claimed |
 | **Tier Upgraded** | Reaching a new tier |
-| **Referral** | Referral rewards |
-| **Customer Registration** | Joining the programme |
-| **Customer Removal** | Leaving the programme |
+| **Birthday** | A member's birthday reward |
+| **Inactivity Reminder** | A member who has gone quiet |
+| **Points Expiry Alert** | An upcoming expiry |
+| **Points Expired** | Points removed by expiry |
 
 <Callout type="warn">
-  A notification with no template selected does not send. After enabling a notification in
-  [Settings](/loyalty/settings), come here and map it.
+  A notification with no template selected does not send. Create the template here, wait for
+  approval, then go to [Settings](/loyalty/settings) and select it against the notification.
 </Callout>
 
 ---

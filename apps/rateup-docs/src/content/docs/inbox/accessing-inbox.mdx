@@ -22,7 +22,7 @@ You need:
 
 <Callout type="warn">
   If the Inbox is missing from your sidebar, it is almost always one of two things: your role does
-  not include Inbox access, or no channel has been connected yet. Ask a Business Admin to check
+  not include Inbox access, or no channel has been connected yet. Ask a Super Admin to check
   both.
 </Callout>
 
@@ -55,11 +55,27 @@ new messages arrive.
 
 ## Who Can Access the Inbox
 
+RateUp has three roles, set per user under [Users](/settings/users):
+
 | Role | What they see |
 |------|---------------|
-| **Business Admin** | Every ticket in the organisation, plus Inbox settings and automation |
-| **Manager** | Tickets belonging to the teams they manage |
-| **Agent** | Tickets assigned to them or to their team, subject to permissions |
+| **Super Admin** | Every ticket on every channel — channel scoping does not apply to them |
+| **Admin** | Tickets on the channels their teams grant |
+| **Staff** | The same channel scope, and less of the assigned work (see below) |
+
+Two things narrow this further:
+
+- **Channel access comes from teams.** A user's channels are the union of those granted to the
+  teams they belong to. A user in **no** team is not restricted — they see every channel. See
+  [Teams](/settings/teams).
+- **Access to Inbox is a separate per-user permission.** Without it the Inbox is hidden entirely,
+  whatever the role says.
+
+<Callout type="info">
+  Whether **Staff** see tickets assigned to other people is an organisation-level setting, not a
+  per-user one. It has three states — everyone, team members only, or admins only — and under
+  *admins only* a Staff user sees none of the assigned tickets in shared views.
+</Callout>
 
 ---
 
@@ -74,7 +90,7 @@ Permissions affect more than visibility. Depending on your role you may or may n
 - Edit contact details
 - Change Inbox settings and automation rules
 
-These are configured under **Teams & Roles**, not in the Inbox itself.
+These are configured under [Users](/settings/users) and [Teams](/settings/teams), not in the Inbox itself.
 
 ---
 
@@ -82,10 +98,10 @@ These are configured under **Teams & Roles**, not in the Inbox itself.
 
 | Symptom | Likely cause | What to do |
 |---------|--------------|------------|
-| Inbox is missing from the sidebar | Role does not include Inbox access | Ask a Business Admin to update your role |
+| Inbox is missing from the sidebar | Role does not include Inbox access | Ask a Super Admin to update your role |
 | Inbox opens but is empty | No channel connected, or no tickets match your permissions | Check the **All** view; ask an admin to confirm the channel is live |
 | You can read but not reply | The ticket is unassigned, or closed | Assign it to yourself, or reopen it |
-| You cannot see a colleague's ticket | It belongs to a team you are not in | Ask a Manager to assign it to you or your team |
+| You cannot see a colleague's ticket | It belongs to a team you are not in | Ask an admin to assign it to you or your team |
 
 ---
 

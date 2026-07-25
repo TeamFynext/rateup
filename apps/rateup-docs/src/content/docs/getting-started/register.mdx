@@ -54,11 +54,27 @@ What this step asks for depends on the method you chose.
 | **Name** | Your own name |
 | **Email address** | Must be valid, and not already registered |
 | **Password** | See the rules below |
-| **Confirm password** | Must match |
+
+As you type, a checklist appears under the password field and ticks each rule off:
+
+| Rule | Meaning |
+|------|---------|
+| **At least 8 characters** | Shorter passwords are rejected |
+| **1 uppercase letter** | `A`–`Z` |
+| **1 lowercase letter** | `a`–`z` |
+| **1 number** | `0`–`9` |
+| **1 special character** | See the accepted list below |
+
+Accepted special characters:
+
+```text
+! @ # $ % ^ & * ( ) , . ? " : { } | < >
+```
 
 <Callout type="warn">
-  Your password must be at least **5 characters** and contain **at least one letter and one
-  number**. A password of only letters or only digits is rejected.
+  All five rules must be green before you can continue. Until then the field shows *"Your password
+  must meet all security requirements"* — it does not say which rule is missing, so read the
+  checklist.
 </Callout>
 
 ### With Google or Apple
@@ -180,7 +196,7 @@ Dashboard
 |---------|---------|-----------|
 | **"This account already exists"** | That email is already registered | [Log in](/getting-started/login), or [reset your password](/getting-started/resetpassword) |
 | **"Sign up process is already completed"** | Registration finished on a previous attempt | Go to the login page and sign in |
-| **"Password should contain at least one letter and one number"** | Password is all letters or all digits | Mix both |
+| **"Your password must meet all security requirements"** | One or more of the five password rules is unmet | Check the password checklist — the unticked rules are the ones to fix |
 | **"Enter a valid email"** | The address is malformed | Check for typos |
 | **Continue button will not activate** | A required field is empty — usually **team size** | Fill every field on the step |
 | **No verification email** | Filtered as spam, or a typo in the address | Check spam, then **Resend verification email** |
