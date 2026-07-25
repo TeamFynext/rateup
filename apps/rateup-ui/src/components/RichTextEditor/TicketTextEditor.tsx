@@ -1,3 +1,4 @@
+import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -7,6 +8,7 @@ import Youtube from "@tiptap/extension-youtube";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
+import SearchAndReplace from "@/components/tiptap/extensions/search-and-replace";
 import { EditorToolbar } from "@/components/tiptap/toolbars/editor-toolbar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
@@ -23,6 +25,8 @@ export default function TicketTextEditor({ content, onUpdate, placeholder = "", 
       Link,
       Color,
       TextStyle,
+      Highlight.configure({ multicolor: true }),
+      SearchAndReplace,
       Youtube,
       Video,
       TextAlign.configure({ types: ["paragraph"] }),

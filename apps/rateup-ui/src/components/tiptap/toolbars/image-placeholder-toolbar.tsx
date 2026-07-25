@@ -14,6 +14,11 @@ const ImagePlaceholderToolbar = React.forwardRef<
   React.ComponentProps<typeof Button>
 >(({ className, onClick, children, ...props }, ref) => {
   const { editor } = useToolbar();
+
+  // Only registered when the ImagePlaceholder extension is on the editor, and not every
+  // editor mounting this toolbar registers it (some ship their own image picker instead).
+  if (typeof editor?.commands.insertImagePlaceholder !== "function") return null;
+
   return (
     <Tooltip>
       <TooltipTrigger

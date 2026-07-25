@@ -26,10 +26,13 @@ export function SearchAndReplaceToolbar() {
   const [replaceText, setReplaceText] = useState("");
   const [checked, setChecked] = useState(false);
 
-  const results = (editor?.storage as any)?.searchAndReplace
-    .results as SearchAndReplaceStorage["results"];
-  const selectedResult = (editor?.storage as any)?.searchAndReplace
-    .selectedResult as SearchAndReplaceStorage["selectedResult"];
+  // Only present when the SearchAndReplace extension is registered on the editor,
+  // and not every editor mounting this toolbar registers it.
+  const storage = (editor?.storage as any)?.searchAndReplace as SearchAndReplaceStorage | undefined;
+  const results = storage?.results;
+  const selectedResult = storage?.selectedResult;
+
+  const supported = !!storage;
 
   const replace = () => editor?.chain().replace().run();
   const replaceAll = () => editor?.chain().replaceAll().run();
@@ -37,16 +40,19 @@ export function SearchAndReplaceToolbar() {
   const selectPrevious = () => editor?.chain().selectPreviousResult().run();
 
   useEffect(() => {
+    if (!supported) return;
     editor?.chain().setSearchTerm(searchText).run();
-  }, [searchText, editor]);
+  }, [searchText, editor, supported]);
 
   useEffect(() => {
+    if (!supported) return;
     editor?.chain().setReplaceTerm(replaceText).run();
-  }, [replaceText, editor]);
+  }, [replaceText, editor, supported]);
 
   useEffect(() => {
+    if (!supported) return;
     editor?.chain().setCaseSensitive(checked).run();
-  }, [checked, editor]);
+  }, [checked, editor, supported]);
 
   useEffect(() => {
     if (!open) {
@@ -55,6 +61,8 @@ export function SearchAndReplaceToolbar() {
       setReplacing(false);
     }
   }, [open]);
+
+  if (!supported) return null;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
