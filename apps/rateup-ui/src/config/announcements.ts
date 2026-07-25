@@ -38,6 +38,16 @@ export interface Announcement {
 
 export const ANNOUNCEMENTS: readonly Announcement[] = [
   {
+    id: "2026-07-25-inbox-channel-filter",
+    title: "Channel filter moved to the sidebar",
+    summary:
+      "Pick the channel you are working in from the inbox sidebar, alongside lifecycle, labels, users and teams — it scopes every tab. The advanced filters popover in the conversation list is gone.",
+    publishedAt: "2026-07-25",
+    kinds: ["improvement"],
+    area: "Inbox",
+    link: { to: "/dashboard/inbox", search: { tab: "open" }, label: "Open inbox" },
+  },
+  {
     id: "2026-07-23-spam-tab",
     title: "Spam has its own tab",
     summary:

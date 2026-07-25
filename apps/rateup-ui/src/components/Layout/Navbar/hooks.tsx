@@ -1,7 +1,9 @@
 import {
   IconActivity,
+  IconAddressBook,
   IconAward,
   IconBolt,
+  IconBrandFacebook,
   IconBrandInstagram,
   IconBrandWhatsapp,
   IconBrowser,
@@ -46,13 +48,20 @@ import { AtSign, Layers, ShieldAlert, Sparkles, Star, UserCheck } from "lucide-r
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { TeamFeature } from "@/types/enums.ts";
+import { MessagePlatform, TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
+
+const CHANNEL_PLATFORM_ICON = {
+  [MessagePlatform.WHATSAPP]: IconBrandWhatsapp,
+  [MessagePlatform.INSTAGRAM]: IconBrandInstagram,
+  [MessagePlatform.FACEBOOK]: IconBrandFacebook,
+};
 
 export function useNavMain({
   subscription,
   lifecycles,
   contactLabels,
+  channels,
   staff,
   teams,
   chatFilterStore,
@@ -144,6 +153,31 @@ export function useNavMain({
                 {
                   group: "Filter",
                   items: [
+                    // Channel scopes every tab, so it leads the filter group.
+                    ...(channels.length > 0
+                      ? [
+                          {
+                            title: t("Channel"),
+                            isSectionHeader: true,
+                            icon: IconAddressBook,
+                            showClearButton: Boolean(chatFilterStore.filter.phone),
+                            clearFilter: () =>
+                              chatFilterStore.setFilter({
+                                ...chatFilterStore.filter,
+                                phone: "",
+                              }),
+                            items: channels.map((channel) => ({
+                              title: channel.label,
+                              url: "#",
+                              icon: CHANNEL_PLATFORM_ICON[channel.platform] ?? IconMessage,
+                              handleClick: () => {
+                                handleFilter("channel", channel.value);
+                              },
+                              isActive: chatFilterStore.filter.phone === channel.value,
+                            })),
+                          },
+                        ]
+                      : []),
                     ...(lifecycles.length > 0
                       ? [
                           {
@@ -661,8 +695,10 @@ export function useNavMain({
       },
     ],
     [
+      channels,
       chatFilterStore.filter.labels,
       chatFilterStore.filter.lifecycle,
+      chatFilterStore.filter.phone,
       contactLabels,
       handleFilter,
       hasTeamFeature,

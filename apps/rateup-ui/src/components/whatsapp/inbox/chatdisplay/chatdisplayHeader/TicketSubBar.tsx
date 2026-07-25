@@ -24,7 +24,7 @@ export default function TicketSubBar({ contact }: Readonly<TicketSubBarProps>) {
     // header row exactly, so this bar's line lands on the same y as that one.
     <div className="flex h-9 shrink-0 items-center gap-2.5 border-b border-border bg-muted px-5">
       <Ticket className="size-3.5 shrink-0 text-muted-foreground" />
-      <span className="shrink-0 font-mono text-[11px] text-muted-foreground mt-auto">
+      <span className="shrink-0 font-mono text-[11px] text-muted-foreground mt-1">
         #{ticketNumber}
       </span>
       <span className="truncate text-[13px] font-bold text-foreground">

@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { signOut } from "supertokens-auth-react/recipe/session";
 
-import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilter/index.tsx";
+import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilterStore.ts";
 
 import { useContactsStore, useMessagesStore } from "../../../components/dashboard/inbox/store.ts";
 import { resetBrowserQueryClient } from "../../../components/providers.tsx";

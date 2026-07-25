@@ -10,6 +10,7 @@ import { Field, FieldLabel, FieldTitle } from "../ui/field.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
+import { getChannelOptions } from "./channelOptions.ts";
 
 interface AccountSelectorProps {
   onChange?: any;
@@ -47,40 +48,14 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   const { data, isPending, isError } = useWaSettings();
 
   const { t: translations } = useTranslation();
-  let accountOptions = [];
-  for (const account of data ?? []) {
-    if (platform === "all" || platform === MessagePlatform.WHATSAPP) {
-      const val = usePhoneNumber ? account?.phone?.replace("+", "") : account.phoneId;
-
-      if (!filterIds || filterIds.includes(val)) {
-        accountOptions.push({
-          value: val,
-          label: account?.phoneDisplayName || account.phone,
-          status: account.status,
-        });
-      }
-    }
-    if (platform === "all" || platform === MessagePlatform.INSTAGRAM)
-      if (account.ibaId) {
-        if (!filterIds || filterIds.includes(account.ibaId)) {
-          accountOptions.push({
-            value: account.ibaId,
-            label: account.igUserName ?? account.ibaId,
-            status: account.status,
-          });
-        }
-      }
-    if (platform === "all" || platform === MessagePlatform.FACEBOOK)
-      if (account.fbPageId) {
-        if (!filterIds || filterIds.includes(account.fbPageId)) {
-          accountOptions.push({
-            value: account.fbPageId,
-            label: account.fbUserName ?? account.fbPageId,
-            status: account.status,
-          });
-        }
-      }
-  }
+  let accountOptions: { value: string; label: string; status?: string }[] = getChannelOptions(
+    data,
+    {
+      platform,
+      usePhoneNumber,
+      filterIds,
+    },
+  );
 
   if (withAllOption) {
     accountOptions = [{ value: "all", label: "All" }, ...accountOptions];
@@ -102,7 +77,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   }
   if (isPending) {
     return (
-      <div className="flex h-10 w-60 items-center justify-between rounded-md border px-3">
+      <div className="flex h-10 w-full max-w-60 items-center justify-between rounded-md border px-3">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-4 w-5" />
       </div>
