@@ -1,0 +1,65 @@
+---
+title: "Payments"
+description: Configure how customers pay for orders placed through WhatsApp.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+**Payments** controls how customers pay for orders placed through WhatsApp.
+
+<ScreenShot src="/docs/screenshots/commerce/payments.png" alt="Payment configuration" />
+
+---
+
+## Prerequisites
+
+Payments needs two things in place:
+
+| Requirement | If missing |
+|-------------|-----------|
+| A **WhatsApp account** set up | The page shows *"WhatsApp settings not found"* |
+| A **catalog connected** to it | The page shows a *"No catalog connected"* notice |
+
+Connect a catalog under [Catalogs](/commerce/catalogs) before configuring payments.
+
+---
+
+## What You Configure
+
+The payment panel covers how money is collected for orders from this catalog — the provider, the
+methods customers are offered, and whether cash on delivery is allowed.
+
+Which options appear depends on your region, your WhatsApp Business account and whether a store
+integration is connected.
+
+<Callout type="info">
+  If your store is connected through **Shopify**, payment handling follows the Shopify
+  configuration rather than being set here.
+</Callout>
+
+---
+
+## Cash on Delivery
+
+COD orders skip the payment step: they move straight to fulfilment and the money is collected on
+handover. In the [Orders](/commerce/orders) list they show a **COD** marker so your team knows to
+collect.
+
+---
+
+## Troubleshooting
+
+| Symptom | What to check |
+|---------|---------------|
+| "WhatsApp settings not found" | Set up a WhatsApp Business account first |
+| "No catalog connected" | Connect a catalog in Catalogs |
+| Customers cannot complete checkout | Confirm the payment provider is live, not in test mode |
+| Payment succeeded but the order still shows Pending | Refresh the Orders list; if it persists, check the provider's webhook |
+
+---
+
+## Related Pages
+
+- [Orders](/commerce/orders)
+- [Checkout Settings](/commerce/checkout-settings)
+- [WhatsApp Settings](/whatsapp/settings)

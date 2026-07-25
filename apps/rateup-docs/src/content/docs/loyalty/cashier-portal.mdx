@@ -1,0 +1,133 @@
+---
+title: "Cashier Portal"
+description: The in-store tool for finding a customer, issuing points and confirming redemptions.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+The **Cashier Portal** is the counter-side view of the loyalty programme. It is deliberately
+simple — staff need to find a customer and act in seconds, with a queue behind them.
+
+<ScreenShot src="/docs/screenshots/loyalty/cashier-portal.png" alt="The Cashier Portal" />
+
+---
+
+## Finding a Customer
+
+Search by **name or phone number**. Open the result to see their record.
+
+| Shown | Meaning |
+|-------|---------|
+| **Current Tier** | Their tier |
+| **Available Points** | What they can spend now |
+| **Lifetime Points** | Total ever earned |
+| **Joined** | When they enrolled |
+| **Referral Code** | Copyable, with a link |
+
+---
+
+## Issuing Points
+
+<Steps>
+<Step>
+Find the customer.
+</Step>
+<Step>
+Click **Issue Points** and **enter the amount**.
+</Step>
+<Step>
+Add a note in **Add any notes…** — this becomes the description in
+[Transactions](/loyalty/transactions), so make it useful.
+</Step>
+<Step>
+Confirm. Depending on your settings this may go to [Approvals](/loyalty/approvals) first.
+</Step>
+</Steps>
+
+---
+
+## Redeeming a Reward
+
+<Steps>
+<Step>
+Open **Available Rewards for Customer** — this lists only what they can actually afford.
+</Step>
+<Step>
+Choose the reward and **Claim Reward**.
+</Step>
+<Step>
+Hand over the gift, or apply the discount.
+</Step>
+<Step>
+Confirm the redemption so the points are deducted.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Confirm **after** the customer has what they came for, not before. Confirming first and then
+  discovering the item is out of stock leaves them with neither the reward nor their points.
+</Callout>
+
+---
+
+## Coupon Codes
+
+For a customer presenting a coupon:
+
+<Steps>
+<Step>
+**Enter coupon code**.
+</Step>
+<Step>
+Apply the discount.
+</Step>
+<Step>
+**Mark as Used** so the code cannot be reused.
+</Step>
+</Steps>
+
+---
+
+## Granting a Reward Directly
+
+**Assign Reward** or **Grant reward** gives a reward without the customer spending points — for
+service recovery, or a goodwill gesture.
+
+<Callout type="info">
+  A granted reward after something went wrong is worth far more than the points it costs you.
+  Give staff explicit permission to use this and a clear limit.
+</Callout>
+
+---
+
+## Registering a New Customer
+
+Staff can enrol customers at the counter. The customer can also register themselves via the
+**Customer Registration page link** from [Commands](/loyalty/commands) — a QR code at the till is
+the usual way to share it.
+
+<Callout type="info">
+  Self-registration is better wherever possible: fewer typos, and the customer's own consent, given
+  by them.
+</Callout>
+
+---
+
+## Training Staff
+
+Cover these five things and nothing else:
+
+1. Search by phone number — it is more reliable than by name
+2. Always note *why* when issuing points
+3. Confirm redemption only after handing over
+4. Mark coupon codes used, every time
+5. When unsure, issue nothing and ask — corrections are visible and awkward
+
+---
+
+## Related Pages
+
+- [Rewards](/loyalty/rewards)
+- [Approvals](/loyalty/approvals)
+- [Transactions](/loyalty/transactions)

@@ -1,0 +1,135 @@
+---
+title: "Settings"
+description: Program name, currencies, point expiry, approvals, birthday reminders and the danger zone.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+Loyalty **Settings** holds the programme-wide configuration — the decisions that apply to every
+member.
+
+<ScreenShot src="/docs/screenshots/loyalty/settings.png" alt="Loyalty settings" />
+
+---
+
+## Basic Settings
+
+| Setting | Purpose |
+|---------|---------|
+| **Program Name** | What customers see the programme called. Required |
+| **Points Currency** | What you call your points — *Stars*, *Coins*, *Points*. Required |
+| **Money Currency** | The currency spend is measured in. Required |
+| **Default Country** | Default for phone numbers at registration. Required |
+| **Program Status** | **Program Active** enables or disables the whole programme |
+
+<Callout type="info">
+  Name your points something of your own. *"You have 340 Beans"* is memorable in a way
+  *"340 points"* never is — and it makes the programme feel like yours rather than software.
+</Callout>
+
+---
+
+## Points Expiration
+
+| Setting | Purpose |
+|---------|---------|
+| **Enable Expiration** | Turns expiry on |
+| **Expiration Period** | How long points last before expiring. Required when expiry is on |
+
+Expiry limits your liability and creates urgency. It also, done badly, destroys goodwill.
+
+<Callout type="warn">
+  If you enable expiry, enable the [reminder notifications](/loyalty/notifications) at the same
+  time. Expiring points silently is the most damaging thing a loyalty programme can do to a
+  customer who was saving.
+</Callout>
+
+Give people a realistic window. A period shorter than a typical purchase cycle means points expire
+before anyone could reasonably spend them.
+
+---
+
+## Approvals
+
+**Auto-approve Adjustments** decides whether staff adjustments take effect immediately or wait for
+review in [Approvals](/loyalty/approvals).
+
+Leave it **off** unless your team is small and trusted.
+
+---
+
+## Birthday Reminders
+
+**Enable Birthday Reminders** sends a message on each member's birthday. Pair it with a
+**Birthday Gift** reward so the message arrives with something attached.
+
+Requires a **date of birth** on the member record — collect it during registration.
+
+---
+
+## Notifications
+
+The notification switches live here too — see [Notifications](/loyalty/notifications) for what each
+one does and how often to send.
+
+---
+
+## Danger Zone
+
+Two irreversible actions.
+
+### Reset Points
+
+Sets every member's balance to zero.
+
+<Callout type="warn">
+  This wipes points your customers earned and expect to spend. There is almost no situation where
+  this is the right answer to a live programme — export
+  [transactions](/loyalty/transactions) first if you proceed.
+</Callout>
+
+### Delete Program
+
+Removes the loyalty programme and all its data — members, balances, transactions and rewards.
+**Remove all data** does exactly what it says.
+
+<Callout type="warn">
+  Permanent and irreversible. Export member and transaction data before doing this.
+</Callout>
+
+---
+
+## Launch Checklist
+
+<Steps>
+<Step>
+Program name, points currency, money currency and default country set.
+</Step>
+<Step>
+[Earning rules and tiers](/loyalty/earning-rules) configured and modelled.
+</Step>
+<Step>
+At least one **cheap, reachable** [reward](/loyalty/rewards) available.
+</Step>
+<Step>
+[Notifications](/loyalty/notifications) enabled, with approved templates selected.
+</Step>
+<Step>
+[Commands](/loyalty/commands) configured so customers can self-serve.
+</Step>
+<Step>
+Staff trained on the [cashier portal](/loyalty/cashier-portal).
+</Step>
+<Step>
+**Program Active** switched on.
+</Step>
+</Steps>
+
+---
+
+## Related Pages
+
+- [Earning Rules & Tiers](/loyalty/earning-rules)
+- [Notifications](/loyalty/notifications)
+- [Approvals](/loyalty/approvals)

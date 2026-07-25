@@ -1,0 +1,90 @@
+---
+title: "Conversational Components"
+description: Ice breakers and commands — the suggestions customers see before they type anything.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+**Conversational components** are what WhatsApp shows a customer when they open a chat with you and
+have not written anything yet.
+
+They are small, cheap to set up, and they deflect a surprising share of routine questions.
+
+<ScreenShot src="/docs/screenshots/whatsapp/conversational-components.png" alt="Ice breakers and commands" />
+
+---
+
+## Ice Breakers
+
+Ice breakers are tappable suggested questions shown in an empty chat.
+
+<Steps>
+<Step>
+Click **Add Ice Breaker**.
+</Step>
+<Step>
+Write the question as a customer would ask it.
+</Step>
+<Step>
+Click **Save Changes**.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  A maximum of **four** ice breakers is allowed. Choose the four questions you actually answer most
+  — check your [Inbox](/inbox) if you are guessing.
+</Callout>
+
+---
+
+## Commands
+
+Commands are shortcuts a customer types with a leading slash. Each has a **command** and a
+**description** explaining what it does.
+
+<Steps>
+<Step>
+Click **Add Command**.
+</Step>
+<Step>
+Enter the command name and a short description.
+</Step>
+<Step>
+Click **Save Changes**.
+</Step>
+</Steps>
+
+Keep descriptions to a few words — they appear in a compact list on the customer's phone.
+
+---
+
+## Ice Breakers vs Commands
+
+| | Ice breakers | Commands |
+|---|-------------|----------|
+| **Seen by** | Everyone opening an empty chat | Customers who type `/` |
+| **Best for** | The obvious first questions | Power users and repeat customers |
+| **Limit** | 4 | Several |
+
+Most businesses get more value from ice breakers, because they require nothing of the customer.
+
+---
+
+## Syncing
+
+**Sync from WhatsApp** pulls the current configuration from your WhatsApp account, so RateUp
+matches what customers actually see.
+
+<Callout type="info">
+  If a change does not appear on a test phone, close and reopen the chat — WhatsApp caches these
+  components on the device.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Chatbots](/whatsapp/chatbots) — what happens after they tap
+- [Inbox](/inbox) — finding your most common questions
+- [Instagram Entry Points](/instagram/entry-points) — the Instagram equivalent

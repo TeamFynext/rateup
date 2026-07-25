@@ -1,0 +1,80 @@
+---
+title: "Ice Breakers, Menu & Links"
+description: The three ways customers start a conversation with you on Instagram.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+Three features decide how easy it is for someone to start talking to you on Instagram — and what
+they see when they do.
+
+---
+
+## Ice Breakers
+
+Ice breakers are the suggested questions Instagram shows before a customer types anything.
+
+<ScreenShot src="/docs/screenshots/instagram/overview.png" alt="Ice breaker questions" />
+
+<Steps>
+<Step>
+Open the **Ice Breakers** section and click **Add question**.
+</Step>
+<Step>
+Write the **question text** as the customer would ask it — *"What are your business hours?"*, not
+*"Business hours"*.
+</Step>
+<Step>
+Set what happens when they tap it.
+</Step>
+<Step>
+Save and **Sync with Meta**.
+</Step>
+</Steps>
+
+<Callout type="info">
+  Ice breakers are the cheapest support you will ever build. Look at your Inbox, find the three
+  questions you answer most, and make them tappable.
+</Callout>
+
+---
+
+## Persistent Menu
+
+The persistent menu sits in the DM thread permanently, so customers can reach your key options at
+any point in the conversation.
+
+Each entry has:
+
+| Field | Purpose |
+|-------|---------|
+| **Title** | What the customer sees — *"Talk to an agent"* |
+| **Type** | What it does |
+| **URL / Payload** | Where it goes, or which bot step it triggers |
+
+| Type | Behaviour |
+|------|-----------|
+| **Web URL** | Opens a link |
+| **Postback** | Triggers a step in your chatbot |
+
+Keep it short. A menu of three useful entries gets used; a menu of ten gets ignored.
+
+---
+
+### Why the referral parameter matters
+
+It arrives with the conversation, so you know which campaign, poster or page sent that person. Use
+a different parameter per placement and you can tell which one actually works.
+
+<Callout type="info">
+  Pair an ig.me link with a [QR code](/qr-studio/qr-creator): the printed code stays the same while
+  the destination behind it changes with each campaign.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Instagram Chatbots](/instagram/chatbots)
+- [QR Creator](/qr-studio/qr-creator)

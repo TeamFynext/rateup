@@ -1,3 +1,5 @@
+import { CDN } from "@/lib/cdn";
+
 interface ScreenshotProps {
   src: string;
   alt?: string;
@@ -8,7 +10,7 @@ interface ScreenshotProps {
 const Screenshot = ({ src, alt, width, height }: ScreenshotProps) => {
   return (
     <img
-      src={src}
+      src={`${CDN}${src}`}
       alt={alt}
       width={width || "80%"}
       height={height || "auto"}

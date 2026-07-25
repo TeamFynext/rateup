@@ -1,0 +1,96 @@
+---
+title: "Access Links"
+description: One shareable page holding several links — the single URL you put in a bio or a campaign.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+An **access link** is a single page that holds several links. Share one URL and let people choose
+where to go — a survey, your menu, a booking form, your socials.
+
+It is the answer to "we only get one link in the bio".
+
+<ScreenShot src="/docs/screenshots/qr-studio/access-links-list.png" alt="Your access links" />
+
+---
+
+## Create an Access Link
+
+<Steps>
+<Step>
+Go to **QR Studio → Access Links** and click **Create Access Link**.
+</Step>
+<Step>
+Give it a **name** — this identifies it in your list.
+</Step>
+<Step>
+Click **Create Link**. It opens in the editor.
+</Step>
+<Step>
+Add the links you want on the page, and arrange them in the order visitors should see them.
+</Step>
+<Step>
+**Publish** when you are ready. Until then it is not live.
+</Step>
+</Steps>
+
+---
+
+## Status
+
+| Status | Meaning |
+|--------|---------|
+| **Active** | The link is live and reachable |
+| **Inactive** | The link is not serving visitors |
+| **Published** | The current version has been published |
+
+Editing a published link does not go live until you publish again — so you can rework a page
+without breaking what people are currently visiting.
+
+---
+
+## Tracking Clicks
+
+Each access link shows a **Clicks** count.
+
+Compare it with the scan count on any [QR code](/qr-studio/qr-creator) pointing at it: scans tell
+you how many people picked up their phone, clicks tell you how many actually went somewhere.
+
+---
+
+## Sharing
+
+| Method | Use |
+|--------|-----|
+| **Share** | Copy the URL to send digitally |
+| **Share QR Code** | Get a QR for the access link, for print |
+
+---
+
+## Managing
+
+- **Rename** — change the name without affecting the URL or its content
+- **Delete** — removes the link permanently; anyone visiting the old URL will find nothing
+- **Search** — find a link by name once you have several
+
+<Callout type="warn">
+  Deleting an access link breaks every QR code and printed material pointing at it. If it is in the
+  wild, set it inactive rather than deleting it.
+</Callout>
+
+---
+
+## Best Practices
+
+- Put the most important link first — most visitors tap one thing and leave
+- Keep the list short; five good links beat fifteen
+- Point printed QR codes at an access link, so the destinations can change later
+- Check the click counts monthly and prune the links nobody uses
+
+---
+
+## Related Pages
+
+- [QR Creator](/qr-studio/qr-creator)
+- [Share Your Survey](/web-forms/sharing)

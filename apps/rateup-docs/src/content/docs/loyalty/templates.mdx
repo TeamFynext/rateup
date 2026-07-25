@@ -1,0 +1,72 @@
+---
+title: "WhatsApp Templates"
+description: The approved message templates the loyalty programme uses for each kind of notification.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+Loyalty sends its notifications as WhatsApp **templates**. This page is where each notification
+type is mapped to the template that carries it.
+
+<ScreenShot src="/docs/screenshots/loyalty/templates.png" alt="Loyalty message templates" />
+
+---
+
+## Mapping Templates
+
+Select the **WhatsApp Account** the programme sends from, then choose a template for each
+notification type:
+
+| Notification | Template for |
+|--------------|-------------|
+| **Points Issued** | Points awarded |
+| **Points Adjusted** | A manual balance change |
+| **Points Expired** | Points removed by expiry |
+| **Points Expiry Alert** | An upcoming expiry |
+| **Rewards Issued** | A reward granted |
+| **Reward Redeemed** | A reward claimed |
+| **Tier Upgraded** | Reaching a new tier |
+| **Referral** | Referral rewards |
+| **Customer Registration** | Joining the programme |
+| **Customer Removal** | Leaving the programme |
+
+<Callout type="warn">
+  A notification with no template selected does not send. After enabling a notification in
+  [Settings](/loyalty/settings), come here and map it.
+</Callout>
+
+---
+
+## Category
+
+Loyalty notifications are transactional rather than promotional, so they generally belong in the
+**UTILITY** category when the template is created.
+
+Category matters: a utility template rejected for containing promotional content is the most common
+approval failure. Tell the customer what happened to their points; do not attach an offer.
+
+---
+
+## Variables
+
+Templates carry variables filled in per customer — their name, point balance, tier, reward name.
+Provide an example for each when creating the template, or WhatsApp will reject it.
+
+Preview before saving. A broken variable in a loyalty notification reaches every active member.
+
+---
+
+## Creating the Templates
+
+Templates themselves are built and submitted for approval under
+[WhatsApp → Templates](/whatsapp/templates). Only approved templates appear in the selectors here.
+
+Build them before launch — approval takes time you will not have on the day.
+
+---
+
+## Related Pages
+
+- [Notifications](/loyalty/notifications) — which notifications exist
+- [WhatsApp Templates](/whatsapp/templates) — creating and approving them
+- [Settings](/loyalty/settings)

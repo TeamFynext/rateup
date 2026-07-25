@@ -1,0 +1,81 @@
+---
+title: "Channels"
+description: Connect the WhatsApp, Instagram and Facebook accounts your customers message you on.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+**Channels** is where your messaging accounts are connected. Everything else in RateUp — the Inbox,
+Commerce, Campaigns, Loyalty notifications — depends on at least one channel being live here.
+
+<ScreenShot src="/docs/screenshots/settings/channels.png" alt="Connected channels" />
+
+---
+
+## Supported Channels
+
+| Channel | What connects |
+|---------|---------------|
+| **WhatsApp** | A WhatsApp Business account and its phone numbers |
+| **Instagram** | An Instagram professional account |
+| **Facebook** | A Facebook page |
+
+Each channel lists its connected **accounts** and **pages**, so you can see at a glance what is
+live.
+
+---
+
+## Multiple Accounts
+
+You can connect more than one account per channel — several WhatsApp numbers, for example, one per
+brand or region.
+
+In the Inbox, each ticket shows which account the customer wrote to, so agents always know which
+identity they are replying as.
+
+---
+
+## What Depends on a Channel
+
+| Feature | Needs |
+|---------|-------|
+| [Inbox](/inbox) | Any channel |
+| [Campaigns](/campaign) | WhatsApp |
+| [Commerce](/commerce) | WhatsApp + a catalog |
+| [Loyalty notifications](/loyalty/notifications) | WhatsApp |
+| [Instagram automations](/instagram) | Instagram |
+
+<Callout type="warn">
+  Disconnecting a channel stops message delivery for everything built on it. Existing conversations
+  stay readable, but nothing new arrives and nothing can be sent.
+</Callout>
+
+---
+
+## Troubleshooting
+
+| Symptom | What to check |
+|---------|---------------|
+| Messages stopped arriving | The channel's connection may have expired — reconnect it |
+| "WhatsApp settings not found" elsewhere in RateUp | No WhatsApp account is connected |
+| An Instagram account will not connect | It must be a professional account linked to a Facebook page |
+| Replies fail on one number only | Check that specific account's status, not the channel as a whole |
+
+---
+
+## Who Can See Which Channel
+
+Every member of the organisation sees every channel unless you say otherwise. To restrict a group to
+one number or account, set **Channel Access** on their [team](/settings/teams).
+
+Agents can then narrow their own view further with the Inbox's
+[Channel filter](/inbox/inbox-filter) — which never widens what their team is allowed to see.
+
+---
+
+## Related Pages
+
+- [WhatsApp Settings](/whatsapp/settings)
+- [Instagram](/instagram)
+- [Teams](/settings/teams) — per-team channel access
+- [Integrations](/settings/integrations)

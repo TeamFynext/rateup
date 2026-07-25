@@ -1,0 +1,108 @@
+---
+title: "Campaign Details"
+description: Monitor participants, read the delivery report, control a running drip, and export results.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+Open any campaign to see how it is doing.
+
+<ScreenShot src="/docs/screenshots/campaign/detail.png" alt="Campaign details" />
+
+---
+
+## Overview
+
+The headline view of the campaign:
+
+| Shown | Meaning |
+|-------|---------|
+| **Total Participants** | How many contacts are in it |
+| **Template** | Which template is being sent |
+| **Status** | Draft, Scheduled, Active, Completed or Inactive |
+| **Team** | The owning team |
+
+**Back to Campaigns** returns to the list; **Refresh** pulls the latest figures.
+
+---
+
+## Participants
+
+The per-contact list, with **name**, **phone**, **consent** and delivery **status**.
+
+Search by name or phone to find one person, and filter by status to see only failures.
+
+| Action | Use |
+|--------|-----|
+| **Add Participant** | Add someone to a campaign already built |
+| **Resend** | Try again for a contact whose message failed |
+| **Delete Participants** | Remove people from the campaign |
+
+<Callout type="info">
+  Check **consent** in this list before sending, not after. A participant without consent will fail
+  — and every failure counts against your account.
+</Callout>
+
+---
+
+## Delivery Report
+
+The **Delivery Report** breaks the send down by outcome: delivered, read and failed.
+
+Read it alongside [Message Analytics](/analytics/message-analytics), which puts this campaign in the
+context of everything else you send.
+
+### What the numbers tell you
+
+| Pattern | Likely meaning |
+|---------|----------------|
+| High failure rate | List quality, or missing consent |
+| High delivery, low read | The message is not compelling, or arrived at a bad time |
+| High read, no replies | The call to action is unclear |
+| Replies flooding the Inbox | Good problem — check staffing before the next send |
+
+---
+
+## Controlling a Drip
+
+Running drip campaigns can be paused and resumed:
+
+| Control | Effect |
+|---------|--------|
+| **Pause Drip** | Stops sending; already-sent messages are unaffected |
+| **Start Drip** | Resumes from where it stopped |
+
+<Callout type="warn">
+  Pause immediately if you spot a mistake in a live drip — a wrong link, a broken variable. You
+  cannot recall what has already gone, but you can stop the rest.
+</Callout>
+
+---
+
+## Exporting
+
+| Format | Use |
+|--------|-----|
+| **Download as Excel** (.xlsx) | Analysis in a spreadsheet |
+| **Download as OpenDocument** (.ods) | Open-format alternative |
+
+Exports contain participant phone numbers — treat them as personal data.
+
+---
+
+## Deleting a Campaign
+
+**Delete Campaign** removes it and its report.
+
+<Callout type="warn">
+  Deleting destroys the delivery record. If you want the history for future comparison, export it
+  first.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Creating a Campaign](/campaign/creating-a-campaign)
+- [Message Analytics](/analytics/message-analytics)
+- [Inbox](/inbox) — where the replies land

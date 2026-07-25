@@ -1,168 +1,261 @@
 ---
-title: "Responding to Conversations"
-description: Learn how to reply to customers, use quick actions, and manage messages in the RateUp Inbox.
+title: "Replying to Customers"
+description: Send messages, quick replies, attachments and templates — and understand when the composer is locked and why.
 ---
 
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
-import { CDN } from '@/lib/cdn';
 
-This section explains how to **respond to customer messages** inside the RateUp Inbox, including manual replies, automation, and WhatsApp messaging limitations.
-
-Responding to conversations is possible from multiple Inbox views such as **New**, **Assigned**, and **Mine**.
+This page covers everything about answering a customer: the composer, its limits, and the four
+situations where you cannot reply.
 
 ---
 
-## Opening a Conversation
+## Before You Reply
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/chat-window.png`}
-  alt="Open conversation in the Inbox"
-  width={"70%"}
-/>
-
-To respond to a customer:
-
-1. Select a conversation from the Inbox list
-2. The chat opens in the right panel
-3. Review the message history and assigned owner before replying
-
----
-
-## Sending a Manual Reply
-
-To send a message:
-
-1. Click the message input box at the bottom of the chat
-2. Type your response
-3. Click **Send** or press **Enter**
-
-Your message is delivered instantly to the customer.
+<Steps>
+<Step>
+**Check the ticket has an owner.** If the composer is replaced by an **Assign to me** bar, take
+the ticket first.
+</Step>
+<Step>
+**Read the ticket strip** — the number and title tell you what this ticket is about.
+</Step>
+<Step>
+**Check the history bar.** If the customer has previous conversations, expand it and see what your
+team already told them.
+</Step>
+<Step>
+**Check the countdown** in the header on WhatsApp tickets. It shows how long you can still send a
+free-form reply.
+</Step>
+</Steps>
 
 ---
 
-## Automation vs Manual Replies
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/add-quick-reply.png`}
-  alt="Automation and manual messages in a conversation"
-  width={700}
-/>
+## The Composer
 
-Conversations can contain both **automated messages** and **manual replies**.
+<ScreenShot src="/docs/screenshots/inbox/composer-annotated.png" alt="The composer and its controls" />
 
-### Automated Messages
-- Triggered by flows or automation rules
-- Often include buttons or predefined options
-- Clearly marked as system-generated
+Two tabs decide where your text goes:
 
-### Manual Replies
-- Sent by agents, managers, or admins
-- Used for personalized communication
-- Appear with the sender’s name
+| Tab | Delivered to | Colour |
+|-----|--------------|--------|
+| **Message** | The customer | Blue |
+| **Private Note** | Your team only | Amber |
 
-Both types of messages can appear in the same conversation.
+<Callout type="warn">
+  Always check which tab is active before sending. The composer changes colour precisely so this is
+  hard to get wrong — but it is worth the half-second glance.
+</Callout>
 
 ---
 
-## Using Quick Actions & Buttons
+## Send a Reply
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/inbox/quick-actions.png`}
-  alt="Quick action buttons inside chat"
-  width={200}
-/>
+<Steps>
+<Step>
+Make sure the **Message** tab is selected.
+</Step>
+<Step>
+Type your reply in the message box.
+</Step>
+<Step>
+Press **Enter**, or click the **send** button.
+</Step>
+</Steps>
 
-Some messages include **quick action buttons** to guide the customer.
-
-Customers can:
-- Click a button to continue an automated flow
-- Send a manual reply alongside automation
-
-Quick actions help reduce response time and improve customer experience.
-
----
-
-## Message Status Indicators
-
-Messages may display delivery status indicators:
-
-- **Sent** – Message sent successfully
-- **Delivered** – Delivered to the customer
-- **Read** – Read by the customer
-
-These indicators help track engagement and follow-ups.
+The message appears in the thread immediately and is delivered to the customer.
 
 ---
 
-## Responding Based on Assignment
+## Character Limit
 
-- In **Mine**, you are the owner and should respond directly
-- In **Assigned**, response access depends on your role
-- **Business Admins** and **Managers** can respond across all views
-- **Agents** typically respond to conversations assigned to them
+Customer messages are limited to **1024 characters**.
 
----
+A counter sits to the right of the composer tabs, showing how much you have used — for example
+`184 / 1024`.
 
-## WhatsApp 24-Hour Messaging Window
+| State | What happens |
+|-------|--------------|
+| Under the limit | Counter shown in grey |
+| At the limit | Counter turns **red** and **Send** is disabled |
 
-Direct chat replies in RateUp are subject to WhatsApp’s **24-hour messaging window** policy.
+Shorten the message, or split it into two, to send again.
 
----
-
-### What Is the 24-Hour Window?
-
-The 24-hour window starts when a **customer sends a message** to your business.
-
-Within this window, you can:
-- Send manual replies
-- Continue the conversation freely
-- Use quick actions and follow-up messages
+<Callout type="info">
+  Private notes have **no** character limit, so the counter is hidden on that tab.
+</Callout>
 
 ---
 
-### What Happens After 24 Hours?
+## Quick Replies
 
-If the customer does not reply within 24 hours:
+Quick replies are saved answers to questions you get constantly.
 
-- Manual messaging is **disabled**
-- You cannot send free-form messages
-- The reply input may be unavailable
+Two ways to insert one:
 
-This is a **WhatsApp platform restriction**.
+| Method | How |
+|--------|-----|
+| **Button** | Click the **lightning** icon next to the character counter |
+| **Keyboard** | Type `/` in the message box to open the list, and keep typing to filter |
+
+Pick a reply and it is inserted into the composer, where you can edit it before sending.
+
+Quick replies are created under [Inbox Settings](/inbox/inbox-settings).
 
 ---
 
-### How to Message After 24 Hours
+## Attachments, Templates & Flows
 
-To continue a conversation after the 24-hour window:
+The menu beside the composer lets you send more than text:
 
-- Use **approved WhatsApp Templates**
-- Templates are the only allowed way to message customers after 24 hours
+| Option | Use |
+|--------|-----|
+| **Attachments** | Images, documents, video and audio |
+| **Voice note** | Record and send audio directly |
+| **Send WhatsApp Template** | Approved templates — required outside the 24-hour window |
+| **Send WhatsApp Flow** | Interactive flows |
 
-Templates can also be sent **within the 24-hour window** when structured or predefined messaging is preferred.
+[Sending templates in detail →](/inbox/send-templates)
 
-Once a customer replies to a template:
-- A **new 24-hour window** starts automatically
-- Normal chat replies and automation become available again
+---
 
-> ℹ️ Learn how to send templates in detail in  
-> [Sending Templates](./sendTemplates).
+## When You Cannot Reply
 
+The composer is replaced by a banner in four situations:
+
+| Situation | What you see | How to continue |
+|-----------|--------------|-----------------|
+| **Unassigned ticket** | Amber **Assign to me** bar | Take the ticket, or assign it to someone |
+| **Closed ticket** | "This chat has been closed by … at …" | Click **Reopen** in the header |
+| **Blocked contact** | Blocked-contact banner | Unblock the contact |
+| **Contact flagged as spam** | "This contact is marked as spam." | Click **Not spam** in the banner |
+| **24-hour window expired** | Template-only options | Send an approved template |
+| **Conversation limit reached** | Amber upgrade callout | Upgrade the plan, or wait for the reset |
+
+---
+
+## The WhatsApp 24-Hour Window
+
+WhatsApp — not RateUp — restricts when you may send free-form messages.
+
+### How it works
+
+- The window opens when the **customer** sends you a message
+- It lasts **24 hours** from that message
+- The countdown in the chat header shows the time remaining
+
+### Inside the window
+
+- Send free-form replies, attachments and quick replies
+- Continue the conversation normally
+
+### Outside the window
+
+- Free-form messaging is disabled
+- Only **approved templates** can be sent
+- Once the customer replies to your template, a **new 24-hour window** opens and normal replying
+  resumes
+
+<Callout type="info">
+  This limit applies to WhatsApp only. Other channels have their own rules.
+</Callout>
+
+[How to send a template →](/inbox/send-templates)
+
+---
+
+## Message Status
+
+Outgoing messages show delivery ticks:
+
+| Status | Meaning |
+|--------|---------|
+| **Sent** | Accepted by the channel |
+| **Delivered** | Reached the customer's device |
+| **Read** | Opened by the customer |
+
+Hover a message to see the exact timestamps.
+
+---
+
+## Deleted Messages
+
+If a WhatsApp user deletes a message they had sent — "delete for everyone" — the message stays in
+the thread but its content is withheld. In its place you see, in italics:
+
+> 🚫 This message was deleted
+
+This applies both ways: a customer deleting their own message, and your business deleting a message
+it sent from the WhatsApp Business app.
+
+| Where | What it shows |
+|-------|---------------|
+| The thread | The placeholder, in the same position in the timeline |
+| The conversation list preview | *"This message was deleted"* |
+| An [exported](/inbox/toolbar) chat | The row is kept; the text is replaced by the placeholder |
+
+<Callout type="info">
+  Deletions are reported by WhatsApp only for accounts using the **WhatsApp Business app**
+  (coexistence). On a Cloud API-only number, a customer deleting a message on their phone changes
+  nothing on your side — you keep seeing what they sent.
+</Callout>
+
+A deletion is an edit to history, not a new message: it starts no automations, opens no ticket and
+does not touch the 24-hour window.
+
+---
+
+## Automated vs Manual Messages
+
+A ticket can contain both:
+
+- **Automated messages** come from flows and automation rules, and often carry buttons. They are
+  visually distinct from an agent's reply.
+- **Manual replies** are sent by people and show the sender's name.
+- **System notes** record assignments, closures and reopenings.
+- **Private notes** are centred, padlocked, and never leave your team.
+
+---
+
+## Frequently Asked
+
+<Accordions type="single">
+<Accordion title="Why is my Send button greyed out?">
+Either you are over the 1024-character limit, or the ticket is unassigned, closed or outside the
+24-hour window. The banner above the composer tells you which.
+</Accordion>
+<Accordion title="Can I edit or delete a message I already sent?">
+Not from RateUp — sent messages are part of the record here. Send a correction as a follow-up
+message. If you delete the message from the WhatsApp Business app instead, RateUp marks it as
+deleted in the thread rather than removing the row.
+</Accordion>
+<Accordion title="The customer replied but my ticket did not update.">
+Click the **refresh** icon in the toolbar. If the reply came after the ticket was closed, it has
+opened a **new ticket** — check the **New** view.
+</Accordion>
+<Accordion title="Can I reply to two tickets from the same customer separately?">
+Yes, and you should. Each ticket has its own thread and the customer sees one continuous chat.
+</Accordion>
+</Accordions>
 
 ---
 
 ## Best Practices
 
-- Respond to customers as quickly as possible
-- Read message history before replying
-- Use automation for common questions
-- Personalize replies when needed
-- Monitor the 24-hour window to avoid blocked replies
-- Close conversations once the issue is resolved
+- Reply fast — the 24-hour window is shorter than it sounds
+- Check the history bar before answering a returning customer
+- Use quick replies for repeat questions, and personalise the opening line
+- Keep long explanations under the character limit, or split them deliberately
+- Close the ticket once the topic is done
 
 ---
 
-## What’s Next?
+## Related Pages
 
-Continue to **Assignment & Reassignment** to learn how conversation ownership is managed across teams.
-
-
+- [Sending Templates](/inbox/send-templates)
+- [Private Notes & @Mentions](/inbox/private-notes)
+- [Closing & Reopening](/inbox/conversation-lifecycle)
+- [Inbox Settings](/inbox/inbox-settings) — where quick replies are created

@@ -1,0 +1,95 @@
+---
+title: "Triggers"
+description: The events that start an automation rule.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+A **trigger** is the event that starts a rule. Every automation has exactly one.
+
+<ScreenShot src="/docs/screenshots/automation/trigger-select.png" alt="Choosing a trigger" />
+
+---
+
+## Message Triggers
+
+| Trigger | Fires when |
+|---------|-----------|
+| **Message Received** | A customer sends a message |
+
+Message triggers apply to a channel — **WhatsApp**, **Instagram** or **Facebook** — and can be
+narrowed to **All Messages** or a **custom keyword**.
+
+This is the workhorse trigger. Most routing and auto-reply rules start here.
+
+---
+
+## Conversation Triggers
+
+| Trigger | Fires when |
+|---------|-----------|
+| **Chat Assigned** | A ticket is given an owner |
+| **Chat Closed** | A ticket is closed |
+
+Use **Chat Closed** for follow-ups — a satisfaction survey sent after resolution, for example.
+
+---
+
+## Contact Triggers
+
+| Trigger | Fires when |
+|---------|-----------|
+| **Contact Created** | A new contact is added |
+| **Lifecycle Updated** | A contact's lifecycle stage changes |
+
+These are the hooks for onboarding sequences: welcome a new contact, or react when someone becomes
+a customer.
+
+---
+
+## Instagram Triggers
+
+| Trigger | Fires when |
+|---------|-----------|
+| **Instagram Comment (Private Reply)** | Someone comments on a post |
+| **Instagram Story Mention** | Someone mentions you in a story |
+
+Comment triggers can apply to **all posts** or **specific posts** — use specific posts when a
+single campaign has its own reply.
+
+---
+
+## Shopify Triggers
+
+| Trigger | Fires when |
+|---------|-----------|
+| **Shopify Event** | A selected event occurs in your connected Shopify store |
+
+Pick the event, and optionally a **specific product**, so the rule only fires for the items you
+care about.
+
+---
+
+## Choosing the Right Trigger
+
+<Callout type="info">
+  Pick the **narrowest trigger that covers your case**. A rule triggered on every message and then
+  filtered down works, but it is harder to reason about than one triggered on the right event in
+  the first place.
+</Callout>
+
+| You want to… | Trigger |
+|-------------|---------|
+| Route incoming questions | Message Received |
+| Follow up after resolution | Chat Closed |
+| Chase a stalled conversation | Elapsed Time |
+| Welcome a new contact | Contact Created |
+| React to social activity | Instagram Comment / Story Mention |
+| React to a purchase | Shopify Event |
+
+---
+
+## Related Pages
+
+- [Conditions](/automation/conditions)
+- [Actions](/automation/actions)

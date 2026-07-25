@@ -1,6 +1,3 @@
 {
-  "pages": [
-    "flows",
-    "templates"
-  ]
+  "pages": ["index", "triggers", "conditions", "actions"]
 }

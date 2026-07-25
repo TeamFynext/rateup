@@ -3,12 +3,16 @@
     "index",
     "accessing-inbox",
     "layout",
+    "tickets",
     "inboxview",
     "asigning-conversation",
-    "conversation-lifecycle",
     "responding-to-conversation",
-    "inbox-filter",
+    "send-templates",
+    "private-notes",
+    "conversation-lifecycle",
+    "ticket-details",
     "toolbar",
+    "inbox-filter",
     "inbox-settings"
   ]
 }

@@ -1,96 +1,69 @@
 ---
-title: "Register on RateUp"
-description: Step-by-step guide to create a new RateUp account.
+title: "Getting Started"
+description: From creating an account to handling your first customer conversation.
 ---
 
-import ScreenShot from "@/components/Screenshot";
-import { CDN } from '@/lib/cdn';
+import { Step, Steps } from "fumadocs-ui/components/steps";
 
-This guide walks you through the complete process of **creating a new RateUp account**.
-
----
-
-## Step 1: Open RateUp
-
-1. Visit [https://rateup.app](https://rateup.app)
-2. Click the **Login** button in the top-right corner of the landing page
-
-> ℹ️ RateUp uses a unified entry point. New users can register from the Login page.
-
-<ScreenShot src={`${CDN}/docs/screenshots/authentication/home.png`} alt="Home page" />
+This section takes you from nothing to a working RateUp setup.
 
 ---
 
-## Step 2: Choose Registration Method
+## The Path
 
-On the Login page, click **Create account**.
-
-You can register using either:
-
-- **Continue with Google** *(recommended for faster setup)*
-- **Continue with Email**
-
-<ScreenShot src={`${CDN}/docs/screenshots/authentication/login.png`} alt="Create account option on login page"  width="350px"/>
----
-
-## Step 3: Account Details (Step 1 of 3)
-
-Fill in your basic account details:
-
-- **Name**
-- **Email address**
-- **Password**
-- **Confirm password**
-- Accept the **Terms of Service** and **Privacy Policy**
-
-Click **Continue** to proceed.
-
-<ScreenShot src={`${CDN}/docs/screenshots/authentication/step1.png`} alt="Account details form" width="350px" />
+<Steps>
+<Step>
+**[Create an account](/getting-started/register)** — register, verify your email, and tell RateUp
+about your business.
+</Step>
+<Step>
+**[Log in](/getting-started/login)** — with Google or email.
+</Step>
+<Step>
+**[Connect a channel](/settings/channels)** — a WhatsApp Business account or Instagram. Nothing
+works until one is live.
+</Step>
+<Step>
+**[Invite your team](/settings/users)** — add people, set their permissions, and group them into
+[teams](/settings/teams).
+</Step>
+<Step>
+**[Open the Inbox](/inbox)** — where every customer conversation is handled.
+</Step>
+</Steps>
 
 ---
 
-## Step 4: Business Information (Step 2 of 3)
+## Your First Week
 
-Provide details about your business to personalize your experience:
+Once the basics are in place, these are the highest-value things to set up next:
 
-- **Business Name** *(required)*
-- **Website URL** *(optional)*
-- **Phone Number** *(optional)*
-- **Industry** *(required)*
-- **Location** *(required)*
+| Do this | Why |
+|---------|-----|
+| [Quick replies](/inbox/inbox-settings) | Stops your team retyping the same answers |
+| [Ice breakers](/whatsapp/conversational-components) | Deflects the three questions you get most |
+| [Labels and lifecycle stages](/contacts) | Makes filtering and reporting possible later |
+| [Templates](/whatsapp/templates) | Approval takes time — start before you need them |
+| [Auto-close rules](/inbox/inbox-settings) | Keeps the Inbox from filling with dead conversations |
 
-> 🔧 Your dashboard and available features are customized based on this information.
-
-Click **Continue**.
-
-<ScreenShot src={`${CDN}/docs/screenshots/authentication/step2.png`} alt="Account details form" width="350px" />
----
-
-## Step 5: Select Your Goals (Step 3 of 3)
-
-Choose one or more goals that best match your needs:
-
-- Improve Customer Support  
-- Generate More Leads  
-- Automate Sales Process  
-- Increase Customer Retention  
-- Boost Social Media Engagement  
-- Build Loyalty Programs  
-
-Click **Continue** to complete registration.
-
-<ScreenShot src={`${CDN}/docs/screenshots/authentication/step3.png`} alt="Account details form" width="350px" />
----
-
-## Step 6: Email Verification
-
-1. A verification email will be sent to your registered email address
-2. Open the email and click **Verify Email**
-3. Your account will be activated after verification
+<Callout type="info">
+  Resist configuring everything at once. Get conversations flowing through the Inbox first — a week
+  of real messages will tell you which automation is actually worth building.
+</Callout>
 
 ---
 
-## Registration Flow Summary
+## Getting Help
 
-**Register → Verify Email → Login → Access Dashboard**
+- Every section of these docs ends with **Related Pages** for the next step
+- Most pages have a **Troubleshooting** table for the common failure modes
+- If the Inbox is missing from your sidebar, it is a permissions or channel problem — see
+  [Accessing the Inbox](/inbox/accessing-inbox)
 
+---
+
+## Related Pages
+
+- [Create an Account](/getting-started/register)
+- [Login](/getting-started/login)
+- [Reset Password](/getting-started/resetpassword)

@@ -1,273 +1,128 @@
 ---
-title: "WhatsApp Templates"
+title: "Templates"
+description: Build and manage the pre-approved messages you need to reach customers outside the 24-hour window.
 ---
 
-WhatsApp Templates are pre-approved message formats used to send notifications, marketing messages, and automated communications to users. Templates ensure messages comply with WhatsApp policies and can be reused across flows, broadcasts, and automations.
-
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
-import { CDN } from "@/lib/cdn";
+
+A **template** is a message format approved by WhatsApp in advance. Templates are the only way to
+message a customer more than 24 hours after their last message — which makes them the backbone of
+campaigns and re-engagement.
+
+<ScreenShot src="/docs/screenshots/whatsapp/templates-list.png" alt="Your templates" />
 
 ---
 
-## Accessing Templates
+## Creating a Template
 
-Templates are managed from **WhatsApp → Templates**.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/whatsapp/templates-dashboard.png`}
-  alt="WhatsApp templates dashboard"
-/>
-
-This page lists all templates created under the connected WhatsApp account.
-
----
-
-## Templates Dashboard Overview
-
-The Templates dashboard displays templates as individual cards.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/whatsapp/template-cards.png`}
-  alt="WhatsApp template cards"
-/>
-
-Each template card shows:
-- Template name
-- Created time
-- Approval status
-- Template category and type
-- Delete option (if applicable)
-
-This view helps teams quickly locate and manage existing templates.
+<Steps>
+<Step>
+Click **Create Template** and choose a starting point: **Blank Template**, or
+**Create Draft from Predefined Template** to start from a ready-made one.
+</Step>
+<Step>
+Enter a **template name**. Lower-case letters and underscores only.
+</Step>
+<Step>
+Choose the **category** and **language**.
+</Step>
+<Step>
+Build the message in the [template editor](/whatsapp/template-editor) — header, body, footer and
+buttons.
+</Step>
+<Step>
+**Save as draft** while you work, or **Save & Submit** to send it to WhatsApp for approval.
+</Step>
+</Steps>
 
 ---
 
-## Top Action Buttons
+## Message Structure
 
-At the top of the Templates page, you will find three quick actions.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/whatsapp/templates-actions.png`}
-  alt="Templates top action buttons"
-/>
-
-### Documentation (Book Icon)
-- Opens WhatsApp Templates documentation.
-- Use this to review template rules, formats, and limitations.
-
-### Start a Tour (Info Icon)
-- Launches a guided walkthrough of the Templates interface.
-- Useful for first-time users.
-
-### Refresh / Sync (Refresh Icon)
-- Syncs templates with WhatsApp (Meta).
-- Use this after submitting a template or when approval status is not updated.
+| Part | Purpose |
+|------|---------|
+| **Header** | Optional title, image, video or document |
+| **Body** | The message itself — supports **bold**, *italic*, strikethrough and monospace |
+| **Footer** | Optional small print |
+| **Buttons** | Optional actions |
 
 ---
 
-## Sorting Templates
+## Variables
 
-Templates can be sorted using the **Sort By** dropdown.
+Insert `{{1}}`, `{{2}}` and so on to personalise a template — a name, an order number, a date.
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/whatsapp/templates-sort.png`}
-  alt="Sort templates dropdown"
-  width={300}
-/>
+<Steps>
+<Step>
+Click **Add Variable** or **Insert variable** `{{1}}` where you want it.
+</Step>
+<Step>
+Provide an **example** value. WhatsApp requires one for approval and rejects templates without it.
+</Step>
+</Steps>
 
-Available options:
-- **Latest First** – Newest templates appear first
-- **Old First** – Oldest templates appear first
-- **A – Z** – Alphabetical order
-- **Z – A** – Reverse alphabetical order
-
-Sorting helps when managing a large number of templates.
-
----
-
-## Creating a New Template
-
-To create a new WhatsApp template:
-
-1. Click **Create Templates +**
-2. The **Create Template** screen opens
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/whatsapp/create-template-form.png`}
-  alt="Create WhatsApp template form"
-/>
+<Callout type="warn">
+  Variables are positional. Reordering your text without reordering the values breaks every send —
+  always preview before submitting.
+</Callout>
 
 ---
 
-## Template Basic Details
+## Button Types
 
-Fill in the required template information.
+| Type | Does |
+|------|------|
+| **Quick Reply Buttons** | Sends a canned reply back to you |
+| **Call-To-Action Buttons** | **Visit a Website** or **Call phone number** |
+| **Catalog Buttons** | Opens your product catalog |
+| **Authentication Buttons** | One-time password flows — **Copy offer code**, code expiration |
+| **RateUp Interactive Buttons** | Opens a **RateUp Web Survey** or a **Flow** |
 
-### Template Name
-- Unique identifier for the template
-- Used internally and during message sending
-- Lowercase names with underscores are recommended
+Rules the editor enforces:
 
-### Template Type
-- Defines how the message will be used
-- Example: `GENERAL_NOTIFICATION`
-
-### Category
-- Determines WhatsApp policy classification
-- Common options:
-  - UTILITY
-  - MARKETING
-
-### Language
-- Select the language of the message content
+- A maximum of **12** buttons
+- Only **one** authentication button
+- Flow and catalog (MPM) buttons are exclusive — remove one to add the other
 
 ---
 
-## Adding a Broadcast Header
+## Approval
 
-The broadcast header appears at the top of the WhatsApp message.
+Submitted templates are reviewed by WhatsApp. Until approved, a template cannot be sent.
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/whatsapp/template-header.png`}
-  alt="Template broadcast header selection"
-  width={400}
-/>
+Common rejection causes:
 
-Supported header types:
-- **IMAGE**
-- **VIDEO**
-- **TEXT**
+| Cause | Fix |
+|-------|-----|
+| Missing variable examples | Fill in an example for every variable |
+| Promotional content in a utility category | Pick the right category |
+| Vague or misleading wording | Say plainly what the message is |
+| Wrong language selected | Match the language to the content |
 
-Click **Update Image** (or upload) to attach media when using image or video headers.
-
----
-
-## Writing the Message Body
-
-The body contains the main message content.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/whatsapp/template-body.png`}
-  alt="Template body editor"
-/>
-
-You can:
-- Write formatted text (bold, italic, strikethrough)
-- Insert emojis
-- Add variables for personalization
-
-Character limits are shown below the editor.
+<Callout type="info">
+  Get templates approved *before* the campaign you need them for. Approval is not instant, and a
+  rejection means starting the wait again.
+</Callout>
 
 ---
 
-## Adding a Footer (Optional)
+## Managing Templates
 
-The footer is displayed at the bottom of the message.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/whatsapp/template-footer.png`}
-  alt="Template footer field"
-/>
-
-Common footer usage:
-- Disclaimers
-- Brand attribution
-- Short notes
+| Action | Notes |
+|--------|-------|
+| **Preview** | See the rendered message before submitting |
+| **Edit** | Change a draft |
+| **Create Draft** | Copy an existing template as a starting point |
+| **Sync** | Pull the latest approval status from WhatsApp |
+| **Delete** | Removes the template |
+| **Filter by Teams** | Narrow the list to one team's templates |
 
 ---
 
-## Adding Action Buttons (Optional)
+## Related Pages
 
-Buttons allow users to take action directly from the message.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/whatsapp/template-buttons.png`}
-  alt="Template action buttons"
-  width={450}
-/>
-
-To add a button:
-1. Click **Add Action Button**
-2. Choose the action type (for example: *Visit a Website*)
-3. Enter button text
-4. Provide the destination URL
-
-If more than three buttons are added, they are displayed as a list.
-
----
-
-## Previewing the Template
-
-A live WhatsApp preview is shown on the right side.
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/whatsapp/template-preview.png`}
-  alt="WhatsApp template preview"
-  width={300}
-/>
-
-The preview updates automatically as you edit:
-- Header
-- Body
-- Footer
-- Buttons
-
-This helps verify how the message will appear to users.
-
----
-
-## Saving and Submitting Templates
-
-At the top-right of the screen:
-
-- **Save as Draft**
-  - Saves the template without submitting for approval
-- **Save & Submit**
-  - Submits the template to WhatsApp for review
-
-Once submitted, the template status updates after approval.
-
----
-
-## Template Statuses
-
-Templates can have different statuses:
-- **Draft** – Not submitted
-- **Pending** – Under review
-- **Approved** – Ready to use
-- **Rejected** – Requires changes
-
-Status is visible on the template card in the dashboard.
-
----
-
-## Using Templates
-
-Approved templates can be used in:
-- Broadcast campaigns
-- Automated flows
-- Chatbots
-- Notifications
-
-Templates ensure consistent, policy-compliant messaging.
-
----
-
-## Best Practices
-
-- Use clear and descriptive template names
-- Keep message content concise
-- Avoid promotional content in utility templates
-- Always preview before submitting
-- Sync templates after approval if status is not updated
-
----
-
-## Why Templates Matter
-
-WhatsApp Templates enable reliable, compliant communication at scale while ensuring messages are reusable, approved, and easy to manage across teams.
-
----
-
-
-
+- [Template Editor](/whatsapp/template-editor) — every field and rule in the editor
+- [Campaigns](/campaign) — sending a template to many people
+- [Sending Templates](/inbox/send-templates) — sending one from a conversation
+- [Flows](/whatsapp/flows)

@@ -1,0 +1,95 @@
+---
+title: "Actions"
+description: What a rule does when it fires — assign, label, reply, close or call your own systems.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+**Actions** are the `THEN` part of a rule. One rule can perform several, in order.
+
+<ScreenShot src="/docs/screenshots/automation/actions.png" alt="Choosing actions" />
+
+---
+
+## Routing Actions
+
+| Action | Does |
+|--------|------|
+| **Assign User** | Gives the ticket to a specific person |
+| **Assign Team** | Gives it to a team — anyone in it can pick it up |
+| **Close Chat** | Closes the ticket |
+
+Prefer **Assign Team** over **Assign User** in automation. Team routing keeps working when someone
+is on leave; individual routing quietly piles up in an absent person's queue.
+
+---
+
+## Tagging Actions
+
+| Action | Does |
+|--------|------|
+| **Attach Label** | Adds a label to the contact |
+| **Assign Lifecycle** | Moves the contact to a lifecycle stage |
+
+These make later filtering and reporting possible. A rule that labels every refund enquiry costs
+nothing and makes "how many refund requests last month?" answerable.
+
+---
+
+## Messaging Actions
+
+| Action | Sends |
+|--------|-------|
+| **Send Message** | A plain message |
+| **Send Template** | An approved [template](/whatsapp/templates) |
+| **Send Flow** | A [WhatsApp flow](/whatsapp/flows) |
+| **Send Web Survey** | A [web form](/web-forms) |
+| **Trigger Chatbot** | Hands the conversation to a [chatbot](/whatsapp/chatbots) |
+
+<Callout type="warn">
+  Outside WhatsApp's 24-hour window, only **Send Template** will actually deliver. A **Send
+  Message** action on a stale conversation fails silently — check
+  [Message Analytics](/analytics/message-analytics) if replies are not arriving.
+</Callout>
+
+---
+
+## Integration Actions
+
+| Action | Does |
+|--------|------|
+| **Call External API** | Sends the event to a URL you control |
+
+Use this to notify your own systems — create a record in your CRM, trigger a fulfilment job, post
+to a team channel.
+
+See [Integrations](/settings/integrations) for webhook setup and payloads.
+
+---
+
+## Combining Actions
+
+Actions run in order, so a single rule can do a complete piece of work:
+
+> **When** a message is received · **if** the body contains "refund" ·
+> **then** attach the *Refund* label → assign the Billing team → send the acknowledgement template
+
+---
+
+## Keeping Automations Safe
+
+- **Start narrow.** One keyword, one account, then widen.
+- **Avoid loops.** A rule that sends a message on message-received can re-trigger itself if the
+  direction is not filtered.
+- **Do not auto-close on a customer message.** Closing what someone just wrote in about is the
+  fastest way to lose them.
+- **Name your rules properly.** *"Untitled rule"* is unmaintainable six months later.
+- **Review quarterly.** Rules outlive the campaigns that justified them.
+
+---
+
+## Related Pages
+
+- [Triggers](/automation/triggers)
+- [Conditions](/automation/conditions)
+- [Integrations](/settings/integrations)

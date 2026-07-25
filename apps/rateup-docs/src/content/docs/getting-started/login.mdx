@@ -1,60 +1,73 @@
 ---
-title: "Login to RateUp"
-description: Learn how to log in to your RateUp account.
+title: "Login"
+description: Sign in to RateUp with Google or email, and what to do when you cannot.
 ---
 
+import { Step, Steps } from "fumadocs-ui/components/steps";
 import ScreenShot from "@/components/Screenshot";
-import { CDN } from '@/lib/cdn';
-
-This guide explains how to **log in to your RateUp account** after registration.
 
 ---
 
-## Step 1: Open RateUp
+## Signing In
 
-1. Visit [https://rateup.app](https://rateup.app)
-2. Click the **Login** button in the top-right corner
+<Steps>
+<Step>
+Go to [rateup.app](https://rateup.app) and click **Login** in the top-right corner.
+</Step>
+<Step>
+Choose **Continue with Google**, or **Continue with Email**.
+</Step>
+<Step>
+For email, enter your **email address** and **password**, then click **Sign In**.
+</Step>
+<Step>
+You land on your dashboard.
+</Step>
+</Steps>
 
-<ScreenShot src={`${CDN}/docs/screenshots/authentication/home.png`} alt="RateUp login page" />
-
----
-
-## Step 2: Choose Login Method
-
-You can sign in using either:
-
-- **Continue with Google**
-- **Continue with Email**
-
-### Email Login
-1. Enter your **email address**
-2. Enter your **password**
-3. Click **Sign In**
-
-<ScreenShot src={`${CDN}/docs/screenshots/authentication/login.png`} alt="Email login form" width="350px"/>
-
----
-
-## Step 3: Access Dashboard
-
-After successful authentication, you will be redirected to your **RateUp dashboard**.
+<ScreenShot
+  src={`/docs/screenshots/authentication/login.png`}
+  alt="The RateUp login page"
+  width="350px"
+/>
 
 ---
 
-## Forgot Password
+## Before Your First Login
 
-If you can’t access your account:
-
-1. Click **Forgot password**
-2. Enter your registered email address
-3. Follow the reset instructions sent to your email
+| Requirement | Why |
+|-------------|-----|
+| **Email verified** | Verification is required before you can sign in the first time |
+| **Google account already registered** | Google sign-in works only for an email that has been registered |
+| **An invite accepted** | If a colleague added you, use the invite link before trying to log in |
 
 ---
 
-## Important Notes
+## What You See After Signing In
 
-- 🔐 Email verification is required before first login
-- 🔁 Google login works only if the email is already registered
-- 🧠 Your dashboard experience is based on business details provided during registration
+Your dashboard reflects two things:
 
+- The **business details** you gave during registration
+- The **role and team permissions** an admin has given you
 
+If a section is missing from your sidebar, it is almost always a
+[team feature](/settings/teams) or a [user permission](/settings/users), not a fault.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| "Invalid email or password" | Wrong credentials | Use [Reset Password](/getting-started/resetpassword) |
+| Google sign-in bounces you back | That email has never been registered | Register with email first, or ask an admin to invite you |
+| Login works but the dashboard is empty | No channel connected, or no permissions | See [Accessing the Inbox](/inbox/accessing-inbox) |
+| You never received the verification email | Filtered as spam | Check spam and promotions folders, then retry |
+
+---
+
+## Related Pages
+
+- [Create an Account](/getting-started/register)
+- [Reset Password](/getting-started/resetpassword)
+- [Security](/settings/security) — changing your password once signed in

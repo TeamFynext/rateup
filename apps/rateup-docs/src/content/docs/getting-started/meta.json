@@ -1,7 +1,3 @@
 {
-  "pages": [
-    "index",
-    "login",
-    "resetpassword"
-  ]
+  "pages": ["index", "register", "login", "resetpassword"]
 }

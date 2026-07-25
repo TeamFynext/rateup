@@ -1,0 +1,177 @@
+---
+title: "Ticket Details Panel"
+description: The right-hand panel — assignment, lifecycle, labels, contact information, ticket info, and the ticket title and description.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+The **Ticket Details** panel is everything about a ticket and its customer that does not belong in
+the message thread.
+
+Open it with the **panel icon** at the far right of the chat header; close it with the chevron in
+the panel's own header.
+
+<ScreenShot src="/docs/screenshots/inbox/ticket-details-full.png" alt="The Ticket Details panel" />
+
+---
+
+## Panel Header
+
+| Control | What it does |
+|---------|--------------|
+| **Ticket #number** | The ticket's identity |
+| **Copy link** | Copies a direct link to this ticket — paste it to a colleague and they land here |
+| **Chevron** | Collapses the panel to give the conversation more room |
+
+---
+
+## Assignment
+
+Shows the current owner and their team, or **Unassigned**.
+
+<Steps>
+<Step>
+Click **Change**.
+</Step>
+<Step>
+Pick a team or an individual — availability is shown next to each person.
+</Step>
+<Step>
+Click **Done** to collapse the picker.
+</Step>
+</Steps>
+
+[Full assignment guide →](/inbox/asigning-conversation)
+
+---
+
+## Lifecycle Stage
+
+The customer's stage in your funnel — lead, customer, churned, and whatever else your organisation
+has configured.
+
+Click a stage to set it. This belongs to the **contact**, so it applies to all of their tickets.
+
+Stages are configured under **Contacts → Lifecycle**.
+
+---
+
+## Labels
+
+Labels are colour-coded tags on the **contact** — VIP, refund pending, wholesale, and so on.
+
+<Steps>
+<Step>
+Click **+** in the **Labels** section.
+</Step>
+<Step>
+Tick the labels to apply, untick to remove.
+</Step>
+</Steps>
+
+Labels show on every conversation row for that customer and can be used as a filter in the
+toolbar.
+
+---
+
+## Contact
+
+The customer's own details:
+
+- Name and avatar
+- Phone number
+- Channel
+- Customer since
+- Consent status
+
+<ScreenShot
+  src={`/docs/screenshots/inbox/edit-contact.png`}
+  alt="Editing contact details"
+  width={420}
+/>
+
+Editing here updates the contact everywhere in RateUp — campaigns, contact lists and every one of
+their tickets.
+
+<Callout type="warn">
+  **Consent** controls whether this customer may receive template messages. A contact without
+  consent shows a **DND** badge next to their name in the chat header.
+</Callout>
+
+---
+
+## Ticket Info
+
+Read-only facts about this ticket:
+
+| Field | Meaning |
+|-------|---------|
+| **Channel** | WhatsApp, Instagram, Messenger or Webchat |
+| **Account** | Which of your numbers or accounts the customer wrote to |
+| **Created** | When the ticket was opened |
+| **Result** | The outcome it was closed with, if any |
+
+---
+
+## Title & Description
+
+The only fields that belong to **this ticket alone**.
+
+<Steps>
+<Step>
+Click the **pencil** icon next to **Title & Description**.
+</Step>
+<Step>
+Write a short, specific title. It is what your team reads in the conversation list.
+</Step>
+<Step>
+Add a description for context the messages do not make obvious.
+</Step>
+<Step>
+Click **Save**, or **Cancel** to discard.
+</Step>
+</Steps>
+
+| Good title | Weak title |
+|-----------|------------|
+| Refund not received for order 8821 | Question |
+| Wrong size delivered — needs exchange | Customer issue |
+| Bulk pricing request, 200 units | Follow up |
+
+---
+
+## Mark Contact as Spam
+
+At the bottom of the panel — the same action as **Close → Mark contact as spam**. It flags the
+**contact**, closes their open tickets and moves them into the **Spam** tab.
+
+If the contact is already flagged, the button reads **Not spam** and takes them back out again.
+
+[More about spam →](/inbox/inboxview/spam)
+
+---
+
+## Ticket Fields vs Contact Fields
+
+Knowing which is which saves confusion:
+
+| Belongs to the **ticket** | Belongs to the **contact** |
+|--------------------------|---------------------------|
+| Title and description | Name, phone, email |
+| Assignment | Lifecycle stage |
+| Status and result | Labels |
+| Created and closed dates | Consent |
+| Favourite star | Custom fields |
+| | Spam and blocked flags |
+
+Change a contact field and it applies to every ticket that customer will ever have. Change a
+ticket field and only this ticket is affected.
+
+---
+
+## Related Pages
+
+- [Tickets & Conversations](/inbox/tickets)
+- [Assignment & Reassignment](/inbox/asigning-conversation)
+- [Search, Filters & Sorting](/inbox/toolbar)

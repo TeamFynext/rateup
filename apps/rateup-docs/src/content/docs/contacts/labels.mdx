@@ -1,155 +1,84 @@
 ---
 title: "Labels"
+description: Coloured tags that describe a contact, visible everywhere they appear.
 ---
-
-Labels allow teams to tag contacts for easier organization, filtering, and follow-up. Labels can be created, edited, assigned, and removed without affecting the contact’s core data.
 
 import ScreenShot from "@/components/Screenshot";
-import { CDN } from '@/lib/cdn';
+
+A **label** is a coloured tag on a contact. Unlike groups, labels show up wherever the contact
+appears — including on every row in the [Inbox](/inbox).
+
+<ScreenShot src="/docs/screenshots/contacts/labels.png" alt="Contact labels" />
 
 ---
 
-## Accessing Labels
+## Creating Labels
 
-Labels are managed from **Contacts → Labels**.
+Create a label with a **name** and a **colour**. The colour is what makes labels useful at a glance
+— an agent scanning the Inbox reads colour long before they read text.
 
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/labels-list.png`}
-  alt="Labels list page"
-/>
+Pick colours with meaning and stick to it:
 
-This page shows all existing labels along with:
-- Label name and color
-- Optional description
-- Number of contacts using the label
-- Creation date
-
-The labels list acts as the central place to manage labeling across contacts.
+| Colour | Convention |
+|--------|-----------|
+| **Red** | Needs attention — *Complaint*, *At risk* |
+| **Amber** | In progress — *Refund pending* |
+| **Green** | Positive — *VIP*, *Advocate* |
+| **Grey** | Neutral classification — *Wholesale* |
 
 ---
 
-## Creating a New Label
+## Applying Labels
 
-To create a label:
+| From | How |
+|------|-----|
+| **Contacts list** | Select contacts → **Apply Label** |
+| **Contact record** | Add labels directly |
+| **Inbox** | Ticket Details panel → **Labels** |
+| **Automation** | The **Attach Label** action |
 
-1. Click **Create Label**
-2. Enter the required details
-3. Save the label
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/create-label-modal.png`}
-  alt="Create new label modal"
-  width={350}
-/>
-
-### Label Configuration
-
-- **Name**  
-  The label text that will appear on contacts (for example, `Enquiry`, `VIP`, `Follow-up`).
-
-- **Color**  
-  Used to visually distinguish the label in contact lists and profiles.
-
-- **Description (optional)**  
-  Internal context for when the label should be used.
-
-Click **Create Label** to save.
+Automation is where labels earn their keep. A rule that labels every refund enquiry costs nothing
+and makes "how many refund requests last month?" a question you can answer.
 
 ---
 
-## Editing an Existing Label
+## Where Labels Show Up
 
-Labels can be updated at any time.
-
-1. Open the label’s action menu (⋮)
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/label-actions-menu.png`}
-  alt="Label action menu"
-  width={250}
-/>
-
-2. Select **Edit**
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/edit-label-modal.png`}
-  alt="Edit label modal"
-  width={400}
-/>
-
-You can update:
-- Label name
-- Color
-- Description
-
-Changes apply immediately to all contacts using the label.
+- On every conversation row in the Inbox
+- In the Ticket Details panel
+- In the contacts list
+- As a filter in contacts, the Inbox and campaigns
 
 ---
 
-## Deleting a Label
+## Labels vs Lifecycle Stages
 
-Labels that are no longer needed can be removed.
+| | Labels | [Lifecycle stages](/contacts/lifecycle) |
+|---|--------|-----------|
+| **How many** | Many per contact | Exactly one |
+| **Describe** | Traits, states, categories | Position in your funnel |
+| **Change** | Freely, in any direction | Progressively through the journey |
 
-1. Open the label’s action menu (⋮)
-2. Select **Delete**
-
-<ScreenShot
-  src={`${CDN}/docs/screenshots/contacts/label-actions-menu.png`}
-  alt="Delete label option"
-  width={250}
-/>
-
-> Deleting a label removes it from all contacts but does **not** delete the contacts themselves.
+Someone can be *VIP* **and** *Refund pending* at once. They cannot be both *Lead* and *Customer*.
 
 ---
 
-## Viewing Label Usage
+## Keeping Labels Useful
 
-The **Contacts** column shows how many contacts currently use each label.
+<Callout type="warn">
+  Label sprawl is the standard failure. Once there are forty labels, nobody knows which to use and
+  the colours stop meaning anything.
+</Callout>
 
-This helps teams:
-- Identify commonly used labels
-- Clean up unused labels
-- Understand segmentation patterns
-
----
-
-## Searching and Sorting Labels
-
-- Use the search bar to quickly find labels by name
-- Sort labels by name, contact count, or creation date
-
-This is useful when managing large numbers of labels.
+- Agree the list before rolling it out, and keep it short
+- Review quarterly and delete labels nobody applies
+- Use consistent wording — *VIP*, not *vip* and *V.I.P.*
+- Automate the ones that can be automated; humans forget
 
 ---
 
-## How Labels Are Used Across Contacts
+## Related Pages
 
-Once created, labels can be applied when:
-
-- Editing a contact
-- Adding contacts to groups
-- Performing bulk actions
-- Importing contacts (via mapping)
-
-Labels provide a flexible way to classify contacts without changing their lifecycle or group membership.
-
----
-
-## Best Practices
-
-- Use short, clear label names
-- Avoid overlapping labels with similar meanings
-- Use colors consistently (for example, red for urgent, blue for informational)
-- Periodically review and delete unused labels
-
----
-
-## Why Labels Matter
-
-Labels help teams quickly segment contacts, prioritize follow-ups, and maintain clarity across large contact lists without altering core contact data.
-
----
-
-
-
+- [Groups](/contacts/groups)
+- [Lifecycle Stages](/contacts/lifecycle)
+- [Automation Actions](/automation/actions)

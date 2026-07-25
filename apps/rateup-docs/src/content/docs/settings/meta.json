@@ -1,0 +1,12 @@
+{
+  "pages": [
+    "index",
+    "account",
+    "users",
+    "teams",
+    "channels",
+    "integrations",
+    "security",
+    "billing"
+  ]
+}

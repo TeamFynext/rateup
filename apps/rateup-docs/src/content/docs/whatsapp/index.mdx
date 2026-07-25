@@ -1,0 +1,109 @@
+---
+title: "WhatsApp Overview"
+description: Flows, chatbots, templates, catalogs and conversational components — everything you build on your WhatsApp Business account.
+---
+
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+The **WhatsApp** section is where you build what customers experience on WhatsApp: the forms they
+fill in, the bots they talk to, the messages you send them and the products they browse.
+
+Conversations themselves happen in the [Inbox](/inbox); this section is what feeds it.
+
+---
+
+## What's Here
+
+<Cards>
+  <Card
+    title="Flows"
+    href="/whatsapp/flows"
+    description="Multi-screen forms customers complete inside WhatsApp."
+  />
+  <Card
+    title="Flow Editor"
+    href="/whatsapp/flow-editor"
+    description="Screens, elements, logic jumps — and pushing a flow live."
+  />
+  <Card
+    title="Chatbots"
+    href="/whatsapp/chatbots"
+    description="Automated conversations that answer without an agent."
+  />
+  <Card
+    title="Chatbot Builder"
+    href="/whatsapp/chatbot-builder"
+    description="The node canvas: components, connections, validation and preview."
+  />
+  <Card
+    title="Templates"
+    href="/whatsapp/templates"
+    description="Pre-approved messages — required outside the 24-hour window."
+  />
+  <Card
+    title="Template Editor"
+    href="/whatsapp/template-editor"
+    description="Every field, the formatting toolbar and the button rules."
+  />
+  <Card
+    title="Conversational Components"
+    href="/whatsapp/conversational-components"
+    description="Ice breakers and commands shown before the customer types."
+  />
+  <Card
+    title="Catalog"
+    href="/whatsapp/catalogs"
+    description="The products customers browse and order in chat."
+  />
+  <Card
+    title="Settings"
+    href="/whatsapp/settings"
+    description="Your WhatsApp Business account configuration."
+  />
+</Cards>
+
+---
+
+## How the Pieces Fit
+
+```
+Customer opens your WhatsApp
+        │
+        ├── sees ice breakers / commands   → Conversational Components
+        ├── talks to a bot                 → Chatbots
+        ├── fills in a form                → Flows
+        ├── browses products               → Catalog  → Commerce
+        └── anything else                  → Inbox    (a human replies)
+
+You message them first                     → Templates → Campaigns
+```
+
+---
+
+## Before You Start
+
+Everything here requires a connected **WhatsApp Business account** — see
+[Channels](/settings/channels).
+
+Templates additionally require **approval by WhatsApp** before they can be used, so build them
+before you need them, not during a rush.
+
+---
+
+## The 24-Hour Rule
+
+WhatsApp lets you send free-form messages only within **24 hours** of the customer's last message.
+Outside that window, only approved templates go through.
+
+This single rule shapes most of how the section is used: templates for re-engagement, everything
+else for live conversation.
+
+[More on the 24-hour window →](/inbox/responding-to-conversation)
+
+---
+
+## Related Pages
+
+- [Inbox](/inbox) — where conversations are handled
+- [Campaigns](/campaign) — sending templates in bulk
+- [Commerce](/commerce) — selling through the catalog

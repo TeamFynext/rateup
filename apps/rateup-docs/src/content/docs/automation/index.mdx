@@ -1,0 +1,87 @@
+---
+title: "Automation Overview"
+description: Build When → If → Then rules that react to messages, comments and contact changes automatically.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+**Automation** lets RateUp act on its own. A rule watches for something happening, checks whether
+conditions are met, and does something about it — no agent involved.
+
+<ScreenShot src="/docs/screenshots/automation/rules-list.png" alt="Your automation rules" />
+
+---
+
+## How a Rule Reads
+
+Every rule has the same three-part shape:
+
+```
+WHEN   something happens          (the trigger)
+IF     these conditions hold      (optional filters)
+THEN   do this                    (one or more actions)
+```
+
+For example:
+
+> **When** a message is received · **if** the body contains "refund" · **then** assign the Billing
+> team and attach the *Refund* label.
+
+<Cards>
+  <Card
+    title="Triggers"
+    href="/automation/triggers"
+    description="The events that start a rule — messages, comments, contact changes and more."
+  />
+  <Card
+    title="Conditions"
+    href="/automation/conditions"
+    description="Narrowing a trigger down so the rule fires only when it should."
+  />
+  <Card
+    title="Actions"
+    href="/automation/actions"
+    description="What the rule does — assign, label, reply, close, call an API."
+  />
+</Cards>
+
+---
+
+## Creating a Rule
+
+1. Click **Create Automation**
+2. Name it — a rule left as *"Untitled rule"* is impossible to maintain later
+3. Pick the **account** it applies to
+4. Choose the **trigger**, add **conditions**, add **actions**
+5. Save, then set it **Enabled**
+
+---
+
+## Enabled and Disabled
+
+Every rule has a toggle. **Disabled** is the safe way to stop a rule without losing its
+configuration — use it while investigating, rather than deleting.
+
+<Callout type="warn">
+  Automations act on live customer conversations. Test a new rule with a narrow condition first —
+  a specific keyword, a single account — before broadening it.
+</Callout>
+
+---
+
+## Where Automation Fits
+
+| Tool | Use when |
+|------|----------|
+| **Automation rules** | Something happens and you want a reaction — routing, labelling, replying |
+| [Chatbots](/whatsapp/chatbots) | You want a full back-and-forth conversation |
+| [Inbox auto-close](/inbox/inbox-settings) | You want idle tickets closed on a timer |
+| [Instagram automations](/instagram/automations) | You are reacting to comments and story mentions |
+
+---
+
+## Related Pages
+
+- [Triggers](/automation/triggers)
+- [Conditions](/automation/conditions)
+- [Actions](/automation/actions)

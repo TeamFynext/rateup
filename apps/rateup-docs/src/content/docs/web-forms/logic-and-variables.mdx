@@ -1,0 +1,125 @@
+---
+title: "Logic & Variables"
+description: Logic jumps, variables and custom validation — making a form respond to who is filling it in.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+Three features turn a flat questionnaire into something that adapts: **logic jumps**, **variables**
+and **custom validation**.
+
+---
+
+## Logic Jumps
+
+A **logic jump** sends respondents to a different question depending on their answer.
+
+<ScreenShot src="/docs/screenshots/web-forms/logic-jump.png" alt="Configuring a logic jump" />
+
+<Steps>
+<Step>
+Open the question the jump starts from and click **three dots** and then click **Add Logic Jump**.
+</Step>
+<Step>
+Set the **condition** — which answer triggers it.
+</Step>
+<Step>
+Choose the **next question** to jump to, or **End Survey**.
+</Step>
+<Step>
+Add further conditions for the other answers.
+</Step>
+</Steps>
+
+### Why it matters
+
+The classic use is splitting by satisfaction:
+
+```
+"How likely are you to recommend us?"
+   ├── 9–10  →  "Would you leave us a Google review?"
+   ├── 7–8   →  "What would have made it a 10?"
+   └── 0–6   →  "What went wrong?" → creates a ticket
+```
+
+Each group gets the question that suits them, and nobody is asked something irrelevant.
+
+<Callout type="warn">
+  Test every branch in **Preview** before sharing. A jump pointing at a deleted question strands
+  respondents mid-form, and you will only find out from the drop-off in your response count.
+</Callout>
+
+---
+
+## Variables
+
+**Variables** store a value while someone fills in the form, and let you use it later.
+
+| Kind | Meaning |
+|------|---------|
+| **Default Variables** | Built in — data RateUp already knows |
+| **Custom Variables** | Ones you create with **Create Variable** |
+
+<Steps>
+<Step>
+Click **Add Variable** or **Create Variable** and name it.
+</Step>
+<Step>
+Use **Assign a value to variable** on a question so answering sets it.
+</Step>
+<Step>
+Reference the variable later — in question text, on the thank-you page, or in a condition.
+</Step>
+</Steps>
+
+### What variables are for
+
+- **Personalisation** — greeting someone by the name they gave two questions ago
+- **Scoring** — accumulating a value across several answers and branching on the total
+- **Passing context in** — carrying a campaign or location identifier into the response record
+
+<Callout type="info">
+  Passing a variable in through the form's URL is how you tell which QR code, campaign or branch a
+  response came from — without asking the customer.
+</Callout>
+
+---
+
+## Custom Validation
+
+**Custom Validation** constrains what an input question accepts.
+
+| Rule | Accepts |
+|------|---------|
+| **Letters** | Alphabetic only |
+| **Numbers** | Numeric only |
+| **Length** | Within a minimum and maximum |
+| **Custom** | Your own pattern |
+
+Every rule carries an **error message**. Write it as help, not as a scolding: *"Please enter a
+10-digit mobile number"* beats *"Invalid input"*.
+
+<Callout type="warn">
+  Over-strict validation loses responses silently. A phone rule that rejects international formats
+  will block real customers who then simply close the tab.
+</Callout>
+
+---
+
+## Putting Them Together
+
+A well-built feedback form usually uses all three:
+
+1. **Validation** keeps the contact details usable
+2. **Logic jumps** ask detractors and promoters different things
+3. **Variables** carry the source into the response, so you know which branch or campaign produced
+   it
+
+---
+
+## Related Pages
+
+- [Question Types](/web-forms/question-types)
+- [Automations](/web-forms/automations)
+- [Results](/web-forms/results)

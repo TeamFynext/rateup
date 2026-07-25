@@ -1,0 +1,96 @@
+---
+title: "Billing & Subscription"
+description: Your plan, message limits, add-ons and payments.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+**Billing & Subscription** shows what you are on, what it includes, and how to buy more.
+
+<ScreenShot src="/docs/screenshots/settings/billing.png" alt="Billing & Subscription" />
+
+---
+
+## Current Plan
+
+The plan card shows what you are subscribed to and what it includes:
+
+| Shown | Meaning |
+|-------|---------|
+| **Plan features** | What the plan unlocks |
+| **Annual message limit** | Messages included per year |
+| **Usage** | How much of the limit you have consumed |
+
+Click **Refresh** if the figures look stale after a payment.
+
+---
+
+## Upgrading
+
+<Steps>
+<Step>
+Click **Buy RateUp Premium**.
+</Step>
+<Step>
+Review the order on the **Confirm your Order** screen.
+</Step>
+<Step>
+Click **Continue to Payment**.
+</Step>
+<Step>
+Complete payment. You will see *"Payment Successful"*, and a confirmation follows by email.
+</Step>
+</Steps>
+
+Payments are handled by **Razorpay**. If the payment window fails to open, disable any script
+blocker for the page and retry.
+
+---
+
+## Add-ons
+
+**Buy Addons** tops up capacity without changing your plan — most often extra message volume.
+
+Buy an add-on when you are approaching your limit mid-cycle; upgrade the plan when you hit it
+every cycle.
+
+---
+
+## Running Out of Messages
+
+When the conversation limit is reached, the Inbox composer shows an amber callout with your usage
+and an **Upgrade Plan** button, and outbound messaging stops until you upgrade or the limit resets.
+
+<Callout type="warn">
+  The limit is on **conversations**, not on individual messages. A long back-and-forth with one
+  customer counts once; a broadcast to a thousand contacts counts a thousand times. Campaigns are
+  what usually exhaust a plan.
+</Callout>
+
+---
+
+## After Paying
+
+Processing is not always instant. You may see **Order Processing Started** before the plan updates.
+
+If the plan has not changed after a few minutes:
+
+<Steps>
+<Step>
+Click **Refresh** on the billing page.
+</Step>
+<Step>
+Check your email for the payment confirmation.
+</Step>
+<Step>
+If the payment succeeded but the plan did not change, contact support with the payment reference.
+</Step>
+</Steps>
+
+---
+
+## Related Pages
+
+- [Campaigns](/campaign) — the main consumer of message volume
+- [Account](/settings/account)

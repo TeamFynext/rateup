@@ -1,0 +1,111 @@
+---
+title: "Creating a Campaign"
+description: Pick a template, build the audience, and send or schedule.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+---
+
+## Before You Start
+
+You need:
+
+- An **approved** [template](/whatsapp/templates)
+- A connected [WhatsApp account](/settings/channels)
+- An audience — a [group](/contacts/groups), a label filter, or selected contacts
+- **Consent** from the people you are about to message
+
+---
+
+## Creating It
+
+<Steps>
+<Step>
+Click **Create Campaign** and give it a name you will recognise in a report three months from now.
+</Step>
+<Step>
+Select the **team** the campaign belongs to.
+</Step>
+<Step>
+Choose the **template**. Only approved templates appear.
+</Step>
+<Step>
+Fill in the template's **variables** — map them to contact fields so each person gets their own
+name, order number or date.
+</Step>
+<Step>
+Build the **audience**: pick a group, filter by label or lifecycle stage, or add participants
+individually with **Add Participant**.
+</Step>
+<Step>
+Choose **Broadcast** or **Drip**.
+
+For a drip, set the **daily send limit** — or **No limit** to send as fast as possible.
+</Step>
+<Step>
+**Send** now, or schedule it for later.
+</Step>
+</Steps>
+
+---
+
+## Choosing the Audience Well
+
+Relevance is the whole game. A message that lands wrong does not just underperform — it generates
+blocks that make every future campaign worse.
+
+| Segment by | Using |
+|-----------|-------|
+| Explicit list | [Groups](/contacts/groups) |
+| A trait | [Labels](/contacts/labels) |
+| Funnel position | [Lifecycle stages](/contacts/lifecycle) |
+| Custom data | [Custom fields](/contacts/custom-fields) |
+
+<Callout type="info">
+  Three targeted campaigns of 200 people almost always beat one campaign of 600. You get better
+  results and you protect your account.
+</Callout>
+
+---
+
+## Variables
+
+Templates carry variables that personalise each message. Map every one before sending.
+
+<Callout type="warn">
+  A mis-mapped variable goes out to your entire list at once and cannot be recalled. Send the
+  campaign to yourself, or to a group of one, before running it for real.
+</Callout>
+
+---
+
+## Daily Send Limits
+
+For drip campaigns, the daily limit paces the send.
+
+| Setting | Effect |
+|---------|--------|
+| **A number** | At most that many messages per day |
+| **No limit** | Sends as fast as the channel allows |
+
+Pacing is not just about volume. A steady drip is easier for your team to handle — replies arrive
+in a manageable stream instead of a flood no one can answer.
+
+---
+
+## Scheduling
+
+Scheduled campaigns show as **Scheduled** until they run.
+
+Send when your audience will actually read it, and — more importantly — when your team is around to
+handle the replies. A campaign that goes out at 6pm on a Friday produces a Monday morning backlog.
+
+---
+
+## Related Pages
+
+- [Campaign Details](/campaign/campaign-details) — monitoring the send
+- [Templates](/whatsapp/templates)
+- [Groups](/contacts/groups)

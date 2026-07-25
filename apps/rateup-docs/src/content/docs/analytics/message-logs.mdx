@@ -1,0 +1,70 @@
+---
+title: "Message Logs"
+description: Every individual message, searchable, filterable and exportable.
+---
+
+import ScreenShot from "@/components/Screenshot";
+
+Where [Message Analytics](/analytics/message-analytics) gives you the totals, **Message Logs**
+gives you the individual messages behind them.
+
+This is the view you open when someone says "the customer says they never got it".
+
+<ScreenShot src="/docs/screenshots/analytics/message-logs.png" alt="Message Logs" />
+
+---
+
+## The Columns
+
+| Column | Contains |
+|--------|----------|
+| **Timestamp** | When the message was sent |
+| **Phone** | The recipient |
+| **Message** | The content |
+| **Type** | What kind of message it was |
+| **Source** | Campaign, template, external API |
+| **Status** | Sent, delivered, read or failed |
+
+---
+
+## Finding a Message
+
+| Tool | Use |
+|------|-----|
+| **Search** | Search by phone number or message content |
+| **Status filter** | Narrow to failures, or to read messages |
+| **Source filter** | Isolate campaign sends from conversation messages |
+| **Date range** | Restrict to the period in question |
+
+The fastest route for a delivery complaint: search the phone number, set status to **Failed**, and
+look at the timestamp.
+
+---
+
+## Exporting
+
+**Export** produces the filtered log as a file.
+
+<Callout type="warn">
+  Message logs contain customer phone numbers and message content. Treat an export as personal data
+  — do not email it around, and delete it when you are done with it.
+</Callout>
+
+---
+
+## Common Investigations
+
+| Question | How |
+|----------|-----|
+| "Did this customer get our message?" | Search their number, check status |
+| "Why did this campaign underperform?" | Filter source = Campaign, status = Failed |
+| "Are our templates being read?" | Filter source = Template, compare delivered vs read |
+| "What did our API send last night?" | Filter source = External API, set the date range |
+
+---
+
+## Related Pages
+
+- [Message Analytics](/analytics/message-analytics)
+- [Campaigns](/campaign)
+- [Integrations](/settings/integrations) — the message status webhook

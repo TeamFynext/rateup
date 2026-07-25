@@ -1,56 +1,83 @@
 ---
 title: "Contacts Overview"
----
-
-The **Contacts** module is the central place to manage all customer information inside RateUp. It brings together contacts from multiple communication channels into a single, organized workspace.
-
+description: Your customer database — the people behind every conversation, campaign and order.
 ---
 
 import ScreenShot from "@/components/Screenshot";
-import { CDN } from '@/lib/cdn';
 
-## What Is Contacts?
+**Contacts** is the record of everyone you talk to. Every conversation in the
+[Inbox](/inbox), every [campaign](/campaign) send and every [order](/commerce/orders) is attached
+to a contact here.
 
-Contacts represent individual customers or leads who interact with your business through supported channels such as WhatsApp, Web Chat, or manual entry. Each contact stores essential details that help teams track conversations, follow-ups, and engagement history.
-
-<ScreenShot src={`${CDN}/docs/screenshots/contacts/contact-overview.png`} alt="Contacts-overview" />
----
-
-## What You Can Do With Contacts
-
-Using the Contacts module, teams can:
-
-- View all customer contacts in one place  
-- Search contacts by name, phone number, or email  
-- Categorize contacts using labels and lifecycle stages  
-- Identify the source of each contact  
-- Add, import, or export contacts  
-- Manage contacts efficiently across teams  
+<ScreenShot src="/docs/screenshots/contacts/list.png" alt="The contacts list" />
 
 ---
 
-## Why Contacts Matter
+## The Four Ways to Organise Contacts
 
-The Contacts module ensures that customer data is:
+RateUp gives you four separate tools. They do different jobs, and using the right one is what keeps
+the database usable as it grows.
 
-- **Centralized** – No scattered or duplicated contact records  
-- **Organized** – Easy segmentation using labels and lifecycle stages  
-- **Accessible** – Quick access for support, sales, and operations teams  
-- **Actionable** – Enables faster responses and better customer engagement  
+| Tool | What it is | Example |
+|------|-----------|---------|
+| **[Groups](/contacts/groups)** | Explicit lists you add people to | *Newsletter subscribers* |
+| **[Labels](/contacts/labels)** | Coloured tags for cross-cutting traits | *VIP*, *Refund pending* |
+| **[Lifecycle stages](/contacts/lifecycle)** | Where someone is in your funnel | *Lead → Customer* |
+| **[Custom fields](/contacts/custom-fields)** | Extra data you define | *Membership number* |
 
----
-
-## What’s Next
-
-From the Contacts module, you can explore:
-
-- **All Contacts** – View and manage every contact  
-- **Groups** – Organize contacts into collections  
-- **Custom Fields** – Store additional contact information  
-- **Labels** – Tag contacts for categorization  
-- **Lifecycle** – Track contact progress through different stages  
+<Callout type="info">
+  A contact sits in **one** lifecycle stage at a time, but can carry **many** labels and belong to
+  **many** groups. If you find yourself creating a group called "VIP", what you want is a label.
+</Callout>
 
 ---
 
+## What's in This Section
 
+<Cards>
+  <Card
+    title="Managing Contacts"
+    href="/contacts/managing-contacts"
+    description="Adding, editing, searching, filtering, importing and exporting."
+  />
+  <Card
+    title="Groups"
+    href="/contacts/groups"
+    description="Explicit lists for campaigns and routing."
+  />
+  <Card
+    title="Labels"
+    href="/contacts/labels"
+    description="Coloured tags visible everywhere the contact appears."
+  />
+  <Card
+    title="Lifecycle Stages"
+    href="/contacts/lifecycle"
+    description="The customer journey funnel, from lead to customer."
+  />
+  <Card
+    title="Custom Fields"
+    href="/contacts/custom-fields"
+    description="Store the data your business needs that RateUp does not have by default."
+  />
+</Cards>
 
+---
+
+## Contacts and Consent
+
+Every contact carries a **consent** status, which controls whether they may receive template
+messages and campaigns. Contacts without consent show a **DND** badge in the Inbox.
+
+<Callout type="warn">
+  Consent is not a formality. Messaging people who did not opt in damages your WhatsApp account's
+  quality rating, and that is far harder to repair than a slow month of campaigns.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Campaigns](/campaign) — where groups and labels get used
+- [Inbox](/inbox) — conversations attached to contacts
+- [Automation](/automation) — rules that read and write contact fields

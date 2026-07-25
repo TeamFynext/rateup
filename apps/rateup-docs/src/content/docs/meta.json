@@ -1,27 +1,20 @@
 {
   "pages": [
     "index",
-    "title",
     "getting-started",
     "inbox",
     "analytics",
     "contacts",
     "campaign",
     "whatsapp",
+    "instagram",
     "automation",
-    "loyality",
-    "profile-settings",
-    "teams",
-    "web-survey",
-    "whatsapp-survey",
-    "menu",
-    "landing-page",
-    "ticket",
-    "testimonial",
-    "type",
-    "advanced-features",
-    "apidoc",
-    "app-link",
-    "href"
+    "commerce",
+    "loyalty",
+    "web-forms",
+    "tickets",
+    "qr-studio",
+    "settings",
+    "external-api"
   ]
 }

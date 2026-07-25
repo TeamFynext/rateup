@@ -1,0 +1,77 @@
+---
+title: "Groups"
+description: Explicit lists of contacts, used mainly as campaign audiences.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+A **group** is a list you put contacts into deliberately. Groups are what campaigns are sent to.
+
+<ScreenShot src="/docs/screenshots/contacts/groups.png" alt="Contact groups" />
+
+---
+
+## Creating a Group
+
+<Steps>
+<Step>
+Click **Create Group**.
+</Step>
+<Step>
+Give it a name that describes the audience, not the campaign — *Newsletter subscribers* outlives
+*March mailer*.
+</Step>
+<Step>
+Add members, from the group page or by bulk-selecting in the contacts list.
+</Step>
+</Steps>
+
+Use **Search contact groups…** to find one once you have several.
+
+---
+
+## Adding and Removing Members
+
+| From | How |
+|------|-----|
+| **Contacts list** | Select contacts → **Add to Group** |
+| **Group page** | Add members directly |
+| **Import** | Assign a group during import |
+
+Removing someone from a group does not delete the contact — it only takes them off that list.
+
+---
+
+## Groups vs Labels
+
+This is the distinction people get wrong most often:
+
+| | Groups | [Labels](/contacts/labels) |
+|---|--------|--------|
+| **Are** | Lists you build | Tags describing a trait |
+| **Answer** | "Who should get this campaign?" | "What is true about this person?" |
+| **Visible in the Inbox** | No | Yes, on every conversation row |
+| **Typical name** | *Newsletter subscribers* | *VIP*, *Refund pending* |
+
+<Callout type="info">
+  Rule of thumb: if you would ever want to **send something to it**, it is a group. If it describes
+  **what someone is**, it is a label.
+</Callout>
+
+---
+
+## Designing Your Groups
+
+- Keep them purposeful — a group nobody sends to is dead weight
+- Prefer a few durable groups over one per campaign
+- Build segments by filtering on labels and lifecycle rather than creating a group per combination
+- Review membership before big sends; groups drift
+
+---
+
+## Related Pages
+
+- [Campaigns](/campaign) — the main consumer of groups
+- [Labels](/contacts/labels)
+- [Managing Contacts](/contacts/managing-contacts)

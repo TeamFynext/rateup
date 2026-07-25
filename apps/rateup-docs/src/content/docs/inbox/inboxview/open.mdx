@@ -1,0 +1,97 @@
+---
+title: "Open"
+description: The Open view shows every active ticket — the full live workload, assigned or not.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+
+**Open** shows every **active** ticket: those already assigned and those still waiting for an
+owner. Nothing closed appears here.
+
+It is the default view when you enter the Inbox, and the one managers live in.
+
+---
+
+## What You See
+
+<ScreenShot src="/docs/screenshots/inbox/view-open.png" alt="Assigned and unassigned tickets side by side" />
+
+- Every ticket is still active
+- Each row shows **New** (unassigned) or **Assigned**
+- Unassigned rows carry an **amber left edge**
+- The assignee's avatar sits on the right; `+2` means several people are assigned
+
+---
+
+## Open vs New vs Mine
+
+| View | Meaning |
+|------|---------|
+| **Open** | All active tickets, assigned or not |
+| **New** | Active tickets with **no owner** |
+| **Mine** | Active tickets assigned **to you** |
+
+**New** and **Mine** are both subsets of **Open**.
+
+---
+
+## Reading Ownership at a Glance
+
+| Where | What it shows |
+|-------|---------------|
+| Conversation row | Assignee avatar, `+N` for extras — hover for the full list |
+| Chat header | Status pill: **Assigned** or **New** |
+| Ticket Details panel | Assignee name, their team, and a **Change** action |
+
+---
+
+## Reassign a Ticket
+
+<Steps>
+<Step>
+Open the ticket.
+</Step>
+<Step>
+Click the **panel icon** at the far right of the chat header to open **Ticket Details**.
+</Step>
+<Step>
+Under **Assignment**, click **Change**.
+</Step>
+<Step>
+Pick another team or team member. The ticket is reassigned instantly and a system note records it.
+</Step>
+</Steps>
+
+<Callout type="info">
+  Assigning a **team** makes the ticket available to every member of it. Assigning an
+  **individual** puts it in exactly one person's **Mine** view. Use teams when you want the fastest
+  available person to pick it up.
+</Callout>
+
+---
+
+## Using Open as a Manager
+
+- Sort by **oldest first** to surface tickets that have been waiting
+- Use the **staff** and **team** filters to check one person's or one team's load
+- Watch for rows with an amber edge — those have nobody on them
+- Reassign when someone goes offline rather than letting their tickets stall
+
+---
+
+## Role-Based Behaviour
+
+| Role | In the Open view |
+|------|------------------|
+| **Business Admin** | Sees every open ticket; can reassign across all teams |
+| **Manager** | Sees and reassigns within their teams |
+| **Agent** | Sees open tickets; can respond and reassign subject to permissions |
+
+---
+
+## Related Pages
+
+- [New](/inbox/inboxview/newchat) — the unowned queue
+- [Mine](/inbox/inboxview/mine) — your own workload
+- [Sidebar Filters](/inbox/inbox-filter) — narrowing Open down

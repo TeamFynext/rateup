@@ -1,0 +1,248 @@
+---
+title: "Settings"
+description: Publishing, scheduling, access control, languages, kiosk mode, notifications and the response webhook.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import ScreenShot from "@/components/Screenshot";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+
+Everything about how a form **behaves**, as opposed to how it looks.
+
+<ScreenShot src="/docs/screenshots/web-forms/settings.png" alt="Form settings" />
+
+---
+
+## Publishing
+
+| Control | Effect |
+|---------|--------|
+| **Publish** | Makes the form live and accepting responses |
+| **Unpublish** | Takes it offline |
+| **Pause** | Stops collection without unpublishing |
+
+A form must be published before its link works.
+
+---
+
+## Scheduling
+
+Set a **start** and an **End Survey At** date so a form opens and closes on its own — or choose
+**No Expiry** to leave it open indefinitely.
+
+Use scheduling for anything time-bound: an event feedback form should close when the event is over,
+not linger collecting stray responses for a year.
+
+---
+
+## Access Control
+
+| Setting | Effect |
+|---------|--------|
+| **Password Protection** | Respondents must enter a password |
+| **Allowed email IDs** | Only listed addresses may submit |
+| **Anonymous** | Responses are not tied to an identity |
+
+<Callout type="info">
+  **Anonymous** genuinely changes what people tell you. For sensitive feedback — complaints, staff
+  surveys — it raises both response rate and honesty. For anything you need to follow up on, it
+  makes that impossible. Decide deliberately.
+</Callout>
+
+---
+
+## End-to-End Encryption
+
+**End-to-End Encryption** encrypts response data.
+
+Turn it on for anything sensitive. Note that encrypted responses limit what can be processed
+automatically — check your reporting still works before relying on it.
+
+---
+
+## Languages
+
+Add the languages your form should offer. At least one is required — you will be told
+*"Must contain atleast one language"* otherwise.
+
+Available languages include English, Hindi, Malayalam and Kannada among others. Respondents pick
+theirs on the [language page](/web-forms/design).
+
+---
+
+## Response Behaviour
+
+| Setting | Effect |
+|---------|--------|
+| **Automatic Transition** | Moves to the next question automatically after an answer |
+| **Preview screen** | Show or skip the preview before submission |
+| **Fetch Location** | Captures the respondent's location |
+| **Kiosk Mode** | Resets the form after each submission, for a shared device |
+
+**Kiosk Mode** is what you want for a tablet at a counter or an event stand — it prevents one
+person seeing the previous person's answers.
+
+<Callout type="warn">
+  **Fetch Location** collects personal data. Tell respondents why you need it, and do not enable it
+  because it is available.
+</Callout>
+
+---
+
+## Notifications
+
+**Enable Email Notification** sends an alert to a **notification email** when responses arrive.
+
+Point it at a shared mailbox rather than an individual — a survey alerting one person who then goes
+on holiday is a form nobody is reading.
+
+---
+
+## Webhook
+
+A **webhook** posts each response to a URL you control, the moment it is submitted. Use it to push
+responses into your own database, CRM or fulfilment system without polling.
+
+This webhook is configured **per form**, and the same mechanism serves
+[WhatsApp flows](/whatsapp/flows).
+
+<Callout type="info">
+  This is not the same webhook as the one under
+  [Settings → Integrations](/settings/integrations) — that one is organisation-wide and reports
+  **WhatsApp message delivery status**. This one carries **form responses**, and unlike that one it
+  is signed and retried.
+</Callout>
+
+### Setting it up
+
+<Steps>
+<Step>
+**Create an HTTPS endpoint** that accepts **POST** and parses a JSON body.
+
+```
+https://example.com/webhook-endpoint
+```
+
+Plain HTTP endpoints are skipped entirely — nothing is ever sent to them.
+</Step>
+<Step>
+Enter the URL under **Webhook** in this Settings tab and **Save changes**.
+</Step>
+<Step>
+Note the **client secret**. It signs every request, and you need it to verify what arrives.
+</Step>
+</Steps>
+
+<ImagePlaceholder
+  file="web-forms/webhook-settings.png"
+  shot="The Webhook section of a survey's Settings tab, showing the endpoint URL field and the client secret."
+  caption="Registering a response webhook."
+/>
+
+{/* TODO: capture the survey webhook settings */}
+
+### Payload
+
+```json
+{
+  "tag": "feedback",
+  "createdAt": "2024-09-17T10:00:00Z",
+  "phone": "14155552671",
+  "language": "en",
+  "responses": [
+    { "type": "Rating", "response": 3, "title": "Please rate us?" },
+    { "type": "Smiley", "response": "Happy", "title": "Are you satisfied?" }
+  ],
+  "teamId": "3112a17e-d353-482b-82e0-0af2f10771ee",
+  "surveyId": "4365b702-69a3-4362-a162-1725ad50f259"
+}
+```
+
+| Field | Contains |
+|-------|----------|
+| `tag` | The form's tag |
+| `createdAt` | Submission time, ISO 8601 |
+| `phone` | The respondent's number, where captured |
+| `language` | The language they answered in |
+| `responses` | One entry per question — `type`, `response`, `title` |
+| `teamId` | The owning team |
+| `surveyId` | The form the response came from |
+
+### Headers
+
+| Header | Contains |
+|--------|----------|
+| `X-Rateup-Signature` | HMAC-SHA256 of the payload, base64-encoded |
+| `X-Rateup-Triggered-At` | Trigger time, ISO 8601 |
+| `X-Webhook-Id` | A UUID identifying this delivery |
+
+### Verifying the signature
+
+Compute an HMAC-SHA256 of the JSON payload with your client secret, base64-encode it, and compare
+against `X-Rateup-Signature`.
+
+```javascript
+import crypto from "crypto";
+
+function verifySignature(payload, signature, secret) {
+  const hmac = crypto.createHmac("sha256", secret);
+  hmac.update(JSON.stringify(payload));
+  return signature === hmac.digest("base64");
+}
+```
+
+<Callout type="warn">
+  Verify **before** acting on the payload. Your endpoint URL is not a secret, and an unverified
+  handler processes whatever anyone posts to it.
+</Callout>
+
+### Retries
+
+| Your response | What happens |
+|---------------|--------------|
+| **2xx** | Delivered; done |
+| **5xx** | Retried, up to **3 attempts**, with exponential backoff |
+| **4xx** | **No retry** — the response is abandoned immediately |
+
+<Callout type="warn">
+  A 4xx is read as "your endpoint rejected this deliberately" and the event is dropped for good. If
+  your handler hits something temporary — a database blip, a lock — return a **5xx** so it is
+  retried. Returning 400 loses the response permanently.
+</Callout>
+
+### Idempotency
+
+Because retries exist, the same event can arrive twice. Record the `X-Webhook-Id` of every delivery
+you process and skip ids you have already seen.
+
+Acknowledge with a 2xx as soon as you have the payload, then process it asynchronously.
+
+### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Nothing ever arrives | Endpoint is HTTP, not HTTPS | Non-HTTPS endpoints are skipped |
+| Nothing ever arrives | Webhook not saved on this form | Re-check this Settings tab |
+| Signature never matches | Wrong secret, or the payload was altered before hashing | Hash the raw JSON with the registered client secret |
+| One failure and it never returns | Your handler returned a 4xx | Return 5xx for transient failures |
+| Duplicate records | No idempotency | Deduplicate on `X-Webhook-Id` |
+
+---
+
+## Danger Zone
+
+**Delete Survey** removes the form and its responses.
+
+<Callout type="warn">
+  Deleting takes every response with it. Export from [Results](/web-forms/results) first — and
+  prefer **Unpublish** for a form you have simply finished with.
+</Callout>
+
+---
+
+## Related Pages
+
+- [Sharing](/web-forms/sharing)
+- [Results](/web-forms/results)
+- [Design](/web-forms/design)
+- [Integrations](/settings/integrations) — the separate WhatsApp message status webhook
