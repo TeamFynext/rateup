@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Key, Lock, Mail } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -21,17 +21,15 @@ import AppleSignInButton from "./AppleSigninButton.tsx";
 import { AuthHeader } from "./AuthHeader.tsx";
 import GoogleSignInButton from "./GoogleSigninButton.tsx";
 
-const loginSchema = z.object({
-  email: z.email().min(1, "Email is required"),
-  password: z
-    .string()
-    .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
-      error: "Password should contain at least one letter and one number",
-    })
-    .min(5, "Password should be at least 5 characters long"),
-});
+const buildLoginSchema = (t: (key: string) => string) =>
+  z.object({
+    email: z.email({
+      error: (issue) => (issue.input === "" ? t("Email is required") : t("Enter a valid email")),
+    }),
+    password: z.string().min(1, t("Password is required")),
+  });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = z.infer<ReturnType<typeof buildLoginSchema>>;
 
 type SignInFlowProps = Readonly<{
   setIsLoading: (value: boolean) => void;
@@ -49,18 +47,10 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }: SignInFl
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
-  const translatedLoginSchema = loginSchema.extend({
-    email: z.email().min(1, translations("Email is required")),
-    password: z
-      .string()
-      .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
-        error: translations("Password should contain at least one letter and one number"),
-      })
-      .min(5, translations("Password should be at least 5 characters long")),
-  });
+  const resolver = useMemo(() => zodResolver(buildLoginSchema(translations)), [translations]);
 
   const loginForm = useForm<LoginFormValues>({
-    resolver: zodResolver(translatedLoginSchema),
+    resolver,
     defaultValues: {
       email: "",
       password: "",
