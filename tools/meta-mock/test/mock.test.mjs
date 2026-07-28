@@ -370,3 +370,40 @@ test("a replayed inbound message can carry the text a test chose", async () => {
     );
   });
 });
+
+test("marketing sends behave exactly like ordinary ones", async () => {
+  await withSink(async (sinkUrl, received) => {
+    await withMock(
+      async (mock) => {
+        // message-dispatcher posts here instead of /messages when the
+        // template's category is MARKETING.
+        const sent = await fetch(`${mock.url}/v25.0/259643180556398/marketing_messages`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ messaging_product: "whatsapp", to: "919876500001" }),
+        }).then((r) => r.json());
+
+        // The caller reads res.data.messages[0].id and stores it; without a
+        // real envelope it stores undefined and no status can ever match.
+        assert.ok(sent.messages?.[0]?.id, "a marketing send must return a message id");
+        assert.equal(sent.messaging_product, "whatsapp");
+
+        await mock.close();
+
+        assert.deepEqual(statusesOf(received), ["sent", "delivered", "read"]);
+        assert.equal(
+          received[0].entry[0].changes[0].value.statuses[0].id,
+          sent.messages[0].id,
+          "the callbacks must carry the id the send handed back",
+        );
+      },
+      {
+        webhookUrl: sinkUrl,
+        statusProgression: true,
+        statusDelays: { sent: 0, delivered: 0, read: 0 },
+        wabaId: "111",
+        phoneNumberId: "259643180556398",
+      },
+    );
+  });
+});

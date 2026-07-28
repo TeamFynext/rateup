@@ -30,7 +30,7 @@ These run **ahead of** the fixtures, because a canned example cannot model creat
 | GET | `/{wabaId}/message_templates` | always |
 | DELETE | `/{wabaId}/message_templates` | always |
 | POST | `/{templateId}` | conditional |
-| POST | `/{phoneId}/messages` | always |
+| POST | `/{phoneId}/{endpoint}` | always |
 | POST | `/{appId}/uploads` | always |
 | POST | `/upload:{sessionId}` | always |
 | GET | `/{phoneId}/whatsapp_business_encryption` | always |

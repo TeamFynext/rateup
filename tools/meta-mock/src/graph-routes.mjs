@@ -176,10 +176,21 @@ export function createGraphRoutes({ state, mintId, publicUrl, onMessageSent }) {
       },
     },
 
-    /* ---- outbound messages: the one path that would reach a real person ---- */
+    /* ---- outbound messages: the one path that would reach a real person ---- *
+     *
+     * Two endpoints, one behaviour. Marketing template sends go to
+     * `/{phone-number-id}/marketing_messages` (Meta's MM Lite API) rather than
+     * `/messages`, and answer with the same envelope — message-dispatcher picks
+     * between them on the template's category.
+     *
+     * Matching only `/messages` is a quiet failure with two heads: no status
+     * callbacks fire, *and* the generic fallback answers without a
+     * `messages[0].id`, so the caller stores an undefined message id and could
+     * never match a status to it later even if one arrived.
+     */
     {
       method: "POST",
-      match: /^\/(?<phoneId>\d+)\/messages$/,
+      match: /^\/(?<phoneId>\d+)\/(?<endpoint>messages|marketing_messages)$/,
       handle: ({ body, params }) => {
         const messageId = `wamid.STUB${mintId()}`;
         const recipientId = body?.to ?? "";
