@@ -111,10 +111,29 @@ real, end to end, against a real database, with nothing leaving the machine.
 ## Running it
 
 ```bash
-npx meta-mock                                     # :3099
-npx meta-mock --port 4000 --verbose
-META_MOCK_WEBHOOK_URL=http://localhost:3001/api/wa/webhook npx meta-mock
+npx meta-mock                        # :3099 — no status callbacks
+npx meta-mock --status-progression   # ...and sent → delivered → read
+npx meta-mock --help
 ```
+
+**A send is answered and nothing follows unless you ask for status
+progression.** Without it, campaign and message statuses never update — the send
+looks fine and the silence afterwards reads as a bug in your app. The startup
+banner always says which mode it is in; if statuses are not arriving, look there
+first.
+
+Copy `.env.example` to `.env` so the account identity is not retyped each run —
+the CLI loads it, and real environment variables still win:
+
+```bash
+cp .env.example .env      # then fill in the WABA and phone number ids
+npm run dev               # progression on, verbose
+```
+
+The identity matters: status callbacks carry `metadata.phone_number_id`, and the
+receiving app resolves the tenant from it. Leave it empty and every callback is
+silently ignored — which is why the banner warns when progression is on without
+one.
 
 Then point the services at it:
 

@@ -31,7 +31,8 @@
     "sync": "node scripts/sync-from-postman.mjs",
     "sync:check": "node scripts/sync-from-postman.mjs --check",
     "test": "node --test test/*.test.mjs",
-    "routes": "node scripts/print-routes.mjs"
+    "routes": "node scripts/print-routes.mjs",
+    "dev": "node bin/meta-mock.mjs --status-progression --verbose"
   },
   "engines": {
     "node": ">=20"

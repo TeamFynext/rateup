@@ -55,9 +55,19 @@ export interface MetaMockOptions {
    * the request body gives nothing away. Defaults to "whatsapp".
    */
   defaultApi?: "whatsapp" | "instagram";
-  /** Where replayed webhooks are delivered. */
+  /** Where replayed webhooks and status callbacks are delivered. */
   webhookUrl?: string;
   verbose?: boolean;
+  /** Deliver sent → delivered → read after each send. Off by default. */
+  statusProgression?: boolean;
+  /** Stamped onto status callbacks so the receiving app can resolve the tenant. */
+  wabaId?: string;
+  phoneNumberId?: string;
+  displayPhoneNumber?: string;
+  /** Fraction of sends that fail after `sent`. Zero by default. */
+  failureRate?: number;
+  /** Delays between callbacks, in ms. */
+  statusDelays?: { sent?: number; delivered?: number; read?: number };
 }
 
 export interface MetaMock {
@@ -66,6 +76,16 @@ export interface MetaMock {
   readonly url: string;
   readonly port: number;
   calls(filter?: CallFilter): MockCall[];
+  /** How this instance is configured. */
+  readonly config: {
+    statusProgression: boolean;
+    webhookUrl: string;
+    failureRate: number;
+    wabaId: string;
+    phoneNumberId: string;
+    displayPhoneNumber: string;
+    defaultApi: "whatsapp" | "instagram";
+  };
   reset(): void;
   replayWebhook(request: WebhookRequest): Promise<WebhookResult>;
   webhooks(): Array<{ name: string; folder: string }>;

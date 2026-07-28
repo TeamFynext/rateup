@@ -371,6 +371,17 @@ export function createMetaMock(options = {}) {
           filter.method ? call.method === String(filter.method).toUpperCase() : true,
         ),
 
+    /** How this instance is configured — the CLI prints it so the mode is never a guess. */
+    config: {
+      statusProgression,
+      webhookUrl: webhookTarget,
+      failureRate,
+      wabaId: identity.wabaId,
+      phoneNumberId: identity.phoneNumberId,
+      displayPhoneNumber: identity.displayPhoneNumber,
+      defaultApi,
+    },
+
     reset,
     replayWebhook: (request) => replayWebhook({ target: webhookTarget, ...request }),
     webhooks: listWebhooks,
