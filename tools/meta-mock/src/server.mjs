@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 
-import { fallbackResponse, fixtures, matchFixture } from "./fixtures.mjs";
+import { fallbackResponse, fixtures, matchFixture, stripVersion } from "./fixtures.mjs";
 import { createGraphRoutes } from "./graph-routes.mjs";
 import { runStatusProgression, statusPayload } from "./status-progression.mjs";
 import { listWebhooks, replayWebhook } from "./webhooks.mjs";
@@ -103,12 +103,6 @@ export function createMetaMock(options = {}) {
   /* ---------------------------------------------------------------- *
    * Plumbing
    * ---------------------------------------------------------------- */
-
-  /** Strip the `/v25.0` style prefix; some Meta hosts send none. */
-  const stripVersion = (pathname) => {
-    const match = /^\/v\d+\.\d+(?<rest>\/.*)?$/.exec(pathname);
-    return match ? (match.groups.rest ?? "/") : pathname;
-  };
 
   const readBody = (req) =>
     new Promise((resolve) => {

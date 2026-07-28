@@ -25,6 +25,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { VERSION_SEGMENT } from "../src/fixtures.mjs";
 import { renderRoutesDoc } from "./write-routes-doc.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -115,9 +116,6 @@ async function loadCollection(source, overrides) {
  * because the stub cannot tell a WABA id from a phone number id by looking at
  * it — and neither can Graph, from the path alone.
  */
-/** `{{Version}}`, `{{api_version}}`, `v23.0` — all the ways a version segment appears. */
-const VERSION_SEGMENT = /^(\{\{\s*[\w-]*version[\w-]*\s*\}\}|v\d+\.\d+)$/i;
-
 function toPattern(rawUrl) {
   if (!rawUrl) return null;
 
