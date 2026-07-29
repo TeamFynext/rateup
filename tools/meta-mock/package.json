@@ -1,19 +1,40 @@
 {
-  "name": "whatsapp-mock-api",
+  "name": "@rateup/meta-mock",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node --watch index.js",
-    "dev": "node --watch index.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "description": "A local stand-in for Meta's Graph API \u2014 WhatsApp Cloud API and Instagram \u2014 generated from Meta's published Postman collections.",
+  "license": "MIT",
+  "repository": "https://github.com/TeamFynext/whatsapp-mock-api",
   "type": "module",
-  "dependencies": {
-    "axios": "^1.8.4",
-    "dotenv": "^16.5.0",
-    "express": "^5.1.0"
+  "main": "./index.mjs",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.mjs"
+    },
+    "./graph-fixtures.json": "./graph-fixtures.json"
+  },
+  "bin": {
+    "meta-mock": "./bin/meta-mock.mjs"
+  },
+  "files": [
+    "README.md",
+    "ROUTES.md",
+    "bin",
+    "graph-fixtures.json",
+    "index.d.ts",
+    "index.mjs",
+    "src"
+  ],
+  "scripts": {
+    "start": "node bin/meta-mock.mjs",
+    "sync": "node scripts/sync-from-postman.mjs",
+    "sync:check": "node scripts/sync-from-postman.mjs --check",
+    "test": "node --test test/*.test.mjs",
+    "routes": "node scripts/print-routes.mjs",
+    "dev": "node bin/meta-mock.mjs --status-progression --verbose"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
