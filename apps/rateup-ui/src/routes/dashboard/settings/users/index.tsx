@@ -290,9 +290,7 @@ function UsersPage() {
               }
             }}
           >
-            <DialogTrigger
-              render={<Button className="bg-[#2E5BFF] hover:bg-[#2549d8] h-10 shrink-0" />}
-            >
+            <DialogTrigger render={<Button className="h-10 shrink-0" />}>
               <Plus className="w-4 h-4 mr-2" />
               {translations("Add New User")}
             </DialogTrigger>
@@ -300,7 +298,7 @@ function UsersPage() {
             <DialogContent className="sm:max-w-175">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#2E5BFF] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                     <Plus className="w-4 h-4 text-white" />
                   </div>
                   {translations("Add New User")}
@@ -321,7 +319,7 @@ function UsersPage() {
                       {newUserProfileImage ? (
                         <AvatarImage src={newUserProfileImage} />
                       ) : (
-                        <AvatarFallback className="bg-[#2E5BFF] text-white">
+                        <AvatarFallback className="bg-primary text-white">
                           <User className="w-12 h-12" />
                         </AvatarFallback>
                       )}
@@ -540,11 +538,7 @@ function UsersPage() {
                   >
                     {translations("Cancel")}
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={addResourceMutation.isPending}
-                    className="bg-[#2E5BFF] hover:bg-[#2549d8]"
-                  >
+                  <Button type="submit" disabled={addResourceMutation.isPending}>
                     <CheckCircle className="w-4 h-4 mr-2" />
                     {addResourceMutation.isPending
                       ? translations("Inviting")
