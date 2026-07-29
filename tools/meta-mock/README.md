@@ -63,7 +63,7 @@ is preserved; its files are not.
 | `POST /v1/webhook/message` | `POST /__stub/webhook` — replays Meta's own payload |
 | `POST /webhook/statuses/:id` | `POST /__stub/status` |
 | automatic status progression | kept — opt-in, and deterministic |
-| port 3004 | port 3099 (`PORT`) |
+| port 3004 | port 8081 (`PORT`) |
 
 Two differences worth knowing.
 
@@ -111,7 +111,7 @@ real, end to end, against a real database, with nothing leaving the machine.
 ## Running it
 
 ```bash
-npx meta-mock                        # :3099 — no status callbacks
+npx meta-mock                        # :8081 — no status callbacks
 npx meta-mock --status-progression   # ...and sent → delivered → read
 npx meta-mock --help
 ```
@@ -138,7 +138,7 @@ one.
 Then point the services at it:
 
 ```bash
-cd rateup-api && META_API_BASE_URL=http://127.0.0.1:3099 npm run dev
+cd rateup-api && META_API_BASE_URL=http://127.0.0.1:8081 npm run dev
 ```
 
 Or as a container, alongside the rest of your local infrastructure:
@@ -147,7 +147,7 @@ Or as a container, alongside the rest of your local infrastructure:
 services:
   meta-mock:
     build: ../meta-mock
-    ports: ["3099:3099"]
+    ports: ["8081:8081"]
     environment:
       META_MOCK_WEBHOOK_URL: http://host.docker.internal:3001/api/wa/webhook
 ```
@@ -263,7 +263,7 @@ segment. Matching only one spelling leaves every Instagram path with an extra
 
 | Variable | Default |
 | --- | --- |
-| `PORT` | `3099` |
+| `PORT` | `8081` |
 | `META_MOCK_HOST` | `127.0.0.1` |
 | `META_MOCK_WEBHOOK_URL` | `http://localhost:3001/api/wa/webhook` |
 | `META_MOCK_DEFAULT_API` | `whatsapp` — which API wins on shared endpoints |

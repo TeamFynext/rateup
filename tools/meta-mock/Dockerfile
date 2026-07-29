@@ -7,8 +7,8 @@ COPY src ./src
 COPY bin ./bin
 
 ENV META_MOCK_HOST=0.0.0.0
-ENV PORT=3099
-EXPOSE 3099
+ENV PORT=8081
+EXPOSE 8081
 
 # Webhooks are delivered back out of the container, so the target has to be
 # reachable from inside it — host.docker.internal on Docker Desktop, or the
@@ -16,6 +16,6 @@ EXPOSE 3099
 ENV META_MOCK_WEBHOOK_URL=http://host.docker.internal:3001/api/wa/webhook
 
 HEALTHCHECK --interval=10s --timeout=3s --retries=5 \
-  CMD node -e "fetch('http://127.0.0.1:3099/__stub/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:8081/__stub/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "bin/meta-mock.mjs"]

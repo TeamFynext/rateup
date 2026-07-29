@@ -2,7 +2,7 @@
 /**
  * Run the mock as a server.
  *
- *   npx meta-mock                              # :3099, no status callbacks
+ *   npx meta-mock                              # :8081, no status callbacks
  *   npx meta-mock --status-progression         # ...and sent → delivered → read
  *   npx meta-mock --port 4000 --verbose
  *
@@ -31,7 +31,7 @@ if (has("help")) {
   console.log(`
 meta-mock — a local stand-in for Meta's Graph API
 
-  --port <n>                 default 3099, or PORT
+  --port <n>                 default 8081, or PORT
   --host <h>                 default 127.0.0.1
   --webhook-url <url>        where replayed webhooks and status callbacks go
   --status-progression       deliver sent → delivered → read after each send

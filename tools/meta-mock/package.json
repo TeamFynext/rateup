@@ -27,7 +27,7 @@
     "src"
   ],
   "scripts": {
-    "start": "node bin/meta-mock.mjs",
+    "start": "node bin/meta-mock.mjs --status-progression",
     "sync": "node scripts/sync-from-postman.mjs",
     "sync:check": "node scripts/sync-from-postman.mjs --check",
     "test": "node --test test/*.test.mjs",

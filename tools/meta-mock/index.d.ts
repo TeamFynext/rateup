@@ -47,7 +47,7 @@ export interface WebhookResult {
 }
 
 export interface MetaMockOptions {
-  /** Defaults to 3099. Pass 0 for any free port. */
+  /** Defaults to 8081. Pass 0 for any free port. */
   port?: number;
   host?: string;
   /**
