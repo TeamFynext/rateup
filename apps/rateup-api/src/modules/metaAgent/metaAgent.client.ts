@@ -1,8 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { log } from "../../utils/logger.js";
 
-const META_AGENT_API_BASE = "https://api.facebook.com";
-const META_AGENT_API_VERSION = "2.0.0";
+import { META_AGENT_API_HOST, META_AGENT_API_VERSION } from "../../utils/meta.js";
 
 export class MetaAgentApiError extends Error {
   status: number;
@@ -27,7 +26,7 @@ export async function callMetaAgentApi<T = any>(
   extraHeaders: AxiosRequestConfig["headers"] = {},
 ): Promise<T> {
   const config: AxiosRequestConfig = {
-    url: `${META_AGENT_API_BASE}${path}`,
+    url: `${META_AGENT_API_HOST}${path}`,
     method,
     data,
     params,

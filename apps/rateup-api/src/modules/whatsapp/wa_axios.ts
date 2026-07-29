@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import { log } from "../../utils/logger.js";
+import { graphUrl } from "../../utils/meta.js";
 
 async function axiosWithRetry<T = any>(
   config: AxiosRequestConfig,
@@ -46,7 +47,8 @@ async function axiosWithRetry<T = any>(
   throw lastError!;
 }
 
-const META_API_VERSION = "v25.0";
+/** Re-exported so existing importers of wa_axios keep working. */
+export { META_API_HOST, META_API_VERSION } from "../../utils/meta.js";
 
 export async function callMetaApi(
   url: string,
@@ -59,7 +61,7 @@ export async function callMetaApi(
 ): Promise<AxiosResponse<any, any>> {
   const headAuth = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
   const config: AxiosRequestConfig = {
-    url: `https://graph.facebook.com/${META_API_VERSION}${url}`,
+    url: graphUrl(url),
     method,
     data,
     params,

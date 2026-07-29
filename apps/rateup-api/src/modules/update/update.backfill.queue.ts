@@ -99,11 +99,7 @@ async function handleScan(cursor: string | null): Promise<void> {
 
   // Advance the cursor forward and keep scanning. Every candidate is scanned
   // exactly once and enqueued to exactly one process job — no rescans.
-  await backfillConversationQueue.add(
-    "scan",
-    { cursor: ids.at(-1)! } satisfies ScanData,
-    JOB_OPTS,
-  );
+  await backfillConversationQueue.add("scan", { cursor: ids.at(-1)! } satisfies ScanData, JOB_OPTS);
 }
 
 async function handleProcess(contactIds: string[]): Promise<void> {
@@ -167,7 +163,12 @@ export async function startBackfillConversations() {
   const counts = await backfillConversationQueue.getJobCounts("active", "waiting", "delayed");
   const inFlight = counts.active + counts.waiting + counts.delayed;
   if (status === "running" || inFlight > 0) {
-    return { started: false, reason: "already running", status: status ?? "running", queue: counts };
+    return {
+      started: false,
+      reason: "already running",
+      status: status ?? "running",
+      queue: counts,
+    };
   }
 
   await Promise.all([
@@ -189,13 +190,7 @@ export async function startBackfillConversations() {
 export async function getBackfillConversationStatus() {
   const [queue, status, startedAt, finishedAt, scanned, created, linked, assignees, skipped] =
     await Promise.all([
-      backfillConversationQueue.getJobCounts(
-        "active",
-        "waiting",
-        "delayed",
-        "completed",
-        "failed",
-      ),
+      backfillConversationQueue.getJobCounts("active", "waiting", "delayed", "completed", "failed"),
       baseRedis.get(K.status),
       baseRedis.get(K.startedAt),
       baseRedis.get(K.finishedAt),
