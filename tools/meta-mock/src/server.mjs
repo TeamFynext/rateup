@@ -77,7 +77,16 @@ export function createMetaMock(options = {}) {
   const mintId = () => String(100000000000000 + nextId++);
 
   let listening = null;
-  const publicUrl = () => `http://${host}:${listening?.port ?? port}`;
+
+  /**
+   * A wildcard bind is not a hostname anyone can dial, but it is still the base
+   * every request URL is parsed against — and an IPv6 literal has to be
+   * bracketed or `new URL` rejects it, taking down every request with it.
+   * Binding `::` is the normal case wherever the network is IPv6-only, which
+   * includes Railway's private network.
+   */
+  const authority = (h) => (h.includes(":") ? `[${h}]` : h);
+  const publicUrl = () => `http://${authority(host)}:${listening?.port ?? port}`;
 
   const rules = createGraphRoutes({
     state,
