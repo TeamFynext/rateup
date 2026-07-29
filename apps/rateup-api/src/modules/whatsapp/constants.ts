@@ -1,10 +1,6 @@
 import type { InboxStatus } from "../../types/enums.js";
 import { WaMessageAssignStatus } from "../../types/enums.js";
 
-const whatsappApiBaseUrl = "https://graph.facebook.com/v21.0";
-
-export { whatsappApiBaseUrl };
-
 export const WaMessageAssignStatusTab = {
   New: "NEW",
   UnAssigned: "UNASSIGNED",

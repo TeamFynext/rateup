@@ -2,6 +2,7 @@ import axios from "axios";
 import prisma from "../../../utils/prisma.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
 import { callMetaApi } from "../wa_axios.js";
+import { graphUrl } from "../../../utils/meta.js";
 import {
   convertHeaderToNewQuestion,
   generateFlowMessageData,
@@ -592,7 +593,7 @@ export async function updateFlowJsonInWa(orgId: string, waFlowId: string, json: 
 
   try {
     await axios.post(
-      `https://graph.facebook.com/v21.0/${waFlowId}/assets`,
+      graphUrl(`/${waFlowId}/assets`),
       formData, // Upload the FormData
       {
         headers: {
