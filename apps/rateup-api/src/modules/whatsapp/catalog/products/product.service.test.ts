@@ -1,0 +1,461 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+vi.mock("../../../../utils/prisma.js", () => ({
+  default: {
+    waCatalogProduct: {
+      createMany: vi.fn(),
+      findMany: vi.fn(),
+      deleteMany: vi.fn(),
+      update: vi.fn(),
+    },
+  },
+  excludeFields: vi.fn(),
+}));
+
+vi.mock("../../settings/wa_settings.service.js", () => ({
+  getWaSettings: vi.fn(async () => ({ accessToken: "token-abc" })),
+}));
+vi.mock("../../wa_axios.js", () => ({ callMetaApi: vi.fn() }));
+vi.mock("../catalog.service.js", () => ({ getWaCatalog: vi.fn() }));
+vi.mock("../../../integrations/shopify/shopify.service.js", () => ({ getShopifyInfo: vi.fn() }));
+vi.mock("../../../integrations/shopify/shopify.config.js", () => ({
+  default: { clients: { Graphql: vi.fn() } },
+}));
+vi.mock("../../../../utils/logger.js", () => ({
+  log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
+}));
+
+import prisma from "../../../../utils/prisma.js";
+import { getWaSettings } from "../../settings/wa_settings.service.js";
+import { callMetaApi } from "../../wa_axios.js";
+import { getWaCatalog } from "../catalog.service.js";
+import {
+  createCatalogProductsBatch,
+  deleteCatalogProducts,
+  getCatalogProducts,
+  sendProducts,
+  updateCatalogProducts,
+} from "./product.service.js";
+
+type Mock = ReturnType<typeof vi.fn>;
+
+const db = (
+  prisma as unknown as {
+    waCatalogProduct: { createMany: Mock; findMany: Mock; deleteMany: Mock; update: Mock };
+  }
+).waCatalogProduct;
+
+const callMetaApiMock = callMetaApi as unknown as Mock;
+const getWaSettingsMock = getWaSettings as unknown as Mock;
+const getWaCatalogMock = getWaCatalog as unknown as Mock;
+
+const ORG_ID = "org-1";
+const CATALOG_ID = "cat-1";
+
+/** A product item as the client sends it, before Meta formatting. */
+function productItem(overrides: Record<string, unknown> = {}) {
+  return {
+    retailer_id: "sku-1",
+    title: "Running shoe",
+    price: 99.5,
+    sale_price: 89,
+    currencyCode: "INR",
+    internal_label: ["summer"],
+    image: [{ url: "https://img/1.png" }],
+    ...overrides,
+  };
+}
+
+/** The Meta requests array built by whichever call is under test. */
+function metaRequests() {
+  return callMetaApiMock.mock.calls[0][3].requests;
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  db.createMany.mockResolvedValue({ count: 1 });
+  db.findMany.mockResolvedValue([]);
+  db.deleteMany.mockResolvedValue({ count: 1 });
+  db.update.mockResolvedValue({});
+  callMetaApiMock.mockResolvedValue({ data: { handles: ["h1"] } });
+  getWaSettingsMock.mockResolvedValue({ accessToken: "token-abc" });
+  getWaCatalogMock.mockResolvedValue({ catalogId: CATALOG_ID, vertical: "commerce" });
+});
+
+describe("sendProducts", () => {
+  test("posts the batch to the catalog's items_batch endpoint", async () => {
+    const requests = [{ method: "CREATE" as const, data: { id: "sku-1" } }];
+
+    await sendProducts(ORG_ID, requests, "PRODUCT_ITEM", CATALOG_ID);
+
+    const [url, method, token, body, , headers] = callMetaApiMock.mock.calls[0];
+    expect(url).toBe(`/${CATALOG_ID}/items_batch`);
+    expect(method).toBe("POST");
+    expect(token).toBeNull();
+    expect(body).toEqual({
+      access_token: "token-abc",
+      item_type: "PRODUCT_ITEM",
+      requests,
+    });
+    expect(headers).toEqual({ "Content-Type": "application/json" });
+  });
+
+  test("returns Meta's response body", async () => {
+    await expect(sendProducts(ORG_ID, [], "PRODUCT_ITEM", CATALOG_ID)).resolves.toEqual({
+      handles: ["h1"],
+    });
+  });
+
+  test("uses the org's own access token", async () => {
+    await sendProducts(ORG_ID, [], "PRODUCT_ITEM", CATALOG_ID);
+
+    expect(getWaSettingsMock).toHaveBeenCalledWith(ORG_ID);
+  });
+});
+
+describe("createCatalogProductsBatch - product items", () => {
+  test("sends a CREATE request per item", async () => {
+    await createCatalogProductsBatch(
+      ORG_ID,
+      "PRODUCT_ITEM" as any,
+      [productItem(), productItem({ retailer_id: "sku-2" })],
+      CATALOG_ID,
+    );
+
+    expect(metaRequests()).toHaveLength(2);
+    expect(metaRequests()[0].method).toBe("CREATE");
+  });
+
+  test("sends the retailer id to Meta as `id`", async () => {
+    await createCatalogProductsBatch(ORG_ID, "PRODUCT_ITEM" as any, [productItem()], CATALOG_ID);
+
+    expect(metaRequests()[0].data.id).toBe("sku-1");
+    expect(metaRequests()[0].data).not.toHaveProperty("retailer_id");
+  });
+
+  test("formats the price as an amount with its currency, to two decimals", async () => {
+    await createCatalogProductsBatch(
+      ORG_ID,
+      "PRODUCT_ITEM" as any,
+      [productItem({ price: 99.5 })],
+      CATALOG_ID,
+    );
+
+    expect(metaRequests()[0].data.price).toBe("99.50 INR");
+  });
+
+  test("quotes each internal label, as Meta's batch format requires", async () => {
+    await createCatalogProductsBatch(
+      ORG_ID,
+      "PRODUCT_ITEM" as any,
+      [productItem({ internal_label: ["summer", "sale"] })],
+      CATALOG_ID,
+    );
+
+    expect(metaRequests()[0].data.internal_label).toEqual(["'summer'", "'sale'"]);
+  });
+
+  test("stores the first image as the main one and all of them as extras", async () => {
+    await createCatalogProductsBatch(
+      ORG_ID,
+      "PRODUCT_ITEM" as any,
+      [productItem({ image: [{ url: "https://img/1.png" }, { url: "https://img/2.png" }] })],
+      CATALOG_ID,
+    );
+
+    const stored = db.createMany.mock.calls[0][0].data[0];
+    expect(stored.productProps.image_link).toBe("https://img/1.png");
+    expect(stored.productProps.additional_image_link).toEqual([
+      "https://img/1.png",
+      "https://img/2.png",
+    ]);
+  });
+
+  test("leaves the image links unset when the item has no images", async () => {
+    await createCatalogProductsBatch(
+      ORG_ID,
+      "PRODUCT_ITEM" as any,
+      [productItem({ image: [] })],
+      CATALOG_ID,
+    );
+
+    const stored = db.createMany.mock.calls[0][0].data[0];
+    expect(stored.productProps.image_link).toBeUndefined();
+    expect(stored.productProps.additional_image_link).toBeUndefined();
+  });
+
+  test("files the stored row under the catalog and its type", async () => {
+    await createCatalogProductsBatch(ORG_ID, "PRODUCT_ITEM" as any, [productItem()], CATALOG_ID);
+
+    expect(db.createMany.mock.calls[0][0].data[0]).toMatchObject({
+      type: "PRODUCT_ITEM",
+      retailer_id: "sku-1",
+      catalogId: CATALOG_ID,
+    });
+  });
+
+  test("keeps the Shopify variant id out of the Meta payload but on the stored row", async () => {
+    await createCatalogProductsBatch(
+      ORG_ID,
+      "PRODUCT_ITEM" as any,
+      [productItem({ shopifyVariantId: "variant-1" })],
+      CATALOG_ID,
+    );
+
+    expect(metaRequests()[0].data).not.toHaveProperty("shopifyVariantId");
+    expect(db.createMany.mock.calls[0][0].data[0].shopifyVariantId).toBe("variant-1");
+  });
+
+  test("sends to Meta before storing anything locally", async () => {
+    const order: string[] = [];
+    callMetaApiMock.mockImplementation(async () => {
+      order.push("meta");
+      return { data: {} };
+    });
+    db.createMany.mockImplementation(async () => {
+      order.push("db");
+      return { count: 1 };
+    });
+
+    await createCatalogProductsBatch(ORG_ID, "PRODUCT_ITEM" as any, [productItem()], CATALOG_ID);
+
+    expect(order).toEqual(["meta", "db"]);
+  });
+
+  test("stores nothing when Meta rejects the batch", async () => {
+    callMetaApiMock.mockRejectedValue(new Error("meta rejected"));
+
+    await expect(
+      createCatalogProductsBatch(ORG_ID, "PRODUCT_ITEM" as any, [productItem()], CATALOG_ID),
+    ).rejects.toThrow("meta rejected");
+    expect(db.createMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("createCatalogProductsBatch - hotels", () => {
+  const hotel = (overrides: Record<string, unknown> = {}) => ({
+    hotel_id: "hotel-1",
+    name: "Grand",
+    base_price: 5000,
+    sale_price: 4500,
+    currencyCode: "INR",
+    tags: ["beach"],
+    numbertags: [3],
+    image: [{ url: "https://img/h.png" }],
+    ...overrides,
+  });
+
+  test("formats the base and sale prices with the currency", async () => {
+    await createCatalogProductsBatch(ORG_ID, "HOTEL" as any, [hotel()], CATALOG_ID);
+
+    expect(metaRequests()[0].data.base_price).toBe("5000 INR");
+    expect(metaRequests()[0].data.sale_price).toBe("4500 INR");
+  });
+
+  test("spreads text tags into custom_label_N fields", async () => {
+    await createCatalogProductsBatch(
+      ORG_ID,
+      "HOTEL" as any,
+      [hotel({ tags: ["beach", "spa"] })],
+      CATALOG_ID,
+    );
+
+    expect(metaRequests()[0].data.custom_label_0).toBe("beach");
+    expect(metaRequests()[0].data.custom_label_1).toBe("spa");
+  });
+
+  test("spreads numeric tags into custom_number_N fields", async () => {
+    await createCatalogProductsBatch(
+      ORG_ID,
+      "HOTEL" as any,
+      [hotel({ numbertags: [3, 5] })],
+      CATALOG_ID,
+    );
+
+    expect(metaRequests()[0].data.custom_number_0).toBe(3);
+    expect(metaRequests()[0].data.custom_number_1).toBe(5);
+  });
+
+  test("stores the hotel under hotelProps rather than productProps", async () => {
+    await createCatalogProductsBatch(ORG_ID, "HOTEL" as any, [hotel()], CATALOG_ID);
+
+    const stored = db.createMany.mock.calls[0][0].data[0];
+    expect(stored.hotelProps).toBeDefined();
+    expect(stored.productProps).toBeUndefined();
+  });
+
+  test("stores a hotel room under hotelRoomProps", async () => {
+    await createCatalogProductsBatch(
+      ORG_ID,
+      "HOTEL_ROOM" as any,
+      [
+        {
+          hotel_retailer_id: "hotel-1",
+          hotel_room_id: "room-1",
+          base_price: 2000,
+          currencyCode: "INR",
+          image: [],
+        },
+      ],
+      CATALOG_ID,
+    );
+
+    const stored = db.createMany.mock.calls[0][0].data[0];
+    expect(stored.hotelRoomProps).toBeDefined();
+    expect(metaRequests()[0].data.base_price).toBe("2000 INR");
+  });
+});
+
+describe("getCatalogProducts", () => {
+  test("lists the catalog's products", async () => {
+    db.findMany.mockResolvedValue([{ id: "prod-1" }]);
+
+    const result = await getCatalogProducts(CATALOG_ID);
+
+    expect(db.findMany).toHaveBeenCalledWith({ where: { catalogId: CATALOG_ID } });
+    expect(result).toEqual([{ id: "prod-1" }]);
+  });
+
+  // NOTE: the query parameter is accepted and then ignored — it is named `_query`
+  // and never reaches the where clause, so any search or filter sent by the client
+  // silently does nothing.
+  test("ignores the query it is handed", async () => {
+    await getCatalogProducts(CATALOG_ID, { search: "shoe", limit: 5 } as any);
+
+    expect(db.findMany).toHaveBeenCalledWith({ where: { catalogId: CATALOG_ID } });
+  });
+});
+
+describe("deleteCatalogProducts", () => {
+  test("sends a DELETE request per product to Meta", async () => {
+    await deleteCatalogProducts(ORG_ID, CATALOG_ID, [{ id: "sku-1" }, { id: "sku-2" }] as any);
+
+    expect(metaRequests()).toEqual([
+      { method: "DELETE", data: { id: "sku-1" } },
+      { method: "DELETE", data: { id: "sku-2" } },
+    ]);
+  });
+
+  test("addresses a hotel by hotel_id rather than id", async () => {
+    getWaCatalogMock.mockResolvedValue({ vertical: "hotels" });
+
+    await deleteCatalogProducts(ORG_ID, CATALOG_ID, [{ id: "hotel-1" }] as any);
+
+    expect(metaRequests()[0].data).toEqual({ hotel_id: "hotel-1" });
+  });
+
+  test("deletes the matching rows locally after Meta accepts", async () => {
+    await deleteCatalogProducts(ORG_ID, CATALOG_ID, [{ id: "sku-1" }] as any);
+
+    expect(db.deleteMany).toHaveBeenCalled();
+    expect(db.deleteMany.mock.calls[0][0].where.retailer_id).toEqual({ in: ["sku-1"] });
+  });
+
+  // NOTE: the local delete matches on retailer_id alone — there is no catalogId in
+  // the where clause. Two catalogs (or two orgs) holding the same retailer_id means
+  // deleting from one deletes the other's row too.
+  test("does not confine the local delete to the catalog being deleted from", async () => {
+    await deleteCatalogProducts(ORG_ID, CATALOG_ID, [{ id: "sku-1" }] as any);
+
+    expect(db.deleteMany.mock.calls[0][0].where).not.toHaveProperty("catalogId");
+  });
+
+  test("does not delete locally when Meta rejects the batch", async () => {
+    callMetaApiMock.mockRejectedValue(new Error("meta rejected"));
+
+    await expect(
+      deleteCatalogProducts(ORG_ID, CATALOG_ID, [{ id: "sku-1" }] as any),
+    ).rejects.toThrow("meta rejected");
+    expect(db.deleteMany).not.toHaveBeenCalled();
+  });
+
+  // NOTE: the hotel_room branch sends the whole id object as hotel_room_id rather
+  // than its `id` field, so Meta receives an object where it expects a string.
+  test("sends the whole identifier object as the room id", async () => {
+    getWaCatalogMock.mockResolvedValue({ vertical: "hotel_room" });
+    const identifier = { id: "room-1", hotel_retailer_id: "hotel-1" };
+
+    await deleteCatalogProducts(ORG_ID, CATALOG_ID, [identifier] as any);
+
+    expect(metaRequests()[0].data).toEqual({
+      hotel_retailer_id: "hotel-1",
+      hotel_room_id: identifier,
+    });
+  });
+});
+
+describe("updateCatalogProducts", () => {
+  test("sends an UPDATE request per item", async () => {
+    await updateCatalogProducts(ORG_ID, CATALOG_ID, [productItem()], "PRODUCT_ITEM");
+
+    expect(metaRequests()[0].method).toBe("UPDATE");
+  });
+
+  // NOTE: create formats the price with parseFloat(...).toFixed(2) but update does
+  // not, so the same product sends "99.50 INR" on create and "99.5 INR" on update.
+  test("sends an unformatted price, unlike create", async () => {
+    await updateCatalogProducts(ORG_ID, CATALOG_ID, [productItem({ price: 99.5 })], "PRODUCT_ITEM");
+
+    expect(metaRequests()[0].data.price).toBe("99.5 INR");
+  });
+
+  test("quotes the internal labels as create does", async () => {
+    await updateCatalogProducts(
+      ORG_ID,
+      CATALOG_ID,
+      [productItem({ internal_label: ["sale"] })],
+      "PRODUCT_ITEM",
+    );
+
+    expect(metaRequests()[0].data.internal_label).toEqual(["'sale'"]);
+  });
+
+  test("leaves the labels alone when the update does not mention them", async () => {
+    await updateCatalogProducts(
+      ORG_ID,
+      CATALOG_ID,
+      [productItem({ internal_label: undefined })],
+      "PRODUCT_ITEM",
+    );
+
+    expect(metaRequests()[0].data.internal_label).toBeUndefined();
+  });
+
+  test("updates the local row by catalog and retailer id together", async () => {
+    await updateCatalogProducts(ORG_ID, CATALOG_ID, [productItem()], "PRODUCT_ITEM");
+
+    expect(db.update.mock.calls[0][0].where).toEqual({
+      catalog_retailer_id_unique: { catalogId: CATALOG_ID, retailer_id: "sku-1" },
+    });
+  });
+
+  test("writes the item's fields into productProps", async () => {
+    await updateCatalogProducts(ORG_ID, CATALOG_ID, [productItem()], "PRODUCT_ITEM");
+
+    expect(db.update.mock.calls[0][0].data.productProps).toMatchObject({
+      title: "Running shoe",
+      currency: "INR",
+      image_link: "https://img/1.png",
+    });
+  });
+
+  test("updates every item it was given", async () => {
+    await updateCatalogProducts(
+      ORG_ID,
+      CATALOG_ID,
+      [productItem(), productItem({ retailer_id: "sku-2" })],
+      "PRODUCT_ITEM",
+    );
+
+    expect(db.update).toHaveBeenCalledTimes(2);
+  });
+
+  test("does not touch the local rows when Meta rejects the batch", async () => {
+    callMetaApiMock.mockRejectedValue(new Error("meta rejected"));
+
+    await expect(
+      updateCatalogProducts(ORG_ID, CATALOG_ID, [productItem()], "PRODUCT_ITEM"),
+    ).rejects.toThrow("meta rejected");
+    expect(db.update).not.toHaveBeenCalled();
+  });
+});

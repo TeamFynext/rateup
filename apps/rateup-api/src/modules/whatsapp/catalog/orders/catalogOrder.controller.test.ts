@@ -1,0 +1,171 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+vi.mock("./catalogOrder.service.js", () => ({ getWaCatalogOrders: vi.fn() }));
+vi.mock("../../../../utils/logger.js", () => ({
+  log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
+}));
+
+import { getWaCatalogOrders } from "./catalogOrder.service.js";
+import { log } from "../../../../utils/logger.js";
+import { orderPaginateSchema } from "./catalogOrder.schema.js";
+import { getWaCatalogOrdersHandler } from "./catalogOrder.controller.js";
+
+type Mock = ReturnType<typeof vi.fn>;
+
+const getOrdersMock = getWaCatalogOrders as unknown as Mock;
+
+const RESULT = { data: [{ id: "order-1" }], totalCount: 1 };
+
+function makeReply() {
+  const reply: any = {
+    statusCode: undefined,
+    payload: undefined,
+    code: vi.fn((c: number) => {
+      reply.statusCode = c;
+      return reply;
+    }),
+    send: vi.fn((p?: unknown) => {
+      reply.payload = p;
+      return reply;
+    }),
+  };
+  return reply;
+}
+
+function makeRequest(overrides: Record<string, unknown> = {}) {
+  return {
+    params: { catalogId: "cat-1" },
+    query: {},
+    body: {},
+    user: { orgId: "org-1", userId: "user-1" },
+    ...overrides,
+  } as any;
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  getOrdersMock.mockResolvedValue(RESULT);
+});
+
+describe("getWaCatalogOrdersHandler", () => {
+  test("returns the catalog's orders", async () => {
+    const reply = makeReply();
+
+    await getWaCatalogOrdersHandler(makeRequest({ query: { page: 0, limit: 50 } }), reply);
+
+    expect(getOrdersMock).toHaveBeenCalledWith("cat-1", {
+      page: 0,
+      limit: 50,
+      storeType: undefined,
+    });
+    expect(reply.code).toHaveBeenCalledWith(200);
+    expect(reply.payload).toEqual(RESULT);
+  });
+
+  test("passes the requested page, size and store type through", async () => {
+    await getWaCatalogOrdersHandler(
+      makeRequest({ query: { page: 2, limit: 25, storeType: "SHOPIFY" } }),
+      makeReply(),
+    );
+
+    expect(getOrdersMock).toHaveBeenCalledWith("cat-1", {
+      page: 2,
+      limit: 25,
+      storeType: "SHOPIFY",
+    });
+  });
+
+  test("defaults the page size to fifty", async () => {
+    await getWaCatalogOrdersHandler(makeRequest({ query: { page: 0 } }), makeReply());
+
+    expect(getOrdersMock.mock.calls[0][1].limit).toBe(50);
+  });
+
+  // NOTE: the handler defaults page to 1, but the service treats page as zero-based
+  // (skip = page * limit), so page 1 skips the first 50 orders. The two disagree:
+  // either the default should be 0 or the skip maths should be (page - 1).
+  // On the real route the schema requires `page`, so this default is only reachable
+  // when the handler is called directly — but a client that sends page=1 meaning
+  // "the first page" is silently shown records 51-100.
+  test("defaults to a page the service will treat as the second one", async () => {
+    await getWaCatalogOrdersHandler(makeRequest({ query: {} }), makeReply());
+
+    expect(getOrdersMock.mock.calls[0][1]).toMatchObject({ page: 1, limit: 50 });
+  });
+
+  test("honours an explicit page of zero rather than defaulting it away", async () => {
+    await getWaCatalogOrdersHandler(makeRequest({ query: { page: 0 } }), makeReply());
+
+    expect(getOrdersMock.mock.calls[0][1].page).toBe(0);
+  });
+
+  // NOTE: the catalog id comes straight from the path and nothing compares it to the
+  // caller's org, so another org's orders — customer names and phone numbers included
+  // — are returned.
+  test("returns another org's orders given its catalog id", async () => {
+    const reply = makeReply();
+
+    await getWaCatalogOrdersHandler(
+      makeRequest({ params: { catalogId: "cat-victim" }, query: {} }),
+      reply,
+    );
+
+    expect(getOrdersMock.mock.calls[0][0]).toBe("cat-victim");
+    expect(reply.code).not.toHaveBeenCalledWith(403);
+  });
+
+  test("returns 500 and logs when the lookup fails", async () => {
+    getOrdersMock.mockRejectedValue(new Error("db down"));
+    const reply = makeReply();
+
+    await getWaCatalogOrdersHandler(makeRequest({ query: {} }), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(500);
+    expect(log.error).toHaveBeenCalled();
+  });
+});
+
+// The route validates the query string with this schema before the handler runs, so
+// what it coerces decides what the handler's defaults ever see.
+describe("orderPaginateSchema", () => {
+  test("turns the query string's numbers into real numbers", () => {
+    const parsed = orderPaginateSchema.parse({ page: "2", limit: "25" });
+
+    expect(parsed).toEqual({ page: 2, limit: 25 });
+  });
+
+  test("keeps an optional store type when given", () => {
+    expect(orderPaginateSchema.parse({ page: "0", limit: "10", storeType: "NATIVE" })).toEqual({
+      page: 0,
+      limit: 10,
+      storeType: "NATIVE",
+    });
+  });
+
+  test("accepts a request with no store type", () => {
+    expect(orderPaginateSchema.parse({ page: "0", limit: "10" }).storeType).toBeUndefined();
+  });
+
+  // NOTE: page and limit are required by the schema, so the handler's `page = 1` and
+  // `limit = 50` defaults can only apply if the schema is bypassed — on the real
+  // route a request omitting them is rejected before the handler is reached.
+  test.each([
+    ["page", { limit: "10" }],
+    ["limit", { page: "0" }],
+    ["both", {}],
+  ])("rejects a query missing %s", (_name, query) => {
+    expect(() => orderPaginateSchema.parse(query)).toThrow();
+  });
+
+  test("rejects a page that is not a number", () => {
+    expect(() => orderPaginateSchema.parse({ page: "abc", limit: "10" })).toThrow();
+  });
+
+  // Coercion is permissive: it accepts values that are not sensible page numbers.
+  test.each([
+    ["a negative page", { page: "-1", limit: "10" }, -1],
+    ["a fractional page", { page: "1.5", limit: "10" }, 1.5],
+  ])("accepts %s", (_name, query, expected) => {
+    expect(orderPaginateSchema.parse(query).page).toBe(expected);
+  });
+});

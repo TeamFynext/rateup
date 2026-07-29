@@ -1,0 +1,613 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+vi.mock("axios", () => ({ default: { get: vi.fn(), post: vi.fn() } }));
+vi.mock("../../../utils/prisma.js", () => ({
+  default: {
+    waFlow: {
+      create: vi.fn(),
+      delete: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+    },
+    survey: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+  },
+  excludeFields: vi.fn(),
+}));
+vi.mock("../settings/wa_settings.service.js", () => ({ getWaSettings: vi.fn() }));
+vi.mock("../wa_axios.js", () => ({
+  callMetaApi: vi.fn(),
+  GraphApiError: class GraphApiError extends Error {},
+}));
+vi.mock("./flow.utils.js", () => ({
+  convertHeaderToNewQuestion: vi.fn((json) => json),
+  generateFlowMessageData: vi.fn(() => ({ type: "interactive" })),
+  generateQuestionResponsesFromFlowResponse: vi.fn(() => []),
+  getFlowFormElementNameFromQuestionId: vi.fn(),
+  getFlowJsonWithTitleAndDescription: vi.fn((json) => json),
+  injectIdToFlowJson: vi.fn((json) => json),
+  parseFlowResponse: vi.fn(),
+  parseFlowResponseV2: vi.fn(),
+  parseResponseFromCurrentScreenResponse: vi.fn(() => []),
+  parseResponseFromCurrentScreenResponseV2: vi.fn(() => []),
+  removeEmptyStrings: vi.fn(),
+  removeIdFromFlowJson: vi.fn((json) => json),
+  sanitizeScreenData: vi.fn(),
+  transformFlowAndLogicJumps: vi.fn(),
+}));
+vi.mock("../../survey/survey.service.js", () => ({
+  getGoogleUrlBySurveyTeamMapId: vi.fn(),
+  getSurveyById: vi.fn(),
+}));
+vi.mock("../whatsappSurvey/wasurvey.service.js", () => ({
+  deleteSession: vi.fn(),
+  getSession: vi.fn(),
+  saveResponses: vi.fn(),
+  sendMessage: vi.fn(),
+  shouldShowGoogleReview: vi.fn(),
+  shouldShowGoogleReviewV2: vi.fn(),
+  updateSession: vi.fn(),
+}));
+vi.mock("../../question/question.utils.js", () => ({
+  validateLogic: vi.fn(),
+  validateLogicV2: vi.fn(),
+}));
+vi.mock("../whatsappSurvey/wasurvey.utils.js", () => ({
+  createCTAButtonMessage: vi.fn(() => ({ type: "cta" })),
+  parseMessage: vi.fn(),
+}));
+vi.mock("../../../utils/commonUtils.js", () => ({
+  getShortUrlId: vi.fn(() => "short-1"),
+  shortIdUniqueConstraintErrHandler: vi.fn((fn) => fn()),
+}));
+vi.mock("../../integrations/integrations.service.js", () => ({
+  getIntegrationByName: vi.fn(),
+  getWaAmeliaTimeSlot: vi.fn(),
+}));
+vi.mock("../../team/team.service.js", () => ({ getTeamIdsByUserId: vi.fn() }));
+vi.mock("../whatsappSurvey/wasurvey.controller.js", () => ({ processNextNode: vi.fn() }));
+vi.mock("../whatsappSurvey/automation-logger.utils.js", () => ({
+  findRecentAutomation: vi.fn(),
+  logFlowCompletion: vi.fn(),
+}));
+vi.mock("../../../utils/logger.js", () => ({
+  log: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
+}));
+
+import axios from "axios";
+import prisma from "../../../utils/prisma.js";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import { callMetaApi } from "../wa_axios.js";
+import { generateFlowMessageData } from "./flow.utils.js";
+import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
+import { getTeamIdsByUserId } from "../../team/team.service.js";
+import { WaFlowStatus } from "../../../types/enums.js";
+import {
+  cloneFlow,
+  createFlowCopyInDb,
+  deleteFlowInDb,
+  deleteFlowInWa,
+  deprecateFlowInWa,
+  getFlowBySurveyId,
+  getFlowFromDb,
+  getFlowFromDbByFlowId,
+  getFlowPreview,
+  getFlowPreviewFromDb,
+  getFlowsFromDb,
+  getUnsyncedFlows,
+  publishFlowInWa,
+  removeDuplicateResponses,
+  sendFlow,
+  syncLocalFlowToWhatsapp,
+  updateFlowIdAndStatusInDb,
+  updateFlowInDb,
+  updateFlowJsonInWa,
+} from "./flow.service.js";
+
+type Mock = ReturnType<typeof vi.fn>;
+
+const db = prisma as unknown as {
+  waFlow: Record<"create" | "delete" | "findFirst" | "findMany" | "update", Mock>;
+  survey: Record<"create" | "findMany" | "findUnique" | "update", Mock>;
+};
+const axiosMock = axios as unknown as { get: Mock; post: Mock };
+const getWaSettingsMock = getWaSettings as unknown as Mock;
+const callMetaApiMock = callMetaApi as unknown as Mock;
+const generateFlowMessageDataMock = generateFlowMessageData as unknown as Mock;
+const sendMessageMock = sendMessage as unknown as Mock;
+const getTeamIdsMock = getTeamIdsByUserId as unknown as Mock;
+
+const ORG_A = "org-a";
+const ORG_B = "org-b";
+const DB_FLOW_ID = "dbflow-1";
+
+const SETTINGS = { wabaId: "waba-1", accessToken: "token-abc" };
+
+/** A stored flow row, owned by org A unless told otherwise. */
+function flowRow(overrides: Record<string, unknown> = {}): any {
+  return {
+    dbFlowId: DB_FLOW_ID,
+    flowId: "wa-flow-1",
+    orgId: ORG_A,
+    surveyId: "survey-1",
+    name: "Feedback",
+    status: WaFlowStatus.DRAFT,
+    version: 1,
+    json: { screens: [{ id: "S1", layout: { children: [] } }] },
+    map: {},
+    logicJumps: {},
+    templateMessage: { body: "b", cta: "c" },
+    survey: { id: "survey-1", questions: [] },
+    ...overrides,
+  };
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  getWaSettingsMock.mockResolvedValue(SETTINGS);
+  callMetaApiMock.mockResolvedValue({ data: { data: [] } });
+  axiosMock.post.mockResolvedValue({ data: {} });
+  axiosMock.get.mockResolvedValue({ data: {} });
+  getTeamIdsMock.mockResolvedValue(["team-1"]);
+  db.waFlow.findFirst.mockResolvedValue(flowRow());
+  db.waFlow.findMany.mockResolvedValue([]);
+  db.waFlow.update.mockResolvedValue(flowRow());
+  db.waFlow.create.mockResolvedValue(flowRow());
+  db.waFlow.delete.mockResolvedValue(flowRow());
+  db.survey.update.mockResolvedValue({});
+  db.survey.findMany.mockResolvedValue([]);
+});
+
+describe("reading a flow - who is allowed to see it", () => {
+  // NOTE: pins current behaviour. getFlowFromDb keys on dbFlowId alone and takes no
+  // org at all. Every handler that starts from a path :dbFlowId goes through it —
+  // get, update, delete, deprecate, publish, clone, preview, push-to-wa — and none
+  // of them compares the result's orgId to req.user.orgId afterwards. All those
+  // routes sit behind checkSession, so this is an authenticated user of one org
+  // reading another's flow. Same family as issues.txt 1.1. See issues.txt 11.1.
+  test("returns a flow without being told which org is asking", async () => {
+    db.waFlow.findFirst.mockResolvedValue(flowRow({ orgId: ORG_B }));
+
+    const flow = await getFlowFromDb(DB_FLOW_ID);
+
+    expect(flow.orgId).toBe(ORG_B);
+    expect(db.waFlow.findFirst.mock.calls[0][0]).toEqual({ where: { dbFlowId: DB_FLOW_ID } });
+  });
+
+  test("scopes a lookup by Meta flow id to the caller's org, as it should", async () => {
+    await getFlowFromDbByFlowId(ORG_A, "wa-flow-1");
+
+    expect(db.waFlow.findFirst.mock.calls[0][0]).toEqual({
+      where: { flowId: "wa-flow-1", orgId: ORG_A },
+    });
+  });
+
+  test("lists only the flows of the caller's org, and only their own teams'", async () => {
+    await getFlowsFromDb(ORG_A, "user-1");
+
+    const { where } = db.waFlow.findMany.mock.calls[0][0];
+    expect(where.orgId).toBe(ORG_A);
+    expect(where.survey.teams.some.teamId).toEqual({ in: ["team-1"] });
+  });
+
+  // NOTE: pins current behaviour. Same gap as above, reached from a different
+  // direction — campaign, response and survey all call this by survey id.
+  // See issues.txt 11.1.
+  test("finds a flow by survey id with no org to scope it by", async () => {
+    await getFlowBySurveyId("survey-1");
+
+    expect(db.waFlow.findFirst.mock.calls[0][0]).toEqual({ where: { surveyId: "survey-1" } });
+  });
+});
+
+describe("updateFlowInDb", () => {
+  test("trims the name it is given", async () => {
+    await updateFlowInDb(ORG_A, DB_FLOW_ID, { name: "  Feedback  " });
+
+    expect(db.waFlow.update.mock.calls[0][0].data.name).toBe("Feedback");
+  });
+
+  test("renames the survey alongside the flow", async () => {
+    db.waFlow.update.mockResolvedValue(flowRow({ surveyId: "survey-1" }));
+
+    await updateFlowInDb(ORG_A, DB_FLOW_ID, { name: "New name" });
+
+    expect(db.survey.update.mock.calls[0][0]).toEqual({
+      where: { id: "survey-1" },
+      data: { title: "New name", isPublished: undefined },
+    });
+  });
+
+  test("publishes the survey when the flow is published", async () => {
+    await updateFlowInDb(ORG_A, DB_FLOW_ID, { status: WaFlowStatus.PUBLISHED });
+
+    expect(db.survey.update.mock.calls[0][0].data.isPublished).toBe(true);
+  });
+
+  test("leaves the survey alone for an edit that touches neither name nor status", async () => {
+    await updateFlowInDb(ORG_A, DB_FLOW_ID, { pendingSave: true });
+
+    expect(db.survey.update).not.toHaveBeenCalled();
+  });
+
+  // NOTE: pins current behaviour. The first parameter is named orgId and is never
+  // read — the update is keyed on dbFlowId alone, so the caller's org is accepted
+  // in good faith and thrown away. Identical to the `_orgId` case in issues.txt 1.2.
+  // See issues.txt 11.1.
+  test("does not scope the update to the org it is handed", async () => {
+    await updateFlowInDb(ORG_A, DB_FLOW_ID, { name: "Renamed by another org" });
+
+    expect(db.waFlow.update.mock.calls[0][0].where).toEqual({ dbFlowId: DB_FLOW_ID });
+    expect(JSON.stringify(db.waFlow.update.mock.calls[0][0])).not.toContain(ORG_A);
+  });
+
+  // NOTE: same gap on the delete side. See issues.txt 11.1.
+  test("takes no org to scope the delete by", async () => {
+    await deleteFlowInDb(DB_FLOW_ID);
+
+    expect(db.waFlow.delete.mock.calls[0][0]).toEqual({ where: { dbFlowId: DB_FLOW_ID } });
+  });
+});
+
+describe("syncLocalFlowToWhatsapp", () => {
+  test("uploads the json and then publishes the flow", async () => {
+    await syncLocalFlowToWhatsapp(ORG_A, DB_FLOW_ID);
+
+    expect(axiosMock.post.mock.calls[0][0]).toContain("/wa-flow-1/assets");
+    expect(callMetaApiMock.mock.calls[0][0]).toBe("/wa-flow-1/publish");
+  });
+
+  test("records the flow as published and no longer pending", async () => {
+    await syncLocalFlowToWhatsapp(ORG_A, DB_FLOW_ID);
+
+    expect(db.waFlow.update.mock.calls[0][0].data).toMatchObject({
+      pendingSave: false,
+      status: WaFlowStatus.PUBLISHED,
+    });
+  });
+
+  // NOTE: pins current behaviour, and this is the one that costs a user their work.
+  // updateFlowJsonInWa catches the upload failure, logs it at TRACE level and
+  // returns normally (flow.service.ts:605-607). syncLocalFlowToWhatsapp then
+  // publishes and marks the row PUBLISHED with pendingSave cleared, and
+  // saveFlowJsonToWhatsappHandler answers 200. The editor shows no unsaved
+  // changes while WhatsApp still serves the previous json. See issues.txt 11.2.
+  test("still reports the flow saved and published when the upload to Meta failed", async () => {
+    axiosMock.post.mockRejectedValue(new Error("meta rejected the asset"));
+
+    await expect(syncLocalFlowToWhatsapp(ORG_A, DB_FLOW_ID)).resolves.toBeUndefined();
+
+    expect(db.waFlow.update.mock.calls[0][0].data).toMatchObject({
+      pendingSave: false,
+      status: WaFlowStatus.PUBLISHED,
+    });
+  });
+
+  // NOTE: same gap as getFlowFromDb — the row is fetched by dbFlowId with no org,
+  // so the orgId argument only picks whose WhatsApp credentials to publish with.
+  // See issues.txt 11.1.
+  test("loads the flow to sync without checking it belongs to the org syncing it", async () => {
+    db.waFlow.findFirst.mockResolvedValue(flowRow({ orgId: ORG_B }));
+
+    await syncLocalFlowToWhatsapp(ORG_A, DB_FLOW_ID);
+
+    expect(db.waFlow.findFirst.mock.calls[0][0].where).toEqual({ dbFlowId: DB_FLOW_ID });
+    expect(getWaSettingsMock).toHaveBeenCalledWith(ORG_A);
+  });
+});
+
+describe("updateFlowJsonInWa", () => {
+  test("uploads the json to Meta as a flow.json asset", async () => {
+    await updateFlowJsonInWa(ORG_A, "wa-flow-1", { screens: [] } as any);
+
+    const [url, , config] = axiosMock.post.mock.calls[0];
+    expect(url).toBe("https://graph.facebook.com/v21.0/wa-flow-1/assets");
+    expect(config.headers.Authorization).toBe("Bearer token-abc");
+  });
+
+  // NOTE: pins current behaviour. The catch logs at TRACE — the level that is off
+  // in production — and returns as though the upload succeeded. There is no return
+  // value for a caller to check either. See issues.txt 11.2.
+  test("reports nothing at all when Meta rejects the upload", async () => {
+    axiosMock.post.mockRejectedValue(new Error("meta rejected the asset"));
+
+    await expect(
+      updateFlowJsonInWa(ORG_A, "wa-flow-1", { screens: [] } as any),
+    ).resolves.toBeUndefined();
+  });
+});
+
+describe("cloneFlow", () => {
+  const SURVEY = {
+    id: "survey-1",
+    orgId: ORG_A,
+    title: "Feedback",
+    spreadSheetId: "sheet-1",
+    isPublished: true,
+  };
+
+  beforeEach(() => {
+    db.survey.findUnique.mockResolvedValue(SURVEY);
+    db.survey.create.mockResolvedValue({ id: "survey-2", title: "Feedback Copy 1" });
+  });
+
+  test("refuses when the flow's survey is gone", async () => {
+    db.survey.findUnique.mockResolvedValue(null);
+
+    await expect(cloneFlow(flowRow(), "wa-flow-2", "user-1", "team-1")).resolves.toBe(
+      "Survey not found to duplicate",
+    );
+  });
+
+  test("names the copy after the original", async () => {
+    await cloneFlow(flowRow(), "wa-flow-2", "user-1", "team-1");
+
+    expect(db.survey.create.mock.calls[0][0].data.title).toBe("Feedback Copy 1");
+  });
+
+  test("numbers the next copy past the highest one that already exists", async () => {
+    db.survey.findMany.mockResolvedValue([
+      { title: "Feedback" },
+      { title: "Feedback Copy 1" },
+      { title: "Feedback Copy 4" },
+    ]);
+
+    await cloneFlow(flowRow(), "wa-flow-2", "user-1", "team-1");
+
+    expect(db.survey.create.mock.calls[0][0].data.title).toBe("Feedback Copy 5");
+  });
+
+  test("starts the copy unpublished and credited to whoever cloned it", async () => {
+    await cloneFlow(flowRow(), "wa-flow-2", "user-1", "team-1");
+
+    const { data } = db.survey.create.mock.calls[0][0];
+    expect(data.isPublished).toBe(false);
+    expect(data.createdBy).toBe("user-1");
+    expect(data).not.toHaveProperty("spreadSheetId");
+  });
+
+  test("creates the cloned flow as a draft against the new survey", async () => {
+    await cloneFlow(flowRow(), "wa-flow-2", "user-1", "team-1");
+
+    expect(db.waFlow.create.mock.calls[0][0].data).toMatchObject({
+      flowId: "wa-flow-2",
+      status: WaFlowStatus.DRAFT,
+      surveyId: "survey-2",
+    });
+  });
+
+  // NOTE: pins current behaviour. The query that works out the next copy number
+  // filters on the title prefix alone, with no orgId — so the number is chosen by
+  // looking at every org's survey titles. Two effects: another org's titles are
+  // read, and a copy in your own org can be numbered "Copy 7" because a stranger
+  // has six. See issues.txt 11.3.
+  test("counts existing copies across every org, not just the caller's", async () => {
+    await cloneFlow(flowRow(), "wa-flow-2", "user-1", "team-1");
+
+    const { where } = db.survey.findMany.mock.calls[0][0];
+    expect(where).toEqual({ AND: [{ title: { startsWith: "Feedback" } }] });
+    expect(JSON.stringify(where)).not.toContain("orgId");
+  });
+
+  // NOTE: same gap on the read that starts the clone. See issues.txt 11.1.
+  test("loads the survey to clone by id alone", async () => {
+    await cloneFlow(flowRow(), "wa-flow-2", "user-1", "team-1");
+
+    expect(db.survey.findUnique.mock.calls[0][0]).toEqual({ where: { id: "survey-1" } });
+  });
+});
+
+describe("createFlowCopyInDb", () => {
+  test("defaults a new flow to version 2 with a starter template message", async () => {
+    await createFlowCopyInDb({
+      orgId: ORG_A,
+      flowId: "wa-flow-1",
+      json: { screens: [] } as any,
+      flowMap: {},
+      surveyId: "survey-1",
+      status: WaFlowStatus.DRAFT,
+      name: "Feedback",
+    });
+
+    expect(db.waFlow.create.mock.calls[0][0].data).toMatchObject({
+      version: 2,
+      logicJumps: {},
+      templateMessage: { body: "Would you like to start survey?", cta: "Open" },
+    });
+  });
+});
+
+describe("the Meta-side flow operations", () => {
+  test("publishes with the org's own credentials", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { success: true } });
+
+    await expect(publishFlowInWa(ORG_A, "wa-flow-1")).resolves.toEqual({ success: true });
+    expect(callMetaApiMock.mock.calls[0].slice(0, 3)).toEqual([
+      "/wa-flow-1/publish",
+      "POST",
+      "token-abc",
+    ]);
+  });
+
+  test("deprecates through the dedicated endpoint", async () => {
+    await deprecateFlowInWa(ORG_A, "wa-flow-1");
+
+    expect(callMetaApiMock.mock.calls[0].slice(0, 2)).toEqual(["/wa-flow-1/deprecate", "POST"]);
+  });
+
+  test("deletes through a DELETE on the flow itself", async () => {
+    await deleteFlowInWa(ORG_A, "wa-flow-1");
+
+    expect(callMetaApiMock.mock.calls[0].slice(0, 2)).toEqual(["/wa-flow-1", "DELETE"]);
+  });
+
+  test("passes a Meta failure on to the caller", async () => {
+    callMetaApiMock.mockRejectedValue(new Error("graph is down"));
+
+    await expect(publishFlowInWa(ORG_A, "wa-flow-1")).rejects.toThrow("graph is down");
+  });
+});
+
+describe("getUnsyncedFlows", () => {
+  test("reports the flows Meta knows about that we have never imported", async () => {
+    callMetaApiMock.mockResolvedValue({
+      data: { data: [{ id: "wa-flow-1" }, { id: "wa-flow-2" }] },
+    });
+    db.waFlow.findMany.mockResolvedValue([{ flowId: "wa-flow-1" }]);
+
+    await expect(getUnsyncedFlows(ORG_A, "user-1")).resolves.toEqual([{ id: "wa-flow-2" }]);
+  });
+
+  test("reports nothing when everything is already imported", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { data: [{ id: "wa-flow-1" }] } });
+    db.waFlow.findMany.mockResolvedValue([{ flowId: "wa-flow-1" }]);
+
+    await expect(getUnsyncedFlows(ORG_A, "user-1")).resolves.toEqual([]);
+  });
+});
+
+describe("updateFlowIdAndStatusInDb", () => {
+  test("points the flow at its new Meta id and takes the survey back to draft", async () => {
+    await updateFlowIdAndStatusInDb(DB_FLOW_ID, "wa-flow-2", "survey-1");
+
+    expect(db.waFlow.update.mock.calls[0][0]).toEqual({
+      where: { dbFlowId: DB_FLOW_ID },
+      data: { flowId: "wa-flow-2", status: WaFlowStatus.DRAFT },
+    });
+    expect(db.survey.update.mock.calls[0][0]).toEqual({
+      where: { id: "survey-1" },
+      data: { isPublished: false },
+    });
+  });
+});
+
+describe("getFlowPreview", () => {
+  const FUTURE = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const PAST = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+  test("reuses a cached preview that has not expired", async () => {
+    db.waFlow.findFirst.mockResolvedValue(flowRow({ preview: { expires_at: FUTURE, url: "u" } }));
+
+    await expect(getFlowPreview(ORG_A, DB_FLOW_ID)).resolves.toEqual({
+      expires_at: FUTURE,
+      url: "u",
+    });
+    expect(callMetaApiMock).not.toHaveBeenCalled();
+  });
+
+  test("fetches a fresh preview once the cached one has expired, and stores it", async () => {
+    db.waFlow.findFirst.mockResolvedValue(flowRow({ preview: { expires_at: PAST } }));
+    callMetaApiMock.mockResolvedValue({ data: { preview: { url: "fresh" } } });
+
+    await expect(getFlowPreview(ORG_A, DB_FLOW_ID)).resolves.toEqual({ url: "fresh" });
+    expect(callMetaApiMock.mock.calls[0][0]).toBe("/wa-flow-1?fields=preview");
+    expect(db.waFlow.update.mock.calls[0][0].data).toEqual({ preview: { url: "fresh" } });
+  });
+
+  test("fetches a preview for a flow that has never had one", async () => {
+    callMetaApiMock.mockResolvedValue({ data: { preview: { url: "fresh" } } });
+
+    await expect(getFlowPreview(ORG_A, DB_FLOW_ID)).resolves.toEqual({ url: "fresh" });
+  });
+
+  // NOTE: pins current behaviour. getFlowPreviewFromDb reads `flow.preview` with no
+  // null check, so an id that matches nothing raises a TypeError rather than
+  // reporting nothing. Nothing calls it today — it is dead alongside getFlowPreview,
+  // which does the same job properly. See issues.txt 11.11.
+  test("throws rather than reporting nothing for a flow id that matches nothing", async () => {
+    db.waFlow.findFirst.mockResolvedValue(null);
+
+    await expect(getFlowPreviewFromDb("nope")).rejects.toThrow(TypeError);
+  });
+});
+
+describe("sendFlow", () => {
+  test("builds the flow message and sends it to the given number", async () => {
+    generateFlowMessageDataMock.mockReturnValue({ type: "interactive" });
+
+    await expect(
+      sendFlow({ orgId: ORG_A, dbFlowId: DB_FLOW_ID, phone: "15550001", userId: "user-1" }),
+    ).resolves.toBe(true);
+
+    expect(sendMessageMock.mock.calls[0][1]).toEqual({ type: "interactive", to: "15550001" });
+  });
+
+  test("sends through the phone number the caller asked for", async () => {
+    await sendFlow({
+      orgId: ORG_A,
+      dbFlowId: DB_FLOW_ID,
+      phone: "15550001",
+      whatsappSettingsPhoneId: "phone-2",
+    });
+
+    expect(sendMessageMock.mock.calls[0][4]).toBe("phone-2");
+  });
+
+  test("reports failure rather than throwing when the send fails", async () => {
+    sendMessageMock.mockRejectedValue(new Error("whatsapp is down"));
+
+    await expect(sendFlow({ orgId: ORG_A, dbFlowId: DB_FLOW_ID, phone: "15550001" })).resolves.toBe(
+      false,
+    );
+  });
+
+  test("reports failure when the flow cannot be turned into a message", async () => {
+    generateFlowMessageDataMock.mockImplementation(() => {
+      throw new Error("Flow has no screens");
+    });
+
+    await expect(sendFlow({ orgId: ORG_A, dbFlowId: DB_FLOW_ID, phone: "15550001" })).resolves.toBe(
+      false,
+    );
+    expect(sendMessageMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("removeDuplicateResponses", () => {
+  test("keeps the last answer given to each question", () => {
+    const result = removeDuplicateResponses([
+      { questionId: "q1", response: "first" },
+      { questionId: "q2", response: "only" },
+      { questionId: "q1", response: "corrected" },
+    ] as any);
+
+    expect(result).toEqual([
+      { questionId: "q1", response: "corrected" },
+      { questionId: "q2", response: "only" },
+    ]);
+  });
+
+  test("keeps the questions in the order they were first answered", () => {
+    const result = removeDuplicateResponses([
+      { questionId: "q2", response: "b" },
+      { questionId: "q1", response: "a" },
+    ] as any);
+
+    expect(result.map((r) => r.questionId)).toEqual(["q2", "q1"]);
+  });
+
+  test("copes with nothing to deduplicate", () => {
+    expect(removeDuplicateResponses([])).toEqual([]);
+  });
+
+  // NOTE: pins current behaviour. `responses.reverse()` reverses the caller's own
+  // array rather than a copy. Both callers do
+  // `session.responses = removeDuplicateResponses(session.responses)` so the damage
+  // is overwritten immediately — but anything that reads the array it passed in
+  // finds it silently reordered. See issues.txt 11.10.
+  test("reverses the array it was handed, in place", () => {
+    const input: any = [
+      { questionId: "q1", response: "a" },
+      { questionId: "q2", response: "b" },
+    ];
+
+    removeDuplicateResponses(input);
+
+    expect(input.map((r: any) => r.questionId)).toEqual(["q2", "q1"]);
+  });
+});
