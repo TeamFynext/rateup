@@ -3,7 +3,6 @@ import { log } from "../../utils/logger.js";
 
 import { META_AGENT_API_HOST, META_AGENT_API_VERSION } from "../../utils/meta.js";
 
-
 export class MetaAgentApiError extends Error {
   status: number;
   detail?: string;
