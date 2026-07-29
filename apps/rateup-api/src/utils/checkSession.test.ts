@@ -1,0 +1,233 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+vi.mock("supertokens-node/recipe/session/index.js", () => ({
+  default: { getSession: vi.fn() },
+}));
+vi.mock("./logger.js", () => ({
+  log: { error: vi.fn(), info: vi.fn(), trace: vi.fn(), warn: vi.fn() },
+}));
+vi.mock("./auditLog.js", () => ({ auditLogHook: vi.fn() }));
+
+import Session from "supertokens-node/recipe/session/index.js";
+import { log } from "./logger.js";
+import { auditLogHook } from "./auditLog.js";
+import { checkSession } from "./checkSession.js";
+import { checkRoleHandler } from "./checkRoleHandler.js";
+
+type Mock = ReturnType<typeof vi.fn>;
+
+const getSessionMock = Session.getSession as unknown as Mock;
+const auditLogHookMock = auditLogHook as unknown as Mock;
+
+const TOKEN_PAYLOAD = { role: "SUPER_ADMIN", orgId: "org-1", email: "owner@acme.com" };
+
+function makeSession(overrides: Record<string, unknown> = {}) {
+  return {
+    getUserId: () => "user-1",
+    getAccessTokenPayload: () => TOKEN_PAYLOAD,
+    ...overrides,
+  };
+}
+
+function makeReply() {
+  const reply: any = {
+    statusCode: undefined,
+    payload: undefined,
+    code: vi.fn((c: number) => {
+      reply.statusCode = c;
+      return reply;
+    }),
+    status: vi.fn((c: number) => {
+      reply.statusCode = c;
+      return reply;
+    }),
+    send: vi.fn((p?: unknown) => {
+      reply.payload = p;
+      return reply;
+    }),
+  };
+  return reply;
+}
+
+function makeRequest(overrides: Record<string, unknown> = {}) {
+  return { headers: {}, method: "GET", url: "/api/user/info", ...overrides } as any;
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  getSessionMock.mockResolvedValue(makeSession());
+});
+
+describe("checkSession - a valid session", () => {
+  test("puts the logged-in user id on the request", async () => {
+    const request = makeRequest();
+
+    await checkSession(request, makeReply());
+
+    expect(request.userId).toBe("user-1");
+  });
+
+  test("unpacks the identity the login stamped into the access token", async () => {
+    const request = makeRequest();
+
+    await checkSession(request, makeReply());
+
+    expect(request.user).toEqual({
+      userId: "user-1",
+      role: "SUPER_ADMIN",
+      orgId: "org-1",
+      email: "owner@acme.com",
+    });
+  });
+
+  test("lets the request through without a reply of its own", async () => {
+    const reply = makeReply();
+
+    await checkSession(makeRequest(), reply);
+
+    expect(reply.code).not.toHaveBeenCalled();
+    expect(reply.send).not.toHaveBeenCalled();
+  });
+
+  test("records the request in the audit log once the caller is known", async () => {
+    const request = makeRequest({ method: "POST" });
+    const reply = makeReply();
+
+    await checkSession(request, reply);
+
+    expect(auditLogHookMock).toHaveBeenCalledWith(request, reply);
+  });
+
+  test("carries an incomplete token payload through as undefined fields", async () => {
+    getSessionMock.mockResolvedValue(
+      makeSession({ getAccessTokenPayload: () => ({ email: "owner@acme.com" }) }),
+    );
+    const request = makeRequest();
+
+    await checkSession(request, makeReply());
+
+    expect(request.user).toEqual({
+      userId: "user-1",
+      role: undefined,
+      orgId: undefined,
+      email: "owner@acme.com",
+    });
+  });
+});
+
+describe("checkSession - no usable session", () => {
+  test("answers 401 when there is no session at all", async () => {
+    getSessionMock.mockRejectedValue(new Error("unauthorised"));
+    const reply = makeReply();
+
+    await checkSession(makeRequest(), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.payload).toEqual({ message: "Not authorized" });
+  });
+
+  test("does not record an audit entry for a rejected request", async () => {
+    getSessionMock.mockRejectedValue(new Error("unauthorised"));
+
+    await checkSession(makeRequest(), makeReply());
+
+    expect(auditLogHookMock).not.toHaveBeenCalled();
+  });
+
+  test("answers 401 when the session carries no user id", async () => {
+    getSessionMock.mockResolvedValue(makeSession({ getUserId: () => "" }));
+    const reply = makeReply();
+
+    await checkSession(makeRequest(), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(log.error).toHaveBeenCalled();
+  });
+
+  test("answers 401 when the audit log write throws", async () => {
+    auditLogHookMock.mockRejectedValue(new Error("db down"));
+    const reply = makeReply();
+
+    await checkSession(makeRequest({ method: "POST" }), reply);
+
+    expect(reply.code).toHaveBeenCalledWith(401);
+  });
+
+  // NOTE: the guard replies 401 but does not return, so the handler chain continues
+  // with a request that was just rejected for having no user id.
+  test("still populates the request after replying 401 for a missing user id", async () => {
+    getSessionMock.mockResolvedValue(makeSession({ getUserId: () => "" }));
+    const request = makeRequest();
+
+    await checkSession(request, makeReply());
+
+    expect(request.user).toEqual({
+      userId: "",
+      role: "SUPER_ADMIN",
+      orgId: "org-1",
+      email: "owner@acme.com",
+    });
+    expect(auditLogHookMock).toHaveBeenCalled();
+  });
+});
+
+describe("checkRoleHandler", () => {
+  test("lets a caller holding the required role through", async () => {
+    const reply = makeReply();
+
+    await checkRoleHandler(["SUPER_ADMIN"])(makeRequest(), reply);
+
+    expect(reply.status).not.toHaveBeenCalled();
+  });
+
+  test("accepts any one of several allowed roles", async () => {
+    const reply = makeReply();
+
+    await checkRoleHandler(["ADMIN", "SUPER_ADMIN"])(makeRequest(), reply);
+
+    expect(reply.status).not.toHaveBeenCalled();
+  });
+
+  test("blocks a caller whose role is not allowed", async () => {
+    getSessionMock.mockResolvedValue(
+      makeSession({ getAccessTokenPayload: () => ({ ...TOKEN_PAYLOAD, role: "MEMBER" }) }),
+    );
+    const reply = makeReply();
+
+    await checkRoleHandler(["SUPER_ADMIN"])(makeRequest(), reply);
+
+    expect(reply.status).toHaveBeenCalledWith(403);
+    expect(reply.payload).toEqual({
+      error: "Permissions failed.",
+      message: "Action is only allowed for SUPER_ADMIN.",
+    });
+  });
+
+  test("blocks a session whose token carries no role", async () => {
+    getSessionMock.mockResolvedValue(makeSession({ getAccessTokenPayload: () => ({}) }));
+    const reply = makeReply();
+
+    await checkRoleHandler(["ADMIN"])(makeRequest(), reply);
+
+    expect(reply.status).toHaveBeenCalledWith(403);
+  });
+
+  test("lists every allowed role in the refusal", async () => {
+    getSessionMock.mockResolvedValue(
+      makeSession({ getAccessTokenPayload: () => ({ role: "MEMBER" }) }),
+    );
+    const reply = makeReply();
+
+    await checkRoleHandler(["ADMIN", "SUPER_ADMIN"])(makeRequest(), reply);
+
+    expect(reply.payload.message).toBe("Action is only allowed for ADMIN, SUPER_ADMIN.");
+  });
+
+  test("propagates a missing session rather than answering 403", async () => {
+    getSessionMock.mockRejectedValue(new Error("unauthorised"));
+
+    await expect(checkRoleHandler(["ADMIN"])(makeRequest(), makeReply())).rejects.toThrow(
+      "unauthorised",
+    );
+  });
+});
