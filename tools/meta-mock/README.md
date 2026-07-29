@@ -63,7 +63,7 @@ is preserved; its files are not.
 | `POST /v1/webhook/message` | `POST /__stub/webhook` — replays Meta's own payload |
 | `POST /webhook/statuses/:id` | `POST /__stub/status` |
 | automatic status progression | kept — opt-in, and deterministic |
-| port 3004 | port 3099 (`META_MOCK_PORT`) |
+| port 3004 | port 3099 (`PORT`) |
 
 Two differences worth knowing.
 
@@ -263,7 +263,7 @@ segment. Matching only one spelling leaves every Instagram path with an extra
 
 | Variable | Default |
 | --- | --- |
-| `META_MOCK_PORT` | `3099` |
+| `PORT` | `3099` |
 | `META_MOCK_HOST` | `127.0.0.1` |
 | `META_MOCK_WEBHOOK_URL` | `http://localhost:3001/api/wa/webhook` |
 | `META_MOCK_DEFAULT_API` | `whatsapp` — which API wins on shared endpoints |

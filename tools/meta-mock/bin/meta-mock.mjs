@@ -31,7 +31,7 @@ if (has("help")) {
   console.log(`
 meta-mock — a local stand-in for Meta's Graph API
 
-  --port <n>                 default 3099, or META_MOCK_PORT
+  --port <n>                 default 3099, or PORT
   --host <h>                 default 127.0.0.1
   --webhook-url <url>        where replayed webhooks and status callbacks go
   --status-progression       deliver sent → delivered → read after each send

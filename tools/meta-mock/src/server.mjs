@@ -23,7 +23,7 @@ import { listWebhooks, replayWebhook } from "./webhooks.mjs";
  * sending it.
  */
 export function createMetaMock(options = {}) {
-  const port = Number(options.port ?? process.env.META_MOCK_PORT ?? 3099);
+  const port = Number(options.port ?? process.env.PORT ?? 3099);
   const host = options.host ?? process.env.META_MOCK_HOST ?? "127.0.0.1";
   const verbose = options.verbose ?? process.env.META_MOCK_VERBOSE === "1";
 

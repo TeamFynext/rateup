@@ -7,7 +7,7 @@ COPY src ./src
 COPY bin ./bin
 
 ENV META_MOCK_HOST=0.0.0.0
-ENV META_MOCK_PORT=3099
+ENV PORT=3099
 EXPOSE 3099
 
 # Webhooks are delivered back out of the container, so the target has to be
