@@ -276,7 +276,8 @@ export const templateSchema = z
     const { value: values, issues } = ctx;
     const format = values.format;
     const value = values.header;
-    let errorMessage = "";
+    // The type checks below assign `false` when the media type is acceptable.
+    let errorMessage: string | false = "";
     const videoType = ["video/mp4"];
     const imageType = ["image/png", "image/jpg", "image/jpeg"];
     const documentType = [...imageType, ...videoType, "application/pdf"];
@@ -364,16 +365,16 @@ export const templateSchema = z
           break;
         case WHATSAPP_BUTTON_TYPE.MPM:
           let errormsg;
-          if (!values.defaultValues.whatsappSettingsPhoneId?.length) {
+          if (!values.defaultValues?.whatsappSettingsPhoneId?.length) {
             errormsg = "Catalog linked Whatsapp account is required";
-          } else if (values.defaultValues.catalog.mpm.sections.length > 10) {
+          } else if (values.defaultValues!.catalog!.mpm!.sections.length > 10) {
             errormsg = "Sections cannot be more than 10";
           } else if (
-            values.defaultValues.catalog.mpm.sections.some((s) => s.products.length > 30)
+            values.defaultValues!.catalog!.mpm!.sections.some((s) => s.products.length > 30)
           ) {
             errormsg = "Each sections can have only upto 30 products";
           } else if (
-            values.defaultValues.catalog.mpm.sections.some(
+            values.defaultValues!.catalog!.mpm!.sections.some(
               (s) => !s.title.length || !s.products.length,
             )
           ) {
@@ -396,9 +397,9 @@ export const templateSchema = z
           }
           break;
         case WHATSAPP_BUTTON_TYPE.SPM:
-          if (!values.defaultValues.whatsappSettingsPhoneId?.length) {
+          if (!values.defaultValues?.whatsappSettingsPhoneId?.length) {
             errormsg = "Catalog linked Whatsapp account is required";
-          } else if (!values.defaultValues.catalog.spm.product_retailer_id) {
+          } else if (!values.defaultValues!.catalog!.spm!.product_retailer_id) {
             issues.push({
               input: "",
               path: ["buttons", index],
@@ -415,13 +416,14 @@ export const templateSchema = z
     const typeNotString = typeof value !== "string";
     if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE && typeNotString) {
       errorMessage =
-        !imageType.includes(value?.type) && `Incorrect Type use only ${imageType?.join(",")}`;
+        !imageType.includes(value?.type ?? "") && `Incorrect Type use only ${imageType?.join(",")}`;
     } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO && typeNotString) {
       errorMessage =
-        !videoType.includes(value?.type) && `Incorrect Type use only ${videoType?.join(",")}`;
+        !videoType.includes(value?.type ?? "") && `Incorrect Type use only ${videoType?.join(",")}`;
     } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.DOCUMENT && typeNotString) {
       errorMessage =
-        !documentType.includes(value?.type) && `Incorrect Type use only ${documentType?.join(",")}`;
+        !documentType.includes(value?.type ?? "") &&
+        `Incorrect Type use only ${documentType?.join(",")}`;
     } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT && !value) {
       errorMessage = "Header Text Needed";
     }
@@ -429,12 +431,12 @@ export const templateSchema = z
       issues.push({
         path: ["header"],
         code: "custom",
-        message: errorMessage,
+        message: errorMessage || "",
         input: "",
       });
 
-    if (values.templateType === TemplateType.CAROUSEL && values.mediaCarousel.length) {
-      if (values.mediaCarousel.length < 2) {
+    if (values.templateType === TemplateType.CAROUSEL && values.mediaCarousel!.length) {
+      if (values.mediaCarousel!.length < 2) {
         issues.push({
           path: ["mediaCarousel"],
           code: "custom",
@@ -443,7 +445,7 @@ export const templateSchema = z
         });
         return;
       }
-      values.mediaCarousel.map((card, index) => {
+      values.mediaCarousel!.map((card, index) => {
         const cardHeaerTypeNotString = typeof card.header !== "string";
         if (!card.body.length) {
           issues.push({
@@ -469,7 +471,7 @@ export const templateSchema = z
           issues.push({
             path: ["mediaCarousel", index],
             code: "custom",
-            message: msg,
+            message: msg || "",
             input: "",
           });
         } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO && cardHeaerTypeNotString) {
@@ -479,7 +481,7 @@ export const templateSchema = z
           issues.push({
             path: ["mediaCarousel", index],
             code: "custom",
-            message: msg,
+            message: msg || "",
             input: "",
           });
         } else if (!card.buttons.length) {
@@ -493,8 +495,8 @@ export const templateSchema = z
       });
     }
 
-    if (values.templateType === TemplateType.CAROUSEL && values.productCarousel.length) {
-      if (values.productCarousel.length < 2) {
+    if (values.templateType === TemplateType.CAROUSEL && values.productCarousel!.length) {
+      if (values.productCarousel!.length < 2) {
         issues.push({
           path: ["productCarousel"],
           code: "custom",
@@ -503,8 +505,8 @@ export const templateSchema = z
         });
         return;
       }
-      const buttonType = values.productCarousel[0].button.type;
-      values.productCarousel.map((card, index) => {
+      const buttonType = values.productCarousel![0]!.button.type;
+      values.productCarousel!.map((card, index) => {
         if (card.button.type !== buttonType) {
           issues.push({
             path: ["productCarousel", index],

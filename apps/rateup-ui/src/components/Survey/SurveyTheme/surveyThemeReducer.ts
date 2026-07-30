@@ -48,7 +48,8 @@ const themeValue = (payload: unknown) => payload as string & number & boolean;
 function surveyThemeReducer(state: SurveyThemeState, action: SurveyThemeAction) {
   const { payload } = action;
   const { selectedPageTab, surveyTheme, selectedPreview } = state;
-  const surveyThemeKey = getSurveyThemeKeyOf(selectedPageTab);
+  // The tab is always one of the four the helper maps.
+  const surveyThemeKey = getSurveyThemeKeyOf(selectedPageTab)!;
 
   switch (action.type) {
     case "set-survey-theme": {
