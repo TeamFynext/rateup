@@ -363,7 +363,15 @@ export const getValidationSchema = (type: QuestionType2) => {
 interface InitialValues {
   [key: string]: {
     type: string;
-    value: string | number | boolean | string[] | { id: string; title: string }[];
+    /** `null`/`undefined` for fields that start empty, e.g. date pickers. */
+    value:
+      | string
+      | number
+      | boolean
+      | string[]
+      | { id: string; title: string }[]
+      | null
+      | undefined;
     extra?: any;
     metaType?: string;
   };
