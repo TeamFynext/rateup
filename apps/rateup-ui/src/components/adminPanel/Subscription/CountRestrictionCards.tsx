@@ -42,10 +42,13 @@ export function CountRestrictionCards({
   control,
 }: Readonly<CountRestrictionCardsProps>) {
   const features = useWatch({ control, name: "features" });
-  const feature = getNestedProperty(features, featurePathName);
+  const feature = getNestedProperty<{ count: Partial<Record<"max" | "min", number>> }>(
+    features,
+    featurePathName,
+  );
   return (
     <>
-      {Object.keys(feature.count).map((property: "max" | "min") => (
+      {(Object.keys(feature.count) as Array<"max" | "min">).map((property) => (
         <CountField
           key={property}
           control={control}

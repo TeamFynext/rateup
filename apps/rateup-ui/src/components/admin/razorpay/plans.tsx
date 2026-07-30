@@ -36,12 +36,13 @@ interface RazorpayPlan {
   paymentPlanId?: string;
   name?: string;
   description?: string;
-  status?: string;
+  status?: PaymentPlanStatus;
   amount?: number;
   currency?: string;
   period?: string;
   interval?: number;
-  createdAt?: string;
+  /** Razorpay reports creation as a unix timestamp. */
+  createdAt?: number;
 }
 
 interface PlanTableData {
