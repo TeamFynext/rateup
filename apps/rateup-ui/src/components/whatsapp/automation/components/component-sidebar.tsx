@@ -131,7 +131,7 @@ export default function ComponentSidebar({ platform }: Readonly<{ platform: stri
 
   // Function to get default node data based on node type. The visible label is
   // filled in on drop from the shared node-config, so nodes get friendly names.
-  const getDefaultNodeData = useCallback((nodeId: string) => {
+  const getDefaultNodeData = useCallback((nodeId: string): Record<string, unknown> => {
     const baseData = { type: nodeId };
 
     switch (nodeId) {

@@ -290,7 +290,7 @@ export function getResponseArrayByQuestionType(questionType: QuestionType | WaQu
     }
   }
 }
-export function getResponseArrayByQuestionTypeV2(questionType: WaQuestions): Array<{
+export function getResponseArrayByQuestionTypeV2(questionType: WaQuestions | QuestionType): Array<{
   value: string | number;
   color: string;
   Icon?: any;

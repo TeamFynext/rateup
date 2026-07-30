@@ -1677,15 +1677,15 @@ interface Location {
   address: string;
 }
 interface Image {
-  link: string;
+  link: string | File;
 }
 
 interface Document {
-  link: string;
+  link: string | File;
 }
 
 interface Video {
-  link: string;
+  link: string | File;
 }
 
 export interface WaTemplate {

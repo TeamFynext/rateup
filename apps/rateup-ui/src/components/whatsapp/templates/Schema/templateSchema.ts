@@ -123,6 +123,8 @@ export const templateSchema = z
           flow_id: z.string().optional(),
           flow_action: z.string().optional(),
           navigate_screen: z.string().optional(),
+          /** Authentication templates: how the OTP button delivers the code. */
+          otp_type: z.string().optional(),
         }),
       )
       .max(10),
@@ -517,7 +519,7 @@ export const templateSchema = z
   });
 
 export interface WaTemplateDefaultValues {
-  image?: {
-    link: string;
-  };
+  image?: { link: string; filename?: string };
+  video?: { link: string; filename?: string };
+  document?: { link: string; filename?: string };
 }

@@ -9,10 +9,10 @@ const MediaCardPreview = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export function HeaderWithFormatting(text: string, type: string) {
+export function HeaderWithFormatting(text: string | File, type: string) {
   switch (type) {
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT:
-      return <p className="text-sm break-all">{text}</p>;
+      return <p className="text-sm break-all">{typeof text === "string" ? text : text?.name}</p>;
     case WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE:
       return (
         <MediaCardPreview>

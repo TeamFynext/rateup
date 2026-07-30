@@ -488,7 +488,7 @@ export function WhatsappTemplateById({
         const publicImageLink = await uploadFile(values.header);
         const filename = values.header.name ?? "";
         values.header = file?.id ?? "";
-        defaultValues[values.format?.toLowerCase()] = {
+        defaultValues[values.format?.toLowerCase() as keyof WaTemplateDefaultValues] = {
           link: publicImageLink,
           filename,
         };

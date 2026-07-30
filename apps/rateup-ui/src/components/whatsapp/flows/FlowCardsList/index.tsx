@@ -2,7 +2,7 @@ import { CardGrid } from "@/components/common/generic-card.tsx";
 
 import FlowCard from "../FlowCard/index.tsx";
 
-function FlowCardsList({ flows, teamsData }: Readonly<{ flows: DbFlow[]; teamsData }>) {
+function FlowCardsList({ flows, teamsData }: Readonly<{ flows: DbFlow[]; teamsData: TeamData[] }>) {
   return (
     <CardGrid
       items={flows ?? []}

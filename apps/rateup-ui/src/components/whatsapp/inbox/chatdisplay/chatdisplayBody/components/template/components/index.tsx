@@ -31,18 +31,16 @@ export default function WaInboxTemplateComponents(props: Readonly<Props>) {
 const WaInboxTemplateHeader = (props: Props) => {
   function getUrlIfParameterIsPresent(): string {
     if (props?.parameterData) {
-      if (
-        props?.parameterData?.parameters[0]?.[props?.templateComponent?.format?.toLowerCase()]
-          ?.link instanceof File
-      ) {
-        return URL.createObjectURL(
-          props?.parameterData?.parameters[0]?.[props?.templateComponent?.format?.toLowerCase()]
-            ?.link,
-        );
+      // A media header's payload sits under the lowercased format key.
+      const mediaKey = props?.templateComponent?.format?.toLowerCase() as
+        | "image"
+        | "video"
+        | "document";
+      const media = props?.parameterData?.parameters[0]?.[mediaKey];
+      if (media?.link instanceof File) {
+        return URL.createObjectURL(media.link);
       } else {
-        return props?.parameterData?.parameters[0]?.[
-          props?.templateComponent?.format?.toLowerCase()
-        ]?.link;
+        return media?.link;
       }
     } else {
       return props?.templateComponent?.example?.header_handle[0];
