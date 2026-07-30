@@ -84,7 +84,7 @@ function ContactGroup() {
   const confirm = useConfirm();
 
   useEffect(() => {
-    setGroupDetails(groupDetails);
+    setGroupDetails(groupDetails ?? null);
   }, [groupDetails]);
 
   const column: ColumnDef<any>[] = [
@@ -96,7 +96,7 @@ function ContactGroup() {
       enableColumnFilter: false,
       id: "action",
       cell: (info) => (
-        <ParticipantMenu contactId={info.row.original.id} groupId={groupDetails?.id} />
+        <ParticipantMenu contactId={info.row.original.id} groupId={groupDetails?.id ?? ""} />
       ),
       meta: { title: "Action" },
     },
@@ -185,7 +185,7 @@ function ContactGroup() {
               >
                 {groupDetails?.icon ? (
                   <Image
-                    src={getFileUrlFromKey(groupDetails?.icon)}
+                    src={getFileUrlFromKey(groupDetails?.icon ?? "") ?? ""}
                     alt={groupDetails.name}
                     className="object-cover"
                     layout="fullWidth"
@@ -250,7 +250,7 @@ function ContactGroup() {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          setGroupName(groupDetails?.name);
+                          setGroupName(groupDetails?.name ?? "");
                           setIsEditingName(true);
                         }}
                         className="h-8 w-8 p-0 hover:bg-blue-50 text-primary"
@@ -319,7 +319,7 @@ function ContactGroup() {
             onPaginationChange: setPagination,
             sorting,
             onSortingChange: setSorting,
-            rowCount: groupDetails?.totalCount,
+            rowCount: groupDetails?.totalCount ?? 0,
             pagination: pagination,
           }}
           isPending={loadingState}
@@ -330,7 +330,7 @@ function ContactGroup() {
       <ContactGroupIconEditDialog
         opened={showEditIconDialog}
         setOpened={setShowEditIconDialog}
-        group={groupDetails}
+        group={groupDetails!}
       />
       <ContactImportErrorModal
         body={(createNewContactsFromCSV?.error as any)?.response?.data}
@@ -357,7 +357,7 @@ function ContactGroupIconEditDialog({
     await deleteUploadedFiles({ fileKeyArray: [{ Key: group.icon }] });
     editContactGroupMutation.mutate(
       {
-        icon: null,
+        icon: "",
       },
       {
         onSuccess: () => {
@@ -373,6 +373,7 @@ function ContactGroupIconEditDialog({
   async function handleFileSelect(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     const oldIcon = group.icon;
+    if (!file) return;
     const icon = await uploadFile(file);
     editContactGroupMutation.mutate(
       {
@@ -408,7 +409,7 @@ function ContactGroupIconEditDialog({
             <div className="w-32 h-32 rounded-2xl bg-linear-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 overflow-hidden">
               {group?.icon ? (
                 <Image
-                  src={getFileUrlFromKey(group?.icon)}
+                  src={getFileUrlFromKey(group?.icon ?? "") ?? ""}
                   alt={group?.name}
                   className="w-full h-full object-cover"
                   width={200}
