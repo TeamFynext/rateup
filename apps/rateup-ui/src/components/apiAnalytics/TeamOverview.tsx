@@ -1,6 +1,8 @@
 import { Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import type { TeamApiOverviewRow } from "@/backend/apiAnalytics/apianalytics.api";
+
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 
@@ -8,7 +10,7 @@ function TeamOverview({
   teamData,
   isLoading,
 }: {
-  teamData: Array<Record<string, unknown>> | undefined;
+  teamData: TeamApiOverviewRow[] | undefined;
   isLoading: boolean;
 }) {
   const { t } = useTranslation("apianalytics");

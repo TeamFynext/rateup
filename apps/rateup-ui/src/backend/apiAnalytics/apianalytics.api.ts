@@ -28,10 +28,19 @@ export async function getTemplateOverview(filter: QueryFilter) {
   return res.data;
 }
 
+/** One row of the per-team messaging overview. */
+export interface TeamApiOverviewRow {
+  teamId: string;
+  teamName: string;
+  teamColor?: string;
+  totalSent: number;
+  successPercentage?: number;
+}
+
 export async function getTeamOverview(filter: QueryFilter) {
   const query = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
-  const res = await axiosClient.get(`${API_BASE_URL}/team-overview?${query}`);
+  const res = await axiosClient.get<TeamApiOverviewRow[]>(`${API_BASE_URL}/team-overview?${query}`);
   return res.data;
 }

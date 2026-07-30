@@ -122,17 +122,19 @@ export function SubscriptionEditorModal({
             <p>Features</p>
             <div className="flex flex-col gap-3 overflow-auto rounded-lg bg-muted p-3">
               {subscription?.features &&
-                Object.keys(subscription.features).map((feature: SubscriptionFeaturePathName) => {
-                  // Tickets are a free feature — no longer subscription-managed.
-                  if (feature === "menu" || feature === "ticket") return null;
-                  return (
-                    <FeatureCard
-                      key={feature}
-                      featurePathName={feature}
-                      control={subscriptionForm.control}
-                    />
-                  );
-                })}
+                (Object.keys(subscription.features) as SubscriptionFeaturePathName[]).map(
+                  (feature) => {
+                    // Tickets are a free feature — no longer subscription-managed.
+                    if (feature === "menu" || feature === "ticket") return null;
+                    return (
+                      <FeatureCard
+                        key={feature}
+                        featurePathName={feature}
+                        control={subscriptionForm.control}
+                      />
+                    );
+                  },
+                )}
             </div>
             {isRazorPayPlan && (
               <p className="text-sm font-bold text-primary">
