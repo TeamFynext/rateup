@@ -52,9 +52,9 @@ export function TeamSelector({
     // Setting the default teamId to the first team in the list
     if (value) return;
     if (enableAll) {
-      onChange("all");
+      onChange?.("all");
     } else if (teamOptions.length > 0 && enableDefaultValue) {
-      onChange(teamOptions[0].value);
+      onChange?.(teamOptions[0]!.value);
     }
   }, [teamOptions, value]);
 
@@ -73,7 +73,7 @@ export function TeamSelector({
   }
 
   return (
-    <Select value={value} onValueChange={onChange} items={teamOptions}>
+    <Select value={value} onValueChange={(next) => onChange?.(next ?? "")} items={teamOptions}>
       <SelectTrigger className={`${className || ""}`}>
         <div>
           <Users className="size-4 text-muted-foreground" />
