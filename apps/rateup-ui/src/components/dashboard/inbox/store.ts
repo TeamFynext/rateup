@@ -33,7 +33,7 @@ interface ContactStore {
   selectedTicket: any;
   setSelectedTicket: (ticket: any) => void;
   setTicketAndOpen: (ticket: any) => void;
-  filterData: string;
+  filterData: string | null;
   setFilterData: (value: string) => void;
 }
 
@@ -319,7 +319,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                   unReadMessageCount: selectedRowKey === rowKey ? 0 : c.unReadMessageCount,
                 });
               }
-              const updatedContact = contactsByIdMap.get(rowKey);
+              const updatedContact = contactsByIdMap.get(rowKey)!;
 
               // The ticket's own status is authoritative now; the contact-level one
               // is the fallback for rows that predate conversation threading.
@@ -385,7 +385,8 @@ export const useContactsStore = create<ContactsStoreState>()(
         const rowKey = state.contactsById.has(contactId)
           ? contactId
           : liveRowKeyForContact(state.contactsById, contactId);
-        const contact = rowKey ? state.contactsById.get(rowKey) : null;
+        if (!rowKey) return;
+        const contact = state.contactsById.get(rowKey);
         if (!contact) return;
         const updateIdb: Array<{ key: string; contactIds: string[] }> = [];
         const updatedContact = {
@@ -396,7 +397,9 @@ export const useContactsStore = create<ContactsStoreState>()(
         let assignStatusChanged = false;
         set(
           produce((draft: ContactsStoreState) => {
-            const { currentFilterKey, contactsByFilter, contactsById } = draft;
+            const { contactsByFilter, contactsById } = draft;
+            // The caller only reaches here with a filter selected.
+            const currentFilterKey = draft.currentFilterKey!;
             const newContactsById = new Map(contactsById);
             newContactsById.set(rowKey, updatedContact);
             draft.contactsById = newContactsById;
@@ -436,7 +439,7 @@ export const useContactsStore = create<ContactsStoreState>()(
               isSpamTab === !!updatedContact.isSpam &&
               // The status filters below are the ticket's; the Spam tab has none —
               // it lists contacts whatever state their tickets are in.
-              (isSpamTab || statuses.length === 0 || statuses.includes(ticketStatus)) &&
+              (isSpamTab || statuses.length === 0 || statuses.includes(ticketStatus!)) &&
               (!currentFilterKey?.includes("waMessageAssignStatus:mine") ||
                 (ticketStatus === WaMessageAssignStatus.ASSIGNED &&
                   updatedContact.assignedUsers?.some((u) => u.id === state.currentUser?.userId))) &&
@@ -545,6 +548,7 @@ export const useContactsStore = create<ContactsStoreState>()(
               produce((draft: ContactsStoreState) => {
                 const state = get();
                 const contact = state.contactsById.get(contactId);
+                if (!contact) return;
 
                 const isNew = !isInboxSessionExpired(contact.lastReceivedMessageTimeStamp);
                 const filterList = Object.keys(draft.contactsByFilter).filter((key) =>
@@ -556,17 +560,21 @@ export const useContactsStore = create<ContactsStoreState>()(
                   let newList = [...contactIds];
                   let changed = false;
                   const statusMatch = filterKey?.match(/status:([^|]*)/);
-                  const statuses = statusMatch ? statusMatch[1].split(",").filter(Boolean) : [];
+                  const statuses = statusMatch ? statusMatch[1]!.split(",").filter(Boolean) : [];
                   if (isNew) {
                     if (
                       !isInFilter &&
-                      (!statuses.length || statuses.includes(rowStatus(contact)))
+                      (!statuses.length || statuses.includes(rowStatus(contact) ?? ""))
                     ) {
                       newList.push(contactId);
                       changed = true;
                     }
                   }
-                  if (isInFilter && statuses.length && !statuses.includes(rowStatus(contact))) {
+                  if (
+                    isInFilter &&
+                    statuses.length &&
+                    !statuses.includes(rowStatus(contact) ?? "")
+                  ) {
                     newList = contactIds.filter((id) => id !== contactId);
                     changed = true;
                   }
@@ -605,6 +613,7 @@ export const useContactsStore = create<ContactsStoreState>()(
               produce((draft: ContactsStoreState) => {
                 const state = get();
                 const contact = state.contactsById.get(contactId);
+                if (!contact) return;
 
                 const filterList = Object.keys(draft.contactsByFilter).filter(
                   (key) =>
@@ -621,9 +630,9 @@ export const useContactsStore = create<ContactsStoreState>()(
                   let changed = false;
 
                   const statusMatch = filterKey.match(/status:([^|]*)/);
-                  const statuses = statusMatch ? statusMatch[1].split(",").filter(Boolean) : [];
+                  const statuses = statusMatch ? statusMatch[1]!.split(",").filter(Boolean) : [];
                   const matchesStatus = statuses.length
-                    ? statuses.includes(rowStatus(contact))
+                    ? statuses.includes(rowStatus(contact) ?? "")
                     : [WaMessageAssignStatus.ASSIGNED, WaMessageAssignStatus.UNASSIGNED].includes(
                         rowStatus(contact) as WaMessageAssignStatus,
                       );
@@ -674,6 +683,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                 const state = get();
 
                 const contact = state.contactsById.get(contactId);
+                if (!contact) return;
 
                 const isAssigned = rowStatus(contact) === WaMessageAssignStatus.ASSIGNED;
                 const filterList = Object.keys(draft.contactsByFilter).filter((key) =>
@@ -686,7 +696,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                   let changed = false;
                   if (
                     isAssigned &&
-                    contact.assignedUsers.some((a) => a.id === state.currentUser.userId)
+                    contact.assignedUsers.some((a) => a.id === state.currentUser?.userId)
                   ) {
                     if (!isInFilter) {
                       newList.push(contactId);
@@ -926,12 +936,14 @@ export const useMessagesStore = create<MessagesStore>()(
               // must not resurrect the message's content.
               deletedAt: msg.deletedAt ?? existingMsg.deletedAt,
               stats: {
-                read: msg.stats.read.length ? msg.stats.read : existingMsg.stats.read,
-                sent: msg.stats.sent.length ? msg.stats.sent : existingMsg.stats.sent,
-                delivered: msg.stats.delivered.length
+                read: msg.stats?.read.length ? msg.stats.read : (existingMsg.stats?.read ?? ""),
+                sent: msg.stats?.sent.length ? msg.stats.sent : (existingMsg.stats?.sent ?? ""),
+                delivered: msg.stats?.delivered.length
                   ? msg.stats.delivered
-                  : existingMsg.stats.delivered,
-                failed: msg.stats.failed.length ? msg.stats.failed : existingMsg.stats.failed,
+                  : (existingMsg.stats?.delivered ?? ""),
+                failed: msg.stats?.failed.length
+                  ? msg.stats.failed
+                  : (existingMsg.stats?.failed ?? ""),
               },
             };
 
