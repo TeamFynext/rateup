@@ -548,7 +548,7 @@ export default function WaInboxChatDisplayFooter({
                 the editor column is allowed to shrink and the send button is not. */}
             <div className="flex items-start gap-2 p-2 pb-0 sm:p-4 sm:pb-0">
               <div className="min-w-0 flex-1">
-                <ToolbarProvider editor={privateNoteEditor}>
+                <ToolbarProvider editor={privateNoteEditor!}>
                   <TooltipProvider>
                     <EditorContent
                       editor={privateNoteEditor}

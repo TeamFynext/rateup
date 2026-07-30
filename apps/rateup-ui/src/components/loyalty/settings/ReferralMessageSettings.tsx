@@ -125,7 +125,7 @@ export function ReferralMessageSettings({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex-1">
-                    <ToolbarProvider editor={referralEditor}>
+                    <ToolbarProvider editor={referralEditor!}>
                       <TooltipProvider>
                         <EditorContent
                           editor={referralEditor}

@@ -407,7 +407,7 @@ function WaTextEditor({
       )}
       <div className={`flex items-start gap-2 ${border ? "p-2 sm:p-4" : ""} pb-0`}>
         <div className="min-w-0 flex-1">
-          <ToolbarProvider editor={editor}>
+          <ToolbarProvider editor={editor!}>
             <TooltipProvider>
               {inbox && !quickRepliesControlled && (
                 <div className="flex items-center justify-end px-2 pb-1">

@@ -438,7 +438,7 @@ const LoyaltyWaTemplateConfig = ({
                         {getLoyaltyTemplateLabel(values.type).templateDescription}
                       </FieldDescription>
                       <div className="flex-1">
-                        <ToolbarProvider editor={contentEditor}>
+                        <ToolbarProvider editor={contentEditor!}>
                           <TooltipProvider>
                             <EditorContent
                               editor={contentEditor}

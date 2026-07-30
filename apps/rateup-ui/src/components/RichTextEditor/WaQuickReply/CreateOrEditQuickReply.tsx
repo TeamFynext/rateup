@@ -205,7 +205,7 @@ const CreateOrEditQuickReply = ({
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="text">{t("Reply Text")}</FieldLabel>
                     <div className="flex-1">
-                      <ToolbarProvider editor={textEditor}>
+                      <ToolbarProvider editor={textEditor!}>
                         <TooltipProvider>
                           <EditorContent
                             editor={textEditor}

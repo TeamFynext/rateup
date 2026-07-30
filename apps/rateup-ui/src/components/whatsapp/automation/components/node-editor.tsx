@@ -484,7 +484,7 @@ const TextNodeEditor: React.FC<NodeComponentProps<"textNode">> = ({
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
-          <ToolbarProvider editor={bodyEditor}>
+          <ToolbarProvider editor={bodyEditor!}>
             <TooltipProvider>
               <EditorContent
                 editor={bodyEditor}
@@ -592,7 +592,7 @@ const InputNodeEditor: React.FC<
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
-          <ToolbarProvider editor={questionEditor}>
+          <ToolbarProvider editor={questionEditor!}>
             <TooltipProvider>
               <EditorContent
                 editor={questionEditor}
@@ -969,7 +969,7 @@ const MediaNodeEditor: React.FC<
           <div className="text-xs font-bold text-muted-foreground">Caption (optional)</div>
           <div className="flex items-start space-x-2 pb-0">
             <div className="flex-1">
-              <ToolbarProvider editor={captionEditor}>
+              <ToolbarProvider editor={captionEditor!}>
                 <TooltipProvider>
                   <EditorContent
                     editor={captionEditor}
@@ -1144,7 +1144,7 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
-          <ToolbarProvider editor={bodyEditor}>
+          <ToolbarProvider editor={bodyEditor!}>
             <TooltipProvider>
               <EditorContent
                 editor={bodyEditor}
@@ -1199,7 +1199,7 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
       <div className="text-xs font-bold text-muted-foreground">Footer Text</div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
-          <ToolbarProvider editor={footerEditor}>
+          <ToolbarProvider editor={footerEditor!}>
             <TooltipProvider>
               <EditorContent
                 editor={footerEditor}
@@ -1350,7 +1350,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
-          <ToolbarProvider editor={bodyEditor}>
+          <ToolbarProvider editor={bodyEditor!}>
             <TooltipProvider>
               <EditorContent
                 editor={bodyEditor}
@@ -1405,7 +1405,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
       <div className="text-xs font-bold text-muted-foreground">Footer (optional)</div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
-          <ToolbarProvider editor={footerEditor}>
+          <ToolbarProvider editor={footerEditor!}>
             <TooltipProvider>
               <EditorContent
                 editor={footerEditor}
@@ -1676,7 +1676,7 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
-          <ToolbarProvider editor={bodyEditor}>
+          <ToolbarProvider editor={bodyEditor!}>
             <TooltipProvider>
               <EditorContent
                 editor={bodyEditor}
@@ -1731,7 +1731,7 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
       <div className="text-xs font-bold text-muted-foreground">Footer (optional)</div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
-          <ToolbarProvider editor={footerEditor}>
+          <ToolbarProvider editor={footerEditor!}>
             <TooltipProvider>
               <EditorContent
                 editor={footerEditor}
@@ -3214,7 +3214,7 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
           </div>
           <div className="flex items-start space-x-2 pb-0">
             <div className="flex-1">
-              <ToolbarProvider editor={headerEditor}>
+              <ToolbarProvider editor={headerEditor!}>
                 <TooltipProvider>
                   <EditorContent
                     editor={headerEditor}
@@ -3272,7 +3272,7 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
       </div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
-          <ToolbarProvider editor={bodyEditor}>
+          <ToolbarProvider editor={bodyEditor!}>
             <TooltipProvider>
               <EditorContent
                 editor={bodyEditor}
@@ -3322,7 +3322,7 @@ const CatalogNodeEditor = ({ nodeData, handleInputChange }: NodeComponentProps<"
       <div className="text-xs font-bold text-muted-foreground">Footer (optional)</div>
       <div className="flex items-start space-x-2 pb-0">
         <div className="flex-1">
-          <ToolbarProvider editor={footerEditor}>
+          <ToolbarProvider editor={footerEditor!}>
             <TooltipProvider>
               <EditorContent
                 editor={footerEditor}
