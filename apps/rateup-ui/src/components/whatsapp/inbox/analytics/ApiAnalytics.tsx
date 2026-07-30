@@ -18,10 +18,11 @@ import TemplateOverview from "@/components/apiAnalytics/TemplateOverview.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 
 dayjs.extend(isToday);
 
-const formatTime = (time) => {
+const formatTime = (time: string | number | Date) => {
   const d = dayjs(time);
 
   if (d.isToday()) {
@@ -31,7 +32,7 @@ const formatTime = (time) => {
   }
 };
 
-function ApiAnalytics({ dateRange }) {
+function ApiAnalytics({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const { t } = useTranslation("apianalytics");
   const targetRef = useRef(null);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
@@ -63,12 +64,12 @@ function ApiAnalytics({ dateRange }) {
     apiType: apiType,
   });
 
-  const localTrend = trend?.trend.map((item) => ({
+  const localTrend = trend?.trend.map((item: { time: string; [key: string]: unknown }) => ({
     ...item,
     time: formatTime(item.time),
   }));
 
-  const localWeekTrend = trend?.weekTrend.map((item) => ({
+  const localWeekTrend = trend?.weekTrend.map((item: { time: string; [key: string]: unknown }) => ({
     ...item,
     day: dayjs(item.time).format("ddd, DD MMM"),
   }));

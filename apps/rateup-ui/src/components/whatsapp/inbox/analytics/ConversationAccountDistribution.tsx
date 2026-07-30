@@ -6,6 +6,7 @@ import { useGetConversationAccountDistribution } from "@/backend/conversation/co
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Progress, ProgressIndicator } from "@/components/ui/progress.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 
 function getMessageSourcePlatformColor(platform: MessagePlatform) {
@@ -21,7 +22,7 @@ function getMessageSourcePlatformColor(platform: MessagePlatform) {
   }
 }
 
-const ConversationAccountDistribution = ({ dateRange }) => {
+const ConversationAccountDistribution = ({ dateRange }: { dateRange: AnalyticsDateRange }) => {
   const { t } = useTranslation();
   const { data: channelDistribution = [], isLoading } = useGetConversationAccountDistribution({
     dateRange: dateRange.range,

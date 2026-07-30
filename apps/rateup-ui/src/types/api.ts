@@ -15,6 +15,7 @@ export type QueryParamValue =
   | Date
   | string[]
   | number[]
+  | Date[]
   | null
   | undefined;
 

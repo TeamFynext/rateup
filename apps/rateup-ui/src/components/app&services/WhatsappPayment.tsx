@@ -324,6 +324,21 @@ function WhatsappPaymentList({
   data,
   deleteMutation: _deleteMutation,
   regenerateWaPaymentConfigurationOauthMutation,
+}: {
+  data?: {
+    credential?: Array<{
+      configuration_name?: string;
+      provider_name?: string;
+      status?: string;
+      oauth_url?: string;
+      purpose_code?: string;
+      merchant_category_code?: string;
+      expiration?: number;
+      description?: string;
+    }>;
+  };
+  deleteMutation?: unknown;
+  regenerateWaPaymentConfigurationOauthMutation: { mutate: (name: string) => void };
 }) {
   if (!data?.credential || data?.credential?.length === 0) return <NothingFound text="" />;
   return (

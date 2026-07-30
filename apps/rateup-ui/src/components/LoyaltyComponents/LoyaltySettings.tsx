@@ -817,7 +817,19 @@ function useSampleReplyMessage() {
   const { t: translations } = useTranslation();
 
   return useCallback(
-    ({ responseType, content, waTemplateId, selectedTemplate, variableMeta }) => {
+    ({
+      responseType,
+      content,
+      waTemplateId,
+      selectedTemplate,
+      variableMeta,
+    }: {
+      responseType: string;
+      content?: string;
+      waTemplateId?: string;
+      selectedTemplate?: { data?: { name?: string; components?: unknown[] } };
+      variableMeta?: Array<{ token: string; sample: string }>;
+    }) => {
       if (responseType === WaAutomatedReplyResponseType.Template) {
         const templateName = selectedTemplate?.data?.name;
         const templateBody = getWaTemplateBodyText(selectedTemplate?.data?.components);

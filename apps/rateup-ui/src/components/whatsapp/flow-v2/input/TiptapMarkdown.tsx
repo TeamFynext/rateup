@@ -19,6 +19,7 @@ import {
   UndoIcon,
 } from "lucide-react";
 import { useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import { Markdown } from "tiptap-markdown";
 
 import { Button } from "@/components/ui/button.tsx";
@@ -147,7 +148,19 @@ function Toolbar({ editor }: Readonly<{ editor: Editor }>) {
   );
 }
 
-function TiptapMarkdown({ value, onChange, label, max, disabled }) {
+function TiptapMarkdown({
+  value,
+  onChange,
+  label,
+  max,
+  disabled,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label?: ReactNode;
+  max?: number;
+  disabled?: boolean;
+}) {
   const content = value || "";
   const isUpdatingFromEditor = useRef(false);
 

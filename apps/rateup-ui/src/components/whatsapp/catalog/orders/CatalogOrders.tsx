@@ -28,7 +28,7 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
 
   const data = useMemo(() => {
     return orders
-      ? orders?.data?.map((order) => ({
+      ? orders?.data?.map((order: CatalogOrder) => ({
           ...order,
           phone: order.contact.phone,
           name: order.contact.name,
@@ -122,14 +122,14 @@ const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
     let productItems = [];
     let totalPrice = 0;
     if (selectedOrder) {
-      productItems = selectedOrder.products.map((item, idx) => ({
+      productItems = selectedOrder.products.map((item: CatalogOrderProduct, idx: number) => ({
         id: `product-${idx}`,
         retailerId: item.retailerId,
         quantity: item.quantity,
         price: `${item.currency} ${item.price}`,
         total: `${item.currency} ${item.price * item.quantity}`,
       }));
-      selectedOrder.products.forEach((item) => {
+      selectedOrder.products.forEach((item: CatalogOrderProduct) => {
         totalPrice += item.price * item.quantity;
       });
     }

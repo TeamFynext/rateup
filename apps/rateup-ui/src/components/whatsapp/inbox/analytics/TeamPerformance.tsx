@@ -6,9 +6,10 @@ import { useGetTeamOverview } from "@/backend/conversation/conversation.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
-function TeamPerformance({ dateRange }) {
+function TeamPerformance({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { data: teamsData, isLoading } = useGetTeamOverview({
@@ -72,7 +73,7 @@ function TeamPerformance({ dateRange }) {
                       </td>
                     </tr>
                   ))
-                : teamsData?.map((team) => {
+                : teamsData?.map((team: { id: string; name: string }) => {
                     const averageResponseTime = formatTimeToNearestUnitFromSeconds(
                       team.averageResponseTime,
                     );

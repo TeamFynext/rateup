@@ -32,8 +32,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 
-function MessageLogs({ dateRange }) {
+function MessageLogs({ dateRange }: { dateRange: AnalyticsDateRange }) {
   const [search, setSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedSource, setSelectedSource] = useState("all");

@@ -33,7 +33,7 @@ interface FlowScreenFormValues {
   footerBtnLabel: string;
 }
 
-function getInitialValues(screens): FlowScreenFormValues {
+function getInitialValues(screens: WaFlowScreen[]): FlowScreenFormValues {
   return {
     screenId: getUniqueRandomAlphaId(
       6,

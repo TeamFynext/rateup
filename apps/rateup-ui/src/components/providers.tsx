@@ -28,7 +28,7 @@ function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        placeholderData: (previousData, _previousQuery) => previousData, // This will apply to all queries
+        placeholderData: (previousData: unknown, _previousQuery: unknown) => previousData, // This will apply to all queries
         staleTime: 60 * 1000,
         gcTime: 600 * 1000,
         retry: (failureCount, error: any) => {

@@ -14,9 +14,10 @@ import {
 import type { ChartConfig } from "@/components/ui/chart.tsx";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatDate } from "@/utils/dateTime.ts";
 
-const ConversationTrendsGraph = ({ dateRange }) => {
+const ConversationTrendsGraph = ({ dateRange }: { dateRange: AnalyticsDateRange }) => {
   const { t } = useTranslation();
   const { data, isLoading } = useGetResolvedConversationStats({
     days: 7,

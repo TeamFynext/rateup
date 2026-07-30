@@ -388,7 +388,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   );
 }
 
-export function reactionEmojiMap(reaction) {
+export function reactionEmojiMap(reaction: string) {
   if (reaction === "love") {
     return "❤";
   }

@@ -94,7 +94,17 @@ export function FlowImageDetailedView() {
 }
 
 // currently not allowing user to edit width
-function FlowImageElementEditor({ onChange, src, height, width }) {
+function FlowImageElementEditor({
+  onChange,
+  src,
+  height,
+  width,
+}: {
+  onChange: (key: string, value: unknown) => void;
+  src?: string;
+  height?: number;
+  width?: number;
+}) {
   const uid = useId();
   const [file, setFile] = useState<File | null>(null);
   const [base64, setBase64] = useState("");

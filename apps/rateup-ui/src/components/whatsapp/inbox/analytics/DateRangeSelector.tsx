@@ -13,9 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import type { AnalyticsDateRange } from "@/types/api.ts";
 import { formatDate } from "@/utils/dateTime.ts";
 
-const DateRangeSelector = ({ value, onChange }) => {
+const DateRangeSelector = ({
+  value,
+  onChange,
+}: {
+  value: AnalyticsDateRange;
+  onChange: (range: AnalyticsDateRange) => void;
+}) => {
   const data = [
     { label: "Today", key: "today" },
     { label: "Yesterday", key: "yesterday" },
@@ -23,8 +30,8 @@ const DateRangeSelector = ({ value, onChange }) => {
     { label: "Last 30 days", key: "last30days" },
     { label: "Custom Range", key: "custom-range" },
   ];
-  function handleChange(key) {
-    let range = [];
+  function handleChange(key: string) {
+    let range: Date[] = [];
     switch (key) {
       case "today":
         range = [dayjs().startOf("day").toDate(), new Date()];

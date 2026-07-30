@@ -191,7 +191,17 @@ const ShopifySchedules = ({
   );
 };
 
-const EventDetailsModal = ({ opened, close, shopifySurvey, templateAndTeam }) => {
+const EventDetailsModal = ({
+  opened,
+  close,
+  shopifySurvey,
+  templateAndTeam,
+}: {
+  opened: boolean;
+  close: () => void;
+  shopifySurvey: Record<string, unknown>;
+  templateAndTeam: Record<string, unknown>;
+}) => {
   const { t: translations } = useTranslation();
   return (
     <Dialog open={opened} onOpenChange={(open) => !open && close()}>

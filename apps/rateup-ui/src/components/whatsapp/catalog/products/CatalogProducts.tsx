@@ -19,7 +19,7 @@ const CatalogProducts = ({ catalogData }: { catalogData: WaCatalog }) => {
   const [addOpened, { open: openAdd, close: closeAdd }] = useDisclosure(false);
   const syncFromMetaMut = useSyncCatalogProducts(catalogData?.catalogId);
 
-  function handleSyncFromMeta(data = null) {
+  function handleSyncFromMeta(data: { limit?: number; next?: string } | null = null) {
     toast.loading("Syncing products from Meta...", {
       id: "sync-catalog-products-meta",
     });

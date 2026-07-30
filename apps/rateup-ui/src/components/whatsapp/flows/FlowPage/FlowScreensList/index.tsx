@@ -1,4 +1,5 @@
 import { DragDropContext } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { useContext, useEffect, useRef } from "react";
@@ -69,7 +70,7 @@ function FlowScreensList({
     }
   }, [flowJson?.screens?.length]);
 
-  function onDragEnd({ destination, source }) {
+  function onDragEnd({ destination, source }: DropResult) {
     if (!destination) return;
     if (destination.index === source.index && destination.droppableId === source.droppableId)
       return;

@@ -30,7 +30,7 @@ interface CreateFlowFormValues {
   teamId: string[];
 }
 
-function CreateFlowModal({ opened, onClose }) {
+function CreateFlowModal({ opened, onClose }: { opened: boolean; onClose: () => void }) {
   const uid = useId();
   const { t: translations } = useTranslation();
 

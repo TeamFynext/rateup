@@ -12,7 +12,11 @@ import {
 
 const InitInput = (props) => {
   const uid = useId();
-  const options = props?.dataSource?.map((data) => ({ value: data.id, label: data.title })) ?? [];
+  const options =
+    props?.dataSource?.map((data: { id: string; title: string }) => ({
+      value: data.id,
+      label: data.title,
+    })) ?? [];
 
   return options.length > 0 ? (
     <Field>
@@ -22,7 +26,7 @@ const InitInput = (props) => {
           <SelectValue placeholder={props.placeholder} />
         </SelectTrigger>
         <SelectContent>
-          {options.map((option) => (
+          {options.map((option: { value: string; label: string }) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>

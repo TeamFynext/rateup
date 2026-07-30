@@ -12,6 +12,7 @@ import {
 import { useParams } from "@tanstack/react-router";
 import classNames from "classnames/bind";
 import { useId, useContext, useEffect, useRef, useState, type CSSProperties } from "react";
+import type { ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -187,7 +188,7 @@ function ScreenListItem({
     onElementClick(element.id, screen.id);
   }
 
-  function handleScreenTitleInputChange(e) {
+  function handleScreenTitleInputChange(e: ChangeEvent<HTMLInputElement>) {
     setScreenTitleInputState(e.target.value);
   }
 
@@ -195,7 +196,7 @@ function ScreenListItem({
     updateScreenTitle(screenTitleInputState);
   }
 
-  function handleFooterLabelInputChange(e) {
+  function handleFooterLabelInputChange(e: ChangeEvent<HTMLInputElement>) {
     setFooterLabelInputState(e.target.value);
   }
 

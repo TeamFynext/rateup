@@ -54,7 +54,7 @@ const IgCommentBubble = ({
   );
 };
 
-export const SingleMessage = ({ message }) => {
+export const SingleMessage = ({ message }: { message: WaGetMessagesBody }) => {
   const { t: translations } = useTranslation();
   const { messageContent, messageType, template, interactive, timeStamp } = parseWaMessage(message);
   switch (messageType) {
@@ -171,7 +171,7 @@ export function getReactionMessage({
     };
 }
 
-export const TempMessageBody = ({ body, timestamp }) => {
+export const TempMessageBody = ({ body, timestamp }: { body: string; timestamp?: string }) => {
   const { user } = useUser();
   return (
     <Message align="end">

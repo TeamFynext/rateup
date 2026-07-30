@@ -26,6 +26,13 @@ import {
 import { Input } from "../ui/input.tsx";
 import { Loader } from "../ui/loader.tsx";
 
+/** Fields of either step of the reset flow — the email step or the new-password step. */
+type ResetPasswordValues = {
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+};
+
 const ResetPasswordForm = ({ mode }: { mode: string }) => {
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false });
@@ -126,7 +133,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
   const setNewPassword = useSetNewPassword(handleSuccess);
 
   const onSubmit = isEmailPage
-    ? async (values) => {
+    ? async (values: ResetPasswordValues) => {
         try {
           const user = await checkEmailMutaion.mutateAsync({
             email: values.email,
@@ -148,7 +155,7 @@ const ResetPasswordForm = ({ mode }: { mode: string }) => {
           setIsLoading(false);
         }
       }
-    : (values) => {
+    : (values: ResetPasswordValues) => {
         setIsLoading(true);
         setNewPassword(values.confirmPassword).finally(() => {
           setIsLoading(false);
