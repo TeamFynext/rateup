@@ -159,6 +159,7 @@ declare global {
     createdAt: string;
     teams: STeam[];
     isProtected: boolean;
+    password?: string;
     isPublished: boolean;
     kioskMode: boolean;
     type: SurveyType;
@@ -185,8 +186,10 @@ declare global {
     webSurveyPagesTheme: any;
     /** Review destination per platform. The legacy "" key holds the Google link. */
     reviewPageLinks: Partial<Record<ReviewPagePlatform | "", string>>;
-    /** Recipients for survey response notification emails. */
-    notificationEmail?: string[];
+    /** Recipient for survey response notification emails. */
+    notificationEmail?: string;
+    /** Whether response notification emails are sent at all. */
+    enableNotificationEmail?: boolean;
     /** Per-language overrides for the renderer's built-in UI strings. */
     uiTextTranslations?: Record<string, Record<string, string>>;
     /** Cached AI summaries of the survey's long-text answers. */

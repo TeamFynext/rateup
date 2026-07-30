@@ -66,8 +66,10 @@ const SurveySettings = ({
   useEffect(() => {
     setHasGoogleReview(
       survey?.questions?.some(
-        (item: { value: string; label: string }) =>
-          item?.googleReview?.length ||
+        (item: Question) =>
+          // NOTE: `googleReview` is an object, so `.length` is always undefined here.
+          // Preserved as-is; see the migration notes.
+          (item?.googleReview as { length?: number } | null)?.length ||
           !!(item?.reviewPageOptions && Object.keys(item?.reviewPageOptions).length),
       ),
     );

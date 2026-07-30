@@ -73,7 +73,7 @@ const GeneralSettings = ({
   } = useForm<FormValues>({
     defaultValues: {
       title: survey?.title || "",
-      languages: survey?.langauges || [],
+      languages: survey?.languages || [],
       teams: survey?.teams?.map((team) => team?.id) || [],
       sendWeeklyReport: survey?.sendWeeklyReport ?? true,
     },

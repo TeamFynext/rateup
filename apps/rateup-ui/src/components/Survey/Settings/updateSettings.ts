@@ -6,16 +6,16 @@ import type { Dispatch, SetStateAction } from "react";
  * are used, so the mutation is modelled by what is called rather than by
  * react-query's full `UseMutationResult`.
  */
-export interface SurveyUpdateMutation {
+export interface SurveyUpdateMutation<TVariables = Record<string, unknown>> {
   mutate: (
-    variables: Record<string, unknown>,
+    variables: TVariables,
     options?: {
       onSuccess?: (data: unknown) => void;
       onError?: (error: unknown) => void;
       onSettled?: () => void;
     },
   ) => void;
-  mutateAsync: (variables: Record<string, unknown>) => Promise<unknown>;
+  mutateAsync?: (variables: TVariables) => Promise<unknown>;
   isPending?: boolean;
 }
 
@@ -88,7 +88,7 @@ export const updatewebSurveyAutoTransitionToNextQues = (
 };
 
 export const updatePwdSurvey = (
-  updateSurveyPassword: SurveyUpdateMutation,
+  updateSurveyPassword: SurveyUpdateMutation<{ surveyId: string; password: string }>,
   setPasswordProtection: Dispatch<SetStateAction<boolean>>,
   surveyId: string,
 ) => {
