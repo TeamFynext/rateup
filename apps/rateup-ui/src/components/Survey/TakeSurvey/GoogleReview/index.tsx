@@ -66,7 +66,7 @@ function GoogleReview({
   }
 
   const deleteReviewMutation = useDeleteReviewSuggestionMutation(surveyTeamMapId, true);
-  const updateReviewPageVisits = useUpdateReviewLinkStatsOnSurveyMutation(survey?.id);
+  const updateReviewPageVisits = useUpdateReviewLinkStatsOnSurveyMutation(survey?.id ?? "");
   // if user clicks on go to review page, delete the last copied review
   function handleGoToReviewPage() {
     updateReviewPageVisits.mutate(surveyTeamMapId);
@@ -92,7 +92,7 @@ function GoogleReview({
     return Boolean(question?.reviewPageOptions);
   });
 
-  if (!reviewPageLinks) reviewPageLinks = survey?.reviewPageLinks;
+  if (!reviewPageLinks) reviewPageLinks = survey?.reviewPageLinks ?? null;
 
   let reviewPagePlatform =
     questionWithReviewPageOptions?.reviewPagePlatform || ReviewPagePlatform.Google;

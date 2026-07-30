@@ -37,7 +37,7 @@ function Preview({
 
   const [isLogoDownloadProcessing, setIsLogoDownloadProcessing] = useState(false);
 
-  const previewContainerRef = useRef(undefined);
+  const previewContainerRef = useRef<HTMLDivElement | null>(null);
   const { t: translations } = useTranslation();
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
   const FALLBACK_LOGO = "/images/rateup-icon.png";

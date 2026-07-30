@@ -102,7 +102,7 @@ export const updatePwdSurvey = (
 };
 
 export const updateEmailSurvey = (
-  setEnabledNotificationEmail: Dispatch<SetStateAction<boolean>>,
+  setEnabledNotificationEmail: Dispatch<SetStateAction<boolean | undefined>>,
   editSurvey: SurveyUpdateMutation,
 ) => {
   setEnabledNotificationEmail((prev) => {
