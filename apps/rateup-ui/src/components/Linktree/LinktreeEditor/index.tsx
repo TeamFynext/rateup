@@ -64,7 +64,7 @@ function LinktreeEdtior() {
   }
 
   return (
-    <LinktreeContextProvider linktreeData={data} activeTab={activeTab} setActiveTab={setActiveTab}>
+    <LinktreeContextProvider linktreeData={data!} activeTab={activeTab} setActiveTab={setActiveTab}>
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}

@@ -9,7 +9,7 @@ export interface ICreateGoogleUser {
   name: string;
   orgName: string;
   /** Comes straight off the `authType` search param, which may repeat. */
-  type: string | string[];
+  type: string | string[] | undefined;
   email?: string;
   referralCode?: string;
   industry?: string;

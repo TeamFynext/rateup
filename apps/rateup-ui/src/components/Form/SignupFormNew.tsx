@@ -193,8 +193,8 @@ export function SignUpFlow({
       return;
     }
 
-    const selectedPlan = JSON.parse(localStorage.getItem("selected_plan"));
-    if (cart?.planId.length) {
+    const selectedPlan = JSON.parse(localStorage.getItem("selected_plan") ?? "null");
+    if (cart?.planId?.length) {
       sendMail.mutate({
         email: signupForm.getValues("email"),
         name: signupForm.getValues("name"),

@@ -164,8 +164,8 @@ function AuthTypeSignupForm({
     const referralCode = existingCookie?.split("=")[1];
 
     const data = {
-      name: values?.name,
-      orgName: values?.orgName,
+      name: values?.name ?? "",
+      orgName: values?.orgName ?? "",
       email: values?.email,
       type: authType,
       industry: values?.industry,

@@ -266,7 +266,7 @@ const LoyaltyWaTemplateConfig = ({
     label: getLoyaltyTemplateLabel(t).label,
   }));
 
-  const variableMeta = getLoyaltyTemplateVariableMeta(values.type);
+  const variableMeta = getLoyaltyTemplateVariableMeta(values.type) ?? [];
   const selectedTemplate = loyaltyTemplates?.find(
     (template) => template.id === values.waTemplateId,
   );
@@ -783,9 +783,9 @@ function replaceDynamicVariables({
   variableMeta,
 }: {
   message: string;
-  variableMeta: Array<{ token: string; sample: string }>;
+  variableMeta?: Array<{ token: string; sample: string }>;
 }) {
-  return variableMeta.reduce((acc, variable) => {
+  return (variableMeta ?? []).reduce((acc, variable) => {
     return acc.replaceAll(variable.token, variable.sample);
   }, message);
 }

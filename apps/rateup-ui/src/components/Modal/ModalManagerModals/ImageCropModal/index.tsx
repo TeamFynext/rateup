@@ -93,7 +93,7 @@ function ImageCropModal({
       onSaveClick?.({
         url: generatedUrl,
         source: "unsplash",
-        file: null,
+        file: undefined,
       });
 
       context.closeModal(thisModalId);

@@ -74,7 +74,7 @@ const OverallResponseGraphWebForm = ({
           <Select
             items={TIME_PERIODS}
             value={timePeriod}
-            onValueChange={(val) => setTimePeriod(val)}
+            onValueChange={(val) => setTimePeriod(val ?? "")}
           >
             <SelectTrigger size="sm" className="w-30">
               <SelectValue placeholder="Select" />

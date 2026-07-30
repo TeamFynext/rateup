@@ -65,7 +65,7 @@ export function useSignIn() {
   const navigate = useNavigate();
   const { route } = useRouteAndCartStore();
 
-  return async function (email: string, password: string, phoneNumber: string) {
+  return async function (email?: string, password?: string, phoneNumber?: string) {
     try {
       if (phoneNumber) {
         await handleCreateCode(phoneNumber, navigate);
@@ -74,11 +74,11 @@ export function useSignIn() {
           formFields: [
             {
               id: "email",
-              value: email,
+              value: email ?? "",
             },
             {
               id: "password",
-              value: password,
+              value: password ?? "",
             },
           ],
         });
