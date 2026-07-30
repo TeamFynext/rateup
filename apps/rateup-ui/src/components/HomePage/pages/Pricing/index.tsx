@@ -12,6 +12,7 @@ import { CustomSection } from "./Section/CustomSection.tsx";
 import { SurveySection } from "./Section/SurveySection.tsx";
 import { WhatsAppSection } from "./Section/WhatsAppSection.tsx";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
+import type { Cart } from "./store/RouteAndCartStore.ts";
 
 const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebSurveys" }) => {
   const [value, setValue] = useState(source);
@@ -46,7 +47,7 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
 
   const session = useCheckSession();
 
-  const handlePlanSelection = (data) => {
+  const handlePlanSelection = (data: Cart) => {
     let route = "/dashboard/settings/billing";
     updateRouteAndCart(route, data);
     if (isAccount) return handleSelection();

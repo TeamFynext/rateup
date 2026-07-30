@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-interface Cart {
+export interface Cart {
   id: string;
   name: string;
   currency: string;
@@ -55,7 +55,7 @@ interface ImageActions {
   updateImageArray: (image: object) => void;
   resetImage: () => void;
 }
-const initalImageData = {
+const initalImageData: ImageStore = {
   imageToDelete: [],
 };
 export const useImageStore = create<ImageStore & ImageActions>((set) => ({

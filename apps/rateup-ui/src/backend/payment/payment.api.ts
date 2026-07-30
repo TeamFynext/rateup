@@ -31,6 +31,16 @@ export interface RateupPaymentPlan {
   createdAt: string;
   trialDays: number;
   features?: unknown;
+  currency?: string;
+  /** Gateway pricing, joined onto the plan by the plans endpoint. */
+  paymentPlan?: {
+    /** A number for real plans; the enterprise tiers use "Lets Talk!". */
+    amount: string | number;
+    currency?: string;
+    period?: string;
+    planId?: string;
+  };
+  stripeProduct?: StripeProduct;
 }
 
 export async function syncRazorPayPlans() {

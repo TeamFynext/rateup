@@ -13,7 +13,8 @@ export interface AppNotification {
   data?: {
     contactName?: string;
     contactId?: string;
-    [key: string]: unknown;
+    /** Further per-subSource fields the message renderers read. */
+    [key: string]: string | number | boolean | null | undefined;
   };
 }
 

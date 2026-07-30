@@ -63,8 +63,8 @@ function LinkCard({
   }, [isLinkUrlBeingEdited]);
 
   const getNewLinksArr = useCallback(
-    (changedValueObj) => {
-      const newLinksArr = links.map((linkObj) => {
+    (changedValueObj: Partial<LinktreeLink>) => {
+      const newLinksArr = links.map((linkObj: LinktreeLink) => {
         if (linkObj.id === id) {
           return {
             ...linkObj,

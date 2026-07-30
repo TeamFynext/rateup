@@ -1,4 +1,6 @@
 import PlanCard from "../Card/PlanCard.tsx";
+import type { Cart } from "../store/RouteAndCartStore.ts";
+import type { PricingPlan } from "../types.ts";
 import { PlanCardWidth } from "../Utils/constants.ts";
 
 export const WhatsAppSection = ({
@@ -8,8 +10,8 @@ export const WhatsAppSection = ({
   currencySymbol,
 }: {
   largeScreen: boolean;
-  handlePlanSelection: (plan: SPlan) => void;
-  freePlan: SPlan[];
+  handlePlanSelection: (cart: Cart) => void;
+  freePlan: PricingPlan[];
   currencySymbol: string;
 }) => {
   const whatsAppPlan = [] // plans, removing for now

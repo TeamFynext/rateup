@@ -55,7 +55,7 @@ function CreateQrModal({
   const createQrMutation = useCreateQrMutation();
   const updateQrMutation = useUpdateQrMutation(shortUrlId);
 
-  const handleCreateQrFormSubmit = useCallback(async (values: { name: string }) => {
+  const handleCreateQrFormSubmit = useCallback(async (values: { name: string; url: string }) => {
     await createQrMutation.mutateAsync({
       name: values.name,
       link: values.url,
@@ -65,7 +65,7 @@ function CreateQrModal({
   }, []);
 
   const handleUpdateQrFormSubmit = useCallback(
-    async (values) => {
+    async (values: { name: string; url?: string }) => {
       const name = values.name;
       await updateQrMutation.mutateAsync({
         shortUrlId: shortUrlId,

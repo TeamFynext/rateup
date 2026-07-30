@@ -54,7 +54,10 @@ export const LifecycleSelector = ({
         items:
           tags
             ?.filter((lifecycle: GetLabelsRes) => lifecycle?.category === "lost")
-            .map((lifecycle) => ({ value: lifecycle?.id, label: toLabel(lifecycle) })) || [],
+            .map((lifecycle: GetLabelsRes) => ({
+              value: lifecycle?.id,
+              label: toLabel(lifecycle),
+            })) || [],
       },
     ],
     [tags],
@@ -91,7 +94,7 @@ export const LifecycleSelector = ({
             {(all || index > 0) && <SelectSeparator />}
             <SelectGroup>
               <SelectLabel>{group.group}</SelectLabel>
-              {group.items.map((item) => (
+              {group.items.map((item: { value: string; label: string }) => (
                 <SelectItem key={item.value} value={item.value}>
                   {item.label}
                 </SelectItem>

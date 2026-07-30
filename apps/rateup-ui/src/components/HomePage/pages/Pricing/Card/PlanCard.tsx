@@ -11,6 +11,8 @@ import { gAnalyticsAndFbEvent } from "@/utils/gtag.ts";
 
 import { Button } from "../../../../ui/button.tsx";
 import { NumberAnimate } from "../Animate/NumberAnimate.tsx";
+import type { Cart } from "../store/RouteAndCartStore.ts";
+import type { PricingPlan } from "../types.ts";
 import { PlanCardWidth, Title4 } from "../Utils/constants.ts";
 
 import ButtonStyles from "./Button.module.css";
@@ -24,6 +26,14 @@ const PlanCard = ({
   largeScreen,
   handlePlanSelection,
   isPopular = false,
+}: {
+  index: number;
+  totalItems: number;
+  currencySymbol: string;
+  data: PricingPlan;
+  largeScreen: boolean;
+  handlePlanSelection: (cart: Cart) => void;
+  isPopular?: boolean;
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [isIframeLoading, setIsIframeLoading] = useState(false);

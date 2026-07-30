@@ -691,7 +691,8 @@ declare global {
     displayName: string;
     paymentPlan?: {
       period: string;
-      amount: number;
+      /** A number for real plans; the enterprise tiers use "Lets Talk!". */
+      amount: number | string;
       currency?: string;
     };
     paymentPlanId?: string;
