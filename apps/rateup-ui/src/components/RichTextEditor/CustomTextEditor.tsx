@@ -14,7 +14,13 @@ import InsertImage from "./InsertImage/index.tsx";
 import { Video } from "./InsertVideo/CustomVideo.tsx";
 import InsertVideo from "./InsertVideo/index.tsx";
 
-export default function CustomTextEditor({ content, onUpdate }) {
+export default function CustomTextEditor({
+  content,
+  onUpdate,
+}: {
+  content: string;
+  onUpdate: (content: string) => void;
+}) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ link: false }),

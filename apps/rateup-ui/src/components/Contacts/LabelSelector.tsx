@@ -5,7 +5,24 @@ import { MultiSelect } from "../ui/multi-select.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 
-const LabelSelector = ({ value, onChange, className = "", allowMultiSelect = false }) => {
+/** A contact label as the label picker renders it. */
+interface ContactLabelOption {
+  id: string;
+  name: string;
+  color?: string;
+}
+
+const LabelSelector = ({
+  value,
+  onChange,
+  className = "",
+  allowMultiSelect = false,
+}: {
+  value: string & string[];
+  onChange: ((value: string) => void) & ((value: string[]) => void);
+  className?: string;
+  allowMultiSelect?: boolean;
+}) => {
   const { data: labels = [], isLoading } = useContactLabels();
   if (isLoading) {
     return (
@@ -15,7 +32,8 @@ const LabelSelector = ({ value, onChange, className = "", allowMultiSelect = fal
     );
   }
   if (allowMultiSelect) {
-    const labelOptions = labels?.map((label) => ({ value: label.id, label: label.name })) ?? [];
+    const labelOptions =
+      labels?.map((label: ContactLabelOption) => ({ value: label.id, label: label.name })) ?? [];
     return (
       <MultiSelect
         options={labelOptions}
@@ -27,14 +45,15 @@ const LabelSelector = ({ value, onChange, className = "", allowMultiSelect = fal
       />
     );
   }
-  const labelItems = labels?.map((label) => ({ value: label.id, label: label.name })) ?? [];
+  const labelItems =
+    labels?.map((label: ContactLabelOption) => ({ value: label.id, label: label.name })) ?? [];
   return (
     <Select value={value} onValueChange={onChange} items={labelItems}>
       <SelectTrigger className={`${className}`}>
         <SelectValue placeholder={"Select a label"} />
       </SelectTrigger>
       <SelectContent>
-        {labels?.map((label) => (
+        {labels?.map((label: ContactLabelOption) => (
           <SelectItem value={label.id} key={label.id}>
             {label.name}
           </SelectItem>

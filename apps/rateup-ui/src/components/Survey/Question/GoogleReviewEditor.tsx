@@ -114,7 +114,7 @@ const GoogleReviewEditor = ({
     }
   };
 
-  const updateSmileyResponse = (value) => {
+  const updateSmileyResponse = (value: string[]) => {
     setSelectedSmileys((prevSmileys) => {
       return prevSmileys.includes(value)
         ? prevSmileys.filter((smiley) => smiley !== value)
@@ -142,7 +142,7 @@ const GoogleReviewEditor = ({
     }
   };
 
-  const handleError = (error) => {
+  const handleError = (error: string) => {
     console.error("Failed to update", error);
     toast.error(`${translations("Failed to update.. try again. Error:")} ${error.message}`, {
       id: "load-data",

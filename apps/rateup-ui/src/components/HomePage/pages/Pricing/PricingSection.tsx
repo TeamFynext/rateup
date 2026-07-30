@@ -16,7 +16,33 @@ import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
 
 type BillingPeriod = "monthly" | "yearly";
 
-const PricingSection = ({ onPlanSelect = null, plans }) => {
+/** One gateway's pricing for a plan. */
+interface PricingGatewayPlan {
+  amount: string | number;
+  currency?: string;
+  period?: string;
+  planId?: string;
+}
+
+/** A subscription plan as the public pricing page renders it. */
+interface PricingPlan {
+  id: string;
+  name: string;
+  displayName?: string;
+  description?: string[];
+  currency?: string;
+  paymentPlan?: PricingGatewayPlan;
+  monthlyPaymentPlan?: PricingGatewayPlan;
+  yearlyPaymentPlan?: PricingGatewayPlan;
+}
+
+const PricingSection = ({
+  onPlanSelect = null,
+  plans,
+}: {
+  onPlanSelect?: (() => void) | null;
+  plans: PricingPlan[];
+}) => {
   const [period, setPeriod] = useState<BillingPeriod>("yearly");
   const navigate = useNavigate();
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -55,7 +81,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
   const sendMail = useSendMailPlanSelectDetails();
   const session = useCheckSession();
 
-  function handlePlanSelection(plan) {
+  function handlePlanSelection(plan: PricingPlan) {
     if (onPlanSelect) onPlanSelect();
     if (plan.name === "FREE PLAN") {
       navigate({ to: "/signup" });

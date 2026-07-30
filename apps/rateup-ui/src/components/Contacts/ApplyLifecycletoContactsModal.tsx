@@ -18,7 +18,17 @@ import { Label } from "../ui/label.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { LifecycleSelector } from "./LifecycleSelector.tsx";
 
-const ApplyLifecycletoContactsModal = ({ opened, setOpened, contactIds, onSuccess = null }) => {
+const ApplyLifecycletoContactsModal = ({
+  opened,
+  setOpened,
+  contactIds,
+  onSuccess = null,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  contactIds: string[];
+  onSuccess?: (() => void) | null;
+}) => {
   const { t } = useTranslation();
   const [lifecycleId, setLifecycleId] = useState("");
   const update = useUpdateLifecycleofMultipleContacts();

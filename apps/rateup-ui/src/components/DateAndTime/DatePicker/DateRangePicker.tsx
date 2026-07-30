@@ -11,7 +11,17 @@ const DateRangePicker = lazy(() =>
   import("react-date-range").then((m) => ({ default: m.DateRangePicker })),
 );
 
-export const DateRangePickerModal = ({ opened, onChange, ranges, close }) => {
+export const DateRangePickerModal = ({
+  opened,
+  onChange,
+  ranges,
+  close,
+}: {
+  opened: boolean;
+  onChange: (ranges: Date[]) => void;
+  ranges: Date[];
+  close: () => void;
+}) => {
   const { t: translations } = useTranslation();
   return (
     <Dialog

@@ -1,5 +1,8 @@
 // themeObj is draft obj of immer, since this function is being passes to useImmerReducer.
-function themeReducer(themeObj, action) {
+function themeReducer(
+  themeObj: Record<string, unknown>,
+  action: { type: string; payload?: unknown },
+) {
   const payload = action.payload;
 
   switch (action.type) {

@@ -5,7 +5,17 @@ import { MultiSelect } from "../ui/multi-select.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 
-const ContactGroupSelector = ({ value, onChange, className = "", allowMultiSelect = false }) => {
+const ContactGroupSelector = ({
+  value,
+  onChange,
+  className = "",
+  allowMultiSelect = false,
+}: {
+  value: string | string[];
+  onChange: (value: string & string[]) => void;
+  className?: string;
+  allowMultiSelect?: boolean;
+}) => {
   const { data: groups, isLoading } = useContactGroup();
   if (isLoading) {
     return (

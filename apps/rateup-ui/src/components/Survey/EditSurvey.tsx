@@ -104,7 +104,9 @@ export function EditSurvey({
 
   const { data: allThemesArr, isPending: isAllThemesFetchPending } = useAllThemes();
 
-  const themeObjBeingEdited = allThemesArr?.find((obj) => obj.id === themeSelectorState);
+  const themeObjBeingEdited = allThemesArr?.find(
+    (obj: { id: string }) => obj.id === themeSelectorState,
+  );
   const isThemeObjBeingEditedDefaultTheme = themeObjBeingEdited?.name === "Default Theme";
 
   const [isStylesEditorDrawerOpen, setIsStylesEditorDrawerOpen] = useState(false);

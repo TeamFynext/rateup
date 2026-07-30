@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
+import type { ReactNode } from "react";
 
 import { useResolvedTheme } from "@/components/theme/theme-provider.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
@@ -8,7 +9,7 @@ import { rateupLogoUrl } from "../HomePage/constants.tsx";
 
 import styles from "./login-signup-layout.module.css";
 
-function LoginSignupLayout({ children }) {
+function LoginSignupLayout({ children }: { children: ReactNode }) {
   const colorScheme = useResolvedTheme();
 
   return (

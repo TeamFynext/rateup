@@ -10,7 +10,17 @@ import ImageSourceSelectorModal from "../Modal/ModalManagerModals/ImageSourceSel
 
 import styles from "./LocalOrUnsplashImagePicker.module.css";
 
-function LocalOrUnsplashImagePicker({ value, label, forDevice, onImageSelected }) {
+function LocalOrUnsplashImagePicker({
+  value,
+  label,
+  forDevice,
+  onImageSelected,
+}: {
+  value: string;
+  label: string;
+  forDevice: string;
+  onImageSelected: (url: string) => void;
+}) {
   const { t: translations } = useTranslation();
   const [uploadModalOpened, { open: openUploadModal, close: closeUploadModal }] =
     useDisclosure(false);

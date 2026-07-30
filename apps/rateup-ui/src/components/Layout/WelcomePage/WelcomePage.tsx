@@ -36,7 +36,7 @@ function WelcomePage({
   };
 
   const welcomeTypeQuestionObj =
-    questionsArr?.find((question) => question.type === PageType.Welcome) ||
+    questionsArr?.find((question: Question) => question.type === PageType.Welcome) ||
     defaultTitleSubtitleStartButtonTexts;
   const { titleText, subtitleText, startButtonText } = welcomeTypeQuestionObj;
 

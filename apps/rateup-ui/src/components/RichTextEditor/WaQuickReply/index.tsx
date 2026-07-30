@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useGetWaQuickReplies } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
 import { Spinner } from "@/components/ui/spinner.tsx";
 
-export function isJSONString(string) {
+export function isJSONString(string: string) {
   return /^\s*\{.*\}\s*$/.test(string);
 }
 

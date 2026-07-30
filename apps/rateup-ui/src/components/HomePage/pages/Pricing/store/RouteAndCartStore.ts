@@ -5,7 +5,8 @@ interface Cart {
   name: string;
   currency: string;
   description: string[];
-  amount: string;
+  /** A number for real plans; the enterprise tiers store "Lets Talk!". */
+  amount: string | number;
   currencySymbol: string;
   period: string;
   gateway: string;

@@ -18,7 +18,18 @@ import ContactDetailedView from "./ContactDetailedView.tsx";
 import CreateOrEditContactModal from "./CreatOrEditContactModal.tsx";
 import SendMessageModal from "./SendMessageModal.tsx";
 
-const ContactMenu = ({ contact, groupId }) => {
+const ContactMenu = ({
+  contact,
+  groupId,
+}: {
+  contact: ContactsData & {
+    notes?: string;
+    location?: string;
+    contactLabelMap?: Array<{ label?: { id?: string; name?: string; color?: string } }>;
+    contactGroups?: Array<{ contactGroup?: ContactGroup }>;
+  };
+  groupId: string;
+}) => {
   const { t: translations } = useTranslation();
   const confirm = useConfirm();
   const [openedEditModal, setOpenedEditModal] = useState(false);
@@ -43,8 +54,9 @@ const ContactMenu = ({ contact, groupId }) => {
   const initialValues = {
     ...rest,
     labels: ContactLabelMap ? ContactLabelMap.map((c) => c.label.id) : [],
-    contactGroupIds: contactGroups?.map((g) => g?.contactGroup?.id) || [],
-    assignedUserIds: waInboxAssign?.map((a) => a.assignedUserId) || [],
+    contactGroupIds:
+      contactGroups?.map((g: { contactGroup?: { id?: string } }) => g?.contactGroup?.id) || [],
+    assignedUserIds: waInboxAssign?.map((a) => a.assignedUser?.id) || [],
   };
   return (
     <DropdownMenu>

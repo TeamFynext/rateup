@@ -212,7 +212,12 @@ const ContactForm = ({ form, customFields, type }: ContactFormProps) => {
                 <FieldLabel htmlFor={`${uid}-field-3`}>{translations("Labels")}</FieldLabel>
                 <MultiSelect
                   id={`${uid}-field-3`}
-                  options={labels?.map((label) => ({ value: label.id, label: label.name })) ?? []}
+                  options={
+                    labels?.map((label: { id: string; name: string }) => ({
+                      value: label.id,
+                      label: label.name,
+                    })) ?? []
+                  }
                   value={field.value ?? []}
                   onValueChange={field.onChange}
                   placeholder="Select labels"

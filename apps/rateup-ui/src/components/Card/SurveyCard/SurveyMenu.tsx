@@ -59,8 +59,8 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
   const confirm = useConfirm();
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const allTeams = teamsData?.map((team) => team?.id);
-  const teamOptions = teamsData?.map((team) => ({
+  const allTeams = teamsData?.map((team: { id: string; name: string }) => team?.id);
+  const teamOptions = teamsData?.map((team: { id: string; name: string }) => ({
     value: team?.id,
     label: team?.name,
   }));
@@ -303,7 +303,7 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
   );
 }
 
-function arraysEqual(a, b) {
+function arraysEqual(a: string[], b: string[]) {
   if (a === b) return true;
   if (a == null || b == null) return false;
   if (a?.length !== b?.length) return false;

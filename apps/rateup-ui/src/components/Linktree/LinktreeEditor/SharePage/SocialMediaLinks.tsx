@@ -8,7 +8,15 @@ import { getLink, socialMediaLinks } from "./constants.tsx";
 
 import styles from "./ShareLinktree.module.css";
 
-function SocialMediaLinks({ linktreeName, linktreeShareUrl, isPublished }) {
+function SocialMediaLinks({
+  linktreeName,
+  linktreeShareUrl,
+  isPublished,
+}: {
+  linktreeName: string;
+  linktreeShareUrl: string;
+  isPublished: boolean;
+}) {
   const [isIframeModalOpen, { open: openIframeModal, close: closeIframeModal }] = useDisclosure();
 
   return (

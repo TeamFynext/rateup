@@ -35,6 +35,12 @@ const AddCustomerModal = ({
   existingContactIds,
   createNewContactsFromCSV,
   type = ContactGroupType.NORMAL,
+}: {
+  groupId: string;
+  close: () => void;
+  existingContactIds: string[];
+  createNewContactsFromCSV: { mutate: (data: FormData) => void; isPending?: boolean };
+  type?: ContactGroupType;
 }) => {
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
   const [isCreating, setIsCreating] = useState(false);

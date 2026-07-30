@@ -29,24 +29,36 @@ function Stats() {
           {!links || !links.length ? (
             <NothingFound text="No Links Found" />
           ) : (
-            links?.map(({ id, linkDisplayName, linkUrl, noOfClicks = 0 }) => {
-              return (
-                <Card key={id} className={"p-4"}>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className={cn("flex flex-col gap-4", styles["name-and-url-container"])}>
-                      <h2>{linkDisplayName}</h2>
-                      <p>{linkUrl}</p>
+            links?.map(
+              ({
+                id,
+                linkDisplayName,
+                linkUrl,
+                noOfClicks = 0,
+              }: {
+                id: string;
+                linkDisplayName: string;
+                linkUrl: string;
+                noOfClicks?: number;
+              }) => {
+                return (
+                  <Card key={id} className={"p-4"}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className={cn("flex flex-col gap-4", styles["name-and-url-container"])}>
+                        <h2>{linkDisplayName}</h2>
+                        <p>{linkUrl}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className={styles["no-of-clicks-p"]}>
+                          <span>Number of Clicks: </span>
+                          <span className={styles["no-of-clicks-number-span"]}>{noOfClicks}</span>
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <p className={styles["no-of-clicks-p"]}>
-                        <span>Number of Clicks: </span>
-                        <span className={styles["no-of-clicks-number-span"]}>{noOfClicks}</span>
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })
+                  </Card>
+                );
+              },
+            )
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 
 import {
@@ -34,7 +35,13 @@ import LanguageSelectionPage from "../LanguageSelectionPage/index.tsx";
 import WelcomePage from "../WelcomePage/WelcomePage.tsx";
 import { getBgImgAndBgColor } from "./utils.ts";
 
-export const TakeSurveyLayoutWeb = ({ survey, children }) => {
+export const TakeSurveyLayoutWeb = ({
+  survey,
+  children,
+}: {
+  survey: Survey;
+  children: ReactNode;
+}) => {
   const { theme: surveyThemeData } = survey?.webSurveyTheme ?? {};
   const pagesThemeData = survey?.webSurveyPagesTheme;
 

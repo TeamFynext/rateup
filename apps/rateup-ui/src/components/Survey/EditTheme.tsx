@@ -50,7 +50,9 @@ export function EditTheme({
 
   const { data: allThemesArr, isPending: isAllThemesFetchPending } = useAllThemes();
 
-  const themeObjBeingEdited = allThemesArr?.find((obj) => obj.id === themeSelectorState);
+  const themeObjBeingEdited = allThemesArr?.find(
+    (obj: { id: string }) => obj.id === themeSelectorState,
+  );
   const isThemeObjBeingEditedDefaultTheme = themeObjBeingEdited?.name === "Default Theme";
 
   useEffect(() => {

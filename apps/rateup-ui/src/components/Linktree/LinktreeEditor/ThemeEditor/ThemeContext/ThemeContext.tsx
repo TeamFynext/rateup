@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import type { ReactNode } from "react";
 import { useImmerReducer } from "use-immer";
 
 import { useLinktreeObj } from "../../LinktreeContext/LinktreeContext.tsx";
@@ -14,7 +15,7 @@ const SetSelectPreviewDeviceContext = createContext(null);
 const SelectedEditorContext = createContext(null);
 const SetSelectedEditorContext = createContext(null);
 
-function ThemeObjProvider({ children }) {
+function ThemeObjProvider({ children }: { children: ReactNode }) {
   let { theme } = useLinktreeObj();
   if (!theme) theme = initialState;
   const [themeObj, dispatch] = useImmerReducer(themeReducer, theme);

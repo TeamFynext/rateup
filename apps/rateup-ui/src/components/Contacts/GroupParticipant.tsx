@@ -5,7 +5,7 @@ import { useConfirm } from "@/context/confirm-provider";
 
 import { Button } from "../ui/button.tsx";
 
-export const ParticipantMenu = ({ contactId, groupId }) => {
+export const ParticipantMenu = ({ contactId, groupId }: { contactId: string; groupId: string }) => {
   const removeContactsMutation = useRemoveContactsFromGroup(groupId);
   const { t: translations } = useTranslation();
   const confirm = useConfirm();

@@ -28,7 +28,7 @@ const socialMediaLinks = [
   },
 ];
 
-const getLink = (id, link, linktreeTitle, shareUrl) => {
+const getLink = (id: string, link: string, linktreeTitle: string, shareUrl: string) => {
   switch (id) {
     case "email": {
       return `${link}\n ${linktreeTitle} \n${shareUrl} \n\n`;

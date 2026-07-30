@@ -12,7 +12,13 @@ import { useLinktreeObj } from "../../LinktreeContext/LinktreeContext.tsx";
 
 import styles from "../LinksEditor.module.css";
 
-function LinkCard({ linkObj, onDelete }) {
+function LinkCard({
+  linkObj,
+  onDelete,
+}: {
+  linkObj: LinktreeLink;
+  onDelete: (id: string) => void;
+}) {
   const { id, linkDisplayName, linkUrl } = linkObj;
   const [linkDisplayNameInputState, setLinkDisplayNameInputState] = useState(linkDisplayName);
 

@@ -1,5 +1,7 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import type { Dispatch, SetStateAction } from "react";
 
+import type { PaginationState } from "@/types/api.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
 import { Button } from "../ui/button.tsx";
@@ -7,7 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 
 const pageSizeOptions = PAGE_SIZE.map((size) => ({ value: size, label: size }));
 
-const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
+const ContactPagination = ({
+  totalPageCount,
+  setPagination,
+  pagination,
+}: {
+  totalPageCount: number;
+  setPagination: Dispatch<SetStateAction<PaginationState>>;
+  pagination: PaginationState;
+}) => {
   const totalPages = Math.max(1, Math.round(totalPageCount));
   const goTo = (pageIndex: number) =>
     setPagination((prev) => ({

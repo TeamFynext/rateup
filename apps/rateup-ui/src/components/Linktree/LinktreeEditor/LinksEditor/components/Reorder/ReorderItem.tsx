@@ -2,10 +2,21 @@ import { Draggable } from "@hello-pangea/dnd";
 import { IconGripVertical } from "@tabler/icons-react";
 import cx from "clsx";
 import type { CSSProperties } from "react";
+import type { ReactNode } from "react";
 
 import classes from "./Reorder.module.css";
 
-function ReorderItem({ children, id, index, className = "" }) {
+function ReorderItem({
+  children,
+  id,
+  index,
+  className = "",
+}: {
+  children: ReactNode;
+  id: string;
+  index: number;
+  className?: string;
+}) {
   return (
     <Draggable draggableId={id} index={index}>
       {(provided, snapshot) => {

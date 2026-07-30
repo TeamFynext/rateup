@@ -10,7 +10,15 @@ import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 import errorPageStyles from "../../../ws/$shortId/ws.module.css";
 
-export default function Page({ survey, error_occured, fromShortUrl = false }) {
+export default function Page({
+  survey,
+  error_occured,
+  fromShortUrl = false,
+}: {
+  survey: Survey;
+  error_occured?: boolean;
+  fromShortUrl?: boolean;
+}) {
   // empty if its not review page, contains surveyLanguage if its review page
   const [isReviewPage, setIsReviewPage] = useState<string>("");
   const { t: translations } = useTranslation();

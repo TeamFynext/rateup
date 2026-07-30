@@ -2,7 +2,7 @@
 
 import TimeSinceText from "../TimeSinceText.tsx";
 
-function CreatedSinceText({ createdAt }) {
+function CreatedSinceText({ createdAt }: { createdAt: string | Date }) {
   // const { t: translations } = useTranslation();
   return (
     <div className="flex min-w-0 items-center gap-1 overflow-hidden">

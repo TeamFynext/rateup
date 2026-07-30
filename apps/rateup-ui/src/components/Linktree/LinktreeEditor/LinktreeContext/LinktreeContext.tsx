@@ -1,10 +1,21 @@
 import { createContext, useContext } from "react";
+import type { ReactNode } from "react";
 
 const LinktreeContext = createContext(null);
 const LinktreeEditorTabContext = createContext(null);
 const LinktreeEditorSetTabContext = createContext(null);
 
-function LinktreeContextProvider({ linktreeData, children, activeTab, setActiveTab }) {
+function LinktreeContextProvider({
+  linktreeData,
+  children,
+  activeTab,
+  setActiveTab,
+}: {
+  linktreeData: unknown;
+  children: ReactNode;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}) {
   return (
     <LinktreeContext.Provider value={linktreeData}>
       <LinktreeEditorTabContext.Provider value={activeTab}>

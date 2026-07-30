@@ -16,21 +16,21 @@ function BackgroundEditor() {
   } = useThemeObj();
   const themeDispatch = useThemeDispatch();
 
-  const handleBackgroundColorChange = useCallback((value) => {
+  const handleBackgroundColorChange = useCallback((value: string) => {
     themeDispatch({
       type: "background-color-change",
       payload: value,
     });
   }, []);
 
-  const handleDesktopBackgroundImageChange = useCallback((url) => {
+  const handleDesktopBackgroundImageChange = useCallback((url: string) => {
     themeDispatch({
       type: "background-destktop-img-change",
       payload: url,
     });
   }, []);
 
-  const handleMobileBackgroundImageChange = useCallback((url) => {
+  const handleMobileBackgroundImageChange = useCallback((url: string) => {
     themeDispatch({
       type: "background-mobile-img-change",
       payload: url,

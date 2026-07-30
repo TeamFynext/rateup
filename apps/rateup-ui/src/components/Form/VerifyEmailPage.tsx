@@ -7,7 +7,7 @@ import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 
-function VerifyEmailPage({ sendEmail }) {
+function VerifyEmailPage({ sendEmail }: { sendEmail: () => void }) {
   const [countdown, setCountdown] = useState(0);
   const [emailSent, setEmailSent] = useState(false);
   const navigate = useNavigate();

@@ -20,7 +20,15 @@ import { Field, FieldLabel } from "../ui/field.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 
-const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
+const SendMessageModal = ({
+  opened,
+  setOpened,
+  selectedContact,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  selectedContact: ContactsData;
+}) => {
   const [whatsappSettingsPhoneId, setWhatsappSettingsPhoneId] = useState("");
   const [message, setMessage] = useState("");
   const [platform, setPlatform] = useState<string>(MessagePlatform.WHATSAPP);
@@ -82,7 +90,7 @@ const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
             <FieldLabel htmlFor="message-account">Account</FieldLabel>
             <AccountSelector
               value={whatsappSettingsPhoneId}
-              onChange={(value) => setWhatsappSettingsPhoneId(value)}
+              onChange={(value: string) => setWhatsappSettingsPhoneId(value)}
               platform={platform as MessagePlatform}
             />
           </div>

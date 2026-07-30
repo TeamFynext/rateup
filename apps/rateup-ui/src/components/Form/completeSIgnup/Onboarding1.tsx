@@ -61,7 +61,7 @@ export default function OnboardingStep1({
     setData((prev) => ({
       ...prev,
       services: prev.services.includes(serviceId)
-        ? prev.services.filter((s) => s !== serviceId)
+        ? prev.services.filter((s: string) => s !== serviceId)
         : [...prev.services, serviceId],
     }));
   };

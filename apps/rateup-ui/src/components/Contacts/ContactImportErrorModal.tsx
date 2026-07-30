@@ -7,7 +7,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog.t
 import { ScrollArea } from "../ui/scroll-area.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table.tsx";
 
-const ContactImportErrorModal = ({ isError = false, body }) => {
+const ContactImportErrorModal = ({
+  isError = false,
+  body,
+}: {
+  isError?: boolean;
+  body: unknown;
+}) => {
   const responseError = body?.error ?? "";
   const failedRows: { name?: string; phone?: string }[] = Array.isArray(body?.data)
     ? body.data

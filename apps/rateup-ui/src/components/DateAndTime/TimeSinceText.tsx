@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { getTimeSince } from "@/utils/index.ts";
 
-function TimeSinceText({ isoDateString }) {
+function TimeSinceText({ isoDateString }: { isoDateString: string }) {
   const [timeSinceStr, setTimeSinceStr] = useState("");
   useEffect(() => {
     if (isoDateString) {

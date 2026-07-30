@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge.tsx";
@@ -7,7 +8,13 @@ import { QuestionType } from "@/types/enums.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { extractText, isHtml } from "@/utils/index.ts";
 
-export const HoverCardComponent = ({ content, questionType = null }) => {
+export const HoverCardComponent = ({
+  content,
+  questionType = null,
+}: {
+  content: ReactNode;
+  questionType?: QuestionType | null;
+}) => {
   const { t: translations } = useTranslation();
 
   if (questionType && !Object.values(QuestionType).includes(questionType))
