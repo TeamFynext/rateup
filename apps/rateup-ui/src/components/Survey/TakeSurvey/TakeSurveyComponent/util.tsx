@@ -138,12 +138,12 @@ export function submitSurvey({
   checkUniqueDevice,
   selectedColumnId,
 }: {
-  surveyTeamMapId: string;
+  surveyTeamMapId: string | undefined;
   responses: QuestionResponse[];
   selectedLanguage: string;
   setIsSavingResponses: (saving: boolean) => void;
   coordinates?: Coordinates;
-  tag?: string;
+  tag?: string | null;
   encryptedResponses?: string;
   shouldRaiseTicket: boolean;
   checkUniqueDevice: boolean;

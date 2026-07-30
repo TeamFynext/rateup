@@ -99,12 +99,11 @@ function TakeSurvey({
   // used for animation of question change in Question AnimationPresence below.
   const [aPDirection, setApDirection] = useState(0);
 
-  const [coordinates, setCoordinates] = useState<{
-    latitude: number;
-    longitude: number;
-  }>(undefined);
+  const [coordinates, setCoordinates] = useState<
+    { latitude: number; longitude: number } | undefined
+  >(undefined);
 
-  const updateCompleted = useUpdateCompletedMutation(survey?.id);
+  const updateCompleted = useUpdateCompletedMutation(survey?.id ?? "");
 
   const [responses, handlers] = useListState<QuestionResponse>([]);
   const responsesRef = useRef(responses);
@@ -179,12 +178,12 @@ function TakeSurvey({
   };
 
   useEffect(() => {
-    window?.visualViewport.addEventListener("scroll", viewportHandler);
-    window?.visualViewport.addEventListener("resize", viewportHandler);
+    window?.visualViewport?.addEventListener("scroll", viewportHandler);
+    window?.visualViewport?.addEventListener("resize", viewportHandler);
 
     return () => {
-      window?.visualViewport.removeEventListener("scroll", viewportHandler);
-      window?.visualViewport.removeEventListener("resize", viewportHandler);
+      window?.visualViewport?.removeEventListener("scroll", viewportHandler);
+      window?.visualViewport?.removeEventListener("resize", viewportHandler);
     };
   }, [isSurveyThemePreview]);
 
@@ -214,7 +213,7 @@ function TakeSurvey({
 
   const goBack = () => {
     const prevQId = questionsHistory[questionsHistory.length - 2];
-    setSelectedQ(survey.questions.find((q) => q.id === prevQId));
+    setSelectedQ(survey.questions.find((q) => q.id === prevQId) ?? null);
     questionsHistoryHandlers.pop();
     setApDirection(-1);
   };
@@ -293,15 +292,19 @@ function TakeSurvey({
       checkGoogleReviewForQuestion(survey?.questions, responsesRef.current);
     const shouldRaiseTicket =
       survey?.enableAutoGenerateTicket ||
-      checkRaiseTicketIssueQuestion(survey?.questions, responsesRef.current, selectedLanguage);
+      checkRaiseTicketIssueQuestion(
+        survey?.questions ?? [],
+        responsesRef.current,
+        selectedLanguage,
+      );
     let selectedColumnId = survey?.ticketColumnId;
     if (shouldRaiseTicket && !survey?.enableAutoGenerateTicket) {
-      selectedColumnId = getColumnIdFromTickets(survey?.questions, responsesRef.current);
+      selectedColumnId = getColumnIdFromTickets(survey?.questions ?? [], responsesRef.current);
     }
     // This If Condition is for survey preview in survey editor.
     if (isSurveyThemePreview) {
       if (shouldShowGoogleReview && !(pageType === PageType.ThankYou)) {
-        setIsReviewPage(selectedLanguage);
+        setIsReviewPage?.(selectedLanguage);
       } else if (isThankYouPageEnabled) {
         setIsThankyouPage?.(true);
       } else {
@@ -318,7 +321,10 @@ function TakeSurvey({
     let defaultResponses = responsesRef.current;
     let encryptedResponses = "";
     if (survey?.isEncrypted || survey?.publicKey) {
-      const { encryptedResponse } = await encryptResponse(responsesRef.current, survey?.publicKey);
+      const { encryptedResponse } = await encryptResponse(
+        responsesRef.current,
+        survey?.publicKey ?? "",
+      );
       encryptedResponses = encryptedResponse;
       defaultResponses = [];
     }
@@ -336,12 +342,12 @@ function TakeSurvey({
       selectedColumnId,
     })
       .then(() => {
-        updateCompleted.mutate(surveyTeamMapId);
+        updateCompleted.mutate(surveyTeamMapId ?? "");
         let kioskMode = survey?.kioskMode ? "y" : "n";
         kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
 
         if (shouldShowGoogleReview && !(pageType === PageType.ThankYou)) {
-          setIsReviewPage(selectedLanguage);
+          setIsReviewPage?.(selectedLanguage);
         } else if (isThankYouPageEnabled) {
           if (fromShortUrl) {
             navigate({
