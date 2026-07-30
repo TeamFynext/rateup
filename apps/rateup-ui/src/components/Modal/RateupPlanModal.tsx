@@ -167,7 +167,7 @@ const RateupPlanModal = ({
     }
   }, [checked]);
 
-  const handleSubmit = (values: RateupPlanFormValues) => {
+  const handleSubmit = (values: z.infer<typeof schema>) => {
     const payload = { ...values, currency: values.currency || undefined };
     if (isEdit) {
       rateupPaymentsPlanUpdateMutation.mutate({ ...payload, id: plan.id });

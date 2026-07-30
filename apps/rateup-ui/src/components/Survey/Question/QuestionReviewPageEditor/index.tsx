@@ -56,7 +56,7 @@ function QuestionReviewPageEditor({
 }: {
   selectedQ: Question;
   survey: Survey;
-  setActiveTab: (tab: string) => void;
+  setActiveTab: (tab: QuestionTabsEnum) => void;
 }) {
   const [state, setState] = useState(selectedQ?.reviewPageOptions);
   const [reviewPagePlatformDDState, setReviewPageDDState] = useState(selectedQ?.reviewPagePlatform);

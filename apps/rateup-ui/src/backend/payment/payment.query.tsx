@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import type { ICreateCheckoutType } from "./payment.api";
 import {
   cancelRazorpaySubscription,
@@ -46,7 +48,7 @@ export function useRateupPaymentsPlanMutation(close: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => createRateupPaymentPlan(data),
+    mutationFn: (data: RequestPayload) => createRateupPaymentPlan(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
       toast.success("RateUp Plan created successfully.", {
@@ -66,7 +68,7 @@ export function useRateupPaymentsPlanUpdateMutation(close: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => updateRateupPaymentPlan(data),
+    mutationFn: (data: RequestPayload) => updateRateupPaymentPlan(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
       queryClient.invalidateQueries({ queryKey: ["subscription"] });

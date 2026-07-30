@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 
+import type { QuestionType } from "@/types/enums.ts";
 import { PageType } from "@/types/enums.ts";
 
 import BackgroundStyles from "./components/BackgroundStyles.tsx";
@@ -173,7 +174,7 @@ export const getSurveyThemeTabValueFromPageType = (pageType: PageType) => {
   }
 };
 
-export const getSurveyThemeKeyFromPageType = (pageType: PageType) => {
+export const getSurveyThemeKeyFromPageType = (pageType: PageType | QuestionType) => {
   switch (pageType) {
     case PageType.Welcome: {
       return "welcomeTheme";

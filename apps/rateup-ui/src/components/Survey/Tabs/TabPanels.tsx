@@ -36,7 +36,7 @@ function TabPanelsComp({
   setSelectedLanguage: Dispatch<SetStateAction<string>>;
   encryptionpassword: string;
   setEncryptionPassword: (password: string) => void;
-  setActiveTab: (tab: string) => void;
+  setActiveTab: (tab: TabEnum) => void;
   setFunToRunBeforeSurveyIdPageHeaderTabsChange: (fn: (() => void) | null) => void;
 }) {
   const { data: subscription } = useSubscription();

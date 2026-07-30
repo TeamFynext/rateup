@@ -1,4 +1,5 @@
 import { Node } from "@tiptap/core";
+import type { ReactNodeViewProps } from "@tiptap/react";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import type { ComponentType } from "react";
 
@@ -8,7 +9,7 @@ const MantineComponentExtension = ({
   MantineComponent,
   componentName,
 }: {
-  MantineComponent: ComponentType<Record<string, unknown>>;
+  MantineComponent: ComponentType<ReactNodeViewProps<HTMLElement>>;
   componentName: string;
 }) => {
   return Node.create({
@@ -46,7 +47,7 @@ const MantineComponentExtension = ({
   });
 };
 
-const VariableComponent = ({ node }) => {
+const VariableComponent = ({ node }: ReactNodeViewProps<HTMLElement>) => {
   return (
     <NodeViewWrapper as={"span"}>
       <Badge variant="system" className="rounded-sm">
