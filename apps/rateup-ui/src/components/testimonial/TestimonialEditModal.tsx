@@ -245,7 +245,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
   const [activeBlockTab, setActiveBlockTab] = useState<BlockTabEnum>(BlockTabEnum.Background);
 
   useEffect(() => {
-    setCurrentstyle(theme);
+    if (theme) setCurrentstyle(theme);
     setActiveBlockTab(BlockTabEnum.Background);
   }, [theme]);
 
@@ -524,7 +524,7 @@ const TestimonialEditModal = ({ opened, onClose, theme }: Readonly<TestimonialEd
           <Button
             variant="outline"
             onClick={() => {
-              setCurrentstyle(theme);
+              if (theme) setCurrentstyle(theme);
               onClose();
             }}
           >
