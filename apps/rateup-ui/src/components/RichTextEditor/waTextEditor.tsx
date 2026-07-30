@@ -17,6 +17,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
 import { BoldToolbar } from "@/components/tiptap/toolbars/bold.tsx";
 import { BulletListToolbar } from "@/components/tiptap/toolbars/bullet-list.tsx";
@@ -64,8 +65,10 @@ import { createWaExtensions } from "./wa-editor/extensions.ts";
 import { parseFromWhatsAppFormat } from "./wa-editor/format.tsx";
 import { isJSONString, WaQuickReply } from "./WaQuickReply/index.tsx";
 interface WaTextEditorProps {
-  handleInputChange: (value: string) => void;
-  content: string;
+  /** Receives the editor's Tiptap document (`editor.getJSON()`). */
+  handleInputChange: (value: TiptapNode) => void;
+  /** Initial content: a Tiptap document, or WhatsApp-formatted/plain text. */
+  content: TiptapNode | string;
   className?: string;
   mah?: number | string;
   placeholder?: string;

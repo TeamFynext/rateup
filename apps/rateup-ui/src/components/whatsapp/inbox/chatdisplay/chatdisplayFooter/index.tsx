@@ -326,7 +326,7 @@ export default function WaInboxChatDisplayFooter({
     resetMedia();
     setAudioUrl(null);
     const id = generateInternalMessageId();
-    const newMessage = {
+    const newMessage: OptimisticMessage = {
       id: id,
       contactId: contact.id,
       waCreatedAt: new Date().toISOString(),
@@ -637,7 +637,7 @@ export const WaInboxAssignUserFooter = ({
     }
     const message = `Chat assigned to ${user.userName}`;
     const id = generateInternalMessageId();
-    const newMessage = {
+    const newMessage: OptimisticMessage = {
       id: id,
       contactId: contactId,
       waCreatedAt: new Date().toISOString(),
@@ -856,7 +856,8 @@ interface Message {
   id?: string;
   contactId: string;
   body: {
-    text: string;
+    /** The composer's Tiptap document, or plain text for legacy entries. */
+    text: TiptapNode | string;
     url?: string;
     urlType?: string;
     filename?: string;
@@ -908,11 +909,37 @@ export const useTemperoryMessageStore = create<MessageState>((set, get) => ({
     }),
 }));
 
+/**
+ * An optimistic message pushed into the thread before the server echoes it.
+ * The `null` slots mirror the wire shape, where only one of
+ * send/receive/privateNote is populated.
+ */
+interface OptimisticMessage {
+  id: string;
+  contactId: string;
+  waCreatedAt: string;
+  messageBody: {
+    send: unknown;
+    receive: unknown;
+    privateNote?: unknown;
+    exchangeProcess: string;
+    [key: string]: unknown;
+  };
+  sourcePlatform: string;
+  sourceIdentifier: string | null;
+  sendBy?: string;
+  sender?: { name?: string; profilePhoto?: string };
+  stats?: { read: string; sent: string; failed: string; delivered: string };
+  messageId: string;
+  [key: string]: unknown;
+}
+
 interface WaMedia {
   type: string;
   url: string;
   name: string;
-  key: string;
+  /** Absent until the file has been uploaded (e.g. a fresh voice note). */
+  key?: string;
   isVoiceNote?: boolean;
 }
 
