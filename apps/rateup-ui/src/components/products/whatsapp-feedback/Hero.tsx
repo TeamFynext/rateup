@@ -5,7 +5,7 @@ import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal"
 
 import style from "./feedback.module.css";
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function getTime() {
   const now = new Date();
@@ -24,7 +24,7 @@ export default function Hero() {
     if (runningRef.current) return;
     runningRef.current = true;
 
-    function mkMsg(side, html, showTime) {
+    function mkMsg(side: string, html: string, showTime?: boolean) {
       const d = document.createElement("div");
       const base =
         "msg max-w-[84%] px-2.5 pt-[7px] pb-2 text-[13px] leading-[1.4] text-[#111b21] rounded-[10px] relative shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] break-words transition-all duration-[320ms] ease-[cubic-bezier(0.22,1,0.36,1)] opacity-0 translate-y-2 scale-[0.97]";
@@ -84,10 +84,10 @@ export default function Hero() {
       return wrap;
     }
 
-    function countUp(el, from, to, dur) {
+    function countUp(el: HTMLElement, from: number, to: number, dur: number) {
       if (!el) return;
       const start = performance.now();
-      function tick(now) {
+      function tick(now: number) {
         const p = Math.min(1, (now - start) / dur);
         const eased = 1 - Math.pow(1 - p, 3);
         el.textContent = Math.round(from + (to - from) * eased);
@@ -123,7 +123,7 @@ export default function Hero() {
       return d;
     }
 
-    async function typingThen(ms) {
+    async function typingThen(ms: number) {
       const t = mkTyping();
       await sleep(ms);
       t.remove();

@@ -31,6 +31,17 @@ const ContactDetailedView = ({
   selectedContact,
   setIsSendMessageOpen,
   setIsAddToGroupOpen,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  selectedContact: ContactsData & {
+    notes?: string;
+    location?: string;
+    contactLabelMap?: Array<{ label?: { id?: string; name?: string; color?: string } }>;
+    contactGroups?: Array<{ contactGroup?: ContactGroup }>;
+  };
+  setIsSendMessageOpen: (open: boolean) => void;
+  setIsAddToGroupOpen: (open: boolean) => void;
 }) => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [editNotes, setEditNotes] = useState(false);
@@ -38,7 +49,7 @@ const ContactDetailedView = ({
   const removeContacts = useRemoveContactsFromGroup(selectedGroup?.id);
   const updateContact = useEditContactMutation();
   const confirm = useConfirm();
-  async function handleRemoveContactFromGroup(group, contactIds) {
+  async function handleRemoveContactFromGroup(group: ContactGroup, contactIds: string[]) {
     const shouldRemove = await confirm({
       title: "Remove Contact from Group",
       description: `Are you sure you want to remove ${selectedContact.name} from group ${group?.name}?`,
@@ -149,11 +160,13 @@ const ContactDetailedView = ({
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <p className="text-xs text-muted-foreground mb-2">Tags</p>
                   <div className="flex gap-1 flex-wrap">
-                    {selectedContact.contactLabelMap.map((label) => (
-                      <Badge key={label.label.id} variant="outline">
-                        {label.label.name}
-                      </Badge>
-                    ))}
+                    {selectedContact.contactLabelMap.map(
+                      (label: { label?: { id?: string; name?: string; color?: string } }) => (
+                        <Badge key={label.label.id} variant="outline">
+                          {label.label.name}
+                        </Badge>
+                      ),
+                    )}
                   </div>
                 </div>
               )}
@@ -178,31 +191,33 @@ const ContactDetailedView = ({
 
               {selectedContact.contactGroups && selectedContact.contactGroups.length > 0 ? (
                 <div className="space-y-2 overflow-auto">
-                  {selectedContact.contactGroups.map((contactGroup) => {
-                    const group = contactGroup.contactGroup;
+                  {selectedContact.contactGroups.map(
+                    (contactGroup: { contactGroup?: ContactGroup }) => {
+                      const group = contactGroup.contactGroup;
 
-                    return (
-                      <Card key={group.id} className="p-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Folder className="w-4 h-4 text-indigo-600" />
-                            <span className="text-sm">{group.name}</span>
+                      return (
+                        <Card key={group.id} className="p-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Folder className="w-4 h-4 text-indigo-600" />
+                              <span className="text-sm">{group.name}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label={`Remove from ${group.name}`}
+                              onClick={() => {
+                                setSelectedGroup(group);
+                                handleRemoveContactFromGroup(group, [selectedContact.id]);
+                              }}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            aria-label={`Remove from ${group.name}`}
-                            onClick={() => {
-                              setSelectedGroup(group);
-                              handleRemoveContactFromGroup(group, [selectedContact.id]);
-                            }}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </Card>
-                    );
-                  })}
+                        </Card>
+                      );
+                    },
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">

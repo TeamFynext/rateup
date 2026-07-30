@@ -1,3 +1,4 @@
+import type { DropResult } from "@hello-pangea/dnd";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { IconEdit, IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useContext, useState, type CSSProperties } from "react";
@@ -14,7 +15,21 @@ import { reorder } from "@/utils/questions.ts";
 
 import { ChoicesCreator } from "./ChoicesCreator.tsx";
 
-const MCQGridExtraProps = ({ form, qId }) => {
+/**
+ * NOTE: this component reads `form.values` and calls `form.setFieldValue` —
+ * the Mantine form API. The form it is handed (from QuestionDetailedView) is a
+ * react-hook-form instance, which has neither, so `values` reads as undefined
+ * today. Typed to match what the component actually touches rather than
+ * changing its behaviour; see the migration notes.
+ */
+interface MCQGridForm {
+  values?: {
+    features?: Record<string, { questions?: string[] } & Record<string, unknown>>;
+  };
+  setFieldValue?: (path: string, value: unknown) => void;
+}
+
+const MCQGridExtraProps = ({ form, qId }: { form: MCQGridForm; qId: string }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = form.values?.features?.[selectedLanguage] || {};
   const questions = form.values?.features?.[selectedLanguage]?.questions || [];
@@ -31,7 +46,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
   const { t: translations } = useTranslation();
   const handleAddQuestion = () => {
     if (!newQuestion.trim().length) return;
-    if (questions?.find((question) => question.trim() === newQuestion.trim())) {
+    if (questions?.find((question: string) => question.trim() === newQuestion.trim())) {
       setError(translations("Question already present"));
       return;
     }
@@ -46,7 +61,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
     setNewQuestion("");
   };
 
-  const handleDragEnd = ({ source, destination }) => {
+  const handleDragEnd = ({ source, destination }: DropResult) => {
     const reorderedQuestions = reorder(questions, source.index, destination?.index || 0);
     form.setFieldValue("features", {
       ...form.values.features,
@@ -66,7 +81,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
       ...form.values.features,
       [selectedLanguage]: {
         ...features,
-        questions: questions.map((q, index) =>
+        questions: questions.map((q: string, index: number) =>
           index == updateQuestion.index ? updateQuestion.question : q,
         ),
       },
@@ -75,12 +90,12 @@ const MCQGridExtraProps = ({ form, qId }) => {
     close();
   };
 
-  const handleDeleteQuestion = (question) => {
+  const handleDeleteQuestion = (question: string) => {
     form.setFieldValue("features", {
       ...form.values.features,
       [selectedLanguage]: {
         ...features,
-        questions: questions.filter((q) => q !== question),
+        questions: questions.filter((q: string) => q !== question),
       },
     });
   };
@@ -92,7 +107,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
         <Droppable droppableId="dnd-list" direction="vertical">
           {(provided) => (
             <div {...provided.droppableProps} ref={provided.innerRef}>
-              {questions?.map((question, index) => (
+              {questions?.map((question: string, index: number) => (
                 <Draggable key={question} index={index} draggableId={question}>
                   {(provided, snapshot) => (
                     <div

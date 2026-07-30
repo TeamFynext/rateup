@@ -44,18 +44,28 @@ const Result = ({
   // .
   // .
   const flowQuestions = useMemo(() => {
-    return flow?.json?.screens?.flatMap((screen) =>
+    return flow?.json?.screens?.flatMap((screen: WaFlowScreen) =>
       screen.layout.children
-        .filter((child) => child.type !== QuestionType2.Footer)
-        .map(({ id, label, metaType, type, name, "data-source": dataSource, header }) => ({
-          id,
-          label,
-          metaType: type || metaType,
-          dataSource,
-          name,
-          header,
-        }))
-        .filter(({ name }) => name),
+        .filter((child: WaFlowFormElement) => child.type !== QuestionType2.Footer)
+        .map(
+          ({
+            id,
+            label,
+            metaType,
+            type,
+            name,
+            "data-source": dataSource,
+            header,
+          }: WaFlowFormElement & { metaType?: string }) => ({
+            id,
+            label,
+            metaType: type || metaType,
+            dataSource,
+            name,
+            header,
+          }),
+        )
+        .filter(({ name }: { name?: string }) => name),
     );
   }, [flow]);
   if (isQLoading) return <RateupLoader />;

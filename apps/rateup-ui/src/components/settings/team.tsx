@@ -68,7 +68,7 @@ export const colorArray = [
   { from: "#6366F1", to: "#4F46E5" }, // Indigo
 ];
 
-export function EditTeam({ selectedTeam }) {
+export function EditTeam({ selectedTeam }: { selectedTeam: string }) {
   const { t: translations } = useTranslation();
 
   const id = selectedTeam.id;
@@ -94,7 +94,7 @@ export function EditTeam({ selectedTeam }) {
     }
   }, [selectedTeam]);
 
-  const onSubmit = (values) => {
+  const onSubmit = (values: { name: string; googleLink?: string }) => {
     setIsLoading(true);
 
     const data = {
@@ -226,7 +226,7 @@ export function EditTeam({ selectedTeam }) {
   );
 }
 
-export function AddMembers({ selectedTeam }) {
+export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
   const [memberToDelete, setMemberToDelete] = useState(null);
   const { t: translations } = useTranslation();
   const teamID = selectedTeam;
@@ -235,7 +235,7 @@ export function AddMembers({ selectedTeam }) {
   const queryClient = useQueryClient();
   const removeteam = useRemoveUserFromTeam(selectedTeam);
 
-  const getRoleStyles = (role) => {
+  const getRoleStyles = (role: string) => {
     switch (role) {
       case UserRole.SUPADM:
         return {
@@ -258,7 +258,7 @@ export function AddMembers({ selectedTeam }) {
     }
   };
 
-  const removeTeam = (userid) => {
+  const removeTeam = (userid: string) => {
     removeteam.mutate(
       { teamId: selectedTeam, userId: userid },
       {
@@ -527,7 +527,7 @@ export function AddMembers({ selectedTeam }) {
   );
 }
 
-export function DeleteTeam({ selectedTeam }) {
+export function DeleteTeam({ selectedTeam }: { selectedTeam: string }) {
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const teamId = selectedTeam.id;
@@ -551,7 +551,7 @@ export function DeleteTeam({ selectedTeam }) {
       form.setValue("googleLink", teamsMembersData.googleLink);
     }
   }, [form, teamsMembersData.googleLink]);
-  const onSubmit = (data) => {
+  const onSubmit = (data: { googleLink?: string }) => {
     // simple validation
     if (data.googleLink && !data.googleLink.startsWith("https://")) {
       return;
@@ -737,7 +737,7 @@ const FEATURES_WITH_SUBSCRIPTION: {
   { feature: TeamFeature.Settings, label: "Settings" },
 ];
 
-export function TeamFeatureAccess({ selectedTeam }) {
+export function TeamFeatureAccess({ selectedTeam }: { selectedTeam: string }) {
   const { t: translations } = useTranslation();
   const teamId = selectedTeam?.id as string;
 
@@ -846,7 +846,7 @@ function describeChannel(channel: any): { label: string; platform: string } {
   };
 }
 
-export function TeamChannelAccess({ selectedTeam }) {
+export function TeamChannelAccess({ selectedTeam }: { selectedTeam: string }) {
   const { t: translations } = useTranslation();
   const teamId = selectedTeam?.id as string;
 

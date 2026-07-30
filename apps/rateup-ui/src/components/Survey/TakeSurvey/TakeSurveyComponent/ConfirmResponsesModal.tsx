@@ -58,10 +58,10 @@ function ConfirmResponsesModal({
         <div className="flex-1 overflow-auto pt-4">
           <div className="flex flex-col gap-4 pb-8">
             {survey.questions
-              .filter((q) => questionsHistory.includes(q.id))
-              .map((question) => {
+              .filter((q: Question) => questionsHistory.includes(q.id))
+              .map((question: Question) => {
                 const response: QuestionResponse = responses.find(
-                  (response) => response.questionId === question.id,
+                  (response: QuestionResponse) => response.questionId === question.id,
                 );
                 return (
                   <div key={question.id} className="flex flex-col gap-2">

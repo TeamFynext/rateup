@@ -13,12 +13,23 @@ const linkTypeOptions = [
   },
 ];
 
-const getLinkTypeLabel = (value) => {
+/** A survey row as the linktree editor's survey dropdown consumes it. */
+interface LinktreeSurvey {
+  id: string;
+  title: string;
+  teams: Array<{
+    id: string;
+    shortUrlId?: string;
+    team: { name: string };
+  }>;
+}
+
+const getLinkTypeLabel = (value: string) => {
   const { label } = linkTypeOptions.find((obj) => obj.value === value);
   return label;
 };
 
-const getSelectedSurveyTitleOptions = (surveysData) => {
+const getSelectedSurveyTitleOptions = (surveysData: LinktreeSurvey[] | undefined) => {
   if (surveysData) {
     const data = surveysData.map((surveyObj) => {
       return {
@@ -31,7 +42,10 @@ const getSelectedSurveyTitleOptions = (surveysData) => {
   return [];
 };
 
-const getSelectedTeamOptions = (surveysData, selectedSurveyTitle) => {
+const getSelectedTeamOptions = (
+  surveysData: LinktreeSurvey[] | undefined,
+  selectedSurveyTitle: string,
+) => {
   if (surveysData) {
     const data = surveysData.find((surveyObj) => surveyObj.id === selectedSurveyTitle);
     const options = data?.teams.map(({ id, shortUrlId, team: { name: teamName } }) => {
@@ -44,7 +58,7 @@ const getSelectedTeamOptions = (surveysData, selectedSurveyTitle) => {
   }
 };
 
-const getSurveyTitleWithId = (surveysData, surveyId) => {
+const getSurveyTitleWithId = (surveysData: LinktreeSurvey[] | undefined, surveyId: string) => {
   return surveysData?.find((surveyObj) => surveyObj.id === surveyId)?.title ?? "";
 };
 

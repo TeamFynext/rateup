@@ -22,7 +22,7 @@ const InboxContactsControl = () => {
 
   const { body, setBody, resetBody } = useMessageBodyStore();
 
-  function handleSubmit(contacts) {
+  function handleSubmit(contacts: { contactIds: string[]; groupIds: string[] }) {
     setBody({ ...body, type: "contact", contacts });
     setOpened((o) => !o);
   }
@@ -59,7 +59,19 @@ enum ContactMethods {
   Group = "Group",
 }
 
-const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], groupIds = [] }) => {
+const SelectContacts = ({
+  submitbtnTitle,
+  onSubmit,
+  onCancel,
+  contactIds = [],
+  groupIds = [],
+}: {
+  submitbtnTitle: string;
+  onSubmit: (selection: { contactIds: string[]; groupIds: string[] }) => void;
+  onCancel: () => void;
+  contactIds?: string[];
+  groupIds?: string[];
+}) => {
   const { t: translations } = useTranslation();
   const [selectedTab, setSelectedTab] = useState(ContactMethods.Individual);
   const [searchText, setSearchText] = useState("");
@@ -193,7 +205,15 @@ const SelectContacts = ({ submitbtnTitle, onSubmit, onCancel, contactIds = [], g
   );
 };
 
-const ContactSelectCard = ({ contact, checked, onToggle }) => {
+const ContactSelectCard = ({
+  contact,
+  checked,
+  onToggle,
+}: {
+  contact: ContactsData;
+  checked: boolean;
+  onToggle: (next: boolean) => void;
+}) => {
   if (!contact) return null;
   return (
     <FieldTitle
@@ -216,7 +236,15 @@ const ContactSelectCard = ({ contact, checked, onToggle }) => {
   );
 };
 
-const ContactGroupSelectCard = ({ group, checked, onToggle }) => {
+const ContactGroupSelectCard = ({
+  group,
+  checked,
+  onToggle,
+}: {
+  group: ContactGroup;
+  checked: boolean;
+  onToggle: (next: boolean) => void;
+}) => {
   if (!group) return null;
   return (
     <FieldTitle

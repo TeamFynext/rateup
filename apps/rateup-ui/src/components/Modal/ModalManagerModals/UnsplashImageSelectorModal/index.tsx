@@ -15,7 +15,27 @@ import useDebounce from "../../../menu/hook/useDebounce.ts";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../../../ui/input-group.tsx";
 import ImageCropModal from "../ImageCropModal/index.tsx";
 
-function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
+/** A photo result from the Unsplash search endpoint. */
+interface UnsplashPhotoResult {
+  id: string;
+  urls: { regular: string };
+  user: { name: string; username: string };
+  links: { download_location: string };
+}
+
+function UnsplashImageSelectorModal({
+  context,
+  id: thisModalId,
+  innerProps,
+}: {
+  context: { closeModal: (id: string) => void };
+  id: string;
+  innerProps: {
+    handleUnsplashImageSave: (url: string, name: string) => void;
+    onImageSelected?: (url: string, name: string) => void;
+    aspectRatio?: number;
+  };
+}) {
   const { onImageSelected, aspectRatio } = innerProps;
   const { t: translations } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,7 +62,7 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
   const [cropModalOpened, { open: openCropModal, close: closeCropModal }] = useDisclosure(false);
   const [cropModalProps, setCropModalProps] = useState(null);
 
-  const handleImageClick = useCallback((url, name) => {
+  const handleImageClick = useCallback((url: string, name: string) => {
     setCropModalProps({
       imageUrl: url,
       imageName: name,
@@ -120,6 +140,12 @@ const UnsplashPhoto = ({
   close,
   setSearchQuery,
   reference = null,
+}: {
+  photo: UnsplashPhotoResult;
+  handleUnsplashImageSave: (url: string, name: string) => void;
+  close: () => void;
+  setSearchQuery: (query: string) => void;
+  reference?: ((node: HTMLElement | null) => void) | null;
 }) => {
   const {
     urls: { regular },

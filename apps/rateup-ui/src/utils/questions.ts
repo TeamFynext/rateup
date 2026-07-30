@@ -6,16 +6,14 @@ import { ChoiceTypeQuestions, defaultTitleSubtitleStartBtnTextsObj } from "./con
 interface Reorderable {
   type?: string;
 }
-export function reorder<T extends Reorderable>(
-  array: Array<T>,
-  from: number,
-  to: number,
-): Array<T> {
+export function reorder<T>(array: Array<T>, from: number, to: number): Array<T> {
   const newArray = [...array];
   const item = newArray.splice(from, 1)[0];
   newArray.splice(to, 0, item);
 
-  const reOrderedList = reOrderPages(newArray);
+  // reOrderPages only reads an optional `type`, so callers reordering plain
+  // values (e.g. MCQ grid question labels) simply have none.
+  const reOrderedList = reOrderPages(newArray as Array<T & Reorderable>);
 
   return reOrderedList;
 }
