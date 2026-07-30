@@ -38,7 +38,7 @@ export const HoverCardComponent = ({
           <p className="line-clamp-1 min-w-[200px] max-w-[200px] font-light">{listContent[0]}</p>
         ) : isObjectContent ? (
           <img
-            src={getFileUrlFromKey(choiceContent?.value?.image)}
+            src={getFileUrlFromKey(choiceContent?.value?.image ?? "")}
             className="w-[30px]"
             alt={translations("answer image of question")}
           />
@@ -62,7 +62,7 @@ export const HoverCardComponent = ({
             ) : isObjectContent ? (
               <>
                 <img
-                  src={getFileUrlFromKey(choiceContent?.value?.image)}
+                  src={getFileUrlFromKey(choiceContent?.value?.image ?? "")}
                   className="w-[200px]"
                   alt={translations("answer image of question")}
                 />

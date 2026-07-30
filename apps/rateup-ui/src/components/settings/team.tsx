@@ -322,7 +322,7 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
             >
               <div className="flex items-center gap-2">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src={getFileUrlFromKey(user?.profilePhoto)} />
+                  <AvatarImage src={getFileUrlFromKey(user?.profilePhoto ?? "")} />
                   <AvatarFallback className="bg-primary text-white text-xs">
                     {user.name?.toUpperCase().slice(0, 2)}
                   </AvatarFallback>

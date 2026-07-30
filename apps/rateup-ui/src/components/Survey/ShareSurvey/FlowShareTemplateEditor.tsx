@@ -281,7 +281,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }: { selectedTeamCode:
   const dbFlowId = params.dbFlowId as string;
 
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
-  const { data: survey } = useSurvey(dbFlow?.surveyId);
+  const { data: survey } = useSurvey(dbFlow?.surveyId ?? "");
   const updateMutation = useUpdateFlowMutation();
   const templateInitialValues = generateTemplateInitialValues(dbFlow);
 
@@ -332,7 +332,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }: { selectedTeamCode:
                       }}
                     >
                       {generateWaSurveyIdentifier_byName(
-                        survey?.title,
+                        survey?.title ?? "",
                         selectedTeamCode,
                       ).replaceAll("`", "")}
                     </code>

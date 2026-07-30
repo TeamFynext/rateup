@@ -28,7 +28,7 @@ function SaveButton({
   const themeObjState = useSurveyThemeContextValue();
   const [isSaving, setIsSaving] = useState(false);
   const { t: translations } = useTranslation();
-  const updateSurveyTheme = useUpdateSurveyTheme(themeObjBeingEdited?.id, survey?.id);
+  const updateSurveyTheme = useUpdateSurveyTheme(themeObjBeingEdited?.id ?? "", survey?.id);
 
   const handleSaveTheme = useCallback(async () => {
     if (!themeObjBeingEdited?.id) {

@@ -113,7 +113,7 @@ const LoyaltySettings = () => {
 
     if (!shouldDelete) return;
 
-    deleteMutation.mutate(config?.id);
+    deleteMutation.mutate(config?.id ?? "");
   }
 
   const columns = useLoyaltyTemplateColumns(setSelectedConfig, open, handleDeleteConfig);
@@ -170,7 +170,7 @@ const LoyaltyWaTemplateConfig = ({
   close: () => void;
 }) => {
   const templateMut = useCreateLoyaltyTemplate();
-  const updateTempMut = useUpdateLoyaltyTemplate(config?.id);
+  const updateTempMut = useUpdateLoyaltyTemplate(config?.id ?? "");
   const { data: loyaltyTemplates } = useWaTemplates(TemplateType.LOYALTY);
   const { t: translations } = useTranslation();
   const getLoyaltyTemplateLabel = useLoyaltyTemplateLabel();

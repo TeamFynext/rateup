@@ -32,7 +32,7 @@ export function DataTableToolbar<TData, TValue>({
   const [isOpenedAddModal, setIsOpenedAddModal] = useState(false);
 
   const { groupDetails, filter, setFilter } = useGroupTableStore();
-  const removeContactsMutation = useRemoveContactsFromGroup(groupDetails?.id);
+  const removeContactsMutation = useRemoveContactsFromGroup(groupDetails?.id ?? "");
   const selectedMembers = Object.keys(table.getState().rowSelection);
   function handleRemoveMembers() {
     if (!selectedMembers.length) return;

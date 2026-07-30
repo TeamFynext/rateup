@@ -922,7 +922,7 @@ function TicketTopHeader({
     return null;
   }, [boards, ticket.ticketColumnId]);
 
-  const { labels } = useLabels(currentCol?.ticketBoardId);
+  const { labels } = useLabels(currentCol?.ticketBoardId ?? "");
 
   const isOverdue = !!(ticket.deadline && new Date(ticket.deadline) < new Date());
 
@@ -1144,7 +1144,7 @@ function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticketId: str
   const currentBoard = (boards || []).find((b) =>
     b.ticketColumns?.some((c: any) => c.id === ticket.ticketColumnId),
   );
-  const { labels } = useLabels(currentBoard?.id);
+  const { labels } = useLabels(currentBoard?.id ?? "");
 
   const handleLabelChange = (clickedLabelId: string) => {
     const currentLabelIds = ticket.labels?.map((l: any) => l.id) || [];

@@ -383,7 +383,7 @@ function WhatsappPaymentList({
                             size="icon"
                             onClick={() =>
                               regenerateWaPaymentConfigurationOauthMutation.mutate(
-                                credential?.configuration_name,
+                                credential?.configuration_name ?? "",
                               )
                             }
                           />

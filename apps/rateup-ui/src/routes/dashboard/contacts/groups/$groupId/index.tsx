@@ -103,7 +103,7 @@ function ContactGroup() {
   ];
   const loadingState = isLoading || isRefetching;
   const [showEditIconDialog, setShowEditIconDialog] = useState(false);
-  const editContactGroupMutation = useEditContactGroupMutation(groupDetails?.id);
+  const editContactGroupMutation = useEditContactGroupMutation(groupDetails?.id ?? "");
   function handleSaveGroupName() {
     if (!groupName.trim().length || groupName === groupDetails?.name) return;
     editContactGroupMutation.mutate(

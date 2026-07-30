@@ -120,7 +120,9 @@ const LargeTextResponseSummary = ({
                         render={
                           <Button
                             size="sm"
-                            onClick={() => getResponseSummary(selectedQuestion?.id, team.value)}
+                            onClick={() =>
+                              getResponseSummary(selectedQuestion?.id ?? "", team.value)
+                            }
                           >
                             <Sparkles
                               className={`mr-1.5 size-4 ${getSummary.isPending ? styles.rotateInfinitely : ""}`}

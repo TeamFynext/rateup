@@ -32,7 +32,7 @@ export const WaSettingEditModal = ({
   close: () => void;
   waSetting: WaSetting | null;
 }>) => {
-  const updatemut = useUpdateWaSettingsMutation(waSetting?.id);
+  const updatemut = useUpdateWaSettingsMutation(waSetting?.id ?? "");
 
   const schema = z.object({
     phoneDisplayName: z.string(),

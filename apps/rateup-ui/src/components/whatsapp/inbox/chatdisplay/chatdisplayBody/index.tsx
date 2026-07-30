@@ -115,7 +115,7 @@ const WaInboxChatDisplayBody = (_props: Readonly<{ isContactDetailsOpened?: bool
     isFetchingNextPage,
     isPending,
   } = useGetMessagesByContactId(
-    selectedContact?.id,
+    selectedContact?.id ?? "",
     filter?.phone,
     enable,
     selectedContact?.conversationId,

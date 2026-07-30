@@ -72,7 +72,7 @@ const WaInboxTemplateBody = (props: Props) => {
   return (
     <p className="text-sm font-normal leading-relaxed">
       {TextWithFormatting(
-        props?.templateComponent?.text,
+        props?.templateComponent?.text ?? "",
         (props?.parameterData?.parameters?.map((data) => data?.text) ||
           props?.templateComponent?.example?.body_text?.[0]) ??
           [],

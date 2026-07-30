@@ -31,7 +31,7 @@ function templateBodyText(templateComponent: Array<{ type?: string; text?: strin
 
 export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }: Readonly<Props>) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const sendTemplate = useSendWaTemplateToUser(contact?.phone, contact?.id);
+  const sendTemplate = useSendWaTemplateToUser(contact?.phone ?? "", contact?.id);
   const [teamId, setTeamId] = useState<string>("");
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);
