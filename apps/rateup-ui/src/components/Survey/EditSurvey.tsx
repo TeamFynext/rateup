@@ -62,8 +62,8 @@ interface EditSurveyProps {
   questions: Array<Question>;
   addQnTrigger?: number;
   surveyLanguages: string[];
-  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
-  subscription: Subscription;
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string | null>>;
+  subscription?: Subscription;
   setFunToRunBeforeSurveyIdPageHeaderTabsChange: any;
 }
 

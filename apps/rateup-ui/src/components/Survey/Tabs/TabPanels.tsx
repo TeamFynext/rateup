@@ -16,6 +16,13 @@ import { TabEnum } from "../SurveyId.tsx";
 
 const ResultsOverviewWebForm = lazy(() => import("../Result/ResultsOverviewWebForm.tsx"));
 
+/** What the active tab reports when the user tries to leave it. */
+export type UnsavedChangesCheck = () => {
+  haveUnsavedChanges?: boolean;
+  feedbackElement?: string;
+  toastMessage?: string;
+};
+
 function TabPanelsComp({
   value,
   survey,
@@ -33,11 +40,13 @@ function TabPanelsComp({
   surveyId: string;
   questions: Question[];
   addQnTrigger: number;
-  setSelectedLanguage: Dispatch<SetStateAction<string>>;
+  setSelectedLanguage: Dispatch<SetStateAction<string | null>>;
   encryptionpassword: string;
   setEncryptionPassword: (password: string) => void;
   setActiveTab: (tab: TabEnum) => void;
-  setFunToRunBeforeSurveyIdPageHeaderTabsChange: (fn: (() => void) | null) => void;
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange: Dispatch<
+    SetStateAction<UnsavedChangesCheck | null>
+  >;
 }) {
   const { data: subscription } = useSubscription();
 
@@ -90,7 +99,7 @@ function TabPanelsComp({
                   hasFeature(subscription, SubscriptionFeaturePathName.EmailNotification) &&
                     "enableNotificationEmail",
                   hasFeature(subscription, SubscriptionFeaturePathName.Webhook) && "webhook",
-                ]
+                ].filter((m): m is string => typeof m === "string")
           }
         />
       </TabsContent>
@@ -107,8 +116,8 @@ function TabPanelsComp({
         >
           <ResultsOverviewWebForm
             surveyId={surveyId}
-            aiResponseSummary={survey?.aiResponseSummary}
-            flowId={null}
+            aiResponseSummary={survey?.aiResponseSummary ?? []}
+            flowId={undefined}
             version={1}
             flowQuestions={[]}
             questions={questions}

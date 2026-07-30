@@ -38,7 +38,7 @@ interface QuestionsSideBarProps {
   setActiveTab: React.Dispatch<React.SetStateAction<QuestionTabsEnum>>;
   addQnTrigger?: number;
   surveyLanguages: string[];
-  setSelectedLanguage: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedLanguage: React.Dispatch<React.SetStateAction<string | null>>;
   isWaSurvey?: boolean;
   survey?: Survey;
   setSurveyThemeContextValue?: any;
