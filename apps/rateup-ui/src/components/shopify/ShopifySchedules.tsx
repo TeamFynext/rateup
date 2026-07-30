@@ -199,8 +199,12 @@ const EventDetailsModal = ({
 }: {
   opened: boolean;
   close: () => void;
-  shopifySurvey: Record<string, unknown>;
-  templateAndTeam: Record<string, unknown>;
+  shopifySurvey: ShopifySurvey;
+  templateAndTeam: {
+    templateName?: string;
+    teamName?: string;
+    product?: string;
+  };
 }) => {
   const { t: translations } = useTranslation();
   return (

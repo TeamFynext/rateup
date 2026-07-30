@@ -149,11 +149,11 @@ const CardCarousel = ({
   function deleteProductCard(index: number) {
     removeItem(form, "productCarousel", index);
   }
-  function handleButtonSelect(btn: { type?: string; [key: string]: unknown }, index: number) {
-    const newObject = { type: btn, text: "" };
+  function handleButtonSelect(btn: WHATSAPP_BUTTON_TYPE, index: number) {
+    const newObject: { type: string; text: string; example?: string[] } = { type: btn, text: "" };
     if (btn === WHATSAPP_BUTTON_TYPE.WEBSURVEY) {
       newObject.type = "URL";
-      newObject["example"] = [];
+      newObject.example = [];
     }
     const existing = form
       .watch()
@@ -375,9 +375,7 @@ const CardCarousel = ({
                 </div>
                 <CarouselButtonMenu
                   btnLength={card.buttons.length}
-                  handleButtonSelect={(btn: { type?: string; [key: string]: unknown }) =>
-                    handleButtonSelect(btn, index)
-                  }
+                  handleButtonSelect={(btn: WHATSAPP_BUTTON_TYPE) => handleButtonSelect(btn, index)}
                 />
                 {card.buttons.map((btn, btnIndex) => (
                   <div
@@ -573,7 +571,7 @@ const CarouselButtonMenu = ({
   handleButtonSelect,
 }: {
   btnLength: number;
-  handleButtonSelect: (btn: { type?: string; [key: string]: unknown }) => void;
+  handleButtonSelect: (btn: WHATSAPP_BUTTON_TYPE) => void;
 }) => {
   return (
     <DropdownMenu>

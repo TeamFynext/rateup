@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils.ts";
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
 import ChannelFilter from "./ChannelFilter.tsx";
 import WaInboxChatExport from "./chatExport/index.tsx";
+import type { ChatFilter } from "./chatFilterStore.ts";
 import { useChatFilterStore } from "./chatFilterStore.ts";
 import InboxTabStrip from "./InboxTabStrip.tsx";
 
@@ -61,7 +62,7 @@ const ChatselectPanelHeader = ({
 }: {
   isRefetchingFilteredContacts: boolean;
   refetchFilteredContacts: () => void;
-  onUnknownContactAddSuccess?: () => void;
+  onUnknownContactAddSuccess?: (contact: ContactsData) => void;
   tab: string;
   isSelectionMode: boolean;
   setIsSelectionMode: (mode: boolean) => void;
@@ -281,7 +282,7 @@ const ChatselectPanelHeader = ({
           <SortMenu
             data={sortData}
             value={filter?.sortBy}
-            onChange={(value) => setFilter({ ...filter, sortBy: value })}
+            onChange={(value) => setFilter({ ...filter, sortBy: value as ChatFilter["sortBy"] })}
             defaultValue="newest"
             selectTriggerClassName="h-auto w-auto gap-1 border-0 bg-transparent px-0 text-xs! shadow-none hover:bg-transparent text-muted-foreground focus:ring-0 focus:ring-offset-0"
             customSelectTrigger={

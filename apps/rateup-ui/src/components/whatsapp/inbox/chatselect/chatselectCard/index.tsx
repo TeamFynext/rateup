@@ -14,13 +14,13 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import type { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
   useToggleFavorite,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import useContactStore, {
   useContactsStore,
   useMessagesStore,
@@ -32,6 +32,7 @@ import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { cn } from "@/lib/utils.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
+import type { WaInboxMessage, WaInternalMessageBody } from "@/types/global";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
 import { formatDateWithRelativeTime, formatToRelativeTime } from "@/utils/dateTime.ts";
 import {
@@ -52,7 +53,7 @@ import { generateInternalMessageId, getSoucePlatformIconAndColor } from "../../u
  */
 type DerivedStatus = "new" | "assigned" | "closed";
 
-export function getDerivedStatus(contact: ContactsWithLastMessage): DerivedStatus {
+export function getDerivedStatus(contact: ContactWithUpdatedAt): DerivedStatus {
   const status = (contact?.conversationStatus ??
     contact?.waMessageAssignStatus) as WaMessageAssignStatus;
   if (WaMessageClosedStatus.includes(status)) return "closed";
@@ -73,7 +74,7 @@ const STATUS_PILL_COLORS: Record<DerivedStatus, string> = {
 };
 
 interface WaInboxChatSelectCardProps {
-  contact: ContactsWithLastMessage;
+  contact: ContactWithUpdatedAt;
   waSettings: WaSettings;
   lifeCycleLabels: Array<{
     id: string;
@@ -145,18 +146,18 @@ export default function WaInboxChatSelectCard({
       contactId,
       waCreatedAt: new Date().toISOString(),
       messageBody: {
-        send: null,
-        receive: null,
+        send: null as WaInboxMessage["send"],
+        receive: null as WaInboxMessage["receive"],
         internal: {
           text: { body: `Chat assigned to ${user.userName}` },
-          assignedUsers: [],
+          assignedUsers: [] as WaInternalMessageBody["assignedUsers"],
           assignStatus: WaMessageAssignStatus.ASSIGNED,
           triggeredByUser: { id: user.userId, name: user.userName },
         },
         exchangeProcess: "internal",
       },
       sourcePlatform: "INTERNAL",
-      sourceIdentifier: null,
+      sourceIdentifier: null as string | null,
       sendBy: user.userId,
       sender: { name: user.userName, profilePhoto: user?.profilePhoto },
       stats: { read: "", sent: "", failed: "", delivered: "" },

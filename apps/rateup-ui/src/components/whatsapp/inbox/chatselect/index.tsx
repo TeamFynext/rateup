@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useBulkAssignStatusMutation } from "@/backend/campaign/contacts/contacts.query";
 import { getRowKey } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import type { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import useContactStore, {
@@ -131,13 +132,13 @@ const WaInboxChatSelect = () => {
   const validateSearchStringAsMobileNumber = useCallback((searchString: string): boolean => {
     return !!RegExp(/^\d{10}$/).exec(searchString);
   }, []);
-  function updateInitialMessagesToStore(contacts: ContactWithUpdatedAt[]) {
+  function updateInitialMessagesToStore(contacts: ContactsWithLastMessage[]) {
     contacts.map((c) => {
       // Rows are conversation-grained; bucket preview messages by the ticket key
       // (conversationId ?? id) so two tickets of one contact don't share a bucket.
       const rowKey = getRowKey(c);
       const messageMap = new Map();
-      c.messages.map((m: WaGetMessagesBody) => {
+      c.messages.map((m: Partial<WaGetMessagesBody>) => {
         const key = `${rowKey}_${m.sourceIdentifier}`;
         const all = `${rowKey}_all`;
         messageMap.set(key, [...(messageMap.get(key) ?? []), m]);
@@ -157,7 +158,7 @@ const WaInboxChatSelect = () => {
 
     const state = useContactsStore.getState();
 
-    const getNewContacts = (page: { rows: ContactWithUpdatedAt[] }) => {
+    const getNewContacts = (page: { rows: ContactsWithLastMessage[] }) => {
       const existingIds = new Set(state.contactsByFilter[filterKey] || []);
       // Rows are tickets — dedupe on the ticket key, not the contact id, or a
       // contact's second ticket would be discarded as a duplicate of its first.
@@ -168,7 +169,11 @@ const WaInboxChatSelect = () => {
       });
 
       return filteredContacts.map((c) => {
-        if (state.contactsById.get(getRowKey(c))) return c;
+        // A row that is already in the store keeps its stored `updatedAt`: the
+        // store merges over the existing entry, so the field is never lost even
+        // though this re-emitted row does not carry one itself.
+        if (state.contactsById.get(getRowKey(c)))
+          return c as ContactsWithLastMessage & { updatedAt: string };
         return { ...c, updatedAt: new Date().toISOString() };
       });
     };
@@ -275,6 +280,8 @@ const WaInboxChatSelect = () => {
 
   const onUnknownContactAddSuccess = useCallback(
     (contact: ContactsData) => {
+      // A just-created contact has no ticket row yet; it is selected as a bare
+      // conversation shell until the first message lands and the store fills it in.
       setSelectedContact({
         ...contact,
         groups: [],
@@ -286,7 +293,7 @@ const WaInboxChatSelect = () => {
           sourceIdentifier: "",
         },
         assignedUsers: [],
-      });
+      } as ContactWithUpdatedAt);
     },
     [setSelectedContact],
   );
@@ -294,7 +301,12 @@ const WaInboxChatSelect = () => {
     if (!tab) return;
     // `favorite`/`mentions`/`spam` are sticky in the filter store; clear them for
     // every tab that is not their own, or they leak across tabs.
-    const base = { ...filter, favorite: undefined, mentions: undefined, spam: undefined };
+    const base: ChatFilter = {
+      ...filter,
+      favorite: undefined,
+      mentions: undefined,
+      spam: undefined,
+    };
     if (tab === "blocked") {
       prepareFilters({
         ...base,
