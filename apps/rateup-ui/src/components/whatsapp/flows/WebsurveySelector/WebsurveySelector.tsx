@@ -90,7 +90,7 @@ export function WebsurveySelector({
       )}
       <Select
         value={value ?? ""}
-        onValueChange={handleChange}
+        onValueChange={(value) => handleChange(value ?? "")}
         items={selectOptions}
         disabled={disabled}
       >

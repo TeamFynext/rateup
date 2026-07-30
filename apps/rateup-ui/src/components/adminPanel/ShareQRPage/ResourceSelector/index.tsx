@@ -27,7 +27,7 @@ function ResourceSelector({
   const items = resourceOptions.map((option) => ({ value: option, label: option }));
   return (
     <div className={styles["resource-selector-dropdown-container"]}>
-      <Select value={resource} onValueChange={setResource} items={items}>
+      <Select value={resource} onValueChange={(value) => setResource(value ?? "")} items={items}>
         <SelectTrigger className="w-56">
           <SelectValue placeholder={translations("Select a Resource")} />
         </SelectTrigger>

@@ -132,7 +132,7 @@ const CurrencySelect = React.forwardRef<HTMLButtonElement, CurrencySelectProps>(
     return (
       <Select
         value={value}
-        onValueChange={handleValueChange}
+        onValueChange={(value) => handleValueChange(value ?? "")}
         {...props}
         name={name}
         data-valid={valid}

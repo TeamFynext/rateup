@@ -58,7 +58,7 @@ const DateRangeSelector = ({
     <div className="flex gap-1 items-center">
       <Select
         value={value.key}
-        onValueChange={handleChange}
+        onValueChange={(value) => handleChange(value ?? "")}
         items={data.map((date) => ({ value: date.key, label: date.label }))}
       >
         <SelectTrigger className="*:data-[slot=select-value]:text-sm">
