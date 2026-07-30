@@ -57,13 +57,13 @@ function BackgroundEditor() {
             forDevice={"desktop"}
             label={"Desktop"}
             onImageSelected={handleDesktopBackgroundImageChange}
-            value={desktopBgImgUrl}
+            value={desktopBgImgUrl ?? ""}
           />
           <LocalOrUnsplashImagePicker
             forDevice={"mobile"}
             label={"Mobile"}
             onImageSelected={handleMobileBackgroundImageChange}
-            value={mobileBgImgUrl}
+            value={mobileBgImgUrl ?? ""}
           />
         </div>
       </div>

@@ -40,7 +40,7 @@ function TitleEditor() {
     <div className={styles["title-editor-div"]}>
       <div className={`style-section-div`}>
         <h2>Text Color</h2>
-        <CustomColorPicker value={color} onChange={handleColorChange} />
+        <CustomColorPicker value={String(color ?? "")} onChange={handleColorChange} />
       </div>
 
       <div className={`style-section-div`}>

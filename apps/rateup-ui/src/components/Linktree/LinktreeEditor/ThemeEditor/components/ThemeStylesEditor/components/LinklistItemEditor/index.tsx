@@ -40,12 +40,15 @@ function LinklistItemEditor() {
     <div className={styles["link-list-editor"]}>
       <div className={`style-section-div`}>
         <h2>Text Color</h2>
-        <CustomColorPicker value={color} onChange={handleColorChange} />
+        <CustomColorPicker value={String(color ?? "")} onChange={handleColorChange} />
       </div>
 
       <div className={`style-section-div`}>
         <h2>Background Color</h2>
-        <CustomColorPicker value={backgroundColor} onChange={handleBackgroundColorChange} />
+        <CustomColorPicker
+          value={String(backgroundColor ?? "")}
+          onChange={handleBackgroundColorChange}
+        />
       </div>
 
       <div className={`style-section-div`}>
