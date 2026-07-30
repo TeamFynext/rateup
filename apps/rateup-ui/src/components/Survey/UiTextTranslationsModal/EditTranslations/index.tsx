@@ -12,7 +12,7 @@ function EditTranslations({
   languages,
 }: {
   survey: Survey;
-  element: string;
+  element: { id: string; name: string; label: string };
   uiTextTranslations: Record<string, Record<string, string>>;
   languages: string[];
 }) {

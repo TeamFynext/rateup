@@ -5,7 +5,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { elementsToBeTranslated } from "./constants.ts";
 import EditTranslations from "./EditTranslations/index.tsx";
 
-function UiTextTranslationsModal({ opened, onClose, survey }) {
+function UiTextTranslationsModal({
+  opened,
+  onClose,
+  survey,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  survey: Survey;
+}) {
   const lanugages = survey?.languages;
   const uiTextTranslations = survey?.uiTextTranslations;
   const { t: translations } = useTranslation();

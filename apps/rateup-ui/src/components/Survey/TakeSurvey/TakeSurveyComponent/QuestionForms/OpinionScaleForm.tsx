@@ -40,7 +40,8 @@ export function OpinionScaleForm({ initValue }: iProps) {
   };
 
   const handleBtnClick = async (e: MouseEvent<HTMLElement>) => {
-    const clickedBtn = e.target;
+    // The click lands on the button element itself; `target` is typed only as EventTarget.
+    const clickedBtn = e.target as HTMLElement;
     const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue);
     if (clickedBtnValue) {
       if (!initValue) updateResponse(clickedBtnValue);

@@ -20,8 +20,22 @@ import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
 interface TestimonialProps {
-  features;
-  isPreview?;
+  /** Per-language question labels and toggles for the testimonial fields. */
+  features?: Record<
+    string,
+    {
+      nameQn?: string;
+      jobTitle?: boolean;
+      jobTitleQn?: string;
+      testimonialQn?: string;
+      rating?: boolean;
+      ratingQn?: string;
+      photo?: boolean;
+      photoQn?: string;
+      [key: string]: unknown;
+    }
+  >;
+  isPreview?: boolean;
 }
 
 const unstyledInputClassName =
@@ -46,7 +60,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
     updateResponse({ ...response, name: e.currentTarget.value });
   };
   const { t: translations } = useTranslation();
-  const handleJobTitleChange = (e) => {
+  const handleJobTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateResponse({ ...response, jobTitle: e.currentTarget.value });
   };
 
@@ -79,9 +93,11 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         setIsUploading(false);
       });
   }, [file]);
-  const handleCropImageSave = async (cropedImage) => {
+  const handleCropImageSave = async (cropedImage: string | File) => {
     if (!cropedImage) return;
-    setFile(cropedImage);
+    // Opened for local uploads only, so the crop always yields a File — the
+    // string form is the Unsplash path, which this question does not offer.
+    setFile(cropedImage as File);
   };
 
   const onChangePicture = (event: File) => {

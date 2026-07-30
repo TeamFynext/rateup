@@ -11,13 +11,18 @@ interface CustomInputFields {
   fieldKey: string;
   placeholderText: string;
 }
-const MultiTextInputForm = ({ features }) => {
+const MultiTextInputForm = ({
+  features,
+}: {
+  features?: Record<string, { fields?: CustomInputFields[] }>;
+}) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const fields: CustomInputFields[] = features?.[selectedLanguage]?.fields;
 
   useEffect(() => {
-    if (response && Object.values(response).every((r: string) => !r?.trim().length))
+    // Every field of this question's response is a text input's value.
+    if (response && Object.values(response).every((r) => !(r as string)?.trim().length))
       updateResponse(undefined);
   }, [response]);
 

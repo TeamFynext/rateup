@@ -21,7 +21,8 @@ export function YNForm() {
   const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
   const handleYesOrNOClick = async (e: MouseEvent<HTMLElement>, value: YNResponse) => {
-    const clickedBtn = e.target;
+    // The click lands on the button element itself; `target` is typed only as EventTarget.
+    const clickedBtn = e.target as HTMLElement;
     updateResponse(value);
     if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
       if (clickedBtn) {

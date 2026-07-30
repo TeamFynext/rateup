@@ -27,7 +27,8 @@ export function LDForm() {
   const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
   const handleLikeOrDislikeClick = async (e: MouseEvent<HTMLElement>) => {
-    const clikcedBtn = e.target;
+    // The click lands on the button element itself; `target` is typed only as EventTarget.
+    const clikcedBtn = e.target as HTMLElement;
     const clickedBtnName = clikcedBtn.dataset.name;
     const clickedRes = clickedBtnName === "like" ? LDResponse.Like : LDResponse.Dislike;
     updateResponse(clickedRes);
