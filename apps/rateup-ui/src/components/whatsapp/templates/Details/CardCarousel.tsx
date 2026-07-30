@@ -65,11 +65,11 @@ const CardCarousel = ({
 }) => {
   const uid = useId();
   function handleMediaCarousel() {
-    if (form.watch().mediaCarousel.length === 10) {
+    if (form.watch().mediaCarousel!.length === 10) {
       toast.error("Only 10 cards are allowed");
       return;
     }
-    const firstCard = form.watch().mediaCarousel[0];
+    const firstCard = form.watch().mediaCarousel![0];
     appendItem(form, "mediaCarousel", {
       body: "",
       format: "IMAGE",
@@ -80,11 +80,11 @@ const CardCarousel = ({
   }
 
   function handleProductCarousel() {
-    if (form.watch().productCarousel.length === 10) {
+    if (form.watch().productCarousel!.length === 10) {
       toast.error("Only 10 cards are allowed");
       return;
     }
-    const firstCard = form.watch().productCarousel[0];
+    const firstCard = form.watch().productCarousel![0];
     appendItem(form, "productCarousel", {
       button: firstCard
         ? firstCard.button
@@ -97,11 +97,12 @@ const CardCarousel = ({
   }
   const { t: translations } = useTranslation();
   const [selectedText, setSelectedText] = useState("");
-  const contentHistory = useRef([]); // Ref to store content history
+  /** Per-card undo stack for the body text. */
+  const contentHistory = useRef<string[][]>([]); // Ref to store content history
   const inputRefs = useRef<Array<HTMLTextAreaElement | null>>([]);
 
   const applyFormatting = (style: string, index: number) => {
-    const content = form.watch().mediaCarousel[index].body;
+    const content = form.watch().mediaCarousel![index]!.body;
 
     if (style.startsWith("{{")) {
       const newContent = content + style;
@@ -113,14 +114,14 @@ const CardCarousel = ({
     if (!contentHistory.current[index]) {
       contentHistory.current[index] = [];
     }
-    contentHistory.current[index].push(content);
+    contentHistory.current[index]!.push(content);
     const newContent = content.replace(selectedText, formattedText);
     setValue(form, `mediaCarousel.${index}.body`, newContent);
   };
 
   const undo = (index: number) => {
-    if (contentHistory.current[index].length > 0) {
-      const previousContent = contentHistory.current[index].pop();
+    if ((contentHistory.current[index]?.length ?? 0) > 0) {
+      const previousContent = contentHistory.current[index]!.pop()!;
       setValue(form, `mediaCarousel.${index}.body`, previousContent);
     }
   };
@@ -139,8 +140,8 @@ const CardCarousel = ({
   };
   const handleSelect = () => {
     const selection = window.getSelection();
-    const selectedText = selection.toString();
-    setSelectedText(selectedText?.trim());
+    const selectedText = selection?.toString();
+    setSelectedText(selectedText?.trim() ?? "");
   };
 
   function deleteMediaCard(index: number) {
@@ -157,7 +158,7 @@ const CardCarousel = ({
     }
     const existing = form
       .watch()
-      .mediaCarousel[index].buttons.find((b) => b.type === newObject.type);
+      .mediaCarousel![index]!.buttons.find((b) => b.type === newObject.type);
     if (existing) {
       toast.error(`Only one button allowed for this type`);
       return;
@@ -227,7 +228,7 @@ const CardCarousel = ({
               <span>
                 <DropdownMenuItem
                   onClick={handleMediaCarousel}
-                  disabled={form.watch().productCarousel?.length > 0}
+                  disabled={(form.watch().productCarousel?.length ?? 0) > 0}
                 >
                   <IconCarouselHorizontal size={16} />
                   Media Card
@@ -238,7 +239,7 @@ const CardCarousel = ({
           <CustomTooltip
             content={
               <span>
-                {form.watch().mediaCarousel.length > 0
+                {form.watch().mediaCarousel!.length > 0
                   ? "Remove media card to add product card"
                   : ""}
               </span>
@@ -247,7 +248,7 @@ const CardCarousel = ({
               <span>
                 <DropdownMenuItem
                   onClick={handleProductCarousel}
-                  disabled={form.watch().mediaCarousel?.length > 0}
+                  disabled={(form.watch().mediaCarousel?.length ?? 0) > 0}
                 >
                   <IconShoppingCart size={16} />
                   Catalog Product Card
@@ -257,13 +258,13 @@ const CardCarousel = ({
           />
         </DropdownMenuContent>
       </DropdownMenu>
-      {form.watch().mediaCarousel.length ? (
+      {form.watch().mediaCarousel!.length ? (
         <Card className="gap-4 rounded-lg bg-muted p-4">
           <div className="flex items-center gap-2.5 text-sm">
             <IconBulb size={16} />
             Use the same structure for all cards
           </div>
-          {form.watch().mediaCarousel.map((card, index) => (
+          {form.watch().mediaCarousel!.map((card, index) => (
             <Card className="gap-0 overflow-hidden rounded-lg border p-0" key={index}>
               <div className="border-b px-3 py-2">
                 <div className="flex items-center justify-between">
@@ -298,9 +299,9 @@ const CardCarousel = ({
                     />
                     <div className="relative">
                       <Textarea
-                        ref={(el) => {
-                          inputRefs.current[index] = el;
-                        }}
+                        // NOTE: the `registerField` spread below also sets `ref`,
+                        // so this element never reaches `inputRefs` and
+                        // `insertValue` no-ops. Left as-is; see the migration notes.
                         className="field-sizing-content rounded-t-none rounded-b-xl pr-22.5"
                         placeholder={translations("Enter the text")}
                         rows={3}
@@ -310,7 +311,7 @@ const CardCarousel = ({
                       />
                       <div className="pointer-events-none absolute right-2 bottom-2">
                         <LengthTracker
-                          length={form.watch()?.mediaCarousel[index].body?.length}
+                          length={form.watch()?.mediaCarousel?.[index]?.body?.length ?? 0}
                           maxValue={1024}
                           atStart
                         />
@@ -437,20 +438,20 @@ const CardCarousel = ({
           ))}
         </Card>
       ) : null}
-      {form.watch().productCarousel.length ? (
+      {form.watch().productCarousel!.length ? (
         <Card className="gap-4 rounded-lg bg-muted p-4">
           <AccountSelector
             label={"Select catalog linked account"}
             {...inputProps(form, `defaultValues.whatsappSettingsPhoneId`)}
           />
-          {form.watch().defaultValues.whatsappSettingsPhoneId.length && !catalog && (
+          {form.watch().defaultValues?.whatsappSettingsPhoneId?.length && !catalog && (
             <p className="text-xs text-destructive">No catalogs are linked to selected account</p>
           )}
           <div className="flex items-center gap-2.5 text-sm">
             <IconBulb size={16} />
             Use the same structure for all cards
           </div>
-          {form.watch().productCarousel.map((card, index) => (
+          {form.watch().productCarousel!.map((card, index) => (
             <Card className="gap-0 overflow-hidden rounded-lg border p-0" key={index}>
               <div className="border-b px-3 py-2">
                 <div className="flex items-center justify-between">
