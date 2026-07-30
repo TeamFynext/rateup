@@ -25,7 +25,22 @@ import { cn } from "@/lib/utils";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 // ─── Shopify payment options ─────────────────────────────────────────────────
-const SHOPIFY_METHODS = [
+/** One selectable payment method in the orders & payments settings. */
+interface PaymentMethodOption {
+  id: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  label: string;
+  desc: string;
+  logos?: Array<{ src: string; alt: string }>;
+  badges?: Array<{ label: string; className: string }>;
+  fields?: Array<{ key: string; label: string; placeholder: string }>;
+  collectAddressApplicable: boolean;
+  collectDeliveryApplicable: boolean;
+}
+
+const SHOPIFY_METHODS: PaymentMethodOption[] = [
   {
     id: "shopify_checkout",
     icon: ExternalLink,
@@ -70,7 +85,7 @@ const SHOPIFY_METHODS = [
 ];
 
 // ─── Standard payment options ────────────────────────────────────────────────
-const STANDARD_METHODS = [
+const STANDARD_METHODS: PaymentMethodOption[] = [
   {
     id: "manual",
     icon: HandHelping,
