@@ -843,7 +843,7 @@ function RewardsPage() {
                         <Select
                           value={referralRewardId ?? ""}
                           items={freeGiftsList.map((g) => ({ value: g.id, label: g.name }))}
-                          onValueChange={setReferralRewardId}
+                          onValueChange={(value) => setReferralRewardId(value ?? "")}
                         >
                           <SelectTrigger className="h-9">
                             <SelectValue placeholder="Select a gift" />
@@ -934,7 +934,7 @@ function RewardsPage() {
                         <Select
                           value={refereeRewardId ?? ""}
                           items={freeGiftsList.map((g) => ({ value: g.id, label: g.name }))}
-                          onValueChange={setRefereeRewardId}
+                          onValueChange={(value) => setRefereeRewardId(value ?? "")}
                         >
                           <SelectTrigger className="h-9">
                             <SelectValue placeholder="Select a gift" />
