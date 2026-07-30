@@ -55,12 +55,12 @@ export function WaInboxTemplatePreviewNew(props: Props) {
 
           return {
             ...item,
-            parameters: item.parameters.map((param, paramIndex) =>
+            parameters: item.parameters.map((param: Record<string, unknown>, paramIndex: number) =>
               paramIndex === 0
                 ? {
                     ...param,
                     [item?.parameters[0]?.type]: {
-                      ...param[item?.parameters[0]?.type],
+                      ...(param[item?.parameters[0]?.type] as Record<string, unknown>),
                       link: `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`,
                       ...(isDocument && { filename }),
                     },
@@ -88,7 +88,7 @@ export function WaInboxTemplatePreviewNew(props: Props) {
     props?.onClose();
   }
   useEffect(() => {
-    setParameterData(() => []);
+    setParameterData(() => [] as unknown[]);
   }, [props?.selectedTemplateId]);
 
   return (

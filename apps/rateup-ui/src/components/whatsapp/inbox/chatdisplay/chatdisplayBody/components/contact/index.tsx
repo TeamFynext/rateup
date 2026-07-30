@@ -71,7 +71,7 @@ const Contact = ({
     email: contact.emails?.[0]?.email ?? "",
     dob: contact.birthday,
     source: importMethod.MANUAL,
-    contactType: [],
+    contactType: [] as string[],
     tags: {},
     updateExisting: false,
     external_id: "",

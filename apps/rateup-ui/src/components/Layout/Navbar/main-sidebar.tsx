@@ -13,7 +13,7 @@ import AppSidebar from "./app-sidebar.tsx";
 import CorruptedSessionScreen from "./corrupted-session.tsx";
 import { useMainSidebar } from "./use-main-sidebar.tsx";
 
-const WebSocketHandler = () => {
+const WebSocketHandler = (): null => {
   useChatSocket();
 
   return null;

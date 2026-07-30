@@ -163,7 +163,7 @@ export function InstagramConfigModal({
                   fbPageId: config.fbPageId,
                   ibaId: config.ibaId,
                   pageAccessToken: config.pageAccessToken,
-                  teams: undefined,
+                  teams: undefined as string[] | undefined,
                 };
 
                 if (!selectedWaSettings.fbPageId?.length && !data.fbPageId?.length) {

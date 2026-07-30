@@ -193,6 +193,10 @@ declare global {
     aiResponseSummary?: ResponseSummary[];
     /** Advance to the next question automatically once an answer is picked. */
     webSurveyAutoTransitionToNextQues?: boolean;
+    /** Email a weekly summary of responses. */
+    sendWeeklyReport?: boolean;
+    /** Endpoint each new response is POSTed to. */
+    responseWebhookEndpoint?: string;
     ticketColumnId?: string;
     ticketBoardId?: string;
   }

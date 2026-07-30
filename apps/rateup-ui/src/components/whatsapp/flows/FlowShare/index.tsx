@@ -29,7 +29,7 @@ import { ShareSection } from "./ShareSection.tsx";
 interface FlowShareProps {
   flowName: string;
   flowDbId: string;
-  survey: any;
+  survey: Survey;
   surveyId: string;
 }
 

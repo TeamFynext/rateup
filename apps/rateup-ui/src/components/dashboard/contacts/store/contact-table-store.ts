@@ -20,7 +20,7 @@ export const useContactTableStore = create<{
       source: "all",
       labelId: "all",
     },
-    selectedContact: null,
+    selectedContact: null as unknown as ContactsData,
     setFilter: (filter: ContactTableFilter) => {
       set({ filter });
     },

@@ -7,14 +7,14 @@ export interface GroupTableFilter {
 export const useGroupTableStore = create<{
   filter: GroupTableFilter;
   setFilter: (value: GroupTableFilter) => void;
-  groupDetails: any;
+  groupDetails: ContactGroupwithContacts | null;
   setGroupDetails: (value: ContactGroupwithContacts | null) => void;
 }>()(
   immer((set, _get) => ({
     filter: {
       searchTerm: "",
     },
-    groupDetails: null,
+    groupDetails: null as ContactGroupwithContacts | null,
     setFilter: (filter: GroupTableFilter) => {
       set({ filter });
     },

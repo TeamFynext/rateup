@@ -153,7 +153,7 @@ export function FacebookConfigModal({
                   ...rest,
                   fbPageId: config.fbPageId,
                   pageAccessToken: config.pageAccessToken,
-                  teams: undefined,
+                  teams: undefined as string[] | undefined,
                 };
 
                 if (!selectedWaSettings.fbPageId?.length && !data.fbPageId?.length) {

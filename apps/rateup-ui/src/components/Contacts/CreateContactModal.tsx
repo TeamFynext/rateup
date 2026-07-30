@@ -101,7 +101,7 @@ const CreateContactModal = ({
       external_id: values.external_id || undefined,
       phone: values.phone?.replace(/^\+/, "") || "",
       source: type === ContactGroupType.LOYALTY ? ContactGroupType.LOYALTY : values.source,
-      lastReceivedMessageTimeStamp: undefined,
+      lastReceivedMessageTimeStamp: undefined as string | undefined,
     };
     if (initialValues) {
       editContactMutation.mutate(

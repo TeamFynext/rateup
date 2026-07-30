@@ -291,38 +291,40 @@ const VoiceRecorder = () => {
 };
 
 export const useVoiceRecordStore = create<VoiceRecordState>()(
-  immer((set) => ({
-    isRecording: false,
-    audioUrl: null,
-    mediaRecorder: null,
-    stream: null,
-    analyser: null,
-    audioContext: null,
-    source: null,
-    chunks: [],
-    fileKey: null,
-    setIsRecording: (value) => set({ isRecording: value }),
-    setAudioUrl: (value) => set({ audioUrl: value }),
-    setMediaRecorder: (recorder) => set({ mediaRecorder: recorder }),
-    setStream: (stream) => set({ stream }),
-    setAnalyser: (analyser) => set({ analyser }),
-    setAudioContext: (context) => set({ audioContext: context }),
-    setSource: (source) => set({ source }),
-    setChunks: (chunks) => set({ chunks }),
-    setFileKey: (value) => set({ fileKey: value }),
-    resetRecordingState: () =>
-      set({
-        isRecording: false,
-        audioUrl: null,
-        mediaRecorder: null,
-        stream: null,
-        analyser: null,
-        audioContext: null,
-        source: null,
-        chunks: [],
-        fileKey: null,
-      }),
-  })),
+  immer(
+    (set): VoiceRecordState => ({
+      isRecording: false,
+      audioUrl: null,
+      mediaRecorder: null,
+      stream: null,
+      analyser: null,
+      audioContext: null,
+      source: null,
+      chunks: [],
+      fileKey: null,
+      setIsRecording: (value) => set({ isRecording: value }),
+      setAudioUrl: (value) => set({ audioUrl: value }),
+      setMediaRecorder: (recorder) => set({ mediaRecorder: recorder }),
+      setStream: (stream) => set({ stream }),
+      setAnalyser: (analyser) => set({ analyser }),
+      setAudioContext: (context) => set({ audioContext: context }),
+      setSource: (source) => set({ source }),
+      setChunks: (chunks) => set({ chunks }),
+      setFileKey: (value) => set({ fileKey: value }),
+      resetRecordingState: () =>
+        set({
+          isRecording: false,
+          audioUrl: null,
+          mediaRecorder: null,
+          stream: null,
+          analyser: null,
+          audioContext: null,
+          source: null,
+          chunks: [],
+          fileKey: null,
+        }),
+    }),
+  ),
 );
 
 export default VoiceRecorder;
