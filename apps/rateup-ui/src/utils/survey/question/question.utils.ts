@@ -26,7 +26,7 @@ export const getFormattedTitleFromVariable = (title: string, variables: SurveyVa
     if (component) {
       const parent = component.parentNode;
       const replacementNode = doc.createTextNode("");
-      parent.replaceChild(replacementNode, component);
+      parent?.replaceChild(replacementNode, component);
     }
   });
   return doc.body.innerHTML;

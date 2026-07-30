@@ -33,8 +33,8 @@ export function parseLogicAction(
 
     let flag = false;
     for (const logic of logicJumps) {
-      let iterator: "some" | "every";
-      let comparator: (value: string) => boolean;
+      let iterator!: "some" | "every";
+      let comparator!: (value: string) => boolean;
 
       if (ChoiceTypeQuestions.includes(type as QuestionType)) {
         let userResponseIndices: string[];
@@ -179,7 +179,7 @@ export function getResponses2(question: {
   /** WhatsApp flow questions carry choices under either spelling. */
   "data-source"?: { title: string }[];
   dataSource?: { title: string }[];
-}): Array<string | { label: string; value: string }> {
+}): Array<string | { label: string; value: string }> | null {
   try {
     switch (question.metaType) {
       case WaQuestions.LD:
@@ -196,11 +196,12 @@ export function getResponses2(question: {
           question?.["data-source"]?.map((source: { title: string }, index: number) => ({
             label: source.title,
             value: (index + 1)?.toString(),
-          })) ||
+          })) ??
           question?.dataSource?.map((source: { title: string }, index: number) => ({
             label: source.title,
             value: (index + 1)?.toString(),
-          }))
+          })) ??
+          null
         );
       default:
         return null;

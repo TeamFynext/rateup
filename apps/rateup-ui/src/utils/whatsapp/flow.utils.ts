@@ -57,7 +57,7 @@ export function getQuestionTypesFromFlowElement(formElement: WaFlowFormElement):
       return [qt.TextArea];
     case wft.dropDown:
     case wft.radioButtonsGroup: {
-      const choices = formElement["data-source"];
+      const choices = formElement["data-source"] ?? [];
       const types = [qt.MCQ, qt.CustomNPS];
       if (choices.length === 2) return types.concat([qt.YN, qt.LD]);
       else if (choices.length === 5) return types.concat([qt.Rating, qt.Smiley]);
@@ -161,7 +161,7 @@ export function getQuestionsFromScreen(screen: WaFlowScreen, survey: Survey, map
   const formElementIds = screen.layout.children
     .find((se) => se.type === "Form")
     ?.children?.map((q) => q.name);
-  const qIds = formElementIds?.map((fid) => map[fid]?.questionId);
+  const qIds = formElementIds?.map((fid) => (fid ? map[fid]?.questionId : undefined));
   const questions = qIds
     ?.map((qid) => survey.questions.find((q) => q.id === qid))
     .filter((q) => !!q);
@@ -176,7 +176,7 @@ export function getQuestionFromFlowFormElementName(
   name: string,
   questions: Question[],
   map: WaFlowMap,
-): Question {
+): Question | undefined {
   const questionId = getQuestionIdFromFlowFormElementName(name, map);
   return questions.find((q) => q.id === questionId);
 }
@@ -188,7 +188,7 @@ export function getQuestionFromFlowElementId(
   map: any,
 ) {
   const formElement = getFlowFormElementById(id, flowJson);
-  return getQuestionFromFlowFormElementName(formElement?.name, questions, map);
+  return getQuestionFromFlowFormElementName(formElement?.name ?? "", questions, map);
 }
 
 export function getFlowTextLimit(type: WaFlowFormElementType) {
@@ -227,8 +227,8 @@ export function getFlowElementText(fe: WaFlowFormElement, questions: Question[],
     return fe.text;
   } else {
     try {
-      const q = getQuestionFromFlowFormElementName(fe.name, questions, map);
-      return q.title[lang] || q.description[lang] || q.label[lang];
+      const q = getQuestionFromFlowFormElementName(fe.name ?? "", questions, map)!;
+      return q.title[lang] || q.description[lang] || q.label![lang];
     } catch {
       return "";
     }
@@ -239,7 +239,7 @@ export function getAllIdsFromFlowJson(flowJson: WaFlowJson) {
   const ids = [];
   for (const screen of flowJson.screens) {
     const form = screen.layout.children.find((se) => se.type === "Form");
-    for (const fe of form.children) {
+    for (const fe of form?.children ?? []) {
       ids.push(fe.id);
     }
   }
@@ -249,7 +249,7 @@ export function getAllIdsFromFlowJson(flowJson: WaFlowJson) {
 export function getFlowFormElementById(id: string, flowJson: WaFlowJson) {
   for (const screen of flowJson.screens) {
     const form = screen.layout.children.find((se) => se.type === "Form");
-    for (const fe of form.children) {
+    for (const fe of form?.children ?? []) {
       if (fe.id === id) return fe;
     }
   }
@@ -334,12 +334,12 @@ export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow
     const currentScreenPayload = formElements?.reduce(
       (prev, fe) => ({
         ...prev,
-        [fe.name]: `\${form.${fe.name}}`,
+        [fe.name!]: `\${form.${fe.name}}`,
       }),
       {},
     );
     if (currentScreenIsNotLast) {
-      footerObject["on-click-action"] = {
+      footerObject!["on-click-action"] = {
         name: flowHasLogic ? "data_exchange" : "navigate",
         next: flowHasLogic
           ? undefined
@@ -354,7 +354,7 @@ export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow
         : formElements.reduce(
             (prev, fe) => ({
               ...prev,
-              [fe.name]: `\${data.${fe.name}}`,
+              [fe.name!]: `\${data.${fe.name}}`,
             }),
             {},
           );
@@ -367,7 +367,7 @@ export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow
         : formElements.reduce(
             (prev, fe) => ({
               ...prev,
-              [fe.name]: getScreenDataForFormElement(fe),
+              [fe.name!]: getScreenDataForFormElement(fe),
             }),
             {},
           );
@@ -377,7 +377,7 @@ export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow
       };
     } else {
       screen["terminal"] = true;
-      footerObject["on-click-action"] = flowHasLogic
+      footerObject!["on-click-action"] = flowHasLogic
         ? {
             name: "data_exchange",
             payload: {
@@ -537,7 +537,7 @@ export function getFlowElementJsonFromQuestion(question: Question) {
         name: question.optinScreenId,
       },
       payload: {
-        [questionElement.name]: `\${form.${questionElement.name}}`,
+        [questionElement.name!]: `\${form.${questionElement.name}}`,
       },
     };
   } else if (

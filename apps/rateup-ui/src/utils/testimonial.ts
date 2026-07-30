@@ -51,7 +51,7 @@ function filterByLength(testimonials: Array<FilterableTestimonial>, length: stri
 }
 
 function filterByTeams(testimonials: Array<FilterableTestimonial>, teams: string[]) {
-  return testimonials?.filter((t) => (teams.length ? teams.includes(t.teamId) : true));
+  return testimonials?.filter((t) => (teams.length ? teams.includes(t.teamId ?? "") : true));
 }
 
 function filterBySurveys(
@@ -60,7 +60,11 @@ function filterBySurveys(
   teams: string[],
 ) {
   return testimonials?.filter((t) =>
-    teams?.length ? teams?.includes(t.teamId) : surveys?.length ? surveys.includes(t.survey.id) : t,
+    teams?.length
+      ? teams?.includes(t.teamId ?? "")
+      : surveys?.length
+        ? surveys.includes(t.survey?.id ?? "")
+        : t,
   );
 }
 
