@@ -150,10 +150,10 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
       className="flex w-full flex-col justify-center"
       style={{ width: isPreview ? 700 : "100%" }}
     >
-      {tableHeight > 450 || tableWidth > 900 ? (
+      {(tableHeight ?? 0) > 450 || (tableWidth ?? 0) > 900 ? (
         <ScrollArea
           style={{
-            height: tableHeight > 450 ? "65vh" : "100%",
+            height: (tableHeight ?? 0) > 450 ? "65vh" : "100%",
             width: isPreview ? 700 : 900,
           }}
         >
@@ -187,7 +187,7 @@ const MCQGridMobileForm = ({
   const { response } = useContext(CurrentResponsesContext);
   const textColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
   const surveyTheme = useSurveyThemeData()?.surveyTheme;
-  const titleColor = surveyTheme?.title.styles?.color;
+  const titleColor = surveyTheme?.title?.styles?.color;
 
   return (
     <ScrollArea className="max-h-full w-full p-3">

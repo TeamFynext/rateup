@@ -36,7 +36,7 @@ function GoogleReview({
   const closeSuggestionCopiedModal = () => setIsSuggestionCopiedModalOpen(false);
 
   const [reviewIndex, setReviewIndex] = useState<number | null>(null);
-  const [shuffledArray, setShuffledArray] = useState<Array<ReviewSuggestion>>(null);
+  const [shuffledArray, setShuffledArray] = useState<Array<ReviewSuggestion> | null>(null);
   const [fakeLoading, setFakeLoading] = useState(false);
   const [lastCopiedReview, setLastCopiedReview] = useState<ReviewSuggestion | null>(null);
   const { t: translations } = useTranslation();
@@ -50,7 +50,7 @@ function GoogleReview({
   function handleRegenerate() {
     setFakeLoading(true);
 
-    if (reviewIndex >= reviewSuggestions.length - 1 || reviewIndex === null) {
+    if (reviewIndex === null || reviewIndex >= reviewSuggestions.length - 1) {
       setReviewIndex(0);
       setShuffledArray(shuffleArray(reviewSuggestions));
     } else {
@@ -80,7 +80,7 @@ function GoogleReview({
   }
 
   const handleCopyBtnClick = useCallback(() => {
-    const currentReview = shuffledArray[reviewIndex];
+    const currentReview = shuffledArray?.[reviewIndex ?? 0];
     if (currentReview) {
       navigator.clipboard.writeText(currentReview.review);
       openSuggestionCopiedModal();
@@ -149,7 +149,7 @@ function GoogleReview({
               ) : (
                 <div className="flex flex-col items-center gap-4">
                   <p className="h-[150px] w-full overflow-auto px-2.5 text-center break-words">
-                    {shuffledArray?.[reviewIndex]?.review}
+                    {shuffledArray?.[reviewIndex ?? 0]?.review}
                   </p>
                   <Button className="rounded-[1.25rem] px-6 py-2.5" onClick={handleCopyBtnClick}>
                     {translations("Copy")}
