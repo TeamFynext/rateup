@@ -17,7 +17,7 @@ type LinktreeVisitsData = Record<
   string,
   {
     lastVisitedAt?: string;
-    linkClicks?: Record<string, string>;
+    linkClicks?: Record<string, { lastClickedAt: string }>;
   }
 >;
 
