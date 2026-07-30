@@ -14,7 +14,7 @@ import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 const MultiTextInputForm = ({ features }: { features?: Record<string, QuestionFormFeatures> }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const fields: QuestionFormField[] = features?.[selectedLanguage]?.fields;
+  const fields: QuestionFormField[] = features?.[selectedLanguage]?.fields ?? [];
 
   useEffect(() => {
     // Every field of this question's response is a text input's value.

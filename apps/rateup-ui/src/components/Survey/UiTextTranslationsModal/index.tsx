@@ -36,7 +36,7 @@ function UiTextTranslationsModal({
             <EditTranslations
               key={elementObj?.id}
               element={elementObj}
-              uiTextTranslations={uiTextTranslations}
+              uiTextTranslations={uiTextTranslations ?? {}}
               languages={lanugages}
               survey={survey}
             />

@@ -114,8 +114,8 @@ const WheelComponent = ({
   const drawImageToBuffer = useCallback(
     (callback: () => void) => {
       bufferCanvasRef.current = document.createElement("canvas");
-      bufferCanvasRef.current.width = canvasContextRef.current.canvas.width;
-      bufferCanvasRef.current.height = canvasContextRef.current.canvas.height;
+      bufferCanvasRef.current.width = canvasContextRef.current!.canvas.width;
+      bufferCanvasRef.current.height = canvasContextRef.current!.canvas.height;
       bufferContextRef.current = bufferCanvasRef.current.getContext("2d");
 
       const ctx = bufferContextRef.current;

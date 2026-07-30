@@ -297,7 +297,7 @@ function TakeSurvey({
         responsesRef.current,
         selectedLanguage,
       );
-    let selectedColumnId = survey?.ticketColumnId;
+    let selectedColumnId: string | undefined = survey?.ticketColumnId;
     if (shouldRaiseTicket && !survey?.enableAutoGenerateTicket) {
       selectedColumnId = getColumnIdFromTickets(survey?.questions ?? [], responsesRef.current);
     }
@@ -325,7 +325,7 @@ function TakeSurvey({
         responsesRef.current,
         survey?.publicKey ?? "",
       );
-      encryptedResponses = encryptedResponse;
+      encryptedResponses = encryptedResponse ?? "";
       defaultResponses = [];
     }
     const shortId = params?.shortId as string;
