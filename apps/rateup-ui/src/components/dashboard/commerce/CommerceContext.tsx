@@ -8,7 +8,7 @@ import { useAllWaCatalogs, useConnectedWaCatalog } from "@/backend/whatsapp/cata
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { IntegratedApps } from "@/types/enums";
 
-export type CommerceDateRange = { key: string; range: [Date, Date] };
+export type CommerceDateRange = { key: string; range: Date[] };
 
 type CommerceContextValue = {
   waSettings: any[];

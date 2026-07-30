@@ -16,7 +16,7 @@ import type { Rule } from "@/types/rule.ts";
 
 interface RuleCardProps {
   item: Rule;
-  onToggleActive: (e: MouseEvent<HTMLElement>) => void;
+  onToggleActive: (isActive: boolean) => void;
   onDelete: (e: MouseEvent<HTMLElement>) => void;
 }
 

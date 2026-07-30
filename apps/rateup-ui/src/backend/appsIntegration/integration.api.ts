@@ -122,7 +122,12 @@ export interface AppIntegration {
         selectedPipeline?: { id?: string | number; [key: string]: unknown };
         selectedSubPipeline?: { id?: string | number; [key: string]: unknown };
         requiredFieldMappings?: Record<string, unknown>;
-        lifecycleStageMappings?: Record<string, string>;
+        lifecycleStageMappings?: Array<{
+          lifecycleId: string;
+          lifecycleName?: string;
+          biginStageId?: string;
+          biginStageName?: string;
+        }>;
       };
       lifecycleStageMappings?: Record<string, string>;
       [key: string]: unknown;
