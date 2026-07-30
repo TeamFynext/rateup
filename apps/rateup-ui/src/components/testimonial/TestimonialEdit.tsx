@@ -1,10 +1,14 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 import { useParams } from "@tanstack/react-router";
 import type { CSSProperties } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import { useUpdateCollection } from "@/backend/testimonials/testimonial.query";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import type { filterType } from "@/routes/dashboard/testimonial/$collectionId/index.tsx";
+import type { Testimonial, TestimonialStyleType } from "@/types/global";
 import { reorder } from "@/utils/questions.ts";
 import { getFilteredTestimonials } from "@/utils/testimonial.ts";
 
@@ -22,6 +26,15 @@ const TestimonialEdit = ({
   selectedTestimonialIds,
   setSelectedTestimonialIds,
   setFilters,
+}: {
+  currentStyle: TestimonialStyleType;
+  testimonials: Testimonial[];
+  filters: filterType;
+  isDelete?: boolean;
+  type?: string;
+  selectedTestimonialIds: string[];
+  setSelectedTestimonialIds: Dispatch<SetStateAction<string[]>>;
+  setFilters?: Dispatch<SetStateAction<filterType>>;
 }) => {
   const params = useParams({
     strict: false,

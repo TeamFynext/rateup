@@ -100,7 +100,7 @@ const CardCarousel = ({
   const contentHistory = useRef([]); // Ref to store content history
   const inputRefs = useRef<Array<HTMLTextAreaElement | null>>([]);
 
-  const applyFormatting = (style, index) => {
+  const applyFormatting = (style: string, index: number) => {
     const content = form.watch().mediaCarousel[index].body;
 
     if (style.startsWith("{{")) {
@@ -118,14 +118,14 @@ const CardCarousel = ({
     setValue(form, `mediaCarousel.${index}.body`, newContent);
   };
 
-  const undo = (index) => {
+  const undo = (index: number) => {
     if (contentHistory.current[index].length > 0) {
       const previousContent = contentHistory.current[index].pop();
       setValue(form, `mediaCarousel.${index}.body`, previousContent);
     }
   };
 
-  const insertValue = (value: string, index) => {
+  const insertValue = (value: string, index: number) => {
     const input = inputRefs.current[index];
     if (!input) return;
     const start = input.selectionStart;
@@ -143,13 +143,13 @@ const CardCarousel = ({
     setSelectedText(selectedText?.trim());
   };
 
-  function deleteMediaCard(index) {
+  function deleteMediaCard(index: number) {
     removeItem(form, "mediaCarousel", index);
   }
-  function deleteProductCard(index) {
+  function deleteProductCard(index: number) {
     removeItem(form, "productCarousel", index);
   }
-  function handleButtonSelect(btn, index) {
+  function handleButtonSelect(btn: { type?: string; [key: string]: unknown }, index: number) {
     const newObject = { type: btn, text: "" };
     if (btn === WHATSAPP_BUTTON_TYPE.WEBSURVEY) {
       newObject.type = "URL";
@@ -193,7 +193,7 @@ const CardCarousel = ({
     },
   ];
 
-  function getButtonAction(type) {
+  function getButtonAction(type: string) {
     switch (type) {
       case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
         return "Call phone number";
@@ -375,7 +375,9 @@ const CardCarousel = ({
                 </div>
                 <CarouselButtonMenu
                   btnLength={card.buttons.length}
-                  handleButtonSelect={(btn) => handleButtonSelect(btn, index)}
+                  handleButtonSelect={(btn: { type?: string; [key: string]: unknown }) =>
+                    handleButtonSelect(btn, index)
+                  }
                 />
                 {card.buttons.map((btn, btnIndex) => (
                   <div
@@ -566,7 +568,13 @@ const CardCarousel = ({
   );
 };
 
-const CarouselButtonMenu = ({ btnLength, handleButtonSelect }) => {
+const CarouselButtonMenu = ({
+  btnLength,
+  handleButtonSelect,
+}: {
+  btnLength: number;
+  handleButtonSelect: (btn: { type?: string; [key: string]: unknown }) => void;
+}) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="outline" className="w-fit font-semibold" />}>
@@ -648,7 +656,7 @@ export const ProductCardCarouselPreview = ({
       catalog
         ? form.watch().productCarousel?.map((card) => {
             const product = catalog?.products?.find(
-              (p) => p?.retailer_id === card.product_retailer_id,
+              (p: { retailer_id?: string }) => p?.retailer_id === card.product_retailer_id,
             );
             return {
               image: product?.image_link || product?.image?.[0]?.url || "",

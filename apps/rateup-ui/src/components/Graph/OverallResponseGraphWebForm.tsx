@@ -7,6 +7,7 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import React from "react";
+import type { ComponentType, ReactNode } from "react";
 import {
   Bar,
   CartesianGrid,
@@ -32,7 +33,17 @@ const TIME_PERIODS = [
   { label: "Weekly", value: "weekly" },
 ];
 
-const OverallResponseGraphWebForm = ({ data, timePeriod, setTimePeriod, isLoading }) => {
+const OverallResponseGraphWebForm = ({
+  data,
+  timePeriod,
+  setTimePeriod,
+  isLoading,
+}: {
+  data: Array<Record<string, unknown>> | undefined;
+  timePeriod: string;
+  setTimePeriod: (period: string) => void;
+  isLoading: boolean;
+}) => {
   if (isLoading) {
     return <div className="w-full h-100 animate-pulse bg-gray-100 rounded-xl" />;
   }
@@ -194,7 +205,15 @@ const CustomTooltip = ({
   return null;
 };
 
-const Metric = ({ label, icon: Icon, value }) => (
+const Metric = ({
+  label,
+  icon: Icon,
+  value,
+}: {
+  label: string;
+  icon: ComponentType<{ className?: string; size?: number }>;
+  value: ReactNode;
+}) => (
   <div className="flex justify-between items-center gap-2">
     <div className="flex items-center gap-2 text-blue-600">
       <Icon size={18} className="text-blue-500" />
@@ -204,7 +223,15 @@ const Metric = ({ label, icon: Icon, value }) => (
   </div>
 );
 
-const Breakdown = ({ label, value, color }) => {
+const Breakdown = ({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: ReactNode;
+  color: "green" | "yellow" | "red";
+}) => {
   const colorMap = {
     green: "text-green-600 bg-green-500",
     yellow: "text-yellow-600 bg-yellow-400",

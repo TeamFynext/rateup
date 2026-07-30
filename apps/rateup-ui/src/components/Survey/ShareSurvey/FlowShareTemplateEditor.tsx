@@ -1,6 +1,7 @@
 import { IconCircleCheck, IconRefresh } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { useId, useEffect, useRef, useState } from "react";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -12,6 +13,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { cn } from "@/lib/utils";
+import type { RequestPayload } from "@/types/api.ts";
 import { SaveStatus } from "@/types/enums.ts";
 import type { WaFlowStartMessageConfig } from "@/types/global";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
@@ -25,7 +27,7 @@ const exceed = (l: number) => `Cannot exceed ${l} characters.`;
 const empty = `Cannot be empty.`;
 
 /** Checks is all properties in ob1 is equal to that in ob2 */
-function isEqual(ob1: object, ob2: object): boolean {
+function isEqual(ob1: Record<string, unknown>, ob2: Record<string, unknown>): boolean {
   return Object.keys(ob1).every((k) => {
     if (ob1[k] != ob2[k]) console.log(k, ob1[k], ob2[k]);
     return ob1[k] == ob2[k];
@@ -76,7 +78,17 @@ function useSimpleForm<T extends object>(opts: {
   return { values, setValues, setFieldValue, setInitialValues, reset, getInputProps, errors };
 }
 
-function FlowShareTemplateEditor({ form, dbFlowId, updateMutation, initialValues }) {
+function FlowShareTemplateEditor({
+  form,
+  dbFlowId,
+  updateMutation,
+  initialValues,
+}: {
+  form: UseFormReturn<FieldValues>;
+  dbFlowId: string;
+  updateMutation: { mutate: (data: RequestPayload) => void; isPending?: boolean };
+  initialValues: Record<string, unknown>;
+}) {
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const [status, setStatus] = useState(SaveStatus.saved);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -256,7 +268,7 @@ function FlowStartMessageEditor({
   );
 }
 
-export function FlowShareMessageEditor({ selectedTeamCode }) {
+export function FlowShareMessageEditor({ selectedTeamCode }: { selectedTeamCode: string }) {
   const params = useParams({
     strict: false,
   });
@@ -338,8 +350,8 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
   );
 }
 
-function RenderNewLine({ text }) {
-  return text.split("\n").map((t, i) => {
+function RenderNewLine({ text }: { text: string }) {
+  return text.split("\n").map((t: string, i: number) => {
     return <p key={i}>{t}</p>;
   });
 }
@@ -441,16 +453,16 @@ function generateStartMessageInitialValues(dbFlow: DbFlow): WaFlowStartMessageCo
 }
 
 const templateFormValidation = {
-  header: (h) => h.length > 60 && exceed(60),
-  body: (b) => {
+  header: (h: string) => h.length > 60 && exceed(60),
+  body: (b: string) => {
     if (b.length === 0) {
       return empty;
     } else if (b.length > 1024) {
       return exceed(1024);
     }
   },
-  footer: (f) => f.length > 60 && exceed(60),
-  cta: (c) => {
+  footer: (f: string) => f.length > 60 && exceed(60),
+  cta: (c: string) => {
     if (c.length === 0) {
       return empty;
     } else if (c.length > 20) {

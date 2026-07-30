@@ -108,7 +108,7 @@ export default function WaInboxContactDetails({
     setEditable(false);
   }, [contact?.id]);
 
-  const labels = contact?.contactLabels?.map((label) => label?.id);
+  const labels = contact?.contactLabels?.map((label: { id: string }) => label?.id);
   const {
     register,
     handleSubmit,
@@ -159,7 +159,7 @@ export default function WaInboxContactDetails({
         },
         {
           onSuccess: () => {
-            const updatedLabels = contactLabels?.filter((label) =>
+            const updatedLabels = contactLabels?.filter((label: { id: string }) =>
               values.labels?.includes(label.id),
             );
             updateContactById(contact.id, (c) => ({
@@ -189,7 +189,7 @@ export default function WaInboxContactDetails({
     return customField?.value || "";
   };
 
-  const updateCustomField = (fieldId: string, value: unknown, customFieldData: CustomFieldDef) => {
+  const updateCustomField = (fieldId: string, value: string, customFieldData: CustomFieldData) => {
     const currentCustomFields = getValues().customFields || [];
     const existingIndex = currentCustomFields.findIndex((cf) => cf.fieldId === fieldId);
 
@@ -206,7 +206,7 @@ export default function WaInboxContactDetails({
     setValue("customFields", [...currentCustomFields], { shouldValidate: true });
   };
 
-  const renderCustomField = (field: CustomFieldDef) => {
+  const renderCustomField = (field: CustomFieldData) => {
     const fieldValue = getCustomFieldValue(field.slug);
     const inputId = `customField-${field.slug}`;
     const fieldLabel = (
@@ -253,7 +253,7 @@ export default function WaInboxContactDetails({
 
       case "multivalue": {
         const options =
-          field?.listValues?.map((option) => ({
+          field?.listValues?.map((option: string) => ({
             value: option,
             label: option,
           })) || [];
@@ -272,7 +272,7 @@ export default function WaInboxContactDetails({
                 <SelectValue placeholder={`Select ${field.name}`} />
               </SelectTrigger>
               <SelectContent>
-                {options.map((opt) => (
+                {options.map((opt: { value: string; label: string }) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -573,7 +573,7 @@ export default function WaInboxContactDetails({
                       render={({ field }) => (
                         <MultiSelect
                           placeholder={t("Select labels")}
-                          options={contactLabels?.map((label) => ({
+                          options={contactLabels?.map((label: { id: string; name: string }) => ({
                             value: label.id,
                             label: label.name,
                           }))}
@@ -939,21 +939,23 @@ export default function WaInboxContactDetails({
                   {t("Assigned Users")}
                 </h4>
                 <div className="space-y-2">
-                  {contact.assignedUsers.map((user, index) => (
-                    <motion.div
-                      key={user.id}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.24 + index * 0.05, duration: 0.2 }}
-                      whileHover={{ scale: 1.02, x: 2 }}
-                    >
-                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
-                      <p className="text-xs font-light text-foreground">{user.name}</p>
-                    </motion.div>
-                  ))}
+                  {contact.assignedUsers.map(
+                    (user: { id?: string; name?: string }, index: number) => (
+                      <motion.div
+                        key={user.id}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.24 + index * 0.05, duration: 0.2 }}
+                        whileHover={{ scale: 1.02, x: 2 }}
+                      >
+                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <p className="text-xs font-light text-foreground">{user.name}</p>
+                      </motion.div>
+                    ),
+                  )}
                 </div>
               </div>
             ) : (
@@ -974,20 +976,22 @@ export default function WaInboxContactDetails({
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] text-muted-foreground">{t("Labels")}</p>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {contact.contactLabels.map((label) => (
-                    <Badge
-                      key={label.id}
-                      variant="outline"
-                      className="text-[10px] px-1.5 py-0.5 h-auto"
-                      style={{
-                        borderColor: label.color,
-                        color: label.color,
-                        backgroundColor: `${label.color}10`,
-                      }}
-                    >
-                      {label.name}
-                    </Badge>
-                  ))}
+                  {contact.contactLabels.map(
+                    (label: { id: string; name?: string; color?: string }) => (
+                      <Badge
+                        key={label.id}
+                        variant="outline"
+                        className="text-[10px] px-1.5 py-0.5 h-auto"
+                        style={{
+                          borderColor: label.color,
+                          color: label.color,
+                          backgroundColor: `${label.color}10`,
+                        }}
+                      >
+                        {label.name}
+                      </Badge>
+                    ),
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -1042,7 +1046,7 @@ function DeleteContactButton({
   handleToggle,
 }: {
   contact: { id: string; name?: string };
-  deleteContactMutation: { mutate: (id: string, options?: unknown) => void };
+  deleteContactMutation: { mutate: (id: string, options?: unknown) => void; isPending?: boolean };
   handleToggle: () => void;
 }) {
   const { t } = useTranslation();
