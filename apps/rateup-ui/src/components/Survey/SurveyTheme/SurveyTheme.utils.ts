@@ -47,7 +47,7 @@ export async function destructureThemeAndUploadImagesIfAny(
   ];
 
   const urls = await Promise.all(
-    images.map((image: string | File | Blob) =>
+    images.map((image: string | File | Blob | null | undefined) =>
       image instanceof File || image instanceof Blob
         ? uploadFile(image).then(
             (fileKey) => `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`,

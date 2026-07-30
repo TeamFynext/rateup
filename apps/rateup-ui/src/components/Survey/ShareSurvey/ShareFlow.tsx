@@ -175,7 +175,7 @@ export const ShareFlow = ({
                     <Select
                       disabled={disableShare || tagSelectData.length === 0}
                       value={tag}
-                      onValueChange={(value) => setTag(value)}
+                      onValueChange={(value) => setTag(value ?? "")}
                       items={tagSelectData?.map((tagItem) => ({ value: tagItem, label: tagItem }))}
                     >
                       <SelectTrigger id={`${uid}-field-2`} className="w-full min-w-[150px]">
@@ -209,7 +209,7 @@ export const ShareFlow = ({
           </div>
         </Card>
         <FlowShareMessageEditor
-          selectedTeamCode={teamSelectData.find((t) => t.value === surveyTeamMapId)?.label}
+          selectedTeamCode={teamSelectData.find((t) => t.value === surveyTeamMapId)?.label ?? ""}
         />
         <ShareQR
           url={shareUrl || import.meta.env.VITE_FRONTEND_URL}

@@ -28,7 +28,7 @@ function InputStyles() {
         <div className="w-full">
           <h2 className="mb-[0.3125rem] text-xs font-medium text-[#495057]">Color</h2>
           <CustomColorPicker
-            value={input?.primaryColor}
+            value={input?.primaryColor ?? ""}
             onChange={handleColorPickerChange}
             withoutEyedropper
           />

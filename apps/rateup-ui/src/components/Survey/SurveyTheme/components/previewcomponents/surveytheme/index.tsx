@@ -73,7 +73,7 @@ function SurveyThemeView({
         surveyThemeData={surveyCopy?.webSurveyTheme?.theme}
         pagesThemeData={surveyCopy?.webSurveyPagesTheme}
         titleText={titleText}
-        subtitleText={subtitleText}
+        subtitleText={subtitleText ?? undefined}
         isSurveyPreview={true}
       />
     );

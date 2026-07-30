@@ -34,9 +34,9 @@ const ShareQR = ({ url, title, isPublished, id, queryKey, resourceName }: ShareQ
   );
 
   // currently we are using only two resources(first arg below) survey, menu.
-  const shareSettings = useGetShareSettings(queryKey, resourceName, id);
+  const shareSettings = useGetShareSettings(queryKey, resourceName, id ?? "");
   // useUpdateShareSettingsMutation can return null.
-  const shareSettingsMutation = useUpdateShareSettingsMutation(queryKey, resourceName, id);
+  const shareSettingsMutation = useUpdateShareSettingsMutation(queryKey, resourceName, id ?? "");
   const { t: translations } = useTranslation();
   useEffect(() => {
     const qrSettingsFromApi = shareSettings?.data;

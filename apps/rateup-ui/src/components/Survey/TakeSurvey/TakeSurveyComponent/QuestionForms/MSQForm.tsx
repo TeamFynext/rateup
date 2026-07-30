@@ -75,7 +75,7 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
 
   useEffect(() => {
     if (selectedOp.includes(selectedFeature?.other?.title) && otherInputContainerRef.current) {
-      bDivRef.current.scrollIntoView({ behavior: "smooth" });
+      bDivRef.current?.scrollIntoView({ behavior: "smooth" });
     } else if (isOtherInputFocusTrapActive) {
       setIsOtherInputFocusTrapActive(false);
     }

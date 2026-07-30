@@ -14,8 +14,8 @@ function IsSurveyThemePreviewContextProvider({
   children: ReactNode;
 }) {
   return (
-    <IsSurveyThemePreviewContext.Provider value={isSurveyThemePreview}>
-      <IsSurveyThemeEditViewContext.Provider value={isSurveyThemeEditView}>
+    <IsSurveyThemePreviewContext.Provider value={!!isSurveyThemePreview}>
+      <IsSurveyThemeEditViewContext.Provider value={!!isSurveyThemeEditView}>
         {children}
       </IsSurveyThemeEditViewContext.Provider>
     </IsSurveyThemePreviewContext.Provider>
