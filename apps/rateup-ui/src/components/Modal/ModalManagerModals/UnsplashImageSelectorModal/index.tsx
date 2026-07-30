@@ -61,7 +61,13 @@ function UnsplashImageSelectorModal({
   ).filter((item) => item !== undefined);
 
   const [cropModalOpened, { open: openCropModal, close: closeCropModal }] = useDisclosure(false);
-  const [cropModalProps, setCropModalProps] = useState(null);
+  const [cropModalProps, setCropModalProps] = useState<{
+    imageUrl: string;
+    imageName?: string;
+    onSaveClick?: (result: { file?: File; url: string; source?: string } | null) => void;
+    onCancelClick?: () => void;
+    aspectRatio?: number;
+  } | null>(null);
 
   const handleImageClick = useCallback((url: string, name: string) => {
     setCropModalProps({

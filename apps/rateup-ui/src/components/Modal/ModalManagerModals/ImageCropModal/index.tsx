@@ -19,8 +19,8 @@ function ImageCropModal({
   id: string;
   innerProps: {
     imageUrl: string;
-    imageName: string;
-    onSaveClick?: (result: { file?: File; url: string; source?: string }) => void;
+    imageName?: string;
+    onSaveClick?: (result: { file?: File; url: string; source?: string } | null) => void;
     onCancelClick?: () => void;
     aspectRatio?: number;
   };

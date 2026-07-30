@@ -32,7 +32,13 @@ function ImageSourceSelectorModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [cropModalOpened, { open: openCropModal, close: closeCropModal }] = useDisclosure(false);
-  const [cropModalProps, setCropModalProps] = useState(null);
+  const [cropModalProps, setCropModalProps] = useState<{
+    imageUrl: string;
+    imageName?: string;
+    onSaveClick?: (result: { file?: File; url: string; source?: string } | null) => void;
+    onCancelClick?: () => void;
+    aspectRatio?: number;
+  } | null>(null);
 
   const handleFileBtnValueChange = useCallback(
     (fileObj: File | null) => {
