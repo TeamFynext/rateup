@@ -34,10 +34,10 @@ export function FlowTextDetailedView() {
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
     useContext(EditFlowContext);
   const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
-  const [nonInputTextType, setNonInputTextType] = useState(
+  const [nonInputTextType, setNonInputTextType] = useState<WaFlowFormElementType>(
     selectedFormElement?.type === WaFlowFormElementType.nonInputText
       ? WaFlowFormElementType.textHeading
-      : selectedFormElement?.type,
+      : (selectedFormElement?.type ?? WaFlowFormElementType.textHeading),
   );
   const { t: translations } = useTranslation();
 
@@ -45,7 +45,7 @@ export function FlowTextDetailedView() {
     defaultValues: {
       text: selectedFormElement?.text || "",
       type: nonInputTextType,
-      fontWeight: selectedFormElement["font-weight"] || "normal",
+      fontWeight: selectedFormElement?.["font-weight"] || "normal",
       strikethrough: selectedFormElement?.strikethrough || false,
     },
   });
@@ -76,7 +76,7 @@ export function FlowTextDetailedView() {
     }
     form.clearErrors("text");
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
-    const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement);
+    const index = flowForm?.children.findIndex((fe) => fe === selectedFormElement) ?? -1;
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
       formEl!.children[index].text = values.text;
