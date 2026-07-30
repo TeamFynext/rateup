@@ -146,7 +146,7 @@ function LanguagePage({ survey }: { survey: Survey }) {
           <div className="flex w-full flex-col items-stretch gap-4">
             <div className={startBtnWrapperStyles["titleBox"]}>
               <ThemeTitle
-                value={newTitle}
+                value={newTitle ?? ""}
                 onChange={(value: string) => handleSaveTitleSubtitleStartTextSave(value, "title")}
                 styles={{ color: titleStyles?.color }}
               />
