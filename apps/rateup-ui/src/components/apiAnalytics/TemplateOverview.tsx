@@ -12,8 +12,18 @@ function TemplateOverview({
   templatePerformance,
   isLoading,
 }: {
-  categoryOverview: Array<Record<string, unknown>> | undefined;
-  templatePerformance: Array<Record<string, unknown>> | undefined;
+  categoryOverview: Array<{ category: string; count: number; percentage: number }> | undefined;
+  templatePerformance:
+    | Array<{
+        templateName: string;
+        templateCategory: string;
+        lastUsed?: string;
+        totalSent?: number;
+        successPercentage?: number;
+        failurePercentage?: number;
+        avgDeliveryTimeSeconds?: number;
+      }>
+    | undefined;
   isLoading: boolean;
 }) {
   const { t } = useTranslation("apianalytics");
@@ -39,7 +49,7 @@ function TemplateOverview({
         ) : (
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {categoryOverview?.map((category: Record<string, unknown>, index: number) => {
+              {categoryOverview?.map((category, index: number) => {
                 const color = getCategoryColor(category.category);
                 return (
                   <div
@@ -61,7 +71,7 @@ function TemplateOverview({
 
             {/* Template List */}
             <div className="space-y-3">
-              {templatePerformance?.map((template: Record<string, unknown>, index: number) => {
+              {templatePerformance?.map((template, index: number) => {
                 const color = getCategoryColor(template.templateCategory);
                 return (
                   <div

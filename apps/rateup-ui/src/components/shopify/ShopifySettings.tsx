@@ -93,7 +93,12 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
     });
   };
 
-  async function confirmAndRun(deletionCase, confirmFunc, confirmFuncArgs?, data?) {
+  async function confirmAndRun(
+    deletionCase: string,
+    confirmFunc: (args?: unknown) => void,
+    confirmFuncArgs?: unknown,
+    data?: unknown,
+  ) {
     const deleteCase = getLabelsforConfirmModal(deletionCase, confirmFunc, confirmFuncArgs, data);
     const shouldProceed = await confirm({
       title: deleteCase?.headerTitle,
@@ -109,7 +114,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
     else confirmFunc();
   }
 
-  const handleWebhookRegistration = (isEnabled) => {
+  const handleWebhookRegistration = (isEnabled: boolean) => {
     if (isEnabled) {
       registerWebhooks();
     } else {
@@ -143,7 +148,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
     updateIntegration.mutate({ credential: updateData });
   };
 
-  const handleChangeWebhookByTopic = (event, isEnabled) => {
+  const handleChangeWebhookByTopic = (event: { topic: ShopifyEvents }, isEnabled: boolean) => {
     if (isEnabled) {
       toast.loading(translations("Hold On..Registering webhooks"), {
         id: "webhooks",
@@ -156,7 +161,7 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
     }
   };
 
-  const handleDeleteWebhookByTopic = (topic) => {
+  const handleDeleteWebhookByTopic = (topic: ShopifyEvents) => {
     toast.loading(translations("hold on..deleting webhooks"), {
       id: "webhooks",
     });
@@ -302,7 +307,12 @@ const ShopifySettings = ({ shopifyInfo }: { shopifyInfo: ShopifyIntegration }) =
   );
 };
 
-function getLabelsforConfirmModal(deletionCase, confirmFunc, confirmFuncArgs?, data?) {
+function getLabelsforConfirmModal(
+  deletionCase: string,
+  confirmFunc: (args?: unknown) => void,
+  confirmFuncArgs?: unknown,
+  data?: unknown,
+) {
   switch (deletionCase) {
     case "webhooks":
       return {

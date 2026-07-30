@@ -24,8 +24,8 @@ export function extractMentionUserIds(editorContent: any): string[] {
   return Array.from(ids);
 }
 
-export function parseToWhatsAppFormat(editorContent) {
-  function formatText(text, type = "*") {
+export function parseToWhatsAppFormat(editorContent: TiptapNode) {
+  function formatText(text: string, type = "*") {
     const trimmedEnd = text.trimEnd();
     const trimmedStart = text.trimStart();
     const trimmed = text.trim();
@@ -35,7 +35,7 @@ export function parseToWhatsAppFormat(editorContent) {
     const formattedText = trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
     return `${leadingSpaces}${type}${trimmed}${type}${formattedText}`;
   }
-  const parseNode = (node) => {
+  const parseNode = (node: TiptapNode) => {
     if (!node) return "";
     switch (node.type) {
       case "paragraph":
@@ -43,7 +43,7 @@ export function parseToWhatsAppFormat(editorContent) {
       case "text":
         let text = node.text;
         if (node.marks) {
-          node.marks.forEach((mark) => {
+          node.marks.forEach((mark: { type: string }) => {
             switch (mark.type) {
               case "bold":
                 text = formatText(text, "*");
@@ -64,11 +64,13 @@ export function parseToWhatsAppFormat(editorContent) {
         }
         return text;
       case "bulletList":
-        return node.content.map((item) => `* ${parseNode(item)}`).join("\n");
+        return node.content.map((item: TiptapNode) => `* ${parseNode(item)}`).join("\n");
       case "orderedList":
-        return node.content.map((item, index) => `${index + 1}. ${parseNode(item)}`).join("\n");
+        return node.content
+          .map((item: TiptapNode, index: number) => `${index + 1}. ${parseNode(item)}`)
+          .join("\n");
       case "blockquote":
-        return node.content.map((item) => `> ${parseNode(item)}`).join("\n");
+        return node.content.map((item: TiptapNode) => `> ${parseNode(item)}`).join("\n");
       case "codeBlock":
         return `\`\`\`${node.content.map(parseNode).join("")}\`\`\``;
       case "listItem":
@@ -262,13 +264,13 @@ export function parseWhatsAppToReact(text: string): React.ReactNode {
   ));
 }
 
-export function parseJsonToReact(value) {
+export function parseJsonToReact(value: string | TiptapNode) {
   if (typeof value === "string") return value;
   if (!value?.content?.[0]?.content) return "";
   return parse(generateHTML(value, [StarterKit]));
 }
 
-export function whatsappToHTML(text) {
+export function whatsappToHTML(text: string) {
   if (!text) return "";
 
   let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

@@ -1,15 +1,36 @@
 import { produce } from "immer";
 import { useCallback, useEffect } from "react";
+import type { CSSProperties } from "react";
 
 import { usePageVisitsOrLinkClicksUpdateMutation } from "@/backend/linktree/linktree.query";
+import type { LinktreeLink } from "@/components/Linktree/LinktreeEditor/LinksEditor/components/LinkCard.tsx";
 import UnsplashCreditText from "@/components/Linktree/LinktreeEditor/ThemeEditor/components/UnsplashCreditText/index.tsx";
 import { initialState as defaultTheme } from "@/components/Linktree/LinktreeEditor/ThemeEditor/ThemeContext/constants.ts";
+import type { LinktreeTheme } from "@/components/Linktree/LinktreeEditor/ThemeEditor/ThemeContext/ThemeReducer.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { imagesPath } from "@/utils/constants.ts";
 
 import styles from "./lt.module.css";
 
-const LinkTreeC = ({ linktreeObj }) => {
+/** Per-linktree visit/click counters persisted in localStorage. */
+type LinktreeVisitsData = Record<
+  string,
+  {
+    lastVisitedAt?: string;
+    linkClicks?: Record<string, string>;
+  }
+>;
+
+const LinkTreeC = ({
+  linktreeObj,
+}: {
+  linktreeObj: {
+    shortUrlId?: string;
+    theme?: LinktreeTheme;
+    links?: LinktreeLink[];
+    [key: string]: unknown;
+  };
+}) => {
   const shortUrlId = linktreeObj?.shortUrlId;
   const pageVisitsOrLinkClicksMutation = usePageVisitsOrLinkClicksUpdateMutation(shortUrlId);
 
@@ -25,7 +46,7 @@ const LinkTreeC = ({ linktreeObj }) => {
     linkListItem: { styles: linkListItemStyles },
   } = theme;
 
-  const backgroundImageObj = {};
+  const backgroundImageObj: CSSProperties = {};
   if (!isMobile) {
     backgroundImageObj["backgroundImage"] = `url(${desktopBgImgUrl})`;
   } else if (isMobile) {
@@ -52,15 +73,20 @@ const LinkTreeC = ({ linktreeObj }) => {
         resourceToBeUpdated: "page-visit",
       });
     } else if (linktreeVisitsData) {
-      const parsedVisitsDataObj = JSON.parse(localStorage.getItem("linktreeVisitsData"));
+      const parsedVisitsDataObj: LinktreeVisitsData = JSON.parse(
+        localStorage.getItem("linktreeVisitsData"),
+      );
       const currentLinktreeLastVisited = parsedVisitsDataObj[shortUrlId]?.lastVisitedAt;
       if (!currentLinktreeLastVisited) {
-        const updatedParsedVisitsDataObj = produce(parsedVisitsDataObj, (draft) => {
-          draft[shortUrlId] = {
-            lastVisitedAt: new Date().toISOString(),
-            linkClicks: {},
-          };
-        });
+        const updatedParsedVisitsDataObj = produce(
+          parsedVisitsDataObj,
+          (draft: LinktreeVisitsData) => {
+            draft[shortUrlId] = {
+              lastVisitedAt: new Date().toISOString(),
+              linkClicks: {},
+            };
+          },
+        );
         localStorage.setItem("linktreeVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
         pageVisitsOrLinkClicksMutation.mutate({
           resourceToBeUpdated: "page-visit",
@@ -75,9 +101,12 @@ const LinkTreeC = ({ linktreeObj }) => {
       const differenceInMinutes = (+newDateObj - +lastVisitedDateObj) / (1000 * 60);
 
       if (differenceInMinutes > 60) {
-        const updatedParsedVisitsDataObj = produce(parsedVisitsDataObj, (draft) => {
-          draft[shortUrlId].lastVisitedAt = new Date().toISOString();
-        });
+        const updatedParsedVisitsDataObj = produce(
+          parsedVisitsDataObj,
+          (draft: LinktreeVisitsData) => {
+            draft[shortUrlId].lastVisitedAt = new Date().toISOString();
+          },
+        );
         localStorage.setItem("linktreeVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
         pageVisitsOrLinkClicksMutation.mutate({
           resourceToBeUpdated: "page-visit",
@@ -86,16 +115,21 @@ const LinkTreeC = ({ linktreeObj }) => {
     }
   }, []);
 
-  const handleLinkClick = useCallback((linkId) => {
+  const handleLinkClick = useCallback((linkId: string) => {
     const shortUrlId = linktreeObj.shortUrlId;
-    const parsedVisitsDataObj = JSON.parse(localStorage.getItem("linktreeVisitsData"));
+    const parsedVisitsDataObj: LinktreeVisitsData = JSON.parse(
+      localStorage.getItem("linktreeVisitsData"),
+    );
     const linkClicksObj = parsedVisitsDataObj[shortUrlId]["linkClicks"][linkId];
     if (!linkClicksObj) {
-      const updatedParsedVisitsDataObj = produce(parsedVisitsDataObj, (draft) => {
-        draft[shortUrlId]["linkClicks"][linkId] = {
-          lastClickedAt: new Date().toISOString(),
-        };
-      });
+      const updatedParsedVisitsDataObj = produce(
+        parsedVisitsDataObj,
+        (draft: LinktreeVisitsData) => {
+          draft[shortUrlId]["linkClicks"][linkId] = {
+            lastClickedAt: new Date().toISOString(),
+          };
+        },
+      );
       localStorage.setItem("linktreeVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
       pageVisitsOrLinkClicksMutation.mutate({
         resourceToBeUpdated: "link-click",
@@ -108,9 +142,12 @@ const LinkTreeC = ({ linktreeObj }) => {
       const newDateObj = new Date();
       const differenceInMinutes = (+newDateObj - +lastClickedDateObj) / (1000 * 60);
       if (differenceInMinutes > 60) {
-        const updatedParsedVisitsDataObj = produce(parsedVisitsDataObj, (draft) => {
-          draft[shortUrlId]["linkClicks"][linkId]["lastClickedAt"] = new Date().toISOString();
-        });
+        const updatedParsedVisitsDataObj = produce(
+          parsedVisitsDataObj,
+          (draft: LinktreeVisitsData) => {
+            draft[shortUrlId]["linkClicks"][linkId]["lastClickedAt"] = new Date().toISOString();
+          },
+        );
         localStorage.setItem("linktreeVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
         pageVisitsOrLinkClicksMutation.mutate({
           resourceToBeUpdated: "link-click",
@@ -147,7 +184,7 @@ const LinkTreeC = ({ linktreeObj }) => {
       </div>
 
       <div className={styles["links-list-container"]}>
-        {links.map(({ id, linkDisplayName, linkUrl }) => {
+        {links.map(({ id, linkDisplayName, linkUrl }: LinktreeLink) => {
           return (
             <a
               target="_blank"

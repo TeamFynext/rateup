@@ -68,7 +68,16 @@ export const colorArray = [
   { from: "#6366F1", to: "#4F46E5" }, // Indigo
 ];
 
-export function EditTeam({ selectedTeam }: { selectedTeam: string }) {
+/** The team row the settings panels operate on. */
+interface SelectedTeam {
+  id: string;
+  name?: string;
+  code?: string;
+  color?: string;
+  createdAt?: string;
+}
+
+export function EditTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   const { t: translations } = useTranslation();
 
   const id = selectedTeam.id;
@@ -94,7 +103,7 @@ export function EditTeam({ selectedTeam }: { selectedTeam: string }) {
     }
   }, [selectedTeam]);
 
-  const onSubmit = (values: { name: string; googleLink?: string }) => {
+  const onSubmit = (values: { name: string; code?: string; color?: string }) => {
     setIsLoading(true);
 
     const data = {
@@ -226,6 +235,7 @@ export function EditTeam({ selectedTeam }: { selectedTeam: string }) {
   );
 }
 
+// This panel is given the team id, not the row the other panels receive.
 export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
   const [memberToDelete, setMemberToDelete] = useState(null);
   const { t: translations } = useTranslation();
@@ -304,39 +314,41 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
   } else if (notTeamMembersData?.data?.length) {
     addTeamMembersContent = (
       <div className="space-y-1">
-        {notTeamMembersData?.data?.map((user) => (
-          <div
-            key={user.id}
-            className="w-full py-2 rounded-lg flex items-center justify-between px-6"
-          >
-            <div className="flex items-center gap-2">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={getFileUrlFromKey(user?.profilePhoto)} />
-                <AvatarFallback className="bg-primary text-white text-xs">
-                  {user.name?.toUpperCase().slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-
-              <div>
-                <p className="text-sm">{user.name}</p>
-                <p className="text-xs text-muted-foreground">{user.email}</p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() =>
-                addTeams.mutate({
-                  userId: user.id,
-                  teamIds: [selectedTeam],
-                  userEmail: user.email,
-                })
-              }
+        {notTeamMembersData?.data?.map(
+          (user: { id: string; name?: string; email?: string; profilePhoto?: string }) => (
+            <div
+              key={user.id}
+              className="w-full py-2 rounded-lg flex items-center justify-between px-6"
             >
-              <Plus className="w-3 h-3 mr-1" />
-              {translations("Add")}
-            </Button>
-          </div>
-        ))}
+              <div className="flex items-center gap-2">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={getFileUrlFromKey(user?.profilePhoto)} />
+                  <AvatarFallback className="bg-primary text-white text-xs">
+                    {user.name?.toUpperCase().slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div>
+                  <p className="text-sm">{user.name}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  addTeams.mutate({
+                    userId: user.id,
+                    teamIds: [selectedTeam],
+                    userEmail: user.email,
+                  })
+                }
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                {translations("Add")}
+              </Button>
+            </div>
+          ),
+        )}
       </div>
     );
   } else {
@@ -527,7 +539,7 @@ export function AddMembers({ selectedTeam }: { selectedTeam: string }) {
   );
 }
 
-export function DeleteTeam({ selectedTeam }: { selectedTeam: string }) {
+export function DeleteTeam({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const teamId = selectedTeam.id;
@@ -737,7 +749,7 @@ const FEATURES_WITH_SUBSCRIPTION: {
   { feature: TeamFeature.Settings, label: "Settings" },
 ];
 
-export function TeamFeatureAccess({ selectedTeam }: { selectedTeam: string }) {
+export function TeamFeatureAccess({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   const { t: translations } = useTranslation();
   const teamId = selectedTeam?.id as string;
 
@@ -846,7 +858,7 @@ function describeChannel(channel: any): { label: string; platform: string } {
   };
 }
 
-export function TeamChannelAccess({ selectedTeam }: { selectedTeam: string }) {
+export function TeamChannelAccess({ selectedTeam }: { selectedTeam: SelectedTeam }) {
   const { t: translations } = useTranslation();
   const teamId = selectedTeam?.id as string;
 
