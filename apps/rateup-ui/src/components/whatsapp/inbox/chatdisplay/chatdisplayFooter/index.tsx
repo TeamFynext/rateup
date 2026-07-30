@@ -122,7 +122,7 @@ export default function WaInboxChatDisplayFooter({
   const { activeTab, setActiveTab } = useComposerTabStore();
   const [quickRepliesOpen, setQuickRepliesOpen] = useState(false);
 
-  const submiRef = useRef<HTMLElement | null>(null);
+  const submiRef = useRef<(() => void) | null>(null);
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const { user } = useUser();
@@ -295,7 +295,7 @@ export default function WaInboxChatDisplayFooter({
                   },
                 },
           exchangeProcess: "send",
-          receive: null,
+          receive: undefined,
         },
         waCreatedAt: new Date().toISOString(),
         sourceIdentifier: whatsappSettingsPhoneId,
@@ -530,7 +530,7 @@ export default function WaInboxChatDisplayFooter({
                 content={body.text.body}
                 mih={67}
                 inbox={true}
-                customEnter={() => submiRef.current()}
+                customEnter={() => submiRef.current?.()}
                 editable={!isSessionExpired && !isRecording && !audioUrl && body.type === "text"}
                 placeholder="Type a message...Type / for quick replies"
                 sendMessageButton={<SendMessageComponent />}
@@ -627,7 +627,7 @@ export const WaInboxAssignUserFooter = ({
   const { t } = useTranslation();
   const { filterData } = useContactStore();
   const messagesStore = useMessagesStore();
-  const assignMut = useAssignInboxToUer(contactId, filterData);
+  const assignMut = useAssignInboxToUer(contactId ?? "", filterData ?? "");
   const { updateContactById } = useContactsStore();
   const qc = useQueryClient();
 
@@ -772,7 +772,7 @@ export const WaInboxBlockedContactFooter = ({ contact }: { contact: ContactWithU
   const { filterData } = useContactStore();
   const { setSelectedContact } = useContactsStore();
   const confirm = useConfirm();
-  const unblockMut = useUnBlockWhatsAppUser(filterData);
+  const unblockMut = useUnBlockWhatsAppUser(filterData ?? "");
   async function handleUnblock() {
     const shouldUnblock = await confirm({
       title: `Unblock ${contact?.name ?? contact?.phone}`,
@@ -949,7 +949,7 @@ interface MediaStore {
   removeMedia: (key: string) => Promise<void>;
   removeMediaSilently: (key: string) => void;
   resetMedia: () => void;
-  selectedMedia: WaMedia;
+  selectedMedia: WaMedia | null;
   setSelectedMedia: (value: WaMedia | null) => void;
 }
 
@@ -986,7 +986,7 @@ interface MessageBody {
   type: string;
   media?: WaMedia[];
   /** Holds the editor's Tiptap document. */
-  text?: { body: TiptapNode | string };
+  text: { body: TiptapNode | string };
   contacts?: {
     contactIds: string[];
     groupIds: string[];
