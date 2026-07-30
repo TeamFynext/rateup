@@ -182,7 +182,8 @@ export const TempMessageBody = ({
     urlType?: string;
     filename?: string;
   };
-  timestamp?: string;
+  /** Optimistic messages stamp this with `Date.now()`. */
+  timestamp?: string | number;
 }) => {
   const { user } = useUser();
   return (

@@ -212,7 +212,7 @@ export default WaInboxChatDisplayBody;
  * Watches the top sentinel through the scroller's visibility hook — the
  * documented escape hatch — and asks for the next page when it comes into view.
  */
-const LoadOlderMessagesTrigger: FC<{ onLoad: () => void }> = ({
+const LoadOlderMessagesTrigger: FC<{ enabled: boolean; onReach: () => void }> = ({
   enabled,
   onReach,
 }: Readonly<{ enabled: boolean; onReach: () => void }>) => {
