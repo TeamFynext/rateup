@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 
 import { useSurveyThemeStateDispatch } from "../../SurveyThemeContext.tsx";
+import type { SurveyThemePage } from "../../surveyThemeReducer.ts";
 import ComboBoxComponent from "./ComboBoxComponent/index.tsx";
 import { getOptions } from "./constants.tsx";
 import CreateNewThemeModal from "./CreateNewThemeModal.tsx";
@@ -16,7 +17,7 @@ function ThemeSelector({
 }: {
   themeSelectorState: string;
   setThemeSelectorState: (id: string) => void;
-  allThemesArr?: Array<{ id: string; name: string }>;
+  allThemesArr?: Array<{ id: string; name: string; theme?: Record<string, SurveyThemePage> }>;
   isAllThemesFetchPending?: boolean;
   survey: Survey;
   className?: string;

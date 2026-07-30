@@ -16,7 +16,7 @@ function RenderOption({
   option: { value: string; label: string };
   surveyActiveThemeId?: string;
   comboboxHandleChange?: (value: string) => void;
-  handleOpenRenameThemeModal?: (themeId: string, oldName: string) => void;
+  handleOpenRenameThemeModal?: (themeId: string, oldName?: string) => void;
 }) {
   const isDefaultOption = option.label === "Default Theme";
 
