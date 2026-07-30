@@ -48,7 +48,7 @@ function getInitialValues(screens: WaFlowScreen[]): FlowScreenFormValues {
 interface CreateFlowScreenModalProps {
   opened: boolean;
   close: () => void;
-  screenId?: string;
+  screenId?: string | null;
 }
 
 function CreateFlowScreenModal({
@@ -83,10 +83,10 @@ function CreateFlowScreenModal({
       updateFlowJson((draft) => {
         if (!screenId) {
           draft.screens.push(getNewScreenObj(values));
-          updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
+          updateFlowJsonNavigationAndDataPassing(draft, dbFlow!);
         } else {
           const screenToBeEdited = getScreenObjById(draft.screens, screenId);
-          screenToBeEdited["title"] = values.screenTitle;
+          screenToBeEdited!["title"] = values.screenTitle;
         }
         form.reset(getInitialValues(draft.screens));
       });
@@ -98,12 +98,12 @@ function CreateFlowScreenModal({
   useEffect(() => {
     if (screenId) {
       const screenToBeEdited = getScreenObjById(flowJson.screens, screenId);
-      const layoutChildren = screenToBeEdited?.layout["children"][0]["children"];
+      const layoutChildren = screenToBeEdited?.layout["children"][0]?.["children"] ?? [];
       const footerObj = layoutChildren[layoutChildren.length - 1];
       form.reset({
         screenId: screenToBeEdited?.id,
         screenTitle: screenToBeEdited?.title,
-        footerBtnLabel: footerObj.label,
+        footerBtnLabel: footerObj?.label,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
