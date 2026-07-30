@@ -1,5 +1,9 @@
 import { useContext, useEffect } from "react";
 
+import type {
+  QuestionFormFeatures,
+  QuestionFormField,
+} from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
@@ -7,18 +11,10 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { handleInputScrollIntoView } from "../util.tsx";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
-interface CustomInputFields {
-  fieldKey: string;
-  placeholderText: string;
-}
-const MultiTextInputForm = ({
-  features,
-}: {
-  features?: Record<string, { fields?: CustomInputFields[] }>;
-}) => {
+const MultiTextInputForm = ({ features }: { features?: Record<string, QuestionFormFeatures> }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const fields: CustomInputFields[] = features?.[selectedLanguage]?.fields;
+  const fields: QuestionFormField[] = features?.[selectedLanguage]?.fields;
 
   useEffect(() => {
     // Every field of this question's response is a text input's value.

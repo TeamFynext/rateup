@@ -3,6 +3,7 @@ import type { CountryCode } from "libphonenumber-js";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
@@ -13,20 +14,7 @@ import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 import { useThemePrimaryColor } from "./useThemePrimaryColor.ts";
 
 /** Per-field configuration of a Contact question. */
-interface ContactFieldConfig {
-  isEnabled?: boolean;
-  headText?: string;
-  defaultCountryCode?: string;
-}
-
-const ContactForm = ({
-  features,
-}: {
-  features?: Record<
-    string,
-    { name?: ContactFieldConfig; phone?: ContactFieldConfig; email?: ContactFieldConfig }
-  >;
-}) => {
+const ContactForm = ({ features }: { features?: Record<string, QuestionFormFeatures> }) => {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const selectedFeature = features?.[selectedLanguage];

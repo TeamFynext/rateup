@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 
+import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
 import { PageType as Page, QuestionType as Q } from "@/types/enums.ts";
 import type { PageType, QuestionType } from "@/types/enums.ts";
 import type { TNC, Wop } from "@/types/global";
@@ -42,8 +43,8 @@ const QuestionTypePreview = ({
 }: {
   type: QuestionType | PageType;
   choices?: Record<string, Choice[]>;
-  features?: Record<string, unknown>;
-  tnc?: TNC;
+  features?: Record<string, QuestionFormFeatures>;
+  tnc?: Record<string, TNC>;
   wop?: Wop;
   htmlContent?: string | null;
 }) => {

@@ -8,6 +8,7 @@ import { getBgImgAndBgColor } from "@/components/Layout/TakeSurveyLayout/utils.t
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
 import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
+import type { ReviewSuggestion } from "@/types/global";
 
 import BodyComp from "./BodyComp.tsx";
 
@@ -43,7 +44,7 @@ export default function ThankYou({
 }: {
   enableGoogleReview?: boolean;
   googleLink?: string;
-  reviews?: unknown[];
+  reviews?: ReviewSuggestion[];
   kioskMode?: string;
   surveyIdValue?: string;
   fromShortUrl?: boolean;

@@ -17,6 +17,8 @@ export interface QuestionFormField {
   fieldKey: string;
   label?: string;
   placeholder?: string;
+  /** The take-survey renderer reads the placeholder under this name. */
+  placeholderText?: string;
   required?: boolean;
   [key: string]: unknown;
 }
@@ -26,6 +28,19 @@ export interface QuestionFormFeatures {
   fields?: QuestionFormField[];
   questions?: string[];
   /** Smiley question appearance: variant, palette, per-face colours and emoji. */
+  /** Contact question: which sub-fields are on, and their prompts. */
+  name?: { isEnabled?: boolean; headText?: string; defaultCountryCode?: string };
+  phone?: { isEnabled?: boolean; headText?: string; defaultCountryCode?: string };
+  email?: { isEnabled?: boolean; headText?: string; defaultCountryCode?: string };
+  /** Testimonial question: which sub-fields are on, and their prompts. */
+  nameQn?: string;
+  jobTitle?: boolean;
+  jobTitleQn?: string;
+  testimonialQn?: string;
+  rating?: boolean;
+  ratingQn?: string;
+  photo?: boolean;
+  photoQn?: string;
   iconStyle?: {
     variant?: SmileyVariantStyle;
     colorType?: SmileyColorType;

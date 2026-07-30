@@ -3,6 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { QuestionFormFeatures } from "@/components/Survey/Question/QuestionExtraProps/questionForm.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -21,20 +22,7 @@ import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
 interface TestimonialProps {
   /** Per-language question labels and toggles for the testimonial fields. */
-  features?: Record<
-    string,
-    {
-      nameQn?: string;
-      jobTitle?: boolean;
-      jobTitleQn?: string;
-      testimonialQn?: string;
-      rating?: boolean;
-      ratingQn?: string;
-      photo?: boolean;
-      photoQn?: string;
-      [key: string]: unknown;
-    }
-  >;
+  features?: Record<string, QuestionFormFeatures>;
   isPreview?: boolean;
 }
 
