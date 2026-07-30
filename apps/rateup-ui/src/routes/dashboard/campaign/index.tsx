@@ -124,7 +124,7 @@ function CampaignsPage() {
             </FieldLabel>
             <Select
               value={selectedStatus}
-              onValueChange={setSelectedStatus}
+              onValueChange={(value) => setSelectedStatus(value ?? "")}
               items={[
                 { value: "all", label: t("All Statuses") },
                 { value: "ACTIVE", label: t("Active") },

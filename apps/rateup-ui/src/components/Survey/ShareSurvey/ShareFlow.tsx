@@ -154,7 +154,7 @@ export const ShareFlow = ({
                   <Select
                     disabled={disableShare}
                     value={surveyTeamMapId}
-                    onValueChange={setSurveyTeamMapId}
+                    onValueChange={(value) => setSurveyTeamMapId(value ?? "")}
                     items={teamSelectData}
                   >
                     <SelectTrigger id={`${uid}-field`} className="w-full min-w-[150px]">

@@ -49,7 +49,11 @@ function ThemeStyles() {
 
   return (
     <div className={styles["theme-styles-div"]}>
-      <Select value={selectedEditor} items={editorsList} onValueChange={setSelectedEditor}>
+      <Select
+        value={selectedEditor}
+        items={editorsList}
+        onValueChange={(value) => setSelectedEditor(value ?? "")}
+      >
         <SelectTrigger className={styles["editor-select-dropdown"]}>
           <IconEdit width={"1rem"} />
           <SelectValue />

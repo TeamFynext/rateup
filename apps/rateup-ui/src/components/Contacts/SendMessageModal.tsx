@@ -61,7 +61,7 @@ const SendMessageModal = ({
             <FieldLabel htmlFor="message-channel">Select Channel</FieldLabel>
             <Select
               value={platform}
-              onValueChange={setPlatform}
+              onValueChange={(value) => setPlatform(value ?? "")}
               items={[
                 { value: MessagePlatform.WHATSAPP, label: "WhatsApp" },
                 { value: MessagePlatform.INSTAGRAM, label: "Instagram" },

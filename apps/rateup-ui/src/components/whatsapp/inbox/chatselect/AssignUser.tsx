@@ -163,7 +163,7 @@ const BulkAssignUser = ({
         ) : (
           <Select
             value={selectedUser}
-            onValueChange={setSelectedUser}
+            onValueChange={(value) => setSelectedUser(value ?? "")}
             disabled={!selectedTeam}
             items={teamMembersFiltered.map((staff: any) => ({
               value: staff.id,
