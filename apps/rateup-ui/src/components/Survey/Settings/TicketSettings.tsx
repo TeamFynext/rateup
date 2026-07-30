@@ -143,7 +143,7 @@ const TicketSettings = ({
                       </FieldLabel>
                       <Select
                         value={ticketBoardId ?? ""}
-                        onValueChange={(v) => setTicketBoardId(v)}
+                        onValueChange={(v) => setTicketBoardId(v ?? undefined)}
                         items={boards ?? []}
                       >
                         <SelectTrigger id={`${uid}-field`}>
@@ -165,7 +165,7 @@ const TicketSettings = ({
                       </FieldLabel>
                       <Select
                         value={ticketColumnId ?? ""}
-                        onValueChange={(v) => setTicketColumnId(v)}
+                        onValueChange={(v) => setTicketColumnId(v ?? undefined)}
                         items={columns}
                       >
                         <SelectTrigger id={`${uid}-field-2`}>

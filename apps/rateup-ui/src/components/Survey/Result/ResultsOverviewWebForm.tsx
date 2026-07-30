@@ -142,7 +142,7 @@ const ResultsOverviewWebForm = ({
             <LargeTextResponseSummary
               surveyId={surveyId}
               questions={textAreaQuestions}
-              subscription={subscription}
+              subscription={subscription!}
               currentSummary={aiResponseSummary}
               version={version}
             />

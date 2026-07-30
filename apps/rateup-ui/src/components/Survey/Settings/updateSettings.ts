@@ -82,7 +82,7 @@ export const updatewebSurveyAutoTransitionToNextQues = (
 ) => {
   setwebSurveyAutoTransitionToNextQues((prev) => {
     const newValue = !prev;
-    editSurvey.mutateAsync({ webSurveyAutoTransitionToNextQues: newValue });
+    editSurvey.mutateAsync?.({ webSurveyAutoTransitionToNextQues: newValue });
     return newValue;
   });
 };

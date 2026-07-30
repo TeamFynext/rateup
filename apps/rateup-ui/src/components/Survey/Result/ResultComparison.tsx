@@ -114,7 +114,7 @@ export default function ResultComparison({
                     <XAxis dataKey="teamCode" />
                     <YAxis />
                     <Tooltip />
-                    {Object.keys(q.data[0] ?? {})
+                    {Object.keys(q.data?.[0] ?? {})
                       .filter((key) => !["teamCode", "mapId"].includes(key))
                       .map((key) => (
                         <Bar

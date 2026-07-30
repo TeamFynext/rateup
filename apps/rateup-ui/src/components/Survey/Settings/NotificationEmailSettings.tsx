@@ -26,7 +26,7 @@ const NotificationEmailSettings = ({ survey, surveyId }: { survey: Survey; surve
   const editSurvey = useEditSurveyMutation(surveyId);
 
   useEffect(() => {
-    if (!/^\S+@\S+$/.test(notificationEmail)) setError(translations("Invalid Email"));
+    if (!/^\S+@\S+$/.test(notificationEmail ?? "")) setError(translations("Invalid Email"));
     else setError("");
   }, [notificationEmail]);
 

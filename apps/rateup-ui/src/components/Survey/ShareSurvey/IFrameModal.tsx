@@ -87,7 +87,7 @@ const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
           </FieldLabel>
           <Select
             value={values.widthUnit}
-            onValueChange={(unit) => setValues((prev) => ({ ...prev, widthUnit: unit }))}
+            onValueChange={(unit) => setValues((prev) => ({ ...prev, widthUnit: unit ?? "" }))}
             items={units}
           >
             <SelectTrigger id={`${uid}-field-2`} className="w-full">
@@ -122,7 +122,7 @@ const IFrameModal = ({ close, shareUrl }: IFrameModalProps) => {
           </FieldLabel>
           <Select
             value={values.heightUnit}
-            onValueChange={(unit) => setValues((prev) => ({ ...prev, heightUnit: unit }))}
+            onValueChange={(unit) => setValues((prev) => ({ ...prev, heightUnit: unit ?? "" }))}
             items={units}
           >
             <SelectTrigger id={`${uid}-field-4`} className="w-full">
