@@ -121,7 +121,7 @@ declare global {
       allowedMimeTypes?: string[];
     };
     reviewPageOptions?: any;
-    reviewPagePlatform?: string;
+    reviewPagePlatform?: ReviewPagePlatform;
   }
   interface ResponseSummary {
     questionId: string;

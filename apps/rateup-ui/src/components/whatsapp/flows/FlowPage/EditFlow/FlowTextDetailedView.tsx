@@ -97,7 +97,7 @@ export function FlowTextDetailedView() {
   }, [textValue, fontWeight, strikethrough]);
 
   const fontStyle: React.CSSProperties = {
-    fontSize: textFontSize[nonInputTextType],
+    fontSize: textFontSize[nonInputTextType as keyof typeof textFontSize],
     fontWeight: textDecoration ? "inherit" : 800,
     ...getTextStyle(fontWeight, textDecoration),
     textDecoration: textDecoration && strikethrough ? "line-through" : "none",

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import type { ElementType } from "@/components/Survey/Question/QuestionTypeSelection.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import {
   QuestionType,
@@ -85,7 +86,7 @@ function EditFlow() {
     setBlankQuestion(null);
   }
 
-  const handleTypeSelection = (type: QuestionType | WaFlowFormElementType) => {
+  const handleTypeSelection = (type: ElementType) => {
     const screenToBeEdited = getScreenObjById(flowJson.screens, selectedScreenId);
     const formElementChildren = screenToBeEdited.layout.children.find(
       (se) => se.type === "Form",
@@ -94,9 +95,11 @@ function EditFlow() {
       return toast.error("Only 50 components in a screen", {
         id: "error-max-screen-elements",
       });
-    const qsType = [WaFlowFormElementType.nonInputText, WaFlowFormElementType.image].includes(
-      type as WaFlowFormElementType,
-    )
+    const flowElementTypes: ElementType[] = [
+      WaFlowFormElementType.nonInputText,
+      WaFlowFormElementType.image,
+    ];
+    const qsType = flowElementTypes.includes(type)
       ? type
       : questionTypeToFlowFormElementType(type as QuestionType);
     if (

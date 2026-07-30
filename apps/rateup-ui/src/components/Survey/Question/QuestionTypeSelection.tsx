@@ -34,14 +34,23 @@ import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { PageType, QuestionType, WaFlowFormNonInputElementType } from "@/types/enums.ts";
+import {
+  PageType,
+  QuestionType,
+  WaFlowFormElementType,
+  WaFlowFormNonInputElementType,
+} from "@/types/enums.ts";
 import { googleReviewSupportedTypes } from "@/utils/data.ts";
 import { getQuestionTypeLabel, getTypeLabel } from "@/utils/enums/index.ts";
 
 import { GoogleIcon } from "../../Button/GoogleIcon.tsx";
 import { pageIcons } from "../Page/PageIcons.ts";
 
-type ElementType = QuestionType | PageType | WaFlowFormNonInputElementType;
+export type ElementType =
+  | QuestionType
+  | PageType
+  | WaFlowFormElementType
+  | WaFlowFormNonInputElementType;
 
 interface ElementTypeChipProps {
   type: ElementType;
@@ -62,7 +71,8 @@ export function ElementTypeChip({
   onMouseOver,
   onMouseLeave,
 }: Readonly<ElementTypeChipProps>) {
-  const Icon = pageIcons[type] ?? questionIcons[type];
+  const Icon =
+    pageIcons[type as keyof typeof pageIcons] ?? questionIcons[type as keyof typeof questionIcons];
 
   return (
     <button
@@ -107,7 +117,7 @@ interface QuestionTypeSelectionProps {
     title: string;
     questionTypes: Array<any>;
   }>;
-  handleTypeSelection: (type: QuestionType) => void;
+  handleTypeSelection: (type: ElementType) => void;
   /** Optional filter text coming from the "Add Element" search box. */
   query?: string;
 }
@@ -121,7 +131,7 @@ export function QuestionTypeSelection({
   // header instead of always on the first group's.
   const [hoveredType, setHoveredType] = useState<QuestionType | null>(null);
 
-  const handleQuestionTypeClick = (type) => {
+  const handleQuestionTypeClick = (type: ElementType) => {
     handleTypeSelection(type);
     setHoveredType(null);
   };

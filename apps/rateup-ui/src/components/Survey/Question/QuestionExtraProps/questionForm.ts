@@ -26,6 +26,9 @@ export interface QuestionFormField {
 /** The per-language `features` bag a question editor reads and writes. */
 export interface QuestionFormFeatures {
   fields?: QuestionFormField[];
+  /** EmailOTP question: the allow-list and whether it is enforced. */
+  allowedEmails?: string[];
+  isRestricted?: boolean;
   questions?: string[];
   /** Smiley question appearance: variant, palette, per-face colours and emoji. */
   /** Contact question: which sub-fields are on, and their prompts. */

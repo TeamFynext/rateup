@@ -3,7 +3,7 @@ import { immer } from "zustand/middleware/immer";
 
 import type { WaQuestions } from "@/types/enums.ts";
 import { QuestionType2 } from "@/types/enums.ts";
-import type { FlowLogicJump } from "@/types/global";
+import type { FlowLogicJump, FlowLogicJumpComponentLevel } from "@/types/global";
 
 import {
   getQuestionTypeMapping,
@@ -66,7 +66,7 @@ interface StoreState {
   expandedElementId: string | null; // For inline editing in column 2
   currentElementType: QuestionType2 | null;
   detailActiveEditor: EditorType;
-  logicJumps: { [screenId: string]: FlowLogicJump[] };
+  logicJumps: { [screenId: string]: Array<FlowLogicJump | FlowLogicJumpComponentLevel> };
   getScreens: () => Screen[];
   addScreens: (screens: Screen[]) => void;
   addScreenWithTitle: (title: string) => void;
@@ -91,7 +91,9 @@ interface StoreState {
   setTicketIssued: (ticketIssued: any[]) => void;
   getLogicJumps: (screenId: string) => FlowLogicJump[];
   updateLogicJumps: (screenId: string, jumps: FlowLogicJump[]) => void;
-  setAllLogicJumps: (jumps: { [screenId: string]: FlowLogicJump[] }) => void;
+  setAllLogicJumps: (jumps: {
+    [screenId: string]: Array<FlowLogicJump | FlowLogicJumpComponentLevel>;
+  }) => void;
 }
 
 const useFlowStoreV3 = create<StoreState>()(

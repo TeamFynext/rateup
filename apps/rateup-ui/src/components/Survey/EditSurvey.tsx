@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useQuestionCreateMutation } from "@/backend/surveys/questions/questions.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
+import type { ElementType } from "@/components/Survey/Question/QuestionTypeSelection.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -195,7 +196,7 @@ export function EditSurvey({
     surveyId,
   });
 
-  const handleTypeSelection = (type: QuestionType | PageType) => {
+  const handleTypeSelection = (type: ElementType) => {
     if (type in PageType) {
       // Page types (Welcome/ThankYou/etc.) get valid default titles, so it's
       // safe to persist them immediately.
