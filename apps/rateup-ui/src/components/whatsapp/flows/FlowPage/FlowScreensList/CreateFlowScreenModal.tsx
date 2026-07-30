@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import type { WaFlowScreen } from "@/types/global";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getHotkeyHandler } from "@/utils/hotkeys.ts";
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";

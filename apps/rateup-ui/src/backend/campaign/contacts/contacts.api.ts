@@ -166,6 +166,7 @@ export interface CustomFieldData {
   name: string;
   description: string | null;
   visibility: boolean;
+  required?: boolean;
   type: string;
   createdAt: string;
   values: string;

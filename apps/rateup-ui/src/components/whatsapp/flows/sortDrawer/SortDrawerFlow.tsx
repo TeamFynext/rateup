@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 import { useListState } from "@/hooks/use-list-state.ts";
+import type { WaFlowFormElement } from "@/types/global";
 
 import useFlowStore from "../../flow-v2/utils/store.ts";
 import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext.ts";

@@ -3,6 +3,10 @@ import dayjs from "dayjs";
 import { ExternalLink, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import type {
+  CatalogOrder,
+  CatalogOrderProduct,
+} from "@/backend/whatsapp/catalog/orders/catalogOrders.api";
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";

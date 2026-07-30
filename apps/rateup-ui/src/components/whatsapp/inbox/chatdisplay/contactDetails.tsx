@@ -25,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
 
+import type { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import {
   useContactDeleteMutation,
   useContactLabels,
