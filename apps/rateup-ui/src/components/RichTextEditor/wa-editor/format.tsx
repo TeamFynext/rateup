@@ -46,9 +46,9 @@ export function parseToWhatsAppFormat(editorContent: TiptapNode | string) {
     if (!node) return "";
     switch (node.type) {
       case "paragraph":
-        return node?.content?.map(parseNode).join("");
+        return node?.content?.map(parseNode).join("") ?? "";
       case "text":
-        let text = node.text;
+        let text = node.text ?? "";
         if (node.marks) {
           node.marks.forEach((mark: { type: string }) => {
             switch (mark.type) {
@@ -71,17 +71,19 @@ export function parseToWhatsAppFormat(editorContent: TiptapNode | string) {
         }
         return text;
       case "bulletList":
-        return node.content.map((item: TiptapNode) => `* ${parseNode(item)}`).join("\n");
+        return node.content?.map((item: TiptapNode) => `* ${parseNode(item)}`).join("\n") ?? "";
       case "orderedList":
-        return node.content
-          .map((item: TiptapNode, index: number) => `${index + 1}. ${parseNode(item)}`)
-          .join("\n");
+        return (
+          node.content
+            ?.map((item: TiptapNode, index: number) => `${index + 1}. ${parseNode(item)}`)
+            .join("\n") ?? ""
+        );
       case "blockquote":
-        return node.content.map((item: TiptapNode) => `> ${parseNode(item)}`).join("\n");
+        return node.content?.map((item: TiptapNode) => `> ${parseNode(item)}`).join("\n") ?? "";
       case "codeBlock":
-        return `\`\`\`${node.content.map(parseNode).join("")}\`\`\``;
+        return `\`\`\`${node.content?.map(parseNode).join("") ?? ""}\`\`\``;
       case "listItem":
-        return node.content.map(parseNode).join("");
+        return node.content?.map(parseNode).join("") ?? "";
       case "mention":
         return `@${node.attrs?.label ?? node.attrs?.id ?? ""}`;
       default:
@@ -89,7 +91,7 @@ export function parseToWhatsAppFormat(editorContent: TiptapNode | string) {
     }
   };
 
-  return (editorContent as TiptapNode).content.map(parseNode).join("\n");
+  return (editorContent as TiptapNode).content?.map(parseNode).join("\n") ?? "";
 }
 /** A node of a Tiptap document, as the WhatsApp editor produces it. */
 export interface TiptapNode {

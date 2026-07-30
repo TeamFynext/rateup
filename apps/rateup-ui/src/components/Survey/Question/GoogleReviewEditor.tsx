@@ -68,18 +68,18 @@ const GoogleReviewEditor = ({
       setEnableGoogleReview(true);
       switch (selectedQ?.type) {
         case Q.Rating:
-          if (minRating !== selectedQ["googleReview"]["minRating"]) {
-            setMinRating(selectedQ["googleReview"]["minRating"]);
+          if (minRating !== selectedQ["googleReview"]!["minRating"]!) {
+            setMinRating(selectedQ["googleReview"]!["minRating"]!);
           }
           break;
         case Q.Opinion:
-          if (minOpinion !== selectedQ["googleReview"]["minOpinion"]) {
-            setMinOpinion(selectedQ["googleReview"]["minOpinion"]);
+          if (minOpinion !== selectedQ["googleReview"]!["minOpinion"]!) {
+            setMinOpinion(selectedQ["googleReview"]!["minOpinion"]!);
           }
           break;
         case Q.Smiley:
-          if (selectedSmileys !== selectedQ["googleReview"]["reqOptions"]) {
-            setSelectedSmileys(selectedQ["googleReview"]["reqOptions"]);
+          if (selectedSmileys !== selectedQ["googleReview"]!["reqOptions"]!) {
+            setSelectedSmileys(selectedQ["googleReview"]!["reqOptions"]!);
           }
           break;
       }
@@ -159,7 +159,7 @@ const GoogleReviewEditor = ({
 
   const finishQuestionOptionsUpdate = async () => {
     if (waFlowSave) {
-      updateComponentInScreen(currentElementId, {
+      updateComponentInScreen(currentElementId ?? "", {
         googleReview: selectedQ?.googleReview,
       });
       setDetailActiveEditor(EditorType.ElementEditor);
