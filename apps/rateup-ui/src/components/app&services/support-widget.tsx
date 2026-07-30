@@ -129,7 +129,7 @@ export default function SupportWidget({
     let closedByUser = false;
 
     function connect(): void {
-      if (!orgId || !token) return null;
+      if (!orgId || !token) return;
       ws = new WebSocket(WEBHOOK_URL);
       socketRef.current = ws;
 
@@ -210,7 +210,7 @@ export default function SupportWidget({
       try {
         const support_contact_id = localStorage.getItem("support_contact_id");
         const support_contact_name = localStorage.getItem("support_contact_name");
-        const phone = support_contact_name;
+        const phone = support_contact_name ?? "";
         if (!support_contact_id) return;
         const timestamp = Math.floor(Date.now() / 1000);
 
@@ -406,7 +406,8 @@ export default function SupportWidget({
                                   <p className="leading-relaxed">
                                     {parseWhatsAppToReact(
                                       message.messageBody?.receive?.messages?.[0]?.text?.body ||
-                                        message.messageBody?.send?.text?.body,
+                                        message.messageBody?.send?.text?.body ||
+                                        "",
                                     )}
                                   </p>
                                 </div>
