@@ -43,7 +43,10 @@ function BackgroundEditor() {
     <div className={styles["background-editor-div"]}>
       <div className={`style-section-div`}>
         <h2>Background Color</h2>
-        <CustomColorPicker value={backgroundColor} onChange={handleBackgroundColorChange} />
+        <CustomColorPicker
+          value={String(backgroundColor ?? "")}
+          onChange={handleBackgroundColorChange}
+        />
       </div>
 
       <div className={`style-section-div`}>

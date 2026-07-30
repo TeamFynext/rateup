@@ -11,14 +11,14 @@ export interface LinktreeTheme {
   background: {
     styles: CSSProperties;
     desktopBgImgUrl: string | null;
-    desktopBgImgFile: File | null;
+    desktopBgImgFile?: File | null;
     mobileBgImgUrl: string | null;
-    mobileBgImgFile: File | null;
+    mobileBgImgFile?: File | null;
   };
   logo: {
     styles: CSSProperties;
-    logoUrl: string | null;
-    logoFile: File | null;
+    logoUrl?: string | null;
+    logoFile?: File | null;
   };
   title: { styles: CSSProperties; text: string };
   subtitle: { styles: CSSProperties; text: string };
@@ -38,7 +38,7 @@ export type LinktreeThemeAction = {
 const cssValue = (payload: unknown) => payload as string & number;
 
 // themeObj is draft obj of immer, since this function is being passes to useImmerReducer.
-function themeReducer(themeObj: LinktreeTheme, action: LinktreeThemeAction) {
+function themeReducer(themeObj: LinktreeTheme, action: LinktreeThemeAction): LinktreeTheme | void {
   const payload = action.payload;
 
   switch (action.type) {
@@ -47,7 +47,7 @@ function themeReducer(themeObj: LinktreeTheme, action: LinktreeThemeAction) {
       break;
     }
     case "background-destktop-img-change": {
-      URL.revokeObjectURL(themeObj["background"]["desktopBgImgUrl"]);
+      URL.revokeObjectURL(themeObj["background"]["desktopBgImgUrl"] ?? "");
       if (!payload) {
         themeObj["background"]["desktopBgImgUrl"] = null;
         themeObj["background"]["desktopBgImgFile"] = null;
@@ -59,7 +59,7 @@ function themeReducer(themeObj: LinktreeTheme, action: LinktreeThemeAction) {
       break;
     }
     case "background-mobile-img-change": {
-      URL.revokeObjectURL(themeObj["background"]["mobileBgImgUrl"]);
+      URL.revokeObjectURL(themeObj["background"]["mobileBgImgUrl"] ?? "");
       if (!payload) {
         themeObj["background"]["mobileBgImgUrl"] = null;
         themeObj["background"]["mobileBgImgFile"] = null;
@@ -80,7 +80,7 @@ function themeReducer(themeObj: LinktreeTheme, action: LinktreeThemeAction) {
       break;
     }
     case "logo-file-change": {
-      URL.revokeObjectURL(themeObj["logo"]["logoUrl"]);
+      URL.revokeObjectURL(themeObj["logo"]["logoUrl"] ?? "");
       if (!payload) {
         themeObj["logo"]["logoUrl"] = null;
         themeObj["logo"]["logoFile"] = null;
@@ -141,7 +141,7 @@ function themeReducer(themeObj: LinktreeTheme, action: LinktreeThemeAction) {
     }
 
     case "update-theme": {
-      return payload;
+      return payload as LinktreeTheme;
     }
 
     default: {
