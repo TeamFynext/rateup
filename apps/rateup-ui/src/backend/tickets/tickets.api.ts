@@ -1,11 +1,12 @@
 import type { Board, Card, Column, Label, MemberData } from "@/components/Tickets/types.ts";
+import type { RequestPayload } from "@/types/api.ts";
 import type { TicketType } from "@/utils/enums/ticket.ts";
 
 import { axiosClient } from "../apiClient";
 import type { ICreateTicketResponse, ITicket } from "./tickets";
 
 const TICKET_URL = "/tickets";
-export async function createTicket(data) {
+export async function createTicket(data: RequestPayload) {
   const res: ICreateTicketResponse = (await axiosClient.post(`${TICKET_URL}/create`, data)).data;
   return res;
 }
@@ -41,7 +42,7 @@ export async function deleteTicket(id: string) {
 }
 
 // update ticket status
-export async function updateTicketStatus(ticketId, data) {
+export async function updateTicketStatus(ticketId: string, data: RequestPayload) {
   try {
     const ticket: any = (await axiosClient.put(`${TICKET_URL}/${ticketId}/status`, data)).data;
     return ticket;
@@ -52,7 +53,7 @@ export async function updateTicketStatus(ticketId, data) {
 }
 
 // update ticket - deadline, priority
-export async function updateTicket(ticketId, data) {
+export async function updateTicket(ticketId: string, data: RequestPayload) {
   try {
     const ticket: any = (await axiosClient.put(`${TICKET_URL}/${ticketId}`, data)).data;
     return ticket;
@@ -63,7 +64,7 @@ export async function updateTicket(ticketId, data) {
 }
 
 // create comment
-export async function createComment(data) {
+export async function createComment(data: { ticketId: string } & Record<string, unknown>) {
   const id = data.ticketId;
   try {
     const comment: any = (await axiosClient.post(`${TICKET_URL}/${id}/comment`, data)).data;
@@ -97,7 +98,7 @@ export const createBoard = async (board: {
   return data;
 };
 
-export const updateBoard = async (board): Promise<Board> => {
+export const updateBoard = async (board: Board): Promise<Board> => {
   const { data } = await axiosClient.put(`/tickets/boards/${board.id}`, board);
   return data;
 };
@@ -146,7 +147,7 @@ export const createCard = async (card: {
   return data;
 };
 
-export const updateCard = async (card): Promise<Card> => {
+export const updateCard = async (card: Card): Promise<Card> => {
   const { data } = await axiosClient.put(`/tickets/cards/${card.id}`, card);
   return data;
 };

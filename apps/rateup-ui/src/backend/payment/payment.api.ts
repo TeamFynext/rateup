@@ -1,3 +1,5 @@
+import type { RequestPayload } from "@/types/api.ts";
+
 import { axiosClient } from "../apiClient";
 
 const PLAN_URL = "/payment/plans";
@@ -19,10 +21,10 @@ export const getAllRateupPaymentPlans = async () => {
 export async function syncRazorPayPlans() {
   return (await axiosClient.post(`/payment/sync-plans`)).data;
 }
-export async function createRateupPaymentPlan(data) {
+export async function createRateupPaymentPlan(data: RequestPayload) {
   return await axiosClient.post(`${PAYMENT_URL}rateup-plan`, data);
 }
-export async function updateRateupPaymentPlan(data) {
+export async function updateRateupPaymentPlan(data: RequestPayload) {
   return await axiosClient.put(`${PAYMENT_URL}rateup-plan`, data);
 }
 export async function deleteRateupPaymentPlan(id: string) {
@@ -40,7 +42,7 @@ export async function createCheckoutSession(data: ICreateCheckoutType) {
   return await axiosClient.post(`/payment/create-checkout-session`, data);
 }
 
-export async function updatePaymentPlan(data) {
+export async function updatePaymentPlan(data: RequestPayload) {
   return await axiosClient.put(`${PAYMENT_URL}updateplans`, data);
 }
 
@@ -68,10 +70,10 @@ export async function deletePaymentPlan(data: { id: string; planId: string }) {
   return await axiosClient.delete(`${PAYMENT_URL}`, { data });
 }
 
-export async function sendMailPlanSelectDetails(data) {
+export async function sendMailPlanSelectDetails(data: RequestPayload) {
   return await axiosClient.post(`${PAYMENT_PUBLIC_URL}mail`, data);
 }
 
-export async function updateSubscriptionOrder(orderId, data) {
+export async function updateSubscriptionOrder(orderId: string, data: RequestPayload) {
   return await axiosClient.put(`${PAYMENT_URL}order/${orderId}`, data);
 }

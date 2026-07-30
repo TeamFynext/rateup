@@ -62,7 +62,7 @@ export const useSyncConnectedCatalog = () => {
   });
 };
 
-export const useUpateCatalog = (catalogId) => {
+export const useUpateCatalog = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => updateWaCatalog(catalogId, data),
@@ -78,7 +78,7 @@ export const useUpateCatalog = (catalogId) => {
   });
 };
 
-export const useDisconnectCatalogFromWa = (catalogId) => {
+export const useDisconnectCatalogFromWa = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: disconnectCatalogFromWaba,
@@ -94,7 +94,7 @@ export const useDisconnectCatalogFromWa = (catalogId) => {
   });
 };
 
-export const useWaCatalog = (catalogId) => {
+export const useWaCatalog = (catalogId: string) => {
   return useQuery({
     queryFn: () => getWaCatalogById(catalogId),
     queryKey: ["WaCatalog", catalogId],
@@ -108,7 +108,7 @@ export const useAllWaCatalogs = () => {
     queryKey: ["allWaCatalog"],
   });
 };
-export const useConnectedWaCatalog = (whatsappSettingsPhoneId) => {
+export const useConnectedWaCatalog = (whatsappSettingsPhoneId: string) => {
   return useQuery({
     queryFn: () => getWaConnectedCatalog(whatsappSettingsPhoneId),
     queryKey: ["connected_catalog", whatsappSettingsPhoneId],

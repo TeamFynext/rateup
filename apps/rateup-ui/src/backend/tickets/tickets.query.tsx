@@ -101,7 +101,7 @@ export const useUpdateTicketStatusMutation = (ticketId?: string) => {
 };
 
 // update ticket
-export const useUpdateTicketMutation = (id) => {
+export const useUpdateTicketMutation = (id: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: IUpdateTicketRequest) => {
@@ -148,7 +148,7 @@ export function useDeleteTicket() {
 }
 
 // create ticket comment
-export const useCreateCommentMutation = (id) => {
+export const useCreateCommentMutation = (id: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createComment,

@@ -12,7 +12,7 @@ import {
   updateStripeProduct,
 } from "./stripe.api";
 
-export function useCreateStripeCheckoutSession(setIsLoading) {
+export function useCreateStripeCheckoutSession(setIsLoading: (loading: boolean) => void) {
   return useMutation({
     mutationFn: (values: any) => createStripeCheckoutSession(values),
     onSuccess: (_data) => {
@@ -33,7 +33,7 @@ export function useCreateStripeCheckoutSession(setIsLoading) {
   });
 }
 
-export const useGetStripeCheckoutSession = (sessionId) => {
+export const useGetStripeCheckoutSession = (sessionId: string) => {
   return useQuery({
     enabled: !!sessionId,
     queryFn: () => getCheckoutSession(sessionId),

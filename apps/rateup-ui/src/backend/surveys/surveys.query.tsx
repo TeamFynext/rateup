@@ -69,7 +69,7 @@ export const useSurveysBylandingId = (landingId: string) =>
 // ------------whatsapp survey --------------
 // ----@author:harshad-----------
 
-export const useWhatsappSurveys = (enabled) => {
+export const useWhatsappSurveys = (enabled: boolean) => {
   return useQuery({
     enabled: enabled,
     queryKey: ["whatsappsurveys"],
@@ -106,7 +106,7 @@ export const usePublicSurveyGoogleLink = (surveyTeamMapId: string) =>
 //     queryFn: getSurveys,
 //   });
 // --------------survey landing pages----------
-export const useSurveysLanding = (_teamIsSelected) =>
+export const useSurveysLanding = (_teamIsSelected?: boolean) =>
   useQuery({
     enabled: true,
     queryKey: ["surveysLanding"],
@@ -122,7 +122,7 @@ export const useSurveysLanding = (_teamIsSelected) =>
 //   });
 // }
 
-export const useSurveyTemplates = (surveyType) => {
+export const useSurveyTemplates = (surveyType: string) => {
   return useQuery({
     queryKey: ["survey-templates", surveyType],
     queryFn: () => getSurveyTemplates(surveyType),
@@ -283,7 +283,7 @@ export function useCloneSurveyMutation({ close, selectedTeamId }: CloneProps) {
   });
 }
 
-export function useUpdateSurveyPwdMutation(surveyId) {
+export function useUpdateSurveyPwdMutation(surveyId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateSurveyPassword,
@@ -331,7 +331,7 @@ async function handleSurveyVerifyPwd(surveyId: string, password: string) {
   return verifySurveyPassword(surveyId, data);
 }
 
-export function useEditSurveyMutation(id) {
+export function useEditSurveyMutation(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => updateSurvey(id, data),
@@ -446,7 +446,7 @@ export const useGetSurveyStatsBySurveyTeamMapId = (surveyTeamMapId: string) => {
   });
 };
 
-export const useGetSurveyStats = (surveyId) => {
+export const useGetSurveyStats = (surveyId: string) => {
   return useQuery({
     queryFn: () => getSurveyStats(surveyId),
     queryKey: ["SurveyStats", surveyId],
@@ -454,7 +454,7 @@ export const useGetSurveyStats = (surveyId) => {
   });
 };
 
-export const useGetSurveyVariables = (surveyId, isPublic) => {
+export const useGetSurveyVariables = (surveyId: string, isPublic?: boolean) => {
   return useQuery({
     queryKey: ["surveyVariables", surveyId],
     queryFn: () => getSurveyVariables(surveyId, isPublic),
@@ -462,7 +462,7 @@ export const useGetSurveyVariables = (surveyId, isPublic) => {
   });
 };
 
-export const useCreateSurveyVariableMutation = (surveyId) => {
+export const useCreateSurveyVariableMutation = (surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createSurveyVariable,
@@ -478,7 +478,7 @@ export const useCreateSurveyVariableMutation = (surveyId) => {
   });
 };
 
-export const useUpdateSurveyVariableMutation = (surveyId) => {
+export const useUpdateSurveyVariableMutation = (surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateSurveyVariable,
@@ -494,7 +494,7 @@ export const useUpdateSurveyVariableMutation = (surveyId) => {
   });
 };
 
-export const useDeleteSurveyVariableMutation = (surveyId) => {
+export const useDeleteSurveyVariableMutation = (surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteSurveyVariable,
@@ -528,7 +528,7 @@ export const useValidateOtp = () => {
   });
 };
 
-export const useSurveyUpdateMutation = (surveyId) => {
+export const useSurveyUpdateMutation = (surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ surveyId, data }: { surveyId: string; data: any }) => {
@@ -550,10 +550,10 @@ export const useSurveyUpdateMutation = (surveyId) => {
 };
 
 export const useAllResponseForGraph = (
-  timePeriod,
-  userTimeZone,
+  timePeriod: string,
+  userTimeZone: string,
   surveyId = "",
-  teamMapIds = [],
+  teamMapIds: string[] = [],
 ) => {
   return useQuery({
     queryKey: ["reponse", "graph", timePeriod, userTimeZone, surveyId, teamMapIds],
@@ -562,10 +562,10 @@ export const useAllResponseForGraph = (
 };
 
 export const useAllResponseNPSForGraph = (
-  timePeriod,
-  userTimeZone,
+  timePeriod: string,
+  userTimeZone: string,
   surveyId = "",
-  teamMapIds = [],
+  teamMapIds: string[] = [],
 ) => {
   return useQuery({
     queryKey: ["reponse-nps", "graph-nps", timePeriod, userTimeZone, surveyId, teamMapIds],

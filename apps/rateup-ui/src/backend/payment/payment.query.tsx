@@ -42,7 +42,7 @@ export function useUserOrgOrders(enabled = true) {
   });
 }
 
-export function useRateupPaymentsPlanMutation(close) {
+export function useRateupPaymentsPlanMutation(close: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -62,7 +62,7 @@ export function useRateupPaymentsPlanMutation(close) {
   });
 }
 
-export function useRateupPaymentsPlanUpdateMutation(close) {
+export function useRateupPaymentsPlanUpdateMutation(close: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -122,7 +122,10 @@ export function usePlanSyncMutation() {
   });
 }
 
-export function useCreateCheckoutSession(setIsLoading, setOrder) {
+export function useCreateCheckoutSession<TOrder>(
+  setIsLoading: (loading: boolean) => void,
+  setOrder: (order: TOrder) => void,
+) {
   return useMutation({
     mutationFn: (values: ICreateCheckoutType) => createCheckoutSession(values),
     onSuccess: (data) => {
@@ -221,7 +224,7 @@ export function useSendMailPlanSelectDetails() {
   });
 }
 
-export const useUpdateSubscriptionOrder = (orderId) => {
+export const useUpdateSubscriptionOrder = (orderId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => updateSubscriptionOrder(orderId, data),

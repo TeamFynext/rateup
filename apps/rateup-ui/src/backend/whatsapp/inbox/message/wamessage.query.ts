@@ -8,9 +8,11 @@ import {
 import { toast } from "sonner";
 
 import useContactStore, { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 
 import type { AssignInboxResult } from "./wamessage.api";
+import type { WaMessageLogFilter } from "./wamessage.api";
 import {
   assignInboxToUser,
   blockWhatsAppUser,
@@ -159,7 +161,7 @@ function followAssignmentToItsTicket(result: AssignInboxResult, contactId: strin
   });
 }
 
-export const useAssignInboxToUer = (_contactId, filterData) => {
+export const useAssignInboxToUer = (_contactId: string, filterData: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: assignInboxToUser,
@@ -229,7 +231,7 @@ export const useBulkAssignInboxToUser = (filterData?: string) => {
   });
 };
 
-export const useGetAssignedUserForContact = (contactId) => {
+export const useGetAssignedUserForContact = (contactId: string) => {
   return useQuery({
     queryKey: ["assignedInboxUser", contactId],
     queryFn: () => getAssignedUserForContact(contactId),
@@ -245,7 +247,7 @@ export const useGetInboxUserCount = (enabled: boolean) => {
   });
 };
 
-export const useMarkWaMessagesAsRead = (contactId: string, _filterData) => {
+export const useMarkWaMessagesAsRead = (contactId: string, _filterData?: string) => {
   return useMutation({
     mutationFn: () => markWaMessagesAsRead(contactId),
     onSuccess: () => {},
@@ -364,7 +366,7 @@ export const useEditConversation = () => {
       // Prefer what the server actually stored; fall back to what we sent.
       const subject = res?.subject !== undefined ? res.subject : variables.subject;
       const description = res?.description !== undefined ? res.description : variables.description;
-      const patch = (c) => ({
+      const patch = (c: ContactWithUpdatedAt): ContactWithUpdatedAt => ({
         ...c,
         ...(subject !== undefined ? { ticketSubject: subject } : {}),
         ...(description !== undefined ? { ticketDescription: description } : {}),
@@ -427,7 +429,7 @@ export const useBlockWhatsAppUser = () => {
   });
 };
 
-export const useUnBlockWhatsAppUser = (filterData) => {
+export const useUnBlockWhatsAppUser = (filterData: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: unblockWhatsAppUser,
@@ -497,13 +499,13 @@ interface CreatePrivateMessageVariables {
   data: any;
 }
 
-export function useCreatePrivateMessage(contactId) {
+export function useCreatePrivateMessage(contactId: string) {
   return useMutation({
     mutationFn: ({ data }: CreatePrivateMessageVariables) => createPrivateMessage(contactId, data),
   });
 }
 
-export function useWaMessageLogs(filter) {
+export function useWaMessageLogs(filter: WaMessageLogFilter) {
   return useQuery({
     queryKey: [
       "wa-message-logs",

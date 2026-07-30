@@ -159,7 +159,7 @@ export function userResendInviteTeamMutation() {
     },
   });
 }
-export function useDeleteInviteMutation(teamId) {
+export function useDeleteInviteMutation(teamId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteInviteById(id),
@@ -204,7 +204,7 @@ export function useAddUsertoTeams() {
   });
 }
 
-export function useRemoveUserFromTeam(teamId) {
+export function useRemoveUserFromTeam(teamId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: removeUserFromTeam,

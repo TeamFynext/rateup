@@ -18,7 +18,7 @@ function useGetAllGeneratedQrsQuery() {
   });
 }
 
-function useGetQrWithShortUrlId(shortUrlId) {
+function useGetQrWithShortUrlId(shortUrlId: string) {
   return useQuery({
     queryKey: ["generatedQr", shortUrlId],
     queryFn: getQrWithShortUrlId(shortUrlId),
@@ -26,7 +26,7 @@ function useGetQrWithShortUrlId(shortUrlId) {
   });
 }
 
-function useGetQrWithShortUrlIdPublic(shortUrlId) {
+function useGetQrWithShortUrlIdPublic(shortUrlId: string) {
   return useQuery({
     queryKey: ["generatedQrPublicGet", shortUrlId],
     queryFn: getQrWithShortUrlIdPublic(shortUrlId),
@@ -51,7 +51,7 @@ function useCreateQrMutation() {
   });
 }
 
-function useUpdateQrMutation(shortUrlId) {
+function useUpdateQrMutation(shortUrlId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateQr,

@@ -2,6 +2,8 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
+import type { RequestPayload } from "@/types/api.ts";
+
 import type {
   IChangePassword,
   ICreateGoogleUser,
@@ -50,7 +52,7 @@ export const useGetAllUsers = () =>
     queryFn: getAllUsers,
   });
 
-export function useCreateUserMutation(setIsLoading) {
+export function useCreateUserMutation(setIsLoading: (loading: boolean) => void) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   return useMutation({
@@ -77,7 +79,7 @@ export function useCreateUserMutation(setIsLoading) {
   });
 }
 
-export function useCreateAppleUserMutation(setIsLoading) {
+export function useCreateAppleUserMutation(setIsLoading: (loading: boolean) => void) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   return useMutation({
@@ -104,11 +106,11 @@ export function useCreateAppleUserMutation(setIsLoading) {
   });
 }
 
-async function handleCreateUser(values) {
+async function handleCreateUser(values: RequestPayload) {
   return createGoogleUser(values);
 }
 
-async function handleCreateAppleUser(values) {
+async function handleCreateAppleUser(values: RequestPayload) {
   return createAppleUser(values);
 }
 
@@ -153,7 +155,7 @@ export function useUpdateMemberProfileMutation() {
   });
 }
 
-export function useUpdateUserLanguageMutation(setIsLoading) {
+export function useUpdateUserLanguageMutation(setIsLoading: (loading: boolean) => void) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: IUpdateUserLanguage) => updateUserLanguage(values),
@@ -176,7 +178,7 @@ export function useUpdateUserLanguageMutation(setIsLoading) {
   });
 }
 
-export function useUpdateProfilePhotoMutation(setIsLoadingUpload) {
+export function useUpdateProfilePhotoMutation(setIsLoadingUpload: (uploading: boolean) => void) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: IUpdateProfilePhoto) => updateUserProfilePhoto(values),
@@ -289,7 +291,7 @@ export const useUpdateUserAvailabilityStatus = () => {
   return { ...mutation, queryClient };
 };
 
-export function useUserAuditLogs(pagination) {
+export function useUserAuditLogs(pagination: Parameters<typeof getAuditLogs>[0]) {
   return useQuery({
     queryKey: ["user-audit-logs", pagination],
     queryFn: () => getAuditLogs(pagination),

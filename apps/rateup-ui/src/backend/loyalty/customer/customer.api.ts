@@ -1,3 +1,5 @@
+import type { RequestPayload } from "@/types/api.ts";
+
 import { axiosClient } from "../../apiClient";
 import { LOYALTY_BASE, PUBLIC_LOYALTY_BASE } from "../base.ts";
 
@@ -32,15 +34,23 @@ export async function getAllCustomers(
   return response.data;
 }
 
-export async function deleteLoyaltyCustomer(id) {
+export async function deleteLoyaltyCustomer(id: string) {
   return (await axiosClient.delete(`${base}/${id}`)).data;
 }
 
-export async function createLCAction({ phone, actionId, amount }) {
+export async function createLCAction({
+  phone,
+  actionId,
+  amount,
+}: {
+  phone: string;
+  actionId: string;
+  amount: number;
+}) {
   await axiosClient.post(`${base}/${phone}/${actionId}`, { amount });
 }
 
-export const importCustomers = async (data) => {
+export const importCustomers = async (data: RequestPayload) => {
   const res = await axiosClient.post(`${base}/importcsv`, data, {
     headers: {
       "Content-Type": "multipart/form-data",

@@ -1,8 +1,21 @@
+import type { PaginationState, RequestPayload } from "@/types/api.ts";
 import type { MessagePlatform } from "@/types/enums.ts";
 import type { WaInboxMessage, WaTemplateComponent } from "@/types/global";
 
 import { WA_INBOX_BASE_PATH } from "..";
 import { axiosClient } from "../../../apiClient";
+
+/** Filter accepted by the WhatsApp message-log endpoints. */
+export interface WaMessageLogFilter {
+  dateKey?: string;
+  /** Either a preformatted range string or a two-element [from, to] tuple. */
+  dateRange?: string | (string | Date)[];
+  status?: string;
+  source?: string;
+  team?: string;
+  searchQuery?: string;
+  pagination?: PaginationState;
+}
 
 const WA_CONTACT_BASE_PATH = `${WA_INBOX_BASE_PATH}/message`;
 
@@ -247,7 +260,7 @@ export async function bulkAssignInboxToUser(data: {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign-bulk`, data)).data;
 }
 
-export async function getAssignedUserForContact(contactId) {
+export async function getAssignedUserForContact(contactId: string) {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/assign/${contactId}`)).data;
 }
 
@@ -255,7 +268,7 @@ export async function getInboxUserCount() {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`, { timeout: 30000 })).data;
 }
 
-export async function markWaMessagesAsRead(contactId) {
+export async function markWaMessagesAsRead(contactId: string) {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/mark/${contactId}`)).data;
 }
 
@@ -363,15 +376,15 @@ export async function getInboxAnalytics() {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/analytics`)).data;
 }
 
-export async function generateInboxResponse(data) {
+export async function generateInboxResponse(data: RequestPayload) {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/generate-response`, data)).data;
 }
 
-export async function createPrivateMessage(contactId, data) {
+export async function createPrivateMessage(contactId: string, data: RequestPayload) {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/privatemessage/${contactId}`, data)).data;
 }
 
-export async function getWaMessageLogs(filter) {
+export async function getWaMessageLogs(filter: WaMessageLogFilter) {
   // Format date range if it's an array of Date objects
   let dateRange = filter.dateRange;
   if (Array.isArray(dateRange) && dateRange.length === 2) {
@@ -409,7 +422,7 @@ export async function getWaMessageLogs(filter) {
   ).data;
 }
 
-export async function exportWaMessageLogs(filter) {
+export async function exportWaMessageLogs(filter: WaMessageLogFilter) {
   let dateRange = filter.dateRange;
   if (Array.isArray(dateRange) && dateRange.length === 2) {
     dateRange = `${dateRange[0]},${dateRange[1]}`;

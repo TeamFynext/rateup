@@ -114,7 +114,7 @@ export const useReplaceQuestionsMutation = (surveyId: string) => {
   return replaceMutation;
 };
 
-export const useImportEmailIdsMutation = (surveyId) => {
+export const useImportEmailIdsMutation = (surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: importEmailIds,

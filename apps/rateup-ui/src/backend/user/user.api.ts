@@ -1,5 +1,8 @@
 import type { PaginationState, SortingState } from "@tanstack/react-table";
 
+import type { RequestPayload } from "@/types/api.ts";
+import { getApiErrorData } from "@/utils/apiError.ts";
+
 import { axiosClient } from "../apiClient";
 
 export interface ICreateGoogleUser {
@@ -57,7 +60,7 @@ export async function fetchUserInfo() {
     const response: IUserInfoApiResponse = (await axiosClient.get("/user/info")).data;
     return response;
   } catch (e) {
-    return { error: e.response.data }; // TODO: improve error handling for react query
+    return { error: getApiErrorData(e) }; // TODO: improve error handling for react query
   }
 }
 
@@ -88,7 +91,7 @@ export const updateUserProfilePhoto = (data: IUpdateProfilePhoto) =>
     data: data,
   });
 
-export const createGoogleUser = (data) => {
+export const createGoogleUser = (data: RequestPayload) => {
   return axiosClient({
     url: `/user/complete-google-signup`,
     method: "POST",
@@ -96,7 +99,7 @@ export const createGoogleUser = (data) => {
   });
 };
 
-export const createAppleUser = (data) => {
+export const createAppleUser = (data: RequestPayload) => {
   return axiosClient({
     url: `/user/complete-apple-signup`,
     method: "POST",
@@ -135,7 +138,7 @@ export async function updateRecipeName() {
   return (await axiosClient.post(`user/update-recipe`)).data;
 }
 
-export async function updateUserPause({ userId, data }) {
+export async function updateUserPause({ userId, data }: { userId: string; data: RequestPayload }) {
   return await axiosClient.put(`user/pause/${userId}`, data);
 }
 

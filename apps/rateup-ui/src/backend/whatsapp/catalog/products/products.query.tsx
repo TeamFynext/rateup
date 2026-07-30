@@ -12,7 +12,7 @@ import {
   updateCatalogProducts,
 } from "./products.api";
 
-export const useWaCatalogProducts = (catalogId) => {
+export const useWaCatalogProducts = (catalogId: string) => {
   return useQuery({
     queryFn: () => getCatalogProducts(catalogId),
     queryKey: ["catalog_products", catalogId],
@@ -20,7 +20,7 @@ export const useWaCatalogProducts = (catalogId) => {
   });
 };
 
-export const useCreateBatchCatalogProducts = (catalogId) => {
+export const useCreateBatchCatalogProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => createCatalogProductBatch(catalogId, data),
@@ -31,7 +31,7 @@ export const useCreateBatchCatalogProducts = (catalogId) => {
   });
 };
 
-export const useSyncCatalogProducts = (catalogId) => {
+export const useSyncCatalogProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => syncCatalogProducts(catalogId, data),
@@ -41,7 +41,7 @@ export const useSyncCatalogProducts = (catalogId) => {
   });
 };
 
-export const useDeletCatalogProducts = (catalogId) => {
+export const useDeletCatalogProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { productIds: { id: string; hotel_reatiler_id?: string }[] }) =>
@@ -52,7 +52,7 @@ export const useDeletCatalogProducts = (catalogId) => {
   });
 };
 
-export const useUpdateCatalogProducts = (catalogId) => {
+export const useUpdateCatalogProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => updateCatalogProducts(catalogId, data),

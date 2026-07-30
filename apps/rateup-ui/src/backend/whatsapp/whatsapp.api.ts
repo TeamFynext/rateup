@@ -1,4 +1,5 @@
 import type { TemplateType, WaTemplateCategory, WaTemplateStatus } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { WHATSAPP_URL } from ".";
 import { axiosClient } from "../apiClient";
@@ -33,7 +34,7 @@ export interface SyncTemplatesInput {
 /**
  * Fetches whatsapp templates using orgId user belongs to.
  */
-export const getWaTemplates = async (templatType) => {
+export const getWaTemplates = async (templatType?: string) => {
   const url = templatType ? `${TEMPLATES_URL}?templateType=${templatType}` : TEMPLATES_URL;
   const res = await axiosClient.get(url);
   return res.data as WaTemplate[];
@@ -87,7 +88,7 @@ export async function uploadTemplateMedia(file: File) {
     });
     return response?.data as imageResponse;
   } catch (error) {
-    throw new Error(error?.response?.data?.message);
+    throw new Error(getApiErrorMessage(error));
   }
 }
 

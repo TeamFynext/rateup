@@ -1,3 +1,4 @@
+import type { RequestPayload } from "@/types/api.ts";
 import type { MetaLoginAssets, WaConfigType, WhatsappSettingsStatus } from "@/types/enums.ts";
 
 import { WHATSAPP_URL } from "..";
@@ -36,26 +37,36 @@ export const getWaSettings = async () => {
   return res.data as WaSettings;
 };
 
-export const upsertWaSettings = async (settings) => {
+export const upsertWaSettings = async (settings: RequestPayload) => {
   const res = await axiosClient.put(SettingsUrl, settings);
   return res;
 };
 
-export const updateWaSettingsById = async (settingId, data) => {
+export const updateWaSettingsById = async (settingId: string, data: RequestPayload) => {
   const res = await axiosClient.put(`${SettingsUrl}/${settingId}`, data);
   return res;
 };
 
-export const createWaSettings = async (settings) => {
+export const createWaSettings = async (settings: RequestPayload) => {
   const res = await axiosClient.post(SettingsUrl, settings);
   return res.data;
 };
-export const deleteWaSettings = async (phoneId) => {
+export const deleteWaSettings = async (phoneId: string) => {
   const res = await axiosClient.delete(`${SettingsUrl}/${phoneId}`);
   return res.data;
 };
 
-export const registerBusinessClient = async ({ code, phone_number_id, waba_id, assets }) => {
+export const registerBusinessClient = async ({
+  code,
+  phone_number_id,
+  waba_id,
+  assets,
+}: {
+  code: string;
+  phone_number_id: string;
+  waba_id: string;
+  assets: string[];
+}) => {
   const res = axiosClient.post(
     `${authUrl}/register`,
     { code, phone_number_id, waba_id, assets },
@@ -71,7 +82,13 @@ export const deRegisterBusinessClient = async (phoneId: string) => {
   return res;
 };
 
-export const updateUserAccessToken = async ({ waSettingId, code }) => {
+export const updateUserAccessToken = async ({
+  waSettingId,
+  code,
+}: {
+  waSettingId: string;
+  code: string;
+}) => {
   const res = axiosClient.post(`${authUrl}/user-token/${waSettingId}`, {
     code,
   });
@@ -113,7 +130,7 @@ export const getWaLogs = async (
   return res.data as WaLogsRes;
 };
 
-export const syncFbPages = async (waSettingsId) => {
+export const syncFbPages = async (waSettingsId: string) => {
   const res = await axiosClient.post(`${SettingsUrl}/sync/pages/${waSettingsId}`);
   return res.data as { id: string; name: string; access_token: string }[];
 };
@@ -124,7 +141,7 @@ export interface fbPageQuery {
   fields?: string[];
 }
 
-export const syncMetaLeadgenForms = async (waSettingsId, data: fbPageQuery) => {
+export const syncMetaLeadgenForms = async (waSettingsId: string, data: fbPageQuery) => {
   const res = await axiosClient.post(`${SettingsUrl}/sync/leadgen-forms/${waSettingsId}`, data);
   return res.data as { id: string; name: string }[];
 };
@@ -139,7 +156,7 @@ export const syncLeadgenFormQuestions = async (
   );
   return res.data as { questions: any[] };
 };
-export const syncAdAccounts = async (waSettingsId) => {
+export const syncAdAccounts = async (waSettingsId: string) => {
   const res = await axiosClient.post(`${SettingsUrl}/sync/ad-accounts/${waSettingsId}`);
   return res.data as { id: string; name: string }[];
 };
@@ -154,7 +171,7 @@ export const syncDatasets = async (waSettingsId: string) => {
   return res.data;
 };
 
-export const subscribeFieldtoPage = async (waSettingsId, body: fbPageQuery) => {
+export const subscribeFieldtoPage = async (waSettingsId: string, body: fbPageQuery) => {
   const res = await axiosClient.post(`${SettingsUrl}/subscribe/${waSettingsId}`, body);
   return res.data;
 };
@@ -195,7 +212,7 @@ export interface MetaAssets {
     questions: any[];
   }[];
 }
-export const getMetaAssets = async (waSettingsId) => {
+export const getMetaAssets = async (waSettingsId: string) => {
   return (await axiosClient.get(`${SettingsUrl}/meta-assets/${waSettingsId}`)).data as MetaAssets;
 };
 export const getVerificationStatus = async () => {

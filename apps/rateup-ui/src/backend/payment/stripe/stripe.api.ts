@@ -1,3 +1,5 @@
+import type { RequestPayload } from "@/types/api.ts";
+
 import { axiosClient } from "../../apiClient";
 
 const STRIPE_URL = "/payment/stripe";
@@ -15,7 +17,7 @@ export async function syncStripeProducts() {
   return (await axiosClient.post(`${STRIPE_URL}/sync-products`)).data;
 }
 
-export async function updateStripeProduct(data) {
+export async function updateStripeProduct(data: RequestPayload) {
   return (await axiosClient.put(`${STRIPE_URL}/product`, data)).data;
 }
 

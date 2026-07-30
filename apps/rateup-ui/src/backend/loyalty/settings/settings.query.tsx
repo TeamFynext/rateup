@@ -23,7 +23,7 @@ export const useCreateLoyaltyTemplate = () => {
   });
 };
 
-export const useUpdateLoyaltyTemplate = (commandId) => {
+export const useUpdateLoyaltyTemplate = (commandId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => updateLoyaltyTemplate(commandId, data),
@@ -53,7 +53,7 @@ export const useDeleteLoyaltyTemplate = () => {
   });
 };
 
-export const useGetLoyaltyTemplate = (commandId) => {
+export const useGetLoyaltyTemplate = (commandId: string) => {
   return useQuery({
     queryFn: () => getLoyaltyTemplate(commandId),
     queryKey: ["LoyaltyTemplate"],

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
+import type { ColumnFilterState, PaginationState, SortState } from "@/types/api.ts";
 
 import type { AssignRewardRequest } from "./assignReward.api";
 import { assignRewardToCustomer } from "./assignReward.api";
@@ -32,7 +33,7 @@ export const useCreateLoyaltyCustomerMutation = () => {
   });
 };
 
-export const useGetLoyaltyCustomerById = (customerId) => {
+export const useGetLoyaltyCustomerById = (customerId: string) => {
   return useQuery({
     queryFn: () => getLoyaltyCustomerById(customerId),
     queryKey: ["loyaltyCustomer", customerId],
@@ -48,7 +49,12 @@ export const useGetLoyaltyCustomerByContactId = (contactId: string) => {
   });
 };
 
-export const useLoyaltyCustomers = (pagination, searchData?, sorting?, columnFilters?) => {
+export const useLoyaltyCustomers = (
+  pagination: PaginationState,
+  searchData?: string,
+  sorting?: SortState,
+  columnFilters?: ColumnFilterState[],
+) => {
   const sort = sorting ?? CONTACT_SORT;
   const filters = columnFilters ?? [];
   const search = searchData ?? "";

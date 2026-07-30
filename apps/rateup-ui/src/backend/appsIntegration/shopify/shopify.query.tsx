@@ -14,7 +14,7 @@ import {
   updateShopifySession,
 } from "./shopify.api";
 
-export const useGetProductsFromShopify = (enabled) => {
+export const useGetProductsFromShopify = (enabled: boolean) => {
   return useQuery({
     queryKey: ["shopifyProducts"],
     queryFn: getProductsFromShopify,
@@ -22,7 +22,7 @@ export const useGetProductsFromShopify = (enabled) => {
   });
 };
 
-export const useGetRegisteredWebhooks = (enabled) => {
+export const useGetRegisteredWebhooks = (enabled: boolean) => {
   return useQuery({
     queryKey: ["shopifyWebhooks"],
     queryFn: getRegisteredWebhooks,

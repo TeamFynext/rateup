@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import type { QueryFilter } from "@/types/api.ts";
 import { decryptResultResponse } from "@/utils/response.ts";
 
 import { useSurvey } from "../surveys.query";
@@ -57,7 +58,7 @@ export const useAllResponses = (surveyId: string) => {
   });
 };
 
-export const useResponsesBySurvey = (surveyId, filter) => {
+export const useResponsesBySurvey = (surveyId: string, filter: QueryFilter) => {
   const filterQuery = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
@@ -179,7 +180,7 @@ export function useGenerateLargeTextResponseSummaryByAI(surveyId: string) {
   });
 }
 
-export const useExportContactResponses = (surveyId) => {
+export const useExportContactResponses = (surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => exportContactResponseToContacts(surveyId),
@@ -200,7 +201,7 @@ export const useExportContactResponses = (surveyId) => {
   });
 };
 
-export const useResponseCount = (surveyId) => {
+export const useResponseCount = (surveyId: string) => {
   return useQuery({
     queryFn: () => getSurveyResponseCount(surveyId),
     queryKey: ["responseCount", surveyId],
@@ -212,7 +213,7 @@ interface FilterAnalytics {
   teamMapIds?: string[];
   dateRange?: string[];
 }
-export const useResponseAnalytics = (surveyId, filter: FilterAnalytics) => {
+export const useResponseAnalytics = (surveyId: string, filter: FilterAnalytics) => {
   const filterQuery = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
@@ -223,7 +224,7 @@ export const useResponseAnalytics = (surveyId, filter: FilterAnalytics) => {
   });
 };
 
-export const useResponseForComparison = (surveyId) => {
+export const useResponseForComparison = (surveyId: string) => {
   return useQuery({
     queryFn: () => getResponseForComparison(surveyId),
     queryKey: ["responseComparison", surveyId],
@@ -243,7 +244,7 @@ export function useSurveyHappyResponseAnalytics(
   });
 }
 
-export function useHappyIndex(surveyId: string, filterTeams) {
+export function useHappyIndex(surveyId: string, filterTeams?: string[]) {
   return useQuery({
     queryKey: ["happy-index", surveyId, filterTeams],
     queryFn: () => getHappyIndex(surveyId, filterTeams),

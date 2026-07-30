@@ -1,10 +1,11 @@
 import { axiosClient } from "@/backend/apiClient";
+import type { RequestPayload } from "@/types/api.ts";
 
 import { WHATSAPP_URL } from "..";
 
 export const waCatalogUrl = `${WHATSAPP_URL}/catalog`;
 
-export async function updateWaCatalog(catalogId, data) {
+export async function updateWaCatalog(catalogId: string, data: RequestPayload) {
   await axiosClient.put(`${waCatalogUrl}/${catalogId}`, data);
 }
 
@@ -27,7 +28,7 @@ export async function syncConnectedWaCatalog(): Promise<
   return (await axiosClient.post(`${waCatalogUrl}/sync-connected`)).data;
 }
 
-export async function getWaCatalogById(catalogId) {
+export async function getWaCatalogById(catalogId: string) {
   return (await axiosClient.get(`${waCatalogUrl}/${catalogId}`)).data;
 }
 
@@ -39,7 +40,7 @@ export async function deleteWaCatalog(catalogId: string) {
   await axiosClient.delete(`${waCatalogUrl}/${catalogId}`);
 }
 
-export async function disconnectCatalogFromWaba(data) {
+export async function disconnectCatalogFromWaba(data: RequestPayload) {
   return (await axiosClient.delete(`${waCatalogUrl}/disconnect`, { data })).data;
 }
 

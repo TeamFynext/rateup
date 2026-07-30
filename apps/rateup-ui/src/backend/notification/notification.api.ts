@@ -1,3 +1,5 @@
+import type { RequestPayload } from "@/types/api.ts";
+
 import { axiosClient } from "../apiClient";
 
 const base = "/notification";
@@ -14,11 +16,11 @@ export async function getNotificationSettings() {
   return (await axiosClient.get(`${base}/settings`)).data;
 }
 
-export async function updateNotificationSettings(data) {
+export async function updateNotificationSettings(data: RequestPayload) {
   return (await axiosClient.put(`${base}/settings`, data)).data;
 }
 
-export async function deleteNotification(notificationId) {
+export async function deleteNotification(notificationId: string) {
   return await axiosClient.delete(`${base}/${notificationId}`);
 }
 

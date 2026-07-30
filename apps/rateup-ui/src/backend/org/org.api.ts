@@ -1,3 +1,4 @@
+import type { RequestPayload } from "@/types/api.ts";
 import type { WaAssignedChatPermission } from "@/types/enums.ts";
 
 import { axiosClient } from "../apiClient";
@@ -79,7 +80,7 @@ export async function deleteOrg(orgId: string) {
   return await axiosClient.delete(`org/${orgId}`);
 }
 
-export async function updateOrgPause({ orgId, data }) {
+export async function updateOrgPause({ orgId, data }: { orgId: string; data: RequestPayload }) {
   return await axiosClient.put(`org/pause/${orgId}`, data);
 }
 
@@ -87,7 +88,7 @@ export async function getWebhookClientSecret() {
   return (await axiosClient.get(`org/webhook-client-secret`)).data;
 }
 
-export async function completeOrgDetails(onboarding) {
+export async function completeOrgDetails(onboarding: RequestPayload) {
   await axiosClient.put("/org/completeorgdetails", {
     onboarding,
   });

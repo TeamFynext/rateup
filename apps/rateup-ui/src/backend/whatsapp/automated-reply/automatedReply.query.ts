@@ -95,7 +95,7 @@ export const useUpdateWaAutomatedReplyMutation = () => {
   });
 };
 
-export const useInitiateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
+export const useInitiateWaAutomatedReplyMutation = (waAutomatedReplyId: string) => {
   return useMutation({
     mutationFn: ({ phone }: any) => initiateWaAutomatedReply(waAutomatedReplyId, phone),
     onSuccess: (_res) => {

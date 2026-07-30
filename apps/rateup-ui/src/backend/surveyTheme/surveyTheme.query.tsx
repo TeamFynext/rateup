@@ -65,7 +65,7 @@ export const useRenameSurveyThemeMutation = () => {
   });
 };
 
-export const useCreateNewThemeMutation = (surveyId) => {
+export const useCreateNewThemeMutation = (surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createNewTheme,

@@ -1,3 +1,5 @@
+import type { RequestPayload } from "@/types/api.ts";
+
 import { axiosClient } from "../apiClient";
 
 const url = "/generateQr";
@@ -7,21 +9,21 @@ async function getAllGeneratedQrs() {
   return res.data;
 }
 
-function getQrWithShortUrlId(shortUrlId) {
+function getQrWithShortUrlId(shortUrlId: string) {
   return async () => {
     const res = await axiosClient.get(`${url}/${shortUrlId}`);
     return res.data;
   };
 }
 
-function getQrWithShortUrlIdPublic(shortUrlId) {
+function getQrWithShortUrlIdPublic(shortUrlId: string) {
   return async () => {
     const res = await axiosClient.get(`${url}/public/${shortUrlId}`);
     return res.data;
   };
 }
 
-async function createQr(data) {
+async function createQr(data: RequestPayload) {
   const res = await axiosClient.post(url, data);
   return res.data;
 }
@@ -31,12 +33,12 @@ async function updateQr(data: any) {
   return res.data;
 }
 
-async function deleteQr(shortUrlId) {
+async function deleteQr(shortUrlId: string) {
   const res = await axiosClient.delete(`${url}/${shortUrlId}`);
   return res.data;
 }
 
-async function incrementNoOfScans(shortUrlId) {
+async function incrementNoOfScans(shortUrlId: string) {
   const res = await axiosClient.post(`${url}/noOfScans/${shortUrlId}`);
   return res.data;
 }
