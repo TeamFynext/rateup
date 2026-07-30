@@ -79,7 +79,7 @@ const getStatusOption = (presenceMode: UserPresenceMode, status: UserAvailabilit
 };
 
 interface NavUserProps {
-  user: IUserInfoApiResponse["data"];
+  user: IUserInfoApiResponse["data"] | undefined;
 }
 
 export function NavUser({ user }: Readonly<NavUserProps>) {

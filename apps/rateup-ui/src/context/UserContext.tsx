@@ -17,7 +17,7 @@ export interface User {
   orgPhone: string;
   orgAddress: string;
   teams: Array<string>;
-  encryptionKeys: {
+  encryptionKeys?: {
     publicKey: string;
     privateKey: string;
   };

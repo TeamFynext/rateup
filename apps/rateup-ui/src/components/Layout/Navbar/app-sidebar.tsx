@@ -778,7 +778,7 @@ export default function AppSidebar({
                   className={`${userData?.data.orgLogo ? "bg-background" : "bg-sidebar-primary"} text-sidebar-primary-foreground`}
                 >
                   <AvatarImage
-                    src={getFileUrlFromKey(userData?.data.orgLogo)}
+                    src={getFileUrlFromKey(userData?.data.orgLogo ?? "")}
                     alt={userData?.data?.orgName}
                     className="rounded-md"
                   />
@@ -810,7 +810,7 @@ export default function AppSidebar({
                       aria-label={item.title}
                       render={item.url && item.url !== "#" ? <Link to={item.url} /> : undefined}
                     >
-                      <item.icon {...sidebarIconProps} />
+                      {item.icon && <item.icon {...sidebarIconProps} />}
                       <span className="sr-only">{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -854,7 +854,7 @@ export default function AppSidebar({
                     item={item}
                     fullPathname={fullPathname}
                     onRouteGuard={handleRouteGuard}
-                    isLast={index === activeItem.items.length - 1}
+                    isLast={index === (activeItem.items?.length ?? 0) - 1}
                     isSettingsPanel
                   />
                 ))}

@@ -113,9 +113,8 @@ function EncryptionPasswordModal({
   close,
 }: EncryptionPasswordModalProps) {
   const uid = useId();
-  const {
-    user: { encryptionKeys },
-  } = useUser();
+  const { user } = useUser();
+  const encryptionKeys = user?.encryptionKeys;
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const [encryptionpassword, setEncryptionPassword] = useState("");

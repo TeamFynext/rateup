@@ -16,7 +16,7 @@ export const WhatsAppSettingsModal = ({
 }: {
   opened: boolean;
   onClose: () => void;
-  intendedRoute?: string;
+  intendedRoute?: string | null;
 }) => {
   const navigate = useNavigate();
   return (
