@@ -17,6 +17,11 @@ function SaveButton({
   themeObjBeingEdited,
   isThemeObjBeingEditedDefaultTheme,
   onSave = null,
+}: {
+  survey: Survey;
+  themeObjBeingEdited?: { id: string; name: string } | null;
+  isThemeObjBeingEditedDefaultTheme?: boolean;
+  onSave?: (() => void) | null;
 }) {
   const selectedPageTab = useSelectedPageTab();
   const themeObjState = useSurveyThemeContextValue();

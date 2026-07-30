@@ -4,6 +4,7 @@ import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
+import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import { useGetAllBusinessHours } from "@/backend/org/business-hours/business-hours.query";
 import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldError } from "@/components/ui/field.tsx";
@@ -73,13 +74,15 @@ const ConditionValueInput = ({
       <Select
         onValueChange={valueField.onChange}
         value={valueField.value}
-        items={labels?.map((l) => ({ value: l?.id, label: l?.name })) ?? []}
+        items={
+          labels?.map((l: { id: string; name: string }) => ({ value: l?.id, label: l?.name })) ?? []
+        }
       >
         <SelectTrigger>
           <SelectValue placeholder="Select label" />
         </SelectTrigger>
         <SelectContent>
-          {labels?.map((l) => (
+          {labels?.map((l: { id: string; name: string }) => (
             <SelectItem key={l?.id} value={l?.id}>
               {l?.name}
             </SelectItem>
@@ -93,7 +96,7 @@ const ConditionValueInput = ({
       <Select
         onValueChange={valueField.onChange}
         value={valueField.value}
-        items={lifecycles.map((l) => ({
+        items={lifecycles.map((l: GetLabelsRes) => ({
           value: l?.id,
           label: `${l?.emoji ?? ""} ${l?.name ?? ""}`,
         }))}
@@ -102,7 +105,7 @@ const ConditionValueInput = ({
           <SelectValue placeholder="Select lifecycle" />
         </SelectTrigger>
         <SelectContent>
-          {lifecycles.map((l) => (
+          {lifecycles.map((l: GetLabelsRes) => (
             <SelectItem key={l?.id} value={l?.id}>
               {l?.emoji} {l?.name}
             </SelectItem>

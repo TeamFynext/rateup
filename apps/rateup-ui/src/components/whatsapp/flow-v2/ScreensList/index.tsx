@@ -140,7 +140,8 @@ function ScreenCard({ screen, index, isSelected, onSelect, onDelete }: Readonly<
                   {screen.title || `Screen ${index + 1}`}
                 </p>
                 <p className="text-xs text-muted-foreground leading-4 mt-0.5">
-                  {screen.layout?.children?.filter((c) => c.type !== "Footer").length || 0}{" "}
+                  {screen.layout?.children?.filter((c: WaFlowFormElement) => c.type !== "Footer")
+                    .length || 0}{" "}
                   {translations("elements")}
                 </p>
               </div>

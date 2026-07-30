@@ -5,11 +5,18 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import type { Testimonial, TestimonialStyleType } from "@/types/global";
 
 import NothingFound from "../NothingFound/NothingFound.tsx";
 import TestimonialCard from "./TestimonialCard.tsx";
 
-const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
+const TestimonialShare = ({
+  selectedTestimonials,
+  currentStyle,
+}: {
+  selectedTestimonials: string[];
+  currentStyle: TestimonialStyleType;
+}) => {
   const filteredTestimonials = selectedTestimonials;
   const { t: translations } = useTranslation();
   if (filteredTestimonials?.length <= 0)
@@ -23,7 +30,7 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
     <ScrollArea className="h-full">
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2 p-3">
-          {filteredTestimonials?.map((testimonial, _index) => (
+          {filteredTestimonials?.map((testimonial: Testimonial, _index: number) => (
             <TestimonialCard
               testimonial={testimonial}
               currentStyle={currentStyle}
@@ -36,7 +43,15 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
   );
 };
 
-export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
+export const TestimonialShareModal = ({
+  opened,
+  onClose,
+  collectionId,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  collectionId: string;
+}) => {
   const shareUrl = `${import.meta.env.VITE_FRONTEND_URL}/public/testimonial/${collectionId}`;
   const iframe = `<iframe title="Testimonials" src="${shareUrl}" width="100%"></iframe>`;
 

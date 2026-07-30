@@ -8,7 +8,7 @@ import { PageType } from "@/types/enums.ts";
 
 import classes from "@/components/Survey/SurveyTheme/SurveyTheme.module.css";
 
-export default function TemplateCard({ survey }) {
+export default function TemplateCard({ survey }: { survey: Survey }) {
   const webSurveyPagesTheme = survey?.webSurveyPagesTheme;
   const surveyThemeObj = survey?.webSurveyTheme?.theme;
   const questionsArr = survey?.questions;
@@ -25,7 +25,7 @@ export default function TemplateCard({ survey }) {
     startButtonText: translations("Start Survey") || "Start Survey",
   };
   const welcomeTypeQuestionObj =
-    questionsArr?.find((question) => question.type === PageType.Welcome) ||
+    questionsArr?.find((question: Question) => question.type === PageType.Welcome) ||
     defaultTitleSubtitleStartButtonTexts;
   const { titleText, subtitleText } = welcomeTypeQuestionObj;
 

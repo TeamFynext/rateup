@@ -29,6 +29,21 @@ import { PaymentPlanStatus } from "@/types/enums.ts";
 
 import { PlansDataTableToolbar } from "./plans-data-table-toolbar.tsx";
 
+/** A Razorpay plan row from the sync endpoint. */
+interface RazorpayPlan {
+  id: string;
+  planId?: string;
+  paymentPlanId?: string;
+  name?: string;
+  description?: string;
+  status?: string;
+  amount?: number;
+  currency?: string;
+  period?: string;
+  interval?: number;
+  createdAt?: string;
+}
+
 interface PlanTableData {
   id: string;
   name: string;
@@ -58,7 +73,7 @@ const RazorpayPlans = () => {
 
   const handleDeleteClick = () => {
     const planIdLocal = Array.isArray(plans?.data)
-      ? plans?.data?.find((plan) => plan?.planId == selectedPlanId)?.id
+      ? plans?.data?.find((plan: RazorpayPlan) => plan?.planId == selectedPlanId)?.id
       : "";
     const planInrateupPlans =
       rateupPlans && rateupPlans?.find((plan) => plan.paymentPlanId === planIdLocal);
@@ -173,7 +188,7 @@ const RazorpayPlans = () => {
             ]}
             onValueChange={(value) => {
               const planIdLocal = Array.isArray(plans?.data)
-                ? plans?.data?.find((plan) => plan?.planId == row.original.id)?.id
+                ? plans?.data?.find((plan: RazorpayPlan) => plan?.planId == row.original.id)?.id
                 : "";
               handleUpdatePlans({
                 id: planIdLocal,
@@ -258,8 +273,8 @@ const RazorpayPlans = () => {
 
   const tableData: PlanTableData[] = Array.isArray(plans?.data)
     ? plans?.data
-        ?.filter((p) => p.status !== "INACTIVE")
-        ?.map((plan) => ({
+        ?.filter((p: RazorpayPlan) => p.status !== "INACTIVE")
+        ?.map((plan: RazorpayPlan) => ({
           id: plan.planId,
           name: plan.name,
           createdAt: dayjs.unix(plan.createdAt).format("DD/MM/YYYY HH:mm:ss"),

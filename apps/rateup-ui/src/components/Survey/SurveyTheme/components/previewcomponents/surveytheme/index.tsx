@@ -20,6 +20,11 @@ function SurveyThemeView({
   previewId,
   isSurveyThemePreview = true,
   isSurveyThemeEditView = false,
+}: {
+  survey: Survey;
+  previewId?: string;
+  isSurveyThemePreview?: boolean;
+  isSurveyThemeEditView?: boolean;
 }) {
   const selectedPageTab = useSelectedPageTab();
   const isSurveyPageTabSelected = selectedPageTab === ThemeTabEnum.SURVEY;

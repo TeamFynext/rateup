@@ -108,13 +108,18 @@ const ActionValueInput = ({ index, valueField }: { index: number; valueField: an
       <Select
         onValueChange={valueField.onChange}
         value={valueField.value || ""}
-        items={labelsData?.map((l) => ({ value: l?.id, label: l?.name })) ?? []}
+        items={
+          labelsData?.map((l: { id: string; name: string }) => ({
+            value: l?.id,
+            label: l?.name,
+          })) ?? []
+        }
       >
         <SelectTrigger className="w-full bg-background">
           <SelectValue placeholder="Select label" />
         </SelectTrigger>
         <SelectContent>
-          {labelsData?.map((l) => (
+          {labelsData?.map((l: { id: string; name: string }) => (
             <SelectItem key={l?.id} value={l?.id}>
               {l?.name}
             </SelectItem>

@@ -13,6 +13,12 @@ function ThemeSelector({
   allThemesArr = [],
   isAllThemesFetchPending,
   survey,
+}: {
+  themeSelectorState: string;
+  setThemeSelectorState: (id: string) => void;
+  allThemesArr?: Array<{ id: string; name: string }>;
+  isAllThemesFetchPending?: boolean;
+  survey: Survey;
 }) {
   const surveyThemeDispatch = useSurveyThemeStateDispatch();
 
@@ -21,7 +27,7 @@ function ThemeSelector({
   const [selectedThemesThemeName, setSelectedThemesThemeName] = useState("");
 
   const handleChange = useCallback(
-    (value) => {
+    (value: string) => {
       setThemeSelectorState(value);
       const themeObj = allThemesArr?.find((obj) => obj.id === value);
       if (themeObj) {
@@ -35,7 +41,7 @@ function ThemeSelector({
   );
 
   const handleOpenRenameThemeModal = useCallback(
-    (themeId) => {
+    (themeId: string) => {
       const themeObj = allThemesArr?.find((obj) => obj.id === themeId);
       if (themeObj) {
         const { name = "" } = themeObj;

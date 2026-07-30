@@ -5,6 +5,16 @@ import { WHATSAPP_URL } from "..";
 
 export const waCatalogUrl = `${WHATSAPP_URL}/catalog`;
 
+/** A WhatsApp product catalog as the catalog endpoints return it. */
+export interface WaCatalog {
+  catalogId: string;
+  name: string;
+  vertical?: string;
+  checkoutMessage?: string;
+  autoCheckoutEnabled?: boolean;
+  connectedWaPhoneIds: Array<{ whatsappSettingsPhoneId?: string }>;
+}
+
 export async function updateWaCatalog(catalogId: string, data: RequestPayload) {
   await axiosClient.put(`${waCatalogUrl}/${catalogId}`, data);
 }

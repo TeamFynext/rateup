@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { AppIntegration } from "@/backend/appsIntegration/integration.api";
 import {
   useDeleteIntegrationMutation,
   useIntegrationByType,
@@ -109,7 +110,7 @@ export function Zoho() {
   );
 }
 
-const ZohoAuthentication = ({ integration }) => {
+const ZohoAuthentication = ({ integration }: { integration: AppIntegration }) => {
   const { t } = useTranslation();
   const user = useUser();
   const [connectionMode, setConnectionMode] = useState<"crm" | "bigin" | "both" | null>(null);
@@ -239,7 +240,7 @@ const ZohoTriggerList = ({
   refetch,
   isLoading,
 }: {
-  integration: any;
+  integration: AppIntegration;
   refetch: () => void;
   isLoading: boolean;
 }) => {
@@ -931,7 +932,9 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
     if (!lifecycles || !leads.length) return;
     const uniqueLeadStatuses = Array.from(
       new Set<string>(
-        leads.map((lead) => lead.Lead_Status).filter((status): status is string => !!status),
+        leads
+          .map((lead: { Lead_Status?: string }) => lead.Lead_Status)
+          .filter((status: string | undefined): status is string => !!status),
       ),
     );
 

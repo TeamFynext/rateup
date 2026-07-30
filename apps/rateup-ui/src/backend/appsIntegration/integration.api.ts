@@ -90,7 +90,48 @@ export interface AppIntegration {
   orgId: string;
   active: boolean;
   createdAt: string;
-  credential: { session?: { shop?: string } } & Record<string, unknown>;
+  /**
+   * Per-provider credential blob. The named members are the ones the
+   * integration screens read; the rest varies by provider.
+   */
+  credential: {
+    session?: { shop?: string };
+    accessToken?: string;
+    restaurantId?: string;
+    orderEvent?: Record<string, unknown>;
+    history?: Array<{
+      phone?: string;
+      name?: string;
+      status?: string;
+      scheduledAt?: string;
+      createdAt?: string;
+    }>;
+    supportedProducts?: { crm?: boolean; bigin?: boolean; [key: string]: unknown };
+    triggerSubscriptions?: Array<{
+      subscribed_field?: string;
+      active?: boolean;
+      [key: string]: unknown;
+    }>;
+    crm?: {
+      leadLifecycleMappings?: Record<string, string>;
+      [key: string]: unknown;
+    };
+    bigin?: {
+      biginOwner?: string;
+      pipeline?: {
+        selectedPipeline?: { id?: string | number; [key: string]: unknown };
+        selectedSubPipeline?: { id?: string | number; [key: string]: unknown };
+        requiredFieldMappings?: Record<string, unknown>;
+        lifecycleStageMappings?: Record<string, string>;
+      };
+      lifecycleStageMappings?: Record<string, string>;
+      [key: string]: unknown;
+    };
+    lastZohoSyncAt?: string;
+    lastZohoLeadSyncAt?: string;
+    lastBiginSyncAt?: string;
+    [key: string]: unknown;
+  };
 }
 
 export async function getAllIntegrations() {

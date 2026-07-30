@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Separator } from "@/components/ui/separator.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
-const CatalogOrders = ({ catalogId }) => {
+const CatalogOrders = ({ catalogId }: { catalogId: string }) => {
   const [pagination, setPagination] = useState({
     pageSize: Number(PAGE_SIZE[0]),
     pageIndex: 0,

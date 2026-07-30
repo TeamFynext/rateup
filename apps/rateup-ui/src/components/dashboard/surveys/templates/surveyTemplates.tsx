@@ -2,7 +2,17 @@ import { Card } from "@/components/ui/card.tsx";
 
 import TemplateCard from "./templateCard.tsx";
 
-const SurveyTemplates = ({ survey, setSelectedTemplate, bgTemp, open }) => {
+const SurveyTemplates = ({
+  survey,
+  setSelectedTemplate,
+  bgTemp,
+  open,
+}: {
+  survey: Survey;
+  setSelectedTemplate: (survey: Survey) => void;
+  bgTemp?: string;
+  open: () => void;
+}) => {
   return (
     <Card
       className="p-0 cursor-pointer shadow-custom-base! hover:shadow-custom-hover! transition-shadow hover:-translate-y-0.5 gap-3.5"

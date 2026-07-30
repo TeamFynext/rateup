@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useId, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import type { WaCatalog } from "@/backend/whatsapp/catalog/catalog.api";
 import {
   useDeleteWaCatalog,
   useDisconnectCatalogFromWa,
@@ -32,7 +33,7 @@ import { useConfirm } from "@/context/confirm-provider.tsx";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { MetaLoginAssets, WaConfigType } from "@/types/enums.ts";
 
-const CatalogSettings = ({ catalogData }) => {
+const CatalogSettings = ({ catalogData }: { catalogData: WaCatalog }) => {
   const uid = useId();
   const navigate = useNavigate();
   const update = useUpateCatalog(catalogData?.catalogId);
@@ -58,7 +59,9 @@ const CatalogSettings = ({ catalogData }) => {
   useEffect(() => {
     if (waSettings && catalogData) {
       const setting = waSettings.find((s) =>
-        catalogData.connectedWaPhoneIds.some((c) => c.whatsappSettingsPhoneId === s.phoneId),
+        catalogData.connectedWaPhoneIds.some(
+          (c: { whatsappSettingsPhoneId?: string }) => c.whatsappSettingsPhoneId === s.phoneId,
+        ),
       );
       if (setting) {
         setWabaId(setting.wabaId);
@@ -234,7 +237,7 @@ const CatalogSettings = ({ catalogData }) => {
   );
 };
 
-const ProductManagementSection = ({ catalogData }) => {
+const ProductManagementSection = ({ catalogData }: { catalogData: WaCatalog }) => {
   const catalogId = catalogData?.catalogId;
   const [shopifyImportOpened, { close: closeShopifyImport }] = useDisclosure(false);
 
@@ -279,7 +282,7 @@ const ProductManagementSection = ({ catalogData }) => {
   );
 };
 
-const ProductSetsSection = ({ catalogId }) => {
+const ProductSetsSection = ({ catalogId }: { catalogId: string }) => {
   const syncProductSetsMut = useSyncProductSets();
   const { data: productSets, isLoading } = useProductSetsByCatalog(catalogId);
 

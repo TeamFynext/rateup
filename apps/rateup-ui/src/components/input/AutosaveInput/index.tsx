@@ -37,7 +37,7 @@ function AutosaveInput({
   }, []);
 
   const handleInputBlur = useCallback(
-    async (_e) => {
+    async (_e?: unknown) => {
       setIsInputBeingEdited(false);
       if (inputState !== value) {
         setIsSavingText(true);

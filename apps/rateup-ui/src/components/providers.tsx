@@ -14,6 +14,7 @@ import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import axios from "axios";
 import { Suspense } from "react";
+import type { ReactNode } from "react";
 import Session from "supertokens-auth-react/recipe/session";
 
 import { AppErrorBoundary } from "@/components/AppErrorBoundary.tsx";
@@ -74,7 +75,7 @@ export function resetBrowserQueryClient() {
   browserQueryClient = undefined;
 }
 
-export default function Providers({ children }) {
+export default function Providers({ children }: { children: ReactNode }) {
   // NOTE: Avoid useState when initializing the query client if you don't
   //       have a suspense boundary between this and the code that may
   //       suspend because React will throw away the client on the initial

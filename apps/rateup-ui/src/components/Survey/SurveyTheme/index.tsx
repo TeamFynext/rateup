@@ -16,6 +16,10 @@ function SurveyTheme({
   isSurveyThemeEditView = false,
   isSurveyThemePreview = false,
   onEditPageBtnClick = null,
+}: {
+  survey: Survey;
+  previewId?: string;
+  onEditPageBtnClick?: ((pageType: PageType) => void) | null;
 }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme ?? {};
   const { t: translations } = useTranslation();

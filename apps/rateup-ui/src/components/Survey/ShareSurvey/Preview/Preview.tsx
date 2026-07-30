@@ -17,6 +17,10 @@ function Preview({
   isSurveyPublished = true,
   customAttrForDownloadedQrFileName = "",
   logoTabPanelState,
+}: {
+  url: string;
+  surveyTitle: string;
+  logoTabPanelState: Record<string, unknown>;
 }) {
   const {
     qrBgColor,
