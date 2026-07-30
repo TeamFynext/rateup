@@ -33,7 +33,16 @@ import { TextForm } from "./QuestionForms/TextForm.tsx";
 import WOPForm from "./QuestionForms/WOPForm.tsx";
 import { YNForm } from "./QuestionForms/YNForm.tsx";
 
-const shouldShowGoogleReview = (question, userResponse) => {
+/**
+ * A response stores its answer under a key named after its own question type.
+ * `QuestionResponse["response"]` only declares the subset of types that can
+ * carry an answer, so the lookup is narrowed to those keys here.
+ */
+function responseValueFor(userResponse: QuestionResponse) {
+  return userResponse.response?.[userResponse.type as keyof QuestionResponse["response"]];
+}
+
+const shouldShowGoogleReview = (question: Question, userResponse: QuestionResponse) => {
   switch (question.type) {
     case QuestionType.Rating:
       return userResponse.response.Rating >= question.reviewPageOptions.minRating;
@@ -46,7 +55,10 @@ const shouldShowGoogleReview = (question, userResponse) => {
   }
 };
 
-export const checkGoogleReviewForQuestion = (questions, responses) => {
+export const checkGoogleReviewForQuestion = (
+  questions: Question[],
+  responses: QuestionResponse[],
+) => {
   for (const question of questions) {
     if (question?.reviewPageOptions) {
       const userResponse = responses.find((r) => r?.questionId === question?.id);
@@ -58,7 +70,11 @@ export const checkGoogleReviewForQuestion = (questions, responses) => {
   return false;
 };
 
-const shouldRaiseTicket = (question, userResponse, selectedLanguage) => {
+const shouldRaiseTicket = (
+  question: Question,
+  userResponse: QuestionResponse,
+  selectedLanguage: string,
+) => {
   if (question.ticketIssue.submissionTicket) return true;
   switch (question.type) {
     case QuestionType.Rating:
@@ -72,17 +88,19 @@ const shouldRaiseTicket = (question, userResponse, selectedLanguage) => {
     case QuestionType.DDSS:
     case QuestionType.MCQ:
     case QuestionType.MSQ:
-      const response = userResponse.response[userResponse.type];
+      const response = responseValueFor(userResponse);
       let flag = false;
       if (Array.isArray(response)) {
-        response.forEach((res) => {
-          const index = question.choices[selectedLanguage].findIndex((c) => c.value === res.value);
+        response.forEach((res: Choice) => {
+          const index = question.choices[selectedLanguage].findIndex(
+            (c: Choice) => c.value === res.value,
+          );
           flag = question.ticketIssue.reqOptions.includes(index.toString());
           if (flag) return;
         });
       } else {
         const index = question.choices[selectedLanguage].findIndex(
-          (c) => c.value === response.value,
+          (c: Choice) => c.value === response.value,
         );
         flag = question.ticketIssue.reqOptions.includes(index.toString());
       }
@@ -92,7 +110,11 @@ const shouldRaiseTicket = (question, userResponse, selectedLanguage) => {
   }
 };
 
-export const checkRaiseTicketIssueQuestion = (questions, responses, selectedLanguage) => {
+export const checkRaiseTicketIssueQuestion = (
+  questions: Question[],
+  responses: QuestionResponse[],
+  selectedLanguage: string,
+) => {
   for (const question of questions) {
     if (question?.ticketIssue) {
       const userResponse = responses.find((r) => r?.questionId === question?.id);
@@ -115,6 +137,17 @@ export function submitSurvey({
   shouldRaiseTicket,
   checkUniqueDevice,
   selectedColumnId,
+}: {
+  surveyTeamMapId: string;
+  responses: QuestionResponse[];
+  selectedLanguage: string;
+  setIsSavingResponses: (saving: boolean) => void;
+  coordinates?: Coordinates;
+  tag?: string;
+  encryptedResponses?: string;
+  shouldRaiseTicket: boolean;
+  checkUniqueDevice: boolean;
+  selectedColumnId?: string;
 }) {
   return createResponsePublic({
     surveyTeamMapId,
@@ -144,7 +177,7 @@ export function submitSurvey({
     });
 }
 
-export function getQuestionForm(type, selectedQ) {
+export function getQuestionForm(type: QuestionType | PageType, selectedQ: Question) {
   switch (type) {
     case Q.Text:
       return <TextForm key={selectedQ?.id} />;
@@ -207,7 +240,21 @@ export function getQuestionForm(type, selectedQ) {
   }
 }
 
-export const validateResponse = (response, selectedQ, selectedLanguage) => {
+/** The in-progress answer for the question being validated. */
+interface ResponseUnderValidation {
+  name?: string;
+  phone?: string;
+  email?: string;
+  testimonial?: string;
+  isValid?: boolean;
+  [key: string]: unknown;
+}
+
+export const validateResponse = (
+  response: ResponseUnderValidation | undefined,
+  selectedQ: Question,
+  selectedLanguage: string,
+) => {
   let errMsg = "";
   if (!selectedQ.required && !response) return errMsg;
   switch (selectedQ.type) {
@@ -255,7 +302,10 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
       if (!selectedQ.required) break;
       const questions = selectedQ?.features?.[selectedLanguage]?.questions;
       const responsedQuestions = response ? Object.keys(response) : [];
-      if (!responsedQuestions.length || !questions.every((q) => responsedQuestions.includes(q)))
+      if (
+        !responsedQuestions.length ||
+        !questions.every((q: string) => responsedQuestions.includes(q))
+      )
         errMsg = "All questions are mandatory";
       break;
     case QuestionType.EmailOtp:
@@ -267,7 +317,7 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
   return errMsg;
 };
 
-export const handleInputScrollIntoView = (e) => {
+export const handleInputScrollIntoView = (e: { currentTarget: HTMLElement }) => {
   const domEle = e.currentTarget;
   domEle.style.scrollMarginTop = "40px";
   setTimeout(() => {
@@ -276,13 +326,13 @@ export const handleInputScrollIntoView = (e) => {
 };
 
 export const getPropValueFromQuestionCustomComponent = (
-  str,
+  str: string,
   componentName = "variable-component",
   prop = "label",
 ) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(str, "text/html");
-  const labels = [];
+  const labels: string[] = [];
   const customComponents = doc.querySelectorAll(componentName);
   if (!customComponents?.length) return null;
   customComponents.forEach((component) => {
@@ -322,7 +372,7 @@ export const getReplacedTitleFromVariable = ({
     if (component) {
       const parent = component.parentNode;
       const replacementNode = doc.createTextNode(
-        isPublicPage ? getValueFromVariable(value, responses, surveyId) : `{${value}}`,
+        isPublicPage ? String(getValueFromVariable(value, responses, surveyId)) : `{${value}}`,
       );
       parent.replaceChild(replacementNode, component);
     }
@@ -330,42 +380,53 @@ export const getReplacedTitleFromVariable = ({
   return doc.body.innerHTML;
 };
 
-function getValueFromVariable(variable: string, responses: QuestionResponse[], surveyId) {
+function getValueFromVariable(variable: string, responses: QuestionResponse[], surveyId: string) {
   const { data: variables } = useGetSurveyVariables(surveyId, true);
   const variableObj = variables && variables?.find((val) => val?.name === variable);
   if (variableObj) {
     if (variableObj.type === SurveyVariableType.CUSTOM) return variableObj.value;
     const response = responses?.find((res) => res?.questionId === variableObj.value);
     return response
-      ? getFormattedResponseForVariable(
-          response.response?.[response?.type],
-          response?.type,
-          variable,
-        )
+      ? getFormattedResponseForVariable(responseValueFor(response), response?.type, variable)
       : "";
   }
   return "";
 }
 
-function getFormattedResponseForVariable(response, questionType, variable) {
+/** The answer fields the variable formatter can substitute into a title. */
+interface VariableResponse {
+  name?: string;
+  phone?: string;
+  email?: string;
+  testimonial?: string;
+  jobTitle?: string;
+  rating?: number;
+}
+
+function getFormattedResponseForVariable(
+  response: unknown,
+  questionType: QuestionType,
+  variable: string,
+) {
+  const contact = response as VariableResponse | undefined;
   switch (questionType) {
     case QuestionType.Contact:
       return variable.includes("name")
-        ? (response?.name ?? "")
+        ? (contact?.name ?? "")
         : variable.includes("phone")
-          ? (response?.phone ?? "")
+          ? (contact?.phone ?? "")
           : variable.includes("email")
-            ? (response?.email ?? "")
+            ? (contact?.email ?? "")
             : "";
     case QuestionType.Testimonial:
       return variable.includes("name")
-        ? (response?.name ?? "")
+        ? (contact?.name ?? "")
         : variable.includes("testimonial")
-          ? (response?.testimonial ?? "")
+          ? (contact?.testimonial ?? "")
           : variable.includes("jobTitle")
-            ? (response?.jobTitle ?? "")
+            ? (contact?.jobTitle ?? "")
             : variable.includes("rating")
-              ? (response?.rating ?? "")
+              ? (contact?.rating ?? "")
               : "";
     case QuestionType.Text:
     case QuestionType.Date:
@@ -393,24 +454,25 @@ export const DEFAULT_WOP = {
   segColors: ["#1c518e", "#06ac6e"],
 };
 
-const pageTypeStrsWithoutCustomPageStr = Object.values(PageType).filter(
-  (str) => str !== PageType.Custom,
-);
+// Widened to the full question/page union so it can test any question's type.
+const pageTypeStrsWithoutCustomPageStr: Array<QuestionType | PageType> = Object.values(
+  PageType,
+).filter((str) => str !== PageType.Custom);
 
-function getQuestionsArrWithoutPageTypeQuestions(survey) {
+function getQuestionsArrWithoutPageTypeQuestions(survey: Survey) {
   return survey?.questions?.filter((questionObj) => {
     return !pageTypeStrsWithoutCustomPageStr.includes(questionObj?.type);
   });
 }
 
-export function getFirstQuestion(survey) {
+export function getFirstQuestion(survey: Survey) {
   const firstQuestion = survey?.questions?.find((questionObj) => {
     return !pageTypeStrsWithoutCustomPageStr.includes(questionObj?.type);
   });
   return firstQuestion;
 }
 
-export function getLastQuestion(survey) {
+export function getLastQuestion(survey: Survey) {
   const questions = survey?.questions;
   if (questions?.length > 0) {
     for (let i = questions.length - 1; i >= 0; i--) {
@@ -422,7 +484,7 @@ export function getLastQuestion(survey) {
   }
 }
 
-export function getQuestionsLength(survey) {
+export function getQuestionsLength(survey: Survey) {
   const questions = getQuestionsArrWithoutPageTypeQuestions(survey);
   if (questions && questions?.length >= 0) {
     return questions.length;
@@ -431,10 +493,12 @@ export function getQuestionsLength(survey) {
   }
 }
 
-export function getSelectedQPos(survey, selectedQ) {
+export function getSelectedQPos(survey: Survey, selectedQ: Question) {
   if (survey?.questions && selectedQ) {
     const questions = getQuestionsArrWithoutPageTypeQuestions(survey);
-    const selectedQuestionIndex = questions.findIndex((question) => question.id === selectedQ.id);
+    const selectedQuestionIndex = questions.findIndex(
+      (question: Question) => question.id === selectedQ.id,
+    );
     return selectedQuestionIndex + 1;
   } else {
     return 1;

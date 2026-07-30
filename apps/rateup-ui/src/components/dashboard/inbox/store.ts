@@ -102,7 +102,7 @@ export const useChatContactCountStore = create<ChatContactCountStore>((set) => (
 
 export default useContactStore;
 
-export function makeFilterKey(filter) {
+export function makeFilterKey(filter: ChatFilter | null | undefined) {
   return Object.entries(filter || {})
     .map(([key, value]) => `${key}:${value}`)
     .join("|");
@@ -116,13 +116,13 @@ interface ContactsStoreState {
   contactsById: Map<string, ContactWithUpdatedAt>;
   contactsByFilter: ContactsByFilter;
   selectedContact: ContactWithUpdatedAt | null;
-  currentFilterKey: string;
+  currentFilterKey: string | null;
   isLoading: boolean;
-  currentUser: User;
+  currentUser: User | null;
 
   // Actions
   setFilter: (filter: ChatFilter) => void;
-  loadContactsFromDB: (filter: ChatFilter, user) => Promise<void>;
+  loadContactsFromDB: (filter: ChatFilter, user: User | null) => Promise<void>;
   addContactsForFilter: (
     filterKey: string,
     contacts: Array<ContactsWithLastMessage & { updatedAt: string }>,
@@ -134,12 +134,12 @@ interface ContactsStoreState {
     markUnread?: boolean,
   ) => void;
   resetUnreadForContact: (contactId: string, contact?: ContactWithUpdatedAt) => void;
-  setSelectedContact: (contact) => void;
+  setSelectedContact: (contact: ContactWithUpdatedAt | null) => void;
   getContactsByIds: (ids: string[]) => Promise<ContactWithUpdatedAt[]>;
   clearAllContacts: () => Promise<void>;
   deleteContactsByIds: (contactIds: string[]) => Promise<void>;
   clearContactsForFilter: (filter: ChatFilter) => void;
-  updateContactList: (tab, contactId, isMessageUpdated: boolean) => void;
+  updateContactList: (tab: string, contactId: string, isMessageUpdated: boolean) => void;
 }
 
 enableMapSet();
@@ -240,7 +240,7 @@ export function resolveIncomingRowKey(
 let currentLoadToken = 0;
 export const useContactsStore = create<ContactsStoreState>()(
   persist(
-    (set, get) => ({
+    (set, get): ContactsStoreState => ({
       contactsById: new Map(),
       contactsByFilter: {},
       selectedContact: null,
@@ -257,7 +257,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         const loadToken = ++currentLoadToken;
         const filterKey = makeFilterKey(filter);
         set(
-          produce((state) => {
+          produce((state: ContactsStoreState) => {
             state.currentFilterKey = filterKey;
             if (!state.currentUser) state.currentUser = user;
           }),
@@ -291,7 +291,7 @@ export const useContactsStore = create<ContactsStoreState>()(
       addContactsForFilter: async (filterKey, contacts, updateOtherTabs = false) => {
         const { currentFilterKey } = get();
         if (!filterKey || currentFilterKey !== filterKey) return;
-        let sortedList = [];
+        let sortedList: string[] = [];
         set(
           produce((state: ContactsStoreState) => {
             state.isLoading = true;
@@ -387,7 +387,7 @@ export const useContactsStore = create<ContactsStoreState>()(
           : liveRowKeyForContact(state.contactsById, contactId);
         const contact = rowKey ? state.contactsById.get(rowKey) : null;
         if (!contact) return;
-        const updateIdb = [];
+        const updateIdb: Array<{ key: string; contactIds: string[] }> = [];
         const updatedContact = {
           ...updater(contact),
           updatedAt: new Date().toISOString(),
@@ -395,7 +395,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         let messageUpdated = false;
         let assignStatusChanged = false;
         set(
-          produce((draft) => {
+          produce((draft: ContactsStoreState) => {
             const { currentFilterKey, contactsByFilter, contactsById } = draft;
             const newContactsById = new Map(contactsById);
             newContactsById.set(rowKey, updatedContact);
@@ -532,7 +532,7 @@ export const useContactsStore = create<ContactsStoreState>()(
       },
 
       updateContactList: (tab, contactId, isMessageUpdated) => {
-        const updateIdb = [];
+        const updateIdb: Array<{ key: string; contactIds: string[] }> = [];
         // Callers pass a ticket row key; tolerate a bare contact id too.
         if (!get().contactsById.has(contactId)) {
           const resolved = liveRowKeyForContact(get().contactsById, contactId);
@@ -542,7 +542,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         switch (tab) {
           case "all":
             set(
-              produce((draft) => {
+              produce((draft: ContactsStoreState) => {
                 const state = get();
                 const contact = state.contactsById.get(contactId);
 
@@ -602,7 +602,7 @@ export const useContactsStore = create<ContactsStoreState>()(
           case "open":
             // Open = Assigned and Unassigned contacts (not Closed/Addressed)
             set(
-              produce((draft) => {
+              produce((draft: ContactsStoreState) => {
                 const state = get();
                 const contact = state.contactsById.get(contactId);
 
@@ -670,7 +670,7 @@ export const useContactsStore = create<ContactsStoreState>()(
             break;
           case "mine":
             set(
-              produce((draft) => {
+              produce((draft: ContactsStoreState) => {
                 const state = get();
 
                 const contact = state.contactsById.get(contactId);
@@ -742,7 +742,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         if (!filterKey || get().currentFilterKey !== filterKey) return;
         if (!get().contactsByFilter[filterKey]?.length) return;
         set(
-          produce((draft) => {
+          produce((draft: ContactsStoreState) => {
             draft.contactsByFilter[filterKey] = [];
           }),
         );
@@ -827,7 +827,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         }
         contactIds = rowKeys.length ? rowKeys : contactIds;
         set(
-          produce((state) => {
+          produce((state: ContactsStoreState) => {
             contactIds.forEach((id) => {
               state.contactsById.delete(id);
               Object.keys(state.contactsByFilter).forEach((filterKey) => {
@@ -889,7 +889,7 @@ interface MessagesStore {
 
 export const useMessagesStore = create<MessagesStore>()(
   persist(
-    (set, get) => ({
+    (set, get): MessagesStore => ({
       messagesByKey: new Map(),
       selectedKey: null,
       isLoading: false,
