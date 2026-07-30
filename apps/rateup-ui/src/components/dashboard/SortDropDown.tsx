@@ -11,10 +11,16 @@ import {
   SelectValue,
 } from "../ui/select.tsx";
 
-const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
+const SortDropdown = ({
+  onSortChange,
+  defaultSortOption = "latest",
+}: {
+  onSortChange: (value: string) => void;
+  defaultSortOption?: string;
+}) => {
   const [sortOption, setSortOption] = useState(defaultSortOption);
   const { t: translations } = useTranslation();
-  const handleSortChange = (value) => {
+  const handleSortChange = (value: string) => {
     setSortOption(value);
     onSortChange(value);
   };

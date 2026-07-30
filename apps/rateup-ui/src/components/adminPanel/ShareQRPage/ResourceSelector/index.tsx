@@ -14,7 +14,15 @@ import { resourceOptions } from "./constants.tsx";
 
 import styles from "./ResourceSelector.module.css";
 
-function ResourceSelector({ resource, setResource, onGenerateBtnClick }) {
+function ResourceSelector({
+  resource,
+  setResource,
+  onGenerateBtnClick,
+}: {
+  resource: string;
+  setResource: (resource: string) => void;
+  onGenerateBtnClick: () => void;
+}) {
   const { t: translations } = useTranslation();
   const items = resourceOptions.map((option) => ({ value: option, label: option }));
   return (

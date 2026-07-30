@@ -13,8 +13,16 @@ function ComboBoxComponent({
   value,
   data = [],
   onChange,
-  renderOptionProps = {} as any,
+  renderOptionProps = {} as Record<string, unknown>,
   isLoading = false,
+}: {
+  className?: string;
+  classNames?: { option?: string };
+  value: string;
+  data?: Array<{ value: string; label: string }>;
+  onChange: (value: string) => void;
+  renderOptionProps?: Record<string, unknown>;
+  isLoading?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 

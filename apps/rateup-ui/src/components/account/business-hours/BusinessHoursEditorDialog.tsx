@@ -53,6 +53,14 @@ function TimeSlotRow({
   slotError,
   handleTimeSlotChange,
   removeTimeSlot,
+}: {
+  slot: { start?: string; end?: string };
+  slotIndex: number;
+  day: string;
+  daySchedule: { slots?: Array<{ start?: string; end?: string }> };
+  slotError?: string;
+  handleTimeSlotChange: (day: string, slotIndex: number, field: string, value: string) => void;
+  removeTimeSlot: (day: string, slotIndex: number) => void;
 }) {
   const { t } = useTranslation();
   return (

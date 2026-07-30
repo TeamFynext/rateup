@@ -29,6 +29,14 @@ interface MCQGridFormProps {
   previewChoices?: Record<string, Array<Choice>>;
   isPreview?: boolean;
 }
+/**
+ * Grid columns are plain-text choices; `Choice["value"]` also allows the rich
+ * image/title form used by picture-choice questions, which this grid does not
+ * render.
+ */
+const choiceLabel = (choice: Choice) =>
+  typeof choice?.value === "string" ? choice.value : (choice?.value?.title ?? "");
+
 const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { selectedQ } = useContext(SelectedQContext);
@@ -43,12 +51,12 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
 
   const { control } = useForm<Record<string, string>>({
     values: Object.fromEntries(
-      (questions ?? []).map((question) => [question, response?.[question]?.value ?? ""]),
+      (questions ?? []).map((question: string) => [question, response?.[question]?.value ?? ""]),
     ),
   });
 
-  const handleUpdateResponse = (value, question) => {
-    const choice = choices?.find((ch) => ch.value === value);
+  const handleUpdateResponse = (value: string, question: string) => {
+    const choice = choices?.find((ch: Choice) => ch.value === value);
     updateResponse({ ...response, [question]: choice });
   };
 
@@ -83,26 +91,26 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
       <TableHeader>
         <TableRow>
           <TableHead className="sticky top-0 left-0 z-[3] bg-[#CDCDCD] px-4 py-4" />
-          {choices?.map((choice) => (
+          {choices?.map((choice: Choice, choiceIndex: number) => (
             <TableHead
-              key={choice?.value}
+              key={`${choiceLabel(choice)}-${choiceIndex}`}
               className="sticky top-0 z-[2] w-[100px] bg-[#CDCDCD] px-4 py-4"
             >
-              {choice?.value}
+              {choiceLabel(choice)}
             </TableHead>
           ))}
         </TableRow>
       </TableHeader>
       <TableBody className="[&_tr]:border-b-0">
-        {questions?.map((question) => (
+        {questions?.map((question: string) => (
           <TableRow key={question}>
             <TableCell className="sticky top-0 left-0 z-[1] bg-[#E4E6ED] px-4 py-4">
               {question}
             </TableCell>
-            {choices?.map((choice) => {
+            {choices?.map((choice: Choice) => {
               const isSelected = response?.[question]?.value == choice?.value;
               return (
-                <TableCell key={choice?.value} className="px-4 py-4">
+                <TableCell key={choiceLabel(choice)} className="px-4 py-4">
                   <Controller
                     name={question}
                     control={control}
@@ -165,7 +173,7 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
 interface MCQGridMobileFormProps {
   choices: Choice[];
   questions: string[];
-  handleUpdateResponse: (value, question) => void;
+  handleUpdateResponse: (value: string, question: string) => void;
   control: ReturnType<typeof useForm<Record<string, string>>>["control"];
   themePrimaryColor: string;
 }

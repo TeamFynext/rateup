@@ -82,7 +82,15 @@ export function DataTableRowActions<TData>({ row }: Readonly<DataTableRowActions
   );
 }
 
-const EditCustomFieldModal = ({ opened, setOpened, customField }) => {
+const EditCustomFieldModal = ({
+  opened,
+  setOpened,
+  customField,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  customField: CustomFieldData;
+}) => {
   const { t } = useTranslation();
 
   return (

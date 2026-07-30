@@ -15,7 +15,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 
-function ChartOverview({ messageTrendData, isLoading }) {
+function ChartOverview({
+  messageTrendData,
+  isLoading,
+}: {
+  messageTrendData: Array<Record<string, unknown>> | undefined;
+  isLoading: boolean;
+}) {
   const { t } = useTranslation("apianalytics");
   const hasData = Array.isArray(messageTrendData) && messageTrendData.length > 0;
 
@@ -98,7 +104,13 @@ function ChartOverview({ messageTrendData, isLoading }) {
 
 export default ChartOverview;
 
-export function DailyTrend({ dailyMessageData, isLoading }) {
+export function DailyTrend({
+  dailyMessageData,
+  isLoading,
+}: {
+  dailyMessageData: Array<Record<string, unknown>> | undefined;
+  isLoading: boolean;
+}) {
   const { t } = useTranslation("apianalytics");
   const hasData = Array.isArray(dailyMessageData) && dailyMessageData.length > 0;
 

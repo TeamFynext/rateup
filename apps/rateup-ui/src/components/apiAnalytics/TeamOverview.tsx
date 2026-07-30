@@ -4,7 +4,13 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 
-function TeamOverview({ teamData, isLoading }) {
+function TeamOverview({
+  teamData,
+  isLoading,
+}: {
+  teamData: Array<Record<string, unknown>> | undefined;
+  isLoading: boolean;
+}) {
   const { t } = useTranslation("apianalytics");
   const hasData = Array.isArray(teamData) && teamData.length > 0;
   return (

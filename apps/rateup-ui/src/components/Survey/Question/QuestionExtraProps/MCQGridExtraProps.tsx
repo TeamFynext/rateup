@@ -23,13 +23,6 @@ import type { QuestionExtraPropsForm } from "./questionForm.ts";
  * today. Typed to match what the component actually touches rather than
  * changing its behaviour; see the migration notes.
  */
-interface MCQGridForm {
-  values?: {
-    features?: Record<string, { questions?: string[] } & Record<string, unknown>>;
-  };
-  setFieldValue?: (path: string, value: unknown) => void;
-}
-
 const MCQGridExtraProps = ({ form, qId }: { form: QuestionExtraPropsForm; qId: string }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = form.values?.features?.[selectedLanguage] || {};

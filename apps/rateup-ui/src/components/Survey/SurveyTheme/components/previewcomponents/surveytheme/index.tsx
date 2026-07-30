@@ -56,7 +56,7 @@ function SurveyThemeView({
     );
   } else if (isThankyouPage && !isSurveyThemeEditView) {
     const thankyouTypePageQuestionObj = surveyCopy?.questions?.find(
-      (question) => question?.type === PageType.ThankYou,
+      (question: Question) => question?.type === PageType.ThankYou,
     );
 
     const titleText = thankyouTypePageQuestionObj?.titleText;

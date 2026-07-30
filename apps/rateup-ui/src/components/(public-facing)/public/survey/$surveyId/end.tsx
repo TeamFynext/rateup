@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { CreditsCard } from "@/components/Card/CreditsCard.tsx";
 import { getBgImgAndBgColor } from "@/components/Layout/TakeSurveyLayout/utils.ts";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
+import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 
 import BodyComp from "./BodyComp.tsx";
@@ -39,6 +40,20 @@ export default function ThankYou({
   subtitleText,
   isSurveyPreview = false,
   reviewPageLinks = null,
+}: {
+  enableGoogleReview?: boolean;
+  googleLink?: string;
+  reviews?: unknown[];
+  kioskMode?: string;
+  surveyIdValue?: string;
+  fromShortUrl?: boolean;
+  redirect?: { enable?: boolean; url?: string; time?: string | number } | null;
+  surveyThemeData?: SurveyTheme | null;
+  pagesThemeData?: SurveyTheme | null;
+  titleText?: string;
+  subtitleText?: string;
+  isSurveyPreview?: boolean;
+  reviewPageLinks?: Survey["reviewPageLinks"] | null;
 }) {
   const isMobile = useMediaQuery("(max-width: 480px)");
   const navigate = useNavigate();
@@ -102,7 +117,7 @@ export default function ThankYou({
             });
           }
         },
-        (redirect.time ?? 1) * 1000,
+        Number(redirect.time ?? 1) * 1000,
       );
     }
     return () => clearTimeout(timeout);

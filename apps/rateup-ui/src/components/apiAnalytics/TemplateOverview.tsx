@@ -7,7 +7,15 @@ import { Badge } from "../ui/badge.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 
-function TemplateOverview({ categoryOverview, templatePerformance, isLoading }) {
+function TemplateOverview({
+  categoryOverview,
+  templatePerformance,
+  isLoading,
+}: {
+  categoryOverview: Array<Record<string, unknown>> | undefined;
+  templatePerformance: Array<Record<string, unknown>> | undefined;
+  isLoading: boolean;
+}) {
   const { t } = useTranslation("apianalytics");
   return (
     <Card>
@@ -31,7 +39,7 @@ function TemplateOverview({ categoryOverview, templatePerformance, isLoading }) 
         ) : (
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {categoryOverview?.map((category, index) => {
+              {categoryOverview?.map((category: Record<string, unknown>, index: number) => {
                 const color = getCategoryColor(category.category);
                 return (
                   <div
@@ -53,7 +61,7 @@ function TemplateOverview({ categoryOverview, templatePerformance, isLoading }) 
 
             {/* Template List */}
             <div className="space-y-3">
-              {templatePerformance?.map((template, index) => {
+              {templatePerformance?.map((template: Record<string, unknown>, index: number) => {
                 const color = getCategoryColor(template.templateCategory);
                 return (
                   <div

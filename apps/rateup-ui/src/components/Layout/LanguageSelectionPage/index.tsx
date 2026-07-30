@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import type { SurveyTheme } from "@/context/SurveyThemeContext.tsx";
 import { useMediaQuery } from "@/hooks/use-media-query.ts";
 import { PageType } from "@/types/enums.ts";
 
@@ -25,6 +26,12 @@ function LanguageSelectionPage({
   surveyThemeData,
   pagesThemeData,
   questionsArr,
+}: {
+  languages: string[];
+  setSelectedLanguage: (language: string) => void;
+  surveyThemeData?: SurveyTheme | null;
+  pagesThemeData?: SurveyTheme | null;
+  questionsArr: Question[];
 }) {
   const [lang, setLang] = useState(languages[0]);
   const selectedPreview = useSelectedPreview();
@@ -43,7 +50,12 @@ function LanguageSelectionPage({
   const languageTypeQuestionObj =
     questionsArr?.find((question: Question) => question.type === PageType.Language) ||
     defaultTitleSubtitleStartButtonTexts;
-  const { titleText, subtitleText, startButtonText } = languageTypeQuestionObj;
+  // The fallback object omits `subtitleText`; both shapes are read the same way.
+  const { titleText, subtitleText, startButtonText } = languageTypeQuestionObj as {
+    titleText?: string;
+    subtitleText?: string;
+    startButtonText?: string;
+  };
 
   const isOrgLogoPresent = logoUrl?.length > 0;
   const isMobile = useMediaQuery("(max-width: 768px)") || selectedPreview === "mobile";
