@@ -21,7 +21,7 @@ interface VoiceRecordState {
   source: MediaStreamAudioSourceNode | null;
   chunks: Blob[];
   fileKey: string;
-  setFileKey: (value) => void;
+  setFileKey: (value: string | null) => void;
   setIsRecording: (value: boolean) => void;
   setAudioUrl: (value: string | null) => void;
   setMediaRecorder: (recorder: MediaRecorder | null) => void;
@@ -65,7 +65,7 @@ const VoiceRecorder = () => {
     }
   };
 
-  const startRecording = async () => {
+  const startRecording = async (): Promise<void> => {
     const supportedTypes = ["audio/aac", "audio/amr", "audio/mpeg", "audio/mp4", "audio/ogg"];
     const mimeType = supportedTypes.find((type) => MediaRecorder.isTypeSupported(type));
 
@@ -94,7 +94,7 @@ const VoiceRecorder = () => {
     setChunks([]);
     setMediaRecorder(recorder);
 
-    function getAudioExtension(mimetype) {
+    function getAudioExtension(mimetype: string) {
       switch (mimetype) {
         case "audio/aac":
           return ".acc";

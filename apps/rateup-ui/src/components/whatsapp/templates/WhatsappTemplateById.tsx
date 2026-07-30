@@ -69,6 +69,7 @@ import {
   WaTemplateCategory,
   WaTemplateStatus,
 } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 import {
   SAVE_HOTKEY,
   WHATSAPP_BUTTON_TYPE,
@@ -288,7 +289,7 @@ export function WhatsappTemplateById({
           currentTemplateType === previousTemplateType
         ) {
           const buttons = editingItem?.data?.components?.find(
-            (component) => component.type.toLowerCase() === "buttons",
+            (component: { type: string }) => component.type.toLowerCase() === "buttons",
           )?.buttons;
           setTemplateValue("buttons", buttons || []);
         } else {
@@ -313,7 +314,7 @@ export function WhatsappTemplateById({
 
   const { data: catalog } = useConnectedWaCatalog(values.whatsappSettingsPhoneId);
   const productRetailerIds = useMemo(
-    () => (catalog ? catalog.products?.map((p) => p.retailer_id) : []),
+    () => (catalog ? catalog.products?.map((p: { retailer_id: string }) => p.retailer_id) : []),
     [catalog],
   );
   useEffect(() => {
@@ -549,8 +550,8 @@ export function WhatsappTemplateById({
       toast.error(
         typeof error === "string"
           ? error
-          : typeof error.message === "string"
-            ? error.message
+          : typeof getApiErrorMessage(error) === "string"
+            ? getApiErrorMessage(error)
             : "error in uploading",
       );
     }
@@ -567,7 +568,7 @@ export function WhatsappTemplateById({
     const max = Math.max(...numbers);
     return `{{${max + 1}}}`;
   };
-  const applyFormatting = (style) => {
+  const applyFormatting = (style: string) => {
     const content = values.body;
     if (style.startsWith("{{")) {
       insertValue(getNextVariable());
@@ -986,7 +987,7 @@ export function WhatsappTemplateById({
               <div>
                 <AccountSelector
                   value={values.whatsappSettingsPhoneId}
-                  onChange={(value) => {
+                  onChange={(value: string) => {
                     setTemplateValue("whatsappSettingsPhoneId", value ?? "");
                     setTemplateValue("defaultValues.whatsappSettingsPhoneId", value ?? "");
                   }}

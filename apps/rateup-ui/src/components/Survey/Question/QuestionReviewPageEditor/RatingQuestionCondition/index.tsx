@@ -8,7 +8,7 @@ function RatingQuestionCondition({
   setState,
 }: {
   currentMinRating: number;
-  setState: (updater: (prev: Record<string, unknown>) => Record<string, unknown>) => void;
+  setState: (options: Record<string, unknown>) => void;
 }) {
   const [hoveredRating, setHoveredRating] = useState(-1);
 

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
+import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Bubble, BubbleContent } from "@/components/ui/bubble.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker.tsx";
@@ -171,7 +172,18 @@ export function getReactionMessage({
     };
 }
 
-export const TempMessageBody = ({ body, timestamp }: { body: string; timestamp?: string }) => {
+export const TempMessageBody = ({
+  body,
+  timestamp,
+}: {
+  body: {
+    text?: TiptapNode | string;
+    url?: string;
+    urlType?: string;
+    filename?: string;
+  };
+  timestamp?: string;
+}) => {
   const { user } = useUser();
   return (
     <Message align="end">

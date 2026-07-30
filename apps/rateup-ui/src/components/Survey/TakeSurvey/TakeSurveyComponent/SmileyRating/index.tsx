@@ -26,7 +26,15 @@ import {
 
 const SMILEY_COUNT = 5;
 
-const SmileyRating = ({ updateResponse, response, features }) => {
+const SmileyRating = ({
+  updateResponse,
+  response,
+  features,
+}: {
+  updateResponse: (value: unknown) => void;
+  response?: unknown;
+  features?: Record<string, unknown>;
+}) => {
   const [scope, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
@@ -36,7 +44,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
   const [customColor, setIsCustomColor] = useState(false);
   const [hoveredValue, setHoveredValue] = useState(-1);
 
-  const updateStringResponse = (value) => {
+  const updateStringResponse = (value: string) => {
     let stringValue;
     switch (value) {
       case 1:
@@ -139,7 +147,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
 
 export default SmileyRating;
 
-export const getNumericValue = (stringValue) => {
+export const getNumericValue = (stringValue: string) => {
   switch (stringValue) {
     case SmileyResponse.VerySad:
       return 1;
@@ -156,7 +164,7 @@ export const getNumericValue = (stringValue) => {
   }
 };
 
-export function mapSmileyIcon(value, color?: string) {
+export function mapSmileyIcon(value: unknown, color?: string) {
   switch (value) {
     case SmileyResponse.VeryHappy: {
       return <IconMoodCrazyHappy style={getIconStyle(color)} />;
@@ -195,7 +203,7 @@ export function getSmileyIcon(value: SmileyResponse, color = "black") {
   }
 }
 
-export function getCustomSmileyIcon(response: SmileyResponse, question) {
+export function getCustomSmileyIcon(response: SmileyResponse, question: Question) {
   const iconStyle = question?.features?.iconStyle;
   if (!iconStyle) return null;
   let emoji;

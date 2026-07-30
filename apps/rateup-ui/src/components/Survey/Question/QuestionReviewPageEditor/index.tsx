@@ -49,7 +49,15 @@ const customPlatformSchema = z.object({
 });
 type CustomPlatformFormValues = z.infer<typeof customPlatformSchema>;
 
-function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
+function QuestionReviewPageEditor({
+  selectedQ,
+  survey,
+  setActiveTab,
+}: {
+  selectedQ: Question;
+  survey: Survey;
+  setActiveTab: (tab: string) => void;
+}) {
   const [state, setState] = useState(selectedQ?.reviewPageOptions);
   const [reviewPagePlatformDDState, setReviewPageDDState] = useState(selectedQ?.reviewPagePlatform);
   const [isSwitchStateSaving, setIsSwitchStateSaving] = useState(false);
@@ -62,7 +70,9 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
   const { t: translations } = useTranslation();
 
   const { data: teamsRes } = useTeamsByUser();
-  const teamsToDisplay = teamsRes?.data?.filter((t) => survey?.teams.some((st) => st.id === t.id));
+  const teamsToDisplay = teamsRes?.data?.filter((t: { id: string }) =>
+    survey?.teams.some((st) => st.id === t.id),
+  );
 
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId: survey?.id,

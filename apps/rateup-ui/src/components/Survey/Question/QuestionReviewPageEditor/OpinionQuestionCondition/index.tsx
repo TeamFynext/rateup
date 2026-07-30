@@ -5,7 +5,7 @@ function OpinionQuestionCondition({
   setState,
 }: {
   currentMinOpinion: number;
-  setState: (updater: (prev: Record<string, unknown>) => Record<string, unknown>) => void;
+  setState: (options: Record<string, unknown>) => void;
 }) {
   const handleChange = (newMinOpinion: number) => {
     return () => {

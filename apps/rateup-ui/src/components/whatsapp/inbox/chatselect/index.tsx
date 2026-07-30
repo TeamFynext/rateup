@@ -129,7 +129,7 @@ const WaInboxChatSelect = () => {
   const validateSearchStringAsMobileNumber = useCallback((searchString: string): boolean => {
     return !!RegExp(/^\d{10}$/).exec(searchString);
   }, []);
-  function updateInitialMessagesToStore(contacts) {
+  function updateInitialMessagesToStore(contacts: ContactsWithLastMessage[]) {
     contacts.map((c) => {
       // Rows are conversation-grained; bucket preview messages by the ticket key
       // (conversationId ?? id) so two tickets of one contact don't share a bucket.
@@ -155,7 +155,7 @@ const WaInboxChatSelect = () => {
 
     const state = useContactsStore.getState();
 
-    const getNewContacts = (page) => {
+    const getNewContacts = (page: { rows: ContactsWithLastMessage[] }) => {
       const existingIds = new Set(state.contactsByFilter[filterKey] || []);
       // Rows are tickets — dedupe on the ticket key, not the contact id, or a
       // contact's second ticket would be discarded as a duplicate of its first.
