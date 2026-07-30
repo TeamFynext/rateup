@@ -41,8 +41,8 @@ enum EditFlowRightPanel {
 
 function EditFlow() {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const [blankQuestion, setBlankQuestion] = useState<Question>(null);
-  const [activeEditor, setActiveEditor] = useState<EditFlowRightPanel>(null);
+  const [blankQuestion, setBlankQuestion] = useState<Question | null>(null);
+  const [activeEditor, setActiveEditor] = useState<EditFlowRightPanel | null>(null);
   const {
     flowJson,
     updateFlowJson,
@@ -76,21 +76,21 @@ function EditFlow() {
     } = getFlowElementJsonFromQuestion(newQ);
     updateMap(() => ({ ...map, ...qMap }));
     updateFlowJson((draft) => {
-      const screenToBeEdited = getScreenObjById(draft.screens, selectedScreenId);
+      const screenToBeEdited = getScreenObjById(draft.screens, selectedScreenId)!;
       screenToBeEdited.layout.children
-        .find((se) => se.type === "Form")
+        .find((se) => se.type === "Form")!
         .children.push(questionElement);
-      updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
+      updateFlowJsonNavigationAndDataPassing(draft, dbFlow!);
     });
     setSelectedFormElementId(questionElement.id);
     setBlankQuestion(null);
   }
 
   const handleTypeSelection = (type: ElementType) => {
-    const screenToBeEdited = getScreenObjById(flowJson.screens, selectedScreenId);
+    const screenToBeEdited = getScreenObjById(flowJson.screens, selectedScreenId)!;
     const formElementChildren = screenToBeEdited.layout.children.find(
       (se) => se.type === "Form",
-    ).children;
+    )!.children;
     if (formElementChildren.length > 50)
       return toast.error("Only 50 components in a screen", {
         id: "error-max-screen-elements",
@@ -135,9 +135,11 @@ function EditFlow() {
         id: getUniqueRandomAlphaId(6, getAllIdsFromFlowJson(flowJson)),
       };
       updateFlowJson((draft) => {
-        const screenToBeEdited = getScreenObjById(draft.screens, selectedScreenId);
-        screenToBeEdited.layout.children.find((se) => se.type === "Form").children.push(newElement);
-        updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
+        const screenToBeEdited = getScreenObjById(draft.screens, selectedScreenId)!;
+        screenToBeEdited.layout.children
+          .find((se) => se.type === "Form")!
+          .children.push(newElement);
+        updateFlowJsonNavigationAndDataPassing(draft, dbFlow!);
       });
       setSelectedFormElementId(newElement.id);
       setActiveEditor(EditFlowRightPanel.ElementEditor);
@@ -151,7 +153,7 @@ function EditFlow() {
   } else if (selectedFormElementId) {
     const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
     selectedQuestion = getQuestionFromFlowFormElementName(
-      selectedFormElement.name,
+      selectedFormElement?.name ?? "",
       survey.questions,
       map,
     );
@@ -172,40 +174,40 @@ function EditFlow() {
     if (!flowEditable) return;
     setActiveEditor(EditFlowRightPanel.TypeSelection);
     setBlankQuestion(null);
-    setSelectedFormElementId(null);
+    setSelectedFormElementId("");
     setSelectedScreenId(screenId);
   }
 
   function handleDeleteElement(feId: string, screenId: string) {
     if (!flowEditable) return;
-    const fe = getFlowFormElementById(feId, flowJson);
+    const fe = getFlowFormElementById(feId, flowJson)!;
     setActiveEditor(null);
-    setSelectedFormElementId(null);
+    setSelectedFormElementId("");
 
     if (Object.values(WaFlowFormInputElementType).includes(fe.type as any)) {
-      const questionId = getQuestionIdFromFlowFormElementName(fe.name, map);
+      const questionId = getQuestionIdFromFlowFormElementName(fe.name ?? "", map);
       // deleting element from flowJson
       updateFlowJson((draft) => {
-        const screenToBeEdited = getScreenObjById(draft.screens, screenId);
-        const formElements = screenToBeEdited.layout.children.find((se) => se.type === "Form");
+        const screenToBeEdited = getScreenObjById(draft.screens, screenId)!;
+        const formElements = screenToBeEdited.layout.children.find((se) => se.type === "Form")!;
         const elementIndex = formElements.children.findIndex((c) => c.name === fe.name);
         formElements.children.splice(elementIndex, 1);
-        updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
+        updateFlowJsonNavigationAndDataPassing(draft, dbFlow!);
       });
       // deleting element from map
       updateMap((draft) => {
-        delete draft[fe.name];
+        delete draft[fe.name ?? ""];
       });
 
       // TODO: delete question from survey
       deleteQuestionMutation.mutate(questionId);
     } else if (Object.values(WaFlowFormNonInputElementType).includes(fe.type as any)) {
       updateFlowJson((draft) => {
-        const screenToBeEdited = getScreenObjById(draft.screens, screenId);
-        const formElements = screenToBeEdited.layout.children.find((se) => se.type === "Form");
+        const screenToBeEdited = getScreenObjById(draft.screens, screenId)!;
+        const formElements = screenToBeEdited.layout.children.find((se) => se.type === "Form")!;
         const elementIndex = formElements.children.findIndex((c) => c.id === fe.id);
         formElements.children.splice(elementIndex, 1);
-        updateFlowJsonNavigationAndDataPassing(draft, dbFlow);
+        updateFlowJsonNavigationAndDataPassing(draft, dbFlow!);
       });
     }
   }
