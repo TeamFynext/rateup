@@ -1,4 +1,6 @@
-const WaPageTourSteps = ({ styles }) => {
+import type { DriveStep } from "driver.js";
+
+const WaPageTourSteps = ({ styles }: { styles: Record<string, string> }): DriveStep[] => {
   return [
     {
       element: `.${styles["heading-container"]}`,

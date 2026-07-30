@@ -39,7 +39,13 @@ function Page() {
   );
 }
 
-function Welcome({ setStartClicked, largeScreen }) {
+function Welcome({
+  setStartClicked,
+  largeScreen,
+}: {
+  setStartClicked: (clicked: boolean) => void;
+  largeScreen: boolean;
+}) {
   return (
     <>
       {/* .........Survey Welcome page.......... */}
@@ -68,7 +74,7 @@ const survey2 =
 const survey3 =
   "https://www.rateup.app/public/survey/74a86d7e-ec59-40e3-8bf5-4dbece9023e2?start=true";
 
-function StartPage({ largeScreen }) {
+function StartPage({ largeScreen }: { largeScreen: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center gap-6 h-[70vh]">
       <h3

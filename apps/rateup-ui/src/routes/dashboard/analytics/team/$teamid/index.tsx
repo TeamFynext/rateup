@@ -49,7 +49,7 @@ function page() {
     days: day,
   });
   const averageResponsesTime = formatTimeToNearestUnitFromSeconds(data?.averageResponseTime);
-  const textColor = (value) => {
+  const textColor = (value: number) => {
     if (value > 0) return "text-green-500";
     return "text-red-500";
   };

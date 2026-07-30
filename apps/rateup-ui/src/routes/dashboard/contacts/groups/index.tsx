@@ -64,14 +64,14 @@ function GroupPage() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const confirm = useConfirm();
 
-  function handleEditGroup(group) {
+  function handleEditGroup(group: ContactGroup) {
     setSelectedGroup(group);
     setIsCreateGroupOpen(true);
   }
 
   const deleteGroupMutation = useDeleteGroupMutation();
 
-  async function handleDeleteGroup(group) {
+  async function handleDeleteGroup(group: ContactGroup) {
     const shouldDelete = await confirm({
       title: translations("Delete Group"),
       description: translations("Are you sure you want to delete this group?"),
@@ -174,7 +174,13 @@ function getColorClass(str: string) {
   return GROUP_COLORS[Math.abs(hash) % GROUP_COLORS.length];
 }
 
-function ContactGroupCard({ group, handleEdit, handleDelete }) {
+interface ContactGroupCardProps {
+  group: ContactGroup;
+  handleEdit: (group: ContactGroup) => void;
+  handleDelete: (group: ContactGroup) => void;
+}
+
+function ContactGroupCard({ group, handleEdit, handleDelete }: ContactGroupCardProps) {
   const navigate = useNavigate();
   return (
     <ActionCard
@@ -212,7 +218,7 @@ function ContactGroupCard({ group, handleEdit, handleDelete }) {
   );
 }
 
-function GroupCardMenu({ group, handleEdit, handleDelete }) {
+function GroupCardMenu({ group, handleEdit, handleDelete }: ContactGroupCardProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger

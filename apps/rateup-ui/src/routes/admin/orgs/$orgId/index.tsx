@@ -20,6 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { ComponentType, ReactNode } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
 
@@ -62,7 +63,17 @@ export const Route = createFileRoute("/admin/orgs/$orgId/")({
 
 dayjs.extend(relativeTime);
 
-function StatCard({ title, count, icon: Icon, color = "blue" }) {
+function StatCard({
+  title,
+  count,
+  icon: Icon,
+  color = "blue",
+}: {
+  title: string;
+  count: ReactNode;
+  icon: ComponentType<{ className?: string; size?: number }>;
+  color?: string;
+}) {
   const getColorClasses = () => {
     switch (color) {
       case "green":
@@ -108,7 +119,15 @@ function StatCard({ title, count, icon: Icon, color = "blue" }) {
   );
 }
 
-function StatSection({ title, children, icon: Icon }) {
+function StatSection({
+  title,
+  children,
+  icon: Icon,
+}: {
+  title: string;
+  children: ReactNode;
+  icon: ComponentType<{ className?: string; size?: number }>;
+}) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">

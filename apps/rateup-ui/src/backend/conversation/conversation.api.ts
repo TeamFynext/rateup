@@ -177,10 +177,35 @@ export const getTeamOverview = async (filter: QueryFilter | null) => {
   return response.data;
 };
 
+/** Per-agent slice of a team's conversation metrics. */
+export interface TeamMemberMetrics {
+  userId: string;
+  name: string;
+  onlineStatus?: string;
+  averageResponseTime: number;
+  messagesHandled: number;
+  staffActiveChats: number;
+}
+
+export interface TeamDetailedMetrics {
+  teamName?: string;
+  teamColor?: string;
+  teamMembers?: number;
+  teamMembersOnline?: number;
+  activeChats?: number;
+  averageResponseTime: number;
+  averageResponseTimeComparedToLastWeek?: number;
+  resolutionRate?: number;
+  resolutionRateComparedToLastWeek?: number;
+  members: TeamMemberMetrics[];
+}
+
 export const getTeamDetailedMetrics = async (teamId: string, filter: QueryFilter | null) => {
   const query = Object.entries(filter || {})
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
-  const response = await axiosClient.get(`${baseUrl}/team-metrics/${teamId}?${query}`);
+  const response = await axiosClient.get<TeamDetailedMetrics>(
+    `${baseUrl}/team-metrics/${teamId}?${query}`,
+  );
   return response.data;
 };

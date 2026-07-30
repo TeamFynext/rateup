@@ -7,7 +7,7 @@ export const Route = createFileRoute("/dashboard/loyalty/templates/$templateId/"
   component: LoyaltyTemplateEditPage,
 });
 
-function LoyaltyTemplateEditPage(_props) {
+function LoyaltyTemplateEditPage() {
   // Patch the WhatsappTemplateById to always set templateType to LOYALTY on create
   return <WhatsappTemplateById forceTemplateType={TemplateType.LOYALTY} />;
 }

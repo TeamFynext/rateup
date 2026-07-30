@@ -121,19 +121,25 @@ export function formatDateWithRelativeTime(date: DateInput) {
   }
 }
 
-export function formatTimeToNearestUnitFromSeconds(seconds: number) {
+/**
+ * Callers pass either a number or the numeric string the analytics endpoints
+ * return; the comparisons and arithmetic below coerce either the same way.
+ */
+export function formatTimeToNearestUnitFromSeconds(seconds: number | string) {
   if (seconds === 0) return { value: 0, suffix: "minute" };
   if (!seconds) return;
-  let value = seconds;
+  // Matches the implicit coercion the comparisons and arithmetic already did.
+  const total = Number(seconds);
+  let value = total;
   let suffix = "second (s)";
-  if (seconds < 3600) {
-    value = Math.round(seconds / 60);
+  if (total < 3600) {
+    value = Math.round(total / 60);
     suffix = "minute(s)";
-  } else if (seconds < 86400) {
-    value = Math.round(seconds / 3600);
+  } else if (total < 86400) {
+    value = Math.round(total / 3600);
     suffix = "hour(s)";
   } else {
-    value = Math.round(seconds / 86400);
+    value = Math.round(total / 86400);
     suffix = "day(s)";
   }
   return { value, suffix };

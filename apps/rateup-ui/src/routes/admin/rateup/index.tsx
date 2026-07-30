@@ -4,6 +4,7 @@ import { Calendar, CreditCard, Edit, Package, Star, Trash2, Zap } from "lucide-r
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
 import {
   usePaymentsPlans,
   useRateupPaymentsPlanDeleteMutation,
@@ -215,7 +216,7 @@ function RateupPlan() {
   if (isPending || isRazorPayPlansLoading) return <RateupLoader className="h-dvh" />;
 
   const razorPayPlanFiltered =
-    razorPayPlans?.data?.map((filteredPlan) => ({
+    razorPayPlans?.data?.map((filteredPlan: { id: string; name: string }) => ({
       value: filteredPlan.id,
       label: filteredPlan.name,
     })) ?? [];
@@ -231,7 +232,7 @@ function RateupPlan() {
   ];
 
   const tableData: RateupPlanTableData[] =
-    plans?.map((plan) => ({
+    plans?.map((plan: RateupPaymentPlan) => ({
       id: plan.id,
       displayName: plan.displayName,
       name: plan.name,

@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
+import type { ColumnDef, ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import ContactMenu from "@/components/Contacts/ContactMenu.tsx";
 import { CONTACT_SORT, contactColumn } from "@/components/Contacts/utils/utils.tsx";
+import type { ContactTableFilter } from "@/components/dashboard/contacts/store/contact-table-store.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
@@ -38,7 +40,9 @@ function Contacts() {
   } = useContacts(pagination, searchTerm, sorting?.[0], columnFilters);
 
   useEffect(() => {
-    const filterKeys = Object.keys(filter).filter((f) => f !== "searchTerm");
+    const filterKeys = (Object.keys(filter) as (keyof ContactTableFilter)[]).filter(
+      (f) => f !== "searchTerm",
+    );
     setSearchTerm(filter.searchTerm);
     setColumnFilters(filterKeys.map((key) => ({ id: key, value: filter[key] })));
   }, [filter]);
@@ -55,9 +59,11 @@ function Contacts() {
         enableSorting: false,
         enableColumnFilter: false,
         id: "action",
-        cell: (info) => <ContactMenu contact={info.getValue()} groupId={""} />,
+        // The accessor hands the whole row through; the column's value type is
+        // erased to `unknown` by ColumnDef, so narrow it back here.
+        cell: (info) => <ContactMenu contact={info.getValue() as ContactsData} groupId={""} />,
         meta: { title: "Action" },
-      },
+      } satisfies ColumnDef<ContactsData, unknown>,
     ],
     [customFields],
   );
@@ -66,7 +72,7 @@ function Contacts() {
 
   const defaultColumnVisibility = useMemo(
     () =>
-      column.reduce((visibility, key) => {
+      column.reduce((visibility: Record<string, boolean>, key) => {
         if (
           !["select", "name", "phone", "ContactLabelMap", "source", "createdAt", "action"].includes(
             (key as any)?.accessorKey || key?.id,
@@ -101,10 +107,18 @@ function Contacts() {
   );
 }
 
-export function FilterSelect({ setFilterByTag, filterByTag, contactArray }) {
+export function FilterSelect({
+  setFilterByTag,
+  filterByTag,
+  contactArray,
+}: {
+  setFilterByTag: Dispatch<SetStateAction<ColumnFiltersState>>;
+  filterByTag: ColumnFiltersState;
+  contactArray: { value: string; label: string }[];
+}) {
   const { t: translations } = useTranslation();
   // The selection lives in the table's column filters as one comma-joined entry.
-  const selected = (filterByTag?.find((item) => item.id === "filterGroupName")?.value ?? "")
+  const selected = String(filterByTag?.find((item) => item.id === "filterGroupName")?.value ?? "")
     .split(",")
     .filter(Boolean);
 

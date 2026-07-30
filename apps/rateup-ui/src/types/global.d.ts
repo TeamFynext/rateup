@@ -561,6 +561,18 @@ declare global {
     ];
     campaignParticipants: any[];
     aiWaChat: boolean;
+    /** Labels attached to the contact, as the contacts table renders them. */
+    ContactLabelMap?: Array<{
+      label?: {
+        id?: string;
+        name?: string;
+        color?: string;
+      };
+    }>;
+    /** Present when the row is joined with its lifecycle stage. */
+    Lifecycle?: {
+      name?: string;
+    };
     customFields?: Array<{
       id: string;
       contactId: string;

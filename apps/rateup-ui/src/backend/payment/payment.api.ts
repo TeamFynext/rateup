@@ -11,12 +11,27 @@ export const getAllPaymentPlans = async () => (await axiosClient.get(`${PLAN_URL
 
 export const getAllRateupPaymentPlans = async () => {
   try {
-    return (await axiosClient.get(`${PAYMENT_PUBLIC_URL}rateup-plans`)).data;
+    return (await axiosClient.get(`${PAYMENT_PUBLIC_URL}rateup-plans`)).data as RateupPaymentPlan[];
   } catch (error) {
     console.error("Error fetching Rateup payment plans:", error);
     return [];
   }
 };
+
+/** A Rateup subscription plan as returned by the public plans endpoint. */
+export interface RateupPaymentPlan {
+  id: string;
+  name: string;
+  displayName: string;
+  description: string[];
+  displayWidgetId?: string;
+  planType: string;
+  paymentPlanId?: string;
+  stripeId: string;
+  createdAt: string;
+  trialDays: number;
+  features?: unknown;
+}
 
 export async function syncRazorPayPlans() {
   return (await axiosClient.post(`/payment/sync-plans`)).data;

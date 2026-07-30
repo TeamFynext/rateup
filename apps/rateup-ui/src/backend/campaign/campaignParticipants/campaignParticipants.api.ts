@@ -1,4 +1,4 @@
-import type { RequestPayload } from "@/types/api.ts";
+import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
 
 import { axiosClient } from "../../apiClient";
 
@@ -25,7 +25,7 @@ export const getCampaignParticipants = async (
     id: string;
     desc: string;
   },
-  columnFilters: { id: string; value: string }[],
+  columnFilters: ColumnFilterState[],
   selectedDripStage?: string,
 ) => {
   const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");

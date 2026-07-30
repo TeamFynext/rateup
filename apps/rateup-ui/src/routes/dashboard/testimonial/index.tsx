@@ -41,7 +41,7 @@ function Testimonials() {
   const filteredCollections = useMemo(() => {
     return selectedTeamId === "all" || !selectedTeamId
       ? collections
-      : collections.filter((c) => c.teamId === selectedTeamId);
+      : collections.filter((c: { teamId?: string }) => c.teamId === selectedTeamId);
   }, [collections, selectedTeamId]);
 
   const filteredTestimonials = useMemo(() => {

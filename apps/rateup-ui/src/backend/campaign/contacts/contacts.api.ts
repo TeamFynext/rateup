@@ -1,4 +1,4 @@
-import type { RequestPayload } from "@/types/api.ts";
+import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
 import { downloadBlob } from "@/utils/downloadBlob.ts";
 
 import { axiosClient } from "../../apiClient";
@@ -37,7 +37,7 @@ export const getContactsList = async (
     id: string;
     desc: boolean;
   },
-  columnFilters: { id: string; value: string }[],
+  columnFilters: ColumnFilterState[],
   type?: string,
 ) => {
   const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");

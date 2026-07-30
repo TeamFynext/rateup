@@ -4,6 +4,7 @@ import { Building2, Calendar, ShoppingBag, Store, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import type { AppIntegration } from "@/backend/appsIntegration/integration.api";
 import { useGetAllIntegrations } from "@/backend/appsIntegration/integration.query";
 import { useDeleteShopifyIntegrationByShop } from "@/backend/appsIntegration/shopify/shopify.query";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
@@ -121,8 +122,8 @@ function Shopify() {
 
   const tableData: ShopifyTableData[] = integrations
     ? integrations
-        .filter((integration) => integration.name === IntegratedApps.shopify)
-        ?.map((integration) => ({
+        .filter((integration: AppIntegration) => integration.name === IntegratedApps.shopify)
+        ?.map((integration: AppIntegration) => ({
           id: integration.id,
           shop: integration.credential.session.shop,
           orgId: integration.orgId,

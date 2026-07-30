@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { Building2, Calendar, CreditCard, Package, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
 import {
   useAllSubscriptions,
@@ -92,7 +93,12 @@ function SubscriptionPage() {
         return (
           <Select
             value={row.original.planId}
-            items={rateupPlans?.map((plan) => ({ value: plan.id, label: plan.name })) ?? []}
+            items={
+              rateupPlans?.map((plan: RateupPaymentPlan) => ({
+                value: plan.id,
+                label: plan.name,
+              })) ?? []
+            }
             onValueChange={async (value) => {
               const shouldUpdate = await confirm({
                 title: translations("Update Plan"),
@@ -123,7 +129,7 @@ function SubscriptionPage() {
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {rateupPlans?.map((plan) => (
+              {rateupPlans?.map((plan: RateupPaymentPlan) => (
                 <SelectItem key={plan.id} value={plan.id}>
                   {plan.name}
                 </SelectItem>

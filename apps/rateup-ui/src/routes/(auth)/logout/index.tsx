@@ -12,7 +12,7 @@ export const Route = createFileRoute("/(auth)/logout/")({
   component: Logout,
 });
 
-function Logout() {
+function Logout(): null {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { clearAllContacts } = useContactsStore();

@@ -284,3 +284,23 @@ export function isDraggingAColumn({
 }): boolean {
   return isColumnData(source.data);
 }
+
+/**
+ * Payload for a card update: every field is optional except the id, and the
+ * assignee/label sets are written as id arrays even though a read-back `Card`
+ * exposes them as `assignees` / `labelId`.
+ */
+export type CardUpdate = Partial<Card> & {
+  id: string;
+  assignedToIds?: string[];
+  labelIds?: string[];
+};
+
+/**
+ * Payload for a board update. `teamIds` is write-only; a read-back `Board`
+ * exposes the same relation as `teams`.
+ */
+export type BoardUpdate = Partial<Board> & {
+  id: string;
+  teamIds?: string[];
+};

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-interface GroupTableFilter {
+export interface GroupTableFilter {
   searchTerm: string;
 }
 export const useGroupTableStore = create<{

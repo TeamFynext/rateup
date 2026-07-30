@@ -1,4 +1,4 @@
-import type { RequestPayload } from "@/types/api.ts";
+import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
 import type { MetaLoginAssets, WaConfigType, WhatsappSettingsStatus } from "@/types/enums.ts";
 
 import { WHATSAPP_URL } from "..";
@@ -120,7 +120,7 @@ export const getWaLogs = async (
     id: string;
     desc: string;
   },
-  columnFilters: { id: string; value: string }[],
+  columnFilters: ColumnFilterState[],
 ) => {
   const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
   const desc = sort.desc ? "desc" : "asc";

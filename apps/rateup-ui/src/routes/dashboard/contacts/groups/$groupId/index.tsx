@@ -3,6 +3,7 @@ import type { ColumnDef, ColumnFiltersState, SortingState } from "@tanstack/reac
 import { Image } from "@unpic/react";
 import { ArrowLeft, Check, Edit, Folder, Trash2, Upload, Users, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { toast } from "sonner";
 
 import {
@@ -15,6 +16,7 @@ import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal.tsx";
 import { ParticipantMenu } from "@/components/Contacts/GroupParticipant.tsx";
 import { CONTACT_SORT, contactColumn } from "@/components/Contacts/utils/utils.tsx";
+import type { GroupTableFilter } from "@/components/dashboard/contacts/store/group-table-store.ts";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -149,7 +151,7 @@ function ContactGroup() {
 
   const defaultColumnVisibility = useMemo(
     () =>
-      column.reduce((visibility, key) => {
+      column.reduce((visibility: Record<string, boolean>, key) => {
         if (
           !["select", "name", "phone", "ContactLabelMap", "source", "createdAt", "action"].includes(
             (key as any)?.accessorKey || key?.id,
@@ -162,7 +164,9 @@ function ContactGroup() {
     [column],
   );
   useEffect(() => {
-    const filterKeys = Object.keys(filter).filter((f) => f !== "searchTerm");
+    const filterKeys = (Object.keys(filter) as (keyof GroupTableFilter)[]).filter(
+      (f) => f !== "searchTerm",
+    );
     setSearchTerm(filter.searchTerm);
     setColumnFilters(filterKeys.map((key) => ({ id: key, value: filter[key] })));
   }, [filter]);
@@ -336,7 +340,16 @@ function ContactGroup() {
   );
 }
 
-function ContactGroupIconEditDialog({ opened, setOpened, group }) {
+function ContactGroupIconEditDialog({
+  opened,
+  setOpened,
+  group,
+}: {
+  opened: boolean;
+  setOpened: (open: boolean) => void;
+  // Only these three fields are read here.
+  group: Pick<ContactGroup, "id" | "icon" | "name">;
+}) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editContactGroupMutation = useEditContactGroupMutation(group?.id);
 
@@ -357,7 +370,7 @@ function ContactGroupIconEditDialog({ opened, setOpened, group }) {
       },
     );
   }
-  async function handleFileSelect(event) {
+  async function handleFileSelect(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     const oldIcon = group.icon;
     const icon = await uploadFile(file);

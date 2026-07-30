@@ -1,4 +1,4 @@
-import type { RequestPayload } from "@/types/api.ts";
+import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
 
 import { axiosClient } from "../../apiClient";
 import { LOYALTY_BASE, PUBLIC_LOYALTY_BASE } from "../base.ts";
@@ -24,7 +24,7 @@ export async function getAllCustomers(
     id: string;
     desc: boolean;
   },
-  columnFilters: { id: string; value: string }[],
+  columnFilters: ColumnFilterState[],
 ) {
   const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
   const desc = sort.desc ? "desc" : "asc";

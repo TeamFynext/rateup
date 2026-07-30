@@ -41,7 +41,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps.jsx";
+import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps.ts";
 import WelcomeTour from "@/components/WelcomeTour/WelcomeTour.tsx";
 import { TemplateFilterSort } from "@/components/whatsapp/templates/FilterAndSort.tsx";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates.tsx";

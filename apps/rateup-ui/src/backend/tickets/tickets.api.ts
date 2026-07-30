@@ -1,4 +1,12 @@
-import type { Board, Card, Column, Label, MemberData } from "@/components/Tickets/types.ts";
+import type {
+  Board,
+  BoardUpdate,
+  Card,
+  CardUpdate,
+  Column,
+  Label,
+  MemberData,
+} from "@/components/Tickets/types.ts";
 import type { RequestPayload } from "@/types/api.ts";
 import type { TicketType } from "@/utils/enums/ticket.ts";
 
@@ -64,7 +72,16 @@ export async function updateTicket(ticketId: string, data: RequestPayload) {
 }
 
 // create comment
-export async function createComment(data: { ticketId: string } & Record<string, unknown>) {
+export async function createComment(data: {
+  ticketCardId: string;
+  msg: string;
+  /**
+   * Used to build the request path, but no current caller supplies it — the
+   * only call site passes `{ msg, ticketCardId }`. Left as-is rather than
+   * changing the request this sends; see the migration notes.
+   */
+  ticketId?: string;
+}) {
   const id = data.ticketId;
   try {
     const comment: any = (await axiosClient.post(`${TICKET_URL}/${id}/comment`, data)).data;
@@ -98,7 +115,7 @@ export const createBoard = async (board: {
   return data;
 };
 
-export const updateBoard = async (board: Board): Promise<Board> => {
+export const updateBoard = async (board: BoardUpdate): Promise<Board> => {
   const { data } = await axiosClient.put(`/tickets/boards/${board.id}`, board);
   return data;
 };
@@ -147,7 +164,7 @@ export const createCard = async (card: {
   return data;
 };
 
-export const updateCard = async (card: Card): Promise<Card> => {
+export const updateCard = async (card: CardUpdate): Promise<Card> => {
   const { data } = await axiosClient.put(`/tickets/cards/${card.id}`, card);
   return data;
 };

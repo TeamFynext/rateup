@@ -19,6 +19,17 @@ export const Route = createFileRoute("/admin/orders/")({
   component: Orders,
 });
 
+/** A payment order as returned by the admin orders endpoint. */
+interface RawOrder {
+  id: string;
+  name?: string;
+  subscriptionId?: string;
+  status?: string;
+  createdAt: string;
+  org?: { name?: string };
+  createdBy?: { name?: string; email?: string };
+}
+
 interface OrderTableData {
   id: string;
   name: string;
@@ -149,10 +160,13 @@ function Orders() {
 
   useEffect(() => {
     if (allOrders && isFetched) {
-      const today = allOrders.filter((order) => isToday(order.createdAt))?.length || 0;
-      const yesterday = allOrders.filter((order) => isYesterday(order.createdAt))?.length || 0;
-      const lastWeek = allOrders.filter((order) => isInLastSevenDays(order.createdAt))?.length || 0;
-      const thisMonth = allOrders.filter((order) => isThisMonth(order.createdAt))?.length || 0;
+      const today = allOrders.filter((order: RawOrder) => isToday(order.createdAt))?.length || 0;
+      const yesterday =
+        allOrders.filter((order: RawOrder) => isYesterday(order.createdAt))?.length || 0;
+      const lastWeek =
+        allOrders.filter((order: RawOrder) => isInLastSevenDays(order.createdAt))?.length || 0;
+      const thisMonth =
+        allOrders.filter((order: RawOrder) => isThisMonth(order.createdAt))?.length || 0;
 
       setOrderStats({
         today,
@@ -179,7 +193,7 @@ function Orders() {
   if (isLoading) return <RateupLoader className="h-dvh" />;
 
   const tableData: OrderTableData[] = isFetched
-    ? allOrders?.map((order) => ({
+    ? allOrders?.map((order: RawOrder) => ({
         id: order.id,
         name: order?.name,
         orgname: order?.org?.name || "DELETED ORG",

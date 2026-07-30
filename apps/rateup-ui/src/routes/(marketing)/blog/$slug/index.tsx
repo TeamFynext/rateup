@@ -8,6 +8,7 @@ import RoutePending from "@/components/Loaders/RoutePending.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { getMarkdownContent } from "@/lib/content.ts";
 import { getSinglePost } from "@/lib/posts.ts";
+import type { Tag } from "@/lib/posts.ts";
 import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
 
 export const Route = createFileRoute("/(marketing)/blog/$slug/")({
@@ -197,7 +198,7 @@ function Page() {
               <div className="mt-12 border-t border-slate-200 pt-8">
                 <h2 className="mb-4 text-lg font-semibold text-slate-900">Tags</h2>
                 <div className="flex flex-wrap gap-2">
-                  {post.tags.map((tag) => (
+                  {post.tags.map((tag: Tag) => (
                     <Link
                       key={tag.id}
                       to={`/blog?tag=${tag.slug}`}

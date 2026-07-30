@@ -38,7 +38,7 @@ export const Route = createFileRoute(
 
 // TODO REMOVE THIS PAGE AFTER TESTING  --  CURRENTLY MERGED WITHIN PUBLIC SURVEY PAGE
 
-function ReviewUsOnGoogle(_props) {
+function ReviewUsOnGoogle() {
   const propsToPass = Route.useLoaderData();
 
   return (

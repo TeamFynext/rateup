@@ -43,7 +43,7 @@ function PausedPage() {
   );
 }
 
-function getPausedText(pausedby) {
+function getPausedText(pausedby: string) {
   switch (pausedby) {
     case "org":
       return (

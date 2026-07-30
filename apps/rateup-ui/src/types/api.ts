@@ -8,7 +8,15 @@
  */
 
 /** A value that can be serialised into a query string. */
-export type QueryParamValue = string | number | boolean | Date | null | undefined;
+export type QueryParamValue =
+  | string
+  | number
+  | boolean
+  | Date
+  | string[]
+  | number[]
+  | null
+  | undefined;
 
 /** Filter object that gets flattened into a query string via `Object.entries`. */
 export type QueryFilter = Record<string, QueryParamValue>;
@@ -31,7 +39,8 @@ export type SortState = {
 /** Column filter entry flattened into the query string by the list endpoints. */
 export type ColumnFilterState = {
   id: string;
-  value: string;
+  /** `unknown` to match TanStack Table's own `ColumnFiltersState`. */
+  value: unknown;
 };
 
 /** Analytics date-range selection shared by the analytics dashboards. */

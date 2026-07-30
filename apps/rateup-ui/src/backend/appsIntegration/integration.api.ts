@@ -83,8 +83,18 @@ export const regenerateWaPaymentConfigurationOauth = async (name: string) => {
   return response.data;
 };
 
+/** An installed app integration row. */
+export interface AppIntegration {
+  id: string;
+  name: IntegratedApps;
+  orgId: string;
+  active: boolean;
+  createdAt: string;
+  credential: { session?: { shop?: string } } & Record<string, unknown>;
+}
+
 export async function getAllIntegrations() {
-  return (await axiosClient.get(`${ROUTE_URL}all`)).data;
+  return (await axiosClient.get(`${ROUTE_URL}all`)).data as AppIntegration[];
 }
 
 export async function getIntegrationStatuses() {

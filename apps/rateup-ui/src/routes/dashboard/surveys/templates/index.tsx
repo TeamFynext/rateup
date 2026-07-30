@@ -57,12 +57,12 @@ function Templates() {
     setCreateSurveyOpened(true);
   };
 
-  function Category({ categoryName, surveys }) {
+  function Category({ categoryName, surveys }: { categoryName: string; surveys: SurveySummary[] }) {
     return (
       <div className="mt-6">
         <h3 className="text-lg font-semibold mb-4">{categoryName}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {surveys?.map((survey, index) => (
+          {surveys?.map((survey: SurveySummary, index: number) => (
             <div
               key={survey?.id}
               className="cursor-pointer"

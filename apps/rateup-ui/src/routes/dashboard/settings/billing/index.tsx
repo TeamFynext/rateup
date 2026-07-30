@@ -31,7 +31,7 @@ export const Route = createFileRoute("/dashboard/settings/billing/")({
   component: BillingPage,
 });
 
-function loadScript(src) {
+function loadScript(src: string) {
   return new Promise((resolve) => {
     const script = document.createElement("script");
     script.src = src;
@@ -66,11 +66,14 @@ function BillingPage() {
   const [isAnnualMessageLimit, setIsAnnualMessageLimit] = useState(false);
 
   useEffect(() => {
-    const order = orders?.data?.filter((o) => o.subscriptionId === subscription?.subscriptionRef);
+    const order = orders?.data?.filter(
+      (o: { subscriptionId?: string }) => o.subscriptionId === subscription?.subscriptionRef,
+    );
     if (order && order.length > 0) setActiveOrderData(order[0]);
 
     const sorted = orders?.data?.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a: { createdAt: string }, b: { createdAt: string }) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     if (sorted && sorted.length) setLatestOrderData(sorted[0]);
   }, [subscription, orders]);
@@ -114,7 +117,7 @@ function BillingPage() {
         name: translations("RateUp Payment"),
         description: "Subscription Plans in Rateup",
         image: "https://djd7kjh9uwow0.cloudfront.net/images/logo.svg",
-        handler: function (_response) {
+        handler: function (_response: unknown) {
           console.log(translations("Payment Successful...!"));
           setProcessingPayment(false);
           if (order.hasTrial) {

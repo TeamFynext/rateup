@@ -1,4 +1,4 @@
-import type { RequestPayload } from "@/types/api.ts";
+import type { ColumnFilterState, RequestPayload } from "@/types/api.ts";
 import type { ContactGroupType } from "@/types/enums.ts";
 
 import { axiosClient } from "../../apiClient";
@@ -40,7 +40,7 @@ export const getContactGroupById = async (
     id: string;
     desc: boolean;
   },
-  columnFilters: { id: string; value: string }[],
+  columnFilters: ColumnFilterState[],
 ) => {
   const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
   const desc = sort.desc ? "desc" : "asc";

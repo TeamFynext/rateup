@@ -1,7 +1,7 @@
 import type { RequestPayload } from "@/types/api.ts";
 
 import { axiosClient } from "../apiClient";
-import type { GetLabelsRes } from "./lifecycle.types";
+import type { GetLabelsRes, LifecycleWithContactCount } from "./lifecycle.types";
 
 const LIFECYCLE_URL = `/lifecycles`;
 
@@ -26,5 +26,6 @@ export const reorderLifeCycles = async (data: RequestPayload) => {
 };
 
 export const getLifecyclesWithContactCount = async () => {
-  return (await axiosClient.get(`${LIFECYCLE_URL}/contacts`)).data;
+  return (await axiosClient.get(`${LIFECYCLE_URL}/contacts`))
+    .data as Array<LifecycleWithContactCount>;
 };

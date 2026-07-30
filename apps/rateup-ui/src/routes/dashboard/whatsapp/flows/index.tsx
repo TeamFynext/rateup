@@ -53,7 +53,9 @@ function Flows() {
   const hasSelectedTeamFilter = Boolean(selectedTeamId && selectedTeamId !== "all");
 
   let filteredFlows = hasSelectedTeamFilter
-    ? flows?.filter((flow) => flow.survey.teams.some((team) => team.teamId === selectedTeamId))
+    ? flows?.filter((flow) =>
+        flow.survey.teams.some((team: { teamId?: string }) => team.teamId === selectedTeamId),
+      )
     : flows;
 
   if (searchQuery) {
