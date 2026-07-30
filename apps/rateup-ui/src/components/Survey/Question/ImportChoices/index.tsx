@@ -25,7 +25,7 @@ function ImportChoices({
 
   const areAllSurveyLanguagesColumnsPresent = useCallback(
     (headerRow: unknown[]) => {
-      const headerRowArr = headerRow.map((languageStr) => languageStr.toString().toLowerCase());
+      const headerRowArr = headerRow.map((languageStr) => String(languageStr).toLowerCase());
       return surveyLanguagesArr.every((lang) => headerRowArr.includes(lang.toLowerCase()));
     },
     [surveyLanguagesArr],
@@ -67,8 +67,8 @@ function ImportChoices({
       }
 
       for (let i = 1; i < rows.length; i++) {
-        const rowArr = rows[i]?.data;
-        if (!rowArr.includes(null)) {
+        const rowArr = rows[i]?.data ?? [];
+        if (!rowArr.includes(null as never)) {
           for (const key in columnLanguageObj) {
             choiceStringsSets[columnLanguageObj[key]].add(rowArr[key]);
           }

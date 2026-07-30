@@ -551,9 +551,9 @@ interface ChoiceProps {
   form: any;
   index: number;
   image?: any;
-  buttonRef?: React.RefObject<HTMLButtonElement>;
+  buttonRef?: React.RefObject<HTMLButtonElement | null>;
   maxCharCount?: number;
-  surveyType: SurveyType;
+  surveyType?: SurveyType;
 }
 
 function Choice({

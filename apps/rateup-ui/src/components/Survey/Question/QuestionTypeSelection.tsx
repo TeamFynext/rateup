@@ -163,6 +163,7 @@ export function QuestionTypeSelection({
               className={cn(
                 "h-5 gap-1 rounded-md px-1.5 text-[11px] font-medium capitalize transition-opacity",
                 qtype?.questionTypes?.includes(hoveredType) &&
+                  hoveredType &&
                   googleReviewSupportedTypes.includes(hoveredType)
                   ? "opacity-100"
                   : "pointer-events-none opacity-0",

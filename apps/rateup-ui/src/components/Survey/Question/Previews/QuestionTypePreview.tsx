@@ -111,7 +111,7 @@ const QuestionTypePreview = ({
     // case Page.ThankYou:
     //   return <WOPForm isPreview={true} wop={wop} />;
     case Page.Custom:
-      return <CustomHTML content={htmlContent} />;
+      return <CustomHTML content={htmlContent ?? undefined} />;
     default:
       return <div>{translations("not previews")}</div>;
   }
