@@ -26,7 +26,7 @@ import {
 import { Input } from "../ui/input.tsx";
 import { Loader } from "../ui/loader.tsx";
 
-const ResetPasswordForm = ({ mode }) => {
+const ResetPasswordForm = ({ mode }: { mode: string }) => {
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false });
   const token = searchParams.token;

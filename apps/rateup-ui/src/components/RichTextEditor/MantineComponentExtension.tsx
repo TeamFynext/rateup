@@ -1,9 +1,16 @@
 import { Node } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
+import type { ComponentType } from "react";
 
 import { Badge } from "@/components/ui/badge.tsx";
 
-const MantineComponentExtension = ({ MantineComponent, componentName }) => {
+const MantineComponentExtension = ({
+  MantineComponent,
+  componentName,
+}: {
+  MantineComponent: ComponentType<Record<string, unknown>>;
+  componentName: string;
+}) => {
   return Node.create({
     name: "mantineComponent",
 

@@ -16,6 +16,14 @@ export async function createWaQuickReply(data: z.infer<typeof quickReplySchema>)
   await axiosClient.post(WA_QUICK_REPLY_BASE, data);
 }
 
+/** A saved WhatsApp quick reply. */
+export interface QuickReply {
+  id: string;
+  title?: string;
+  message?: string;
+  priority?: number;
+}
+
 export async function updateQuickReplyOrder(data: { id: string; priority: number }[]) {
   await axiosClient.put(`${WA_QUICK_REPLY_BASE}/order`, data);
 }

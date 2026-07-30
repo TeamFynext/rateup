@@ -21,7 +21,19 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
-function CreateLinktreeModal({ opened, onClose, mode, shortUrlId, initialName }) {
+function CreateLinktreeModal({
+  opened,
+  onClose,
+  mode,
+  shortUrlId,
+  initialName,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  mode: "create" | "edit";
+  shortUrlId: string;
+  initialName: string;
+}) {
   const { t: translations } = useTranslation();
   const formSchema = z.object({
     name: z
@@ -43,13 +55,13 @@ function CreateLinktreeModal({ opened, onClose, mode, shortUrlId, initialName })
   const createLinktreeMutation = useCreateLinktreeMutation();
   const updateLinktreeMutation = useUpdateLinktreeMutation(shortUrlId);
 
-  const handleCreateLinktreeFormSubmit = useCallback(async (values) => {
+  const handleCreateLinktreeFormSubmit = useCallback(async (values: { name: string }) => {
     await createLinktreeMutation.mutateAsync(values);
     form.reset();
     onClose();
   }, []);
 
-  const handleUpdateLinktreeFormSubmit = useCallback(async (values) => {
+  const handleUpdateLinktreeFormSubmit = useCallback(async (values: { name: string }) => {
     const name = values.name;
     await updateLinktreeMutation.mutateAsync({ shortUrlId, name });
     form.reset();

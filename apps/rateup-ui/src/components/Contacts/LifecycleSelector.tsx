@@ -1,5 +1,6 @@
 import React from "react";
 
+import type { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 
 import {
@@ -42,14 +43,17 @@ export const LifecycleSelector = ({
         group: "Lifecycle Stages",
         items:
           tags
-            ?.filter((lifecycle) => lifecycle?.category !== "lost")
-            .map((lifecycle) => ({ value: lifecycle?.id, label: toLabel(lifecycle) })) || [],
+            ?.filter((lifecycle: GetLabelsRes) => lifecycle?.category !== "lost")
+            .map((lifecycle: GetLabelsRes) => ({
+              value: lifecycle?.id,
+              label: toLabel(lifecycle),
+            })) || [],
       },
       {
         group: "Lost Stages",
         items:
           tags
-            ?.filter((lifecycle) => lifecycle?.category === "lost")
+            ?.filter((lifecycle: GetLabelsRes) => lifecycle?.category === "lost")
             .map((lifecycle) => ({ value: lifecycle?.id, label: toLabel(lifecycle) })) || [],
       },
     ],
@@ -65,7 +69,7 @@ export const LifecycleSelector = ({
     if (newValue === value) return;
     onChange(
       newValue,
-      tags?.find((lifecycle) => lifecycle.id === newValue),
+      tags?.find((lifecycle: GetLabelsRes) => lifecycle.id === newValue),
     );
   };
 

@@ -2,8 +2,14 @@ import { mapSmileyIcon } from "@/components/Survey/TakeSurvey/TakeSurveyComponen
 import { Button } from "@/components/ui/button.tsx";
 import { SmileyResponse } from "@/types/enums.ts";
 
-function SmileyQuestionCondition({ currentSelectedEmojis, setState }) {
-  const updateSmileyResponse = (value) => {
+function SmileyQuestionCondition({
+  currentSelectedEmojis,
+  setState,
+}: {
+  currentSelectedEmojis: string[];
+  setState: (updater: (prev: Record<string, unknown>) => Record<string, unknown>) => void;
+}) {
+  const updateSmileyResponse = (value: string) => {
     const newState = currentSelectedEmojis?.includes(value)
       ? currentSelectedEmojis.filter((smiley) => smiley !== value)
       : [...currentSelectedEmojis, value];

@@ -10,7 +10,7 @@ import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/cha
 const InboxLocationControl = () => {
   const [opened, setOpened] = useState(false);
   const { body, setBody } = useMessageBodyStore();
-  function handleLocation(location) {
+  function handleLocation(location: { latitude: number; longitude: number; address?: string }) {
     setBody({ ...body, type: "location", location });
     setOpened((o) => !o);
   }
@@ -42,7 +42,15 @@ const InboxLocationControl = () => {
   );
 };
 
-const LocationMap = ({ onGetLocation, onCancel, submitBtnTitle }) => {
+const LocationMap = ({
+  onGetLocation,
+  onCancel,
+  submitBtnTitle,
+}: {
+  onGetLocation: (location: { latitude: number; longitude: number; address?: string }) => void;
+  onCancel: () => void;
+  submitBtnTitle: string;
+}) => {
   const [coordinates, setCoordinates] = useState([]);
   const [currentLocation, setCurrentLocation] = useState([]);
   const [permissionStatus, setPermissionStatus] = useState("");

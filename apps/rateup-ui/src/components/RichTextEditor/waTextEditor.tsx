@@ -1,6 +1,7 @@
 import { IconFileFilled, IconRobot, IconTrash, IconWaveSine, IconX } from "@tabler/icons-react";
 import { Plugin } from "@tiptap/pm/state";
 import { EditorContent, useEditor } from "@tiptap/react";
+import type { Editor } from "@tiptap/react";
 import {
   LayoutTemplate,
   MoreHorizontal,
@@ -63,7 +64,7 @@ import { createWaExtensions } from "./wa-editor/extensions.ts";
 import { parseFromWhatsAppFormat } from "./wa-editor/format.tsx";
 import { isJSONString, WaQuickReply } from "./WaQuickReply/index.tsx";
 interface WaTextEditorProps {
-  handleInputChange: (value) => void;
+  handleInputChange: (value: string) => void;
   content: string;
   className?: string;
   mah?: number | string;
@@ -270,7 +271,7 @@ function WaTextEditor({
     if (platform === MessagePlatform.WEBCHAT) return null;
     return (
       <AccountSelector
-        onChange={(phoneId) => {
+        onChange={(phoneId: string) => {
           updatePhoneId(phoneId);
         }}
         value={whatsappSettingsPhoneId}
@@ -679,7 +680,7 @@ function WaTextEditor({
 
 export default WaTextEditor;
 
-const ShowMedia = ({ opened, close }) => {
+const ShowMedia = ({ opened, close }: { opened: boolean; close: () => void }) => {
   const { selectedMedia: media, removeMedia } = useMediaStore();
   if (!media) return null;
   return (
@@ -715,7 +716,7 @@ const ShowMedia = ({ opened, close }) => {
   );
 };
 
-const WaTextCharacterCount = ({ editor, max }) => {
+const WaTextCharacterCount = ({ editor, max }: { editor: Editor | null; max: number }) => {
   const percentage = editor
     ? Math.round((100 / max) * editor.storage.characterCount.characters())
     : 0;

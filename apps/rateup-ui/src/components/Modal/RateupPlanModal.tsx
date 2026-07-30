@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
+import type { RateupPaymentPlan } from "@/backend/payment/payment.api";
 import {
   useRateupPaymentsPlanMutation,
   useRateupPaymentsPlanUpdateMutation,
@@ -36,7 +37,17 @@ const currencyOptions = [
   { value: "INR", label: "INR (₹)" },
 ];
 
-const RateupPlanModal = ({ opened, close, planList, plan = null }) => {
+const RateupPlanModal = ({
+  opened,
+  close,
+  planList,
+  plan = null,
+}: {
+  opened: boolean;
+  close: () => void;
+  planList: Array<{ group: string; items: unknown[] }> | undefined;
+  plan?: RateupPaymentPlan | null;
+}) => {
   const uid = useId();
   const [checked, setChecked] = useState(false);
   const { t: translations } = useTranslation();

@@ -1,7 +1,17 @@
 import PlanCard from "../Card/PlanCard.tsx";
 import { PlanCardWidth } from "../Utils/constants.ts";
 
-export const WhatsAppSection = ({ largeScreen, handlePlanSelection, freePlan, currencySymbol }) => {
+export const WhatsAppSection = ({
+  largeScreen,
+  handlePlanSelection,
+  freePlan,
+  currencySymbol,
+}: {
+  largeScreen: boolean;
+  handlePlanSelection: (plan: SPlan) => void;
+  freePlan: SPlan[];
+  currencySymbol: string;
+}) => {
   const whatsAppPlan = [] // plans, removing for now
     ?.filter((item) => item?.name?.includes("WhatsApp"))
     ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);

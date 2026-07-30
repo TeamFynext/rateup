@@ -8,6 +8,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 
+import type { AppNotification } from "@/backend/notification/notification.api";
 import { useDeleteNotification } from "@/backend/notification/notification.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
@@ -15,10 +16,18 @@ import { Button } from "@/components/ui/button.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 
-const NotificationList = ({ close, data, isLoading }) => {
+const NotificationList = ({
+  close,
+  data,
+  isLoading,
+}: {
+  close: () => void;
+  data: AppNotification[] | undefined;
+  isLoading: boolean;
+}) => {
   const deleteNotificationMut = useDeleteNotification();
 
-  const getNotificationIcon = useCallback((source) => {
+  const getNotificationIcon = useCallback((source: string) => {
     switch (source) {
       case "whatsapp":
         return <IconBrandWhatsappFilled className="size-4 text-foreground" />;
@@ -35,7 +44,7 @@ const NotificationList = ({ close, data, isLoading }) => {
     }
   }, []);
 
-  const getNotificationMessageComp = useCallback((notification) => {
+  const getNotificationMessageComp = useCallback((notification: AppNotification) => {
     const { subSource, data } = notification;
     switch (subSource) {
       case "chat-assigned":

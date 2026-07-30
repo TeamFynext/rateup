@@ -1,7 +1,17 @@
 import PlanCard from "../Card/PlanCard.tsx";
 import { PlanCardWidth } from "../Utils/constants.ts";
 
-export const SurveySection = ({ largeScreen, handlePlanSelection, freePlan, currencySymbol }) => {
+export const SurveySection = ({
+  largeScreen,
+  handlePlanSelection,
+  freePlan,
+  currencySymbol,
+}: {
+  largeScreen: boolean;
+  handlePlanSelection: (plan: SPlan) => void;
+  freePlan: SPlan[];
+  currencySymbol: string;
+}) => {
   const surveyPlan = [] // plans, removing for now
     ?.filter((item) => {
       const name = item?.name;

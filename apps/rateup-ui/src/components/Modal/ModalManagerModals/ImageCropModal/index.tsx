@@ -10,7 +10,15 @@ import { mimeTypesForImage } from "@/utils/constants.ts";
 
 import styles from "./ImageCropModal.module.css";
 
-function ImageCropModal({ context, id: thisModalId, innerProps }) {
+function ImageCropModal({
+  context,
+  id: thisModalId,
+  innerProps,
+}: {
+  context: { closeModal: (id: string) => void };
+  id: string;
+  innerProps: Record<string, unknown>;
+}) {
   const uid = useId();
   const { imageUrl, imageName, onSaveClick, onCancelClick, aspectRatio } = innerProps;
 
@@ -85,7 +93,7 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
       context.closeModal(thisModalId);
     } else {
       getCroppedCanvas().then((croppedCanvas) => {
-        croppedCanvas?.toBlob((blob) => {
+        croppedCanvas?.toBlob((blob: Blob | null) => {
           if (!blob) return;
 
           const file = new File([blob], imageName, {

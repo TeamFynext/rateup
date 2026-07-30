@@ -1,7 +1,13 @@
 import { Button } from "@/components/ui/button.tsx";
 
-function OpinionQuestionCondition({ currentMinOpinion, setState }) {
-  const handleChange = (newMinOpinion) => {
+function OpinionQuestionCondition({
+  currentMinOpinion,
+  setState,
+}: {
+  currentMinOpinion: number;
+  setState: (updater: (prev: Record<string, unknown>) => Record<string, unknown>) => void;
+}) {
+  const handleChange = (newMinOpinion: number) => {
     return () => {
       setState({
         minOpinion: newMinOpinion,

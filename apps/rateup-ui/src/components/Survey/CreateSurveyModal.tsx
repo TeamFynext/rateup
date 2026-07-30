@@ -115,7 +115,7 @@ export function CreateSurveyModal({
     setPrevOpen(open);
   }, [open]);
 
-  function arraysEqual(a, b) {
+  function arraysEqual(a: string[], b: string[]) {
     if (a === b) return true;
     if (a == null || b == null) return false;
     if (a?.length !== b?.length) return false;

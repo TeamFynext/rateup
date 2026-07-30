@@ -3,10 +3,16 @@ import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-function RatingQuestionCondition({ currentMinRating, setState }) {
+function RatingQuestionCondition({
+  currentMinRating,
+  setState,
+}: {
+  currentMinRating: number;
+  setState: (updater: (prev: Record<string, unknown>) => Record<string, unknown>) => void;
+}) {
   const [hoveredRating, setHoveredRating] = useState(-1);
 
-  const handleChange = (newMinRating) => {
+  const handleChange = (newMinRating: number) => {
     setState({
       minRating: newMinRating,
     });

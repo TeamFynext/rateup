@@ -4,6 +4,19 @@ import { axiosClient } from "../apiClient";
 
 const base = "/notification";
 
+/** An in-app notification row. */
+export interface AppNotification {
+  id: string;
+  source: string;
+  subSource: string;
+  createdAt: string;
+  data?: {
+    contactName?: string;
+    contactId?: string;
+    [key: string]: unknown;
+  };
+}
+
 export async function getNotifications() {
   return (await axiosClient.get(base)).data;
 }

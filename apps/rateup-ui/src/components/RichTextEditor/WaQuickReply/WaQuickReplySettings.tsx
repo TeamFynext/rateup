@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import z from "zod";
 
+import type { QuickReply } from "@/backend/whatsapp/inbox/quickReply/quickreply.api";
 import {
   useDeleteReply,
   useGetWaQuickReplies,
@@ -21,11 +22,11 @@ const WaQuickReplySettings = () => {
 
   const [selectedItem, setSelectedItem] = useState(null);
 
-  function handleEditClick(reply) {
+  function handleEditClick(reply: QuickReply) {
     setSelectedItem(reply);
     setOpened(true);
   }
-  function handleDeleteQuickReply(reply) {
+  function handleDeleteQuickReply(reply: QuickReply) {
     deleteReply.mutate(reply.id, {
       onSuccess: () => {
         toast.success("Quick reply deleted successfully");

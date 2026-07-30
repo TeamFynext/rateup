@@ -1,5 +1,6 @@
 import { IconInfoCircle, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useId, useContext, useRef, useState } from "react";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -40,7 +41,15 @@ enum EmailAddMethod {
   Import = "Import from file",
 }
 
-const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
+const EmailOtpExtraProps = ({
+  form,
+  qId,
+  surveyLanguages,
+}: {
+  form: UseFormReturn<FieldValues>;
+  qId: string;
+  surveyLanguages: string[];
+}) => {
   const uid = useId();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = form.values?.features?.[selectedLanguage] || {
