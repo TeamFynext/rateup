@@ -102,7 +102,7 @@ function ImageCropModal({
         croppedCanvas?.toBlob((blob: Blob | null) => {
           if (!blob) return;
 
-          const file = new File([blob], imageName, {
+          const file = new File([blob], imageName ?? "image", {
             type: mimeTypesForImage[fileExtension],
           });
 
