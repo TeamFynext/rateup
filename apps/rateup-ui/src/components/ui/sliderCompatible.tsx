@@ -41,9 +41,9 @@ export default function SliderCompatible({
 
   // Handler invoked by Radix/shadcn Slider which gives number[].
   // Map it to onChange (Mantine) as number or to onValueChange as array.
-  const handleValueChange = (arr: number[]) => {
+  const handleValueChange = (next: number | readonly number[]) => {
     // Defensive: ensure numbers
-    const safeArr = arr.map((x) => Number(x));
+    const safeArr = (Array.isArray(next) ? next : [next]).map((x) => Number(x));
     try {
       if (typeof onValueChange === "function") onValueChange(safeArr);
       if (typeof onChange === "function") {

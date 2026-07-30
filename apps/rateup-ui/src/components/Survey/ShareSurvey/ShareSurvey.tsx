@@ -191,7 +191,7 @@ const ShareSurvey = ({
 
   const handleContainedSelectionChange = useCallback(
     (value: string) => {
-      const teamObj = survey.teams[value];
+      const teamObj = survey.teams[Number(value)];
       setSurveyTeamMapId(teamObj.mapId);
       setShortUrlId(teamObj.shortUrlId);
       setSelectTeamDropdownState(value);

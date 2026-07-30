@@ -14,7 +14,7 @@ const TestimonialShare = ({
   selectedTestimonials,
   currentStyle,
 }: {
-  selectedTestimonials: string[];
+  selectedTestimonials: Testimonial[];
   currentStyle: TestimonialStyleType;
 }) => {
   const filteredTestimonials = selectedTestimonials;
