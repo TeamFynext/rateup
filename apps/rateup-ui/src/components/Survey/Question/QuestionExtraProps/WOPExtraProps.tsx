@@ -188,7 +188,7 @@ const WOPExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
     setValue,
     formState: { errors },
   } = useForm<WopValues>({
-    defaultValues: form.values.wop || DEFAULT_WOP,
+    defaultValues: form.values?.wop || DEFAULT_WOP,
   });
 
   const values = watch();
@@ -197,7 +197,7 @@ const WOPExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
     const timer = setTimeout(async () => {
       const result = schema.safeParse(values);
       if (result.success) {
-        form.setFieldValue("wop", values);
+        form.setFieldValue?.("wop", values);
       }
     }, 500);
     return () => clearTimeout(timer);
