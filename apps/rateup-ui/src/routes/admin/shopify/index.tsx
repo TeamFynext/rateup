@@ -24,9 +24,9 @@ export const Route = createFileRoute("/admin/shopify/")({
 
 interface ShopifyTableData {
   id: string;
-  shop: string;
+  shop: string | undefined;
   orgId: string;
-  createdAt: string;
+  createdAt: string | null;
   status: boolean;
 }
 
@@ -109,7 +109,7 @@ function Shopify() {
 
             if (!shouldDelete) return;
 
-            handleDelete(row.original.shop);
+            handleDelete(row.original.shop ?? "");
           }}
           className="h-8 w-8 p-0"
         >
@@ -125,7 +125,7 @@ function Shopify() {
         .filter((integration: AppIntegration) => integration.name === IntegratedApps.shopify)
         ?.map((integration: AppIntegration) => ({
           id: integration.id,
-          shop: integration.credential.session.shop,
+          shop: integration.credential.session?.shop,
           orgId: integration.orgId,
           createdAt: formatIsoDateStringWithTime(integration.createdAt),
           status: integration.active,

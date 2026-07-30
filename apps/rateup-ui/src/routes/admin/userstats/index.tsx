@@ -48,10 +48,10 @@ interface UserTableData {
   name: string;
   orgName: string;
   role: string;
-  signupDate: string;
-  recipeName: string;
-  status: boolean;
-  isPaused: boolean;
+  signupDate: string | null;
+  recipeName: string | undefined;
+  status: boolean | undefined;
+  isPaused: boolean | undefined;
 }
 
 function Index() {

@@ -34,7 +34,7 @@ export const Route = createFileRoute("/admin/orgs/")({
 interface OrgTableData {
   id: string;
   name: string;
-  createdAt: string;
+  createdAt: string | null;
   owner: string;
   ownerEmail: string;
   teams: number;
@@ -245,18 +245,19 @@ function OrgDisplay() {
 
   if (isLoading) return <RateupLoader className="h-dvh" />;
 
-  const tableData: OrgTableData[] = orgs?.map((org) => ({
-    id: org.id,
-    name: org.name,
-    createdAt: formatIsoDateStringWithTime(org.createdAt),
-    owner: org.owner.name,
-    ownerEmail: org.owner.email,
-    teams: org._count.teams,
-    members: org._count.members,
-    invitations: org._count.invitations,
-    lastActivity: org.AuditLog[0]?.createdAt || null,
-    deletionMail: org.deletionMailSent ?? null,
-  }));
+  const tableData: OrgTableData[] =
+    orgs?.map((org) => ({
+      id: org.id,
+      name: org.name,
+      createdAt: formatIsoDateStringWithTime(org.createdAt),
+      owner: org.owner.name,
+      ownerEmail: org.owner.email,
+      teams: org._count.teams,
+      members: org._count.members,
+      invitations: org._count.invitations,
+      lastActivity: org.AuditLog[0]?.createdAt || null,
+      deletionMail: org.deletionMailSent ?? null,
+    })) ?? [];
 
   return (
     <div className="container mx-auto space-y-8">
