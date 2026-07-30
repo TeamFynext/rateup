@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import type { QrLogoPanelState } from "./index.tsx";
 const initialLogoTabPanelState = {
   qrBgColor: "#FFFFFF",
@@ -13,40 +15,43 @@ const logoTabPanelReducer = (
   state: QrLogoPanelState,
   action: { type: string; payload?: unknown },
 ) => {
+  // Each action carries the scalar for the field it names; the action type is a
+  // bare string, so the payload cannot be discriminated on it.
+  const value = action.payload as string & number & boolean & CSSProperties["objectFit"];
   const payload = action.payload;
   switch (action.type) {
     case "file-input": {
-      state["logoFile"] = payload;
+      state["logoFile"] = value;
       if (payload instanceof File) {
         state["isLogoEnabled"] = true;
       }
       break;
     }
     case "logo-image-switch": {
-      state["isLogoEnabled"] = payload;
+      state["isLogoEnabled"] = value;
       if (!payload && !state["logoFile"]) {
         state["logoFile"] = null;
       }
       break;
     }
     case "logo-size": {
-      state["logoSize"] = payload;
+      state["logoSize"] = value;
       break;
     }
     case "logo-fill-type": {
-      state["logoFillType"] = payload;
+      state["logoFillType"] = value;
       break;
     }
     case "logo-border-radius": {
-      state["logoBorderRadius"] = payload;
+      state["logoBorderRadius"] = value;
       break;
     }
     case "qr-bg-color": {
-      state["qrBgColor"] = payload;
+      state["qrBgColor"] = value;
       break;
     }
     case "qr-color": {
-      state["qrColor"] = payload;
+      state["qrColor"] = value;
       break;
     }
     case "update-state-from-api": {

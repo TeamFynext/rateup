@@ -6,14 +6,14 @@ import { useGetSurveyStats } from "@/backend/surveys/surveys.query";
 import { Card } from "@/components/ui/card.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 
-const SurveyStatsWebForm = ({ surveyId }) => {
+const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
   const { filterTeams } = useContext(SurveyContext);
 
   const { data: responseCountData } = useResponseCount(surveyId);
   const responseCount = useMemo(
     () =>
       filterTeams?.length
-        ? responseCountData?.teamWiseCount?.reduce((total, teamMap) => {
+        ? responseCountData?.teamWiseCount?.reduce((total: number, teamMap: { count: number }) => {
             if (filterTeams.includes(teamMap.id)) total += teamMap.count;
             return total;
           }, 0)
@@ -25,7 +25,9 @@ const SurveyStatsWebForm = ({ surveyId }) => {
   const { visited, started, reviewLinkVisited } = useMemo(() => {
     let filteredStats = surveyStats ? [...surveyStats] : [];
     if (filterTeams?.length > 0) {
-      filteredStats = surveyStats?.filter((team) => filterTeams.includes(team?.surveyTeamMapId));
+      filteredStats = surveyStats?.filter((team: STStats) =>
+        filterTeams.includes(team?.surveyTeamMapId),
+      );
     }
     return filteredStats?.reduce(
       (acc, curr) => {

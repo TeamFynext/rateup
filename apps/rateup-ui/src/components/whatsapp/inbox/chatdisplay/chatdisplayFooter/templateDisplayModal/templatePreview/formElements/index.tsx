@@ -53,7 +53,7 @@ export default function WaTemplateFormElements(props: Props) {
               return item.type === component_type.toLowerCase();
             });
             if (existingItem) {
-              component_data?.forEach((variable, i) => {
+              component_data?.forEach((variable: { text?: string }, i: number) => {
                 existingItem.parameters[i] = {
                   type: "text",
                   text: variable,
@@ -62,7 +62,7 @@ export default function WaTemplateFormElements(props: Props) {
             } else {
               draft.push({
                 type: component_type.toLowerCase(),
-                parameters: component_data?.map((variable) => ({
+                parameters: component_data?.map((variable: { text?: string }) => ({
                   type: "text",
                   text: variable,
                 })),
@@ -125,7 +125,7 @@ export default function WaTemplateFormElements(props: Props) {
                     buildtemplatequerycomponent={buildtemplatequerycomponent}
                     exampleParams={
                       exampleParams?.length > 0
-                        ? exampleParams?.map((ep) => ep?.text)
+                        ? exampleParams?.map((ep: { text?: string }) => ep?.text)
                         : component?.example?.body_text?.[0]
                     }
                     leadgenData={props?.leadgenData}

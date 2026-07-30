@@ -19,7 +19,15 @@ import { useLinktreeObj } from "../LinktreeContext/LinktreeContext.tsx";
 
 import styles from "./ShareLinktree.module.css";
 
-function ShareLinktree({ url, isPublished, title }) {
+function ShareLinktree({
+  url,
+  isPublished,
+  title,
+}: {
+  url: string;
+  isPublished: boolean;
+  title: string;
+}) {
   const [logoTabPanelState, logoTabPanelDispatch] = useImmerReducer(
     logoTabPanelReducer,
     initialLogoTabPanelState,

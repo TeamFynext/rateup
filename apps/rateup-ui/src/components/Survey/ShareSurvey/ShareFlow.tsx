@@ -95,7 +95,7 @@ export const ShareFlow = ({
   const disableShare = !(isPublished || allowUnpublishedShare);
 
   const handleContainedSelectionChange = useCallback(
-    (value) => {
+    (value: string) => {
       const teamObj = survey.teams[value];
       setSurveyTeamMapId(teamObj.mapId);
       console.log(teamObj.shortUrlId);
@@ -105,7 +105,7 @@ export const ShareFlow = ({
     },
     [survey],
   );
-  const tagSelectData = survey?.teams[selectTeamDropdownState]?.tags?.map((tag) => {
+  const tagSelectData = survey?.teams[Number(selectTeamDropdownState)]?.tags?.map((tag: string) => {
     return tag;
   });
 
@@ -182,7 +182,7 @@ export const ShareFlow = ({
                         <SelectValue placeholder={translations("select a single Tag")} />
                       </SelectTrigger>
                       <SelectContent>
-                        {tagSelectData?.map((tagItem) => (
+                        {tagSelectData?.map((tagItem: { value: string; label: string }) => (
                           <SelectItem key={tagItem} value={tagItem}>
                             {tagItem}
                           </SelectItem>
@@ -196,7 +196,7 @@ export const ShareFlow = ({
                     teamSelectData={teamSelectData}
                     onSelectTeamDropdownChange={handleContainedSelectionChange}
                     nothingFound={NothingFound}
-                    tagsToMap={survey.teams[selectTeamDropdownState].tags}
+                    tagsToMap={survey.teams[Number(selectTeamDropdownState)].tags}
                     surveyTitle={survey?.title}
                     surveyId={surveyId}
                     shareUrl={shareUrl}

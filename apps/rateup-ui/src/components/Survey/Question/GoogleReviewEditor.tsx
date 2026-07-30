@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch.tsx";
 import useFlowStore, { EditorType } from "@/components/whatsapp/flow-v2/utils/store.ts";
 import { cn } from "@/lib/utils";
 import { QuestionType as Q, SmileyResponse } from "@/types/enums.ts";
+import { getApiErrorMessage } from "@/utils/apiError.ts";
 
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 import { mapSmileyIcon } from "../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
@@ -114,7 +115,7 @@ const GoogleReviewEditor = ({
     }
   };
 
-  const updateSmileyResponse = (value: string[]) => {
+  const updateSmileyResponse = (value: SmileyResponse) => {
     setSelectedSmileys((prevSmileys) => {
       return prevSmileys.includes(value)
         ? prevSmileys.filter((smiley) => smiley !== value)
@@ -142,11 +143,14 @@ const GoogleReviewEditor = ({
     }
   };
 
-  const handleError = (error: string) => {
+  const handleError = (error: unknown) => {
     console.error("Failed to update", error);
-    toast.error(`${translations("Failed to update.. try again. Error:")} ${error.message}`, {
-      id: "load-data",
-    });
+    toast.error(
+      `${translations("Failed to update.. try again. Error:")} ${getApiErrorMessage(error)}`,
+      {
+        id: "load-data",
+      },
+    );
   };
 
   useEffect(() => {
