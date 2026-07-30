@@ -185,7 +185,7 @@ function page() {
               <AnalyticsStatCard
                 icon={<MessageCircle className="w-6 h-6 text-primary" />}
                 label={t("Messages Handled")}
-                value={analytics?.userPerformance?.totalMessagesHandled}
+                value={analytics?.userPerformance?.totalMessagesHandled ?? 0}
                 trendValue={
                   analytics?.userPerformance?.messagesHandledRateByLastWeek != null
                     ? Math.floor(analytics?.userPerformance?.messagesHandledRateByLastWeek)
@@ -209,7 +209,7 @@ function page() {
                 }
                 trendPositiveWhen="decrease"
                 trendSuffix={
-                  analytics?.userPerformance?.responseTimeRateByLastWeek <= 0
+                  (analytics?.userPerformance?.responseTimeRateByLastWeek ?? 0) <= 0
                     ? t("faster vs last week")
                     : t("slower vs last week")
                 }
@@ -364,7 +364,7 @@ function page() {
                           </td>
                           <td className="p-3 text-xs text-muted-foreground">
                             {conv.duration !== null
-                              ? `${formatTimeToNearestUnitFromSeconds(conv.duration).value} ${formatTimeToNearestUnitFromSeconds(conv.duration).suffix}`
+                              ? `${formatTimeToNearestUnitFromSeconds(conv.duration)?.value} ${formatTimeToNearestUnitFromSeconds(conv.duration)?.suffix}`
                               : "NA"}
                           </td>
                           <td className="p-3 text-xs text-muted-foreground">

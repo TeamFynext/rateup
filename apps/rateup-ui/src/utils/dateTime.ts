@@ -125,7 +125,7 @@ export function formatDateWithRelativeTime(date: DateInput) {
  * Callers pass either a number or the numeric string the analytics endpoints
  * return; the comparisons and arithmetic below coerce either the same way.
  */
-export function formatTimeToNearestUnitFromSeconds(seconds: number | string) {
+export function formatTimeToNearestUnitFromSeconds(seconds?: number | string) {
   if (seconds === 0) return { value: 0, suffix: "minute" };
   if (!seconds) return;
   // Matches the implicit coercion the comparisons and arithmetic already did.

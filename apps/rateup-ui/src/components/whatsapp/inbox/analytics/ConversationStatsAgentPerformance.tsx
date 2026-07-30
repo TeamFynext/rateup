@@ -11,7 +11,7 @@ import type { AnalyticsDateRange } from "@/types/api.ts";
 import { MessagePlatform } from "@/types/enums.ts";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 
-export const StaffStatusBadge = ({ status }: { status: string }) => {
+export const StaffStatusBadge = ({ status }: { status?: string }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "online":
@@ -52,7 +52,7 @@ export const StaffStatusBadge = ({ status }: { status: string }) => {
         };
     }
   };
-  const color = getStatusColor(status);
+  const color = getStatusColor(status ?? "");
   return (
     <Badge
       variant="outline"
