@@ -2,6 +2,7 @@ import { generateHTML } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 import React from "react";
+import type { ReactNode } from "react";
 
 /**
  * WhatsApp text-format helpers shared by every inlined WA editor and by the
@@ -24,7 +25,13 @@ export function extractMentionUserIds(editorContent: any): string[] {
   return Array.from(ids);
 }
 
-export function parseToWhatsAppFormat(editorContent: TiptapNode) {
+/**
+ * `editorContent` is the editor's Tiptap document. Callers hold it in a field
+ * typed loosely (it round-trips through the message body), and guard against
+ * empty values before calling — an empty value has no `content` and would throw,
+ * exactly as before.
+ */
+export function parseToWhatsAppFormat(editorContent: TiptapNode | string) {
   function formatText(text: string, type = "*") {
     const trimmedEnd = text.trimEnd();
     const trimmedStart = text.trimStart();
@@ -35,7 +42,7 @@ export function parseToWhatsAppFormat(editorContent: TiptapNode) {
     const formattedText = trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
     return `${leadingSpaces}${type}${trimmed}${type}${formattedText}`;
   }
-  const parseNode = (node: TiptapNode) => {
+  const parseNode = (node: TiptapNode): string => {
     if (!node) return "";
     switch (node.type) {
       case "paragraph":
@@ -82,13 +89,16 @@ export function parseToWhatsAppFormat(editorContent: TiptapNode) {
     }
   };
 
-  return editorContent.content.map(parseNode).join("\n");
+  return (editorContent as TiptapNode).content.map(parseNode).join("\n");
 }
-interface TiptapNode {
+/** A node of a Tiptap document, as the WhatsApp editor produces it. */
+export interface TiptapNode {
   type: string;
   content?: TiptapNode[];
   marks?: { type: string }[];
   text?: string;
+  /** Node attributes, e.g. a mention's label/id. */
+  attrs?: Record<string, string | number | boolean | null | undefined>;
 }
 
 export function parseFromWhatsAppFormat(text: string): {
@@ -211,7 +221,7 @@ export function parseWhatsAppToReact(text: string): React.ReactNode {
       case "text":
         const text = node.text;
         if (node.marks) {
-          return node.marks.reduce((acc, mark) => {
+          return node.marks.reduce<ReactNode>((acc, mark) => {
             switch (mark.type) {
               case "bold":
                 return <strong>{acc}</strong>;

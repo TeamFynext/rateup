@@ -40,6 +40,7 @@ import {
   extractMentionUserIds,
   parseToWhatsAppFormat,
 } from "@/components/RichTextEditor/wa-editor/format.tsx";
+import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { useWaEditor } from "@/components/RichTextEditor/wa-editor/use-wa-editor.ts";
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
 import { BlockquoteToolbar } from "@/components/tiptap/toolbars/blockquote.tsx";
@@ -767,7 +768,7 @@ export const WaInboxAssignUserFooter = ({
   );
 };
 
-export const WaInboxBlockedContactFooter = ({ contact }) => {
+export const WaInboxBlockedContactFooter = ({ contact }: { contact: ContactWithUpdatedAt }) => {
   const { filterData } = useContactStore();
   const { setSelectedContact } = useContactsStore();
   const confirm = useConfirm();
@@ -817,7 +818,7 @@ export const WaInboxBlockedContactFooter = ({ contact }) => {
  * shape as the blocked banner, since both are contact-level states rather than
  * anything to do with the ticket.
  */
-export const WaInboxSpamContactFooter = ({ contact }) => {
+export const WaInboxSpamContactFooter = ({ contact }: { contact: ContactWithUpdatedAt }) => {
   const confirm = useConfirm();
   const spamMutation = useSetContactSpam();
 
@@ -922,7 +923,7 @@ interface MediaStore {
   removeMediaSilently: (key: string) => void;
   resetMedia: () => void;
   selectedMedia: WaMedia;
-  setSelectedMedia: (value) => void;
+  setSelectedMedia: (value: WaMedia | null) => void;
 }
 
 export const useMediaStore = create<MediaStore>((set) => ({
@@ -942,7 +943,7 @@ export const useMediaStore = create<MediaStore>((set) => ({
   resetMedia: () => set(() => ({ media: [] })),
 }));
 
-const initialMessgabody = {
+const initialMessgabody: MessageBody = {
   type: "text",
   media: [],
   text: { body: "" },
@@ -953,23 +954,27 @@ const initialMessgabody = {
   location: null,
 };
 
-export const useMessageBodyStore = create<{
-  body: {
-    type: string;
-    media?: WaMedia[];
-    text?: { body: string };
-    contacts?: {
-      contactIds: string[];
-      groupIds: string[];
-    };
-    location?: {
-      longitude: string;
-      latitude: string;
-      name?: string;
-      address?: string;
-    };
+/** The composer's in-progress outgoing message. */
+interface MessageBody {
+  type: string;
+  media?: WaMedia[];
+  /** Holds the editor's Tiptap document. */
+  text?: { body: TiptapNode | string };
+  contacts?: {
+    contactIds: string[];
+    groupIds: string[];
   };
-  setBody: (value) => void;
+  location?: {
+    longitude: string;
+    latitude: string;
+    name?: string;
+    address?: string;
+  } | null;
+}
+
+export const useMessageBodyStore = create<{
+  body: MessageBody;
+  setBody: (value: MessageBody) => void;
   resetBody: () => void;
 }>((set) => ({
   body: initialMessgabody,
