@@ -14,7 +14,7 @@ import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/Text
 import { SmileyResponse } from "@/types/enums.ts";
 
 import { getSmileyIcon } from "../../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
-import type { QuestionExtraPropsForm } from "./questionForm.ts";
+import type { QuestionExtraPropsForm, QuestionFormFeatures } from "./questionForm.ts";
 
 export enum SmileyVariantStyle {
   Default = "Default",
@@ -72,7 +72,11 @@ function ColorInput({
 
 const SmileyExtraProps = ({ form }: { form: QuestionExtraPropsForm }) => {
   const uid = useId();
-  const features = form.values.features ? { ...form.values.features } : {};
+  // This editor works on the question's feature bag directly (smiley styling is
+  // not per-language), unlike the language-keyed editors.
+  const features: QuestionFormFeatures = form.values.features
+    ? ({ ...form.values.features } as QuestionFormFeatures)
+    : {};
   const [opened, setOpened] = useState(true);
 
   const handleChange = (field: string, value: unknown) => {

@@ -1,3 +1,6 @@
+import type { TNC, Wop } from "@/types/global";
+
+import type { SmileyColorType, SmileyVariantStyle } from "./SmileyExtraProps.tsx";
 /**
  * The form surface the per-question "extra props" editors are written against.
  *
@@ -22,6 +25,15 @@ export interface QuestionFormField {
 export interface QuestionFormFeatures {
   fields?: QuestionFormField[];
   questions?: string[];
+  /** Smiley question appearance: variant, palette, per-face colours and emoji. */
+  iconStyle?: {
+    variant?: SmileyVariantStyle;
+    colorType?: SmileyColorType;
+    color?: Record<number, string>;
+    emojies?: Record<number, string>;
+    gradientStartColor?: string;
+    gradientEndColor?: string;
+  };
   [key: string]: unknown;
 }
 
