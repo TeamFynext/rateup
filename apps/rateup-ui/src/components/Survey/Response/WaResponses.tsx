@@ -53,12 +53,23 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 /** A flow question, as the responses table needs it for column building. */
+/** Answers rendered as numbers rather than labels. */
+const NUMERIC_ANSWER_TYPES: Array<QuestionType | WaQuestions | undefined> = [
+  QuestionType.Rating,
+  QuestionType.Opinion,
+];
+/** Answers that are uploaded files, so neither filterable nor sortable. */
+const ATTACHMENT_ANSWER_TYPES: Array<QuestionType | WaQuestions | undefined> = [
+  WaQuestions.DocumentPicker,
+  WaQuestions.PhotoPicker,
+];
+
 export interface WaFlowQuestion {
   id: string;
   label?: string;
   header?: string;
   /** Flow questions reuse the survey question-type values for shared kinds. */
-  metaType?: WaQuestions & QuestionType;
+  metaType?: WaQuestions | QuestionType;
   dataSource?: Array<{ id: string; title?: string }>;
 }
 
@@ -134,7 +145,7 @@ const WaResponses = ({
   const { data: CFData } = useCampaignFilterForFlows(surveyId);
   const [rawColumnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const columnFilters = useDebounce(rawColumnFilters, 200);
-  const [campaignIds, setSelectedCampaignIds] = useState([]);
+  const [campaignIds, setSelectedCampaignIds] = useState<string[]>([]);
   const { serverFilters, setServerFilters } = useResponseFilterStore();
   useEffect(() => {
     setServerFilters({});
@@ -229,22 +240,23 @@ const WaResponses = ({
         cell: (info: CellInfo) => dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
       },
       ...(questions?.map((question: WaFlowQuestion) => ({
-        id: question.label + "_,_" + QuestionType2[question.metaType] + "_,_" + question.id,
+        id:
+          question.label +
+          "_,_" +
+          QuestionType2[question.metaType as keyof typeof QuestionType2] +
+          "_,_" +
+          question.id,
         accessorKey: question.id,
         accessorFn: (row: Record<string, unknown>) => {
           const response = row?.[question.id];
-          if ([QuestionType.Rating, QuestionType.Opinion].includes(question.metaType)) {
+          if (NUMERIC_ANSWER_TYPES.includes(question.metaType)) {
             return Number(response);
           }
           return response;
         },
-        header: markdownToPlainText(question.header || question.label),
-        enableColumnFilter: ![WaQuestions.DocumentPicker, WaQuestions.PhotoPicker].includes(
-          question.metaType,
-        ),
-        enableSorting: ![WaQuestions.DocumentPicker, WaQuestions.PhotoPicker].includes(
-          question.metaType,
-        ),
+        header: markdownToPlainText(question.header || question.label || ""),
+        enableColumnFilter: !ATTACHMENT_ANSWER_TYPES.includes(question.metaType),
+        enableSorting: !ATTACHMENT_ANSWER_TYPES.includes(question.metaType),
         cell: (info: CellInfo) => getCellData(info?.getValue(), question),
       })) ?? []),
       {
@@ -269,13 +281,13 @@ const WaResponses = ({
               accessorKey: "ticket",
               cell: (info: CellInfo) => {
                 const ticketData = info.row.original.Ticket;
-                const ticketExist = ticketData?.length > 0;
+                const ticketExist = (ticketData?.length ?? 0) > 0;
                 return (
                   <div
                     className="flex items-center justify-center pr-20 cursor-pointer"
                     onClick={() => {
                       if (ticketExist) {
-                        const url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                        const url = `/dashboard/tickets/${ticketData?.[0]?.id}`;
                         window.open(url, "_blank");
                       }
                     }}
@@ -547,6 +559,6 @@ export const getCellData = (info: unknown, question: WaFlowQuestion) => {
     case WaQuestions.PhotoPicker:
       return <WaHoverCardComponent content={info as ReactNode} type={question.metaType} />;
     default:
-      return info.toString() || "";
+      return String(info ?? "") || "";
   }
 };
