@@ -98,7 +98,7 @@ export const ScreenLogicEditor = () => {
     const allJumps = [...logicJumps, ...logicJumpsComponentLevel];
 
     // Save to store
-    saveLogicJumps(currentScreenId, allJumps);
+    saveLogicJumps(currentScreenId ?? "", allJumps);
 
     toast.success("Logic jumps saved successfully", {
       id: "success-logic-jumps",
@@ -207,7 +207,7 @@ function AtomicConditionBlock({
     setCondition({
       condition: selectedCondition,
       response: matchData,
-      questionId: selectedQId,
+      questionId: selectedQId ?? "",
     });
   }, [selectedCondition, matchData, selectedQId]);
 
@@ -228,7 +228,7 @@ function AtomicConditionBlock({
           <FieldLabel htmlFor={`${uid}-field`}>{translations("For Question")}</FieldLabel>
           <Select
             value={selectedQId}
-            onValueChange={setSelectedQId}
+            onValueChange={(value) => setSelectedQId(value ?? "")}
             items={logicSupportedQuestionsInScreen.map((q) => ({ value: q.id, label: q.label }))}
           >
             <SelectTrigger id={`${uid}-field`} className="shrink-0">
@@ -295,7 +295,7 @@ function AtomicConditionBlock({
             <Select
               value={Array.isArray(matchData) ? "" : matchData}
               onValueChange={setMatchData}
-              items={getResponses2(selectedQ).map((opt: any) => ({
+              items={(getResponses2(selectedQ) ?? []).map((opt: any) => ({
                 value: opt.value,
                 label: opt.label,
               }))}
@@ -304,7 +304,7 @@ function AtomicConditionBlock({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {getResponses2(selectedQ).map((opt: any) => (
+                {(getResponses2(selectedQ) ?? []).map((opt: any) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
