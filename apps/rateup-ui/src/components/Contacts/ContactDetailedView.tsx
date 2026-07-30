@@ -38,10 +38,10 @@ const ContactDetailedView = ({
   setIsSendMessageOpen: (open: boolean) => void;
   setIsAddToGroupOpen: (open: boolean) => void;
 }) => {
-  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState<ContactGroup | null>(null);
   const [editNotes, setEditNotes] = useState(false);
   const [notes, setNotes] = useState(selectedContact.notes);
-  const removeContacts = useRemoveContactsFromGroup(selectedGroup?.id);
+  const removeContacts = useRemoveContactsFromGroup(selectedGroup?.id ?? "");
   const updateContact = useEditContactMutation();
   const confirm = useConfirm();
   async function handleRemoveContactFromGroup(group: ContactGroup, contactIds: string[]) {
@@ -155,10 +155,10 @@ const ContactDetailedView = ({
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <p className="text-xs text-muted-foreground mb-2">Tags</p>
                   <div className="flex gap-1 flex-wrap">
-                    {selectedContact.contactLabelMap.map(
+                    {selectedContact.contactLabelMap?.map(
                       (label: { label?: { id?: string; name?: string; color?: string } }) => (
-                        <Badge key={label.label.id} variant="outline">
-                          {label.label.name}
+                        <Badge key={label.label?.id} variant="outline">
+                          {label.label?.name}
                         </Badge>
                       ),
                     )}
@@ -202,8 +202,8 @@ const ContactDetailedView = ({
                               size="sm"
                               aria-label={`Remove from ${group?.name}`}
                               onClick={() => {
-                                setSelectedGroup(group);
-                                handleRemoveContactFromGroup(group, [selectedContact.id]);
+                                setSelectedGroup(group ?? null);
+                                handleRemoveContactFromGroup(group!, [selectedContact.id]);
                               }}
                             >
                               <X className="w-4 h-4" />

@@ -42,7 +42,7 @@ const ContactMenu = ({ contact, groupId }: { contact: ContactsData; groupId: str
   const { ContactLabelMap, contactGroups, waInboxAssign, ...rest } = contact;
   const initialValues = {
     ...rest,
-    labels: ContactLabelMap ? ContactLabelMap.map((c) => c.label.id) : [],
+    labels: ContactLabelMap ? ContactLabelMap.map((c) => c.label?.id) : [],
     contactGroupIds:
       contactGroups?.map((g: { contactGroup?: { id?: string } }) => g?.contactGroup?.id) || [],
     assignedUserIds: waInboxAssign?.map((a) => a.assignedUser?.id) || [],

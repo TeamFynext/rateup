@@ -58,7 +58,7 @@ const AddCustomerModal = ({
   const { isPending, data, refetch } = useContacts(
     pagination,
     searchTerm,
-    null,
+    undefined,
     columnFilters,
     type,
   );
@@ -95,20 +95,22 @@ const AddCustomerModal = ({
       return (
         <TableRow
           key={contact?.loyaltyCustomer?.id}
-          className={customerList.includes(contact?.loyaltyCustomer?.id) ? "bg-accent" : undefined}
+          className={
+            customerList.includes(contact?.loyaltyCustomer?.id ?? "") ? "bg-accent" : undefined
+          }
         >
           <TableCell>
             <Checkbox
               aria-label={translations("Select row")}
               checked={
-                customerList?.includes(contact?.loyaltyCustomer?.id) ||
-                existingContactIds?.includes(contact?.loyaltyCustomer?.id)
+                customerList?.includes(contact?.loyaltyCustomer?.id ?? "") ||
+                existingContactIds?.includes(contact?.loyaltyCustomer?.id ?? "")
               }
-              disabled={existingContactIds?.includes(contact?.loyaltyCustomer?.id)}
+              disabled={existingContactIds?.includes(contact?.loyaltyCustomer?.id ?? "")}
               onCheckedChange={(checked) =>
                 setCustomerList(
                   checked
-                    ? [...customerList, contact?.loyaltyCustomer?.id]
+                    ? [...customerList, contact?.loyaltyCustomer?.id ?? ""]
                     : customerList.filter((id) => id !== contact?.loyaltyCustomer?.id),
                 )
               }
@@ -192,10 +194,12 @@ const AddCustomerModal = ({
         ) : (
           <div className="flex flex-col justify-center gap-4">
             <FilterSelect
-              contactArray={contactGroupData?.map((data) => ({
-                value: data?.id,
-                label: data?.name,
-              }))}
+              contactArray={
+                contactGroupData?.map((data) => ({
+                  value: data?.id,
+                  label: data?.name,
+                })) ?? []
+              }
               setFilterByTag={setColumnFilters}
               filterByTag={columnFilters}
             />
@@ -206,7 +210,7 @@ const AddCustomerModal = ({
                   aria-label="select all"
                   checked={remainingContactIds?.every((id) => customerList.includes(id))}
                   onCheckedChange={(checked) => {
-                    setCustomerList(checked ? remainingContactIds : []);
+                    setCustomerList(checked ? (remainingContactIds ?? []) : []);
                   }}
                   disabled={contactGroupData?.every((customer) =>
                     existingContactIds.includes(customer?.id),
