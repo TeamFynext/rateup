@@ -82,7 +82,7 @@ export default function FlowShare({ flowName, flowDbId, survey, surveyId }: Flow
 
   const selectedTeamObj = survey?.teams?.find((team) => team?.code === selectedTeam);
   const tagOptions =
-    selectedTeamObj?.tags?.map((tag) => ({
+    selectedTeamObj?.tags?.map((tag: string) => ({
       value: tag,
       label: tag,
     })) || [];

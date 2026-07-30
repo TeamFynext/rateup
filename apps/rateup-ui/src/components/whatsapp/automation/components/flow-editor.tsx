@@ -14,6 +14,7 @@ import {
   useNodesState,
 } from "@xyflow/react";
 import type { Node } from "@xyflow/react";
+import type { Connection, NodeChange } from "@xyflow/react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -212,7 +213,7 @@ function FlowEditorContent({
   }, []);
 
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge({ ...params, type: "custom" }, eds)),
+    (params: Connection) => setEdges((eds) => addEdge({ ...params, type: "custom" }, eds)),
     [setEdges],
   );
 
@@ -396,10 +397,10 @@ function FlowEditorContent({
   }, []);
 
   const handleNodesChange = useCallback(
-    (changes) => {
+    (changes: NodeChange[]) => {
       // Check if there's a removal change for the currently selected node
       const isSelectedNodeRemoved = changes.some(
-        (change) => change.type === "remove" && change.id === selectedNode?.id,
+        (change: NodeChange) => change.type === "remove" && change.id === selectedNode?.id,
       );
 
       if (isSelectedNodeRemoved) {

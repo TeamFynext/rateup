@@ -20,7 +20,15 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { WaMessageAssignStatus } from "@/types/enums.ts";
 
-const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
+const BulkAssignUser = ({
+  contactIds,
+  filterData,
+  onSuccess,
+}: {
+  contactIds: string[];
+  filterData: string;
+  onSuccess?: () => void;
+}) => {
   const { user } = useUser();
   const { data: teamMembers, isLoading: membersLoading } = useTeamsMembersOfOrg();
   const { data: teamsRes, isLoading: teamsLoading } = useTeamsByUser();

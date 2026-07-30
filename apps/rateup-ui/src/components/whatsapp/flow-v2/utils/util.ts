@@ -372,16 +372,19 @@ interface InitialValues {
 export const getInitialValues = (type: QuestionType2) => {
   let initialValues: InitialValues = {};
   const validation = getValidationSchema(type);
+  /** zod's internal check descriptors, as this reads max-length limits off them. */
+  type ZodCheckLike = { _zod?: { def?: { check?: string; maximum?: number } } };
   const shape: any = validation?.shape;
   const LABEL_MAX = shape?.label?.def?.checks?.find(
-    (data) => data?._zod?.def?.check === "max_length",
+    (data: ZodCheckLike) => data?._zod?.def?.check === "max_length",
   )?._zod?.def?.maximum;
 
   const DESC_MAX = shape?.description?.def?.checks?.find(
-    (data) => data?._zod?.def?.check === "max_length",
+    (data: ZodCheckLike) => data?._zod?.def?.check === "max_length",
   )?._zod?.def?.maximum;
-  const TEXT_MAX = shape?.text?.def?.checks?.find((data) => data?._zod?.def?.check === "max_length")
-    ?._zod?.def?.maximum;
+  const TEXT_MAX = shape?.text?.def?.checks?.find(
+    (data: ZodCheckLike) => data?._zod?.def?.check === "max_length",
+  )?._zod?.def?.maximum;
 
   const TITLE_MAX = 4090;
   const HELPER_TEXT_MAX = 80;

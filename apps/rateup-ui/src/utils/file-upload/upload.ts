@@ -7,7 +7,8 @@ import { getApiErrorData, getApiErrorMessage } from "../apiError.ts";
 import { fallbackImage } from "../constants.ts";
 
 export const uploadFile = async (
-  file: File,
+  // FormData accepts a Blob just as it does a File; the theme uploader passes both.
+  file: File | Blob,
   withThumbnails = false,
   data = { allowAll: false },
 ) => {

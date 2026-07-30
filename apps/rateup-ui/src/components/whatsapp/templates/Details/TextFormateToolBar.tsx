@@ -24,7 +24,7 @@ export const TextFormateToolBar = ({
   undo,
   dynamicVariables,
 }: {
-  insertValue: (value) => void;
+  insertValue: (value: string) => void;
   applyFormatting: (value: string) => void;
   undo: () => void;
   dynamicVariables: any[];

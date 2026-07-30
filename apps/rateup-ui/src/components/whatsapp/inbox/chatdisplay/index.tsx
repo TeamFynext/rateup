@@ -67,11 +67,17 @@ export default function WaInboxChatDisplay() {
   useEffect(() => {
     if (!contact?.id || !assignedUserList) return;
 
-    const mapped = assignedUserList.map((a) => ({
-      id: a.assignedUserId,
-      name: a.assignedUser?.name,
-      teamId: a.teamId,
-    }));
+    const mapped = assignedUserList.map(
+      (a: {
+        assignedUserId?: string;
+        teamId?: string;
+        assignedUser?: { id?: string; name?: string };
+      }) => ({
+        id: a.assignedUserId,
+        name: a.assignedUser?.name,
+        teamId: a.teamId,
+      }),
+    );
 
     updateContactById(contact.id, (prev) => {
       if (

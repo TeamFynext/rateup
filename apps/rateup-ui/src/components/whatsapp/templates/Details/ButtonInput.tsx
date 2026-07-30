@@ -1,5 +1,6 @@
 import { IconChevronDown, IconPlus, IconTrash, IconVariable, IconX } from "@tabler/icons-react";
 import { useId } from "react";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
@@ -40,7 +41,21 @@ import { useButtonState } from "./useButtonState.ts";
  *  squeeze below a readable width — the row wraps instead. */
 const FIELD = "min-w-56 flex-1";
 
-const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailerIds }) => {
+const ButtonInput = ({
+  form,
+  index,
+  deleteButton,
+  data,
+  catalog,
+  productRetailerIds,
+}: {
+  form: UseFormReturn<FieldValues>;
+  index: number;
+  deleteButton: (index: number) => void;
+  data?: Record<string, unknown>;
+  catalog?: unknown;
+  productRetailerIds?: string[];
+}) => {
   const { t: translations } = useTranslation();
   const uid = useId();
   /** Stable, unique DOM id for one of this button's fields, e.g. fid("text"). */
@@ -557,46 +572,48 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
             Add Sections
             <IconChevronDown size={15} />
           </Button>
-          {form.watch().defaultValues?.catalog?.mpm?.sections?.map((_sec, index) => (
-            <div
-              className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-background p-3"
-              key={index}
-            >
-              <Field className={FIELD}>
-                <FieldLabel htmlFor={fid(`section-${index}-title`)}>Section Title</FieldLabel>
-                <Input
-                  id={fid(`section-${index}-title`)}
-                  key={`defaultValues.catalog.mpm.sections.${index}.title`}
-                  {...registerField(form, `defaultValues.catalog.mpm.sections.${index}.title`)}
-                />
-              </Field>
-              <Field className={FIELD}>
-                <FieldLabel htmlFor={fid(`section-${index}-products`)}>
-                  Product Retailer Ids
-                </FieldLabel>
-                <MultiSelect
-                  id={fid(`section-${index}-products`)}
-                  options={toSelectOptions(productRetailerIds)}
-                  value={
-                    form.watch()["defaultValues"]["catalog"]["mpm"]["sections"][`${index}`][
-                      "products"
-                    ] ?? []
-                  }
-                  onValueChange={(value) =>
-                    setValue(form, `defaultValues.catalog.mpm.sections.${index}.products`, value)
-                  }
-                />
-              </Field>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="shrink-0"
-                onClick={() => removeItem(form, "defaultValues.catalog.mpm.sections", index)}
+          {form
+            .watch()
+            .defaultValues?.catalog?.mpm?.sections?.map((_sec: unknown, index: number) => (
+              <div
+                className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-background p-3"
+                key={index}
               >
-                <IconTrash color="red" size={15} />
-              </Button>
-            </div>
-          ))}
+                <Field className={FIELD}>
+                  <FieldLabel htmlFor={fid(`section-${index}-title`)}>Section Title</FieldLabel>
+                  <Input
+                    id={fid(`section-${index}-title`)}
+                    key={`defaultValues.catalog.mpm.sections.${index}.title`}
+                    {...registerField(form, `defaultValues.catalog.mpm.sections.${index}.title`)}
+                  />
+                </Field>
+                <Field className={FIELD}>
+                  <FieldLabel htmlFor={fid(`section-${index}-products`)}>
+                    Product Retailer Ids
+                  </FieldLabel>
+                  <MultiSelect
+                    id={fid(`section-${index}-products`)}
+                    options={toSelectOptions(productRetailerIds)}
+                    value={
+                      form.watch()["defaultValues"]["catalog"]["mpm"]["sections"][`${index}`][
+                        "products"
+                      ] ?? []
+                    }
+                    onValueChange={(value) =>
+                      setValue(form, `defaultValues.catalog.mpm.sections.${index}.products`, value)
+                    }
+                  />
+                </Field>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="shrink-0"
+                  onClick={() => removeItem(form, "defaultValues.catalog.mpm.sections", index)}
+                >
+                  <IconTrash color="red" size={15} />
+                </Button>
+              </div>
+            ))}
         </div>
       );
     case WHATSAPP_BUTTON_TYPE.SPM:

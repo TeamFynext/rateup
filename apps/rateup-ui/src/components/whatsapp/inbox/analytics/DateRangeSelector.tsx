@@ -102,7 +102,7 @@ const DateRangeSelector = ({
 
 export default DateRangeSelector;
 
-export function DateSelector({ days, setDays }) {
+export function DateSelector({ days, setDays }: { days: number; setDays: (days: number) => void }) {
   const { t } = useTranslation();
   return (
     <div className="flex items-center gap-1 flex-col sm:flex-row">

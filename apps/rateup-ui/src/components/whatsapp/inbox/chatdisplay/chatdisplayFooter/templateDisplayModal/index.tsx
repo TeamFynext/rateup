@@ -20,7 +20,7 @@ interface Props {
   onClose: any;
 }
 
-function templateBodyText(templateComponent) {
+function templateBodyText(templateComponent: Array<{ type?: string; text?: string }>) {
   const templateBody = templateComponent.filter((i) => i.type === "BODY");
   const text = templateBody[0]?.text || "";
 
