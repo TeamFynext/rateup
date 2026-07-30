@@ -58,7 +58,7 @@ function SyncTemplatesModal({
   onClose: () => void;
   unsyncedFlows: WaFlowWa[];
 }) {
-  const [selectedFlows, handlers] = useListState([]);
+  const [selectedFlows, handlers] = useListState<string>([]);
   const [currentScreen, setCurrentScreen] = useState<"selectFlows" | "configureFlows">(
     "selectFlows",
   );
@@ -87,9 +87,9 @@ function SyncTemplatesModal({
           />
         ) : (
           <ImportFlows
-            flows={selectedFlows.map((flowId: string) =>
-              unsyncedFlows.find((flow) => flow.id === flowId),
-            )}
+            flows={selectedFlows
+              .map((flowId: string) => unsyncedFlows.find((flow) => flow.id === flowId))
+              .filter((flow) => !!flow)}
             handleClose={handleClose}
           />
         )}
@@ -107,7 +107,7 @@ interface ImportFlowsProps {
  */
 function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
   const [currentFlowIndex, setCurrentFlowIndex] = useState(0);
-  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [selectedTeam, setSelectedTeam] = useState("");
   const flow = flows[currentFlowIndex];
   const importMutation = useImportFlowsMutation();
   const { t: translations } = useTranslation();
@@ -315,7 +315,7 @@ function ConfigureFlow({
                                 qPath,
                               )?.type;
                               if (qType) {
-                                qRes = getQuestionResponses(qType);
+                                qRes = getQuestionResponses(qType) ?? [];
                                 if (
                                   qRes?.length > 0 &&
                                   !getNestedProperty(form.watch(), choicePath)
@@ -431,7 +431,7 @@ function DisplayTemplates({
                 </TableCell>
                 <TableCell>{template.name}</TableCell>
                 <TableCell>
-                  <WaTemplateStatusBadge status={template.status} />
+                  <WaTemplateStatusBadge status={template.status!} />
                 </TableCell>
               </TableRow>
             ))}
@@ -472,7 +472,7 @@ export function SyncFlowsButton({ disabled = false }) {
       <SyncTemplatesModal
         opened={openModal && !isLoading && !isError}
         onClose={close}
-        unsyncedFlows={unsyncedFlows}
+        unsyncedFlows={unsyncedFlows ?? []}
       />
     </>
   );
