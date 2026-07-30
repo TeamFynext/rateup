@@ -130,7 +130,7 @@ function LoyaltyTemplateListPage() {
   const [sortOption, setSortOption] = useState("latest");
   const navigate = useNavigate();
   const saveDraftMutation = useSaveTemplateAsDraftMutation(
-    null,
+    "",
     () => {
       toast.success("Draft created");
       refetch();
@@ -142,7 +142,9 @@ function LoyaltyTemplateListPage() {
   );
 
   const [showModal, setShowModal] = useState(false);
-  const [selectedPredefined, setSelectedPredefined] = useState(null);
+  const [selectedPredefined, setSelectedPredefined] = useState<
+    (typeof PREDEFINED_TEMPLATES)[number] | null
+  >(null);
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [step, setStep] = useState<"pick" | "account" | "loading">("pick");
 

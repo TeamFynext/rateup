@@ -37,7 +37,7 @@ export function DataTableToolbar<TData, TValue>({
   function handleRemoveMembers() {
     if (!selectedMembers.length) return;
     removeContactsMutation?.mutate(
-      { contactIds: selectedMembers, groupId: groupDetails?.id },
+      { contactIds: selectedMembers, groupId: groupDetails?.id ?? "" },
       {
         onSuccess: () => {
           toast.success("contact removed successfully");
@@ -120,7 +120,7 @@ export function DataTableToolbar<TData, TValue>({
       <AddContactToGroupDialog
         opened={isOpenedAddModal}
         setOpened={setIsOpenedAddModal}
-        group={groupDetails}
+        group={groupDetails!}
       />
     </div>
   );

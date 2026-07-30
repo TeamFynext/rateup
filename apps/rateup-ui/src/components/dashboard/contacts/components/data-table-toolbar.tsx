@@ -64,6 +64,7 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useConfirm } from "@/context/confirm-provider.tsx";
+import type { CustomField } from "@/context/CustomFieldsContext.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
@@ -384,7 +385,7 @@ const ImportContactModal = ({
     // Example: download a text file (you can replace this with any file URL)
     const fileUrl = getFileUrlFromKey("/File/contact/demo.csv", false);
     const link = document.createElement("a");
-    link.href = fileUrl;
+    link.href = fileUrl ?? "";
     link.download = "example.pdf"; // Suggested filename
     link.click();
   };
@@ -393,13 +394,13 @@ const ImportContactModal = ({
   const [hasHeaderRow, setHasHeaderRow] = useState(true);
   const importCSVContactMutation = useImportCSVContactMutation();
   const [error, setError] = useState<string | null>(null);
-  const [fields, setFields] = useState([]);
+  const [fields, setFields] = useState<CustomField[]>([]);
   const { customFields } = useCustomFieldsContext();
 
   useEffect(() => {
     if (csvfile) {
       const fileExtension = csvfile.name.split(".").pop()?.toLowerCase();
-      if (!["csv", "xlsx", "ods"].includes(fileExtension)) {
+      if (!["csv", "xlsx", "ods"].includes(fileExtension ?? "")) {
         setError(t("Please upload a valid CSV, XLSX, or ODS file."));
       } else {
         setError(null);

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
-interface CustomField {
+export interface CustomField {
   id: string;
   slug: string;
   name: string;
