@@ -1,3 +1,4 @@
+import type { RankingInfo } from "@tanstack/match-sorter-utils";
 import { rankings, rankItem } from "@tanstack/match-sorter-utils";
 import type { FilterFn } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -25,11 +26,11 @@ export const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   let itemRank = rankItem(formatedResponse, value);
 
   if (responseType === QuestionType.Smiley && value?.length > 0) {
-    const temp: string[] = [];
+    const temp: RankingInfo[] = [];
     value?.map((data: { value?: string }) => {
-      temp?.push(rankItem(formatedResponse, data));
+      temp?.push(rankItem(formatedResponse, data?.value ?? ""));
     });
-    temp?.map((data: string) => {
+    temp?.map((data) => {
       if (data.passed) itemRank = data;
     });
   }

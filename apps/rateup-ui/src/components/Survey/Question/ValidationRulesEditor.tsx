@@ -193,18 +193,20 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
 
   const addRule = (ruleType: string) => {
     if ([Q.MultiTextInput].includes(selectedQ?.type as QuestionType)) {
-      let newRule;
+      let newRule: Rule;
       if (ruleType === "length") {
         newRule = {
           min: "3",
           max: "5",
           ruleType,
+          errorMessage: "",
         };
         newRule.errorMessage = `${selectedFieldKey}: length should be between ${newRule.min} and ${newRule?.max} characters`;
       } else if (ruleType === "textType") {
         newRule = {
           type: "Letters_&_Numbers",
           ruleType,
+          errorMessage: "",
         };
         newRule.errorMessage = `${selectedFieldKey}: only ${newRule.type} are allowed`;
       } else if (ruleType === "required") {

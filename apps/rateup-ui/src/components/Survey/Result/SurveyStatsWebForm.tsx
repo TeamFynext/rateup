@@ -13,10 +13,13 @@ const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
   const responseCount = useMemo(
     () =>
       filterTeams?.length
-        ? responseCountData?.teamWiseCount?.reduce((total: number, teamMap: { count: number }) => {
-            if (filterTeams.includes(teamMap.id)) total += teamMap.count;
-            return total;
-          }, 0)
+        ? responseCountData?.teamWiseCount?.reduce(
+            (total: number, teamMap: { id: string; count: number }) => {
+              if (filterTeams.includes(teamMap.id)) total += teamMap.count;
+              return total;
+            },
+            0,
+          )
         : responseCountData?.all,
     [responseCountData, filterTeams],
   );
@@ -49,7 +52,7 @@ const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {
     {
       title: "Total Responses",
       value: responseCount ?? 0,
-      badge: null,
+      badge: null as string | null,
       icon: <MessageCircle className="text-[#2B82DE]" size={24} />,
     },
     {
@@ -117,7 +120,7 @@ function getResponseRateInfo(responseCount: number, visited: number) {
 
   const rate = visited > 0 ? Number(((responseCount / visited) * 100).toFixed(1)) : 0;
 
-  let status = "Too Low";
+  let status: "Great" | "Good" | "Low" | "Too Low" = "Too Low";
   if (rate >= 70) status = "Great";
   else if (rate >= 50) status = "Good";
   else if (rate >= 30) status = "Low";
