@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query.ts";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query.ts";
+import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -224,7 +225,7 @@ interface NodeOption {
 
 // Returns the raw body, which for several node types (text/button/list/cta) is a TipTap
 // rich-text JSON object rather than a plain string — must go through parseJsonToReact.
-function getNodeBody(node: TypedNode | null | undefined): unknown {
+function getNodeBody(node: TypedNode | null | undefined): string | TiptapNode {
   const data: any = node?.data;
   if (!data) return "";
   return (

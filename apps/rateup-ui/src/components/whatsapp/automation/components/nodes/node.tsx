@@ -3,6 +3,7 @@ import type { NodeProps } from "@xyflow/react";
 import type { JSX, ReactNode } from "react";
 import { memo } from "react";
 
+import type { TiptapNode } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import { parseJsonToReact } from "@/components/RichTextEditor/wa-editor/format.tsx";
 import {
   Attachment,
@@ -32,8 +33,14 @@ type Choice = { id?: string; title: ReactNode; description?: ReactNode };
 
 type Part =
   | { t: "field"; label?: string; value: ReactNode; mono?: boolean }
-  | { t: "rich"; label?: string; value: unknown; placeholder?: string }
-  | { t: "media"; kind: MediaKind; src?: string | null; title: ReactNode; caption?: unknown }
+  | { t: "rich"; label?: string; value: string | TiptapNode; placeholder?: string }
+  | {
+      t: "media";
+      kind: MediaKind;
+      src?: string | null;
+      title: ReactNode;
+      caption?: string | TiptapNode;
+    }
   | { t: "choices"; items: Choice[] };
 
 // ── part builders ───────────────────────────────────────────────────────
@@ -43,7 +50,7 @@ const field = (label: string | undefined, value: ReactNode, mono = false): Part 
   value,
   mono,
 });
-const rich = (label: string, value: unknown, placeholder?: string): Part => ({
+const rich = (label: string, value: string | TiptapNode, placeholder?: string): Part => ({
   t: "rich",
   label,
   value,
@@ -53,7 +60,7 @@ const media = (
   kind: MediaKind,
   src: string | null | undefined,
   title: ReactNode,
-  caption?: unknown,
+  caption?: string | TiptapNode,
 ): Part => ({ t: "media", kind, src, title, caption });
 const choices = (items: Choice[]): Part => ({ t: "choices", items });
 

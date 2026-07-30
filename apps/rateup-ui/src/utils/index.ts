@@ -131,7 +131,11 @@ export function isValidUrl(url: string, checkHttps: boolean = true) {
 export const safeStrOrNull = (str: string): string | null =>
   !str || !str.trim().length ? null : str;
 
-export function hasRealContent(obj: { content?: { content?: unknown[] }[] } | null | undefined) {
+export function hasRealContent(
+  obj: string | { content?: { content?: unknown[] }[] } | null | undefined,
+) {
+  // A plain-text body has no blocks to inspect, matching the previous behaviour.
+  if (typeof obj === "string") return false;
   return obj?.content?.some(
     (block: { content?: unknown[] }) => block.content && block.content.length > 0,
   );
