@@ -54,7 +54,7 @@ function LinklistItemEditor() {
       <div className={`style-section-div`}>
         <h2>Border Radius</h2>
         <Slider
-          value={[borderRadius]}
+          value={[Number(borderRadius ?? 0)]}
           onValueChange={(value) =>
             handleBorderRadiusChange(Array.isArray(value) ? value[0] : value)
           }
