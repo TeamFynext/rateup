@@ -72,8 +72,8 @@ const BulkAssignUser = ({
               waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
               assignedUsers: [
                 {
-                  id: user?.id,
-                  name: user?.name,
+                  id: user?.id ?? "",
+                  name: user?.name ?? "",
                   teamId: selectedTeam,
                 },
               ],
@@ -94,8 +94,8 @@ const BulkAssignUser = ({
       {
         contactIds,
         assignee: {
-          userId: user?.userId,
-          teamId: user?.teams?.[0],
+          userId: user?.userId ?? "",
+          teamId: user?.teams?.[0] ?? "",
         },
       },
       {
@@ -106,9 +106,9 @@ const BulkAssignUser = ({
               waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
               assignedUsers: [
                 {
-                  id: user?.userId,
-                  name: user?.userName,
-                  teamId: user?.teams?.[0],
+                  id: user?.userId ?? "",
+                  name: user?.userName ?? "",
+                  teamId: user?.teams?.[0] ?? "",
                 },
               ],
             }));
@@ -135,7 +135,7 @@ const BulkAssignUser = ({
           <Select
             value={selectedTeam}
             onValueChange={(val) => {
-              setSelectedTeam(val);
+              setSelectedTeam(val ?? "");
               setSelectedUser("");
             }}
             items={teams.map((team) => ({ value: team.id, label: team.name }))}
