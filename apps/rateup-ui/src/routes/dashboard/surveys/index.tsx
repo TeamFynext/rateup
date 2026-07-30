@@ -192,7 +192,7 @@ function SurveysPageFilter({
     <div className="flex flex-col sm:flex-row gap-2">
       <Select
         value={filterParam}
-        onValueChange={setFilterParam}
+        onValueChange={(value) => setFilterParam(value ?? "")}
         items={[
           { value: "all", label: t("All") },
           { value: "active", label: t("Active") },
@@ -213,7 +213,7 @@ function SurveysPageFilter({
 
       <Select
         value={selectedTeamId}
-        onValueChange={setSelectedTeamId}
+        onValueChange={(value) => setSelectedTeamId(value ?? "")}
         disabled={disabled}
         items={[{ value: "all", label: t("All Teams") }, ...teamOptions]}
       >

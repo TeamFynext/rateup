@@ -399,7 +399,11 @@ export const UserSelector = (props: UserSelectorProps) => {
   }
   const userSelectItems = userData?.map((user) => ({ value: user.id, label: user.name })) ?? [];
   return (
-    <Select value={value} onValueChange={onValueChange} items={userSelectItems}>
+    <Select
+      value={value}
+      onValueChange={(value) => onValueChange(value ?? "")}
+      items={userSelectItems}
+    >
       <SelectTrigger className={`${className}`}>
         <div>
           <User className="size-4 text-muted-foreground" />

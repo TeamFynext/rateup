@@ -91,7 +91,7 @@ const SourceSelector = ({
   return (
     <Select
       value={value}
-      onValueChange={onChange}
+      onValueChange={(value) => onChange(value ?? "")}
       items={ContactSources.map((source) => ({ value: source.value, label: source.label }))}
     >
       <SelectTrigger className="w-37.5 bg-gray-100 border-none">
@@ -150,7 +150,7 @@ const LabelSelector = ({
   return (
     <Select
       value={value}
-      onValueChange={onChange}
+      onValueChange={(value) => onChange(value ?? "")}
       items={labels.map((label) => ({ value: label.id, label: label.name }))}
     >
       <SelectTrigger className="w-37.5 bg-gray-100 border-none">

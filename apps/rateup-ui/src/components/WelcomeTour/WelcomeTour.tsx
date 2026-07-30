@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import styles from "./Welcome.module.css";
 
 const WelcomeTour = ({ steps }: { steps: DriveStep[] }) => {
-  const tourInstance = useRef(null);
+  const tourInstance = useRef<HTMLElement | null>(null);
 
   const startTour = () => {
     tourInstance.current = driver({

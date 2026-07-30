@@ -450,7 +450,7 @@ const ShareSurvey = ({
                       </FieldLabel>
                       <Select
                         value={selectTeamDropdownState}
-                        onValueChange={handleContainedSelectionChange}
+                        onValueChange={(value) => handleContainedSelectionChange(value ?? "")}
                         disabled={disableShare}
                         items={teamSelectData}
                       >

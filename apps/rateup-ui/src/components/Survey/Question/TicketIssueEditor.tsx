@@ -74,14 +74,16 @@ const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: 
   const [minOpinion, setMinOpinion] = useState(selectedQ?.ticketIssue?.minOpinion || 6);
   const [selectedOptions, setSelectedOptions] = useState(selectedQ?.ticketIssue?.reqOptions || []);
 
-  const updateTicketIssue = (ticketIssue: {
-    minRating?: number;
-    minOpinion?: number;
-    reqOptions?: Array<string>;
-    submissionTicket?: boolean;
-    selectedColumnId?: string;
-    selectedBoardId?: string;
-  }) => {
+  const updateTicketIssue = (
+    ticketIssue: {
+      minRating?: number;
+      minOpinion?: number;
+      reqOptions?: Array<string>;
+      submissionTicket?: boolean;
+      selectedColumnId?: string;
+      selectedBoardId?: string;
+    } | null,
+  ) => {
     if (selectedQ) {
       setSelectedQ({
         ...selectedQ,
@@ -95,23 +97,23 @@ const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: 
       setEnableTicketIssue(true);
       switch (selectedQ?.type) {
         case Q.Rating:
-          if (minRating !== selectedQ["ticketIssue"]["minRating"]) {
-            setMinRating(selectedQ["ticketIssue"]["minRating"]);
+          if (minRating !== selectedQ["ticketIssue"]!["minRating"]!) {
+            setMinRating(selectedQ["ticketIssue"]!["minRating"]!);
           }
           break;
         case Q.Opinion:
-          if (minOpinion !== selectedQ["ticketIssue"]["minOpinion"]) {
-            setMinOpinion(selectedQ["ticketIssue"]["minOpinion"]);
+          if (minOpinion !== selectedQ["ticketIssue"]!["minOpinion"]!) {
+            setMinOpinion(selectedQ["ticketIssue"]!["minOpinion"]!);
           }
           break;
         case Q.Smiley:
-          if (selectedOptions !== selectedQ["ticketIssue"]["reqOptions"]) {
-            setSelectedOptions(selectedQ["ticketIssue"]["reqOptions"]);
+          if (selectedOptions !== selectedQ["ticketIssue"]!["reqOptions"]!) {
+            setSelectedOptions(selectedQ["ticketIssue"]!["reqOptions"]!);
           }
           break;
       }
-      if (selectedQ["ticketIssue"]["submissionTicket"])
-        setSubmissionTicket(selectedQ["ticketIssue"]["submissionTicket"]);
+      if (selectedQ["ticketIssue"]!["submissionTicket"]!)
+        setSubmissionTicket(selectedQ["ticketIssue"]!["submissionTicket"]!);
     } else {
       setEnableTicketIssue(false);
     }
@@ -429,14 +431,14 @@ const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: 
               <Field>
                 <FieldLabel htmlFor="ticket-board">Select Board</FieldLabel>
                 <Select
-                  value={selectedQ?.ticketIssue?.selectedBoardId}
+                  value={selectedQ?.ticketIssue?.selectedBoardId ?? ""}
                   onValueChange={(boardId) => {
-                    setSelectedBoardId(boardId);
+                    setSelectedBoardId(boardId ?? undefined);
                     setSelectedQ({
                       ...selectedQ,
                       ticketIssue: {
                         ...selectedQ.ticketIssue,
-                        selectedBoardId: boardId,
+                        selectedBoardId: boardId ?? undefined,
                       },
                     });
                   }}
@@ -458,13 +460,13 @@ const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: 
                 <Field>
                   <FieldLabel htmlFor="ticket-column">Select Column</FieldLabel>
                   <Select
-                    value={selectedQ?.ticketIssue?.selectedColumnId}
+                    value={selectedQ?.ticketIssue?.selectedColumnId ?? ""}
                     onValueChange={(columnId) => {
                       setSelectedQ({
                         ...selectedQ,
                         ticketIssue: {
                           ...selectedQ.ticketIssue,
-                          selectedColumnId: columnId,
+                          selectedColumnId: columnId ?? undefined,
                         },
                       });
                     }}

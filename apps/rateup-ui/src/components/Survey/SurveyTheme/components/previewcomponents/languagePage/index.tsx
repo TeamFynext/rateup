@@ -25,7 +25,7 @@ function LanguagePage({ survey }: { survey: Survey }) {
 
   const selectedPreview = useSelectedPreview();
 
-  const startBtnInputRef = useRef(null);
+  const startBtnInputRef = useRef<HTMLElement | null>(null);
 
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
   const questionUpdateMutation = useQuestionUpdateMutation({

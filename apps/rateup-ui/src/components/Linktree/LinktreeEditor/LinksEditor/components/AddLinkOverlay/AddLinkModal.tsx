@@ -216,7 +216,7 @@ function AddLinkModal({
             <FieldLabel htmlFor="link-type">Select Link type</FieldLabel>
             <Select
               value={selectedLinkType}
-              onValueChange={handleSelectedLinkTypeDropdownChange}
+              onValueChange={(value) => handleSelectedLinkTypeDropdownChange(value ?? "")}
               items={linkTypeOptions}
             >
               <SelectTrigger id="link-type" className="w-full">

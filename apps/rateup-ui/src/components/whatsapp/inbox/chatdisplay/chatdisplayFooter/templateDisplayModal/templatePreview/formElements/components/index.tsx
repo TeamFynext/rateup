@@ -467,7 +467,7 @@ function LeadFormQuestionsInputComponent(props: LeadFormQuestionsInputComponentP
         >
           {"Form question key for " + props.label}
         </FieldLabel>
-        <Select value={props.value} onValueChange={props.onChange}>
+        <Select value={props.value} onValueChange={(value) => props.onChange(value ?? "")}>
           <SelectTrigger id={`${uid}-field-7`} className="w-full">
             <SelectValue placeholder="Click to select" />
           </SelectTrigger>

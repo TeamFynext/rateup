@@ -76,7 +76,7 @@ function SelectField({
   return (
     <Field className={cn("flex flex-col gap-1", className)}>
       {label && <FieldTitle>{label}</FieldTitle>}
-      <Select value={value ?? ""} onValueChange={onChange} items={options}>
+      <Select value={value ?? ""} onValueChange={(value) => onChange(value ?? "")} items={options}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>

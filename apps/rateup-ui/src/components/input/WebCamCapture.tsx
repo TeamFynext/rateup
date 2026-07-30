@@ -18,7 +18,7 @@ interface WebcamProps {
 }
 
 const WebcamCapture = ({ height = 720, width = 1280, setCapturedImg, close }: WebcamProps) => {
-  const webcamRef = useRef(null);
+  const webcamRef = useRef<HTMLElement | null>(null);
   const [imgSrc, setImgSrc] = useState(null);
   const { t: translations } = useTranslation();
   const capture = useCallback(() => {

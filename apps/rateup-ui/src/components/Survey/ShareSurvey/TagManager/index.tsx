@@ -60,7 +60,7 @@ function TagManager({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
-  const dataGridCompRef = useRef(null);
+  const dataGridCompRef = useRef<HTMLDivElement | null>(null);
   const { t: translations } = useTranslation();
 
   const downloadFiles = useCallback(
@@ -110,7 +110,7 @@ function TagManager({
         qrPreviewContainerClassName,
       );
       setIsAllQrDownloadProcessing(true);
-      await downloadFiles(allQrsPreviewContainerDomNodes);
+      await downloadFiles([...allQrsPreviewContainerDomNodes] as HTMLElement[]);
       setIsAllQrDownloadProcessing(false);
     }
   }, []);
@@ -183,7 +183,7 @@ function TagManager({
                 <Select
                   items={teamSelectData}
                   value={selectTeamDropdownValue ?? ""}
-                  onValueChange={onSelectTeamDropdownChange}
+                  onValueChange={(value) => onSelectTeamDropdownChange(value ?? "")}
                   disabled={!isPublished}
                 >
                   <SelectTrigger id={`${uid}-field`} className="w-full">

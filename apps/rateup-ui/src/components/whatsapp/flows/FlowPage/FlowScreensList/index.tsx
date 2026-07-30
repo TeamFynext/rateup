@@ -42,7 +42,7 @@ function FlowScreensList({
 
   const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
-  const firstRender = useRef(null);
+  const firstRender = useRef<HTMLElement | null>(null);
   const [pageNo, handlers] = useCounter(0, {
     min: 0,
     max: flowJson?.screens?.length ?? 0,

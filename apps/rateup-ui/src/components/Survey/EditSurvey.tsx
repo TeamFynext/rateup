@@ -85,10 +85,10 @@ export function EditSurvey({
   );
 
   // To store questionDetailedViewForm State.
-  const questionDetailedViewFormRef = useRef(null);
+  const questionDetailedViewFormRef = useRef<Question | null>(null);
 
   // To store state of surveyThemeContextProvider.
-  const surveyThemeContextProviderValueRef = useRef(null);
+  const surveyThemeContextProviderValueRef = useRef<Record<string, unknown> | null>(null);
 
   // Search text for the "Add Element" catalogue.
   const [elementQuery, setElementQuery] = useState("");
@@ -130,12 +130,12 @@ export function EditSurvey({
     } else if (isQuestionType(selectedQ?.type)) {
       if (questionDetailedViewFormRef.current) {
         const missingLanguages = validateAllLanguagesArePopulated(
-          questionDetailedViewFormRef.current as Question,
+          questionDetailedViewFormRef.current,
           surveyLanguages,
           ["title", "choices"],
         );
         const missingContactFeatures = validateContactFeaturesPopulated(
-          questionDetailedViewFormRef.current as Question,
+          questionDetailedViewFormRef.current,
           surveyLanguages,
         );
         return missingLanguages?.length > 0 || missingContactFeatures?.length > 0;

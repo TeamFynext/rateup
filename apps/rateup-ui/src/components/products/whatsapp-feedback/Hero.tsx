@@ -13,7 +13,7 @@ function getTime() {
 }
 
 export default function Hero() {
-  const waBodyRef = useRef(null);
+  const waBodyRef = useRef<HTMLDivElement | null>(null);
   const heroVisibleRef = useRef(true);
   const runningRef = useRef(false);
   const navigate = useNavigate();

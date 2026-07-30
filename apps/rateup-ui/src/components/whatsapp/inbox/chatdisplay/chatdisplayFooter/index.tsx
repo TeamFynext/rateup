@@ -122,7 +122,7 @@ export default function WaInboxChatDisplayFooter({
   const { activeTab, setActiveTab } = useComposerTabStore();
   const [quickRepliesOpen, setQuickRepliesOpen] = useState(false);
 
-  const submiRef = useRef(null);
+  const submiRef = useRef<HTMLElement | null>(null);
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
   const { user } = useUser();

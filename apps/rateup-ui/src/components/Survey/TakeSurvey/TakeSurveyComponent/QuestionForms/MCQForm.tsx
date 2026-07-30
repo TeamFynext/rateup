@@ -27,7 +27,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
   const [isOtherInputFocusTrapActive, setIsOtherInputFocusTrapActive] = useState(false);
 
   const themePrimaryColor = useThemePrimaryColor();
-  const otherInputContainerRef = useRef(null);
+  const otherInputContainerRef = useRef<HTMLDivElement | null>(null);
   const otherInputRef = useRef<HTMLInputElement>(null);
 
   const [scope, animate] = useAnimate();
@@ -35,7 +35,7 @@ export function MCQForm({ previewChoices, features }: Readonly<MCQFormProps>) {
 
   const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
 
-  const bDivRef = useRef(null);
+  const bDivRef = useRef<HTMLDivElement | null>(null);
   const options = selectedQ
     ? choices
     : previewChoices?.[selectedLanguage]

@@ -14,7 +14,7 @@ function Particle({ style }: { style: CSSProperties }) {
 }
 
 export default function NotFoundPage() {
-  const particlesRef = useRef(null);
+  const particlesRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
   // Generate particle styles once — stable across renders via useMemo if needed

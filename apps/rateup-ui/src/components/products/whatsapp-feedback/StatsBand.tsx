@@ -15,7 +15,7 @@ function StatItem({
   desc?: string;
   delay?: string;
 }) {
-  const numRef = useRef(null);
+  const numRef = useRef<HTMLDivElement | null>(null);
   const observed = useRef(false);
 
   useEffect(() => {

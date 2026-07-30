@@ -151,7 +151,7 @@ function TakeSurvey({
     }
   }, [survey]);
 
-  const takeSurveyRootDivRef = useRef(null);
+  const takeSurveyRootDivRef = useRef<HTMLDivElement | null>(null);
 
   const pendingUpdate = useRef(false);
   const viewportHandler = (event: Event) => {
@@ -188,7 +188,7 @@ function TakeSurvey({
     };
   }, [isSurveyThemePreview]);
 
-  const errorTextDivRef = useRef(null);
+  const errorTextDivRef = useRef<HTMLDivElement | null>(null);
 
   if (!questionsLength) {
     return (

@@ -29,7 +29,7 @@ const SortDropdown = ({
     <div className={"flex items-center w-full gap-1"}>
       <p className="text-gray-600 text-xs w-14">{translations("SORT BY")}:</p>
       <Select
-        onValueChange={handleSortChange}
+        onValueChange={(value) => handleSortChange(value ?? "")}
         defaultValue={sortOption}
         items={[
           { value: "latest", label: translations("Latest First") },

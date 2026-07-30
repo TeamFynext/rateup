@@ -56,7 +56,7 @@ const LabelSelector = (props: LabelSelectorProps) => {
     labels?.map((label: ContactLabelOption) => ({ value: label.id, label: label.name })) ?? [];
   const { value, onChange } = props as Extract<LabelSelectorProps, { allowMultiSelect?: false }>;
   return (
-    <Select value={value} onValueChange={onChange} items={labelItems}>
+    <Select value={value} onValueChange={(value) => onChange(value ?? "")} items={labelItems}>
       <SelectTrigger className={`${className}`}>
         <SelectValue placeholder={"Select a label"} />
       </SelectTrigger>

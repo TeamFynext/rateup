@@ -90,7 +90,7 @@ function SurveyTypeDropdowns({
         <Combobox
           items={selectedSurveyTitleOptions}
           value={selectedSurveyTitle}
-          onValueChange={onSurveyTitleDDChange}
+          onValueChange={(value) => onSurveyTitleDDChange(value ?? "")}
           inputValue={surveyTitleAutoCompleteSearch}
           onInputValueChange={onSurveyTitleAutoCompleteSearchChange}
         >
@@ -128,7 +128,7 @@ function SurveyTypeDropdowns({
         <FieldLabel htmlFor="select-team">Select Team</FieldLabel>
         <Select
           value={selectedTeam ?? ""}
-          onValueChange={onSelectedTeamDDChange}
+          onValueChange={(value) => onSelectedTeamDDChange(value ?? "")}
           items={selectedTeamOptions}
         >
           <SelectTrigger

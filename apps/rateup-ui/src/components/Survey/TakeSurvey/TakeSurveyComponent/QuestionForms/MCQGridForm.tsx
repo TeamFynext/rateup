@@ -46,7 +46,7 @@ const MCQGridForm = ({ features, previewChoices, isPreview }: MCQGridFormProps) 
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
-  const tableRef = useRef(null);
+  const tableRef = useRef<HTMLDivElement | null>(null);
   const themePrimaryColor = useThemePrimaryColor();
 
   const { control } = useForm<Record<string, string>>({

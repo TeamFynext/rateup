@@ -33,7 +33,7 @@ function ThemePreview() {
 
   const themeDispatch = useThemeDispatch();
 
-  const previewDivRef = useRef(null);
+  const previewDivRef = useRef<HTMLDivElement | null>(null);
 
   const handleTitleTextChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     themeDispatch({

@@ -349,7 +349,7 @@ function BoardTeamFilter({
   return (
     <Select
       value={value}
-      onValueChange={onChange}
+      onValueChange={(value) => onChange(value ?? "")}
       disabled={disabled}
       items={[{ value: "all", label: t("All Teams") }, ...teamOptions]}
     >

@@ -47,7 +47,7 @@ const LargeTextResponseSummary = ({
   const [summaryTab, setSummaryTab] = useState(ResponseSummaryType.All);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | FormElement | null>(null);
   const { teams } = useContext(SurveyContext);
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement | null>(null);
   const [height, setHeight] = useState(null);
   const { t: translations } = useTranslation();
 

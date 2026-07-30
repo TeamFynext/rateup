@@ -31,7 +31,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   const selectedPreview = useSelectedPreview();
   const isMobile = useIsMobile() || selectedPreview === "mobile";
   const { t: translations } = useTranslation();
-  const takeSurveyLayoutWebDomNodeRef = useRef(null);
+  const takeSurveyLayoutWebDomNodeRef = useRef<HTMLElement | null>(null);
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const options = selectedQ
@@ -50,7 +50,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
 
   useEffect(() => {
     const takeSurveyLayoutWebRootDiv = document.querySelector(".take-survey-layout-web-root-div");
-    takeSurveyLayoutWebDomNodeRef.current = takeSurveyLayoutWebRootDiv;
+    takeSurveyLayoutWebDomNodeRef.current = takeSurveyLayoutWebRootDiv as HTMLElement | null;
   }, []);
 
   const handleSelectedOp = (value: string) => {
@@ -60,7 +60,11 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
 
   return !isMobile ? (
     <FormPaperLayout>
-      <Combobox value={selectedOp || null} onValueChange={handleSelectedOp} items={items}>
+      <Combobox
+        value={selectedOp || null}
+        onValueChange={(value) => handleSelectedOp(value ?? "")}
+        items={items}
+      >
         <ComboboxInput
           placeholder={translations("Select one / type in to search")}
           className="w-full border-none bg-transparent px-0 shadow-none"

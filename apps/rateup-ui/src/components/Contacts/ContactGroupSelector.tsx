@@ -85,7 +85,7 @@ function SingleGroupSelect({
   const { data: groups } = useContactGroup();
   const groupItems = groups?.map((g) => ({ value: g.id, label: g.name })) ?? [];
   return (
-    <Select value={value} onValueChange={onChange} items={groupItems}>
+    <Select value={value} onValueChange={(value) => onChange(value ?? "")} items={groupItems}>
       <SelectTrigger aria-label="Select a group" className={`${className}`}>
         <SelectValue placeholder={"Select a group"} />
       </SelectTrigger>

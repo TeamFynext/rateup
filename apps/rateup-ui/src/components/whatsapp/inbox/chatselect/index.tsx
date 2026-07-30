@@ -114,7 +114,7 @@ const WaInboxChatSelect = () => {
   const [showBulkAssignDialog, setShowBulkAssignDialog] = useState(false);
   const [openConfirmHandleClose, setOpenConfirmHandleClose] = useState(false);
 
-  const parentRef = useRef(null);
+  const parentRef = useRef<HTMLDivElement | null>(null);
 
   const prepareFilters = useCallback(
     (filters: any) => {

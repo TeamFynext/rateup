@@ -94,8 +94,8 @@ function ScreenListItem({
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
   const confirm = useConfirm();
   const [isOpen, { open, close }] = useDisclosure(false);
-  const screenTitleInputRef = useRef(null);
-  const footerLabelInputRef = useRef(null);
+  const screenTitleInputRef = useRef<HTMLInputElement | null>(null);
+  const footerLabelInputRef = useRef<HTMLInputElement | null>(null);
   const elements = getFlowFormElementsFromScreen(
     flowJson?.screens?.[pageNo],
   ) as WaFlowFormElement[];

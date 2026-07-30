@@ -313,7 +313,12 @@ const SortMenu = ({
   selectTriggerClassName?: string;
 }) => {
   return (
-    <Select onValueChange={onChange} value={value} defaultValue={defaultValue} items={data}>
+    <Select
+      onValueChange={(value) => onChange(value ?? "")}
+      value={value}
+      defaultValue={defaultValue}
+      items={data}
+    >
       <SelectTrigger className={selectTriggerClassName}>
         <SelectValue placeholder={customSelectTrigger ?? <Clock className="w-3 h-3 mr-1" />} />
       </SelectTrigger>

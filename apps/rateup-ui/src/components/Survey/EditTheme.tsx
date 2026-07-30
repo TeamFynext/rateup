@@ -39,7 +39,7 @@ export function EditTheme({
   const [isUiTextTranslationsModalOpen, setIsUiTextTranslationsModalOpen] = useState(false);
 
   // To store state of surveyThemeContextProvider.
-  const surveyThemeContextProviderValueRef = useRef(null);
+  const surveyThemeContextProviderValueRef = useRef<HTMLElement | null>(null);
 
   // Remounts the preview when the question set changes. TakeSurvey (rendered deep
   // inside the preview) keeps its own state — selected question, answers, slide

@@ -28,7 +28,7 @@ function GeneratedQrPage() {
   const [, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const destinationUrlInputRef = useRef(null);
+  const destinationUrlInputRef = useRef<HTMLElement | null>(null);
   let componentToBeRendered = null;
   const handleSaveDestinationUrl = async () => {
     try {

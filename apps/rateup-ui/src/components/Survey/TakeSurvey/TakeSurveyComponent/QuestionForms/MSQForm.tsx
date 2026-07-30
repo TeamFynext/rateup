@@ -33,8 +33,8 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
       ? previewChoices?.[selectedLanguage]
       : sampleChoices;
   const selectedFeature = features?.[selectedLanguage];
-  const otherInputContainerRef = useRef(null);
-  const bDivRef = useRef(null);
+  const otherInputContainerRef = useRef<HTMLDivElement | null>(null);
+  const bDivRef = useRef<HTMLDivElement | null>(null);
   const otherInputRef = useRef<HTMLInputElement>(null);
   const [isOtherInputFocusTrapActive, setIsOtherInputFocusTrapActive] = useState(false);
 
