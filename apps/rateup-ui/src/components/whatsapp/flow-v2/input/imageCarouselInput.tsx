@@ -30,12 +30,12 @@ const ImageCarouselInput = (props: FlowInputProps<CarouselImage[]>) => {
 
   const commit = (next: CarouselImage[]) => {
     setImages(next);
-    props.onChange(next);
+    props.onChange?.(next);
   };
 
   useEffect(() => {
-    if (props.value?.length > 0) {
-      setImages(props.value);
+    if ((props.value?.length ?? 0) > 0) {
+      setImages(props.value ?? []);
     }
   }, [props.value]);
 

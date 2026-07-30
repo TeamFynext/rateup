@@ -102,7 +102,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
           ),
         ),
       };
-      props.insertListItem("data-source", choiceObj);
+      props.insertListItem?.("data-source", choiceObj);
       form.reset();
     } catch {
       form.reset();
@@ -111,7 +111,7 @@ export function DataSourceInput(props: FlowInputProps<FlowChoice[]>) {
   };
 
   const handleRemoveChoice = (index: number) => {
-    props.removeListItem("data-source", index);
+    props.removeListItem?.("data-source", index);
   };
 
   const disabled =
@@ -373,7 +373,7 @@ function ChoiceRow({
       ),
     );
     const updatedChoices = choices.map((c, i) => (i === index ? { ...c, ...choiceObj } : c));
-    setChoices(updatedChoices);
+    setChoices?.(updatedChoices);
     closeEditModal();
   };
 

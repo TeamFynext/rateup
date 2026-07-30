@@ -13,7 +13,7 @@ const ImageInput = (props: FlowInputProps<string>) => {
   const clearFile = () => {
     setError(null);
     resetRef.current?.();
-    props.onChange("");
+    props.onChange?.("");
   };
   const handleFileChange = async (file: File) => {
     try {
@@ -24,7 +24,7 @@ const ImageInput = (props: FlowInputProps<string>) => {
       }
       setError(null);
       const base64String = await FileConverter.fileToBase64(file);
-      props.onChange(base64String);
+      props.onChange?.(base64String);
     } catch (error) {
       toast.error("Error converting file to Base64:" + JSON.stringify(error), {
         id: "file-converting",

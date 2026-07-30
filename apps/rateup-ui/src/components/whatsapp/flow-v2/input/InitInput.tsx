@@ -25,7 +25,11 @@ const InitInput = (
   return options.length > 0 ? (
     <Field>
       <FieldLabel htmlFor={`${uid}-field`}>{props.label}</FieldLabel>
-      <Select items={options} value={props.value ?? ""} onValueChange={props.onChange}>
+      <Select
+        items={options}
+        value={props.value ?? ""}
+        onValueChange={(value) => props.onChange?.(value ?? "")}
+      >
         <SelectTrigger id={`${uid}-field`} className="w-full">
           <SelectValue placeholder={props.placeholder} />
         </SelectTrigger>

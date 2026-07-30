@@ -191,13 +191,13 @@ function TiptapMarkdown({
     ],
     onUpdate: ({ editor }) => {
       isUpdatingFromEditor.current = true;
-      onChange((editor.storage as any).markdown.getMarkdown());
+      onChange?.((editor.storage as any).markdown.getMarkdown());
       setTimeout(() => {
         isUpdatingFromEditor.current = false;
       }, 0);
     },
     onBlur: ({ editor }) => {
-      onChange((editor.storage as any).markdown.getMarkdown());
+      onChange?.((editor.storage as any).markdown.getMarkdown());
     },
     editorProps: {
       attributes: {
@@ -219,7 +219,7 @@ function TiptapMarkdown({
     }
   }, [content, editor]);
   const percentage = editor
-    ? Math.round((100 / max) * editor.storage.characterCount.characters())
+    ? Math.round((100 / (max ?? 1)) * editor.storage.characterCount.characters())
     : 0;
 
   return (
